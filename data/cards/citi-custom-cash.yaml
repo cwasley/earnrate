@@ -1,0 +1,124 @@
+id: citi-custom-cash
+name: Citi Custom Cash Card
+issuer: citi
+network: mastercard
+currency: cash
+last_verified: 2026-10-26
+verified_by: collin
+# Citi stopped taking applications on May 28, 2026; existing cardmembers keep
+# the card and its rewards. The card page no longer lists the categories, so
+# the definitions come from the card's current ThankYou terms (Sept 2026).
+source_urls:
+  - https://www.citi.com/credit-cards/citi-custom-cash-credit-card
+  - https://www.thankyou.com/ccterms
+# Paid as ThankYou Points, which redeem at 1¢ for cash back on this card, so a
+# point here is 1%.
+base_rate: 1
+# Points can be combined into one ThankYou account, which then runs on that
+# account's terms: pooled with a Strata card, they transfer like Strata points.
+pools_into:
+  currency: TYP
+  when_wallet_has: [citi-strata-premier, citi-strata-elite]
+choices:
+  # Citi picks the category itself: whichever eligible category has the most
+  # spend in the billing cycle. Tell earnrate the one you expect to be top.
+  - id: top-category
+    pick: 1
+    period: month
+    options:
+      restaurants: [dining]
+      gas-stations: [gas]
+      grocery-stores: [grocery.supermarket, convenience_store]
+      select-travel: [travel.flights, travel.hotels, travel.cruise]
+      select-transit: [transit, travel.car_rental, ev_charging]
+      select-streaming:
+        merchants:
+          [
+            amazon-prime-video,
+            apple-music,
+            directv-stream,
+            disney-plus,
+            espn,
+            fandango-at-home,
+            fubotv,
+            max,
+            hulu,
+            mlb-tv,
+            nba-league-pass,
+            netflix,
+            pandora,
+            paramount-plus,
+            siriusxm,
+            sling-tv,
+            spotify,
+            starz,
+            tidal,
+            youtube-premium,
+            youtube-tv,
+          ]
+      drugstores: [drugstore]
+      home-improvement-stores: [home_improvement]
+      fitness-clubs: [fitness]
+      live-entertainment: [entertainment]
+rules:
+  - id: top-category
+    match: { choice: top-category }
+    # Third-party dining delivery doesn't count as restaurants; gas at
+    # warehouse clubs and discount stores doesn't count as gas.
+    exclude:
+      {
+        categories: [gas.superstore],
+        merchants: [doordash, uber-eats, dodger-stadium, bellagio],
+      }
+    rate: 5
+    cap: { amount: 500, period: month, then_rate: 1 }
+    note: Citi applies 5% automatically to your highest-spend eligible category each billing cycle (its decision is final), on the first $500 spent, then 1%. Grocery includes supermarkets, meat/seafood and dairy stores, bakeries and convenience stores, but not superstores or warehouse clubs. Select travel is airlines, hotels, cruise lines and travel agencies. Select transit includes car rentals, rail, subways, taxis and car services, tolls, parking, buses and EV charging. Streaming bundled with another product or billed by a third party doesn't count.
+  - id: citi-travel-hotels-cars-attractions
+    match:
+      {
+        merchants:
+          [
+            citi-travel-hotels,
+            citi-travel-car-rentals,
+            citi-travel-attractions,
+          ],
+      }
+    rate: 5
+    note: 4 extra points per $1 on top of the 1% base, for hotels, car rentals and attractions booked with Citi Travel. Citi's terms don't say whether the extra 4 also stacks on the 5% when travel or transit is the top category.
+todo:
+  - Network set to mastercard, but no current Citi page states it (the card page is now a "Not Available" stub). Check your card.
+  - Travel agencies (MCC 4722) count toward select travel, but a choice option can only list categories or merchants, so they aren't in the option.
+  - Citi Travel hotel bookings may also count toward select travel (Citi Travel is a travel agency). Possible 5% + 4% stacking is unconfirmed.
+  - "Closed to new applicants since May 28, 2026, so there's no welcome offer. Its $0 annual fee appears only in the card page's embedded product data, not visible text, so it isn't recorded."
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-custom-cash-credit-card
+    quote: 'Earn 1% cash back thereafter on all other purchases.'
+  - rule: base_rate
+    url: https://www.thankyou.com/ccterms
+    quote: 'You can combine them into one ThankYou Account'
+  - rule: top-category
+    url: https://www.citi.com/credit-cards/citi-custom-cash-credit-card
+    quote: 'Earn 5% cash back on your top eligible spend category each billing cycle up to $500 spent'
+  - rule: top-category
+    url: https://www.thankyou.com/ccterms
+    quote: 'After the first $500 spent in that category during the billing cycle'
+  - rule: top-category
+    url: https://www.thankyou.com/ccterms
+    quote: 'Restaurants, Gas Stations, Grocery Stores, Select Travel, Select Transit, Select Streaming Services'
+  - rule: top-category
+    url: https://www.thankyou.com/ccterms
+    quote: 'Drugstores, Home Improvement Stores, Fitness Clubs and Live Entertainment'
+  - rule: top-category
+    url: https://www.thankyou.com/ccterms
+    quote: 'Citibank shall have the sole right to determine the highest spend category each billing cycle'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.citi.com/credit-cards/citi-custom-cash-credit-card
+    quote: 'additional 4% cash back on hotels, car rentals, and attractions booked with Citi Travel'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.thankyou.com/ccterms
+    quote: '4 additional ThankYou Points for each $1 spent on hotels, car rentals, and attractions'
+  - rule: pools_into
+    url: https://www.thankyou.com/ccterms
+    quote: 'You can combine them into one ThankYou Account'

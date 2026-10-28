@@ -1,0 +1,69 @@
+id: chase-southwest-premier-business
+name: Southwest Rapid Rewards Premier Business Credit Card
+issuer: chase
+network: visa
+currency: southwest-rapid-rewards
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/southwest/premier-business-credit-card
+  - https://creditcards.chase.com/business-credit-cards/southwest/premier-business
+base_rate: 1
+business: true
+annual_fee: 149
+welcome_offer:
+  points: 80000
+  spend: 3000
+  months: 3
+  note: 'Marked a limited-time offer, with 60,000 struck through; the page states no end date. Not available to current cardmembers of this business card, or previous cardmembers who received a new Cardmember bonus for this business card within the last 24 months.'
+caps:
+  - id: gas-and-dining
+    amount: 8000
+    period: cardmember_year
+    then_rate: 1
+rules:
+  - id: southwest
+    match: { merchants: [southwest] }
+    rate: 3
+    note: Purchases made directly with Southwest, including flights, inflight, Southwest gift cards and Getaways by Southwest packages. Southwest Cruises, Southwest Charters and Southwest Cargo are excluded.
+  - id: gas
+    match: { categories: [gas] }
+    rate: 2
+    cap: gas-and-dining
+    note: Shares an $8,000 per account anniversary year cap with restaurants.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 2
+    cap: gas-and-dining
+    note: Shares an $8,000 per account anniversary year cap with gas stations.
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 3
+    valid_to: 2027-12-31
+    note: Limited-time offer on rides, bikes, scooters and Lyft memberships bought in the Lyft app. Gift cards and Lyft car rentals are excluded.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: annual_fee
+    url: https://creditcards.chase.com/business-credit-cards/southwest/premier-business
+    quote: '$149 applied to first billing statement.'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/business-credit-cards/southwest/premier-business
+    quote: '80,000 points after you spend $3,000 on purchases in the first 3 months from account opening'
+  - rule: base_rate
+    url: https://creditcards.chase.com/southwest/premier-business-credit-card
+    quote: 'You’ll earn 1 point for each $1 spent on all other purchases'
+  - rule: southwest
+    url: https://creditcards.chase.com/southwest/premier-business-credit-card
+    quote: 'You’ll earn 3 points for each $1 spent on purchases made directly with Southwest Airlines'
+  - rule: southwest
+    url: https://creditcards.chase.com/southwest/premier-business-credit-card
+    quote: 'Other Southwest Airlines related purchases, such as Southwest Cruises, Southwest Charters, and Southwest Cargo® are excluded.'
+  - rule: gas
+    url: https://creditcards.chase.com/southwest/premier-business-credit-card
+    quote: 'per $1 at gas stations and restaurants on the first $8,000 in combined purchases per anniversary year'
+  - rule: dining
+    url: https://creditcards.chase.com/southwest/premier-business-credit-card
+    quote: 'per $1 at gas stations and restaurants on the first $8,000 in combined purchases per anniversary year'
+  - rule: lyft
+    url: https://creditcards.chase.com/southwest/premier-business-credit-card
+    quote: 'earn 3X Rapid Rewards points on qualifying Lyft products and services purchased through the Lyft mobile application through 12/31/2027'

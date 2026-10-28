@@ -1,0 +1,65 @@
+id: citi-aadvantage-globe
+name: Citi / AAdvantage Globe Mastercard
+issuer: citi
+network: mastercard
+currency: aadvantage-miles
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+base_rate: 1
+annual_fee: 350
+welcome_offer:
+  points: 60000
+  spend: 4000
+  months: 3
+  note: 'Not available if you received a new account bonus for a Citi / AAdvantage Globe account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one.'
+rules:
+  - id: aadvantage-hotels
+    match: { merchants: [aadvantage-hotels] }
+    rate: 6
+    note: Hotels booked on aadvantagehotels.com. Only the part paid with the card earns. Not hotels booked through American Airlines Vacations or with "Reserve Now, Pay Later", nor incidentals or other charges at the hotel.
+  - id: american-airlines
+    match: { merchants: [american-airlines] }
+    rate: 3
+    note: Items billed by American Airlines as the merchant of record, including Admirals Club food and drink. Car rentals booked on aadvantagecars.com and hotels booked on aadvantagehotels.com don't count.
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 2
+    note: Includes cafes, bars, lounges, fast food, takeout and restaurant delivery services. Not restaurants inside supercenters, warehouse clubs, discount or department stores, bowling alleys, golf courses, country clubs, convenience stores or movie theaters, nor caterers or meal kit delivery.
+  - id: rides-and-rails
+    match: { categories: [transit] }
+    rate: 2
+    note: Rides and Rails covers ferries, commuter and passenger rail, subways, taxis, limousines and car services, rideshare, tolls, parking and bus lines. Not charter or tour buses, car rentals, or motor home and RV rentals.
+# Not modeled: Turo, inflight and brand statement credits, Admirals Club Globe Passes, companion certificate, Loyalty Point bonuses.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'Earn 1 AAdvantage® mile for every $1 spent on all other purchases.'
+  - rule: aadvantage-hotels
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'Earn 6 AAdvantage® miles per $1 spent on eligible AAdvantage Hotels™ bookings'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: '3 AAdvantage® miles per $1 spent on eligible American Airlines purchases'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+  - rule: restaurants
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'Earn 2 AAdvantage® miles for every $1 spent at restaurants, including takeout and delivery.'
+  - rule: rides-and-rails
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'Earn 2 AAdvantage® miles for every $1 spent on eligible Rides and Rails™ purchases, including taxis, rideshares and public transit.'
+  - rule: rides-and-rails
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'passenger railways, bridge and road tolls, parking lots'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'Annual fee: $350. Minimum interest charge $0.50.'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'Earn 60,000 AAdvantage® bonus miles after $4,000 in purchases in the first 3 months'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'new account bonus for a Citi® / AAdvantage® Globe™ account in the past 48 months'

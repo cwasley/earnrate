@@ -1,0 +1,72 @@
+id: chase-southwest-premier
+name: Southwest Rapid Rewards Premier Credit Card
+issuer: chase
+network: visa
+currency: southwest-rapid-rewards
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/travel-credit-cards/southwest/premier
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+base_rate: 1
+annual_fee: 149
+welcome_offer:
+  points: 55000
+  spend: 1500
+  months: 3
+  note: 'Not available to current cardmembers of any Southwest Rapid Rewards Credit Card, or previous cardmembers of any Southwest Rapid Rewards Credit Card who received a new Cardmember bonus within the last 24 months (this does not apply to business cards).'
+caps:
+  - id: grocery-and-dining
+    amount: 8000
+    period: cardmember_year
+    then_rate: 1
+rules:
+  - id: southwest
+    match: { merchants: [southwest] }
+    rate: 3
+    note: Purchases made directly with Southwest, including flights, inflight, Southwest gift cards and Getaways by Southwest packages. Southwest Cruises, Southwest Charters and Southwest Cargo are excluded.
+  - id: grocery
+    match: { categories: [grocery] }
+    exclude: { merchants: [walmart, target] }
+    rate: 2
+    cap: grocery-and-dining
+    note: Shares an $8,000 per account anniversary year cap with restaurants. Chase's grocery category excludes warehouse clubs, discount stores such as Walmart and Target, and gas at grocery stores. Delivery services count only if they code as a grocery store.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 2
+    cap: grocery-and-dining
+    note: Shares an $8,000 per account anniversary year cap with grocery stores.
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 3
+    valid_to: 2027-12-31
+    note: Limited-time offer on rides, bikes, scooters and Lyft memberships bought in the Lyft app. Gift cards and Lyft car rentals are excluded.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: annual_fee
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+    quote: '$149 applied to first billing statement.'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+    quote: 'Earn 55,000 bonus points after you spend $1,500 on purchases in the first 3 months from account opening'
+  - rule: base_rate
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+    quote: 'Earn 1 point for each dollar spent on all other purchases.'
+  - rule: southwest
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+    quote: 'Earn 3 points for each dollar spent on Southwest Airlines purchases.'
+  - rule: southwest
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+    quote: 'Other Southwest Airlines related purchases, such as Southwest Cruises, Southwest Charters, and Southwest Cargo® are excluded.'
+  - rule: grocery
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+    quote: 'spent at grocery stores and restaurants on the first $8,000 in combined purchases per anniversary year'
+  - rule: grocery
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'such as warehouse clubs, discount stores and some smaller merchants such as drugstores'
+  - rule: dining
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+    quote: 'spent at grocery stores and restaurants on the first $8,000 in combined purchases per anniversary year'
+  - rule: lyft
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+    quote: 'earn 3X Rapid Rewards points on qualifying Lyft products and services purchased through the Lyft mobile application through 12/31/2027'

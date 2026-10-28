@@ -1,0 +1,103 @@
+id: chase-prime-visa
+name: Prime Visa
+issuer: chase
+network: visa
+currency: cash
+last_verified: 2026-10-24
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+base_rate: 1
+annual_fee: 0
+welcome_offer:
+  dollars: 150
+  spend: 0
+  months: 1
+  note: 'A $150 Amazon Gift Card loaded into your Amazon account on approval, not cash back; there''s no spend requirement, so spend 0 and months 1 stand in for "on approval". For Prime members. Chase: available "if you do not currently have an Amazon Visa or Prime Visa credit card", and the gift card "is only awarded to new cardmembers and at the time of card approval."'
+rules:
+  - id: amazon
+    match: { merchants: [amazon] }
+    rate: 5
+    requires: { membership: amazon-prime }
+    note: Includes Amazon Fresh orders and third-party sellers on Amazon.com. Not on Amazon Pay purchases at other sites, or on Amazon's international sites.
+  - id: amazon-fresh
+    match: { merchants: [amazon-fresh] }
+    rate: 5
+    requires: { membership: amazon-prime }
+    note: Amazon Fresh's physical stores closed or became Whole Foods in 2026, so this is mostly online orders.
+  - id: whole-foods
+    match: { merchants: [whole-foods] }
+    rate: 5
+    requires: { membership: amazon-prime }
+    note: Online or in-store.
+  - id: audible
+    match: { merchants: [audible] }
+    rate: 5
+    requires: { membership: amazon-prime }
+  - id: amazon-without-prime
+    match: { merchants: [amazon, amazon-fresh, whole-foods, audible] }
+    rate: 3
+    note: Without an eligible Prime membership these earn 3% instead of 5%.
+  - id: chase-travel
+    match: { merchants: [chase-travel] }
+    rate: 5
+    requires: { membership: amazon-prime }
+    note: Not on bookings made directly with airlines, hotels, car rental companies or cruise lines.
+  - id: chase-travel-without-prime
+    match: { merchants: [chase-travel] }
+    rate: 3
+  - id: gas
+    match: { categories: [gas] }
+    rate: 2
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 2
+    note: Dine in or takeout.
+  - id: local-transit
+    match: { categories: [transit] }
+    rate: 2
+    note: Local transit and commuting, including rideshare.
+todo:
+  - 6% on Amazon.com orders with "select delivery methods" (stated on amazon.com/dp/BT00LN946S, not on Chase's page) isn't modeled. It depends on the shipping option picked at checkout.
+  - Prime Card Bonus (10%+ on rotating Amazon items) isn't modeled. It's per item and limited-time.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: 'unlimited 1% back on all other purchases'
+  - rule: amazon
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: "You'll earn 5% back with an eligible Prime membership or 3% back without an eligible Prime membership"
+  - rule: amazon-fresh
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: 'Amazon.com Gift Cards, Amazon Fresh orders, Amazon Prime subscriptions'
+  - rule: whole-foods
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: 'including any physical Whole Foods Market locations in the United States'
+  - rule: audible
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: '5% back at Amazon.com, Audible.com, Whole Foods Market'
+  - rule: amazon-without-prime
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: '3% back without an eligible Prime membership for each $1 of eligible purchases'
+  - rule: chase-travel
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: '5% back or 3% back through Chase Travel'
+  - rule: chase-travel-without-prime
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: '3% back without an eligible Prime membership for each $1 spent on purchases'
+  - rule: gas
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: '2% back at gas stations, restaurants, and on local transit and commuting'
+  - rule: restaurants
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: '2% back at gas stations, restaurants, and on local transit and commuting'
+  - rule: local-transit
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: 'local transit and commuting (including rideshare)'
+  - rule: annual_fee
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: 'ANNUAL FEE $0'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: "Prime members, get a $150 Amazon Gift Card instantly loaded into your Amazon account's Gift Card Balance"

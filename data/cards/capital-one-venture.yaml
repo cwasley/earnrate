@@ -1,0 +1,57 @@
+id: capital-one-venture
+name: Capital One Venture Rewards Credit Card
+issuer: capitalone
+# The card page never names the network in visible text. Its embedded product
+# data says MasterCard; older Venture accounts may be on Visa.
+network: mastercard
+currency: C1
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.capitalone.com/credit-cards/venture/
+base_rate: 2
+annual_fee: 95
+welcome_offer:
+  points: 75000
+  spend: 4000
+  months: 3
+  note: Labeled a limited-time offer, with no end date stated. Comes with a one-time $300 Capital One Travel Stays credit for hotel and vacation rental bookings through Capital One Travel, expiring one year after account opening. Available by applying through the card page. Not available to anyone who received a new cardmember bonus for the Venture or Venture X in the past 48 months.
+rules:
+  - id: capital-one-travel-hotels-vacation-rentals-car-rentals
+    match:
+      {
+        merchants:
+          [
+            capital-one-travel-hotels,
+            capital-one-travel-vacation-rentals,
+            capital-one-travel-car-rentals,
+          ],
+      }
+    rate: 5
+    note: Only when booked through Capital One Travel. Flights booked there earn the base 2X.
+  - id: capital-one-entertainment
+    match: { merchants: [capital-one-entertainment] }
+    rate: 5
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Tickets bought directly from Capital One Hall or Capital One Arena are excluded.
+# Not modeled on purpose: the first-year $300 Capital One Travel Stays credit
+# and the $120 Global Entry/TSA PreCheck credit.
+todo:
+  - Network isn't shown in the card page's visible text. Set to mastercard from the page's embedded product data (cardNetwork MasterCard); confirm against a current card or the Rates & Fees disclosure.
+  - Capital One's transfer-partners article (capitalone.com/learn-grow/money-management/venture-miles-transfer-partnerships/) says Venture earns 5X on "activities" through Capital One Travel too. The card page doesn't, so activities aren't modeled.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/credit-cards/venture/
+    quote: 'Earn unlimited 2X miles per dollar on every purchase, every day.'
+  - rule: capital-one-travel-hotels-vacation-rentals-car-rentals
+    url: https://www.capitalone.com/credit-cards/venture/
+    quote: 'Earn 5X miles on hotels, vacation rentals and rental cars booked through Capital One Travel.'
+  - rule: capital-one-entertainment
+    url: https://www.capitalone.com/credit-cards/venture/
+    quote: 'Eligible cardholders will earn 5 miles per dollar spent on Capital One Entertainment purchases.'
+  - rule: annual_fee
+    url: https://www.capitalone.com/credit-cards/venture/
+    quote: 'ANNUAL FEE $95 PURCHASE RATE'
+  - rule: welcome_offer
+    url: https://www.capitalone.com/credit-cards/venture/
+    quote: 'plus earn 75,000 bonus miles once you spend $4,000 on purchases within the first 3 months'

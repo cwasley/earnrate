@@ -1,0 +1,93 @@
+id: chase-ink-business-preferred
+name: Ink Business Preferred
+issuer: chase
+network: visa
+currency: UR
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+base_rate: 1
+business: true
+annual_fee: 95
+welcome_offer:
+  points: 100000
+  spend: 8000
+  months: 3
+  note: 'Chase: "The new cardmember bonus may not be available to you if you have ever had this card." Chase may also consider factors about your business.'
+caps:
+  - id: three-x-combined
+    amount: 150000
+    period: cardmember_year
+    then_rate: 1
+rules:
+  - id: shipping
+    match: { categories: [shipping] }
+    rate: 3
+    cap: three-x-combined
+    note: Couriers, postal and freight shipping, mailbox stores. Not shipping charges on something you buy, or office supply stores that also mail packages.
+  - id: social-search-advertising
+    match: { categories: [online_advertising] }
+    rate: 3
+    cap: three-x-combined
+    note: Bought directly from a social media site or search engine, not through an ad agency. Non-ad purchases from those sites don't count.
+  - id: internet-cable-phone
+    match: { categories: [tv_internet, phone] }
+    rate: 3
+    cap: three-x-combined
+    note: Internet, cable, satellite TV and radio, cellular, wireless data and landline service. Not equipment.
+  - id: travel
+    match: { categories: [travel] }
+    rate: 3
+    cap: three-x-combined
+  - id: transit-as-travel
+    match: { categories: [transit] }
+    rate: 3
+    cap: three-x-combined
+    note: Chase's travel category includes passenger trains, buses, taxis, ferries, tolls and parking. Rideshare codes as a taxi.
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 5
+    valid_to: 2027-09-30
+    note: Limited-time offer, for Lyft products bought in the Lyft app. Chase describes it as 2 extra points on top of the 3x travel rate, so Lyft spend likely counts toward the $150,000 cap.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'Earn 1 point per $1 on all other purchases'
+  - rule: shipping
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'Earn 3 points per $1 on the first $150,000 spent in combined purchases'
+  - rule: shipping
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'first $150,000 spent each account anniversary year on combined purchases in the following rewards categories: shipping'
+  - rule: shipping
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Shipping merchants include couriers, postal and freight shipping companies, express shipping services and mailbox stores'
+  - rule: social-search-advertising
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'Advertising purchases made with social media sites and search engines'
+  - rule: social-search-advertising
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Merchants in this category include social media websites and online search engines'
+  - rule: internet-cable-phone
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'Internet, cable and phone services'
+  - rule: travel
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'social media and search engine advertising; travel; internet, cable, and phone services'
+  - rule: transit-as-travel
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'campgrounds and operators of passenger trains, buses, taxis, limousines, ferries, toll bridges and highways'
+  - rule: lyft
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'Earn a total of 5x points on Lyft rides through September 30, 2027'
+  - rule: annual_fee
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'ANNUAL FEE $95'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'Earn 100,000 bonus points after you spend $8,000 on purchases in the first 3 months after account opening'
+todo:
+  - "lyft: once the $150,000 3x cap is used up, Chase's wording implies Lyft drops to 3x (1 + 2 extra), not 5x; the schema can't share the cap with a different then_rate, so this rule stays at 5x uncapped."

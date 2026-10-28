@@ -1,0 +1,82 @@
+id: wells-fargo-autograph
+name: Wells Fargo Autograph Card
+issuer: wells-fargo
+network: visa
+currency: WFR
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+  - https://www.wellsfargo.com/credit-cards/autograph-visa/streaming/
+base_rate: 1
+annual_fee: 0
+welcome_offer:
+  points: 20000
+  spend: 1000
+  months: 3
+  note: The page calls it a $200 cash redemption value. You may not be eligible for bonus offers if you have this card or opened one within the last 48 months, even if it's closed.
+rules:
+  - id: dining
+    match: { categories: [dining] }
+    rate: 3
+    note: Restaurants, bars (drinking places), fast food and caterers, by Visa merchant code.
+  - id: travel
+    match: { categories: [travel] }
+    rate: 3
+    note: Airlines, hotels, timeshares, car rentals, cruise lines, travel agencies, discount travel sites and campgrounds, by Visa merchant code.
+  - id: transit
+    match: { categories: [transit] }
+    exclude: { mccs: [4131] }
+    rate: 3
+    note: Passenger rail, taxis, limousines, ferries, tolls and parking. Intercity bus lines aren't on Wells Fargo's list.
+  - id: gas
+    match: { categories: [gas, ev_charging] }
+    rate: 3
+    note: Gas stations, automated fuel dispensers and EV charging stations, by Visa merchant code.
+  - id: streaming
+    match: { categories: [streaming, tv_internet] }
+    rate: 3
+    note: Cable and pay TV, digital goods (books, movies, music) and subscription services. Subscriptions bundled with another product or billed by a third party (an app store, a car) may not count. An internet-only bill may not code as pay TV.
+  - id: phone
+    match: { categories: [phone] }
+    rate: 3
+    note: Landline and cell phone providers.
+# Not modeled: cell phone protection.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    quote: '1 rewards point will be earned per $1 spent on other net purchases'
+  - rule: dining
+    url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    quote: 'Dining: eating places and restaurants, drinking places, fast food restaurants'
+  - rule: travel
+    url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    quote: 'Travel: airline, hotel/motel, timeshare, or vehicle/auto rental, cruise lines'
+  - rule: transit
+    url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    quote: 'Transit: passenger railway, taxis, limousines, ferries, toll bridges and highways'
+  - rule: gas
+    url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    quote: 'Gas: gas stations, automated fuel dispensers, and electric vehicle charging stations'
+  - rule: streaming
+    url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    quote: 'Popular streaming services: cable and other pay television, digital goods, books'
+  - rule: streaming
+    url: https://www.wellsfargo.com/credit-cards/autograph-visa/streaming/
+    quote: 'You may earn 3X on these streaming services'
+  - rule: phone
+    url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    quote: 'Phone plans: landline and cell phone providers considered telecommunication services'
+  - rule: annual_fee
+    url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    quote: '$0 Annual Fee'
+  - rule: welcome_offer
+    url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    quote: 'Earn 20,000 bonus points'
+  - rule: welcome_offer
+    url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    quote: 'To qualify for the 20,000 bonus rewards points, a total of at least $1,000 in net purchases'
+todo:
+  - 'Wells Fargo values a point at $0.01 and says points transfer to select travel loyalty programs, but names no partners.'
+  - 'The streaming page lists merchant types, not providers; no issuer list of specific streaming services was found.'

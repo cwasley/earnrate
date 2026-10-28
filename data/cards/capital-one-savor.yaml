@@ -1,0 +1,89 @@
+id: capital-one-savor
+name: Capital One Savor Rewards Credit Card
+issuer: capitalone
+# The card page never names the network in visible text; its embedded
+# product data says MasterCard.
+network: mastercard
+currency: cash
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.capitalone.com/credit-cards/savor/
+base_rate: 1
+annual_fee: 0
+welcome_offer:
+  dollars: 200
+  spend: 500
+  months: 3
+  note: One-time cash bonus, available by applying through the card page. Existing or previous cardmembers are not eligible if they received a new cardmember bonus for this product in the past 48 months.
+rules:
+  - id: capital-one-entertainment
+    match: { merchants: [capital-one-entertainment] }
+    rate: 8
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Tickets bought directly from Capital One Hall or Capital One Arena are excluded.
+  - id: capital-one-travel-hotels-vacation-rentals-car-rentals
+    match:
+      {
+        merchants:
+          [
+            capital-one-travel-hotels,
+            capital-one-travel-vacation-rentals,
+            capital-one-travel-car-rentals,
+          ],
+      }
+    rate: 5
+    note: Only when booked through Capital One Travel. Flights booked there earn the base 1%.
+  - id: grocery-stores
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore], merchants: [walmart, target] }
+    rate: 3
+    note: Supermarkets, meat lockers, freezers, dairy product stores and specialty markets. Superstores like Walmart and Target are excluded.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 3
+    note: Restaurants, cafes, bars, lounges, fast-food chains and bakeries. Restaurants inside hotels or grocery stores, and some food trucks, may not code as dining.
+  - id: entertainment
+    match: { categories: [entertainment, movie_theaters] }
+    rate: 3
+    note: Tickets at movie theaters, professional and semi-professional sports promoters, theatrical promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls, record stores, pool halls and bowling alleys. Golf courses, collegiate sporting events, cable, streaming and membership services don't count as entertainment.
+  - id: streaming
+    match: { categories: [streaming] }
+    rate: 3
+    note: Only "popular streaming services"; Capital One doesn't list them on the card page.
+todo:
+  - Online grocery and delivery (grocery.online, e.g. Instacart) isn't addressed on the card page. Only grocery.supermarket is modeled.
+  - Which streaming services are "popular" isn't listed on the card page.
+  - Amusement parks, tourist attractions, aquariums, zoos, record stores, pool halls and bowling alleys earn 3% as entertainment but have no earnrate category. Golf courses and collegiate sporting events are excluded but can't be told apart from the entertainment category.
+  - Capital One says purchases through third-party payment accounts, mobile card readers or digital wallets may not get the bonus rate. Not modeled.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'plus 1% cash back on all other purchases'
+  - rule: capital-one-entertainment
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'Earn unlimited 8% cash back on Capital One Entertainment purchases.'
+  - rule: capital-one-travel-hotels-vacation-rentals-car-rentals
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'Earn unlimited 5% cash back on hotels, vacation rentals and rental cars booked through Capital One Travel.'
+  - rule: grocery-stores
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'The 3% grocery earn is limited to purchases made at grocery stores'
+  - rule: grocery-stores
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'Superstores like Walmart and Target are excluded.'
+  - rule: dining
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'Purchases at restaurants, cafes, bars, lounges, fast-food chains and bakeries count as dining.'
+  - rule: entertainment
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'Ticket purchases made at movie theaters, sports promoters'
+  - rule: streaming
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'on dining, entertainment and popular streaming services, plus 1% cash back'
+  - rule: annual_fee
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: '$0 annual fee Plus, there are no hidden or foreign transaction fees.'
+  - rule: welcome_offer
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'Earn a one-time $200 cash bonus once you spend $500 on purchases within the first 3 months'

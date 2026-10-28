@@ -1,0 +1,29 @@
+id: sofi-unlimited-2
+name: SoFi Unlimited 2% Credit Card
+issuer: sofi
+network: mastercard
+currency: sofi-rewards
+last_verified: 2026-10-24
+verified_by: collin
+source_urls:
+  - https://www.sofi.com/credit-card/unlimited/
+base_rate: 2
+annual_fee: 0
+rules:
+  - id: sofi-travel
+    match: { merchants: [sofi-travel] }
+    rate: 3
+    note: Trips booked through the SoFi Travel portal (run by Expedia).
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.sofi.com/credit-card/unlimited/
+    quote: 'Members earn 2 rewards points for every dollar spent on purchases'
+  - rule: sofi-travel
+    url: https://www.sofi.com/credit-card/unlimited/
+    quote: 'equal to 3% of the total amount you spend'
+  - rule: annual_fee
+    url: https://www.sofi.com/credit-card/unlimited/
+    quote: 'you’ll pay no annual fee whatsoever'
+todo:
+  - 'No public welcome offer: the page says the card is currently invite only (apply with a mailed reservation code), and shows no bonus.'

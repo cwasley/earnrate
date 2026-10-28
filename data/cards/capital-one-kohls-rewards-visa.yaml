@@ -1,0 +1,48 @@
+id: capital-one-kohls-rewards-visa
+name: Kohl's Rewards Visa
+issuer: capital-one
+network: visa
+currency: kohls-rewards
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.capitalone.com/credit-cards/kohls/
+# Units are cents of Kohl's rewards per dollar, so 3 is 3%.
+base_rate: 1
+annual_fee: 0
+rules:
+  - id: kohls
+    match: { merchants: [kohls] }
+    rate: 2.5
+    note: Card's own share only. Kohl's Rewards members earn 5% however they pay, and paying with the card raises that to 7.5% ("Earn 5% any way you pay or 7.5% when you use a Kohl's Card", kohls.com/feature/rewards.jsp, checked by hand because kohls.com blocks the weekly check). Kohl's stores and Kohls.com, excluding gift cards.
+  - id: gas
+    match: { categories: [gas] }
+    exclude: { categories: [gas.grocery_store, gas.superstore] }
+    rate: 3
+    note: Merchants whose main business is selling gasoline. Set by merchant category code.
+  - id: grocery-stores
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club, convenience_store] }
+    rate: 2
+    note: Groceries at discount stores, superstores, warehouse clubs (e.g. Costco, Walmart) and convenience stores earn 1%.
+todo:
+  - Earns only when the card is linked to a Kohl's Rewards account.
+  - Rewards turn into Kohl's Cash in $5 steps on the 1st of the next month and expire 30 days later. Kohl's Cash can't be used on Sephora at Kohl's.
+  - Periodic cardholder discounts aren't modeled. These are monthly savings offers, a yearly anniversary offer and a 40% off new-account coupon.
+  - "No fixed-amount welcome offer. New cardholders get a 40% off coupon for one transaction within 30 days of credit availability, a percentage discount, so it isn't modeled as welcome_offer."
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/credit-cards/kohls/
+    quote: '1% on purchases everywhere else Visa is accepted.'
+  - rule: kohls
+    url: https://www.capitalone.com/credit-cards/kohls/
+    quote: '7.5% at Kohl’s stores or Kohls.com, excluding gift cards'
+  - rule: gas
+    url: https://www.capitalone.com/credit-cards/kohls/
+    quote: '3% on gasoline purchases made at merchants whose primary line of business is the sale of automotive gasoline'
+  - rule: grocery-stores
+    url: https://www.capitalone.com/credit-cards/kohls/
+    quote: '2% at grocery stores (grocery purchases made at discount stores or superstores, including warehouse clubs'
+  - rule: annual_fee
+    url: https://www.capitalone.com/credit-cards/kohls/
+    quote: "when you open a Kohl's Card. No annual fee."

@@ -1,0 +1,692 @@
+{
+  "version": 1,
+  "pages": {
+    "https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-blue-business-plus-credit-card-amex/": {
+      "checked": "2026-10-27",
+      "lines": []
+    },
+    "https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "06f0ff4aa405d916",
+        "4052755035d5c28f",
+        "4b514b978fe30a42",
+        "5913adff40b92851",
+        "68c2587eb325aaf7",
+        "93389ee7c4fb0f81",
+        "9bc274280ad7bc6d",
+        "a86522bd338c8d68",
+        "a88f8a03a15351c3",
+        "f98fffab6b1fa783",
+        "ff249c1229a8a554"
+      ]
+    },
+    "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0": {
+      "checked": "2026-10-27",
+      "lines": [
+        "0232396b0a8716b1",
+        "17e42cee15b8f34c",
+        "4db3311144b50bb6",
+        "55af0161e2f79f68",
+        "56f120e8a90bf874",
+        "5dd82dd78ab2860a",
+        "abe2309283e0ec5f",
+        "c3ffcaec18a8c9f3"
+      ]
+    },
+    "https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "06f0ff4aa405d916",
+        "4b514b978fe30a42",
+        "5913adff40b92851",
+        "68c2587eb325aaf7",
+        "9bc274280ad7bc6d",
+        "a88f8a03a15351c3",
+        "f98fffab6b1fa783",
+        "ff249c1229a8a554"
+      ]
+    },
+    "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0": {
+      "checked": "2026-10-27",
+      "lines": [
+        "0232396b0a8716b1",
+        "49179b7362a6540b",
+        "4db3311144b50bb6",
+        "55af0161e2f79f68",
+        "56f120e8a90bf874",
+        "5dd82dd78ab2860a",
+        "abe2309283e0ec5f",
+        "c3ffcaec18a8c9f3"
+      ]
+    },
+    "https://www.americanexpress.com/us/credit-cards/card/gold-card/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "31ba20d70d984bc1",
+        "61db2ce75727ce33",
+        "63125db788f27fbc",
+        "fc3fc28fbd083eb5"
+      ]
+    },
+    "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0": {
+      "checked": "2026-10-27",
+      "lines": [
+        "0232396b0a8716b1",
+        "3e0d74aebc3b1eb1",
+        "4567b6426d9a5fb9",
+        "56f120e8a90bf874",
+        "e28759f646589f9c",
+        "ed64edb053c61211"
+      ]
+    },
+    "https://www.americanexpress.com/us/credit-cards/card/platinum/": {
+      "checked": "2026-10-27",
+      "lines": []
+    },
+    "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0": {
+      "checked": "2026-10-27",
+      "lines": [
+        "0232396b0a8716b1",
+        "1e1c9e465bade44e",
+        "3e0d74aebc3b1eb1",
+        "3eca04ec169b3cd0",
+        "4567b6426d9a5fb9",
+        "4db3311144b50bb6",
+        "56f120e8a90bf874",
+        "95df37d3591f2d44",
+        "9bc9670e154faa1d",
+        "cd95210cc0863210",
+        "ed64edb053c61211"
+      ]
+    },
+    "https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "0091556655f3f462",
+        "3040fd8e982a10ec",
+        "7802181364fc570f",
+        "a217842915db8c24",
+        "be4fd26772e0f11f",
+        "c6fe2093be28c96e"
+      ]
+    },
+    "https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "530f43079864f83a",
+        "6b0fadb3d8929c87",
+        "9ef07e37afdf4bf0",
+        "a25aa847609994ff",
+        "baab9605ab16b230",
+        "be4fd26772e0f11f"
+      ]
+    },
+    "https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "3040fd8e982a10ec",
+        "530f43079864f83a",
+        "9928dc90442259b5",
+        "a217842915db8c24",
+        "ca1d1872aefa57e6"
+      ]
+    },
+    "https://www.bilt.com/card/obsidian": {
+      "checked": "2026-10-27",
+      "lines": [
+        "1c888107eb576740",
+        "1d4b7fbd4c2c897e",
+        "1e5807f1918c4e5e",
+        "533fa1c79f20f237",
+        "5507f9c17bc04eda",
+        "56f207720dfaca7d",
+        "56f8b6134776d089",
+        "86c5cfa7b4ccce6f",
+        "96a369a63df6dab4",
+        "a1c992d5131ae69f",
+        "a4bbf8a5ff679981",
+        "b5d92205f788e110",
+        "bfcdd5198e984fe4",
+        "c8ad64c91ffdf8fd",
+        "ddc47f79cdcbf88a",
+        "e44c7011611c85c5",
+        "ea56bcd0460e7055",
+        "fb3bc85d491e7a8a"
+      ]
+    },
+    "https://www.bilt.com/card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "335927c8f4d6f032",
+        "3d39eb4f2b9ebd9a",
+        "529910e52e50d881",
+        "5ae6cd9a46b57098",
+        "63628919d6035deb",
+        "76c21af1c75b2685",
+        "939a23936dd3e3ff",
+        "99c49619bc9f09e1",
+        "9c289f8ef30f6a93",
+        "a1c992d5131ae69f",
+        "a489766622ee6d67",
+        "fa9b45e56f9acf66"
+      ]
+    },
+    "https://www.capitalone.com/credit-cards/kohls/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "249e8b304c3dae74",
+        "892d39ae3c1cd909",
+        "9a3734a1a5a52190",
+        "c27ac80b06e2ad19",
+        "ca1632f126f6358e",
+        "d7b2929ba788c3e4",
+        "dd45aa61e4e43bf5"
+      ]
+    },
+    "https://www.capitalone.com/credit-cards/savor/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "02ec1ed2620f44d7",
+        "0a53af1deb629045",
+        "11d190a83a1f7dfc",
+        "341219e19b057398",
+        "4b0f75ac43076dd7",
+        "8c5e01dbaaa354b4",
+        "acdb916b95cad144",
+        "b7924c6c68126986",
+        "dfa06461c95ed755",
+        "ea21e2f36481f4b2",
+        "ea7e663000cd58e2"
+      ]
+    },
+    "https://www.capitalone.com/credit-cards/venture-x/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "219c07631a88a8fa",
+        "73908fde393f898f",
+        "80cbc7d5b721ec63",
+        "ba6fd84a86990119"
+      ]
+    },
+    "https://www.capitalone.com/credit-cards/venture/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "4b0f75ac43076dd7",
+        "5bedb96fb44ca784",
+        "6fecd2e56733d42e",
+        "839aab7b150136fb",
+        "8c5e01dbaaa354b4",
+        "8faf9feefdf97c8a",
+        "c0fc02b9e1e7b8ae",
+        "dbed80b419703cec"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan": {
+      "checked": "2026-10-27",
+      "lines": [
+        "045cff53b6976deb",
+        "1427a0313d2d1042",
+        "19e8f5556660f89a",
+        "5e681ff709ce8f29",
+        "62ccb3a97362c17a",
+        "77a048be026aa331",
+        "9a3f7a23c12debca",
+        "9feaab1ef91be730",
+        "e9c470409462e562"
+      ]
+    },
+    "https://www.chase.com/personal/credit-cards/rewards-category-faq": {
+      "checked": "2026-10-27",
+      "lines": []
+    },
+    "https://creditcards.chase.com/cash-back-credit-cards/freedom/flex": {
+      "checked": "2026-10-27",
+      "lines": [
+        "8d5b43ecfae20c4f",
+        "c4aa062a6cebb860",
+        "c8d1771b5db67c2a",
+        "cd20353bc41ed6d8",
+        "f8dd9b3fb42e70fc"
+      ]
+    },
+    "https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household": {
+      "checked": "2026-10-27",
+      "lines": [
+        "69fae9b356835b65",
+        "ca8f238e850c193a"
+      ]
+    },
+    "https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited": {
+      "checked": "2026-10-27",
+      "lines": [
+        "9768a41fb6c19bf8",
+        "a1d2c263cf20ede8",
+        "e405536e5a8932b3",
+        "f8dd9b3fb42e70fc"
+      ]
+    },
+    "https://creditcards.chase.com/business-credit-cards/IHG/business": {
+      "checked": "2026-10-27",
+      "lines": [
+        "59c29fd1dce3a50a",
+        "7e54fb78d4f32dca",
+        "84cdd69d82f821c7",
+        "a84a7edc4f0e4060",
+        "b3f50f7920c2d2e2",
+        "f47bd5c2d556b8d7"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select": {
+      "checked": "2026-10-26",
+      "lines": [
+        "0b0cee3df4a6021f",
+        "84cdd69d82f821c7",
+        "b1cd964c593027ca",
+        "ca9b97237a3f5acc",
+        "e02ac76f7db4d6ed",
+        "fb5b86fce2e0a8c3"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier": {
+      "checked": "2026-10-27",
+      "lines": [
+        "0b0cee3df4a6021f",
+        "84cdd69d82f821c7",
+        "a306782fbc2a14ad",
+        "ba70acf1c0fc2111",
+        "d4a176599d0e8371",
+        "eee1aac1950a5721"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards": {
+      "checked": "2026-10-27",
+      "lines": [
+        "0b0cee3df4a6021f",
+        "25446e52b2f279b5",
+        "31ed9091bc25b31c",
+        "688e7d2d1a9370d8",
+        "99f426c28bdea280",
+        "a7e9b1401312bc81"
+      ]
+    },
+    "https://creditcards.chase.com/business-credit-cards/ink/cash": {
+      "checked": "2026-10-27",
+      "lines": [
+        "207a5e59bf1f68c0",
+        "3bdbed2ed573c685",
+        "4b2522f997a15f72",
+        "986e99033a118952",
+        "98f4a450dd0c0ab5",
+        "a5b99e6234d13c0d"
+      ]
+    },
+    "https://creditcards.chase.com/business-credit-cards/ink/business-preferred": {
+      "checked": "2026-10-27",
+      "lines": [
+        "31889854f5e20444",
+        "3bdbed2ed573c685",
+        "96aab39b6978a389",
+        "c38b68e478b947a7"
+      ]
+    },
+    "https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards": {
+      "checked": "2026-10-27",
+      "lines": [
+        "06736d38fa3a3b7c",
+        "2a7a3b33d170db19",
+        "75469942f282db3c",
+        "7c4233ceff38818d",
+        "90a7d73a45f5052c",
+        "b83fa97f03187c3a",
+        "ee68919dd5f3829d"
+      ]
+    },
+    "https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred": {
+      "checked": "2026-10-27",
+      "lines": [
+        "f3bb77a579cdd25f"
+      ]
+    },
+    "https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve": {
+      "checked": "2026-10-27",
+      "lines": [
+        "2b2df50c7248b432",
+        "faddb298329961b5"
+      ]
+    },
+    "https://creditcards.chase.com/southwest/performance-business-credit-card": {
+      "checked": "2026-10-27",
+      "lines": []
+    },
+    "https://creditcards.chase.com/business-credit-cards/southwest/performance-business": {
+      "checked": "2026-10-27",
+      "lines": [
+        "127d5fcbb834e674",
+        "327825ff4aff6921",
+        "5739b5b4059670e0",
+        "7f32b4b910a3890d",
+        "f04ad3828fb11d78"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/southwest/plus": {
+      "checked": "2026-10-27",
+      "lines": [
+        "1df3212c22205922",
+        "d335efa354650248"
+      ]
+    },
+    "https://creditcards.chase.com/southwest/premier-business-credit-card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "0628c2f9c6f5dcc5",
+        "e7686f35278d778a"
+      ]
+    },
+    "https://creditcards.chase.com/business-credit-cards/southwest/premier-business": {
+      "checked": "2026-10-27",
+      "lines": [
+        "7f32b4b910a3890d",
+        "89163eb2524063a4",
+        "9502f678ac5d4486",
+        "a2e9235247754376"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/southwest/premier": {
+      "checked": "2026-10-27",
+      "lines": [
+        "1e8f9a9dc6b709c5",
+        "9502f678ac5d4486"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/southwest/priority": {
+      "checked": "2026-10-27",
+      "lines": [
+        "50db4f32171a404f"
+      ]
+    },
+    "https://creditcards.chase.com/business-credit-cards/united/united-business-card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "00f9a2e44e685e2b",
+        "6fdd517d9cbc7765",
+        "7dc61b4589dc11b4",
+        "90a72924b0987d24",
+        "9fa74a3558f47deb",
+        "f27aae33f96e33ad"
+      ]
+    },
+    "https://creditcards.chase.com/business-credit-cards/united/united-club-business": {
+      "checked": "2026-10-27",
+      "lines": [
+        "06eb7b1b2efbb4ce",
+        "25232bf961299699",
+        "3bdbed2ed573c685",
+        "3d194456113ade84",
+        "6fdd517d9cbc7765"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/united/united-club": {
+      "checked": "2026-10-27",
+      "lines": [
+        "12d6d7c814ea379b",
+        "25232bf961299699",
+        "49780cb62c016d92",
+        "6fdd517d9cbc7765",
+        "90a72924b0987d24",
+        "eae9700aa13f33e7"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/united/united-explorer": {
+      "checked": "2026-10-27",
+      "lines": [
+        "06e43184dedb5443",
+        "07b9d3215a046aec",
+        "2f18800a163ff58d",
+        "3fd575664bd4b37a",
+        "6fdd517d9cbc7765",
+        "90a72924b0987d24"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/united/united-gateway": {
+      "checked": "2026-10-27",
+      "lines": [
+        "04eeefc81c134dd8",
+        "18dfb64eaf7baceb",
+        "44aa19cbdb891391",
+        "b090f457251f18e0",
+        "ca462c57e4045627",
+        "df2f8f8757a1db76",
+        "f27aae33f96e33ad"
+      ]
+    },
+    "https://creditcards.chase.com/travel-credit-cards/united/united-quest": {
+      "checked": "2026-10-27",
+      "lines": [
+        "25232bf961299699",
+        "49780cb62c016d92",
+        "6cd7f821fc1aafcb",
+        "6fdd517d9cbc7765",
+        "90a72924b0987d24",
+        "b538c17b838a7e53"
+      ]
+    },
+    "https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "bd408fed829740c9"
+      ]
+    },
+    "https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard": {
+      "checked": "2026-10-27",
+      "lines": []
+    },
+    "https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard": {
+      "checked": "2026-10-27",
+      "lines": []
+    },
+    "https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "1b7075266ec6af7f",
+        "3b761d6e62c6b637"
+      ]
+    },
+    "https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "cfe799d2d1ef3950"
+      ]
+    },
+    "https://www.citi.com/credit-cards/costco-anywhere-visa-business-card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "1518b994489cfccf"
+      ]
+    },
+    "https://www.citi.com/credit-cards/citi-costco-anywhere-visa-credit-card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "1518b994489cfccf"
+      ]
+    },
+    "https://www.citi.com/credit-cards/citi-custom-cash-credit-card": {
+      "checked": "2026-10-27",
+      "lines": []
+    },
+    "https://www.thankyou.com/ccterms": {
+      "checked": "2026-10-27",
+      "lines": []
+    },
+    "https://www.citi.com/credit-cards/citi-double-cash-credit-card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "3b761d6e62c6b637",
+        "47537a8ae25b346a",
+        "4aebf50d1abd755b",
+        "5558a377e6d86730",
+        "b622fe1674a96140",
+        "c28ea5b959f9b6e8"
+      ]
+    },
+    "https://www.thankyou.com/dcterms": {
+      "checked": "2026-10-27",
+      "lines": []
+    },
+    "https://www.citi.com/credit-cards/citi-best-buy-credit-cards": {
+      "checked": "2026-10-27",
+      "lines": [
+        "19f3b7e14332659b",
+        "2e3d05e98bd148b9",
+        "e2f43761751a86f0",
+        "ebd1926fa4125a62"
+      ]
+    },
+    "https://www.citi.com/credit-cards/citi-strata-elite-credit-card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "345e2953751d3064",
+        "9c7fa7a71fa95e3b",
+        "bd1370ab97374bc8",
+        "c70bfa795f7e654a",
+        "cd4d8a1cfba06610"
+      ]
+    },
+    "https://www.citi.com/credit-cards/citi-strata-premier-credit-card": {
+      "checked": "2026-10-27",
+      "lines": [
+        "678ee2632a0c3c58",
+        "bd07ce94d6d0ee03",
+        "c81fd889eff9df6b",
+        "d4ca9149b0768047",
+        "dea8fdaffd92e05b",
+        "f3fb994ae2102168"
+      ]
+    },
+    "https://www.sofi.com/credit-card/unlimited/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "0b9c21280ad76d24",
+        "1d8ce6cf0d7a3d8d",
+        "2288465d417e890b",
+        "48aab63d28cbf5bf",
+        "78b75cdd17b84b7a",
+        "813a8f20aa449cbb",
+        "8b7a47e123a00e36",
+        "9949cf2458df2e8e",
+        "e8e633a35cbb02e2",
+        "f1c1b23d48440d30",
+        "f40973b428434533",
+        "f8034a6fd986d725",
+        "f91d172aef77bc96"
+      ]
+    },
+    "https://www.nordstrom.com/browse/nordy-club": {
+      "checked": "2026-10-27",
+      "lines": [
+        "17b073a6a0208338",
+        "55c4bd448c2303dd",
+        "5d62514e8e7b87fa",
+        "cdbc8fe65042cb5e",
+        "d90926c36a26449b"
+      ]
+    },
+    "https://www.nordstrom.com/browse/nordy-club/faq": {
+      "checked": "2026-10-27",
+      "lines": [
+        "a1ff4527e1b2d393",
+        "d90926c36a26449b"
+      ]
+    },
+    "https://www.nordstrom.com/browse/nordy-club/terms-conditions": {
+      "checked": "2026-10-27",
+      "lines": [
+        "217e58b59e4c6717",
+        "6ca0c491bfc1a753",
+        "d90926c36a26449b",
+        "ee44b052dacfebb3"
+      ]
+    },
+    "https://www.nordstrom.com/becomecardmember": {
+      "checked": "2026-10-27",
+      "lines": [
+        "03a23796e6824ffd",
+        "c1ce20057db5e752",
+        "d84912ff159713fd",
+        "d90926c36a26449b"
+      ]
+    },
+    "https://www.target.com/circlecard": {
+      "checked": "2026-10-27",
+      "lines": [
+        "2c81fd5a9243ba03",
+        "6c887db32b48aa4f",
+        "771c3ee736ec2a84",
+        "9aab05ef55dfc2e3",
+        "bfe08af064538204"
+      ]
+    },
+    "https://www.target.com/c/target-circle-card-program-rules/-/N-4tgj0": {
+      "checked": "2026-10-27",
+      "lines": [
+        "21c5bc12b2ea73d4",
+        "3f9a62fe6f4f989a",
+        "83de76b0ddad5e82",
+        "9afe398d6c65c2a0",
+        "aace3ef0cd2648e0"
+      ]
+    },
+    "https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html": {
+      "checked": "2026-10-27",
+      "lines": [
+        "00842af7ccbbf061",
+        "0b6d4028a18f85c0",
+        "292edede8041b0c8",
+        "30affcb4efc57d09",
+        "589eeefe89014904",
+        "5a47c1a905448b75",
+        "6233707aaf9a0f81",
+        "8e86f22c1316d8d4",
+        "9768c8c9fda82b06",
+        "c30612b3cb3bccd2",
+        "d73f9bdb39676987",
+        "d833acb9e4f1fd3c",
+        "d9c519994d4edffe",
+        "e42820a6c68e5130",
+        "e680b331f14bd028",
+        "f73cdd4c35fffee8"
+      ]
+    },
+    "https://cashplus.usbank.com/cash-plus/samplemerchants": {
+      "checked": "2026-10-27",
+      "lines": []
+    },
+    "https://creditcards.wellsfargo.com/active-cash-credit-card/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "173b2661f632bfc9",
+        "701afb05e0726114",
+        "91487a34a7e9c0b6",
+        "c10ee79e86c8b607",
+        "c35f2b4b28e4159a",
+        "c3a2e8d46b2de0aa"
+      ]
+    },
+    "https://creditcards.wellsfargo.com/autograph-visa-credit-card/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "01952d49508a09d0",
+        "0def7c696a93398a",
+        "d3a593020688c6e9",
+        "d53f1a098df6dd6a",
+        "ec4ade0ea696641b"
+      ]
+    },
+    "https://www.wellsfargo.com/credit-cards/autograph-visa/streaming/": {
+      "checked": "2026-10-27",
+      "lines": [
+        "3664e9ebab9a65e0"
+      ]
+    }
+  }
+}

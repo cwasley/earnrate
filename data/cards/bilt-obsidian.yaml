@@ -1,0 +1,91 @@
+id: bilt-obsidian
+name: Bilt Obsidian Card
+# Issued by Column N.A. and serviced by Cardless; Bilt runs the rewards.
+# Full earning terms: https://www.bilt.com/terms/bilt-card-offer-terms (PDF,
+# not in source_urls because the source checker can't read PDFs).
+issuer: column
+network: mastercard # World Elite Mastercard
+currency: BILT
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.bilt.com/card/obsidian
+  - https://www.bilt.com/card
+base_rate: 1
+annual_fee: 95
+choices:
+  # Dining is the default. It can be switched once in the first 30 days, then
+  # only in January.
+  - id: three-x-category
+    pick: 1
+    period: calendar_year
+    default: [dining]
+    options:
+      dining: [dining]
+      grocery: [grocery.supermarket]
+rules:
+  - id: bilt-travel-hotels
+    match: { merchants: [bilt-travel-hotels] }
+    rate: 4
+    note: 2X travel plus 2 Bilt Travel Portal bonus points, which post after the stay. No portal bonus if any part is paid with Bilt Points, Bilt Cash or travel credit.
+  - id: bilt-travel-flights
+    match: { merchants: [bilt-travel-flights] }
+    rate: 3
+    note: 2X travel plus 1 Bilt Travel Portal bonus point, which posts after the flight.
+  - id: dining
+    match: { choice: three-x-category, categories: [dining] }
+    rate: 3
+    note: When dining is the 3X pick (the default). Restaurants, bars, bakeries and fast food by Mastercard merchant code. Uncapped.
+  - id: grocery
+    match: { choice: three-x-category, categories: [grocery.supermarket] }
+    rate: 3
+    cap: { amount: 25000, period: calendar_year, then_rate: 1 }
+    note: When grocery is the 3X pick. Grocery stores and supermarkets by Mastercard merchant code; the $25,000 includes authorized users.
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 3
+    requires: { activation: true }
+    note: 1X card earn plus 2X Bilt bonus after linking Bilt and Lyft accounts (matching phone numbers). Rides booked in the Lyft app only; bikes, scooters, Shared and Wait & Save rides, tips, taxes and fees don't earn the bonus.
+  - id: other-travel
+    match:
+      {
+        categories:
+          [travel.flights, travel.hotels, travel.cruise, travel.car_rental],
+      }
+    rate: 2
+    note: Booked directly with airlines, hotels, motels, resorts, cruise lines and car rental agencies, by Mastercard merchant code. Travel agencies and transit don't count.
+# Not modeled on purpose: the $100 Bilt Travel Hotel credit and the $200 Bilt
+# Cash welcome bonus.
+todo:
+  - Rent and mortgage paid through Bilt earn 0X-1.25X depending on the cycle's everyday spend as a share of the housing payment (25%/50%/75%/100% tiers give 0.5X/0.75X/1X/1.25X; below 25% a flat 250 points). earnrate has no housing category or spend-ratio rule.
+  - The Flexible Bilt Cash option earns 4% Bilt Cash on everyday spend on top of points, but drops the housing multiplier (housing points must be bought with Bilt Cash, $3 per 100 points). Bilt Cash is a second currency; not modeled.
+  - Point Accelerator (spend $200 Bilt Cash for +1X on the next $5,000, up to five times a year) isn't modeled.
+  - Bilt Neighborhood Dining restaurants add a per-restaurant bonus (up to 6X total). It varies by restaurant, so it isn't modeled.
+  - Walgreens in-store (+1X, +2X on Walgreens-brand items, per the Bilt Rewards Points Earning Terms PDF at bilt.com/terms/earn), Metropolis parking, fitness classes and Bilt Home Delivery add Bilt bonuses not stated on an HTML page; not modeled.
+  - 'Welcome offer not modeled: the page offers $200 in Bilt Cash upon approval with no spend required. Bilt Cash is a second currency (not BILT points or cash), and this file already skips it on purpose.'
+# Program text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.bilt.com/card/obsidian
+    quote: 'Obsidian Card’s 1X everyday spend base rate'
+  - rule: bilt-travel-hotels
+    url: https://www.bilt.com/card/obsidian
+    quote: 'On hotels, that means 4X total from the base plus the portal bonus.'
+  - rule: bilt-travel-flights
+    url: https://www.bilt.com/card/obsidian
+    quote: 'delivers 3X total on flights booked through Bilt Travel'
+  - rule: dining
+    url: https://www.bilt.com/card/obsidian
+    quote: 'At account opening, dining is your default 3X category.'
+  - rule: grocery
+    url: https://www.bilt.com/card/obsidian
+    quote: 'If you choose grocery, the 3X rate applies up to $25,000 in grocery purchases per calendar year.'
+  - rule: lyft
+    url: https://www.bilt.com/card/obsidian
+    quote: 'you earn 3X total on Lyft'
+  - rule: other-travel
+    url: https://www.bilt.com/card/obsidian
+    quote: '3X on flights through Bilt Travel, 2X on other travel'
+  - rule: annual_fee
+    url: https://www.bilt.com/card/obsidian
+    quote: '$95 annual fee'

@@ -1,0 +1,145 @@
+# value_cents is the default worth of one unit. For points it's the floor you
+# can get without transfer partners. The top of `range` is a published
+# transfer-partner valuation, so the sensitivity note shows what transfers would gain.
+
+- id: cash
+  name: Cash back
+  value_cents: 1
+
+- id: MR
+  name: Amex Membership Rewards
+  value_cents: 1.0
+  range: [1.0, 2.0]
+  note: 1.0¢ booking flights through Amex Travel with points. 2.0¢ is TPG's October 2026 valuation.
+  sources:
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: UR
+  name: Chase Ultimate Rewards
+  value_cents: 1.0
+  range: [1.0, 2.05]
+  note: 1.0¢ cashing out. 2.05¢ is TPG's October 2026 valuation.
+  sources:
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: sofi-rewards
+  name: SoFi Member Rewards
+  value_cents: 1.0
+  redemptions:
+    sofi-account: 1.0 # SoFi Checking, Savings, Invest, the SoFi Credit Card account, loans, or SoFi Travel
+  sources:
+    - https://www.sofi.com/credit-card/unlimited/
+    - https://www.sofi.com/card/rewards?cardtype=c
+
+- id: best-buy-rewards
+  name: My Best Buy rewards
+  value_cents: 2.0
+  note: 250 points become a $5 My Best Buy reward certificate. Points can also go toward gift cards at other merchants.
+  sources:
+    - https://www.citi.com/credit-cards/citi-best-buy-credit-cards
+    - https://www.bestbuy.com/site/misc/financing-rewards/pcmcat102500050032.c
+
+- id: C1
+  name: Capital One miles
+  value_cents: 1.0
+  range: [1.0, 1.85]
+  note: 1.0¢ toward travel, per Capital One. 1.85¢ is TPG's October 2026 valuation.
+  sources:
+    - https://www.capitalone.com/credit-cards/venture-x/
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: TYP
+  name: Citi ThankYou points
+  value_cents: 1.0
+  range: [1.0, 1.9]
+  note: 1.0¢ toward travel or gift cards, per Citi's points-value tool; cash back is 0.75¢ on the Strata cards. 1.9¢ is TPG's October 2026 valuation.
+  sources:
+    - https://www.thankyou.com/
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: WFR
+  name: Wells Fargo Rewards
+  value_cents: 1.0
+  range: [1.0, 1.75]
+  note: 1.0¢ per point, per Wells Fargo. 1.75¢ is TPG's October 2026 valuation.
+  sources:
+    - https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: BILT
+  name: Bilt points
+  value_cents: 1.0
+  range: [1.0, 2.2]
+  note: Bilt publishes no cash value, so 1.0¢ is a conservative default. 2.2¢ is TPG's October 2026 valuation; TPG discloses that its founder advises and invests in Bilt.
+  sources:
+    - https://www.bilt.com/card/obsidian
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+# Airline and hotel programs publish no fixed cash value for most points, so
+# value_cents is a conservative judgment call, said so in each note.
+- id: united-miles
+  name: United MileagePlus miles
+  value_cents: 1.0
+  range: [1.0, 1.2]
+  note: United publishes no fixed cash value, so 1.0¢ is a conservative default. 1.2¢ is TPG's October 2026 valuation.
+  sources:
+    - https://creditcards.chase.com/travel-credit-cards/united/united-explorer
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: aadvantage-miles
+  name: American Airlines AAdvantage miles
+  value_cents: 1.0
+  range: [1.0, 1.45]
+  note: AAdvantage publishes no fixed cash value, so 1.0¢ is a conservative default. 1.45¢ is TPG's October 2026 valuation.
+  sources:
+    - https://www.citi.com/credit-cards/citi-aadvantage-credit-cards
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: southwest-rapid-rewards
+  name: Southwest Rapid Rewards points
+  value_cents: 1.0
+  range: [1.0, 1.25]
+  note: Southwest publishes no fixed value; award prices track the cash fare. 1.0¢ is a conservative default. 1.25¢ is TPG's October 2026 valuation.
+  sources:
+    - https://www.southwest.com/rapid-rewards/points/how-to-redeem/
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: aeroplan
+  name: Aeroplan points
+  value_cents: 1.0
+  range: [1.0, 1.5]
+  note: No published fixed U.S. redemption value; Pay Yourself Back rates are shown only at redemption. 1.0¢ is a conservative default. 1.5¢ is TPG's October 2026 valuation.
+  sources:
+    - https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: atmos-points
+  name: Atmos Rewards points
+  value_cents: 1.0
+  range: [1.0, 1.55]
+  note: Atmos Rewards (Alaska and Hawaiian Airlines) publishes no fixed cash value, so 1.0¢ is a conservative default. 1.55¢ is TPG's October 2026 valuation.
+  sources:
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: ihg-points
+  name: IHG One Rewards points
+  value_cents: 0.5
+  range: [0.5, 0.6]
+  note: IHG prices award nights dynamically and publishes no fixed cash value. 0.5¢ is a conservative default, since hotel points are worth far less than airline miles. 0.6¢ is TPG's October 2026 valuation.
+  sources:
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: kohls-rewards
+  name: Kohl's Rewards
+  value_cents: 1.0
+  note: Rewards turn into Kohl's Cash at face value, in $5 steps on the 1st of the next month. Kohl's Cash expires 30 days later and can't be used on Sephora at Kohl's.
+  sources:
+    - https://www.capitalone.com/credit-cards/kohls/
+
+- id: nordy-club
+  name: Nordy Club points
+  value_cents: 1.0
+  note: 1,000 points become a $10 Nordstrom Note, spendable at Nordstrom, Nordstrom Rack, Last Chance and Nordstrom Local. Notes expire 12 months after issue; points expire after 12 months with no activity.
+  sources:
+    - https://www.nordstrom.com/browse/nordy-club/terms-conditions
+    - https://www.nordstrom.com/browse/nordy-club

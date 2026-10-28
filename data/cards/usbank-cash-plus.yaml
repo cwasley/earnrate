@@ -1,0 +1,102 @@
+id: usbank-cash-plus
+name: U.S. Bank Cash+ Visa Signature Card
+issuer: usbank
+network: visa
+currency: cash
+last_verified: 2026-10-24
+verified_by: collin
+source_urls:
+  - https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+  - https://cashplus.usbank.com/cash-plus/samplemerchants
+base_rate: 1
+annual_fee: 0
+welcome_offer:
+  dollars: 200
+  spend: 1000
+  months: 3
+  note: The page says within 90 days of account opening, modeled as 3 months. Existing and previous Cash Rewards accounts don't qualify, and it can't be combined with any other bonus offer.
+caps:
+  - id: five-percent-combined
+    amount: 2000
+    period: quarter
+    then_rate: 1
+choices:
+  - id: five-percent
+    pick: 2
+    period: quarter
+    options:
+      cell-phone: [phone]
+      department-stores: [department_store]
+      electronics-stores: [electronics]
+      fast-food: [dining.fast_food]
+      furniture-stores: [furniture]
+      ground-transportation: [transit]
+      gyms-fitness: [fitness]
+      home-utilities: [utilities]
+      movie-theaters: [movie_theaters]
+      # U.S. Bank: "This category includes only the merchants listed below."
+      select-clothing-stores:
+        merchants:
+          [
+            aeropostale,
+            american-eagle,
+            ann-taylor,
+            banana-republic,
+            eddie-bauer,
+            express,
+            forever-21,
+            gap,
+            j-crew,
+            jos-a-bank,
+            old-navy,
+            talbots,
+            the-limited,
+          ]
+      sporting-goods: [sporting_goods]
+      tv-internet-streaming: [tv_internet, streaming]
+  - id: two-percent
+    pick: 1
+    period: quarter
+    options:
+      gas-ev-charging: [gas, ev_charging]
+      grocery-stores: [grocery]
+      restaurants: [dining]
+rules:
+  - id: five-percent
+    match: { choice: five-percent }
+    rate: 5
+    cap: five-percent-combined
+  - id: two-percent
+    match: { choice: two-percent }
+    # Gas and grocery exclude discount stores/supercenters and wholesale clubs.
+    # Grocery-store gas stations may still count as gas, per U.S. Bank's
+    # sample merchants (Kroger Fuel Center is listed).
+    exclude: { categories: [gas.superstore] }
+    rate: 2
+  - id: travel-center
+    match: { merchants: [usbank-travel-center] }
+    rate: 5
+    note: Prepaid air, hotel and car reservations booked in the U.S. Bank Travel Center.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: '1% cash back on all other eligible purchases'
+  - rule: five-percent
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: '5% cash back on two categories you choose'
+  - rule: two-percent
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: '2% cash back on one everyday category you choose'
+  - rule: travel-center
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: '5% cash back on prepaid travel. On air, hotel'
+  - rule: five-percent
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'This category includes only the merchants listed below'
+  - rule: annual_fee
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: 'ANNUAL FEE $0 Annual fee'
+  - rule: welcome_offer
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: 'Earn a $200 rewards bonus after you spend $1,000 in eligible purchases within the first 90 days of account opening'

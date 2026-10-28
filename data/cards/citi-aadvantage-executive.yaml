@@ -1,0 +1,63 @@
+id: citi-aadvantage-executive
+name: Citi / AAdvantage Executive World Legend Mastercard
+issuer: citi
+network: mastercard
+currency: aadvantage-miles
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+base_rate: 1
+annual_fee: 695
+welcome_offer:
+  points: 125000
+  spend: 15000
+  months: 5
+  note: 'Citi labels it a limited time offer but states no end date. Not available if you received a new account bonus for a Citi / AAdvantage Executive account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one.'
+rules:
+  - id: aadvantage-hotels
+    match: { merchants: [aadvantage-hotels] }
+    rate: 12
+    note: Hotels booked on aadvantagehotels.com. Only the part paid with the card earns. Not hotels booked through American Airlines Vacations or with "Reserve Now, Pay Later", nor incidentals or other charges at the hotel.
+  - id: aadvantage-cars
+    match: { merchants: [aadvantage-cars] }
+    rate: 12
+    note: Car rentals booked on aadvantagecars.com from a U.S., Canada or Mexico point of sale. Payless rentals don't count. Only the part paid with the card earns.
+  - id: american-airlines
+    match: { merchants: [american-airlines] }
+    rate: 4
+    note: Items billed by American Airlines as the merchant of record. Car rentals booked on aadvantagecars.com and hotels booked on aadvantagehotels.com don't count. Rises to 5x for the rest of the calendar year after $150,000 in total card spend that year.
+# Not modeled: Admirals Club membership, AA Vacations, Lyft, Avis/Budget and inflight credits, Loyalty Point bonuses.
+todo:
+  - 5x on American Airlines after $150,000 in calendar-year spend isn't modeled; the schema can't raise a rate after a spend threshold.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'Earn 1 AAdvantage® mile for every $1 spent on all other purchases'
+  - rule: aadvantage-hotels
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'Earn 12 AAdvantage® miles for every $1 spent on eligible AAdvantage Hotels® bookings and eligible AAdvantage Cars® bookings'
+  - rule: aadvantage-cars
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'Earn 12 AAdvantage® miles for every $1 spent on eligible AAdvantage Hotels® bookings and eligible AAdvantage Cars® bookings'
+  - rule: aadvantage-cars
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'Payless car rentals will not qualify.'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'Earn 4 AAdvantage® miles for every $1 spent on eligible American Airlines purchases'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'After you spend $150,000 in purchases in a calendar year, earn a total of 5 AAdvantage® miles'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'Annual fee: $695. Annual fee for Authorized Users: $175'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'Earn 125,000 AAdvantage® bonus miles after $15,000 in purchases in the first 5 months'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'new account bonus for a Citi® / AAdvantage® Executive account in the past 48 months'

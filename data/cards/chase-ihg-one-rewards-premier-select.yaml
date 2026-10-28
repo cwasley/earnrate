@@ -1,0 +1,44 @@
+id: chase-ihg-one-rewards-premier-select
+name: IHG One Rewards Premier Select Credit Card
+issuer: chase
+network: mastercard
+currency: ihg-points
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+base_rate: 3
+annual_fee: 350
+welcome_offer:
+  points: 200000
+  spend: 5000
+  months: 3
+  note: 'Labeled a launch offer; no end date given. Plus 10,000 points after adding an authorized user in the first 3 months. No free night in the welcome offer; the yearly Anniversary Free Night is a separate perk. Chase: "available to you if you do not have this card and have not received a new Cardmember bonus for this card in the past 24 months."'
+rules:
+  - id: ihg-hotels
+    match: { merchants: [ihg] }
+    rate: 12
+    note: Card points only. Chase advertises "up to 28X total" at IHG, which adds up to 10X IHG member points and 6X Platinum Elite points that IHG posts for stays booked direct; those aren't card earnings.
+  - id: travel-and-dining
+    match: { categories: [travel, transit, dining] }
+    rate: 6
+    note: Chase's whole travel category, including rideshare, trains, buses, tolls and parking. Dining includes takeout and eligible delivery services.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'Earn 3X points per $1 spent on all other purchases.'
+  - rule: ihg-hotels
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: "That's 12X points with this card."
+  - rule: ihg-hotels
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'You will only receive the accelerated earn of 12 points for each $1 spent from this credit card program.'
+  - rule: travel-and-dining
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'Earn 6X points on dining and all other travel, including rideshare.'
+  - rule: annual_fee
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'ANNUAL FEE $350'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'Earn 200,000 Bonus Points after you spend $5,000 on purchases in the first 3 months from account opening'

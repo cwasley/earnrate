@@ -1,0 +1,68 @@
+id: citi-aadvantage-platinum-select
+name: Citi / AAdvantage Platinum Select World Elite Mastercard
+issuer: citi
+network: mastercard
+currency: aadvantage-miles
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+base_rate: 1
+annual_fee: 99
+first_year_fee: 0
+welcome_offer:
+  points: 80000
+  spend: 3500
+  months: 4
+  note: 'Citi labels it a limited time offer but states no end date. Not available if you received a new account bonus for a Citi / AAdvantage Platinum Select account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one.'
+rules:
+  - id: american-airlines
+    match: { merchants: [american-airlines] }
+    rate: 2
+    note: Items billed by American Airlines as the merchant of record, including Admirals Club food and drink. Car rentals booked on aadvantagecars.com and hotels booked on aadvantagehotels.com don't count.
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 2
+    note: Includes cafes, bars, lounges, fast food and takeout. Not restaurants inside supercenters, warehouse clubs, discount or department stores, bowling alleys, golf courses, country clubs, convenience stores or movie theaters, nor caterers or meal kit delivery.
+  - id: gas-stations
+    match: { categories: [gas] }
+    exclude: { categories: [gas.superstore] }
+    rate: 2
+    note: Warehouse-club gas counts only when the club codes it as a gas station, so superstore and warehouse-club gas is excluded here to stay conservative. Discount, department and convenience stores don't count.
+# Not modeled: free first checked bag, preferred boarding, companion certificate. Loyalty Points toward status aren't card earnings.
+todo:
+  - Warehouse-club gas earns 2x if the club codes it as a gas station; earnrate's gas.superstore can't tell, so it's excluded. Moot at Costco, which takes only Visa.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'Earn 1 AAdvantage® mile for every $1 spent on all other purchases'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'Earn 2 AAdvantage® miles for every $1 spent on eligible American Airlines purchases'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+  - rule: restaurants
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'Earn 2 AAdvantage® miles for every $1 spent at restaurants, including takeout'
+  - rule: restaurants
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'restaurants (including cafes, bars, lounges, and fast food restaurants) and at gas stations'
+  - rule: gas-stations
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'Earn 2 AAdvantage® miles for every $1 spent at gas stations'
+  - rule: gas-stations
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'purchases made at warehouse clubs that do not code gas station purchases under a gas station code'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'Annual fee - $99, waived for the first 12 months.'
+  - rule: first_year_fee
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'Annual fee - $99, waived for the first 12 months.'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'Earn 80,000 AAdvantage® bonus miles after $3,500 in purchases in the first 4 months.'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'new account bonus for a Citi® / AAdvantage® Platinum Select® account in the past 48 months'

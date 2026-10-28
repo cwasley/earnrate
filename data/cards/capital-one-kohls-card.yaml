@@ -1,0 +1,33 @@
+id: capital-one-kohls-card
+name: Kohl's Credit Card
+issuer: capital-one
+network: store
+only_at: [kohls]
+currency: kohls-rewards
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.capitalone.com/credit-cards/kohls/
+# Units are cents of Kohl's rewards per dollar, so 2.5 is 2.5%.
+base_rate: 0
+annual_fee: 0
+rules:
+  - id: kohls
+    match: { merchants: [kohls] }
+    rate: 2.5
+    note: Card's own share only. Kohl's Rewards members earn 5% however they pay, and paying with the card raises that to 7.5% ("Earn 5% any way you pay or 7.5% when you use a Kohl's Card", kohls.com/feature/rewards.jsp, checked by hand because kohls.com blocks the weekly check). Kohl's stores and Kohls.com, excluding gift cards. Rewards turn into Kohl's Cash in $5 steps on the 1st of the next month and expire 30 days later.
+todo:
+  - Capital One applies everyone for the Kohl's Rewards Visa first; this store-only card is the fallback.
+  - Periodic cardholder discounts aren't modeled. These are monthly savings offers, a yearly anniversary offer and a 40% off new-account coupon.
+  - MVC status ($600 a year at Kohl's on the card) adds free-shipping offers. Not modeled.
+  - "No fixed-amount welcome offer. New cardholders get a 40% off coupon for one transaction within 30 days of credit availability, a percentage discount, so it isn't modeled as welcome_offer."
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/credit-cards/kohls/
+    quote: "Exclusively for use at Kohl's and Kohls.com"
+  - rule: kohls
+    url: https://www.capitalone.com/credit-cards/kohls/
+    quote: "you can shop at Kohl's to earn 7.5% in rewards on purchases"
+  - rule: annual_fee
+    url: https://www.capitalone.com/credit-cards/kohls/
+    quote: "when you open a Kohl's Card. No annual fee."

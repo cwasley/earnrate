@@ -1,0 +1,101 @@
+id: chase-aeroplan
+name: Chase Air Canada Aeroplan Card
+issuer: chase
+network: mastercard
+currency: aeroplan
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+base_rate: 1
+annual_fee: 195
+welcome_offer:
+  points: 75000
+  spend: 4000
+  months: 3
+  note: 'Up to 115,000 points: plus 40,000 more after $20,000 in purchases in the first 12 months. Billed as "our best offer ever", with the usual 60,000 struck through; no end date given. Chase: "available to you if you do not have the Chase Air Canada Aeroplan Card or previous versions and have not received a new cardmember bonus for the Chase Air Canada Aeroplan Card or previous versions in the past 24 months."'
+rules:
+  - id: air-canada
+    match: { merchants: [air-canada] }
+    rate: 3
+    note: The card's own rate. The "up to 5X" Chase advertises adds 2X that Air Canada awards on eligible flights to Aeroplan 25K members, which isn't card earning. Gift cards, onboard Wi-Fi, and hotels, car rentals and other partner products sold on aircanada.com are excluded.
+  - id: travel
+    match: { categories: [travel] }
+    rate: 3
+    note: In-flight purchases, merchants inside hotels and airports, and sellers of points or miles are excluded from Chase's travel category.
+  - id: transit-as-travel
+    match: { categories: [transit] }
+    rate: 3
+    note: Chase's travel category includes passenger trains, buses, taxis, ferries, tolls and parking. Rideshare codes as a taxi.
+  - id: grocery-2026
+    match: { categories: [grocery] }
+    exclude: { merchants: [walmart, target] }
+    rate: 3
+    valid_to: 2026-12-31
+    note: 3X applies to purchases that post by December 31, 2026. Chase's grocery category excludes warehouse clubs, discount stores such as Walmart and Target, and gas at grocery stores.
+  - id: grocery
+    match: { categories: [grocery] }
+    exclude: { merchants: [walmart, target] }
+    rate: 2
+    valid_from: 2027-01-01
+    note: Chase's grocery category excludes warehouse clubs, discount stores such as Walmart and Target, and gas at grocery stores.
+  - id: dining-2026
+    match: { categories: [dining] }
+    rate: 3
+    valid_to: 2026-12-31
+    note: 3X applies to purchases that post by December 31, 2026. Includes takeout and eligible delivery services.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 2
+    valid_from: 2027-01-01
+    note: Includes takeout and eligible delivery services.
+  - id: gas
+    match: { categories: [gas] }
+    rate: 2
+todo:
+  - 'Through December 31, 2026, the cardmember page creditcards.chase.com/aircanada lists 500 bonus points for each $2,000 spent per calendar month, up to 1,500 a month (+0.25x on the first $6,000). It is not on the product page, and the engine picks one rule rather than stacking, so it is not modeled.'
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: '1X points per $1 spent on all other purchases.'
+  - rule: air-canada
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'You’ll earn 3 points for each $1 spent on purchases made with Air Canada® directly.'
+  - rule: air-canada
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'plus an additional 2X points from Air Canada when traveling as an Aeroplan 25K member'
+  - rule: travel
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: '3X points per $1 spent on travel purchases.'
+  - rule: transit-as-travel
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'discount travel sites, campgrounds and operators of passenger trains, buses, taxis, limousines, ferries'
+  - rule: grocery-2026
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'Grocery store and dining rewards category purchases that post to your account by December 31, 2026'
+  - rule: grocery-2026
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'Through December 31, 2026, these purchases will earn 3X points per $1 spent.'
+  - rule: grocery
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: '2X points per $1 spent at grocery stores.'
+  - rule: grocery
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'such as warehouse clubs, discount stores and some smaller merchants such as drugstores'
+  - rule: dining-2026
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'Grocery store and dining rewards category purchases that post to your account by December 31, 2026'
+  - rule: dining
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: '2X points per $1 spent on dining, including takeout and eligible delivery services.'
+  - rule: gas
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: '2X points per $1 spent at gas stations.'
+  - rule: annual_fee
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'ANNUAL FEE $195'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'Earn 75,000 bonus points after you spend $4,000 on purchases in the first 3 months your account is open'

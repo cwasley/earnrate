@@ -1,0 +1,88 @@
+id: amex-blue-cash-everyday
+name: American Express Blue Cash Everyday Card
+issuer: amex
+network: amex
+currency: cash
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+base_rate: 1
+annual_fee: 0
+welcome_offer:
+  dollars: 200
+  spend: 2000
+  months: 6
+  note: 'Paid as Reward Dollars, redeemable for a statement credit or at Amazon.com checkout. The card page says "Earn $200"; the offer terms say "as high as $200", with the exact amount shown before you accept. Not available if you have or have had this Card, the Cash Magnet Card, the Blue Cash Preferred Card (including the Morgan Stanley version) or previous versions of these Cards.'
+rules:
+  - id: us-supermarkets
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club, convenience_store] }
+    rate: 3
+    geography: us_only
+    cap: { amount: 6000, period: calendar_year, then_rate: 1 }
+    note: Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+  - id: us-online-retail
+    match:
+      categories:
+        [
+          online_retail,
+          department_store,
+          clothing,
+          electronics,
+          sporting_goods,
+          home_improvement,
+          furniture,
+        ]
+    rate: 3
+    channel: online
+    geography: us_only
+    cap: { amount: 6000, period: calendar_year, then_rate: 1 }
+    note: U.S. merchants selling physical goods, paid on their website or app. Not restaurants, supermarkets, gas, car dealers, travel, entertainment or services. Ordered online but paid in store, in-store mobile wallet, phone or mail orders, and buy-now-pay-later don't count.
+  - id: us-gas
+    match: { categories: [gas] }
+    exclude: { categories: [gas.grocery_store, gas.superstore] }
+    rate: 3
+    geography: us_only
+    cap: { amount: 6000, period: calendar_year, then_rate: 1 }
+    note: Superstores, supermarkets and warehouse clubs that sell gas are not gas stations.
+# Each 3% category has its own $6,000 calendar-year cap. Not modeled: the
+# Disney streaming statement credit.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: 'and 1% on all other eligible purchases'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: '3% cash back on the first $6,000 of eligible purchases across the Card Account'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: 'at supermarkets located in the U.S. (superstores, convenience stores, warehouse clubs,'
+  - rule: us-online-retail
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: '3% cash back on the first of $6,000 of U.S. online retail purchases'
+  - rule: us-online-retail
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: 'from a U.S. retail merchant that sells physical goods or merchandise directly to consumers'
+  - rule: us-gas
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: '3% cash back on the first $6,000 of purchases of gasoline at gas stations'
+  - rule: us-gas
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: 'superstores, supermarkets and warehouse clubs that sell gasoline are not considered gas stations'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/
+    quote: 'No Annual Fee'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/
+    quote: 'Earn $200 Cash Back'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/
+    quote: 'after you spend $2,000 in purchases on your new Card in the first 6 months of Card Membership'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: 'As High as $200 Cash Back Welcome Offer'
+todo:
+  - 'Amazon is filed as online retail, so it earns 3% here; superstore sites (walmart.com, target.com) and online drugstores may too, but the terms define the category by merchant code and type of goods, so they are not modeled.'

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.cwasley/earnrate",
+  "title": "earnrate",
+  "description": "Picks the credit card in your wallet that earns the most at a merchant, and says why.",
+  "websiteUrl": "https://earnrate.dev",
+  "repository": {
+    "url": "https://github.com/cwasley/earnrate",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "earnrate",
+      "version": "0.1.0",
+      "runtimeHint": "npx",
+      "transport": { "type": "stdio" },
+      "packageArguments": [{ "type": "positional", "value": "mcp" }],
+      "environmentVariables": [
+        {
+          "name": "EARNRATE_WALLET",
+          "description": "Path to your wallet file. Default: ~/.earnrate/wallet.yaml",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "EARNRATE_LLM",
+          "description": "Set to on to let Claude classify merchants earnrate doesn't know. Off by default.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "description": "Your own Anthropic key, used only when EARNRATE_LLM is on.",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

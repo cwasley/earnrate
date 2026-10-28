@@ -1,0 +1,44 @@
+name: Card sources
+
+on:
+  schedule:
+    - cron: '0 15 * * 1' # Mondays, 8am Pacific
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn playwright install --with-deps chromium
+      - id: check
+        run: |
+          set +e
+          yarn -s check-sources --report report.md
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          [ -f report.md ] && cat report.md >> "$GITHUB_STEP_SUMMARY"
+          # 0 nothing changed, 2 only unreachable pages, 3 changes; anything else is a crash.
+          [ "$code" = 0 ] || [ "$code" = 2 ] || [ "$code" = 3 ]
+      - name: Open or update the issue
+        if: steps.check.outputs.code == '3'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create card-sources --color FBCA04 --description "Issuer pages changed" 2>/dev/null || true
+          number=$(gh issue list --label card-sources --state open --json number --jq '.[0].number')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body-file report.md
+          else
+            gh issue create --title "Card source changes" --label card-sources --body-file report.md
+          fi

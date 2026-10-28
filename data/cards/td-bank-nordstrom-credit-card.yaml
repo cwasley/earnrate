@@ -1,0 +1,69 @@
+id: td-bank-nordstrom-credit-card
+name: Nordstrom Credit Card
+issuer: td-bank
+network: store
+only_at: [nordstrom, nordstrom-rack]
+currency: nordy-club
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.nordstrom.com/browse/nordy-club
+  - https://www.nordstrom.com/browse/nordy-club/faq
+  - https://www.nordstrom.com/browse/nordy-club/terms-conditions
+  - https://www.nordstrom.com/becomecardmember
+# The retail (store-only) card, not the Nordstrom Visa. Rates are the card's
+# own share: every Nordy Club member earns 1 point per dollar at Nordstrom
+# however they pay.
+base_rate: 0
+annual_fee: 0
+welcome_offer:
+  dollars: 60
+  spend: 0
+  months: 1
+  valid_to: 2026-12-01
+  note: A $60 Nordstrom Note, not a statement credit, for applying and getting approved for a new Nordstrom credit card between October 12 and December 1, 2026 (the terms say 9pm PT October 11 to 9pm PT December 1). No purchase is required; the Note posts to the Nordy Club account 7-10 business days after approval, so months is only a placeholder. Current and previous Nordstrom credit cardmembers and Nordstrom employees are not eligible.
+rules:
+  - id: nordstrom
+    match: { merchants: [nordstrom] }
+    rate: 1
+    note: Card's own share only. Cardmembers start at Influencer status and earn 2 points per dollar at Nordstrom and Nordstrom.com, 1 of which any member earns paying any way. Paid through Apple Pay, Google Pay or PayPal it's 1 point per dollar, so nothing extra.
+  - id: nordstrom-ambassador
+    match: { merchants: [nordstrom] }
+    rate: 2
+    requires: { membership: nordy-club-ambassador }
+    note: Ambassador and Icon status earn 3 points per dollar with the card, 2 more than any member. Ambassador takes $5,000 a calendar year in Nordstrom spending.
+  - id: nordstrom-rack
+    match: { merchants: [nordstrom-rack] }
+    rate: 5
+    note: No points at Nordstrom Rack. Instead an instant 5% discount in Rack stores and on NordstromRack.com, counted here as 5 points per dollar because a point is worth 1¢ in Notes. Not through Apple Pay, PayPal or Afterpay, and not on gift cards.
+todo:
+  - Last Chance clearance stores earn no points, and the 5% discount terms name only Rack stores and NordstromRack.com.
+  - Not modeled are bonus points events, Personal Double Points Days and alterations reimbursement Notes.
+evidence:
+  - rule: base_rate
+    url: https://www.nordstrom.com/browse/nordy-club/faq
+    quote: 'Can only be used for purchases in store or online at Nordstrom, Nordstrom Rack, Last Chance and Nordstrom Local.'
+  - rule: nordstrom
+    url: https://www.nordstrom.com/becomecardmember
+    quote: 'Influencer statuses earn two base points per dollar'
+  - rule: nordstrom
+    url: https://www.nordstrom.com/browse/nordy-club/faq
+    quote: 'All members earn 1 base point per $1 net spend on qualifying purchases'
+  - rule: nordstrom-ambassador
+    url: https://www.nordstrom.com/becomecardmember
+    quote: 'Ambassador and Icon statuses earn three base points per dollar, on Nordstrom purchases when using their Nordstrom credit card'
+  - rule: nordstrom-rack
+    url: https://www.nordstrom.com/browse/nordy-club/terms-conditions
+    quote: 'in store and online at Nordstrom Rack receive a five percent (5%) discount on eligible purchases'
+  - rule: nordstrom-rack
+    url: https://www.nordstrom.com/browse/nordy-club/terms-conditions
+    quote: 'No points will be awarded at Nordstrom Rack and Last Chance.'
+  - rule: annual_fee
+    url: https://www.nordstrom.com/becomecardmember
+    quote: 'with no annual or membership fees'
+  - rule: welcome_offer
+    url: https://www.nordstrom.com/becomecardmember
+    quote: 'Get $60 Off Your Next Purchase. Apply Today!'
+  - rule: welcome_offer
+    url: https://www.nordstrom.com/becomecardmember
+    quote: 'approved for a new Nordstrom credit card October 12 - December 1'

@@ -1,0 +1,68 @@
+id: citi-double-cash
+name: Citi Double Cash Card
+issuer: citi
+network: mastercard
+currency: cash
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.citi.com/credit-cards/citi-double-cash-credit-card
+  - https://www.thankyou.com/dcterms
+# Rates are the total Citi states. The 2% is 1 ThankYou Point per $1 when
+# you buy plus 1 point per $1 when you pay that purchase off (tracked in the
+# Purchase Tracker; payments must add up to at least the minimum due). Points
+# redeem at 1¢ for cash back (10,000 points = $100), so a point here is 1%.
+base_rate: 2
+annual_fee: 0
+welcome_offer:
+  dollars: 200
+  spend: 1500
+  months: 6
+  note: 'Paid as bonus ThankYou Points. Not available if you received a new account bonus for a Citi Double Cash account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into a Double Cash.'
+# Points can be combined into one ThankYou account, which then runs on that
+# account's terms: pooled with a Strata card, they transfer like Strata points.
+pools_into:
+  currency: TYP
+  when_wallet_has: [citi-strata-premier, citi-strata-elite]
+rules:
+  - id: citi-travel-hotels-cars-attractions
+    match:
+      {
+        merchants:
+          [
+            citi-travel-hotels,
+            citi-travel-car-rentals,
+            citi-travel-attractions,
+          ],
+      }
+    rate: 5
+    note: 3 extra points per $1 on top of the 1 on purchase and 1 on payment, for hotels, car rentals and attractions booked with Citi Travel. Flights booked through Citi Travel earn the base 2%.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
+    quote: 'Earn unlimited 1% cash back when you buy, plus an additional 1% as you pay'
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
+    quote: 'Cash back is earned in the form of ThankYou® Points'
+  - rule: base_rate
+    url: https://www.thankyou.com/dcterms
+    quote: 'You can combine them into one ThankYou Account'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
+    quote: 'Plus, earn a total of 5% on select travel'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
+    quote: 'this totals 5 ThankYou Points per dollar'
+  - rule: pools_into
+    url: https://www.thankyou.com/dcterms
+    quote: 'You can combine them into one ThankYou Account'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
+    quote: 'Annual Fee – None. Fee for foreign purchases – 3%'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
+    quote: 'Earn $200 cash back bonus after spending $1,500 on purchases in the first 6 months of account opening'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
+    quote: 'new account bonus for a Citi Double Cash account in the past 48 months'

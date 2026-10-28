@@ -1,0 +1,163 @@
+# earnrate
+
+I wanted a ghost card: one card that always charges the best of my cards. The card networks won't allow one, so I built the next best thing.
+
+**earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which card in your wallet earns the most there, and why. It's stateful (it knows your caps and chosen categories), valuation-aware, and transparent about its assumptions. It never sees a card number.
+
+> **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup and MCP server. See `docs/benchmark.md` for how it compares to existing tools.
+
+## Try it
+
+Needs Node 24 or later.
+
+```sh
+npm install -g earnrate
+mkdir -p ~/.earnrate
+curl -o ~/.earnrate/wallet.yaml https://raw.githubusercontent.com/cwasley/earnrate/main/wallet.example.yaml
+earnrate whole foods 80
+```
+
+Then edit `~/.earnrate/wallet.yaml` to list your own cards, by ID: the file names in [`data/cards/`](data/cards). Card numbers never go in it.
+
+```
+Whole Foods Market · $80
+
+Use Blue Cash Preferred: 6% back, about $4.80. High confidence.
+
+  1. Blue Cash Preferred  6%  $4.80
+     6% cash back from its "us-supermarkets" rule. ...
+  2. Prime Visa           5%  $4.00
+     5% cash back from its "whole-foods" rule. Online or in-store.
+  3. Amex Gold            4%  $3.20
+     4x Amex Membership Rewards from its "us-supermarkets" rule. ...
+     Valued at 1¢ per point: 4% back.
+  + 6 more cards (--all lists them)
+
+Amex Gold beats Blue Cash Preferred here if Amex Membership Rewards (MR) points are worth 1.5¢ or more (you value them at 1¢).
+
+Assumes Whole Foods Market codes as supermarkets (MCC 5411).
+```
+
+Options: `--online` or `--in-store`, `--valuation flat|points-heavy`, `--all`, `--json`, `--date`, `--country`. Run `earnrate --help` for details. To keep the wallet somewhere else, set `EARNRATE_WALLET` to its path.
+
+### Merchants earnrate doesn't know
+
+earnrate ships with a curated list of merchants. For anything else it falls back to each card's base rate and says so. Pass `--llm` (or set `EARNRATE_LLM=on`) to have Claude guess the category instead:
+
+- It uses your own `ANTHROPIC_API_KEY` and sends only the merchant text you typed. Amounts, cards and wallet contents never leave your machine.
+- Each answer is saved in `~/.earnrate/merchant-cache.json`, so a merchant is only looked up once.
+- The answer is labeled as Claude's guess, shows its reasoning, and is never higher than medium confidence.
+- Curated merchants never reach Claude.
+
+### Welcome bonuses
+
+When you're working toward a card's sign-up bonus, add it to that card in your wallet:
+
+```yaml
+- id: chase-sapphire-preferred
+  bonus: { opened: 2026-10-01, spend: 5000, by: 2026-12-31, points: 75000 }
+```
+
+While the bonus is open, that card wins wherever it's accepted, and the answer says how much is left, the weekly pace to finish on time, what the bonus is worth at your point values, and what using it costs compared with your best earner. Spend counts up as you record purchases from an AI agent or import a statement with `--apply`; refunds count down. Once it's met or the deadline passes, the card goes back to the normal ranking. With two open bonuses, the one needing more spend per day comes first.
+
+`spend`, `by` and the reward (`points`, or `dollars` for cash back) default to the card's published offer once earnrate has one; set them when your offer was different.
+
+### Which new card?
+
+```sh
+earnrate offers --cash
+```
+
+Ranks the welcome offers on cards you don't have by first-year value: the bonus at your point values minus the first year's annual fee. `--points`, `--no-fee` and `--business` narrow it down. Each offer is the public one on the issuer's page, checked weekly like the earning rules, with the issuer's eligibility rules in its note. Offers can differ by person and by how you apply, and it covers only the cards earnrate knows. There are no affiliate or apply links.
+
+### Import a statement
+
+See what your purchases would have earned on earnrate's picks, using your cards' activity downloads:
+
+```sh
+earnrate import activity.csv --card amex-gold
+earnrate import gold.csv:amex-gold sapphire.csv:chase-sapphire-preferred
+```
+
+It totals what each card earned against the best card in your wallet for each purchase, lists the merchants where another card would have earned the most, and flags merchants your issuer codes differently than earnrate assumes. Name several statements, each with its card, to get one report across them. It reads Amex and Chase activity CSVs. Download the CSV rather than a PDF statement: Chase's PDFs print the full card number in the payment coupon, and earnrate never handles card numbers.
+
+- It's a dry run unless you pass `--apply`, which records cap usage for the current period in your wallet. Refunds lower it.
+- Only the date, description, amount, category and (for Chase) transaction type columns are read. The statements themselves are never stored: `--apply` writes cap totals plus a hash of each recorded purchase to `~/.earnrate/imported.json`, so importing the same file twice never counts twice.
+- For a merchant earnrate doesn't know, it uses the statement's category and marks the row, since another issuer may code it differently.
+- `--valuation points-heavy` values points at transfer rates instead of your wallet's values, which can change which card wins.
+
+## Supported cards
+
+56 cards, each modeled from the issuer's own terms and checked weekly against them:
+
+- **American Express:** Gold, Platinum, Blue Cash Preferred, Blue Cash Everyday, Blue Business Plus
+- **Chase:** Sapphire Preferred, Sapphire Reserve, Freedom Unlimited, Freedom Flex, Ink Business Cash, Ink Business Preferred, Prime Visa
+- **Chase airline and hotel:** United Gateway, Explorer, Quest, Club, Business, Club Business; Southwest Plus, Premier, Priority, Premier Business, Performance Business; Aeroplan; IHG One Rewards, Premier, Premier Select, Business
+- **Citi:** Strata Elite, Strata Premier, Double Cash, Custom Cash, My Best Buy Visa, Costco Anywhere Visa (personal and business); AAdvantage MileUp, Platinum Select, Globe, Executive, Business
+- **Capital One:** Venture X, Venture, Savor, Kohl's Card, Kohl's Rewards Visa
+- **Wells Fargo:** Active Cash, Autograph
+- **Bank of America:** Atmos Rewards Ascent, Summit, Business
+- **TD Bank:** Target Circle Card, Nordstrom card, Nordstrom Visa
+- **Others:** U.S. Bank Cash+, Bilt Obsidian, SoFi Unlimited 2%
+
+Store cards (Target, Kohl's, Nordstrom) only come up at their own stores. Airline and hotel cards count only what the card itself earns, not the points a program gives members however they pay, and their perks (bags, free nights, lounges) aren't counted.
+
+Something the format can't express yet (Bilt's rent earning, Citi Nights) is listed as a `todo:` in that card's file rather than guessed.
+
+## Use it from an AI agent (MCP)
+
+`earnrate mcp` runs earnrate as a local MCP server over stdio, with five tools:
+
+- `best_card_for_purchase`: which card to use, with reasons
+- `resolve_merchant`: how a merchant was identified
+- `list_wallet`: your cards, caps left this period, chosen categories and welcome-bonus progress
+- `compare_welcome_offers`: the best public sign-up offers on cards you don't have
+- `record_purchase`: books a purchase against its cap and any open welcome bonus in your wallet file, keeping your comments
+
+For a merchant earnrate doesn't know, the calling model can pass a `category` (e.g. `grocery.supermarket`). It's used only for unknown merchants and is labeled in the answer. The command line takes the same thing as `--category`.
+
+To add it to Claude Code:
+
+```sh
+claude mcp add --scope user earnrate -- npx -y earnrate mcp
+```
+
+Other MCP clients take the same command in their config:
+
+```json
+{
+  "mcpServers": {
+    "earnrate": { "command": "npx", "args": ["-y", "earnrate", "mcp"] }
+  }
+}
+```
+
+It reads the same wallet as the command line (`~/.earnrate/wallet.yaml`, or `EARNRATE_WALLET` set in the server's `env`).
+
+## Keeping card data current
+
+Every rule in `data/cards/` carries a short quote from the issuer's own page. In a clone of this repo, `yarn check-sources` opens each issuer page in a headless browser and reports:
+
+- rules whose quote is no longer on the page, which usually means the rule changed
+- earning lines that appeared or disappeared since the last baseline, such as a new perk
+
+A GitHub Action runs it every Monday and opens a "Card source changes" issue when something moved. After updating a card file, run `yarn check-sources --update` to record the new baseline. Some issuers block headless browsers on shared servers; those pages are listed as "couldn't check", and running the command locally covers them. The first run needs `yarn playwright install chromium`.
+
+## Working on earnrate
+
+```sh
+git clone https://github.com/cwasley/earnrate.git && cd earnrate
+yarn install
+yarn earnrate whole foods 80   # runs src/ directly, no build
+yarn validate                  # typecheck, lint, format check and tests
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
+## Licensing
+
+- **Code** (everything outside `data/`) is [MIT](LICENSE).
+- **Data** (card rules, merchants, categories and currencies under `data/`) is [CC BY-NC 4.0](data/LICENSE). It's free for personal and non-commercial use, with attribution.
+- **Commercial use of the data needs a license.** That includes serving it through your own API or MCP server, or using it in a paid product. Contact licensing@earnrate.dev.
+
+Not legal advice; this is a good-faith structure.

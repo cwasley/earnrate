@@ -1,0 +1,87 @@
+id: citi-costco-anywhere-visa-business
+name: Costco Anywhere Visa Business Card by Citi
+issuer: citi
+network: visa
+currency: cash
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+# Paid once a year as a Costco reward certificate after the February statement,
+# redeemable for cash or merchandise at a U.S. Costco warehouse.
+base_rate: 1
+business: true
+annual_fee: 0
+caps:
+  # Costco gas, other gas and EV charging share one $7,000 cap. Rewards run on
+  # January–December billing statements.
+  - id: gas-and-ev-combined
+    amount: 7000
+    period: calendar_year
+    then_rate: 1
+rules:
+  - id: costco-gas
+    match: { merchants: [costco-gas] }
+    rate: 5
+    cap: gas-and-ev-combined
+    note: Gas at Costco warehouse locations worldwide.
+  - id: gas-and-ev-charging
+    match: { categories: [gas, ev_charging] }
+    exclude: { categories: [gas.superstore, gas.grocery_store] }
+    rate: 4
+    cap: gas-and-ev-combined
+    note: Other eligible gas and EV charging worldwide. Gas or EV charging at superstores, supermarkets, convenience stores and warehouse clubs other than Costco, and fuel for non-automobile use, earn 1%. Citi keeps a list of excluded merchants at citi.com/Costco_Exclusions.
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 3
+    note: Includes cafes, bars, lounges and fast food. Bakeries and restaurants or cafes inside department stores, grocery stores or warehouse clubs earn 1%.
+  - id: eligible-travel
+    match: { categories: [travel] }
+    rate: 3
+    note: Airfare, hotels, car rentals, travel agencies and cruise lines. Timeshares, campgrounds, bed & breakfasts, and train and commuter travel earn 1%; a bed & breakfast that codes as a hotel would still match here.
+  - id: costco-travel
+    match: { merchants: [costco-travel] }
+    rate: 3
+  - id: costco
+    match: { merchants: [costco] }
+    rate: 2
+    note: All other purchases at Costco warehouses and Costco.com.
+todo:
+  - 'The $0 annual fee requires an active, paid Costco membership. The card page shows no welcome offer.'
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: '1% cash back on all other purchases, including non-qualifying purchases listed above'
+  - rule: costco-gas
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: '5% cash back on gas purchased at Costco warehouse locations worldwide'
+  - rule: costco-gas
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: '5% and 4% earn is on a combined $7,000 spend per year, 1% thereafter'
+  - rule: gas-and-ev-charging
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: '4% cash back on other eligible gas and electric vehicle (EV) charging purchases worldwide'
+  - rule: gas-and-ev-charging
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: 'for gas or EV charging purchased at some superstores, supermarkets, convenience stores and warehouse clubs other than Costco'
+  - rule: restaurants
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: '3% cash back on restaurant purchases (including cafes, bars, lounges, and fast food restaurants)'
+  - rule: eligible-travel
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: 'including airfare, hotels, car rentals, travel agencies, cruise lines, and Costco Travel'
+  - rule: eligible-travel
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: 'timeshares, campgrounds, bed & breakfasts, and for train and commuter travel'
+  - rule: costco-travel
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: 'On restaurants and eligible travel, including Costco Travel'
+  - rule: costco
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: '2% cash back on all other purchases from Costco and Costco.com'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: 'No annual fee with paid Costco membership.'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: '$0 annual fee with active Costco membership.'

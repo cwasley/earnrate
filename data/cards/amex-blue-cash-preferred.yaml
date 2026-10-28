@@ -1,0 +1,76 @@
+id: amex-blue-cash-preferred
+name: American Express Blue Cash Preferred Card
+issuer: amex
+network: amex
+currency: cash
+last_verified: 2026-10-24
+verified_by: collin
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+base_rate: 1
+annual_fee: 95
+first_year_fee: 0
+welcome_offer:
+  dollars: 300
+  spend: 3000
+  months: 6
+  note: 'Paid as Reward Dollars, redeemable for a statement credit or at Amazon.com checkout. The card page says "Earn $300"; the offer terms say "as high as $300", with the exact amount shown before you accept. Not available if you have or have had this Card, the Morgan Stanley Blue Cash Preferred or previous versions of these Cards.'
+rules:
+  - id: us-supermarkets
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club, convenience_store] }
+    rate: 6
+    geography: us_only
+    cap: { amount: 6000, period: calendar_year, then_rate: 1 }
+    note: Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+  - id: us-streaming
+    match: { categories: [streaming] }
+    rate: 6
+    geography: us_only
+    note: Select providers only (list at americanexpress.com/rewards-info). Subscriptions bundled with or billed by another company (cable, phone, a car maker) may not count.
+  - id: transit
+    match: { categories: [transit] }
+    rate: 3
+    note: Trains, taxis, rideshare, ferries, tolls, parking, buses and subways. Airfare, car rental and cruises aren't transit.
+  - id: us-gas
+    match: { categories: [gas] }
+    exclude: { categories: [gas.grocery_store, gas.superstore] }
+    rate: 3
+    geography: us_only
+    note: Superstores, supermarkets and warehouse clubs that sell gas are not gas stations.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'and 1% cash back on all other eligible purchases'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'at supermarkets located in the U.S. (superstores, convenience stores, warehouse clubs,'
+  - rule: us-streaming
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: '6% cash back on eligible purchases of U.S. streaming subscriptions'
+  - rule: transit
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: '3% cash back on eligible purchases on transit, including trains,'
+  - rule: us-gas
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'purchases of gasoline at gas stations located in the U.S.'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/
+    quote: '$0 intro annual fee for the first year, then $95'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'After that, the annual fee will be $95.'
+  - rule: first_year_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'will be $0 for the first year of Card Membership'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/
+    quote: 'Earn $300 Cash Back'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/
+    quote: 'after you spend $3,000 in purchases on your new Card in the first 6 months of Card Membership'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'As High As $300 Cash Back Welcome Offer'

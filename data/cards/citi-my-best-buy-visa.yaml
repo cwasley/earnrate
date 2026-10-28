@@ -1,0 +1,49 @@
+id: citi-my-best-buy-visa
+name: My Best Buy Visa Card
+issuer: citi
+network: visa
+currency: best-buy-rewards
+last_verified: 2026-10-24
+verified_by: collin
+source_urls:
+  - https://www.citi.com/credit-cards/citi-best-buy-credit-cards
+# Rates are points per dollar. A point is worth 2¢ in Best Buy rewards, so 2.5
+# points per dollar is the advertised 5%.
+base_rate: 0.5
+annual_fee: 59
+rules:
+  - id: best-buy
+    match: { merchants: [best-buy, pacific-kitchen-home] }
+    rate: 2.5
+    note: Only when paying with Standard Credit, not a financing plan. My Best Buy Plus/Total members also earn the membership's own rewards, counted separately.
+  - id: gas
+    match: { categories: [gas] }
+    rate: 1.5
+  - id: restaurants-and-grocery
+    match: { categories: [dining, grocery] }
+    rate: 1
+    note: Restaurants, bars and grocery stores.
+todo:
+  - Annual fee is $0 to $59 depending on creditworthiness. Check yours.
+  - 'annual_fee is set to the top of the stated $0 to $59 range.'
+  - "Welcome offer not modeled: the page's new-card offer is 10% back in rewards on the first day of Best Buy purchases, not a fixed amount."
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
+    quote: '(1% back in rewards) on other purchases outside Best Buy'
+  - rule: best-buy
+    url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
+    quote: 'All qualifying purchases at Best Buy® earn 5% back'
+  - rule: best-buy
+    url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
+    quote: 'or Pacific Kitchen & Home'
+  - rule: gas
+    url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
+    quote: 'per $1 spent at gas stations (3% back in rewards)'
+  - rule: restaurants-and-grocery
+    url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
+    quote: 'spent at restaurants, bars and grocery stores (2% back in rewards)'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
+    quote: 'Annual Fee: $0 - $59, based on creditworthiness.'

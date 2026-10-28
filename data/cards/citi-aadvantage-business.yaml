@@ -1,0 +1,78 @@
+id: citi-aadvantage-business
+name: Citi / AAdvantage Business World Elite Mastercard
+issuer: citi
+network: mastercard
+currency: aadvantage-miles
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+# Miles post to the company's AAdvantage Business account, not a personal
+# AAdvantage account.
+base_rate: 1
+business: true
+annual_fee: 99
+first_year_fee: 0
+welcome_offer:
+  points: 65000
+  spend: 4000
+  months: 4
+  note: "Miles post to the business's AAdvantage Business account. Not available if you received a new account bonus for a Citi / AAdvantage Business account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one."
+rules:
+  - id: american-airlines
+    match: { merchants: [american-airlines] }
+    rate: 2
+    note: Items billed by American Airlines as the merchant of record. Car rentals, hotel reservations, status boosts or renewals, and AA Cargo don't count.
+  - id: car-rentals
+    match: { categories: [travel.car_rental] }
+    rate: 2
+    note: Car and truck rental merchants. Not RV or motor home rentals, nor rentals bought through travel agencies, tour operators or third-party travel sites.
+  - id: gas-stations
+    match: { categories: [gas] }
+    exclude: { categories: [gas.superstore] }
+    rate: 2
+    note: Warehouse-club gas counts only when the club codes it as a gas station, so superstore and warehouse-club gas is excluded here to stay conservative. Discount, department and convenience stores don't count.
+  - id: telecom-cable-satellite
+    match: { categories: [phone, tv_internet] }
+    rate: 2
+    note: Telecom merchants (phone service and equipment such as cell phones) and cable and satellite TV, internet, phone and radio providers.
+# Not modeled: free checked bag, companion certificate after $30,000 spend. Loyalty Points toward status aren't card earnings.
+todo:
+  - Warehouse-club gas earns 2x if the club codes it as a gas station; earnrate's gas.superstore can't tell, so it's excluded. Moot at Costco, which takes only Visa.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'Earn 1 AAdvantage® mile for your business on every $1 spent on all other purchases'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'Earn 2 AAdvantage® miles for your business on every $1 spent on eligible American Airlines purchases'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+  - rule: car-rentals
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'Earn 2 AAdvantage® miles for your business on every $1 spent at car rental merchants and gas stations'
+  - rule: car-rentals
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'purchases made through travel agencies, tour operators, and online third party travel sites'
+  - rule: gas-stations
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'Earn 2 AAdvantage® miles for your business on every $1 spent at car rental merchants and gas stations'
+  - rule: gas-stations
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'purchases made at warehouse clubs that do not code gas station purchases under a gas station code'
+  - rule: telecom-cable-satellite
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'Earn 2 AAdvantage® miles for your business on every $1 spent at telecommunications merchants and cable and satellite providers'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'The annual fee is $99. However, this fee is waived for the first 12 months.'
+  - rule: first_year_fee
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'The annual fee is $99. However, this fee is waived for the first 12 months.'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: '65,000 AAdvantage® bonus miles For your business after $4,000 in purchases within the first 4 months of account opening'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'new account bonus for a Citi® / AAdvantage® Business account in the past 48 months'

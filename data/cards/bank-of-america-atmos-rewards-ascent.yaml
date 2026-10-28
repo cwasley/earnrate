@@ -1,0 +1,71 @@
+id: bank-of-america-atmos-rewards-ascent
+name: Atmos Rewards Ascent Visa Signature Credit Card
+issuer: bank-of-america
+network: visa
+currency: atmos-points
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+base_rate: 1
+annual_fee: 95
+welcome_offer:
+  points: 50000
+  spend: 1500
+  months: 3
+  note: Limited-time online offer, no end date stated; it may not be available elsewhere after leaving the page. The window is 90 days from account opening. The offer also includes a $99 Companion Fare (plus taxes and fees from $23).
+rules:
+  - id: alaska-and-hawaiian
+    match: { merchants: [alaska-airlines, hawaiian-airlines] }
+    rate: 3
+    note: Card points only; points and status from flying aren't card earnings.
+  - id: gas-ev-cable-streaming-transit
+    match: { categories: [gas, ev_charging, tv_internet, streaming, transit] }
+    rate: 2
+    note: Local transit includes rideshare. Bank of America says "cable"; internet-only or phone bills may not count.
+  - id: alaska-and-hawaiian-with-boa-account
+    match: { merchants: [alaska-airlines, hawaiian-airlines] }
+    rate: 3.3
+    requires: { membership: bank-of-america-account }
+    note: 3x plus the 10% rewards bonus for holding an eligible Bank of America account.
+  - id: gas-ev-cable-streaming-transit-with-boa-account
+    match: { categories: [gas, ev_charging, tv_internet, streaming, transit] }
+    rate: 2.2
+    requires: { membership: bank-of-america-account }
+    note: 2x plus the 10% rewards bonus for holding an eligible Bank of America account.
+  - id: everything-else-with-boa-account
+    match: { any: true }
+    rate: 1.1
+    requires: { membership: bank-of-america-account }
+    note: The 1x base rate plus the 10% rewards bonus for holding an eligible Bank of America account.
+evidence:
+  - rule: base_rate
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+    quote: 'Earn unlimited 1 point for every $1 spent on all other purchases.'
+  - rule: alaska-and-hawaiian
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+    quote: 'Earn unlimited 3 points for every $1 spent on eligible Alaska Airlines and Hawaiian Airlines purchases.'
+  - rule: gas-ev-cable-streaming-transit
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+    quote: 'eligible gas, EV charging station, cable, streaming services and local transit purchases, including rideshare'
+  - rule: alaska-and-hawaiian-with-boa-account
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+    quote: '10% rewards bonus on all points earned from card purchases if you have an eligible Bank of America® account'
+  - rule: gas-ev-cable-streaming-transit-with-boa-account
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+    quote: "For example, for every 1,000 points you earn on purchases, you'll receive 1,100 points."
+  - rule: everything-else-with-boa-account
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+    quote: '10% rewards bonus on all points earned from card purchases if you have an eligible Bank of America® account'
+  - rule: annual_fee
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+    quote: '$95 annual fee'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+    quote: 'Get 50,000 bonus points and a $99 Companion Fare (plus taxes and fees from $23) with this offer.'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+    quote: 'spend $1,500 or more on purchases within the first 90 days of opening your account'
+todo:
+  - 'The 10% rewards bonus rules use a proposed membership id, bank-of-america-account. Bank of America does not say on this page which accounts are "eligible".'
+  - 20% back on Alaska and Hawaiian inflight purchases is a rebate, not points, and isn't modeled.

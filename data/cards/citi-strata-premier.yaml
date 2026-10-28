@@ -1,0 +1,89 @@
+id: citi-strata-premier
+name: Citi Strata Premier Card
+issuer: citi
+network: mastercard
+currency: TYP
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+base_rate: 1
+annual_fee: 95
+welcome_offer:
+  points: 60000
+  spend: 4000
+  months: 3
+  note: "Not available if you currently have or previously had a Citi Strata Premier or Citi Premier account; Citi may also decline the bonus based on your history of opening, closing and using credit cards. This page doesn't state a 48-month rule."
+rules:
+  - id: citi-travel-hotels-cars-attractions
+    match:
+      {
+        merchants:
+          [
+            citi-travel-hotels,
+            citi-travel-car-rentals,
+            citi-travel-attractions,
+          ],
+      }
+    rate: 10
+    note: Booked on the Citi Travel site (cititravel.com or 1-833-737-1288). Only the part paid with the card earns, not the part paid with points or offset by the $100 Annual Hotel Benefit.
+  - id: air-travel-and-other-hotels
+    match: { categories: [travel.flights, travel.hotels] }
+    rate: 3
+    note: Airlines, and hotels not booked through Citi Travel. Air travel booked through Citi Travel also falls here.
+  - id: travel-agencies
+    match: { mccs: [4722] }
+    rate: 3
+    note: Citi counts travel agency purchases in its air travel and other hotels category.
+  - id: restaurants
+    match: { categories: [dining] }
+    exclude: { merchants: [dodger-stadium, bellagio] }
+    rate: 3
+    note: Includes cafes, bars, lounges, fast food, takeout and restaurant delivery services. Excludes bakeries, caterers and restaurants inside another business (hotels, stores, stadiums, grocery stores, warehouse clubs).
+  - id: supermarkets
+    match: { categories: [grocery.supermarket] }
+    exclude:
+      { categories: [superstore, warehouse_club, convenience_store, drugstore] }
+    rate: 3
+    note: Excludes superstores, warehouse clubs, convenience stores, drugstores, specialty food markets, bakeries and meal kit delivery. Online supermarkets and grocery delivery count only if the merchant uses the supermarket merchant code.
+  - id: gas-and-ev-charging
+    match: { categories: [gas, ev_charging] }
+    exclude: { categories: [gas.superstore] }
+    rate: 3
+    note: Only merchants coded as gas stations or EV charging. Excludes warehouse clubs, discount stores, department stores and convenience stores.
+# Not modeled: the $100 Annual Hotel Benefit.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: '1 point per dollar spent on All Other Purchases'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: '10 points per dollar spent on Hotels, Car Rentals and Attractions booked on cititravel.com'
+  - rule: air-travel-and-other-hotels
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: '3 points per dollar spent on Air Travel and Other Hotel Purchases'
+  - rule: travel-agencies
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: 'Includes purchases at airlines, hotels (not booked through the Citi Travel site via'
+  - rule: travel-agencies
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: '), and travel agencies.'
+  - rule: restaurants
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: '3 points per dollar spent at Restaurants'
+  - rule: supermarkets
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: '3 points per dollar spent at Supermarkets'
+  - rule: gas-and-ev-charging
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: '3 points per dollar spent on Gas & EV Charging Stations'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: 'Annual fee - $95. Fee for foreign purchases - None.'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: 'Earn 60,000 bonus points after spending $4,000 in the first 3 months'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: 'not available if you currently have or previously had a Citi Strata Premier® or a Citi Premier® account'

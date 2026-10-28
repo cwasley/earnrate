@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+
+# Environment files (ANTHROPIC_API_KEY)
+.env
+.env.*
+
+# Personal wallet state and merchant cache, if kept repo-local
+.earnrate/
+
+# Debug logs
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
+.DS_Store
+.idea
+.vscode
+*.tsbuildinfo
+
+# Test coverage reports
+coverage
+
+# Maintainer-only files, a separate private repo
+private/

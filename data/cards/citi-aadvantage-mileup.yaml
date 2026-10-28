@@ -1,0 +1,57 @@
+id: citi-aadvantage-mileup
+name: American Airlines AAdvantage MileUp Card
+issuer: citi
+network: mastercard
+currency: aadvantage-miles
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+base_rate: 1
+annual_fee: 0
+welcome_offer:
+  points: 15000
+  spend: 500
+  months: 3
+  note: 'Plus a $100 statement credit for the same $500 spend. Not available if you received a new account bonus for an AAdvantage MileUp account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into a MileUp.'
+rules:
+  - id: american-airlines
+    match: { merchants: [american-airlines] }
+    rate: 2
+    note: Items billed by American Airlines as the merchant of record. Car rentals booked on aadvantagecars.com and hotels booked on aadvantagehotels.com don't count.
+  - id: grocery-stores
+    match: { categories: [grocery, convenience_store] }
+    exclude: { categories: [superstore, warehouse_club] }
+    rate: 2
+    note: Supermarkets, meat and dairy stores, convenience stores, markets, specialty food vendors, bakeries and grocery delivery services. Not superstores, warehouse clubs, candy stores, cafes, bars or fast food.
+# Not modeled: 25% off inflight food and drink. Miles also earn Loyalty Points toward status, which aren't card earnings.
+todo:
+  - Network set to mastercard, but the card page doesn't state it. Check your card.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'Earn 1 AAdvantage® mile for every $1 spent on all other purchases'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'Earn 2 AAdvantage® miles for every $1 spent on eligible American Airlines purchases'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+  - rule: grocery-stores
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'Earn 2 AAdvantage® miles for each $1 spent at grocery stores, including grocery delivery services'
+  - rule: grocery-stores
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'convenience stores, markets, specialty vendors, and bakeries'
+  - rule: grocery-stores
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'discount superstores, wholesale'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'Annual Fee - None. Fee for Foreign Purchases - 3%'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'Earn 15,000 AAdvantage® bonus miles and a $100 Statement Credit after $500 in purchases in the first 3 months'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'new account bonus for an AAdvantage® MileUp® account in the past 48 months'

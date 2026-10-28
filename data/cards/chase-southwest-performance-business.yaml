@@ -1,0 +1,81 @@
+id: chase-southwest-performance-business
+name: Southwest Rapid Rewards Performance Business Credit Card
+issuer: chase
+network: visa
+currency: southwest-rapid-rewards
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/southwest/performance-business-credit-card
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://creditcards.chase.com/business-credit-cards/southwest/performance-business
+base_rate: 1
+business: true
+annual_fee: 299
+welcome_offer:
+  points: 80000
+  spend: 5000
+  months: 3
+  note: 'Not available to current cardmembers of this business card, or previous cardmembers who received a new Cardmember bonus for this business card within the last 24 months.'
+rules:
+  - id: southwest
+    match: { merchants: [southwest] }
+    rate: 4
+    note: Purchases made directly with Southwest, including flights, inflight, Southwest gift cards and Getaways by Southwest packages. Southwest Cruises, Southwest Charters and Southwest Cargo are excluded.
+  - id: gas
+    match: { categories: [gas] }
+    rate: 2
+  - id: dining
+    match: { categories: [dining] }
+    rate: 2
+  - id: hotels-direct
+    match: { categories: [travel.hotels] }
+    rate: 2
+    note: Only hotel stays booked directly with the hotel. Travel agencies, discount travel sites, vacation clubs and packages don't count, and neither do charges on the hotel premises other than the room bill.
+  - id: local-transit
+    match: { categories: [transit] }
+    rate: 2
+    note: Local transit and commuting, including rideshare, trains, buses, taxis, ferries, tolls and parking. Bike or scooter rentals and car sharing are excluded.
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 5
+    valid_to: 2027-12-31
+    note: Limited-time offer on rides, bikes, scooters and Lyft memberships bought in the Lyft app. Gift cards and Lyft car rentals are excluded.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: annual_fee
+    url: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
+    quote: '$299 applied to first billing statement.'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
+    quote: 'Earn 80,000 points after you spend $5,000 on purchases in the first 3 months from account opening'
+  - rule: base_rate
+    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    quote: 'You’ll earn 1 point for each $1 spent on all other purchases'
+  - rule: southwest
+    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    quote: 'You’ll earn 4 points for each $1 spent on purchases made directly with Southwest Airlines'
+  - rule: southwest
+    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    quote: 'Other Southwest Airlines related purchases, such as Southwest Cruises, Southwest Charters, and Southwest Cargo® are excluded.'
+  - rule: gas
+    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    quote: 'gas stations; dining at restaurants; hotel accommodations when purchased directly with the hotel'
+  - rule: dining
+    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    quote: 'gas stations; dining at restaurants; hotel accommodations when purchased directly with the hotel'
+  - rule: hotels-direct
+    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    quote: 'gas stations; dining at restaurants; hotel accommodations when purchased directly with the hotel'
+  - rule: hotels-direct
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Hotel accommodations not booked directly with the hotel will not qualify'
+  - rule: local-transit
+    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    quote: 'Earn 2 points per $1 spent on local transit and commuting, including rideshare.'
+  - rule: local-transit
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'bike or scooter rentals and car sharing'
+  - rule: lyft
+    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    quote: 'earn 5X Rapid Rewards points on qualifying Lyft products and services purchased through the Lyft mobile application through 12/31/2027'

@@ -1,0 +1,146 @@
+id: chase-freedom-flex
+name: Chase Freedom Flex
+issuer: chase
+network: mastercard
+currency: cash
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+  - https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+base_rate: 1
+annual_fee: 0
+welcome_offer:
+  dollars: 250
+  spend: 500
+  months: 3
+  note: 'Limited-time: the page says "Offer ending soon" (no end date given) and shows the usual $200 struck through. Chase: "available to you if you do not have this card and have not received a new cardmember bonus for this card in the past 24 months."'
+# Its cash back is earned as points, which Chase lets you move to another
+# Ultimate Rewards card on your account.
+pools_into:
+  currency: UR
+  when_wallet_has:
+    [
+      chase-sapphire-preferred,
+      chase-sapphire-reserve,
+      chase-ink-business-preferred,
+    ]
+caps:
+  - id: five-percent-quarterly
+    amount: 1500
+    period: quarter
+    then_rate: 1
+rules:
+  - id: chase-travel
+    match: { merchants: [chase-travel] }
+    rate: 5
+  - id: dining
+    match: { categories: [dining] }
+    rate: 3
+    note: Includes takeout and eligible delivery services.
+  - id: drugstores
+    match: { categories: [drugstore] }
+    rate: 3
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 2
+    valid_to: 2027-09-30
+    note: Limited-time offer, for Lyft products bought in the Lyft app.
+  # Rotating 5% categories. Activation is per quarter; activating after the
+  # quarter starts still applies to the whole quarter.
+  - id: q4-2026-grocery
+    match: { categories: [grocery] }
+    exclude: { merchants: [walmart, target] }
+    rate: 5
+    cap: five-percent-quarterly
+    requires: { activation: true }
+    valid_from: 2026-10-01
+    valid_to: 2026-12-31
+    note: Grocery stores excluding Walmart and Target. Chase's grocery category also excludes warehouse clubs, discount stores and gas at grocery stores; delivery services count only if they code as a grocery store.
+  - id: q4-2026-dining
+    match: { categories: [dining] }
+    rate: 5
+    cap: five-percent-quarterly
+    requires: { activation: true }
+    valid_from: 2026-10-01
+    valid_to: 2026-12-31
+    note: Dining already earns 3%, so this adds 2% until the $1,500 quarterly cap.
+  - id: q4-2026-american-red-cross
+    match: { merchants: [american-red-cross] }
+    rate: 5
+    cap: five-percent-quarterly
+    requires: { activation: true }
+    valid_from: 2026-10-01
+    valid_to: 2026-12-31
+  - id: q1-2027-grocery
+    match: { categories: [grocery] }
+    exclude: { merchants: [walmart, target] }
+    rate: 5
+    cap: five-percent-quarterly
+    requires: { activation: true }
+    valid_from: 2027-01-01
+    valid_to: 2027-03-31
+    note: Grocery stores excluding Walmart and Target. Activation opens December 15, 2026.
+  - id: q1-2027-streaming
+    match: { categories: [streaming] }
+    rate: 5
+    cap: five-percent-quarterly
+    requires: { activation: true }
+    valid_from: 2027-01-01
+    valid_to: 2027-03-31
+    note: Only the "top streaming services" Chase lists at chase.com/RewardsCategoryFAQs. Activation opens December 15, 2026.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'Earn 1% on all other purchases'
+  - rule: chase-travel
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'Earn 5% on travel purchased through Chase Travel'
+  - rule: dining
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'Earn 3% on dining at restaurants, including takeout and eligible delivery services'
+  - rule: drugstores
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'Earn 3% on drugstore purchases'
+  - rule: lyft
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'Earn 2% total cash back on Lyft rides with your Freedom Flex card through September 30, 2027'
+  - rule: q4-2026-grocery
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'CURRENT QUARTER Grocery Stores'
+  - rule: q4-2026-grocery
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'Activate each quarter to earn 5% cash back on up to $1,500 in combined purchases'
+  - rule: q4-2026-grocery
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Purchases made at gas stations from merchants who also operate grocery stores are not included'
+  - rule: q4-2026-dining
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'Dining American Red Cross'
+  - rule: q4-2026-american-red-cross
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'American Red Cross'
+  - rule: q1-2027-grocery
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'NEXT QUARTER Grocery Stores'
+  - rule: q1-2027-streaming
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'Top Streaming Services'
+  - rule: q1-2027-streaming
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Only subscriptions paid for, or purchases made with the following select merchants will qualify'
+  - rule: pools_into
+    url: https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household
+    quote: 'You can combine points from one Chase card to another Chase card on your account'
+  - rule: annual_fee
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'ANNUAL FEE $0'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'Earn a $250 bonus after you spend $500 on purchases in the first 3 months from account opening'
+todo:
+  - "Chase's offer-details overlays for the Q4 2026 and Q1 2027 categories (exact grocery exclusions, what counts for American Red Cross) didn't render in the page dump; rules follow the calendar labels and the rewards-category FAQ."
+  - 'q4-2026-american-red-cross: what counts (presumably donations) is unconfirmed.'
+  - 'Q2 2027 (Apr-Jun) shows "Coming Soon"; add it after Chase posts it (activation opens March 15, 2027).'

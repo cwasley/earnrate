@@ -1,0 +1,70 @@
+id: bank-of-america-atmos-rewards-summit
+name: Atmos Rewards Summit Visa Infinite Credit Card
+issuer: bank-of-america
+network: visa
+currency: atmos-points
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+base_rate: 1
+annual_fee: 395
+welcome_offer:
+  points: 70000
+  spend: 3000
+  months: 3
+  note: Limited-time online offer, no end date stated; it may not be available elsewhere after leaving the page. The window is 90 days from account opening. The offer also includes a 25,000-point Global Companion Award.
+rules:
+  - id: alaska-and-hawaiian
+    match: { merchants: [alaska-airlines, hawaiian-airlines] }
+    rate: 3
+    note: Card points only; points and status from flying aren't card earnings.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 3
+  - id: alaska-and-hawaiian-with-boa-account
+    match: { merchants: [alaska-airlines, hawaiian-airlines] }
+    rate: 3.3
+    requires: { membership: bank-of-america-account }
+    note: 3x plus the 10% rewards bonus for holding an eligible Bank of America account.
+  - id: dining-with-boa-account
+    match: { categories: [dining] }
+    rate: 3.3
+    requires: { membership: bank-of-america-account }
+    note: 3x plus the 10% rewards bonus for holding an eligible Bank of America account.
+  - id: everything-else-with-boa-account
+    match: { any: true }
+    rate: 1.1
+    requires: { membership: bank-of-america-account }
+    note: The 1x base rate plus the 10% rewards bonus for holding an eligible Bank of America account.
+evidence:
+  - rule: base_rate
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: 'Earn unlimited 1 point for every $1 spent on all other purchases.'
+  - rule: alaska-and-hawaiian
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: 'Earn 3 points for every $1 spent on eligible dining, foreign transaction, Alaska Airlines and Hawaiian Airlines purchases.'
+  - rule: dining
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: 'Earn 3 points for every $1 spent on eligible dining, foreign transaction, Alaska Airlines and Hawaiian Airlines purchases.'
+  - rule: alaska-and-hawaiian-with-boa-account
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: '10% rewards bonus on all points earned from card purchases if you have an eligible Bank of America® account'
+  - rule: dining-with-boa-account
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: "For example, for every 1,000 points you earn on purchases, you'll receive 1,100 points."
+  - rule: everything-else-with-boa-account
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: '10% rewards bonus on all points earned from card purchases if you have an eligible Bank of America® account'
+  - rule: annual_fee
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: '$395 annual fee and no foreign transaction fees'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: 'Earn 70,000 bonus points and a 25,000-point Global Companion Award after spending $3,000 or more on purchases'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: '$3,000 or more on purchases within the first 90 days of opening your account'
+todo:
+  - '3x on "foreign transaction" purchases (anything charged in a foreign currency or processed abroad) is not modeled: rules have no foreign-only geography. It would make this card the pick for most purchases abroad.'
+  - 'The 10% rewards bonus rules use a proposed membership id, bank-of-america-account. Bank of America does not say on this page which accounts are "eligible".'

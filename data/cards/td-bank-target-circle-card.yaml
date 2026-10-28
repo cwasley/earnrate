@@ -1,0 +1,51 @@
+id: td-bank-target-circle-card
+name: Target Circle Card
+issuer: td-bank
+network: store
+only_at: [target]
+currency: cash
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.target.com/circlecard
+  - https://www.target.com/c/target-circle-card-program-rules/-/N-4tgj0
+# The credit version only. Earning outside Target (2% dining and gas, 1%
+# elsewhere) belongs to the Target Mastercard, a separate card.
+base_rate: 0
+annual_fee: 0
+welcome_offer:
+  dollars: 50
+  spend: 50
+  months: 2
+  note: Paid as $50 in Target Circle Rewards, redeemable through Target Circle, not cash. Spend $50 or more on qualifying purchases in-store or at Target.com with the Target Circle Credit Card within 60 days of approval. Not for the Target Circle Debit Card or mail-in applications. Qualifying purchases exclude alcohol and gift cards, among others.
+rules:
+  - id: target
+    match: { merchants: [target] }
+    rate: 5
+    note: An instant 5% discount at checkout in Target stores and on Target.com, after other discounts, on the part of the purchase paid with the card. Not on prescriptions, pharmacy-counter items or clinic services, Target Optical eye exams and protection plans (glasses and contacts do count), Target GiftCards or prepaid Visa/Mastercard/Amex cards, Starbucks gift cards bought at in-store Starbucks, Shipt or Target Circle 360 fees, taxes, shipping or other fees.
+todo:
+  - The debit version (Target Circle Debit Card) gets the same 5% discount but isn't modeled as a separate card.
+  - Target considers credit applicants for the Target Mastercard first, which also earns 2% on dining and gas and 1% elsewhere. Not modeled; target.com doesn't say what form those earnings take.
+  - Starbucks counters inside Target stores get the 5% discount too. They aren't a separate merchant here.
+evidence:
+  - rule: base_rate
+    url: https://www.target.com/circlecard
+    quote: 'approved for a Target Mastercard. Some restrictions apply'
+  - rule: target
+    url: https://www.target.com/circlecard
+    quote: 'Get 5% off your Target purchase instantly at checkout.'
+  - rule: target
+    url: https://www.target.com/c/target-circle-card-program-rules/-/N-4tgj0
+    quote: 'at Target stores or Target.com, you will receive 5% off on your purchases'
+  - rule: target
+    url: https://www.target.com/c/target-circle-card-program-rules/-/N-4tgj0
+    quote: 'Prescriptions, over-the-counter items located behind the pharmacy counter and clinic services at Target'
+  - rule: annual_fee
+    url: https://www.target.com/circlecard
+    quote: 'Flexible spending with no monthly or annual fees'
+  - rule: welcome_offer
+    url: https://www.target.com/circlecard
+    quote: 'Earn $50 in Target Circle Rewards when you spend $50 or more on qualifying purchases'
+  - rule: welcome_offer
+    url: https://www.target.com/circlecard
+    quote: 'within 60 days of approval'

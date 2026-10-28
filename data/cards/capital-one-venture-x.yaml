@@ -1,0 +1,58 @@
+id: capital-one-venture-x
+name: Capital One Venture X Rewards Credit Card
+issuer: capitalone
+network: visa # Visa Infinite, per the card page's footnotes
+currency: C1
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.capitalone.com/credit-cards/venture-x/
+base_rate: 2
+annual_fee: 395
+welcome_offer:
+  points: 75000
+  spend: 4000
+  months: 3
+  note: One-time bonus through the card page's Apply Now button; it may not be available after leaving the page. Existing or previous cardmembers are not eligible if they received a new cardmember bonus for this product in the past 48 months. The 10,000-mile anniversary bonus is separate and not part of this offer.
+rules:
+  - id: capital-one-travel-hotels-and-car-rentals
+    match:
+      { merchants: [capital-one-travel-hotels, capital-one-travel-car-rentals] }
+    rate: 10
+    note: Only when booked through Capital One Travel. Purchases paid with the annual $300 Capital One Travel credit earn no miles.
+  - id: capital-one-travel-flights-and-vacation-rentals
+    match:
+      {
+        merchants:
+          [capital-one-travel-flights, capital-one-travel-vacation-rentals],
+      }
+    rate: 5
+    note: Only when booked through Capital One Travel.
+  - id: capital-one-entertainment
+    match: { merchants: [capital-one-entertainment] }
+    rate: 5
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales and tickets bought directly from Capital One Hall or Capital One Arena are excluded.
+# Not modeled on purpose: the $300 annual Capital One Travel credit, the
+# 10,000-mile anniversary bonus and the $120 Global Entry/TSA PreCheck credit.
+todo:
+  - The card page doesn't say whether Premier Collection and Lifestyle Collection hotel bookings earn the 10X Capital One Travel rate. Modeled as regular Capital One Travel hotels.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/credit-cards/venture-x/
+    quote: '2X Miles on all other purchases, every day'
+  - rule: capital-one-travel-hotels-and-car-rentals
+    url: https://www.capitalone.com/credit-cards/venture-x/
+    quote: '10X Miles on hotels & rental cars booked through Capital One Travel'
+  - rule: capital-one-travel-flights-and-vacation-rentals
+    url: https://www.capitalone.com/credit-cards/venture-x/
+    quote: '5X Miles on flights and vacation rentals booked through Capital One Travel'
+  - rule: capital-one-entertainment
+    url: https://www.capitalone.com/credit-cards/venture-x/
+    quote: 'Plus earn 5X miles on Capital One Entertainment purchases'
+  - rule: annual_fee
+    url: https://www.capitalone.com/credit-cards/venture-x/
+    quote: 'ANNUAL FEE $395'
+  - rule: welcome_offer
+    url: https://www.capitalone.com/credit-cards/venture-x/
+    quote: 'Earn 75,000 bonus miles once you spend $4,000 on purchases within the first 3 months from account opening'

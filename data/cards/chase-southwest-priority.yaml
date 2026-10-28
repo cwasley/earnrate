@@ -1,0 +1,58 @@
+id: chase-southwest-priority
+name: Southwest Rapid Rewards Priority Credit Card
+issuer: chase
+network: visa
+currency: southwest-rapid-rewards
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/travel-credit-cards/southwest/priority
+base_rate: 1
+annual_fee: 229
+welcome_offer:
+  points: 60000
+  spend: 2000
+  months: 3
+  note: 'Not available to current cardmembers of any Southwest Rapid Rewards Credit Card, or previous cardmembers of any Southwest Rapid Rewards Credit Card who received a new Cardmember bonus within the last 24 months (this does not apply to business cards).'
+rules:
+  - id: southwest
+    match: { merchants: [southwest] }
+    rate: 4
+    note: Purchases made directly with Southwest, including flights, inflight, Southwest gift cards and Getaways by Southwest packages. Southwest Cruises, Southwest Charters and Southwest Cargo are excluded.
+  - id: gas
+    match: { categories: [gas] }
+    rate: 2
+  - id: dining
+    match: { categories: [dining] }
+    rate: 2
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 5
+    valid_to: 2027-12-31
+    note: Limited-time offer on rides, bikes, scooters and Lyft memberships bought in the Lyft app. Gift cards and Lyft car rentals are excluded.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: annual_fee
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    quote: '$229 applied to first billing statement.'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    quote: 'Earn 60,000 bonus points after you spend $2,000 on purchases in the first 3 months from account opening'
+  - rule: base_rate
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    quote: 'Earn 1 point for each dollar spent on all other purchases.'
+  - rule: southwest
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    quote: 'Earn 4 points for each dollar spent on Southwest Airlines purchases.'
+  - rule: southwest
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    quote: 'Other Southwest Airlines related purchases, such as Southwest Cruises, Southwest Charters, and Southwest Cargo® are excluded.'
+  - rule: gas
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    quote: 'Earn 2 points for each dollar spent at gas stations and restaurants.'
+  - rule: dining
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    quote: 'Earn 2 points for each dollar spent at gas stations and restaurants.'
+  - rule: lyft
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    quote: 'earn 5X Rapid Rewards points on qualifying Lyft products and services purchased through the Lyft mobile application through 12/31/2027'

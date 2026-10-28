@@ -1,0 +1,69 @@
+id: chase-freedom-unlimited
+name: Chase Freedom Unlimited
+issuer: chase
+network: visa
+currency: cash
+last_verified: 2026-10-24
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
+  - https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household
+base_rate: 1.5
+annual_fee: 0
+welcome_offer:
+  dollars: 200
+  spend: 500
+  months: 3
+  note: 'Paid as 20,000 Ultimate Rewards points. Chase: "available to you if you do not have this card and have not received a new cardmember bonus for this card in the past 24 months."'
+# Its cash back is earned as points, which Chase lets you move to another
+# Ultimate Rewards card on your account, where they transfer like any other UR.
+pools_into:
+  currency: UR
+  when_wallet_has:
+    [
+      chase-sapphire-preferred,
+      chase-sapphire-reserve,
+      chase-ink-business-preferred,
+    ]
+rules:
+  - id: chase-travel
+    match: { merchants: [chase-travel] }
+    rate: 5
+  - id: dining
+    match: { categories: [dining] }
+    rate: 3
+    note: Includes takeout and eligible delivery services.
+  - id: drugstores
+    match: { categories: [drugstore] }
+    rate: 3
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 2
+    valid_to: 2027-09-30
+    note: Limited-time offer, for Lyft products bought in the Lyft app.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
+    quote: 'Earn 1.5% on all other purchases'
+  - rule: chase-travel
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
+    quote: 'Earn 5% on travel purchased through Chase Travel'
+  - rule: dining
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
+    quote: 'Earn 3% on dining at restaurants'
+  - rule: drugstores
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
+    quote: 'Earn 3% on drugstore purchases'
+  - rule: lyft
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
+    quote: 'earn 2% cash back total on qualifying Lyft products and services'
+  - rule: pools_into
+    url: https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household
+    quote: 'You can combine points from one Chase card to another Chase card on your account'
+  - rule: annual_fee
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
+    quote: 'ANNUAL FEE $0'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
+    quote: 'Earn a $200 bonus after you spend $500 on purchases in the first 3 months from account opening'

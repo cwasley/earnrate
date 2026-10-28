@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>earnrate: which card should I use?</title>
+    <meta
+      name="description"
+      content="Ask earnrate which card to use before you pay. It checks every card in your wallet, remembers what you've already spent, and tells you which one earns the most."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://earnrate.dev/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="earnrate" />
+    <meta property="og:url" content="https://earnrate.dev/" />
+    <meta property="og:title" content="earnrate: which card should I use?" />
+    <meta
+      property="og:description"
+      content="Ask before you pay. earnrate checks every card in your wallet and tells you which one earns the most at that store, and why."
+    />
+    <meta property="og:image" content="https://earnrate.dev/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="earnrate: Which card should I use? A chat asks which card to use for $100 at Trader Joe’s, and earnrate answers Blue Cash Preferred, 6% back."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#1f6f54" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='7' width='26' height='18' rx='3' fill='%231f6f54'/%3E%3Crect x='3' y='11' width='26' height='3' fill='%23ffffff' opacity='.85'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #fbfaf7;
+        --surface: #ffffff;
+        --text: #1c1d1f;
+        --muted: #5f6368;
+        --line: #e6e2da;
+        --accent: #1f6f54;
+        --accent-soft: #e4f1eb;
+        --term-bg: #16191c;
+        --term-text: #e8e6e1;
+        --term-dim: #8d949b;
+        --term-good: #7fd1ad;
+        --term-warn: #f0c46a;
+        --bubble-me: #1f6f54;
+        --bubble-me-text: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121315;
+          --surface: #1a1c1f;
+          --text: #ecebe7;
+          --muted: #a2a6ab;
+          --line: #2b2e32;
+          --accent: #7fd1ad;
+          --accent-soft: #1c2c25;
+          --term-bg: #0c0e10;
+          --bubble-me: #2b6b52;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          17px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 0 16px 72px;
+      }
+      header.hero {
+        padding: 48px 0 8px;
+      }
+      .hero-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .wordmark {
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--accent);
+        font-size: 18px;
+      }
+      .ghost {
+        width: 112px;
+        height: auto;
+        color: var(--accent);
+        flex: none;
+      }
+      h1 {
+        font-size: clamp(34px, 7vw, 50px);
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+        margin: 22px 0 14px;
+      }
+      h2 {
+        font-size: 24px;
+        letter-spacing: -0.02em;
+        margin: 60px 0 12px;
+      }
+      p {
+        margin: 0 0 14px;
+      }
+      .lede {
+        font-size: 19px;
+        color: var(--muted);
+        max-width: 36em;
+      }
+      a {
+        color: var(--accent);
+      }
+      pre,
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .terminal {
+        background: var(--term-bg);
+        color: var(--term-text);
+        border-radius: 12px;
+        padding: 16px 18px;
+        font-size: 13px;
+        line-height: 1.55;
+        overflow-x: auto;
+        margin: 0;
+      }
+      .terminal.install {
+        margin: 12px 0 20px;
+      }
+      .terminal .prompt,
+      .terminal .dim {
+        color: var(--term-dim);
+      }
+      .terminal .good {
+        color: var(--term-good);
+        font-weight: 600;
+      }
+      .terminal .warn {
+        color: var(--term-warn);
+      }
+      .caption {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 10px;
+      }
+      .chat {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px;
+        margin: 18px 0 0;
+      }
+      .bubble {
+        max-width: 88%;
+        padding: 10px 14px;
+        border-radius: 16px;
+        font-size: 15.5px;
+        line-height: 1.5;
+      }
+      .bubble.me {
+        margin-left: auto;
+        background: var(--bubble-me);
+        color: var(--bubble-me-text);
+        border-bottom-right-radius: 4px;
+      }
+      .bubble.it {
+        margin-top: 10px;
+        background: var(--accent-soft);
+        border-bottom-left-radius: 4px;
+      }
+      .before-after {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 18px;
+      }
+      @media (min-width: 720px) {
+        .before-after {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .before-after > div {
+        display: flex;
+        flex-direction: column;
+      }
+      .before-after .terminal {
+        flex: 1;
+      }
+      .before-after .label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 0 0 6px;
+      }
+      ul.plain {
+        padding-left: 1.2em;
+        margin: 8px 0 0;
+      }
+      ul.plain li {
+        margin-bottom: 8px;
+      }
+      ul.cards {
+        list-style: none;
+        padding: 0;
+        margin: 16px 0 0;
+      }
+      ul.cards li {
+        padding: 10px 0;
+        border-top: 1px solid var(--line);
+      }
+      ul.cards li:last-child {
+        border-bottom: 1px solid var(--line);
+      }
+      ul.cards strong {
+        display: block;
+      }
+      @media (min-width: 640px) {
+        ul.cards li {
+          display: grid;
+          grid-template-columns: 10em 1fr;
+          gap: 12px;
+        }
+      }
+      @media (max-width: 639px) {
+        .terminal {
+          font-size: 11.5px;
+          padding: 14px;
+        }
+        .ghost {
+          width: 84px;
+        }
+      }
+      footer {
+        margin-top: 64px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <div class="hero-top">
+          <div class="wordmark">earnrate</div>
+          <svg
+            class="ghost"
+            viewBox="0 0 120 80"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+          >
+            <rect x="22" y="6" width="92" height="58" rx="9" opacity="0.25" />
+            <rect x="14" y="12" width="92" height="58" rx="9" opacity="0.45" />
+            <rect
+              x="6"
+              y="18"
+              width="92"
+              height="58"
+              rx="9"
+              stroke-width="2"
+              stroke-dasharray="6 5"
+            />
+            <rect
+              x="18"
+              y="34"
+              width="16"
+              height="12"
+              rx="2"
+              stroke-width="2"
+            />
+          </svg>
+        </div>
+        <h1>Which card should I use?</h1>
+        <p class="lede">
+          Ask earnrate before you pay. It checks every card in your wallet and
+          tells you which one earns the most at that store, and why.
+        </p>
+      </header>
+
+      <section>
+        <h2>Why I built it</h2>
+        <p>
+          A few cards into the points hobby, I was standing in Whole Foods
+          trying to work out whether my Prime Visa or my Amex Gold earned more
+          there. Browser extensions can help when you shop online, but nothing
+          helps at a register.
+        </p>
+        <p>
+          My first idea was a ghost card: one physical card that charges
+          whichever of my cards is best. The card networks don't allow that, and
+          Apple Pay is locked down. So I built the next best thing. Before I
+          shop, I ask in plain words, and earnrate does the research.
+        </p>
+        <div class="chat" aria-label="Example conversation">
+          <div class="bubble me">
+            I'm about to go to Trader Joe's. Which card should I use for $100?
+          </div>
+          <div class="bubble it">
+            Use your Blue Cash Preferred: 6% back at U.S. supermarkets, about
+            $6.00. Your Amex Gold is next at 4x points.
+          </div>
+        </div>
+        <p class="caption">
+          An example from Claude with earnrate connected. The numbers are
+          earnrate's real answer for a sample wallet.
+        </p>
+      </section>
+
+      <section>
+        <h2>It remembers what you've spent</h2>
+        <p>
+          Many bonus rates stop at a cap. Blue Cash Preferred pays 6% at
+          supermarkets until you've spent $6,000 in a year, then 1%. earnrate
+          keeps track, so the answer changes when it should.
+        </p>
+        <div class="before-after">
+          <div>
+            <p class="label">In January</p>
+            <pre
+              class="terminal"
+            ><span class="prompt">$</span> earnrate whole foods 80
+
+<span class="good">Use Blue Cash Preferred:</span>
+<span class="good">6% back, about $4.80.</span>
+
+  1. Blue Cash Preferred  6%
+  2. Prime Visa           5%
+  3. Amex Gold            4%</pre>
+          </div>
+          <div>
+            <p class="label">After $6,000 of groceries</p>
+            <pre
+              class="terminal"
+            ><span class="prompt">$</span> earnrate whole foods 80
+
+<span class="good">Use Prime Visa:</span>
+<span class="good">5% back, about $4.00.</span>
+
+  1. Prime Visa           5%
+  2. Amex Gold            4%
+<span class="warn">  Blue Cash Preferred's $6,000
+  supermarket cap is used up.</span></pre>
+          </div>
+        </div>
+        <p class="caption">
+          earnrate's real answers, shortened. Cards that pick categories each
+          quarter, like U.S. Bank Cash+ and Chase Freedom Flex, work the same
+          way: earnrate uses the picks you've made.
+        </p>
+      </section>
+
+      <section>
+        <h2>It explains itself</h2>
+        <p>Every answer shows the rule behind it. A few things it catches:</p>
+        <ul class="plain">
+          <li>
+            Costco's registers only take Visa, so it won't suggest your Amex
+            there.
+          </li>
+          <li>
+            If your points are worth more to you than face value, it ranks on
+            your number and says where the answer would flip.
+          </li>
+          <li>
+            Food at a stadium or inside a hotel may not count as a restaurant.
+            It warns you and says which card wins either way.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Ask it from Claude</h2>
+        <p>
+          earnrate runs as an MCP server, so you can ask in a chat with Claude,
+          like the Trader Joe's example above. It can also show what's left on
+          each cap, and record a purchase so the next answer accounts for it.
+          Answers come back with a stable card id as well as the explanation, so
+          an agent that pays for you can use them directly. It never needs or
+          returns a card number.
+        </p>
+      </section>
+
+      <section>
+        <h2>Cards it knows</h2>
+        <p>
+          Each card's rules come from the issuer's own terms. A weekly check
+          reloads those pages and flags anything that changed.
+        </p>
+        <ul class="cards">
+          <li>
+            <strong>American Express</strong> Gold, Platinum, Blue Cash
+            Preferred, Blue Cash Everyday, Blue Business Plus
+          </li>
+          <li>
+            <strong>Chase</strong> Sapphire Preferred, Sapphire Reserve, Freedom
+            Unlimited, Freedom Flex, Ink Business Cash, Ink Business Preferred,
+            Prime Visa
+          </li>
+          <li>
+            <strong>Citi</strong> Strata Elite, Strata Premier, Double Cash,
+            Custom Cash, My Best Buy Visa
+          </li>
+          <li><strong>Capital One</strong> Venture X, Venture, Savor</li>
+          <li><strong>Wells Fargo</strong> Active Cash, Autograph</li>
+          <li>
+            <strong>Others</strong> U.S. Bank Cash+, Bilt Obsidian, SoFi
+            Unlimited 2%
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Nothing leaves your laptop</h2>
+        <p>
+          earnrate runs on your own machine, and your wallet is a file you
+          control. It never asks for card numbers or bank logins, and there's no
+          tracking. The one exception is optional and off by default: for a
+          store it doesn't recognize, it can ask Claude what kind of store it
+          is. Only the store's name is sent.
+        </p>
+      </section>
+
+      <section>
+        <h2>Get it</h2>
+        <p>Needs Node 24 or later. Install it, then ask about a merchant:</p>
+        <pre
+          class="terminal install"
+        ><span class="prompt">$</span> npm install -g earnrate
+<span class="prompt">$</span> earnrate whole foods 80</pre>
+        <p>To let an AI agent ask it, add it as an MCP server:</p>
+        <pre
+          class="terminal install"
+        ><span class="prompt">$</span> claude mcp add earnrate -- npx -y earnrate mcp</pre>
+        <p>
+          The first run says where to copy the example wallet. Setup, options
+          and the full card list are in the
+          <a href="https://github.com/cwasley/earnrate#readme"
+            >README on GitHub</a
+          >.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          The code is MIT licensed. The card data is CC BY-NC 4.0, free for
+          personal use; for commercial use, email
+          <a href="mailto:licensing@earnrate.dev">licensing@earnrate.dev</a>.
+        </p>
+        <p>
+          No affiliate links, ever. Rankings depend only on your own cards and
+          settings.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

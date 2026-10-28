@@ -1,0 +1,82 @@
+id: chase-united-business
+name: United Business Card
+issuer: chase
+network: visa
+currency: united-miles
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/business-credit-cards/united/united-business-card
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+base_rate: 1
+business: true
+annual_fee: 150
+welcome_offer:
+  points: 90000
+  spend: 5000
+  months: 3
+  note: 'The main tier also earns 2,000 Premier qualifying points (PQP). Up to 100,000 miles in total: plus 10,000 bonus miles after adding an employee card in the first 3 months. Not available to current cardmembers of this card, or previous cardmembers who received a new Cardmember bonus for this card within the last 24 months.'
+rules:
+  - id: united
+    match: { merchants: [united] }
+    rate: 2
+    note: Tickets, seat upgrades, Economy Plus, inflight food, drinks and Wi-Fi, bag fees and other United fees bought from United. Not United Cruises, MileagePlus X, DIRECTV or Merchandise Awards, or United tickets bought through discount travel sites or third-party packages. The advertised 8x on flights includes 6x MileagePlus flight miles, which aren't card earnings.
+  - id: gas
+    match: { categories: [gas] }
+    rate: 2
+    note: Not truck stops, marinas, or oil and propane distributors.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 2
+    note: Includes eligible delivery services.
+  - id: office-supply
+    match: { categories: [office_supply] }
+    rate: 2
+    note: Only stores that specialize in office supplies. Discount, department and electronics stores don't count.
+  - id: local-transit
+    match: { categories: [transit] }
+    rate: 2
+    note: Local transit and commuting, including rideshare, taxis, trains, buses, ferries, tolls and parking. Not airlines, car rentals, bike or scooter rentals or car sharing.
+todo:
+  - United Card Events from Chase also earn 2x; no merchant exists for them, so they aren't modeled.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: annual_fee
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: '$150 Annual Fee'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: 'Earn 90,000 bonus miles + 2,000 PQP after you spend $5,000 on purchases in the first 3 months'
+  - rule: base_rate
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: '1x mile on all other purchases'
+  - rule: united
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: '2x miles on all other eligible United purchases'
+  - rule: united
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: 'on airline tickets purchased from United, and on the following purchases made from United'
+  - rule: gas
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: '2x miles at gas stations'
+  - rule: gas
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Merchants in this category sell automotive gasoline that can be paid for either at the pump or inside the station'
+  - rule: dining
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: '2x miles on dining including eligible delivery services'
+  - rule: dining
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: 'in the following rewards categories: restaurants; gas stations; office supply stores; local transit and commuting'
+  - rule: office-supply
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: '2x miles at office supply stores'
+  - rule: office-supply
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Merchants in this category specialize in selling a variety of office supplies'
+  - rule: local-transit
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: '2x miles on local transit including ride share services, taxicabs, train tickets, tolls and mass transit'
+  - rule: local-transit
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'operators of passenger trains, buses, taxis, limousines, rideshare, ferries, toll bridges and highways'

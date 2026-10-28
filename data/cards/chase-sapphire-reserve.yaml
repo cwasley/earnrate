@@ -1,0 +1,86 @@
+id: chase-sapphire-reserve
+name: Chase Sapphire Reserve
+issuer: chase
+network: visa
+currency: UR
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+base_rate: 1
+annual_fee: 795
+welcome_offer:
+  points: 100000
+  spend: 6000
+  months: 3
+  note: 'Chase: "This credit card is unavailable to you if you currently have this card open. The new cardmember bonus may not be available to you if you previously held this card or received a new cardmember bonus for this card." Chase may also weigh how many cards you''ve opened and closed.'
+# Not modeled on purpose: the $300 travel credit, The Edit credit, dining,
+# StubHub, Lyft and Peloton statement credits, and the $75,000-spend benefits.
+# They're credits or perks, not earn rates. Purchases covered by the travel
+# credit or The Edit credit earn no points.
+rules:
+  - id: chase-travel
+    match: { merchants: [chase-travel] }
+    rate: 8
+    note: Includes The Edit. Bookings through FROSCH, Valerie Wilson Travel or Frosch International Travel don't earn 8x; Reserve Travel Designers bookings earn 8x only if booked through Chase Travel.
+  - id: flights-hotels-direct
+    match: { categories: [travel.flights, travel.hotels] }
+    rate: 4
+    note: Booked directly with the airline or hotel, including charter and private flights. Not travel agencies, discount travel sites or packages; vacation rentals (Airbnb, Vrbo, Vacasa) don't count as hotels.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 3
+    note: Worldwide. Includes takeout and eligible delivery services.
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 5
+    valid_to: 2027-09-30
+    note: Limited-time offer on Lyft products bought in the Lyft app (rides, bikes and scooters, memberships). Not gift cards or car rentals.
+  - id: peloton
+    match: { merchants: [peloton] }
+    rate: 10
+    geography: us_only
+    valid_from: 2025-04-01
+    valid_to: 2027-12-31
+    note: Peloton equipment and accessory purchases over $150 bought directly from Peloton, on up to $5,000 in total purchases over the whole offer. Not memberships, apparel or gift cards.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: "You'll earn 1 point for each $1 spent on all other purchases"
+  - rule: chase-travel
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: "You'll earn 8 points for each $1 spent on purchases made using your card through Chase Travel"
+  - rule: chase-travel
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'on all purchases through Chase Travel, including The Edit'
+  - rule: flights-hotels-direct
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: '4 points ("4X points") on flights and hotels booked direct'
+  - rule: flights-hotels-direct
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'This category includes only airline tickets purchased directly with airlines, including charter and private flights'
+  - rule: dining
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: '3 points ("3X points") on dining at restaurants purchases'
+  - rule: dining
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'dining at restaurants including takeout and eligible delivery services'
+  - rule: lyft
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'earn 5x total points on Lyft rides through 9/30/2027'
+  - rule: peloton
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'earn 10x total points on eligible Peloton equipment and accessory purchases over $150 through 12/31/2027'
+  - rule: peloton
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'on up to $5,000 in total purchases when your card is used for Peloton equipment'
+  - rule: annual_fee
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: '$795 annual fee'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'Earn 100,000 points after you spend $6,000 in purchases in the first 3 months from account opening'
+todo:
+  - "peloton: the $5,000 limit runs across the whole offer (4/1/2025 to 12/31/2027), which no cap period can express, and the $150 minimum per purchase isn't modeled."

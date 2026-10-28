@@ -1,0 +1,247 @@
+# Hand-curated merchants that need special handling. These win over seed.yaml.
+
+# Issuer travel portals. Each issuer's own bonuses match them by id.
+- id: chase-travel
+  name: Chase Travel
+  domains: [travelsecure.chase.com]
+  category: travel
+- id: renowned-hotels-chase-travel
+  name: Renowned Hotels and Resorts (Chase Travel)
+  aliases: [renowned hotels, renowned hotels and resorts]
+  category: travel
+  note: Prepaid stays in the Renowned Hotels and Resorts collection for United cardmembers on Chase Travel.
+- id: costco-travel
+  name: Costco Travel
+  domains: [costcotravel.com]
+  category: travel
+- id: aadvantage-hotels
+  name: AAdvantage Hotels
+  aliases: [american airlines hotels]
+  domains: [aadvantagehotels.com]
+  category: travel
+- id: aadvantage-cars
+  name: AAdvantage Cars
+  aliases: [american airlines cars]
+  domains: [aadvantagecars.com]
+  category: travel
+- id: amex-travel
+  name: American Express Travel
+  aliases: [amex travel]
+  domains: [amextravel.com]
+  category: travel
+  booked_via:
+    [
+      amex-travel-hotels,
+      amex-travel-flights,
+      airbnb-amex-travel,
+      amex-travel-car-rentals,
+      amex-travel-cruises,
+    ]
+# Each bank's travel site books on the bank's behalf, so other issuers see a
+# travel agency (plain `travel`), never a direct hotel or airline booking. The
+# bank's own bonuses match these merchants by id. Bonuses that depend on what's
+# booked get one merchant per booking type.
+- id: amex-travel-hotels
+  name: Hotel through Amex Travel
+  aliases: [amex travel hotel, amex travel hotels, hotel amex travel]
+  category: travel
+  note: Prepaid hotels only for the Amex bonuses.
+- id: amex-travel-flights
+  name: Flight through Amex Travel
+  aliases: [amex travel flight, amex travel flights, flight amex travel]
+  category: travel
+- id: airbnb-amex-travel
+  name: Airbnb through Amex Travel
+  aliases:
+    [
+      airbnb amex travel,
+      airbnb via amex travel,
+      airbnb through amex travel,
+      amex travel airbnb,
+    ]
+  category: travel
+  note: Prepaid Airbnb stays booked in AmexTravel.com or the Amex Travel app, with your Airbnb account linked to Amex.
+- id: amex-travel-car-rentals
+  name: Car rental through Amex Travel
+  aliases: [amex travel car rental, amex travel car]
+  category: travel
+- id: amex-travel-cruises
+  name: Cruise through Amex Travel
+  aliases: [amex travel cruise]
+  category: travel
+- id: usbank-travel-center
+  name: U.S. Bank Travel Center
+  aliases: [us bank travel center]
+  category: travel
+- id: sofi-travel
+  name: SoFi Travel
+  category: travel
+
+# Merchant-specific card rates.
+- id: amazon
+  name: Amazon
+  # AMZN Mktp is how marketplace orders appear on card statements.
+  aliases: [amzn mktp]
+  domains: [amazon.com]
+  category: online_retail
+- id: amazon-fresh
+  name: Amazon Fresh
+  category: grocery.online
+- id: whole-foods
+  name: Whole Foods Market
+  # WHOLEFDS is how it appears on card statements.
+  aliases: [whole foods, wholefds]
+  domains: [wholefoodsmarket.com]
+  category: grocery.supermarket
+  likely_mcc: 5411
+  note: Prime Visa pays 5% here as a merchant rate. BCP and Gold pay their supermarket rate only if it codes as a supermarket, which it usually does in-store.
+- id: best-buy
+  name: Best Buy
+  domains: [bestbuy.com]
+  category: electronics
+- id: pacific-kitchen-home
+  name: Pacific Kitchen & Home
+  aliases: [pacific kitchen and home, pacific sales]
+  category: other
+  note: Best Buy's appliance showrooms. Citi pays its Best Buy rate here too.
+
+# Warehouse clubs and superstores: excluded from issuers' grocery and gas bonuses.
+- id: costco
+  name: Costco
+  aliases: [costco wholesale]
+  domains: [costco.com]
+  category: warehouse_club
+  in_store:
+    accepts: [visa]
+  note: Warehouse registers take Visa only for credit. Costco.com takes other networks.
+- id: costco-gas
+  name: Costco Gas
+  aliases: [costco gas station]
+  category: gas.superstore
+  in_store:
+    accepts: [visa]
+  note: Issuers usually exclude warehouse-club gas from gas bonuses.
+- id: sams-club
+  name: Sam's Club
+  aliases: [sams club]
+  domains: [samsclub.com]
+  category: warehouse_club
+- id: sams-club-gas
+  name: Sam's Club Gas
+  aliases: [sams club gas]
+  category: gas.superstore
+  note: Issuers usually exclude warehouse-club gas from gas bonuses.
+- id: walmart
+  name: Walmart
+  aliases: [walmart supercenter]
+  domains: [walmart.com]
+  category: superstore
+  note: Supercenters can carry a supermarket MCC, but Amex and Chase exclude Walmart from grocery bonuses by name.
+- id: target
+  name: Target
+  domains: [target.com]
+  category: superstore
+
+# Venues where a purchase may not code the way it looks.
+- id: dodger-stadium
+  name: Dodger Stadium
+  category: entertainment
+  ambiguity:
+    may_code_as: [dining]
+    note: Concession stands and stadium restaurants usually code as the venue (entertainment), not as restaurants.
+- id: bellagio
+  name: Bellagio
+  aliases: [bellagio las vegas]
+  category: travel.hotels
+  ambiguity:
+    may_code_as: [dining, entertainment]
+    note: Restaurants inside a hotel may code as dining, or as lodging if charged to the room. Shows and casino charges code separately.
+
+- id: comcast
+  name: Comcast Xfinity
+  aliases: [comcast, xfinity]
+  domains: [xfinity.com]
+  category: tv_internet
+
+# Card issuers' travel and ticketing sites (see the Amex Travel note above).
+- {
+    id: capital-one-travel,
+    name: Capital One Travel,
+    aliases: [capital one travel],
+    category: travel,
+  }
+- {
+    id: capital-one-travel-hotels,
+    name: Hotel through Capital One Travel,
+    aliases: [capital one travel hotel],
+    category: travel,
+  }
+- id: capital-one-travel-vacation-rentals
+  name: Vacation rental through Capital One Travel
+  aliases: [capital one travel vacation rental]
+  category: travel
+- {
+    id: capital-one-travel-car-rentals,
+    name: Car rental through Capital One Travel,
+    aliases: [capital one travel car rental],
+    category: travel,
+  }
+- {
+    id: capital-one-travel-flights,
+    name: Flight through Capital One Travel,
+    aliases: [capital one travel flight],
+    category: travel,
+  }
+- id: capital-one-entertainment
+  name: Capital One Entertainment
+  aliases: [capital one entertainment tickets]
+  category: entertainment
+- {
+    id: citi-travel,
+    name: Citi Travel,
+    aliases: [citi travel],
+    domains: [cititravel.com],
+    category: travel,
+  }
+- {
+    id: citi-travel-hotels,
+    name: Hotel through Citi Travel,
+    aliases: [citi travel hotel],
+    category: travel,
+  }
+- {
+    id: citi-travel-car-rentals,
+    name: Car rental through Citi Travel,
+    aliases: [citi travel car rental],
+    category: travel,
+  }
+- {
+    id: citi-travel-attractions,
+    name: Attraction through Citi Travel,
+    aliases: [citi travel attraction],
+    category: travel,
+  }
+- {
+    id: citi-travel-flights,
+    name: Flight through Citi Travel,
+    aliases: [citi travel flight],
+    category: travel,
+  }
+- {
+    id: bilt-travel,
+    name: Bilt Travel,
+    aliases: [bilt travel],
+    category: travel,
+  }
+- {
+    id: bilt-travel-hotels,
+    name: Hotel through Bilt Travel,
+    aliases: [bilt travel hotel],
+    category: travel,
+  }
+- {
+    id: bilt-travel-flights,
+    name: Flight through Bilt Travel,
+    aliases: [bilt travel flight],
+    category: travel,
+  }

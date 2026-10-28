@@ -1,0 +1,70 @@
+id: citi-strata-elite
+name: Citi Strata Elite Card
+issuer: citi
+network: mastercard
+currency: TYP
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+base_rate: 1.5
+annual_fee: 595
+welcome_offer:
+  points: 75000
+  spend: 6000
+  months: 3
+  note: "Not available if you currently have or previously had a Citi Strata Elite account; Citi may also decline the bonus based on your history of opening, closing and using credit cards. This page doesn't state a 48-month rule."
+rules:
+  - id: citi-travel-hotels-cars-attractions
+    match:
+      {
+        merchants:
+          [
+            citi-travel-hotels,
+            citi-travel-car-rentals,
+            citi-travel-attractions,
+          ],
+      }
+    rate: 12
+    note: Booked with Citi Travel at cititravel.com or 1-833-737-1288. Only the part paid with the card earns, not the part paid with points or offset by the $300 Annual Hotel Benefit.
+  - id: citi-travel-air
+    match: { merchants: [citi-travel-flights] }
+    rate: 6
+    note: Air travel booked with Citi Travel. Flights booked directly with an airline earn the 1.5x base rate.
+  - id: restaurants
+    match: { categories: [dining] }
+    exclude: { merchants: [dodger-stadium, bellagio] }
+    rate: 3
+    note: 6x during Citi Nights (purchases authorized Friday 6 PM to Saturday 6 AM ET and Saturday 6 PM to Sunday 6 AM ET); earnrate can't see the time of a purchase, so this models the 3x rate. Includes cafes, bars, lounges, fast food, takeout and restaurant delivery services. Excludes bakeries, caterers and restaurants inside another business (hotels, stores, stadiums, grocery stores, warehouse clubs).
+# Not modeled: statement credits (hotel benefit, Splurge Credit, Blacklane, Global Entry/TSA PreCheck).
+todo:
+  - Citi Nights 6x at restaurants depends on the authorization time, which the schema can't express. Modeled at 3x.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: '1.5 points per dollar spent on All Other Purchases'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: '12 points per dollar spent on Hotels, Car Rentals, and Attractions'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: 'only the portion paid with your card will earn points'
+  - rule: citi-travel-air
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: '6 points per dollar spent on Air Travel booked on cititravel.com'
+  - rule: restaurants
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: '3 points per dollar spent at Restaurants any other time'
+  - rule: restaurants
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: 'Excludes purchases at bakeries, caterers, and restaurants located inside another business'
+  - rule: annual_fee
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: 'Minimum interest charge – $0.50. Annual fee - $595.'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: 'Earn 75,000 bonus points after spending $6,000 in the first 3 months'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: 'New account bonus offer is not available if you currently have or previously had a Citi Strata Elite® account'

@@ -1,0 +1,71 @@
+id: amex-platinum
+name: The Platinum Card from American Express
+issuer: amex
+network: amex
+currency: MR
+last_verified: 2026-10-24
+verified_by: collin
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/card/platinum/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+base_rate: 1
+annual_fee: 895
+welcome_offer:
+  points: 175000
+  spend: 12000
+  months: 6
+  note: 'The public offer is "as high as" 175,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. Not available if you have or have had this Card, the Schwab or Morgan Stanley Platinum Card, or previous versions of these Cards; Amex may also decline based on your card history.'
+# One cap covers flights booked directly and through Amex Travel.
+caps:
+  - { id: flights, amount: 500000, period: calendar_year, then_rate: 1 }
+rules:
+  - id: flights
+    match: { categories: [travel.flights] }
+    rate: 5
+    cap: flights
+    note: Scheduled flights booked directly with the airline or through Amex Travel. Charter and private jet flights, and flights in tours, cruises or packages, are excluded.
+  - id: flights-amex-travel
+    match: { merchants: [amex-travel-flights] }
+    rate: 5
+    cap: flights
+  - id: prepaid-hotels-amex-travel
+    match: { merchants: [amex-travel-hotels] }
+    rate: 5
+    note: Prepaid hotels only.
+  - id: airbnb-amex-travel
+    match: { merchants: [airbnb-amex-travel] }
+    rate: 5
+    note: Prepaid Airbnb stays booked through Amex Travel, with your Airbnb account linked to Amex.
+  - id: cruises-amex-travel
+    match: { merchants: [amex-travel-cruises] }
+    rate: 2
+    note: Platinum's only 2x Amex Travel booking type.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/us/credit-cards/card/platinum/
+    quote: '1X POINTS On Other Purchases Terms and limitations apply.'
+  - rule: flights
+    url: https://www.americanexpress.com/us/credit-cards/card/platinum/
+    quote: '5X POINTS On Flights Booked directly with airlines or through'
+  - rule: prepaid-hotels-amex-travel
+    url: https://www.americanexpress.com/us/credit-cards/card/platinum/
+    quote: '5X POINTS On Prepaid Hotels Booked through American Express Travel ®'
+  - rule: airbnb-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'prepaid short-term rental reservations booked with Airbnb through AmexTravel.com'
+  - rule: cruises-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'only eligible for 1 additional point on cruise reservations'
+  - rule: flights-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'booked directly with passenger airlines or through American Express Travel'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'The annual fee for the Platinum Card® is $895.'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/platinum/
+    quote: 'AS HIGH AS 175,000 Membership Rewards® points'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/platinum/
+    quote: 'after you spend $12,000 in purchases on your new Card within the first 6 months'

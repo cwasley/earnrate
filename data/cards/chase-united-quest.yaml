@@ -1,0 +1,85 @@
+id: chase-united-quest
+name: United Quest Card
+issuer: chase
+network: visa
+currency: united-miles
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/travel-credit-cards/united/united-quest
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+base_rate: 1
+annual_fee: 350
+welcome_offer:
+  points: 80000
+  spend: 4000
+  months: 3
+  note: 'Up to 90,000 in total: plus 500 Premier qualifying points (PQP) after the first purchase and 10,000 bonus miles after adding an authorized user in the first 3 months. Not available to current cardmembers of this card, or previous cardmembers who received a new Cardmember bonus for this card within the last 24 months.'
+rules:
+  - id: united
+    match: { merchants: [united] }
+    rate: 4
+    note: Tickets, seat upgrades, Economy Plus, inflight food, drinks and Wi-Fi, bag fees and other United fees bought from United. Not United Cruises, MileagePlus X, DIRECTV or Merchandise Awards, or United tickets bought through discount travel sites or third-party packages. The advertised 10x on flights includes 6x MileagePlus flight miles, which aren't card earnings.
+  - id: renowned-hotels
+    match: { merchants: [renowned-hotels-chase-travel] }
+    rate: 5
+    note: Prepaid hotel stays booked through Renowned Hotels and Resorts for United Cardmembers on Chase Travel. Bookings through FROSCH, Valerie Wilson Travel or Frosch International Travel don't earn 5x.
+  - id: travel
+    match: { categories: [travel] }
+    rate: 2
+    note: Includes airfare, trains, cruise lines, hotels, car rentals and resorts.
+  - id: transit-as-travel
+    match: { categories: [transit] }
+    rate: 2
+    note: Chase's travel category on this card includes local transit, taxis, rideshare and tolls.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 2
+    note: Includes takeout and eligible delivery services.
+  - id: streaming
+    match: { categories: [streaming] }
+    rate: 2
+    note: Only Chase's select streaming list (Apple Music, Apple TV, Disney+, ESPN+, Fubo TV, Max, Hulu, Netflix, Pandora, Paramount+, Peacock, Showtime, SiriusXM, Sling, Spotify, YouTube Premium, YouTube TV, Vudu).
+todo:
+  - United Card Events from Chase also earn 4x; no merchant exists for them, so they aren't modeled.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: annual_fee
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'ANNUAL FEE $350'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: '80,000 bonus miles after you spend $4,000 on purchases in the first 3 months your account is open'
+  - rule: base_rate
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: '1x mile on all other purchases'
+  - rule: united
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: '4x miles on all other eligible United purchases'
+  - rule: united
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'on airline tickets purchased from United, and on the following purchases made from United'
+  - rule: renowned-hotels
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: '5x miles on hotel stays when you prepay directly through Renowned Hotels and Resorts'
+  - rule: renowned-hotels
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'hotel accommodation purchases made using your card with Renowned Hotels and Resorts for United'
+  - rule: travel
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: '2x miles on all other travel including airfare, trains, local transit, cruise lines, hotels, car rentals'
+  - rule: transit-as-travel
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'local transit, cruise lines, hotels, car rentals, taxicabs, resorts, ride share services and tolls'
+  - rule: dining
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: '2x miles on dining including eligible delivery services'
+  - rule: dining
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'dining at restaurants including takeout and eligible delivery services'
+  - rule: streaming
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: '2x miles on select streaming services'
+  - rule: streaming
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Only subscriptions paid for, or purchases made with the following select merchants will qualify for this category'

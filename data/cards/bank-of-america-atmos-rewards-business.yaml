@@ -1,0 +1,72 @@
+id: bank-of-america-atmos-rewards-business
+name: Atmos Rewards Visa Signature Business Card
+issuer: bank-of-america
+network: visa
+currency: atmos-points
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+base_rate: 1
+business: true
+annual_fee: 70
+welcome_offer:
+  points: 70000
+  spend: 4000
+  months: 3
+  note: Limited-time online offer, no end date stated. Online only; it may not be available after leaving the page, at a financial center or by phone. The window is 90 days from account opening. The offer also includes a $99 Companion Fare (plus taxes and fees from $23). The spend and window are in the offer's info tooltip, not the visible page text.
+rules:
+  - id: alaska-and-hawaiian
+    match: { merchants: [alaska-airlines, hawaiian-airlines] }
+    rate: 3
+    note: Card points only; points and status from flying aren't card earnings.
+  - id: gas-ev-shipping-transit
+    match: { categories: [gas, ev_charging, shipping, transit] }
+    rate: 2
+    note: Local transit includes rideshare.
+  - id: alaska-and-hawaiian-with-boa-account
+    match: { merchants: [alaska-airlines, hawaiian-airlines] }
+    rate: 3.3
+    requires: { membership: bank-of-america-small-business-account }
+    note: 3x plus the 10% rewards bonus when the company has an eligible Bank of America small business account.
+  - id: gas-ev-shipping-transit-with-boa-account
+    match: { categories: [gas, ev_charging, shipping, transit] }
+    rate: 2.2
+    requires: { membership: bank-of-america-small-business-account }
+    note: 2x plus the 10% rewards bonus when the company has an eligible Bank of America small business account.
+  - id: everything-else-with-boa-account
+    match: { any: true }
+    rate: 1.1
+    requires: { membership: bank-of-america-small-business-account }
+    note: The 1x base rate plus the 10% rewards bonus when the company has an eligible Bank of America small business account.
+evidence:
+  - rule: base_rate
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    quote: 'Earn 1 point for every $1 spent on all other purchases.'
+  - rule: alaska-and-hawaiian
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    quote: 'Earn 3 points for every $1 spent on eligible Alaska Airlines and Hawaiian Airlines purchases.'
+  - rule: gas-ev-shipping-transit
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    quote: 'eligible gas, EV charging station, shipping and local transit purchases, including rideshare'
+  - rule: alaska-and-hawaiian-with-boa-account
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    quote: 'earn a 10% rewards bonus on all points earned from card purchases'
+  - rule: gas-ev-shipping-transit-with-boa-account
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    quote: 'if your company has an eligible Bank of America® small business account.'
+  - rule: everything-else-with-boa-account
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    quote: 'if your company has an eligible Bank of America® small business account.'
+  - rule: annual_fee
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    quote: 'Plus, a low annual fee of $70 for the company and $25 per card.'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    quote: 'Limited-time online offer: 70,000 bonus points + $99 Companion Fare'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    quote: 'after you make $4,000 or more in purchases within the first 90 days of opening your account'
+todo:
+  - 'The 10% rewards bonus rules use a proposed membership id, bank-of-america-small-business-account. Bank of America does not say on this page which accounts are "eligible".'
+  - 'annual_fee is the $70 per-company fee. Each card also costs $25 a year, which the schema has no field for.'

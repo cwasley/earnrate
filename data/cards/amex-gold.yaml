@@ -1,0 +1,94 @@
+id: amex-gold
+name: American Express Gold Card
+issuer: amex
+network: amex
+currency: MR
+last_verified: 2026-10-24
+verified_by: collin
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/card/gold-card/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+base_rate: 1
+annual_fee: 325
+welcome_offer:
+  points: 100000
+  spend: 8000
+  months: 6
+  note: 'The public offer is "as high as" 100,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. Not available if you have or have had this Card, the Premier Rewards Gold Card, the Platinum Card (including the Schwab and Morgan Stanley versions) or previous versions of these Cards; Amex may also decline based on your card history.'
+rules:
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 4
+    cap: { amount: 50000, period: calendar_year, then_rate: 1 }
+    exclude: { merchants: [dodger-stadium, bellagio], mccs: [5813] }
+    note: Worldwide. Not at restaurants inside hotels, casinos or event venues, or at bars, bakeries, cafeterias or caterers. Third-party delivery counts only in the U.S.
+  - id: us-supermarkets
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club, convenience_store] }
+    rate: 4
+    geography: us_only
+    cap: { amount: 25000, period: calendar_year, then_rate: 1 }
+    note: Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+  - id: flights
+    match: { categories: [travel.flights] }
+    rate: 3
+    note: Scheduled flights charged directly with the airline or through Amex Travel. Charter and private jet flights are excluded.
+  - id: flights-amex-travel
+    match: { merchants: [amex-travel-flights] }
+    rate: 3
+  - id: prepaid-hotels-amex-travel
+    match: { merchants: [amex-travel-hotels] }
+    rate: 5
+    note: Prepaid hotels only.
+  - id: prepaid-car-rental-amex-travel
+    match: { merchants: [amex-travel-car-rentals] }
+    rate: 2
+    note: Prepaid car rentals only.
+  - id: cruises-amex-travel
+    match: { merchants: [amex-travel-cruises] }
+    rate: 2
+    note: Booked and paid through AmexTravel.com.
+  - id: airbnb-amex-travel
+    match: { merchants: [airbnb-amex-travel] }
+    rate: 2
+    note: Prepaid Airbnb stays booked through Amex Travel. Add-on fees such as pet or pool fees don't count.
+# Not modeled on purpose: the Venue Collection benefit (10% back at select
+# stadiums and arenas, with enrollment) is a statement credit, not points.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
+    quote: 'Earn 1X Membership Rewards ® points on all other eligible purchases.'
+  - rule: restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
+    quote: '4X POINTS At Restaurants Worldwide, on up to $50K'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
+    quote: '4X POINTS On Groceries At U.S. supermarkets, on up to $25K'
+  - rule: flights
+    url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
+    quote: '3X POINTS On Flights Booked through AmexTravel.com or Amex Travel App™'
+  - rule: prepaid-hotels-amex-travel
+    url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
+    quote: '5X Points per dollar spent on Prepaid Hotels booked through AmexTravel.com'
+  - rule: prepaid-car-rental-amex-travel
+    url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
+    quote: '2X POINTS On Prepaid Car Rentals Booked through AmexTravel.com'
+  - rule: cruises-amex-travel
+    url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
+    quote: 'and cruises booked and paid through AmexTravel.com'
+  - rule: airbnb-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'prepaid short-term rental bookings with Airbnb when made through AmexTravel.com'
+  - rule: flights-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'airfare charged directly through American Express Travel'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'The annual fee for the American Express® Gold Card is $325.'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
+    quote: 'AS HIGH AS 100,000 Membership Rewards® points'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
+    quote: 'after you spend $8,000 in purchases on your new Card within the first 6 months'

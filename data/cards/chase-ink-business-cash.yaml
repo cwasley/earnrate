@@ -1,0 +1,97 @@
+id: chase-ink-business-cash
+name: Ink Business Cash
+issuer: chase
+network: visa
+currency: cash
+last_verified: 2026-10-26
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/business-credit-cards/ink/cash
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household
+base_rate: 1
+business: true
+annual_fee: 0
+welcome_offer:
+  dollars: 750
+  spend: 6000
+  months: 3
+  note: 'Chase: "The new cardmember bonus may not be available to you if you have ever had this card or any other Chase for Business card without an annual fee." Chase may also consider factors about your business.'
+# Its cash back is earned as points, which Chase lets you move to another
+# Ultimate Rewards card on your account.
+pools_into:
+  currency: UR
+  when_wallet_has:
+    [
+      chase-sapphire-preferred,
+      chase-sapphire-reserve,
+      chase-ink-business-preferred,
+    ]
+caps:
+  - id: five-percent-combined
+    amount: 25000
+    period: cardmember_year
+    then_rate: 1
+  - id: two-percent-combined
+    amount: 25000
+    period: cardmember_year
+    then_rate: 1
+rules:
+  - id: office-supply-stores
+    match: { categories: [office_supply] }
+    rate: 5
+    cap: five-percent-combined
+    note: Stores that specialize in office supplies. Discount, department and electronics stores don't count.
+  - id: internet-cable-phone
+    match: { categories: [tv_internet, phone] }
+    rate: 5
+    cap: five-percent-combined
+    note: Internet, cable, satellite TV and radio, cellular, wireless data and landline service. Not equipment, or bills paid in a store that codes as an equipment store.
+  - id: gas-stations
+    match: { categories: [gas] }
+    rate: 2
+    cap: two-percent-combined
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 2
+    cap: two-percent-combined
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 5
+    valid_to: 2027-09-30
+    note: Limited-time offer, for Lyft products bought in the Lyft app.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/business-credit-cards/ink/cash
+    quote: 'Earn 1% cash back on all other purchases'
+  - rule: office-supply-stores
+    url: https://creditcards.chase.com/business-credit-cards/ink/cash
+    quote: 'Earn 5% cash back on the first $25,000 spent in combined purchases at office supply stores'
+  - rule: office-supply-stores
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Merchants in this category specialize in selling a variety of office supplies'
+  - rule: internet-cable-phone
+    url: https://creditcards.chase.com/business-credit-cards/ink/cash
+    quote: 'office supply stores and on internet, cable and phone services each account anniversary year'
+  - rule: internet-cable-phone
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Only purchases for internet, cable, satellite television and radio, cellular, wireless data, and landline services will qualify'
+  - rule: gas-stations
+    url: https://creditcards.chase.com/business-credit-cards/ink/cash
+    quote: 'Earn 2% cash back on the first $25,000 spent in combined purchases at gas stations and restaurants'
+  - rule: restaurants
+    url: https://creditcards.chase.com/business-credit-cards/ink/cash
+    quote: 'Earn 2% cash back on the first $25,000 spent in combined purchases at gas stations and restaurants'
+  - rule: lyft
+    url: https://creditcards.chase.com/business-credit-cards/ink/cash
+    quote: 'Earn a total of 5% cash back on Lyft rides through September 30, 2027'
+  - rule: pools_into
+    url: https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household
+    quote: 'You can combine points from one Chase card to another Chase card on your account'
+  - rule: annual_fee
+    url: https://creditcards.chase.com/business-credit-cards/ink/cash
+    quote: 'ANNUAL FEE $0'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/business-credit-cards/ink/cash
+    quote: 'Earn $750 cash back after you spend $6,000 on purchases in the first 3 months after account opening'

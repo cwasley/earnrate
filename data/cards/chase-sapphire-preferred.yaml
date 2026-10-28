@@ -1,0 +1,91 @@
+id: chase-sapphire-preferred
+name: Chase Sapphire Preferred Card
+issuer: chase
+network: visa
+currency: UR
+last_verified: 2026-10-24
+verified_by: collin
+source_urls:
+  - https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+base_rate: 1
+annual_fee: 95
+welcome_offer:
+  points: 75000
+  spend: 5000
+  months: 3
+  note: 'Chase: "This credit card is unavailable to you if you currently have this card open. The new cardmember bonus may not be available to you if you previously held this card or received a new cardmember bonus for this card." Chase may also weigh how many cards you''ve opened and closed.'
+rules:
+  - id: chase-travel
+    match: { merchants: [chase-travel] }
+    rate: 5
+    note: Bookings through FROSCH or Valerie Wilson Travel by Chase Travel earn 2x instead.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 3
+    note: Includes takeout and eligible delivery services.
+  - id: gas-and-ev-charging
+    match: { categories: [gas, ev_charging] }
+    rate: 3
+  - id: vacation-homes
+    match: { merchants: [airbnb, vrbo, vacasa, plum-guide, homestay-com] }
+    rate: 3
+    note: Only bookings made directly with these brands. A Vrbo stay billed by the property manager doesn't count; only the part Vrbo bills does.
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 5
+    valid_to: 2027-09-30
+    note: Limited-time offer on Lyft rides.
+  - id: streaming
+    match: { categories: [streaming] }
+    rate: 3
+    note: Only "top streaming services", listed at chase.com/RewardsCategoryFAQs.
+  - id: online-grocery
+    match: { categories: [grocery.online] }
+    exclude: { categories: [warehouse_club], merchants: [walmart, target] }
+    rate: 3
+  - id: travel
+    match: { categories: [travel] }
+    rate: 2
+  - id: transit-as-travel
+    match: { categories: [transit] }
+    rate: 2
+    note: Chase's travel category includes passenger trains, buses, taxis, ferries, tolls and parking. Rideshare codes as a taxi.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'You’ll earn 1 point for each $1 spent on all other purchases'
+  - rule: chase-travel
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: '5 points (“5X points”) on Chase Travel purchases'
+  - rule: dining
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: '3x points on dining'
+  - rule: gas-and-ev-charging
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: '3x points on gas stations, EV charging'
+  - rule: streaming
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: '3x points on top streaming services and online grocery'
+  - rule: online-grocery
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'online grocery (excluding Target ® , Walmart ® and wholesale clubs)'
+  - rule: travel
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'spent on purchases made in the travel category'
+  - rule: transit-as-travel
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'on top of the 2 points earned on travel purchases'
+  - rule: vacation-homes
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Only bookings made directly with the following merchants will qualify'
+  - rule: lyft
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'Earn 5x on Lyft rides through 9/30/27'
+  - rule: annual_fee
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: '$95 annual fee'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'Earn 75,000 points after you spend $5,000 in purchases in the first 3 months from account opening'

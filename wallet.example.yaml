@@ -1,0 +1,32 @@
+# Copy to ~/.earnrate/wallet.yaml (or point $EARNRATE_WALLET at a copy).
+# Valuations default to data/currencies.yaml; set one here only to override it.
+
+valuations:
+  sofi-rewards: { redemption: sofi-account }
+memberships: [amazon-prime]
+
+# checkout_label: how the card appears in Chrome autofill or an agent wallet.
+cards:
+  - id: amex-gold
+    checkout_label: Amex Gold
+  - id: amex-blue-cash-preferred
+    checkout_label: Blue Cash Preferred
+  - id: chase-sapphire-preferred
+    checkout_label: Sapphire Preferred
+  - id: chase-freedom-flex
+    checkout_label: Freedom Flex
+  - id: chase-prime-visa
+    checkout_label: Prime Visa
+  - id: usbank-cash-plus
+    checkout_label: Cash+
+    chosen:
+      period: 2026-Q4
+      picks:
+        five-percent: [tv-internet-streaming, movie-theaters]
+        two-percent: [gas-ev-charging]
+  - id: citi-double-cash
+    checkout_label: Double Cash
+  - id: capital-one-savor
+    checkout_label: Savor
+  - id: sofi-unlimited-2
+    checkout_label: SoFi

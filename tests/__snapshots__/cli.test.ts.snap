@@ -1,0 +1,148 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`output > comcast, chosen category 1`] = `
+"Comcast Xfinity · online
+
+Use Cash+: 5% back. High confidence.
+
+  1. Cash+        5%
+     5% cash back from its "five-percent" rule.
+  2. Double Cash  2%
+     2% cash back, its base rate. No bonus category applies here.
+  3. SoFi         2%
+     2x SoFi Member Rewards, its base rate. No bonus category applies here.
+     Valued at 1¢ per point: 2% back.
+  + 6 more cards (--all lists them)
+
+Assumes Comcast Xfinity codes as TV and internet service (MCC 4899).
+Values points at: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢, Amex Membership Rewards (MR) at 1¢.
+"
+`;
+
+exports[`output > costco, channel inferred 1`] = `
+"Costco · in-store
+
+Use Sapphire Preferred: 1% back. High confidence.
+
+  1. Sapphire Preferred  1%
+     1x Chase Ultimate Rewards, its base rate. No bonus category applies here.
+     Valued at 1¢ per point: 1% back.
+  2. Prime Visa          1%
+     1% cash back, its base rate. No bonus category applies here.
+  3. Cash+               1%
+     1% cash back, its base rate. No bonus category applies here.
+
+Prime Visa and Cash+ also earn 1% here. Sapphire Preferred wins the tie because its points can be worth more.
+Can't use here: Amex Gold, Blue Cash Preferred, Freedom Flex, Double Cash, Savor, SoFi. Costco takes only Visa in-store.
+
+Assumes Costco codes as warehouse clubs (MCC 5300).
+Assumes an in-store purchase. Costco takes cards differently online.
+Values points at: Chase Ultimate Rewards (UR) at 1¢.
+"
+`;
+
+exports[`output > dodger stadium, ambiguous venue 1`] = `
+"Dodger Stadium · $40
+
+Use Savor: 3% back, about $1.20. Medium confidence.
+
+  1. Savor        3%  $1.20
+     3% cash back from its "entertainment" rule. Tickets at movie theaters, professional and semi-professional sports promoters, theatrical promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls, record stores, pool halls and bowling alleys. Golf courses, collegiate sporting events, cable, streaming and membership services don't count as entertainment.
+  2. Double Cash  2%  $0.80
+     2% cash back, its base rate. No bonus category applies here.
+  3. SoFi         2%  $0.80
+     2x SoFi Member Rewards, its base rate. No bonus category applies here.
+     Valued at 1¢ per point: 2% back.
+  + 6 more cards (--all lists them)
+
+! Dodger Stadium may code as restaurants instead: Concession stands and stadium restaurants usually code as the venue (entertainment), not as restaurants.
+! If it codes as restaurants, Freedom Flex wins (3%).
+
+Assumes Dodger Stadium codes as live entertainment and events.
+Values points at: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢, Amex Membership Rewards (MR) at 1¢.
+"
+`;
+
+exports[`output > shell, tie with every card listed 1`] = `
+"Shell
+
+Use Sapphire Preferred: 3% back. High confidence.
+
+  1. Sapphire Preferred   3%
+     3x Chase Ultimate Rewards from its "gas-and-ev-charging" rule.
+     Valued at 1¢ per point: 3% back.
+  2. Blue Cash Preferred  3%
+     3% cash back from its "us-gas" rule. Superstores, supermarkets and warehouse clubs that sell gas are not gas stations.
+  3. Prime Visa           2%
+     2% cash back from its "gas" rule.
+  4. Double Cash          2%
+     2% cash back, its base rate. No bonus category applies here.
+  5. SoFi                 2%
+     2x SoFi Member Rewards, its base rate. No bonus category applies here.
+     Valued at 1¢ per point: 2% back.
+  6. Cash+                2%
+     2% cash back from its "two-percent" rule.
+  7. Freedom Flex         1%
+     1x Chase Ultimate Rewards, its base rate. No bonus category applies here.
+     Pools into Chase Ultimate Rewards because you hold Sapphire Preferred.
+     Valued at 1¢ per point: 1% back.
+  8. Amex Gold            1%
+     1x Amex Membership Rewards, its base rate. No bonus category applies here.
+     Valued at 1¢ per point: 1% back.
+  9. Savor                1%
+     1% cash back, its base rate. No bonus category applies here.
+
+Blue Cash Preferred also earns 3% here. Sapphire Preferred wins the tie because its points can be worth more.
+
+Assumes Shell codes as gas stations.
+Values points at: Chase Ultimate Rewards (UR) at 1¢, SoFi Member Rewards at 1¢, Amex Membership Rewards (MR) at 1¢.
+"
+`;
+
+exports[`output > unknown merchant 1`] = `
+""Joe's Hardware Santa Monica" (not recognized) · $25
+
+Use Double Cash: 2% back, about $0.50. Low confidence.
+
+  1. Double Cash   2%  $0.50
+     2% cash back, its base rate. No bonus category applies here.
+  2. SoFi          2%  $0.50
+     2x SoFi Member Rewards, its base rate. No bonus category applies here.
+     Valued at 1¢ per point: 2% back.
+  3. Freedom Flex  1%  $0.25
+     1x Chase Ultimate Rewards, its base rate. No bonus category applies here.
+     Pools into Chase Ultimate Rewards because you hold Sapphire Preferred.
+     Valued at 1¢ per point: 1% back.
+  + 6 more cards (--all lists them)
+
+SoFi also earns 2% here. Double Cash wins the tie by a fixed order; either works.
+
+! Couldn't identify "Joe's Hardware Santa Monica", so only base rates apply. A more specific name may find a bonus category.
+
+Freedom Flex beats Double Cash here if Chase Ultimate Rewards (UR) points are worth 2¢ or more (you value them at 1¢).
+
+Treats "Joe's Hardware Santa Monica" as an everyday purchase with no bonus category.
+Values points at: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢, Amex Membership Rewards (MR) at 1¢.
+"
+`;
+
+exports[`output > whole foods 80, points-heavy 1`] = `
+"Whole Foods Market · $80
+
+Use Amex Gold: 6.8% back, about $5.44. High confidence.
+
+  1. Amex Gold            6.8%  $5.44
+     4x Amex Membership Rewards from its "us-supermarkets" rule. Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+     Valued at 1.7¢ per point: 6.8% back.
+  2. Blue Cash Preferred    6%  $4.80
+     6% cash back from its "us-supermarkets" rule. Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+  3. Prime Visa             5%  $4.00
+     5% cash back from its "whole-foods" rule. Online or in-store.
+  + 6 more cards (--all lists them)
+
+Blue Cash Preferred beats Amex Gold here if Amex Membership Rewards (MR) points are worth less than 1.5¢ (you value them at 1.7¢).
+
+Assumes Whole Foods Market codes as supermarkets (MCC 5411).
+Values points at: Amex Membership Rewards (MR) at 1.7¢, SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1.7¢.
+"
+`;
