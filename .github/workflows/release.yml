@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write # npm trusted publishing and provenance
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: yarn
+          registry-url: https://registry.npmjs.org
+      - run: yarn install --frozen-lockfile
+      - run: yarn validate
+      - run: yarn smoke:pack
+      - name: Check the tag matches package.json
+        run: |
+          version=$(node -p "require('./package.json').version")
+          [ "$GITHUB_REF_NAME" = "v$version" ] || { echo "Tag $GITHUB_REF_NAME doesn't match package.json $version"; exit 1; }
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - name: Stage on npm
+        run: |
+          if npm view "earnrate@$VERSION" version >/dev/null 2>&1; then
+            echo "earnrate@$VERSION is already on npm; nothing to stage."
+            exit 0
+          fi
+          npm install -g npm@11.20.0
+          npm stage publish --provenance
+          echo "Staged earnrate@$VERSION. Approve it on npmjs.com (Staged Packages) to publish." >> "$GITHUB_STEP_SUMMARY"

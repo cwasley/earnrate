@@ -26,6 +26,13 @@ The maintainer's full spec (data model, golden tests, milestones, competitive la
 - Every card rule needs an `evidence` quote (3–20 words) from one of the card's `source_urls`; integrity tests enforce it. After changing a card, run `yarn check-sources --update` to refresh `data/sources.lock.json`. `src/sources/` is the checker; it stores only hashes of issuer text.
 - Tests: vitest, in `tests/` (golden cases in `tests/golden/`) or next to the source as `*.test.ts`.
 
+## Releasing
+
+1. Bump `version` in `package.json` and both versions in `server.json` (a test keeps them in step), commit and push.
+2. Create a GitHub release tagged `v<version>`. `.github/workflows/release.yml` validates, checks the tag, and runs `npm stage publish --provenance` through npm trusted publishing (no npm token in the repo).
+3. Collin approves the staged version on npmjs.com (Staged Packages) with 2FA. Nothing is live until then.
+4. Once `npm view earnrate version` shows it, `mcp-publisher publish` updates the MCP registry entry.
+
 ## Working agreement
 
 - Start each milestone with a short plan and wait for an OK before large changes.
