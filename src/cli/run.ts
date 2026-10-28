@@ -21,6 +21,7 @@ import { DEFAULT_MAX_CALLS } from '../merchants/fallback.ts'
 import { llmEnabled, openLlmSession } from '../merchants/from-env.ts'
 import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
 import type { Wallet } from '../schema/wallet.ts'
+import { packageVersion } from '../version.ts'
 import { parseCliArgs } from './args.ts'
 import { runImport } from './import.ts'
 import { runOffers } from './offers.ts'
@@ -63,6 +64,7 @@ Options:
   --llm, --no-llm        Ask Claude to classify merchants earnrate doesn't know.
                          Off unless you pass --llm or set ${LLM_ENV_VAR}=on.
   -h, --help             Show this help.
+  -v, --version          Show the version.
 
 Wallet: $${WALLET_ENV_VAR}, or ~/${CONFIG_DIR}/wallet.yaml.
 
@@ -105,6 +107,10 @@ export async function readWallet(file: string, io: Io): Promise<Wallet | null> {
 export async function run(argv: string[], io: Io): Promise<number> {
   if (argv[0] === 'import') return runImport(argv.slice(1), io)
   if (argv[0] === 'offers') return runOffers(argv.slice(1), io)
+  if (argv.length === 1 && (argv[0] === '--version' || argv[0] === '-v')) {
+    io.stdout(`${CLI_NAME} ${await packageVersion()}\n`)
+    return 0
+  }
   const args = parseCliArgs(argv)
   if (args.kind === 'help') {
     io.stdout(HELP)

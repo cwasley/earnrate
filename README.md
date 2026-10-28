@@ -1,5 +1,10 @@
 # earnrate
 
+[![CI](https://github.com/cwasley/earnrate/actions/workflows/ci.yml/badge.svg)](https://github.com/cwasley/earnrate/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/earnrate)](https://www.npmjs.com/package/earnrate)
+[![Code: MIT](https://img.shields.io/badge/code-MIT-blue)](LICENSE)
+[![Data: CC BY-NC 4.0](https://img.shields.io/badge/data-CC%20BY--NC%204.0-lightgrey)](data/LICENSE)
+
 I wanted a ghost card: one card that always charges the best of my cards. The card networks won't allow one, so I built the next best thing.
 
 **earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which card in your wallet earns the most there, and why. It's stateful (it knows your caps and chosen categories), valuation-aware, and transparent about its assumptions. It never sees a card number.
@@ -161,6 +166,24 @@ Other MCP clients take the same command in their config:
 ```
 
 It reads the same wallet as the command line (`~/.earnrate/wallet.yaml`, or `EARNRATE_WALLET` set in the server's `env`).
+
+## How it works
+
+```
+merchant text ─▶ resolve ─▶ evaluate every rule ─▶ value ─▶ rank and explain
+                 category,   on every card in       cents per   winner, runner-ups,
+                 channel,    your wallet: dates,    point,      flip points, warnings,
+                 assumptions caps, choices, network pooling     confidence
+```
+
+- **Card terms are data, not code.** Each card is a YAML file of rules (category, rate, cap, channel, dates, activation, required membership), validated with Zod. Every rule carries a short quote from the issuer's own page, and a test fails if one is missing. The engine has no card-specific branches.
+- **Merchants resolve to a category plus the assumption behind it.** "Whole Foods codes as a supermarket (MCC 5411)" is stated in the answer, and venues that can code more than one way (a restaurant inside a stadium or hotel) come back at medium confidence with the alternative spelled out. Unknown merchants fall back to base rates, or to an opt-in, cached and labeled Claude guess.
+- **The engine is pure and deterministic.** Given a purchase, a date and a wallet, it checks every rule against network acceptance, the date window, caps already used (split when a purchase straddles one), quarterly picks and activations, then values points at your cents-per-point, including pooling (Freedom Unlimited points are worth Sapphire points when you hold both). Ties, the valuation at which the runner-up would win, and stale data all show up in the answer.
+- **Wallet edits keep your file intact.** Recording a purchase rewrites only the numbers that changed, so comments and formatting in your YAML survive.
+- **Drift detection.** A weekly GitHub Action opens each issuer page in a headless browser, checks every quote is still there, and opens an issue when terms move. It stores only hashes of issuer text.
+- **Tested end to end.** Golden cases written from issuer terms, CLI snapshot tests, an MCP round trip over real stdio, an install test that packs and installs the npm package, and a check that no committed file contains a card number. CI runs all of it on every push.
+
+The code is TypeScript run directly by Node 24 (`src/`), with the engine in `src/engine/`, merchant resolution in `src/merchants/`, and the CLI and MCP server as thin layers over them.
 
 ## Keeping card data current
 

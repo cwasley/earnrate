@@ -1,15 +1,13 @@
-import { readFile } from 'node:fs/promises'
 import { serveStdio } from '@modelcontextprotocol/server/stdio'
 import { loadCatalog, walletPath } from '../data/load.ts'
 import { localToday as today } from '../engine/periods.ts'
 import { llmEnabled, openLlmSession } from '../merchants/from-env.ts'
+import { packageVersion } from '../version.ts'
 import { createEarnrateServer } from './server.ts'
 
 // stdout carries the protocol, so diagnostics go to stderr only.
 export async function serveMcp(env: NodeJS.ProcessEnv): Promise<void> {
-  const { version } = JSON.parse(
-    await readFile(new URL('../../package.json', import.meta.url), 'utf8'),
-  ) as { version: string }
+  const version = await packageVersion()
   const catalog = await loadCatalog()
   let llm = null
   if (llmEnabled(env)) {

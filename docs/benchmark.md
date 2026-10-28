@@ -34,7 +34,7 @@ Columns are cash / points for RightCard and flat / points-heavy for earnrate.
 
 **RightCard: 5 right, 7 wrong or unsupported, 3 partial.** Its answers didn't change since the first run. Row 3 moved from wrong to partial when Chase's terms showed the card earns 3% without Prime, so RightCard picks the right card at the wrong rate. The Best Buy row, an open data question then, now counts against it. Row 7's verdict now gives the real cause: the gas miss comes from its 1x Sapphire Preferred data, not from Cash+.
 
-**earnrate: 15 of 15.** Read that with care. The expected answers come from our own golden tests, which were written from the same issuer terms as our card files. All of those files still say `verified_by: claude`, so the score shows the engine does what the spec says, not that the data has been checked by a human.
+**earnrate: 15 of 15.** Read that with care. The expected answers come from our own golden tests, which were written from the same issuer terms as our card files. When this ran, those files were still `verified_by: claude`, so the score showed the engine does what the spec says, not that a human had checked the data. All cards have since been reviewed by hand (`verified_by: collin`).
 
 ## What the benchmark changed
 

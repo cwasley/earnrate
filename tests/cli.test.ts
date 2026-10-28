@@ -162,6 +162,12 @@ describe('arguments', () => {
     expect(code).toBe(0)
     expect(stdout).toMatch(/^Usage: earnrate <merchant> \[amount\]/)
   })
+
+  test.each([['--version'], ['-v']])('%s prints the version', async (flag) => {
+    const { code, stdout } = await cli([flag])
+    expect(code).toBe(0)
+    expect(stdout).toMatch(/^earnrate \d+\.\d+\.\d+\n$/)
+  })
 })
 
 describe('wallet errors', () => {
