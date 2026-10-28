@@ -189,3 +189,96 @@ describe('the 16 popular cards', () => {
     expect(booking).toBeNull()
   })
 })
+
+describe('Bank of America Customized Cash Rewards', () => {
+  const ID = 'bank-of-america-customized-cash-rewards'
+
+  function ccr(card: object = {}, memberships: string[] = []): Wallet {
+    return WalletSchema.parse({ memberships, cards: [{ id: ID, ...card }] })
+  }
+
+  function rate(
+    merchant: string,
+    w: Wallet,
+    overrides: Parameters<typeof purchase>[1] = {},
+  ): number | undefined {
+    return recommend(catalog, w, purchase(merchant, overrides)).ranked.find(
+      (r) => r.cardId === ID,
+    )?.rate
+  }
+
+  const picked = (option: string, period = '2026-10') => ({
+    chosen: { period, picks: { 'three-percent': [option] } },
+  })
+
+  test('gas is the 3% default; grocery stores and wholesale clubs earn 2%', () => {
+    expect(rate('Shell', ccr())).toBe(3)
+    expect(rate('Kroger', ccr())).toBe(2)
+    expect(rate('Costco', ccr())).toBe(2)
+    expect(rate('Walmart', ccr())).toBe(1)
+    expect(rate('CVS', ccr())).toBe(1)
+    expect(rate('Chipotle', ccr())).toBe(1)
+  })
+
+  test('each choice category earns 3%', () => {
+    expect(rate('Chipotle', ccr(picked('dining')))).toBe(3)
+    expect(rate('Shell', ccr(picked('dining')))).toBe(1)
+    expect(rate('Delta', ccr(picked('travel')))).toBe(3)
+    expect(rate('Uber', ccr(picked('travel')))).toBe(3)
+    expect(rate('CVS', ccr(picked('drug-stores')))).toBe(3)
+    expect(
+      rate('Home Depot', ccr(picked('home-improvement-furnishings'))),
+    ).toBe(3)
+    expect(rate('IKEA', ccr(picked('home-improvement-furnishings')))).toBe(3)
+  })
+
+  test('the choice stays until changed, so an older pick still applies', () => {
+    const w = ccr(picked('dining', '2026-07'))
+    expect(rate('Chipotle', w)).toBe(3)
+    const rec = recommend(catalog, w, purchase('Chipotle'))
+    const warnings = [...rec.warnings, ...rec.ranked.flatMap((r) => r.warnings)]
+    expect(warnings.join(' ')).not.toMatch(/not the current period/)
+  })
+
+  test('Online Shopping is any online purchase, minus excluded services', () => {
+    const w = ccr(picked('online-shopping'))
+    expect(rate('amazon.com', w)).toBe(3)
+    expect(rate('Best Buy', w, { channel: 'online' })).toBe(3)
+    expect(rate('Netflix', w, { channel: 'online' })).toBe(3)
+    expect(rate('Best Buy', w, { channel: 'in_store' })).toBe(1)
+    expect(rate('UPS', w, { channel: 'online' })).toBe(1)
+    expect(rate('Planet Fitness', w, { channel: 'online' })).toBe(1)
+  })
+
+  test('3% and 2% share a $2,500 quarterly cap, then 1%', () => {
+    const used = (spent: number) =>
+      ccr({
+        cap_usage: {
+          'three-and-two-percent-combined': { period: '2026-Q4', spent },
+        },
+      })
+    expect(rate('Kroger', used(2400), { amount: 200 })).toBeCloseTo(1.5)
+    expect(rate('Shell', used(2400), { amount: 100 })).toBe(3)
+    expect(rate('Shell', used(2500))).toBe(1)
+    expect(rate('Kroger', used(2500))).toBe(1)
+  })
+
+  test('BofA Rewards tiers multiply every rate', () => {
+    const premier = ccr({}, ['bofa-rewards-premier'])
+    expect(rate('Shell', premier)).toBe(5.25)
+    expect(rate('Kroger', premier)).toBe(3.5)
+    expect(rate('Walmart', premier)).toBe(1.75)
+    expect(rate('Shell', ccr({}, ['bofa-rewards-member']))).toBe(3.3)
+    expect(rate('Shell', ccr({}, ['bofa-rewards-preferred-plus']))).toBe(3.75)
+    expect(rate('Shell', ccr({}, ['bofa-rewards-preferred-honors']))).toBe(4.5)
+    const capped = ccr(
+      {
+        cap_usage: {
+          'three-and-two-percent-combined': { period: '2026-Q4', spent: 2500 },
+        },
+      },
+      ['bofa-rewards-premier'],
+    )
+    expect(rate('Shell', capped)).toBe(1.75)
+  })
+})

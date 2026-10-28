@@ -2,6 +2,14 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.10.28.2
+
+Bank of America Customized Cash Rewards, reviewed by Collin (`verified_by: collin`). Choice options can now be "any online purchase except these categories", and a choice period can be `until_changed` for picks that carry over.
+
+| Card                                    | Field | Old → new                                                                                                                                   | Source                                                                                                                                                                                                                                                                                                                     |
+| --------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| bank-of-america-customized-cash-rewards | new   | 3% in a choice category, 2% at grocery stores and wholesale clubs ($2,500 combined a quarter), 1% otherwise; BofA Rewards tiers add 10%–75% | [card page](https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/), [categories](https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/), terms, [BofA Rewards](https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/) |
+
 ## 2026.10.28.1
 
 Collin reviewed the family-cards and offers packets and kept every value as recorded, including the open calls: no Peloton rule on Sapphire Preferred yet, My Best Buy Visa's fee at the top of Citi's $0–59 range, and Amex "as high as" offers at the public figure. All 56 cards are now `verified_by: collin`.

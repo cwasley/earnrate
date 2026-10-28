@@ -1,0 +1,210 @@
+id: bank-of-america-customized-cash-rewards
+name: Bank of America Customized Cash Rewards Credit Card
+issuer: bank-of-america
+# Bank of America's terms carry only the Visa and Visa Signature trademark
+# notice, so the network is Visa.
+network: visa
+currency: cash
+last_verified: 2026-10-28
+verified_by: collin
+source_urls:
+  - https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/
+  - https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+  - https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+  - https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+base_rate: 1
+annual_fee: 0
+welcome_offer:
+  dollars: 200
+  spend: 1000
+  months: 3
+  note: Online offer; the window is 90 days from account opening, modeled as 3 months. The offer may not be available elsewhere after leaving the page.
+caps:
+  - id: three-and-two-percent-combined
+    amount: 2500
+    period: quarter
+    then_rate: 1
+choices:
+  # Gas is the default until changed. It can be changed once per calendar
+  # month and otherwise carries over.
+  - id: three-percent
+    pick: 1
+    period: until_changed
+    default: [gas-ev-charging]
+    options:
+      gas-ev-charging: [gas, ev_charging]
+      # Bank of America also excludes doctors and hospitals, government
+      # services and taxes, insurance, schools and other non-retail services,
+      # which have no earnrate category.
+      online-shopping:
+        { channel: online, exclude: [utilities, shipping, fitness] }
+      dining: [dining]
+      travel: [travel, transit]
+      drug-stores: [drugstore]
+      home-improvement-furnishings: [home_improvement, furniture]
+rules:
+  - id: three-percent
+    match: { choice: three-percent }
+    rate: 3
+    cap: three-and-two-percent-combined
+    note: Gas and EV charging, online shopping, dining, travel, drug stores, or home improvement and furnishings, whichever you picked. Travel includes parking, transit, rideshare and tolls. Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded. The first $2,500 a calendar quarter across the 3% and 2% categories, then 1%.
+  - id: two-percent
+    match: { categories: [grocery.supermarket, warehouse_club] }
+    rate: 2
+    cap: three-and-two-percent-combined
+    note: Grocery stores, supermarkets, wholesale clubs, and meat and seafood, candy, dairy and bakery stores. Superstores and smaller stores that also sell groceries, like drug stores, are excluded. Shares the $2,500 quarterly cap with the 3% category.
+  # BofA Rewards members earn a tier bonus on all cash back: 10% for Member,
+  # 25% Preferred Plus, 50% Preferred Honors, 75% Premier.
+  - id: three-percent-bofa-rewards-member
+    match: { choice: three-percent }
+    rate: 3.3
+    cap: three-and-two-percent-combined
+    requires: { membership: bofa-rewards-member }
+    note: 3% plus the 10% BofA Rewards Member bonus.
+  - id: two-percent-bofa-rewards-member
+    match: { categories: [grocery.supermarket, warehouse_club] }
+    rate: 2.2
+    cap: three-and-two-percent-combined
+    requires: { membership: bofa-rewards-member }
+    note: 2% plus the 10% BofA Rewards Member bonus.
+  - id: everything-else-bofa-rewards-member
+    match: { any: true }
+    rate: 1.1
+    requires: { membership: bofa-rewards-member }
+    note: 1% plus the 10% BofA Rewards Member bonus.
+  - id: three-percent-bofa-rewards-preferred-plus
+    match: { choice: three-percent }
+    rate: 3.75
+    cap: three-and-two-percent-combined
+    requires: { membership: bofa-rewards-preferred-plus }
+    note: 3% plus the 25% BofA Rewards Preferred Plus bonus.
+  - id: two-percent-bofa-rewards-preferred-plus
+    match: { categories: [grocery.supermarket, warehouse_club] }
+    rate: 2.5
+    cap: three-and-two-percent-combined
+    requires: { membership: bofa-rewards-preferred-plus }
+    note: 2% plus the 25% BofA Rewards Preferred Plus bonus.
+  - id: everything-else-bofa-rewards-preferred-plus
+    match: { any: true }
+    rate: 1.25
+    requires: { membership: bofa-rewards-preferred-plus }
+    note: 1% plus the 25% BofA Rewards Preferred Plus bonus.
+  - id: three-percent-bofa-rewards-preferred-honors
+    match: { choice: three-percent }
+    rate: 4.5
+    cap: three-and-two-percent-combined
+    requires: { membership: bofa-rewards-preferred-honors }
+    note: 3% plus the 50% BofA Rewards Preferred Honors bonus.
+  - id: two-percent-bofa-rewards-preferred-honors
+    match: { categories: [grocery.supermarket, warehouse_club] }
+    rate: 3
+    cap: three-and-two-percent-combined
+    requires: { membership: bofa-rewards-preferred-honors }
+    note: 2% plus the 50% BofA Rewards Preferred Honors bonus.
+  - id: everything-else-bofa-rewards-preferred-honors
+    match: { any: true }
+    rate: 1.5
+    requires: { membership: bofa-rewards-preferred-honors }
+    note: 1% plus the 50% BofA Rewards Preferred Honors bonus.
+  - id: three-percent-bofa-rewards-premier
+    match: { choice: three-percent }
+    rate: 5.25
+    cap: three-and-two-percent-combined
+    requires: { membership: bofa-rewards-premier }
+    note: 3% plus the 75% BofA Rewards Premier bonus.
+  - id: two-percent-bofa-rewards-premier
+    match: { categories: [grocery.supermarket, warehouse_club] }
+    rate: 3.5
+    cap: three-and-two-percent-combined
+    requires: { membership: bofa-rewards-premier }
+    note: 2% plus the 75% BofA Rewards Premier bonus.
+  - id: everything-else-bofa-rewards-premier
+    match: { any: true }
+    rate: 1.75
+    requires: { membership: bofa-rewards-premier }
+    note: 1% plus the 75% BofA Rewards Premier bonus.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/
+    quote: 'Unlimited 1% cash back on all other purchases'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: '3% cash back in the category of your choice'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'You can change it once each calendar month, or make no change and it stays the same.'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'Until you change your category it will be set to Gas & EV Charging Stations.'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'first $2,500 of combined Net Purchases posted to the account each calendar quarter'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'purchases must be made online via a website or a digital application (an app)'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'doctors and hospitals, government services and taxes, insurances, membership organizations, education/schools, and some utilities'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'Courier Services (Air and Ground, Freight Forwarders)'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'Clubs, Country Clubs, Membership (Athletic, Recreation, Sports)'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'parking, public transit, taxis/ride share'
+  - rule: two-percent
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/
+    quote: 'Automatic 2% cash back at grocery stores and wholesale clubs'
+  - rule: two-percent
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'Excluded from this Bonus Category are superstores and smaller stores (like drug stores)'
+  - rule: three-percent-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'a $100 purchase that earns 3% ($3.00) will actually earn $3.30'
+  - rule: two-percent-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'bonus of 10% for the Member tier'
+  - rule: everything-else-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'applied after all base and bonus cash rewards have been calculated on a purchase'
+  - rule: three-percent-bofa-rewards-preferred-plus
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'will actually earn $3.30, $3.75, $4.50 or $5.25 based on your tier'
+  - rule: two-percent-bofa-rewards-preferred-plus
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '25% for the Preferred Plus tier'
+  - rule: everything-else-bofa-rewards-preferred-plus
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '25% for the Preferred Plus tier'
+  - rule: three-percent-bofa-rewards-preferred-honors
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'will actually earn $3.30, $3.75, $4.50 or $5.25 based on your tier'
+  - rule: two-percent-bofa-rewards-preferred-honors
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '50% for the Preferred Honors tier'
+  - rule: everything-else-bofa-rewards-preferred-honors
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '50% for the Preferred Honors tier'
+  - rule: three-percent-bofa-rewards-premier
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'will actually earn $3.30, $3.75, $4.50 or $5.25 based on your tier'
+  - rule: two-percent-bofa-rewards-premier
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'or 75% for the Premier tier'
+  - rule: everything-else-bofa-rewards-premier
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'or 75% for the Premier tier'
+  - rule: annual_fee
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/
+    quote: 'Annual Fee $0'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/
+    quote: 'Online $200 cash rewards bonus after making at least $1,000 in purchases in the first 90 days'
+todo:
+  - New accounts earn 6% in the choice category for the first year (an extra 3%, inside the same $2,500 quarterly cap, with no BofA Rewards bonus on the extra 3%). earnrate can't see when an account was opened, so this isn't modeled.
+  - 'The BofA Rewards rules use proposed membership ids: bofa-rewards-member, bofa-rewards-preferred-plus, bofa-rewards-preferred-honors and bofa-rewards-premier. Cardholders who joined Preferred Rewards before May 26, 2026 may have an "extended card benefit" that Bank of America doesn''t define.'
+  - With a BofA Rewards tier, a purchase that crosses the $2,500 cap counts the part past the cap at 1% instead of the tier's boosted base rate, so it's slightly understated.
+  - "Online shopping counts any online purchase earnrate can't place in an excluded category, including unknown merchants. Bank of America also excludes doctors, government, insurance, schools and other non-retail services, which earnrate can't tell apart."

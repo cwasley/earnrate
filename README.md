@@ -69,7 +69,7 @@ cards:
         two-percent: [gas-ev-charging]
 ```
 
-Rule IDs for `activated` and the choice slots for `chosen` are in each card's file. Currencies and their default values are in [`data/currencies.yaml`](data/currencies.yaml). Spending caps fill up as you record purchases from an AI agent or import a statement with `--apply`, and reset with each period.
+Rule IDs for `activated`, the choice slots for `chosen` and the membership IDs that unlock bonuses (such as `bofa-rewards-premier` for a BofA Rewards tier) are in each card's file. Currencies and their default values are in [`data/currencies.yaml`](data/currencies.yaml). Spending caps fill up as you record purchases from an AI agent or import a statement with `--apply`, and reset with each period.
 
 ### Merchants earnrate doesn't know
 
@@ -119,7 +119,7 @@ It totals what each card earned against the best card in your wallet for each pu
 
 ## Supported cards
 
-56 cards, each modeled from the issuer's own terms and checked weekly against them:
+57 cards, each modeled from the issuer's own terms and checked weekly against them:
 
 - **American Express:** Gold, Platinum, Blue Cash Preferred, Blue Cash Everyday, Blue Business Plus
 - **Chase:** Sapphire Preferred, Sapphire Reserve, Freedom Unlimited, Freedom Flex, Ink Business Cash, Ink Business Preferred, Prime Visa
@@ -127,7 +127,7 @@ It totals what each card earned against the best card in your wallet for each pu
 - **Citi:** Strata Elite, Strata Premier, Double Cash, Custom Cash, My Best Buy Visa, Costco Anywhere Visa (personal and business); AAdvantage MileUp, Platinum Select, Globe, Executive, Business
 - **Capital One:** Venture X, Venture, Savor, Kohl's Card, Kohl's Rewards Visa
 - **Wells Fargo:** Active Cash, Autograph
-- **Bank of America:** Atmos Rewards Ascent, Summit, Business
+- **Bank of America:** Atmos Rewards Ascent, Summit, Business; Customized Cash Rewards
 - **TD Bank:** Target Circle Card, Nordstrom card, Nordstrom Visa
 - **Others:** U.S. Bank Cash+, Bilt Obsidian, SoFi Unlimited 2%
 
