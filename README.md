@@ -4,6 +4,9 @@ I wanted a ghost card: one card that always charges the best of my cards. The ca
 
 **earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which card in your wallet earns the most there, and why. It's stateful (it knows your caps and chosen categories), valuation-aware, and transparent about its assumptions. It never sees a card number.
 
+- Runs on your machine. No account, no telemetry, no affiliate links.
+- US cards and US merchants, for now.
+
 > **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup and MCP server. See `docs/benchmark.md` for how it compares to existing tools.
 
 ## Try it
@@ -17,7 +20,7 @@ curl -o ~/.earnrate/wallet.yaml https://raw.githubusercontent.com/cwasley/earnra
 earnrate whole foods 80
 ```
 
-Then edit `~/.earnrate/wallet.yaml` to list your own cards, by ID: the file names in [`data/cards/`](data/cards). Card numbers never go in it.
+Then edit `~/.earnrate/wallet.yaml` to list your own cards (see [Your wallet](#your-wallet)).
 
 ```
 Whole Foods Market · $80
@@ -39,6 +42,29 @@ Assumes Whole Foods Market codes as supermarkets (MCC 5411).
 ```
 
 Options: `--online` or `--in-store`, `--valuation flat|points-heavy`, `--all`, `--json`, `--date`, `--country`. Run `earnrate --help` for details. To keep the wallet somewhere else, set `EARNRATE_WALLET` to its path.
+
+### Your wallet
+
+The wallet is a YAML file listing your cards by ID, which is each card's file name in [`data/cards/`](data/cards). Only the cards are required:
+
+```yaml
+valuations:
+  UR: 1.5 # cents per point; leave out to use earnrate's defaults
+memberships: [amazon-prime] # unlocks Prime Visa's 5%
+cards:
+  - id: chase-sapphire-preferred
+  - id: chase-prime-visa
+  - id: chase-freedom-flex
+    activated: [q4-2026-grocery] # rotating 5% categories you've activated
+  - id: usbank-cash-plus
+    chosen: # categories you picked for the quarter
+      period: 2026-Q4
+      picks:
+        five-percent: [tv-internet-streaming, movie-theaters]
+        two-percent: [gas-ev-charging]
+```
+
+Rule IDs for `activated` and the choice slots for `chosen` are in each card's file. Currencies and their default values are in [`data/currencies.yaml`](data/currencies.yaml). Spending caps fill up as you record purchases from an AI agent or import a statement with `--apply`, and reset with each period.
 
 ### Merchants earnrate doesn't know
 
@@ -104,6 +130,8 @@ Store cards (Target, Kohl's, Nordstrom) only come up at their own stores. Airlin
 
 Something the format can't express yet (Bilt's rent earning, Citi Nights) is listed as a `todo:` in that card's file rather than guessed.
 
+Spotted a wrong rate, or want a card added? [Open an issue](https://github.com/cwasley/earnrate/issues) with a link to the issuer's own page.
+
 ## Use it from an AI agent (MCP)
 
 `earnrate mcp` runs earnrate as a local MCP server over stdio, with five tools:
@@ -161,3 +189,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 - **Commercial use of the data needs a license.** That includes serving it through your own API or MCP server, or using it in a paid product. Contact licensing@earnrate.dev.
 
 Not legal advice; this is a good-faith structure.
+
+earnrate isn't financial advice. Issuers change their terms, and every answer names the rule it used, so check the card's issuer page (linked in its file) before a big purchase.
