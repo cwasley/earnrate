@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy · earnrate</title>
+    <meta
+      name="description"
+      content="earnrate runs on your computer and collects nothing. Where your data goes, and where it doesn't."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://earnrate.dev/privacy" />
+    <meta name="theme-color" content="#1f6f54" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='7' width='26' height='18' rx='3' fill='%231f6f54'/%3E%3Crect x='3' y='11' width='26' height='3' fill='%23ffffff' opacity='.85'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #fbfaf7;
+        --text: #1c1d1f;
+        --muted: #5f6368;
+        --line: #e6e2da;
+        --accent: #1f6f54;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121315;
+          --text: #ecebe7;
+          --muted: #a2a6ab;
+          --line: #2b2e32;
+          --accent: #7fd1ad;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          17px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 0 16px 72px;
+      }
+      header {
+        padding: 48px 0 8px;
+      }
+      .wordmark {
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--accent);
+        font-size: 18px;
+        text-decoration: none;
+      }
+      h1 {
+        font-size: clamp(34px, 7vw, 50px);
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+        margin: 22px 0 14px;
+      }
+      h2 {
+        font-size: 22px;
+        letter-spacing: -0.02em;
+        margin: 44px 0 10px;
+      }
+      p {
+        margin: 0 0 14px;
+      }
+      .lede {
+        font-size: 19px;
+        color: var(--muted);
+        max-width: 36em;
+      }
+      .updated {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      a {
+        color: var(--accent);
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+        overflow-wrap: anywhere;
+      }
+      footer {
+        margin-top: 64px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="wordmark" href="/">earnrate</a>
+        <h1>Privacy</h1>
+        <p class="lede">
+          earnrate is software that runs on your computer. There's no account
+          and no service behind it, so there's nothing for me to collect. Here's
+          where your data goes, and where it doesn't.
+        </p>
+        <p class="updated">Updated October 28, 2026.</p>
+      </header>
+
+      <section>
+        <h2>On your computer</h2>
+        <p>
+          Your wallet is a file you control,
+          <code>~/.earnrate/wallet.yaml</code> unless you point
+          <code>EARNRATE_WALLET</code> somewhere else. earnrate reads it, and
+          writes to it only when you record a purchase or apply an imported
+          statement. Cards are named by product, like <code>amex-gold</code>.
+          earnrate never asks for card numbers, expiry dates, security codes or
+          bank logins.
+        </p>
+        <p>
+          When you import a statement, earnrate reads the file on your computer
+          and keeps only running totals toward caps and welcome bonuses, plus
+          one-way fingerprints of the transactions so a second import doesn't
+          count them twice. It doesn't keep a copy of the statement.
+        </p>
+        <p>
+          There's no telemetry. earnrate doesn't report usage, errors or
+          anything else back to me.
+        </p>
+      </section>
+
+      <section>
+        <h2>When you ask through an AI assistant</h2>
+        <p>
+          If you connect earnrate to Claude or another assistant, earnrate still
+          runs on your computer. But the assistant's provider receives your
+          conversation, including what earnrate tells the assistant: the cards
+          it compared, its answer, and what's left on your caps. That's covered
+          by the provider's privacy policy, not this one.
+        </p>
+      </section>
+
+      <section>
+        <h2>The optional merchant lookup</h2>
+        <p>
+          It's off by default. If you turn it on, earnrate sends the name of a
+          store it doesn't recognize to Anthropic's API, using your own API key,
+          to ask what kind of store it is. Only the name you typed is sent: no
+          amounts, cards or wallet. Answers are saved on your computer, in
+          <code>~/.earnrate/merchant-cache.json</code>, so the same name isn't
+          sent twice. Anthropic handles the request under your agreement with
+          them.
+        </p>
+      </section>
+
+      <section>
+        <h2>Downloading earnrate</h2>
+        <p>
+          When you install earnrate, npm and GitHub see the download, as they do
+          for any package, under their own privacy policies. I can see npm's
+          public download counts, but nothing about who downloaded it.
+        </p>
+      </section>
+
+      <section>
+        <h2>This website</h2>
+        <p>
+          earnrate.dev is a static page with no cookies, scripts, analytics or
+          forms. Cloudflare hosts it and, like any host, handles your IP address
+          and request details to serve the page and block abuse. Its dashboard
+          shows me aggregate traffic counts, not who visited. There's no server
+          code and no logging turned on.
+        </p>
+      </section>
+
+      <section>
+        <h2>Email</h2>
+        <p>
+          Mail to <a href="mailto:hello@earnrate.dev">hello@earnrate.dev</a> or
+          <a href="mailto:licensing@earnrate.dev">licensing@earnrate.dev</a> is
+          forwarded to my personal inbox. I use it only to reply to you, and I
+          don't add anyone to a mailing list.
+        </p>
+      </section>
+
+      <section>
+        <h2>Changes</h2>
+        <p>
+          If any of this changes, for example if earnrate ever offers a hosted
+          version, this page will say so first, with a new date.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Questions:
+          <a href="mailto:hello@earnrate.dev">hello@earnrate.dev</a>.
+          <a href="/">Back to earnrate</a>.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
