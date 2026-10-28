@@ -73,7 +73,11 @@ export type CardEvaluation = {
   staleChoice: string | null // the chosen-category period on file, when it isn't current
 }
 
-export type PickedCoverage = { categories: string[]; merchants: string[] }
+export type PickedCoverage = {
+  categories: string[]
+  merchants: string[]
+  online: { exclude: string[] }[] // picked "any online purchase" options
+}
 
 export function pickedCategories(
   card: Card,
@@ -88,6 +92,7 @@ export function pickedCategories(
     if (
       picks &&
       chosen &&
+      choice.period !== 'until_changed' &&
       chosen.period !== periodKey(choice.period, date, null)
     ) {
       staleChoice = chosen.period
@@ -99,6 +104,7 @@ export function pickedCategories(
     picked.set(choice.id, {
       categories: options.flatMap((o) => o.categories),
       merchants: options.flatMap((o) => o.merchants),
+      online: options.flatMap((o) => (o.online ? [o.online] : [])),
     })
   }
   return { picked, staleChoice }
@@ -130,7 +136,15 @@ function applicability(
     const merchantPicked =
       ctx.merchantId !== null &&
       (covered?.merchants.includes(ctx.merchantId) ?? false)
-    if (!merchantPicked && !inCategory(covered?.categories ?? [])) return 'no'
+    const onlinePicked =
+      ctx.channel === 'online' &&
+      (covered?.online.some((o) => !inCategory(o.exclude)) ?? false)
+    if (
+      !merchantPicked &&
+      !onlinePicked &&
+      !inCategory(covered?.categories ?? [])
+    )
+      return 'no'
   }
 
   if (exclude?.categories && inCategory(exclude.categories)) return 'no'

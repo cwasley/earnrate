@@ -98,23 +98,42 @@ export const WelcomeOfferSchema = z
 export const ChoiceSchema = z.strictObject({
   id: KebabId,
   pick: z.number().int().positive(),
-  period: z.enum(['month', 'quarter', 'calendar_year']),
+  // `until_changed`: the pick carries over until the cardholder changes it,
+  // so a pick made in an earlier period is still current.
+  period: z.enum(['month', 'quarter', 'calendar_year', 'until_changed']),
   // Option ids that apply when the wallet hasn't picked, e.g. Bilt's dining.
   default: z.array(KebabId).min(1).optional(),
-  // Option id → what that option covers: a list of categories, or, when the
-  // issuer publishes the only qualifying stores, `{ merchants: [...] }`.
+  // Option id → what that option covers: a list of categories; or, when the
+  // issuer publishes the only qualifying stores, `{ merchants: [...] }`; or,
+  // for "online shopping" picks, `{ channel: online, exclude: [...] }`, any
+  // online purchase outside the excluded categories.
   options: z.record(
     KebabId,
     z.union([
       z
         .array(CategoryId)
         .min(1)
-        .transform((categories) => ({ categories, merchants: [] as string[] })),
+        .transform((categories) => ({
+          categories,
+          merchants: [] as string[],
+          online: null,
+        })),
       z
         .strictObject({ merchants: z.array(KebabId).min(1) })
         .transform(({ merchants }) => ({
           categories: [] as string[],
           merchants,
+          online: null,
+        })),
+      z
+        .strictObject({
+          channel: z.literal('online'),
+          exclude: z.array(CategoryId).default([]),
+        })
+        .transform(({ exclude }) => ({
+          categories: [] as string[],
+          merchants: [] as string[],
+          online: { exclude },
         })),
     ]),
   ),

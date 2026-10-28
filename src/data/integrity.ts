@@ -134,7 +134,10 @@ function cardProblems(
         )
     }
     for (const [option, covered] of options) {
-      for (const c of covered.categories)
+      for (const c of [
+        ...covered.categories,
+        ...(covered.online?.exclude ?? []),
+      ])
         checkCategory(c, `choice ${choice.id}.${option}`)
       for (const m of covered.merchants)
         checkMerchant(m, `choice ${choice.id}.${option}`)
