@@ -1,6 +1,6 @@
 {
   "name": "earnrate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Picks the best credit card from your wallet for a merchant, and explains why",
   "keywords": [
     "credit cards",
