@@ -12,7 +12,7 @@ I wanted a ghost card: one card that always charges the best of my cards. The ca
 - Runs on your machine. No account, no telemetry, no affiliate links.
 - US cards and US merchants, for now.
 
-> **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup and MCP server. See `docs/benchmark.md` for how it compares to existing tools.
+> **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup and MCP server. See [the benchmark](docs/benchmark.md) for how it compares to an existing card-picking MCP server.
 
 ## Try it
 
