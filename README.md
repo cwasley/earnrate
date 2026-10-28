@@ -9,7 +9,7 @@ I wanted a ghost card: one card that always charges the best of my cards. The ca
 
 **earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which card in your wallet earns the most there, and why. It's stateful (it knows your caps and chosen categories), valuation-aware, and transparent about its assumptions. It never sees a card number.
 
-- Runs on your machine. No account, no telemetry, no affiliate links.
+- Runs on your machine. No account, no telemetry, no affiliate links. See the [privacy page](https://earnrate.dev/privacy).
 - US cards and US merchants, for now.
 
 > **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup and MCP server. See [the benchmark](docs/benchmark.md) for how it compares to an existing card-picking MCP server.
