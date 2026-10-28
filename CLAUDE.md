@@ -23,6 +23,7 @@ The maintainer's full spec (data model, golden tests, milestones, competitive la
 - `earnrate import` (`src/cli/import.ts`, `src/import/`) reads Amex and Chase activity CSVs. Don't add PDF statement parsing: Chase PDFs carry the full card number. Never copy a real statement into the repo, tests or fixtures; `tests/import.test.ts` uses synthetic CSVs, and its privacy test checks that only cap totals and hashes are written.
 - `yarn mcp` runs the MCP server (`src/mcp/bin.ts`, stdio; never write to stdout there). `tests/mcp.test.ts` drives it with an in-process client plus one real stdio round trip.
 - The Claude merchant fallback is tested only with fake classifiers (`tests/llm.test.ts`). Never call the real API from tests.
+- When a card's `todo:` is something the engine or schema can't express (not a data gap), also add it to `docs/feature-gaps.md`.
 - Every card rule needs an `evidence` quote (3–20 words) from one of the card's `source_urls`; integrity tests enforce it. After changing a card, run `yarn check-sources --update` to refresh `data/sources.lock.json`. `src/sources/` is the checker; it stores only hashes of issuer text.
 - Tests: vitest, in `tests/` (golden cases in `tests/golden/`) or next to the source as `*.test.ts`.
 
