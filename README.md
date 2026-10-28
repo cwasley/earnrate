@@ -170,10 +170,11 @@ It reads the same wallet as the command line (`~/.earnrate/wallet.yaml`, or `EAR
 ## How it works
 
 ```
-merchant text ─▶ resolve ─▶ evaluate every rule ─▶ value ─▶ rank and explain
-                 category,   on every card in       cents per   winner, runner-ups,
-                 channel,    your wallet: dates,    point,      flip points, warnings,
-                 assumptions caps, choices, network pooling     confidence
+merchant text
+  → resolve    category, channel, and the assumption behind them
+  → evaluate   every rule on every card: network, dates, caps, picks, activations
+  → value      your cents per point, with pooling
+  → rank       winner, runner-ups, flip points, warnings, confidence
 ```
 
 - **Card terms are data, not code.** Each card is a YAML file of rules (category, rate, cap, channel, dates, activation, required membership), validated with Zod. Every rule carries a short quote from the issuer's own page, and a test fails if one is missing. The engine has no card-specific branches.
