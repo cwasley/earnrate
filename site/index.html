@@ -469,18 +469,26 @@
 
       <section>
         <h2>Get it</h2>
-        <p>Needs Node 24 or later. Install it, then ask about a merchant:</p>
+        <p>
+          Needs Node 22 or later. Install it, add the cards you hold, then ask
+          about a merchant:
+        </p>
         <pre
           class="terminal install"
         ><span class="prompt">$</span> npm install -g earnrate
+<span class="prompt">$</span> earnrate cards sapphire
+<span class="prompt">$</span> earnrate add chase-sapphire-preferred
 <span class="prompt">$</span> earnrate whole foods 80</pre>
-        <p>To let an AI agent ask it, add it as an MCP server:</p>
+        <p>
+          Or add it to your AI assistant as an MCP server, and just tell it
+          which cards you have:
+        </p>
         <pre
           class="terminal install"
         ><span class="prompt">$</span> claude mcp add earnrate -- npx -y earnrate mcp</pre>
         <p>
-          The first run says where to copy the example wallet. Setup, options
-          and the full card list are in the
+          Adding a card tells you anything else it needs, like your Cash+
+          categories this quarter. Options and the full card list are in the
           <a href="https://github.com/cwasley/earnrate#readme"
             >README on GitHub</a
           >.
