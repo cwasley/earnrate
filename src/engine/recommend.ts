@@ -495,7 +495,7 @@ export function recommend(
     if (card && gap !== null) {
       const name = held.checkout_label ?? card.name
       warnings.push(
-        `${name}'s rotating categories for ${gap} aren't in earnrate's data yet, so it's ranked without them. If this purchase is in that period's categories, ${name} may earn more.`,
+        `${name}'s rotating categories for ${gap} aren't in earnrate's data yet, so it's ranked without them. If this purchase is in that period's categories, ${name} may earn more. An earnrate update adds them once the issuer announces them.`,
       )
     }
   }

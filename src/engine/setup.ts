@@ -254,7 +254,7 @@ export function setupNotes(
   if (gap !== null) {
     notes.push({
       kind: 'rotation',
-      text: `${name}'s rotating categories for ${gap} aren't in earnrate's data yet.`,
+      text: `${name}'s rotating categories for ${gap} aren't in earnrate's data yet. An earnrate update adds them once the issuer announces them.`,
     })
   }
   return notes
