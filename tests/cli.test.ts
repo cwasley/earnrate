@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { mkdtemp, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -175,6 +175,7 @@ describe('wallet errors', () => {
     const { code, stderr } = await cli(['costco'], '/nonexistent/wallet.yaml')
     expect(code).toBe(1)
     expect(stderr).toMatch(/No wallet at \/nonexistent\/wallet\.yaml/)
+    expect(stderr).toMatch(/earnrate add chase-sapphire-preferred/)
     expect(stderr).toMatch(/wallet\.example\.yaml/)
   })
 
@@ -207,4 +208,82 @@ test('the bin runs under plain node', async () => {
     },
   )
   expect(stdout).toMatch(/^Netflix\n\nUse Blue Cash Preferred: 6% back\./)
+})
+
+describe('wallet setup commands', () => {
+  async function newWalletPath(): Promise<string> {
+    const dir = await mkdtemp(path.join(tmpdir(), 'earnrate-cli-'))
+    return path.join(dir, 'wallet.yaml')
+  }
+
+  test('cards finds a card and what it needs', async () => {
+    const { code, stdout } = await cli(['cards', 'cash+'])
+    expect(code).toBe(0)
+    expect(stdout).toMatch(/^usbank-cash-plus: U\.S\. Bank Cash\+/m)
+    expect(stdout).toMatch(/five-percent: pick 2 of/)
+    expect(stdout).toMatch(/\[in wallet\]/)
+  })
+
+  test('cards with no match exits 1', async () => {
+    const { code, stderr } = await cli(['cards', 'zzzz'])
+    expect(code).toBe(1)
+    expect(stderr).toMatch(/No card matches "zzzz"/)
+  })
+
+  test('add starts a wallet, then update and memberships finish it', async () => {
+    const file = await newWalletPath()
+    const added = await cli(
+      ['add', 'usbank-cash-plus', '--label', 'Cash+'],
+      file,
+    )
+    expect(added.code).toBe(0)
+    expect(added.stdout).toMatch(/Added U\.S\. Bank Cash\+.*\(a new wallet\)/)
+    expect(added.stdout).toMatch(/earnrate update usbank-cash-plus --pick/)
+
+    const updated = await cli(
+      [
+        'update',
+        'usbank-cash-plus',
+        '--pick',
+        'five-percent=tv-internet-streaming,movie-theaters',
+        '--pick',
+        'two-percent=gas-ev-charging',
+      ],
+      file,
+    )
+    expect(updated.code).toBe(0)
+    expect(updated.stdout).toMatch(/Nothing else to set up/)
+
+    expect((await cli(['add', 'chase-prime-visa'], file)).code).toBe(0)
+    expect((await cli(['memberships', 'amazon-prime'], file)).code).toBe(0)
+    const shown = await cli(['memberships'], file)
+    expect(shown.stdout).toMatch(/^Yours: amazon-prime$/m)
+
+    const best = await cli(['comcast', '100'], file)
+    expect(best.stdout).toMatch(/Use Cash\+: 5% back/)
+    expect(await readFile(file, 'utf8')).toContain(
+      'memberships: [amazon-prime]\ncards:\n  - id: usbank-cash-plus\n',
+    )
+  })
+
+  test('remove takes a card out, and errors exit 1', async () => {
+    const file = await walletFile(
+      'cards:\n  - id: amex-gold\n  - id: citi-double-cash\n',
+    )
+    expect((await cli(['remove', 'amex-gold'], file)).code).toBe(0)
+    const last = await cli(['remove', 'citi-double-cash'], file)
+    expect(last.code).toBe(1)
+    expect(last.stderr).toMatch(/last card/)
+  })
+
+  test('bad arguments are usage errors', async () => {
+    expect((await cli(['add'])).code).toBe(2)
+    expect((await cli(['add', 'amex-gold', '--pick', 'oops'])).code).toBe(2)
+    expect((await cli(['remove', 'amex-gold', '--label', 'x'])).code).toBe(2)
+  })
+
+  test('a merchant named like an object property is still a merchant', async () => {
+    const { code } = await cli(['constructor'])
+    expect(code).toBe(0)
+  })
 })

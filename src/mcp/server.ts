@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 import { MCP_SERVER_NAME } from '../brand.ts'
+import { formatCardInfo, formatNotes } from '../cli/cards.ts'
 import { formatRecommendation } from '../cli/format.ts'
 import { formatOffers } from '../cli/offers.ts'
 import { walletProblems } from '../data/integrity.ts'
@@ -10,10 +11,19 @@ import {
   writeBonusSpent,
   writeCapBooking,
 } from '../data/wallet-write.ts'
+import {
+  addCard,
+  removeCard,
+  setMemberships,
+  updateCard,
+  type CardInput,
+  type SetupResult,
+} from '../data/wallet-setup.ts'
 import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
 import { compareOffers } from '../engine/offers.ts'
 import { capBooking } from '../engine/record.ts'
 import { recommend } from '../engine/recommend.ts'
+import { knownMemberships, searchCards } from '../engine/setup.ts'
 import type { Channel, MerchantResolution } from '../engine/types.ts'
 import { walletSummary } from '../engine/wallet-summary.ts'
 import type { LlmSession } from '../merchants/fallback.ts'
@@ -21,10 +31,12 @@ import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
 import { IsoDate } from '../schema/common.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import {
+  CardSearchSchema,
   MerchantResolutionSchema,
   RecommendationSchema,
   OfferComparisonSchema,
   RecordResultSchema,
+  WalletChangeSchema,
   WalletSummarySchema,
 } from './schemas.ts'
 
@@ -52,6 +64,10 @@ const DateInput = IsoDate.optional().describe(
   'Purchase date, YYYY-MM-DD. Defaults to today.',
 )
 
+const INSTRUCTIONS = `earnrate picks which of the user's credit cards earns the most for a purchase. Its wallet lists the cards they hold by product id, never card numbers; never ask for card numbers, expiry dates or security codes.
+
+If a tool says there's no wallet yet, ask the user which cards they have, find each with search_cards, and add it with add_card. add_card and update_card reply with what a card still needs, such as category picks, memberships like Amazon Prime, or activated bonus categories. Ask the user about those and set them with update_card or set_memberships.`
+
 const fail = (text: string) => ({
   content: [{ type: 'text' as const, text }],
   isError: true,
@@ -61,7 +77,10 @@ const dollars = (n: number) =>
   `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 
 export function createEarnrateServer(deps: ServerDeps): McpServer {
-  const server = new McpServer({ name: MCP_SERVER_NAME, version: deps.version })
+  const server = new McpServer(
+    { name: MCP_SERVER_NAME, version: deps.version },
+    { instructions: INSTRUCTIONS },
+  )
   const { catalog } = deps
 
   // Read on every call, so edits to the wallet file apply without a restart.
@@ -70,6 +89,9 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
     try {
       loaded = await loadWallet(deps.walletFile)
     } catch (e) {
+      if (e instanceof Error && 'code' in e && e.code === 'ENOENT') {
+        return `There's no wallet yet (${deps.walletFile}). Ask the user which credit cards they have, find each one with search_cards, and add it with add_card.`
+      }
       return `Couldn't read the wallet at ${deps.walletFile}: ${e instanceof Error ? e.message : String(e)}`
     }
     const problems = walletProblems(loaded, catalog)
@@ -211,6 +233,10 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           ? `; chosen categories for ${c.chosen.period}${c.chosen.current ? '' : ' (out of date)'}`
           : ''
         const onlyAt = c.onlyAt ? `; works only at ${c.onlyAt.join(', ')}` : ''
+        const rotation =
+          c.rotationGap === null
+            ? ''
+            : `; rotating categories for ${c.rotationGap} not in earnrate yet`
         const b = c.bonus
         const bonus =
           b?.state === 'open' && b.spend !== null
@@ -218,7 +244,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
             : b
               ? `; welcome bonus ${b.state}`
               : ''
-        return `- ${c.checkoutLabel ?? c.cardName} (${c.cardId}): ${c.currency} at ${String(c.centsPerUnit)}¢${caps.length > 0 ? `; ${caps.join(', ')}` : ''}${chosen}${onlyAt}${bonus}`
+        return `- ${c.checkoutLabel ?? c.cardName} (${c.cardId}): ${c.currency} at ${String(c.centsPerUnit)}¢${caps.length > 0 ? `; ${caps.join(', ')}` : ''}${chosen}${rotation}${onlyAt}${bonus}`
       })
       return {
         content: [{ type: 'text', text: lines.join('\n') }],
@@ -401,6 +427,234 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           structuredContent: output,
         }
       }),
+  )
+
+  const CardId = z
+    .string()
+    .min(1)
+    .describe('The card id from search_cards, e.g. chase-sapphire-preferred.')
+  const cardFields = {
+    checkoutLabel: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'How the card appears at checkout or in a browser wallet, e.g. "Amex Gold". Optional.',
+      ),
+    picks: z
+      .record(z.string(), z.array(z.string()).min(1))
+      .optional()
+      .describe(
+        'For cards where the cardholder picks bonus categories: choice id → option ids, from search_cards, e.g. {"five-percent": ["tv-internet-streaming", "fast-food"]}. Saved for the current period. Ask the user; don\'t guess.',
+      ),
+    anniversary: z
+      .string()
+      .regex(/^\d{2}-\d{2}$/)
+      .optional()
+      .describe(
+        "The account's anniversary as MM-DD, for cards whose cap resets on it.",
+      ),
+    activated: z
+      .array(z.string())
+      .optional()
+      .describe(
+        'Rule ids the user has activated with the issuer, such as rotating categories. Replaces the current list.',
+      ),
+  }
+
+  // A card change reports what that card still needs; other changes don't.
+  function changed(result: SetupResult, message: string, cardChange = true) {
+    if (!result.ok) return fail(result.error)
+    const output = {
+      message,
+      created: result.created,
+      cardIds: result.wallet.cards.map((c) => c.id),
+      memberships: result.wallet.memberships,
+      notes: result.notes,
+    }
+    const text = [
+      message,
+      `Wallet: ${output.cardIds.join(', ')}.`,
+      ...(cardChange ? [formatNotes(result.notes)] : []),
+    ].join('\n')
+    return {
+      content: [{ type: 'text' as const, text }],
+      structuredContent: output,
+    }
+  }
+
+  const cardInput = (args: {
+    cardId: string
+    checkoutLabel?: string | undefined
+    picks?: Record<string, string[]> | undefined
+    anniversary?: string | undefined
+    activated?: string[] | undefined
+  }): CardInput => ({
+    id: args.cardId,
+    ...(args.checkoutLabel === undefined
+      ? {}
+      : { checkoutLabel: args.checkoutLabel }),
+    ...(args.picks === undefined ? {} : { picks: args.picks }),
+    ...(args.anniversary === undefined
+      ? {}
+      : { anniversary: args.anniversary }),
+    ...(args.activated === undefined ? {} : { activated: args.activated }),
+  })
+
+  const cardName = (id: string) =>
+    catalog.cards.find((c) => c.id === id)?.name ?? id
+
+  server.registerTool(
+    'search_cards',
+    {
+      title: 'Search cards',
+      description:
+        'Finds credit cards in earnrate\'s catalog by name or issuer, e.g. "sapphire", "amex gold" or "bofa". Returns each card\'s id (for add_card), network, annual fee, whether it\'s already in the wallet, and what it needs set up: category picks and their options, memberships, activations. Leave the query out to list every card. US cards only.',
+      inputSchema: z.object({
+        query: z
+          .string()
+          .optional()
+          .describe('Card name or issuer, as the user said it.'),
+      }),
+      outputSchema: CardSearchSchema,
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    async ({ query }) => {
+      const held = await loadWallet(deps.walletFile).catch(() => null)
+      const result = searchCards(catalog, query ?? '', held, deps.today())
+      const header = result.exact
+        ? ''
+        : result.cards.length > 0
+          ? 'No card matched every word. Closest:\n'
+          : `No card matched "${query ?? ''}". earnrate covers ${String(catalog.cards.length)} US cards; list them all by leaving the query out.`
+      return {
+        content: [
+          {
+            type: 'text',
+            text: header + result.cards.map(formatCardInfo).join('\n'),
+          },
+        ],
+        structuredContent: result,
+      }
+    },
+  )
+
+  server.registerTool(
+    'add_card',
+    {
+      title: 'Add a card',
+      description:
+        "Adds a card the user holds to their wallet by its id from search_cards, creating the wallet if there isn't one. The reply says what the card still needs (category picks, memberships, activations); ask the user about those. Stores only the card's product id and settings, never card numbers.",
+      inputSchema: z.object({ cardId: CardId, ...cardFields }),
+      outputSchema: WalletChangeSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+    },
+    (args) =>
+      withWalletLock(deps.walletFile, async () => {
+        const result = await addCard(
+          deps.walletFile,
+          catalog,
+          cardInput(args),
+          deps.today(),
+        )
+        return changed(
+          result,
+          `Added ${cardName(args.cardId)} (${args.cardId})${result.ok && result.created ? `, starting a new wallet at ${deps.walletFile}` : ''}.`,
+        )
+      }),
+  )
+
+  server.registerTool(
+    'update_card',
+    {
+      title: 'Update a card',
+      description:
+        'Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary or activated categories. Picks for the current period are merged with the ones already saved. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+.',
+      inputSchema: z.object({ cardId: CardId, ...cardFields }),
+      outputSchema: WalletChangeSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    (args) =>
+      withWalletLock(deps.walletFile, async () =>
+        changed(
+          await updateCard(
+            deps.walletFile,
+            catalog,
+            cardInput(args),
+            deps.today(),
+          ),
+          `Updated ${cardName(args.cardId)} (${args.cardId}).`,
+        ),
+      ),
+  )
+
+  server.registerTool(
+    'remove_card',
+    {
+      title: 'Remove a card',
+      description:
+        "Removes a card from the wallet, with its tracked cap usage and bonus progress. Only when the user says they no longer have it or don't want it considered.",
+      inputSchema: z.object({ cardId: CardId }),
+      outputSchema: WalletChangeSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    ({ cardId }) =>
+      withWalletLock(deps.walletFile, async () =>
+        changed(
+          await removeCard(deps.walletFile, catalog, cardId),
+          `Removed ${cardName(cardId)} (${cardId}).`,
+          false,
+        ),
+      ),
+  )
+
+  const memberships = knownMemberships(catalog) as [string, ...string[]]
+  server.registerTool(
+    'set_memberships',
+    {
+      title: 'Set memberships',
+      description:
+        "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier. Replaces the whole list, so include the ones to keep.",
+      inputSchema: z.object({
+        memberships: z
+          .array(z.enum(memberships))
+          .describe(
+            `Every membership the user has. Known: ${memberships.join(', ')}.`,
+          ),
+      }),
+      outputSchema: WalletChangeSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    (args) =>
+      withWalletLock(deps.walletFile, async () =>
+        changed(
+          await setMemberships(deps.walletFile, catalog, args.memberships),
+          args.memberships.length > 0
+            ? `Memberships set to ${args.memberships.join(', ')}.`
+            : 'Memberships cleared.',
+          false,
+        ),
+      ),
   )
 
   return server

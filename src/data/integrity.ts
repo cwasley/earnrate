@@ -166,6 +166,24 @@ function cardProblems(
       problems.push(`${where} ${context}: unknown cap '${rule.cap}'`)
     }
   }
+  for (const cap of card.caps.filter((c) => c.rotating)) {
+    const rules = card.rules.filter((r) => r.cap === cap.id)
+    if (rules.length === 0) {
+      problems.push(`${where} cap ${cap.id}: rotating, but no rule uses it`)
+    }
+    for (const r of rules) {
+      if (r.valid_from === undefined || r.valid_to === undefined) {
+        problems.push(
+          `${where} rule ${r.id}: rules on rotating cap '${cap.id}' need valid_from and valid_to`,
+        )
+      }
+    }
+    if (cap.period === 'cardmember_year') {
+      problems.push(
+        `${where} cap ${cap.id}: a rotating cap can't use cardmember years`,
+      )
+    }
+  }
   return problems
 }
 

@@ -20,12 +20,15 @@ Needs Node 24 or later.
 
 ```sh
 npm install -g earnrate
-mkdir -p ~/.earnrate
-curl -o ~/.earnrate/wallet.yaml https://raw.githubusercontent.com/cwasley/earnrate/main/wallet.example.yaml
+earnrate cards sapphire            # find your cards' ids
+earnrate add chase-sapphire-preferred
+earnrate add amex-gold
 earnrate whole foods 80
 ```
 
-Then edit `~/.earnrate/wallet.yaml` to list your own cards (see [Your wallet](#your-wallet)).
+Adding a card tells you anything else it needs to earn correctly, such as the categories you picked on Cash+, Amazon Prime for Prime Visa's 5%, or which rotating categories you've activated. `earnrate update` sets those. Using an AI assistant instead? [Add the MCP server](#use-it-from-an-ai-agent-mcp) and tell it which cards you have.
+
+With the [example wallet](wallet.example.yaml), it prints:
 
 ```
 Whole Foods Market · $80
@@ -50,7 +53,7 @@ Options: `--online` or `--in-store`, `--valuation flat|points-heavy`, `--all`, `
 
 ### Your wallet
 
-The wallet is a YAML file listing your cards by ID, which is each card's file name in [`data/cards/`](data/cards). Only the cards are required:
+The wallet is a YAML file (`~/.earnrate/wallet.yaml`) listing your cards by ID, which is each card's file name in [`data/cards/`](data/cards). `earnrate add`, `update`, `remove` and `memberships` write it for you and keep your comments, or you can edit it by hand. Only the cards are required:
 
 ```yaml
 valuations:
@@ -139,13 +142,16 @@ Spotted a wrong rate, or want a card added? [Open an issue](https://github.com/c
 
 ## Use it from an AI agent (MCP)
 
-`earnrate mcp` runs earnrate as a local MCP server over stdio, with five tools:
+`earnrate mcp` runs earnrate as a local MCP server over stdio, with ten tools:
 
 - `best_card_for_purchase`: which card to use, with reasons
 - `resolve_merchant`: how a merchant was identified
 - `list_wallet`: your cards, caps left this period, chosen categories and welcome-bonus progress
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have
 - `record_purchase`: books a purchase against its cap and any open welcome bonus in your wallet file, keeping your comments
+- `search_cards`, `add_card`, `update_card`, `remove_card` and `set_memberships`: set up the wallet in conversation
+
+There's no wallet to write first: tell the assistant which cards you have, and it finds them, adds them, and asks about anything a card needs, like this quarter's Cash+ picks.
 
 For a merchant earnrate doesn't know, the calling model can pass a `category` (e.g. `grocery.supermarket`). It's used only for unknown merchants and is labeled in the answer. The command line takes the same thing as `--category`.
 

@@ -86,6 +86,16 @@ describe('catalogProblems', () => {
     ])
   })
 
+  test('rules on a rotating cap need dates', () => {
+    const broken = cashPlusYaml.replace(
+      'period: quarter, then_rate: 1 }',
+      'period: quarter, then_rate: 1, rotating: true }',
+    )
+    expect(catalogProblems(catalog(broken))).toEqual([
+      "card usbank-cash-plus rule five-percent: rules on rotating cap 'five-percent-combined' need valid_from and valid_to",
+    ])
+  })
+
   test('catches an unknown category inside a choice option', () => {
     const broken = cashPlusYaml.replace('[movie_theaters]', '[movies]')
     expect(catalogProblems(catalog(broken))).toEqual([

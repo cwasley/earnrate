@@ -25,6 +25,7 @@ import { packageVersion } from '../version.ts'
 import { parseCliArgs } from './args.ts'
 import { runImport } from './import.ts'
 import { runOffers } from './offers.ts'
+import { runWalletCommand, WALLET_HELP } from './wallet.ts'
 import { formatRecommendation, plain, type Style } from './format.ts'
 
 export type Io = {
@@ -45,11 +46,18 @@ Examples:
   ${CLI_NAME} costco --in-store
   ${CLI_NAME} delta.com 450 --valuation points-heavy
 
+Set up your wallet:
+  ${CLI_NAME} cards [search words]                 Find cards and their ids.
+  ${CLI_NAME} add <card-id> [--pick ...]           Add a card you hold.
+  ${CLI_NAME} update <card-id> [--pick ...]        Change picks, label or activations.
+  ${CLI_NAME} remove <card-id>                     Remove a card.
+  ${CLI_NAME} memberships [names...]               Show or set memberships (amazon-prime).
+
 Other commands:
   ${CLI_NAME} import <statement.csv> --card <id>   Replay a statement against your wallet.
   ${CLI_NAME} offers [--cash | --points]           Rank welcome offers on cards you don't have.
   ${CLI_NAME} mcp                                  Run the MCP server over stdio, for AI agents.
-  Add --help to import or offers for its options.
+  Add --help to any command for its options.
 
 Options:
   --online, --in-store   How you're paying. Default: inferred from the merchant.
@@ -93,7 +101,7 @@ export async function readWallet(file: string, io: Io): Promise<Wallet | null> {
   } catch (e) {
     if (e instanceof Error && 'code' in e && e.code === 'ENOENT') {
       io.stderr(
-        `No wallet at ${displayPath(file)}. Copy the example there and edit it:\n  mkdir -p ${displayPath(path.dirname(file))} && cp ${displayPath(EXAMPLE_WALLET)} ${displayPath(file)}\nOr set ${WALLET_ENV_VAR} to your wallet's path.\n`,
+        `No wallet at ${displayPath(file)} yet. Add the cards you hold:\n  ${CLI_NAME} cards sapphire          find a card's id\n  ${CLI_NAME} add chase-sapphire-preferred\nOr start from the example: mkdir -p ${displayPath(path.dirname(file))} && cp ${displayPath(EXAMPLE_WALLET)} ${displayPath(file)}\nOr set ${WALLET_ENV_VAR} to your wallet's path.\n`,
       )
     } else {
       io.stderr(
@@ -107,6 +115,14 @@ export async function readWallet(file: string, io: Io): Promise<Wallet | null> {
 export async function run(argv: string[], io: Io): Promise<number> {
   if (argv[0] === 'import') return runImport(argv.slice(1), io)
   if (argv[0] === 'offers') return runOffers(argv.slice(1), io)
+  const command = argv[0]
+  if (command !== undefined && Object.hasOwn(WALLET_HELP, command)) {
+    return runWalletCommand(
+      command as keyof typeof WALLET_HELP,
+      argv.slice(1),
+      io,
+    )
+  }
   if (argv.length === 1 && (argv[0] === '--version' || argv[0] === '-v')) {
     io.stdout(`${CLI_NAME} ${await packageVersion()}\n`)
     return 0

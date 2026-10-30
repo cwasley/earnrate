@@ -1,6 +1,6 @@
 id: capital-one-venture
 name: Capital One Venture Rewards Credit Card
-issuer: capitalone
+issuer: capital-one
 # The card page never names the network in visible text. Its embedded product
 # data says MasterCard; older Venture accounts may be on Visa.
 network: mastercard

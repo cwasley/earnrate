@@ -4,6 +4,7 @@ import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
 import { pickedCategories } from './evaluate.ts'
 import { daysBetween, periodKey } from './periods.ts'
+import { rotationGap } from './rotation.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { cardValuation } from './valuation.ts'
 
@@ -30,6 +31,7 @@ export type CardSummary = {
   lastVerified: string
   verifiedBy: string
   dataIsStale: boolean
+  rotationGap: string | null // a rotating card's current period, when its categories aren't in the data
   caps: CapSummary[]
   chosen: {
     period: string
@@ -104,6 +106,7 @@ export function walletSummary(
       lastVerified: card.last_verified,
       verifiedBy: card.verified_by,
       dataIsStale: daysBetween(card.last_verified, today) > STALE_AFTER_DAYS,
+      rotationGap: rotationGap(card, today),
       caps: capSummaries(card, held, today),
       chosen: held.chosen
         ? {

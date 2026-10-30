@@ -112,6 +112,7 @@ export const WalletSummarySchema = z.object({
       lastVerified: z.string(),
       verifiedBy: z.string(),
       dataIsStale: z.boolean(),
+      rotationGap: z.string().nullable(),
       caps: z.array(
         z.object({
           key: z.string(),
@@ -187,4 +188,57 @@ export const OfferComparisonSchema = z.object({
   ),
   withoutOffer: z.array(z.string()),
   notes: z.array(z.string()),
+})
+
+export const CardSearchSchema = z.object({
+  exact: z.boolean(),
+  cards: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      issuer: z.string(),
+      network: CardNetwork,
+      currency: z.string(),
+      annualFee: z.number().nullable(),
+      business: z.boolean(),
+      onlyAt: z.array(z.string()).nullable(),
+      held: z.boolean(),
+      choices: z.array(
+        z.object({
+          id: z.string(),
+          pick: z.number(),
+          period: z.enum([
+            'month',
+            'quarter',
+            'calendar_year',
+            'until_changed',
+          ]),
+          options: z.array(z.string()),
+          default: z.array(z.string()).nullable(),
+        }),
+      ),
+      memberships: z.array(z.string()),
+      activation: z.array(z.string()),
+      needsAnniversary: z.boolean(),
+    }),
+  ),
+})
+
+export const WalletChangeSchema = z.object({
+  message: z.string(),
+  created: z.boolean(),
+  cardIds: z.array(z.string()),
+  memberships: z.array(z.string()),
+  notes: z.array(
+    z.object({
+      kind: z.enum([
+        'pick',
+        'membership',
+        'activation',
+        'anniversary',
+        'rotation',
+      ]),
+      text: z.string(),
+    }),
+  ),
 })

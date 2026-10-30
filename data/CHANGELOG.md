@@ -2,6 +2,15 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.10.30.1
+
+Freedom Flex's quarterly cap is marked `rotating`, so a quarter whose categories aren't in the data yet gets a warning instead of quietly ranking Flex at its everyday rates. Capital One's issuer id is now spelled the same on every card. No rates changed.
+
+| Card                                                          | Field                       | Old → new                | Source |
+| ------------------------------------------------------------- | --------------------------- | ------------------------ | ------ |
+| chase-freedom-flex                                            | caps.five-percent-quarterly | adds `rotating`          | n/a    |
+| capital-one-venture-x, capital-one-venture, capital-one-savor | issuer                      | capitalone → capital-one | n/a    |
+
 ## 2026.10.28.2
 
 Bank of America Customized Cash Rewards, reviewed by Collin (`verified_by: collin`). Choice options can now be "any online purchase except these categories", and a choice period can be `until_changed` for picks that carry over.

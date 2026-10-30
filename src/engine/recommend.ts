@@ -9,6 +9,7 @@ import {
 } from './evaluate.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
 import { daysBetween } from './periods.ts'
+import { rotationGap } from './rotation.ts'
 import type {
   Confidence,
   ExcludedCard,
@@ -486,6 +487,17 @@ export function recommend(
     warnings.push(
       `Not every business takes ${NETWORK_NAMES[winner.card.network] ?? winner.card.network}.${fallback}`,
     )
+  }
+
+  for (const held of wallet.cards) {
+    const card = catalog.cards.find((c) => c.id === held.id)
+    const gap = card ? rotationGap(card, purchase.date) : null
+    if (card && gap !== null) {
+      const name = held.checkout_label ?? card.name
+      warnings.push(
+        `${name}'s rotating categories for ${gap} aren't in earnrate's data yet, so it's ranked without them. If this purchase is in that period's categories, ${name} may earn more.`,
+      )
+    }
   }
 
   const tie = tieNote(entries)

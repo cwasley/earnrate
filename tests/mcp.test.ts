@@ -68,15 +68,20 @@ function text(result: { content?: unknown }): string {
 }
 
 describe('tools', () => {
-  test('lists the five tools with descriptions and hints', async () => {
+  test('lists the ten tools with descriptions and hints', async () => {
     const client = await connect(await walletCopy())
     const { tools } = await client.listTools()
     expect(tools.map((t) => t.name).sort()).toEqual([
+      'add_card',
       'best_card_for_purchase',
       'compare_welcome_offers',
       'list_wallet',
       'record_purchase',
+      'remove_card',
       'resolve_merchant',
+      'search_cards',
+      'set_memberships',
+      'update_card',
     ])
     for (const t of tools) {
       expect(t.description?.length).toBeGreaterThan(80)
@@ -159,6 +164,115 @@ describe('tools', () => {
     const result = await client.callTool({ name: 'list_wallet', arguments: {} })
     expect(result.isError).toBe(true)
     expect(text(result)).toMatch(/nope-card: not in the card catalog/)
+  })
+})
+
+describe('wallet setup', () => {
+  async function missingWallet(): Promise<string> {
+    const dir = await mkdtemp(path.join(tmpdir(), 'earnrate-mcp-'))
+    return path.join(dir, 'earnrate', 'wallet.yaml')
+  }
+
+  test('the server tells agents how to set up a wallet', async () => {
+    const client = await connect(await walletCopy())
+    expect(client.getInstructions()).toMatch(/search_cards.*add_card/s)
+  })
+
+  test('from no wallet to a recommendation', async () => {
+    const file = await missingWallet()
+    const client = await connect(file)
+
+    const before = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(before.isError).toBe(true)
+    expect(text(before)).toMatch(/no wallet yet.*search_cards.*add_card/is)
+
+    const found = await client.callTool({
+      name: 'search_cards',
+      arguments: { query: 'amex blue cash preferred' },
+    })
+    const ids = (found.structuredContent as { cards: { id: string }[] }).cards
+    expect(ids.map((c) => c.id)).toEqual(['amex-blue-cash-preferred'])
+
+    const added = await client.callTool({
+      name: 'add_card',
+      arguments: { cardId: 'amex-blue-cash-preferred', checkoutLabel: 'BCP' },
+    })
+    expect(added.isError).toBeFalsy()
+    expect(added.structuredContent).toMatchObject({
+      created: true,
+      cardIds: ['amex-blue-cash-preferred'],
+    })
+    expect(text(added)).toMatch(/Nothing else to set up/)
+
+    const prime = await client.callTool({
+      name: 'add_card',
+      arguments: { cardId: 'chase-prime-visa' },
+    })
+    expect(text(prime)).toMatch(/amazon-prime/)
+    await client.callTool({
+      name: 'set_memberships',
+      arguments: { memberships: ['amazon-prime'] },
+    })
+
+    const best = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Amazon', channel: 'online' },
+    })
+    expect((best.structuredContent as Recommendation).decision?.cardId).toBe(
+      'chase-prime-visa',
+    )
+    expect(await readFile(file, 'utf8')).toContain(
+      'memberships: [amazon-prime]\ncards:\n  - id: amex-blue-cash-preferred\n    checkout_label: BCP\n  - id: chase-prime-visa\n',
+    )
+  })
+
+  test('picks are checked against the card and saved for this period', async () => {
+    const file = await walletCopy()
+    const client = await connect(file)
+    const bad = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'usbank-cash-plus',
+        picks: { 'two-percent': ['dining'] },
+      },
+    })
+    expect(bad.isError).toBe(true)
+    expect(text(bad)).toMatch(
+      /Options: gas-ev-charging, grocery-stores, restaurants/,
+    )
+
+    const good = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'usbank-cash-plus',
+        picks: { 'two-percent': ['restaurants'] },
+      },
+    })
+    expect(good.isError).toBeFalsy()
+    const wallet = await client.callTool({ name: 'list_wallet', arguments: {} })
+    const cashPlus = (wallet.structuredContent as WalletSummary).cards.find(
+      (c) => c.cardId === 'usbank-cash-plus',
+    )
+    expect(cashPlus?.chosen).toEqual({
+      period: '2026-Q4',
+      current: true,
+      picks: {
+        'five-percent': ['tv-internet-streaming', 'movie-theaters'],
+        'two-percent': ['restaurants'],
+      },
+    })
+  })
+
+  test('remove_card refuses the last card', async () => {
+    const client = await connect(
+      await walletCopy('cards:\n  - id: amex-gold\n'),
+    )
+    const result = await client.callTool({
+      name: 'remove_card',
+      arguments: { cardId: 'amex-gold' },
+    })
+    expect(result.isError).toBe(true)
+    expect(text(result)).toMatch(/last card/)
   })
 })
 

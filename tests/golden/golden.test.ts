@@ -378,6 +378,60 @@ describe('golden cases with state', () => {
   )
 })
 
+describe('#19 rotating categories missing from the data', () => {
+  const withFlex = (w: Wallet): Wallet => ({
+    ...w,
+    cards: [
+      ...w.cards,
+      {
+        id: 'chase-freedom-flex',
+        checkout_label: 'Freedom Flex',
+        cap_usage: {},
+        activated: ['q1-2027-grocery', 'q1-2027-streaming'],
+      },
+    ],
+  })
+
+  goldenTest(
+    '#19a a quarter with no rotating categories on file gets a warning',
+    () => {
+      const wallet = withProfile(withFlex(baseWallet()), 'flat')
+      const rec = recommend(
+        catalog,
+        wallet,
+        purchase('Kroger', { channel: 'in_store', date: '2027-04-10' }),
+      )
+      expectSome(
+        rec.warnings,
+        /Freedom Flex's rotating categories for 2027-Q2 aren't in earnrate's data yet/,
+      )
+    },
+  )
+
+  goldenTest(
+    '#19b a quarter whose categories are on file has no warning',
+    () => {
+      const wallet = withProfile(withFlex(baseWallet()), 'flat')
+      const rec = recommend(
+        catalog,
+        wallet,
+        purchase('Kroger', { channel: 'in_store', date: '2027-02-10' }),
+      )
+      expect(entry(rec, 'chase-freedom-flex').rate).toBe(5)
+      expect(rec.warnings.join('\n')).not.toMatch(/rotating/)
+    },
+  )
+
+  goldenTest('#19c a wallet without a rotating card has no warning', () => {
+    const rec = recommend(
+      catalog,
+      withProfile(baseWallet(), 'flat'),
+      purchase('Kroger', { channel: 'in_store', date: '2027-04-10' }),
+    )
+    expect(rec.warnings.join('\n')).not.toMatch(/rotating/)
+  })
+})
+
 describe('#17 every card has a known network', () => {
   test('a card file without a network is rejected', () => {
     const card = catalog.cards.find((c) => c.id === 'sofi-unlimited-2')

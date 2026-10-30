@@ -31,6 +31,7 @@ caps:
     amount: 1500
     period: quarter
     then_rate: 1
+    rotating: true
 rules:
   - id: chase-travel
     match: { merchants: [chase-travel] }

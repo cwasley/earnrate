@@ -22,7 +22,13 @@ export const CapSchema = z.strictObject({
   then_rate: z.number().nonnegative(),
 })
 
-export const SharedCapSchema = CapSchema.extend({ id: KebabId })
+export const SharedCapSchema = CapSchema.extend({
+  id: KebabId,
+  // Rotating categories (Freedom Flex): every rule on this cap covers one
+  // dated period, and a period with no rule means the issuer's categories
+  // aren't in the data yet, not that there's no bonus.
+  rotating: z.literal(true).optional(),
+})
 
 const hasAny = (m: Record<string, unknown[] | string | true | undefined>) =>
   Object.values(m).some((v) => v === true || (v !== undefined && v.length > 0))
