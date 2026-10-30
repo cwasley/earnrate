@@ -38,8 +38,4 @@ jobs:
         with:
           node-version: 22
       - run: node --version
-      # yarn 1 won't run scripts when package.json `engines` excludes this
-      # Node; npm installing the tarball only warns, as it would for a user.
       - run: yarn smoke:pack
-        env:
-          YARN_IGNORE_ENGINES: 'true'

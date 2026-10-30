@@ -21,7 +21,7 @@
   "mcpName": "io.github.cwasley/earnrate",
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=22"
   },
   "bin": {
     "earnrate": "./dist/cli/bin.js",

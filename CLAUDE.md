@@ -16,7 +16,7 @@ The maintainer's full spec (data model, golden tests, milestones, competitive la
 ## Tooling
 
 - Node >= 24 runs `.ts` files directly (type stripping), so development has no build step. Use only erasable TS syntax: no `enum`, `namespace` or parameter properties. Import local files with the `.ts` extension.
-- The npm package is built JS: Node won't strip types inside `node_modules`. `yarn build` (`tsconfig.build.json`) emits `dist/` with `.ts` imports rewritten, and `yarn smoke:pack` installs the packed tarball in a temp dir and runs `earnrate`, `earnrate mcp` and `earnrate-mcp`. Paths built from `import.meta.url` must resolve the same from `src/` and `dist/`.
+- The npm package is built JS: Node won't strip types inside `node_modules`. It supports Node 22 and up (`engines`), and CI smoke-tests the packed package on Node 22, so don't use newer Node APIs in `src/` without raising both. `yarn build` (`tsconfig.build.json`) emits `dist/` with `.ts` imports rewritten, and `yarn smoke:pack` installs the packed tarball in a temp dir and runs `earnrate`, `earnrate mcp` and `earnrate-mcp`. Paths built from `import.meta.url` must resolve the same from `src/` and `dist/`.
 - TypeScript is pinned to `~6.0` because typescript-eslint doesn't support 7.x yet.
 - `yarn validate` runs typecheck, lint, format check and tests. Run it before committing.
 - `yarn earnrate <merchant> [amount]` runs the CLI (`src/cli/bin.ts`) against `$EARNRATE_WALLET` or `~/.earnrate/wallet.yaml`. CLI output is snapshot-tested against `wallet.example.yaml`, so a data or wording change shows up as a snapshot diff: review it, then `yarn vitest run -u`.

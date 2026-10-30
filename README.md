@@ -16,7 +16,7 @@ I wanted a ghost card: one card that always charges the best of my cards. The ca
 
 ## Try it
 
-Needs Node 24 or later.
+Needs Node 22 or later.
 
 ```sh
 npm install -g earnrate
