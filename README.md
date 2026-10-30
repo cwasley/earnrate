@@ -185,8 +185,8 @@ merchant text
 
 - **Card terms are data, not code.** Each card is a YAML file of rules (category, rate, cap, channel, dates, activation, required membership), validated with Zod. Every rule carries a short quote from the issuer's own page, and a test fails if one is missing. The engine has no card-specific branches.
 - **Merchants resolve to a category plus the assumption behind it.** "Whole Foods codes as a supermarket (MCC 5411)" is stated in the answer, and venues that can code more than one way (a restaurant inside a stadium or hotel) come back at medium confidence with the alternative spelled out. Unknown merchants fall back to base rates, or to an opt-in, cached and labeled Claude guess.
-- **The engine is pure and deterministic.** Given a purchase, a date and a wallet, it checks every rule against network acceptance, the date window, caps already used (split when a purchase straddles one), quarterly picks and activations, then values points at your cents-per-point, including pooling (Freedom Unlimited points are worth Sapphire points when you hold both). Ties, the valuation at which the runner-up would win, and stale data all show up in the answer.
-- **Wallet edits keep your file intact.** Recording a purchase rewrites only the numbers that changed, so comments and formatting in your YAML survive.
+- **The engine is pure and deterministic.** Given a purchase, a date and a wallet, it checks every rule against network acceptance, the date window, caps already used (split when a purchase straddles one), quarterly picks and activations, then values points at your cents-per-point, including pooling (Freedom Unlimited points are worth Sapphire points when you hold both). Ties, the valuation at which the runner-up would win, stale data, and a rotating card whose new quarter isn't in the data yet all show up in the answer.
+- **Wallet edits keep your file intact.** Adding or changing a card, or recording a purchase, splices in only the lines that changed and checks the result before saving, so comments and formatting in your YAML survive.
 - **Drift detection.** A weekly GitHub Action opens each issuer page in a headless browser, checks every quote is still there, and opens an issue when terms move. It stores only hashes of issuer text.
 - **Tested end to end.** Golden cases written from issuer terms, CLI snapshot tests, an MCP round trip over real stdio, an install test that packs and installs the npm package, and a check that no committed file contains a card number. CI runs all of it on every push.
 
@@ -200,6 +200,8 @@ Every rule in `data/cards/` carries a short quote from the issuer's own page. In
 - earning lines that appeared or disappeared since the last baseline, such as a new perk
 
 A GitHub Action runs it every Monday and opens a "Card source changes" issue when something moved. After updating a card file, run `yarn check-sources --update` to record the new baseline. Some issuers block headless browsers on shared servers; those pages are listed as "couldn't check", and running the command locally covers them. The first run needs `yarn playwright install chromium`.
+
+Rotating categories (Freedom Flex) are added each quarter once the issuer posts them. Until then, answers say that quarter's categories are missing rather than guessing.
 
 ## Working on earnrate
 
