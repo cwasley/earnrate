@@ -14,7 +14,7 @@ import { setupNotes } from './setup.ts'
 export type CheatSheetItem =
   { label: string; category: string } | { label: string; merchant: string }
 
-export const CHEAT_SHEET_ITEMS: CheatSheetItem[] = [
+const CHEAT_SHEET_ITEMS: CheatSheetItem[] = [
   { label: 'Groceries', category: 'grocery.supermarket' },
   { label: 'Dining', category: 'dining' },
   { label: 'Gas', category: 'gas' },

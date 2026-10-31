@@ -76,15 +76,6 @@ export function applyBooking(wallet: Wallet, booking: CapBooking): Wallet {
   }
 }
 
-export function recordPurchase(
-  catalog: Catalog,
-  wallet: Wallet,
-  purchase: RecordedPurchase,
-): Wallet {
-  const booking = capBooking(catalog, wallet, purchase)
-  return booking ? applyBooking(wallet, booking) : wallet
-}
-
 export type BonusBooking = {
   cardId: string
   before: number // dollars toward the welcome bonus before the purchase
@@ -94,7 +85,7 @@ export type BonusBooking = {
 }
 
 // The purchase's progress toward the card's open welcome bonus, if it counts.
-export function bonusBooking(
+function bonusBooking(
   catalog: Catalog,
   wallet: Wallet,
   purchase: RecordedPurchase,

@@ -2,7 +2,6 @@ import {
   Client,
   StreamableHTTPClientTransport,
 } from '@modelcontextprotocol/client'
-import { readFile } from 'node:fs/promises'
 import { afterEach, describe, expect, test } from 'vitest'
 import { makeWorker, type Env } from '../remote/src/app.ts'
 import { ALIAS_RESOURCE, RESOURCE } from '../remote/src/auth.ts'
@@ -15,14 +14,13 @@ import {
   wrapWalletKey,
 } from '../remote/src/vault-crypto.ts'
 import { WalletVault, type VaultStorage } from '../remote/src/vault.ts'
-import { DATA_DIR, loadCatalog } from '../src/data/load.ts'
+import { loadCatalog } from '../src/data/load.ts'
 import { SAVED_WALLET_TOOLS } from '../src/mcp/server.ts'
 import { TODAY } from './golden/fixtures.ts'
 
 const ORIGIN = 'https://mcp.earnrate.dev'
 const CALLBACK = 'https://claude.ai/api/mcp/auth_callback'
 const catalog = await loadCatalog()
-const dataVersion = (await readFile(`${DATA_DIR}VERSION`, 'utf8')).trim()
 
 function memoryStorage(): VaultStorage & {
   values: Map<string, unknown>
@@ -88,7 +86,7 @@ function deployment() {
   const storages = new Map<string, ReturnType<typeof memoryStorage>>()
   const vaults = new Map<string, WalletVault>()
   const worker = makeWorker<Env>(
-    { catalog, dataVersion, version: '0.0.0-test' },
+    { catalog, version: '0.0.0-test' },
     (_env, walletId) => {
       let vault = vaults.get(walletId)
       if (!vault) {

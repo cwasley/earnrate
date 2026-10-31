@@ -8,24 +8,10 @@ import {
   type BonusBooking,
   type CapBooking,
 } from '../engine/record.ts'
+import type { CardFields } from '../engine/wallet-change.ts'
 import { WalletSchema, type Wallet } from '../schema/wallet.ts'
 
-export type BonusFields = {
-  opened: string
-  spent: number
-  spend?: number
-  by?: string
-}
-
-export type CardFields = {
-  checkout_label?: string
-  anniversary?: string
-  chosen?: { period: string; picks: Record<string, string[]> }
-  activated?: string[]
-  bonus?: BonusFields | null // null removes it
-}
-
-export type CardEntry = CardFields & { id: string }
+type CardEntry = CardFields & { id: string }
 
 const NEW_WALLET = `# Your earnrate wallet: the cards you hold, by id. Never card numbers.
 # Format: https://github.com/cwasley/earnrate#your-wallet

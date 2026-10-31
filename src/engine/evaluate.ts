@@ -186,7 +186,7 @@ function capState(
   return { key, cap, period, remaining: Math.max(0, cap.amount - used) }
 }
 
-export function rateAfterCap(
+function rateAfterCap(
   rate: number,
   cap: CapState | null,
   amount: number | null,

@@ -36,7 +36,7 @@ const DELETED =
 // it for 13 months from then.
 const UNUSED_NEW_WALLET = 7 * 24 * 60 * 60 * 1000
 
-export function retentionEnd(lastUsed: number): number {
+function retentionEnd(lastUsed: number): number {
   const end = new Date(lastUsed)
   end.setUTCMonth(end.getUTCMonth() + 13)
   return end.getTime()

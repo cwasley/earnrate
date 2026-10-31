@@ -33,7 +33,7 @@ export type Env = AuthEnv & {
   USAGE?: Dataset // counts only: the method or tool name, never arguments
 }
 
-export type Bundle = { catalog: Catalog; dataVersion: string; version: string }
+export type Bundle = { catalog: Catalog; version: string }
 
 // Quarters, caps and rule dates follow the user's calendar; with no user
 // location, U.S. Eastern is the closest single choice.

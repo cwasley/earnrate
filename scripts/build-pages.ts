@@ -5,7 +5,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { DATA_DIR, loadCatalog, type Catalog } from '../src/data/load.ts'
+import { DATA_DIR, loadCatalog } from '../src/data/load.ts'
+import type { Catalog } from '../src/schema/catalog.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,

@@ -18,7 +18,7 @@ export function llmEnabled(env: NodeJS.ProcessEnv): boolean {
   return ON.has((env[LLM_ENV_VAR] ?? '').trim().toLowerCase())
 }
 
-export function maxCallsFromEnv(env: NodeJS.ProcessEnv): number | null {
+function maxCallsFromEnv(env: NodeJS.ProcessEnv): number | null {
   const raw = env[LLM_MAX_CALLS_ENV_VAR]
   if (raw === undefined || raw === '') return DEFAULT_MAX_CALLS
   return /^\d+$/.test(raw) ? Number(raw) : null

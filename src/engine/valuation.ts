@@ -9,7 +9,7 @@ export type Valuation = {
   pooledFrom: string | null // the card's own currency, when it pooled into another
 }
 
-export function currencyValuation(
+function currencyValuation(
   catalog: Catalog,
   wallet: Wallet,
   currencyId: string,

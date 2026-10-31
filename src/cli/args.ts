@@ -22,7 +22,7 @@ export type CliOptions = {
   members: string[]
 }
 
-export type ParsedArgs =
+type ParsedArgs =
   | { kind: 'help' }
   | { kind: 'run'; options: CliOptions }
   | { kind: 'error'; message: string }

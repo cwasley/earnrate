@@ -47,7 +47,7 @@ const RankedCardSchema = z.object({
   warnings: z.array(z.string()),
 })
 
-export const RecommendationSchema = z.object({
+const RecommendationSchema = z.object({
   decision: z
     .object({
       cardId: z.string(),

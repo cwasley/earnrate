@@ -49,7 +49,7 @@ export function normalizeRecoveryCode(text: string): string | null {
   return groups.join('-')
 }
 
-export type CodeKeys = {
+type CodeKeys = {
   walletId: string // names the wallet's storage; can't be turned back into the code
   wrapKey: Key
 }

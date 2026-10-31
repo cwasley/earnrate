@@ -64,7 +64,7 @@ const metadataUrl = (resource: string) =>
   `${ORIGIN}/.well-known/oauth-protected-resource${new URL(resource).pathname.replace(/^\/$/, '')}`
 
 // What a grant carries, encrypted by the OAuth library for the token holder.
-export type Grant = { walletId: string; walletKey: string }
+type Grant = { walletId: string; walletKey: string }
 
 export type AuthEnv = { OAUTH_KV: unknown }
 

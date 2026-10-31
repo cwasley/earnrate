@@ -24,10 +24,9 @@ export type SetupResult =
 export type RecordResult =
   ({ ok: true } & BookedPurchase) | { ok: false; error: string }
 
-// Where a saved wallet lives: the YAML file (CLI, local MCP) or JSON in a
-// key-value backend (the remote connector). Every change goes through the
-// pure rules in src/engine/wallet-change.ts and record.ts, so both behave
-// the same. A wallet is optional: load() returns null when none is saved.
+// Every change goes through the pure rules in src/engine/wallet-change.ts
+// and record.ts, so every store behaves the same. A wallet is optional:
+// load() returns null when none is saved.
 export interface WalletStore {
   readonly where: string // for messages: a file path, or "your saved wallet"
   load(): Promise<Wallet | null> // throws when a saved wallet can't be read
@@ -41,7 +40,7 @@ export interface WalletStore {
   ): Promise<RecordResult>
 }
 
-// A saved wallet the user can also replace or delete outright: the remote
+// A saved wallet the user can also replace or delete outright: the hosted
 // server's, where there's no file to edit or remove by hand.
 export interface AccountStore extends WalletStore {
   replace(wallet: Wallet): Promise<SetupResult>
@@ -153,8 +152,6 @@ export class JsonWalletStore implements AccountStore {
   }
 }
 
-// A store with nothing behind it, for tests and for a session that starts
-// empty and is thrown away.
 export function memoryBackend(initial: string | null = null): JsonBackend {
   let text = initial
   return {

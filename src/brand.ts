@@ -1,6 +1,5 @@
-// The only place the product name lives. package.json `name` and `bin` can't
-// import this, so keep them in sync by hand.
-export const PRODUCT_NAME = 'earnrate'
+// Names users type or set. package.json's `name` and `bin` must match
+// CLI_NAME by hand, since JSON can't import this.
 export const CLI_NAME = 'earnrate'
 export const MCP_SERVER_NAME = 'earnrate'
 export const CONFIG_DIR = '.earnrate' // under the home directory

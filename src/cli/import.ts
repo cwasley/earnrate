@@ -5,7 +5,8 @@ import { parseArgs } from 'node:util'
 import { z } from 'zod'
 import { CLI_NAME } from '../brand.ts'
 import { walletProblems } from '../data/integrity.ts'
-import { loadCatalog, walletPath, type Catalog } from '../data/load.ts'
+import { loadCatalog, walletPath } from '../data/load.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import { writeProgress } from '../data/wallet-edit.ts'
 import { isValuationProfile, withValuationProfile } from '../engine/profiles.ts'
 import { cardValuation } from '../engine/valuation.ts'
@@ -25,7 +26,7 @@ import {
   type Io,
 } from './run.ts'
 
-export const IMPORT_HELP = `Usage: ${CLI_NAME} import <statement.csv> --card <card-id> [--apply]
+const IMPORT_HELP = `Usage: ${CLI_NAME} import <statement.csv> --card <card-id> [--apply]
        ${CLI_NAME} import <statement.csv>:<card-id> [<statement.csv>:<card-id> ...]
 
 Reads card statements (Amex and Chase activity CSVs) and reports:

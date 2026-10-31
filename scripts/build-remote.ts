@@ -3,19 +3,17 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { DATA_DIR, loadCatalog } from '../src/data/load.ts'
+import { loadCatalog } from '../src/data/load.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
-const [catalog, version, pkg] = await Promise.all([
+const [catalog, pkg] = await Promise.all([
   loadCatalog(),
-  readFile(`${DATA_DIR}VERSION`, 'utf8'),
   readFile(path.join(ROOT, 'package.json'), 'utf8'),
 ])
 await writeFile(
   path.join(ROOT, 'remote', 'catalog.gen.json'),
   JSON.stringify({
     catalog,
-    dataVersion: version.trim(),
     version: (JSON.parse(pkg) as { version: string }).version,
   }),
 )

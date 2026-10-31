@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest'
-import { loadCatalog, type Catalog } from '../../src/data/load.ts'
+import { loadCatalog } from '../../src/data/load.ts'
+import type { Catalog } from '../../src/schema/catalog.ts'
 import { recommend } from '../../src/engine/recommend.ts'
-import { recordPurchase } from '../../src/engine/record.ts'
+import { bookPurchase } from '../../src/engine/record.ts'
 import type {
   Purchase,
   RankedCard,
@@ -339,13 +340,13 @@ describe('golden cases with state', () => {
         'amex-blue-cash-preferred',
       )
 
-      const after = recordPurchase(catalog, wallet, {
+      const after = bookPurchase(catalog, wallet, {
         cardId: 'amex-blue-cash-preferred',
         merchant: 'Whole Foods',
         amount: 6000,
         date: TODAY,
         channel: 'in_store',
-      })
+      }).wallet
       const bcp = after.cards.find((c) => c.id === 'amex-blue-cash-preferred')
       expect(bcp?.cap_usage['us-supermarkets']).toEqual({
         period: '2026',
@@ -361,13 +362,13 @@ describe('golden cases with state', () => {
     '#15c Spend recorded at a movie theater drains the cap for TV/internet too',
     () => {
       const wallet = withProfile(baseWallet(), 'flat')
-      const after = recordPurchase(catalog, wallet, {
+      const after = bookPurchase(catalog, wallet, {
         cardId: 'usbank-cash-plus',
         merchant: 'AMC',
         amount: 1950,
         date: TODAY,
         channel: 'in_store',
-      })
+      }).wallet
       const rec = recommend(
         catalog,
         after,

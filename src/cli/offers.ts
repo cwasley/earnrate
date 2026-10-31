@@ -7,7 +7,7 @@ import { formatOffers } from '../format/offers.ts'
 import { valuationProblem } from './args.ts'
 import { cardsToUse, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
 
-export const OFFERS_HELP = `Usage: ${CLI_NAME} offers [--cash | --points] [--no-fee] [--business] [options]
+const OFFERS_HELP = `Usage: ${CLI_NAME} offers [--cash | --points] [--no-fee] [--business] [options]
 
 Ranks the welcome offers on cards you don't have by first-year value: the
 bonus at your point values minus the first year's annual fee.

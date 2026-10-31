@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { loadCatalog, type Catalog } from '../src/data/load.ts'
+import { loadCatalog } from '../src/data/load.ts'
+import type { Catalog } from '../src/schema/catalog.ts'
 import { periodKey } from '../src/engine/periods.ts'
 import { recommend } from '../src/engine/recommend.ts'
 import type { RankedCard, Recommendation } from '../src/engine/types.ts'

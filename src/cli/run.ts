@@ -33,10 +33,11 @@ import type { Wallet } from '../schema/wallet.ts'
 import { packageVersion } from '../version.ts'
 import { membershipProblem, parseCliArgs } from './args.ts'
 import { runCheatSheet } from './cheatsheet.ts'
-import { formatExploration, runBest, runSimulate } from './explore.ts'
+import { runBest, runSimulate } from './explore.ts'
 import { runImport } from './import.ts'
 import { runOffers } from './offers.ts'
 import { runWalletCommand, WALLET_HELP } from './wallet.ts'
+import { formatExploration } from '../format/explore.ts'
 import {
   formatRecommendation,
   plain,
@@ -52,7 +53,7 @@ export type Io = {
   classifier?: Classifier // replaces the Anthropic classifier in tests
 }
 
-export const HELP = `Usage: ${CLI_NAME} <merchant> [amount] [options]
+const HELP = `Usage: ${CLI_NAME} <merchant> [amount] [options]
 
 Picks the card that earns the most at a merchant, and says why: from your
 wallet if you've saved one, from cards you name with --cards, or else from

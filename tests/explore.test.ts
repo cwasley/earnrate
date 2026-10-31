@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { loadCatalog, type Catalog } from '../src/data/load.ts'
+import { loadCatalog } from '../src/data/load.ts'
+import type { Catalog } from '../src/schema/catalog.ts'
 import { catalogCheatSheet } from '../src/engine/cheat-sheet.ts'
 import {
   ALL_PERSONAL_CARDS,

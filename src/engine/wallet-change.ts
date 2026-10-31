@@ -1,5 +1,4 @@
 import type { Catalog } from '../schema/catalog.ts'
-import type { CardFields } from '../data/wallet-edit.ts'
 import type { Card } from '../schema/card.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { periodKey } from './periods.ts'
@@ -29,6 +28,21 @@ export type CardInput = {
   } | null
 }
 
+type BonusFields = {
+  opened: string
+  spent: number
+  spend?: number
+  by?: string
+}
+
+export type CardFields = {
+  checkout_label?: string
+  anniversary?: string
+  chosen?: { period: string; picks: Record<string, string[]> }
+  activated?: string[]
+  bonus?: BonusFields | null // null removes it
+}
+
 export type WalletChange =
   | {
       ok: true
@@ -41,7 +55,7 @@ export type WalletChange =
 const failed = (error: string) => ({ ok: false as const, error })
 const list = (ids: string[]) => ids.join(', ')
 
-export function findCatalogCard(
+function findCatalogCard(
   catalog: Catalog,
   id: string,
   today: string,
@@ -54,7 +68,7 @@ export function findCatalogCard(
     : `No card '${id}' in earnrate. Search the catalog to find its id.`
 }
 
-export function isAnniversary(text: string): boolean {
+function isAnniversary(text: string): boolean {
   const m = /^(\d{2})-(\d{2})$/.exec(text)
   if (!m) return false
   const date = new Date(`2024-${text}T00:00:00Z`) // a leap year allows 02-29
@@ -184,13 +198,13 @@ export function cardFields(
   return problems.length > 0 ? problems.join('\n') : fields
 }
 
-export const newHolding = (id: string): WalletCard => ({
+const newHolding = (id: string): WalletCard => ({
   id,
   cap_usage: {},
   activated: [],
 })
 
-export const withFields = (
+const withFields = (
   { bonus, ...held }: WalletCard,
   f: CardFields,
 ): WalletCard => ({

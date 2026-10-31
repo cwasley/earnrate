@@ -1,6 +1,7 @@
 import { parseArgs } from 'node:util'
 import { CLI_NAME } from '../brand.ts'
-import { loadCatalog, walletPath, type Catalog } from '../data/load.ts'
+import { loadCatalog, walletPath } from '../data/load.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,
@@ -47,7 +48,7 @@ const FILTER_OPTIONS = `  --cash, --points        Cash back cards only, or point
   --valuation <profile>   flat (points at 1¢, the default) or points-heavy
                           (MR and UR at 1.7¢).`
 
-export const BEST_HELP = `Usage: ${CLI_NAME} best <merchant or category> [amount] [options]
+const BEST_HELP = `Usage: ${CLI_NAME} best <merchant or category> [amount] [options]
 
 Ranks every card in earnrate's catalog for one purchase, not just yours. Each
 card is set up at its best: the right category pick, activated, cap unused.
@@ -66,7 +67,7 @@ ${FILTER_OPTIONS}
   -h, --help              Show this help.
 `
 
-export const SIMULATE_HELP = `Usage: ${CLI_NAME} simulate [<what>=<dollars a month>...] [options]
+const SIMULATE_HELP = `Usage: ${CLI_NAME} simulate [<what>=<dollars a month>...] [options]
 
 Spends this much every month for a year and ranks the cards, and the
 two-card pairs, that earn the most after annual fees. Each <what> is a
@@ -215,10 +216,7 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
   return 0
 }
 
-export function parseSpend(
-  catalog: Catalog,
-  args: string[],
-): SpendLine[] | string {
+function parseSpend(catalog: Catalog, args: string[]): SpendLine[] | string {
   const lines: SpendLine[] = []
   for (const arg of args) {
     const match = /^(.+)=\$?(\d+(?:\.\d+)?)$/.exec(arg)
@@ -321,5 +319,3 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
   )
   return 0
 }
-
-export { formatAdditions, formatCatalogSimulation, formatExploration }

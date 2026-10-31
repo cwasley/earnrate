@@ -1,7 +1,7 @@
 // The sign-in pages for saved wallets. No scripts: the policy below allows
 // none. Everything from the client (its name, the redirect host) is escaped.
 
-export type ClientFacts = {
+type ClientFacts = {
   clientName: string
   clientDomain?: string | undefined // set only for a verified (CIMD) client
   redirectHost: string

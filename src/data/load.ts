@@ -14,9 +14,7 @@ import { WalletSchema, type Wallet } from '../schema/wallet.ts'
 
 export const DATA_DIR = fileURLToPath(new URL('../../data/', import.meta.url))
 
-export type { Catalog }
-
-export async function readYaml<S extends z.ZodType>(
+async function readYaml<S extends z.ZodType>(
   file: string,
   schema: S,
 ): Promise<z.output<S>> {

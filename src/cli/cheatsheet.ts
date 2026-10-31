@@ -18,7 +18,7 @@ import {
   type Io,
 } from './run.ts'
 
-export const CHEATSHEET_HELP = `Usage: ${CLI_NAME} cheatsheet [options]
+const CHEATSHEET_HELP = `Usage: ${CLI_NAME} cheatsheet [options]
 
 The card to use for each everyday kind of purchase this quarter: from your
 wallet (with your caps, picks and activations as they are now), from cards you
@@ -98,5 +98,3 @@ export async function runCheatSheet(argv: string[], io: Io): Promise<number> {
   )
   return 0
 }
-
-export { formatCheatSheet }
