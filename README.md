@@ -98,6 +98,16 @@ While the bonus is open, that card wins wherever it's accepted, and the answer s
 
 ### Which new card?
 
+No wallet needed for these:
+
+```sh
+earnrate best groceries                               # every card, ranked for one purchase
+earnrate simulate groceries=600 dining=300 other=1000 # best cards and pairs for a year
+earnrate simulate groceries=600 other=1000 --wallet   # what a new card would add to yours
+```
+
+`best` ranks every card earnrate knows for a merchant or a category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Rates that need a membership like Amazon Prime are listed separately unless you pass `--member amazon-prime`. `simulate` spends your monthly amounts for a year, applying caps as they fill and reset, and ranks single cards and two-card pairs by rewards minus annual fees. Both take `--no-fee`, `--cash` or `--points`, `--issuer`, `--business` and `--valuation`. Welcome bonuses are left out of both; for those:
+
 ```sh
 earnrate offers --cash
 ```
@@ -142,9 +152,10 @@ Spotted a wrong rate, or want a card added? [Open an issue](https://github.com/c
 
 ## Use it from an AI agent (MCP)
 
-`earnrate mcp` runs earnrate as a local MCP server over stdio, with ten tools:
+`earnrate mcp` runs earnrate as a local MCP server over stdio, with twelve tools:
 
 - `best_card_for_purchase`: which card to use, with reasons
+- `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
 - `resolve_merchant`: how a merchant was identified
 - `list_wallet`: your cards, caps left this period, chosen categories and welcome-bonus progress
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have

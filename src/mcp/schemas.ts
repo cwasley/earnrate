@@ -242,3 +242,69 @@ export const WalletChangeSchema = z.object({
     }),
   ),
 })
+
+const ExcludedCardSchema = z.object({
+  cardId: z.string(),
+  cardName: z.string(),
+  checkoutLabel: z.string().nullable(),
+  network: Network,
+  reason: z.string(),
+})
+
+const Picks = z.record(z.string(), z.array(z.string()))
+
+export const ExplorationSchema = z.object({
+  merchant: MerchantResolutionSchema,
+  ranked: z.array(
+    RankedCardSchema.extend({
+      issuer: z.string(),
+      network: CardNetwork,
+      annualFee: z.number().nullable(),
+      firstYearFee: z.number().nullable(),
+      picks: Picks,
+      conditions: z.array(z.string()),
+      evidence: z.object({ quote: z.string(), url: z.string() }).nullable(),
+      withMembership: z.array(
+        z.object({ membership: z.string(), effectiveReturnPct: z.number() }),
+      ),
+    }),
+  ),
+  excluded: z.array(ExcludedCardSchema),
+  assumptions: z.array(z.string()),
+  warnings: z.array(z.string()),
+})
+
+const SimulationSchema = z.object({
+  cards: z.array(z.object({ cardId: z.string(), picks: Picks })),
+  spend: z.number(),
+  rewards: z.number(),
+  annualFees: z.number(),
+  net: z.number(),
+  lines: z.array(
+    z.object({
+      label: z.string(),
+      spend: z.number(),
+      earned: z.number(),
+      returnPct: z.number(),
+      cards: z.array(z.string()),
+    }),
+  ),
+  notes: z.array(z.string()),
+})
+
+export const SpendingSimulationSchema = z.object({
+  singles: z.array(SimulationSchema),
+  pairs: z.array(
+    SimulationSchema.extend({ alternatives: z.array(z.string()) }),
+  ),
+  current: SimulationSchema.nullable(),
+  additions: z.array(
+    z.object({
+      cardId: z.string(),
+      picks: Picks,
+      extraRewards: z.number(),
+      annualFee: z.number(),
+      gain: z.number(),
+    }),
+  ),
+})

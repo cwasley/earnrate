@@ -5,24 +5,30 @@
 
 - id: dining
   name: Restaurants
+  aliases: [dining, restaurant, food, eating out, takeout]
   mccs: [5812, 5813, 5814]
 - id: dining.fast_food
   name: Fast food
+  aliases: [fast food restaurants]
   mccs: [5814]
 
 - id: grocery
   name: Grocery
 - id: grocery.supermarket
   name: Supermarkets
+  aliases: [groceries, grocery, grocery stores, supermarket]
   mccs: [5411]
 - id: grocery.online
   name: Online grocery and delivery
+  aliases: [grocery delivery]
 
 - id: superstore
   name: Superstores
+  aliases: [superstore, big box stores]
   mccs: [5310]
 - id: warehouse_club
   name: Warehouse clubs
+  aliases: [warehouse club, wholesale clubs]
   mccs: [5300]
 
 - id: convenience_store
@@ -31,6 +37,7 @@
 
 - id: gas
   name: Gas stations
+  aliases: [gas, fuel, gas station]
   mccs: [5541, 5542]
 - id: gas.grocery_store
   name: Gas at grocery stores
@@ -38,6 +45,7 @@
   name: Gas at superstores and warehouse clubs
 - id: ev_charging
   name: EV charging
+  aliases: [ev, charging]
   mccs: [5552]
 
 - id: transit
@@ -45,6 +53,7 @@
   mccs: [4111, 4112, 4131, 4784, 7523]
 - id: transit.rideshare
   name: Rideshare and taxis
+  aliases: [rideshare, taxi, taxis]
   mccs: [4121]
 
 - id: travel
@@ -52,41 +61,53 @@
   mccs: [4722]
 - id: travel.flights
   name: Flights
+  aliases: [flights, airfare, airlines]
   mccs: [4511]
 - id: travel.hotels
   name: Hotels
+  aliases: [hotel]
   mccs: [7011]
 - id: travel.car_rental
   name: Car rental
+  aliases: [car rentals, rental cars]
   mccs: [7512]
 - id: travel.cruise
   name: Cruises
+  aliases: [cruise]
   mccs: [4411]
 
 - id: streaming
   name: Streaming services
+  aliases: [streaming, subscriptions]
   mccs: [4899, 5815]
 - id: tv_internet
   name: TV and internet service
+  aliases: [internet, cable]
   mccs: [4899]
 - id: phone
   name: Cell phone service
+  aliases: [phone, cell phone, wireless]
   mccs: [4814]
 - id: utilities
   name: Home utilities
+  aliases: [utilities, electric, electricity]
   mccs: [4900]
 
 - id: drugstore
   name: Drugstores and pharmacies
+  aliases: [drugstores, pharmacy, pharmacies]
   mccs: [5912]
 - id: movie_theaters
   name: Movie theaters
+  aliases: [movies, movie theater]
   mccs: [7832]
 - id: entertainment
   name: Live entertainment and events
+  aliases: [concerts, events, tickets]
   mccs: [7922, 7941]
 - id: fitness
   name: Gyms and fitness
+  aliases: [gym, gyms, fitness]
   mccs: [7997]
 
 - id: department_store
@@ -103,6 +124,7 @@
   mccs: [5941]
 - id: home_improvement
   name: Home improvement
+  aliases: [hardware stores]
   mccs: [5200, 5211]
 - id: furniture
   name: Furniture stores
@@ -110,6 +132,7 @@
 
 - id: online_retail
   name: Online retail
+  aliases: [online shopping, shopping online]
 - id: office_supply
   name: Office supply stores
 - id: shipping
@@ -119,3 +142,4 @@
 
 - id: other
   name: Everything else
+  aliases: [everything, everything else, other]

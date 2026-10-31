@@ -3,6 +3,11 @@ import { z } from 'zod'
 import { MCP_SERVER_NAME } from '../brand.ts'
 import { formatCardInfo, formatNotes } from '../cli/cards.ts'
 import { formatRecommendation } from '../cli/format.ts'
+import {
+  formatAdditions,
+  formatCatalogSimulation,
+  formatExploration,
+} from '../cli/explore.ts'
 import { formatOffers } from '../cli/offers.ts'
 import { walletProblems } from '../data/integrity.ts'
 import { loadWallet, type Catalog } from '../data/load.ts'
@@ -20,9 +25,16 @@ import {
   type SetupResult,
 } from '../data/wallet-setup.ts'
 import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
+import { ALL_PERSONAL_CARDS, exploreCards } from '../engine/explore.ts'
 import { compareOffers } from '../engine/offers.ts'
+import { VALUATION_PROFILES } from '../engine/profiles.ts'
 import { capBooking } from '../engine/record.ts'
 import { recommend } from '../engine/recommend.ts'
+import {
+  resolveSpendLines,
+  simulateAdditions,
+  simulateCatalog,
+} from '../engine/simulate.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
 import type { Channel, MerchantResolution } from '../engine/types.ts'
 import { walletSummary } from '../engine/wallet-summary.ts'
@@ -32,7 +44,9 @@ import { IsoDate } from '../schema/common.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import {
   CardSearchSchema,
+  ExplorationSchema,
   MerchantResolutionSchema,
+  SpendingSimulationSchema,
   RecommendationSchema,
   OfferComparisonSchema,
   RecordResultSchema,
@@ -64,7 +78,7 @@ const DateInput = IsoDate.optional().describe(
   'Purchase date, YYYY-MM-DD. Defaults to today.',
 )
 
-const INSTRUCTIONS = `earnrate picks which of the user's credit cards earns the most for a purchase. Its wallet lists the cards they hold by product id, never card numbers; never ask for card numbers, expiry dates or security codes.
+const INSTRUCTIONS = `earnrate picks which of the user's credit cards earns the most for a purchase. best_cards_for and simulate_spending compare every card earnrate knows and need no wallet, for questions like "what's the best grocery card?" or "which cards fit my spending?". Its wallet lists the cards they hold by product id, never card numbers; never ask for card numbers, expiry dates or security codes.
 
 If a tool says there's no wallet yet, ask the user which cards they have, find each with search_cards, and add it with add_card. add_card and update_card reply with what a card still needs, such as category picks, memberships like Amazon Prime, or activated bonus categories. Ask the user about those and set them with update_card or set_memberships.`
 
@@ -303,6 +317,203 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           { type: 'text', text: formatOffers(comparison, currencyName, false) },
         ],
         structuredContent: comparison,
+      }
+    },
+  )
+
+  const CatalogCategory = z
+    .enum(ids)
+    .describe(
+      `A spending category: ${catalog.categories.map((c) => `${c.id} (${c.name})`).join(', ')}.`,
+    )
+  const issuers = [...new Set(catalog.cards.map((c) => c.issuer))].sort() as [
+    string,
+    ...string[],
+  ]
+  const membershipIds = knownMemberships(catalog) as [string, ...string[]]
+  const CatalogFilters = {
+    kind: z
+      .enum(['any', 'cash', 'points'])
+      .optional()
+      .describe(
+        'cash: cash back cards only. points: points and miles cards only.',
+      ),
+    noAnnualFee: z
+      .boolean()
+      .optional()
+      .describe('Only cards with no annual fee.'),
+    business: z
+      .boolean()
+      .optional()
+      .describe('Business cards instead of personal ones.'),
+    issuer: z.enum(issuers).optional().describe("Only this issuer's cards."),
+    memberships: z
+      .array(z.enum(membershipIds))
+      .optional()
+      .describe(
+        "Memberships the user has, such as amazon-prime. Rates that need one they don't have are listed separately.",
+      ),
+    valuation: z
+      .enum(['flat', 'points-heavy'])
+      .optional()
+      .describe(
+        'flat (default): points at their cash-out value, about 1¢. points-heavy: Amex MR and Chase UR at 1.7¢, for people who transfer points to airlines and hotels.',
+      ),
+  }
+  const settings = (args: {
+    kind?: 'any' | 'cash' | 'points' | undefined
+    noAnnualFee?: boolean | undefined
+    business?: boolean | undefined
+    issuer?: string | undefined
+    memberships?: string[] | undefined
+    valuation?: 'flat' | 'points-heavy' | undefined
+  }) => ({
+    filters: {
+      ...ALL_PERSONAL_CARDS,
+      kind: args.kind ?? 'any',
+      noAnnualFee: args.noAnnualFee ?? false,
+      business: args.business ?? false,
+      issuer: args.issuer ?? null,
+    },
+    memberships: args.memberships ?? [],
+    valuations: args.valuation ? VALUATION_PROFILES[args.valuation] : {},
+  })
+
+  server.registerTool(
+    'best_cards_for',
+    {
+      title: 'Best cards for a purchase',
+      description:
+        'Ranks every card earnrate knows, not only the user\'s, for one purchase or category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Use it for questions like "what\'s the best card for groceries?" or "which card should I get for Amazon?". It needs no wallet. For which of the user\'s own cards to use, call best_card_for_purchase instead. Mention the annual fee and any conditions alongside each card.',
+      inputSchema: z.object({
+        merchant: Merchant.optional(),
+        category: CatalogCategory.optional(),
+        amount: z
+          .number()
+          .positive()
+          .optional()
+          .describe('Purchase amount in US dollars, if known.'),
+        channel: ChannelInput,
+        ...CatalogFilters,
+      }),
+      outputSchema: ExplorationSchema,
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    (args) => {
+      if (args.merchant === undefined && args.category === undefined)
+        return fail('Give a merchant or a category.')
+      const result = exploreCards(
+        catalog,
+        {
+          merchant: args.merchant ?? null,
+          category:
+            args.merchant === undefined ? (args.category ?? null) : null,
+          amount: args.amount ?? null,
+          channel: args.channel ?? null,
+          date: deps.today(),
+        },
+        settings(args),
+      )
+      const trimmed = { ...result, ranked: result.ranked.slice(0, 10) }
+      return {
+        content: [{ type: 'text', text: formatExploration(trimmed, true) }],
+        structuredContent: trimmed,
+      }
+    },
+  )
+
+  server.registerTool(
+    'simulate_spending',
+    {
+      title: 'Simulate a year of spending',
+      description:
+        'Spends the user\'s monthly amounts for a year across every card earnrate knows, and ranks single cards and two-card pairs by rewards minus annual fees. With compareToWallet, it starts from the user\'s wallet and ranks the cards that would add the most to it. Use it for "which card fits my spending?" or "is it worth adding a card?". Ask for rough monthly amounts if the user hasn\'t given them. It leaves out welcome bonuses.',
+      inputSchema: z.object({
+        spending: z
+          .array(
+            z.object({
+              merchant: Merchant.optional(),
+              category: CatalogCategory.optional(),
+              monthly: z.number().positive().describe('US dollars a month.'),
+            }),
+          )
+          .min(1)
+          .describe(
+            'Monthly spending lines, each a category (grocery.supermarket, dining, gas, other) or a merchant (Amazon, Costco).',
+          ),
+        compareToWallet: z
+          .boolean()
+          .optional()
+          .describe(
+            "Rank the cards that would add the most to the user's wallet.",
+          ),
+        ...CatalogFilters,
+      }),
+      outputSchema: SpendingSimulationSchema,
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    async (args) => {
+      if (
+        args.spending.some(
+          (l) => l.merchant === undefined && l.category === undefined,
+        )
+      )
+        return fail('Each spending line needs a merchant or a category.')
+      const lines = resolveSpendLines(
+        catalog,
+        args.spending.map((l) => ({
+          merchant: l.merchant ?? null,
+          category: l.merchant === undefined ? (l.category ?? null) : null,
+          monthly: l.monthly,
+        })),
+      )
+      const unknown = lines.filter((l) => l.merchant.source === 'none')
+      if (unknown.length > 0)
+        return fail(
+          `earnrate doesn't know ${unknown.map((l) => `"${l.merchant.input}"`).join(', ')}. Give a category for those lines instead.`,
+        )
+      const options = { ...settings(args), start: deps.today() }
+      if (args.compareToWallet) {
+        const w = await wallet()
+        if (typeof w === 'string') return fail(w)
+        const valued = args.valuation
+          ? {
+              ...w,
+              valuations: {
+                ...w.valuations,
+                ...VALUATION_PROFILES[args.valuation],
+              },
+            }
+          : w
+        const result = simulateAdditions(catalog, valued, lines, options)
+        return {
+          content: [
+            { type: 'text', text: formatAdditions(result, catalog, false) },
+          ],
+          structuredContent: {
+            singles: [],
+            pairs: [],
+            current: result.current,
+            additions: result.additions
+              .slice(0, 10)
+              .map(({ simulation: _, ...a }) => a),
+          },
+        }
+      }
+      const result = simulateCatalog(catalog, lines, options)
+      return {
+        content: [
+          {
+            type: 'text',
+            text: formatCatalogSimulation(result, catalog, false),
+          },
+        ],
+        structuredContent: {
+          singles: result.singles.slice(0, 10),
+          pairs: result.pairs.slice(0, 5),
+          current: null,
+          additions: [],
+        },
       }
     },
   )
@@ -623,7 +834,6 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       ),
   )
 
-  const memberships = knownMemberships(catalog) as [string, ...string[]]
   server.registerTool(
     'set_memberships',
     {
@@ -632,9 +842,9 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier. Replaces the whole list, so include the ones to keep.",
       inputSchema: z.object({
         memberships: z
-          .array(z.enum(memberships))
+          .array(z.enum(membershipIds))
           .describe(
-            `Every membership the user has. Known: ${memberships.join(', ')}.`,
+            `Every membership the user has. Known: ${membershipIds.join(', ')}.`,
           ),
       }),
       outputSchema: WalletChangeSchema,

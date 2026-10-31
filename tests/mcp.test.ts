@@ -68,12 +68,13 @@ function text(result: { content?: unknown }): string {
 }
 
 describe('tools', () => {
-  test('lists the ten tools with descriptions and hints', async () => {
+  test('lists the twelve tools with descriptions and hints', async () => {
     const client = await connect(await walletCopy())
     const { tools } = await client.listTools()
     expect(tools.map((t) => t.name).sort()).toEqual([
       'add_card',
       'best_card_for_purchase',
+      'best_cards_for',
       'compare_welcome_offers',
       'list_wallet',
       'record_purchase',
@@ -81,6 +82,7 @@ describe('tools', () => {
       'resolve_merchant',
       'search_cards',
       'set_memberships',
+      'simulate_spending',
       'update_card',
     ])
     for (const t of tools) {
@@ -176,6 +178,70 @@ describe('wallet setup', () => {
   test('the server tells agents how to set up a wallet', async () => {
     const client = await connect(await walletCopy())
     expect(client.getInstructions()).toMatch(/search_cards.*add_card/s)
+  })
+
+  test('compares every card with no wallet at all', async () => {
+    const client = await connect(await missingWallet())
+    const best = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { category: 'grocery.supermarket' },
+    })
+    expect(best.isError).toBeFalsy()
+    const ranked = (best.structuredContent as { ranked: { cardId: string }[] })
+      .ranked
+    expect(ranked[0]?.cardId).toBe('amex-blue-cash-preferred')
+    expect(ranked).toHaveLength(10)
+    expect(text(best)).toMatch(/^Best cards for supermarkets:/)
+
+    const sim = await client.callTool({
+      name: 'simulate_spending',
+      arguments: {
+        spending: [
+          { category: 'grocery.supermarket', monthly: 700 },
+          { merchant: 'Amazon', monthly: 100 },
+        ],
+        noAnnualFee: true,
+      },
+    })
+    expect(sim.isError).toBeFalsy()
+    const { singles, pairs } = sim.structuredContent as {
+      singles: { annualFees: number }[]
+      pairs: unknown[]
+    }
+    expect(singles.every((s) => s.annualFees === 0)).toBe(true)
+    expect(pairs.length).toBeGreaterThan(0)
+
+    const withWallet = await client.callTool({
+      name: 'simulate_spending',
+      arguments: {
+        spending: [{ category: 'dining', monthly: 300 }],
+        compareToWallet: true,
+      },
+    })
+    expect(withWallet.isError).toBe(true)
+    expect(text(withWallet)).toMatch(/no wallet yet/i)
+  })
+
+  test('simulate_spending against the wallet ranks additions', async () => {
+    const client = await connect(await walletCopy())
+    const result = await client.callTool({
+      name: 'simulate_spending',
+      arguments: {
+        spending: [
+          { category: 'dining', monthly: 400 },
+          { category: 'other', monthly: 1000 },
+        ],
+        compareToWallet: true,
+      },
+    })
+    expect(result.isError).toBeFalsy()
+    const { current, additions } = result.structuredContent as {
+      current: { rewards: number }
+      additions: { gain: number }[]
+    }
+    expect(current.rewards).toBeGreaterThan(0)
+    expect(additions.length).toBeGreaterThan(0)
+    expect(text(result)).toMatch(/^Your wallet earns about/)
   })
 
   test('from no wallet to a recommendation', async () => {

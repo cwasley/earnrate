@@ -287,3 +287,67 @@ describe('wallet setup commands', () => {
     expect(code).toBe(0)
   })
 })
+
+describe('comparing every card', () => {
+  const noWallet = path.join(tmpdir(), 'earnrate-no-wallet', 'wallet.yaml')
+
+  test('best needs no wallet and reads plain words as a category', async () => {
+    const { code, stdout } = await cli(['best', 'groceries'], noWallet)
+    expect(code).toBe(0)
+    expect(stdout).toMatch(/^Best cards for supermarkets:/)
+    expect(stdout).toMatch(
+      /^ 1\. American Express Blue Cash Preferred Card +6% +\$95 annual fee \(waived the first year\)$/m,
+    )
+    expect(stdout).toMatch(/\+ \d+ more \(--all lists them\)/)
+  })
+
+  test('best with a merchant, an amount and a membership', async () => {
+    const { stdout } = await cli(
+      ['best', 'amazon', '120', '--member', 'amazon-prime', '--no-fee'],
+      noWallet,
+    )
+    expect(stdout).toMatch(/^ 1\. Prime Visa +5% +\$6 +no annual fee$/m)
+    expect(stdout).toMatch(/^ {4}Needs amazon-prime\.$/m)
+  })
+
+  test('simulate ranks single cards and pairs after fees', async () => {
+    const { code, stdout } = await cli(
+      ['simulate', 'groceries=700', 'dining=300', 'other=800'],
+      noWallet,
+    )
+    expect(code).toBe(0)
+    expect(stdout).toMatch(/^A year of this spending: \$21,600\.$/m)
+    expect(stdout).toMatch(/^Best single cards/m)
+    expect(stdout).toMatch(/^Best two-card pairs:$/m)
+    expect(stdout).toMatch(
+      /Supermarkets.* → American Express Blue Cash Preferred Card/,
+    )
+  })
+
+  test('simulate --wallet ranks what a card would add', async () => {
+    const { code, stdout } = await cli([
+      'simulate',
+      'dining=400',
+      'other=1000',
+      '--wallet',
+    ])
+    expect(code).toBe(0)
+    expect(stdout).toMatch(/^Your wallet earns about \$[\d,]+ a year/)
+  })
+
+  test('bad input is a usage error', async () => {
+    expect((await cli(['best'], noWallet)).code).toBe(2)
+    expect(
+      (await cli(['best', 'gas', '--cash', '--points'], noWallet)).code,
+    ).toBe(2)
+    expect(
+      (await cli(['best', 'gas', '--issuer', 'nope'], noWallet)).stderr,
+    ).toMatch(/Unknown issuer "nope"/)
+    expect((await cli(['simulate', 'groceries'], noWallet)).stderr).toMatch(
+      /isn't <what>=<dollars a month>/,
+    )
+    expect((await cli(['simulate', 'zzzshop=50'], noWallet)).stderr).toMatch(
+      /Not a category or a merchant earnrate knows: "zzzshop"/,
+    )
+  })
+})

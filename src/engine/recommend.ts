@@ -49,18 +49,18 @@ type Entry = {
 
 const displayName = (e: Entry) => e.held.checkout_label ?? e.card.name
 
-const num = (n: number) => String(Number(n.toFixed(2)))
+export const num = (n: number) => String(Number(n.toFixed(2)))
 // Whole dollars stay whole ($2,800); anything else shows cents ($0.40).
 const money = (n: number) =>
   `$${n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`
-const dollars = (n: number) =>
+export const dollars = (n: number) =>
   `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 
-function currencyName(catalog: Catalog, id: string): string {
+export function currencyName(catalog: Catalog, id: string): string {
   return catalog.currencies.find((c) => c.id === id)?.name ?? id
 }
 
-function currencyLabel(catalog: Catalog, id: string): string {
+export function currencyLabel(catalog: Catalog, id: string): string {
   const name = currencyName(catalog, id)
   return /^[A-Z]{2,4}$/.test(id) ? `${name} (${id})` : name
 }
@@ -75,14 +75,18 @@ function categoryName(catalog: Catalog, id: string): string {
 
 // Mid-sentence form: "Supermarkets" becomes "supermarkets", but "TV and
 // internet service" and "EV charging" keep their acronyms.
-function categoryPhrase(catalog: Catalog, id: string): string {
+export function categoryPhrase(catalog: Catalog, id: string): string {
   const name = categoryName(catalog, id)
   return /^[A-Z]{2}/.test(name)
     ? name
     : name.charAt(0).toLowerCase() + name.slice(1)
 }
 
-function earnText(catalog: Catalog, rate: number, currency: string): string {
+export function earnText(
+  catalog: Catalog,
+  rate: number,
+  currency: string,
+): string {
   return currency === 'cash'
     ? `${num(rate)}% cash back`
     : `${num(rate)}x ${currencyName(catalog, currency)}`

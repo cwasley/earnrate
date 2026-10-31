@@ -2,6 +2,14 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.10.30.2
+
+Cards record when the issuer stopped taking applications, so "best card for" lists can leave out cards nobody can get. Categories gain `aliases`, the everyday words people search by ("groceries" finds supermarkets). No rates changed.
+
+| Card             | Field               | Old → new  | Source                                                                      |
+| ---------------- | ------------------- | ---------- | --------------------------------------------------------------------------- |
+| citi-custom-cash | applications_closed | 2026-05-28 | [card page](https://www.citi.com/credit-cards/citi-custom-cash-credit-card) |
+
 ## 2026.10.30.1
 
 Freedom Flex's quarterly cap is marked `rotating`, so a quarter whose categories aren't in the data yet gets a warning instead of quietly ranking Flex at its everyday rates. Capital One's issuer id is now spelled the same on every card. No rates changed.

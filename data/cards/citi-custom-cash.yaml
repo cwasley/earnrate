@@ -5,9 +5,10 @@ network: mastercard
 currency: cash
 last_verified: 2026-10-26
 verified_by: collin
-# Citi stopped taking applications on May 28, 2026; existing cardmembers keep
-# the card and its rewards. The card page no longer lists the categories, so
-# the definitions come from the card's current ThankYou terms (Sept 2026).
+applications_closed: 2026-05-28
+# Existing cardmembers keep the card and its rewards. The card page no longer
+# lists the categories, so the definitions come from the card's current
+# ThankYou terms (Sept 2026).
 source_urls:
   - https://www.citi.com/credit-cards/citi-custom-cash-credit-card
   - https://www.thankyou.com/ccterms

@@ -83,7 +83,7 @@ try {
     const { tools } = await client.listTools()
     await client.close()
     check(
-      tools.length === 10,
+      tools.length === 12,
       `${path.basename(command)} ${args.join(' ')}`.trim() +
         ` serves ${String(tools.length)} MCP tools`,
     )

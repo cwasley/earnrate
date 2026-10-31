@@ -160,6 +160,8 @@ export const CardSchema = z
     source_urls: z.array(z.url()).min(1),
     base_rate: z.number().nonnegative(),
     business: z.boolean().default(false),
+    // When the issuer stopped taking applications; cardholders keep earning.
+    applications_closed: IsoDate.optional(),
     annual_fee: z.number().nonnegative().optional(), // dollars
     // When the first year differs, usually a waived fee.
     first_year_fee: z.number().nonnegative().optional(),

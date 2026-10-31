@@ -23,6 +23,7 @@ import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { packageVersion } from '../version.ts'
 import { parseCliArgs } from './args.ts'
+import { runBest, runSimulate } from './explore.ts'
 import { runImport } from './import.ts'
 import { runOffers } from './offers.ts'
 import { runWalletCommand, WALLET_HELP } from './wallet.ts'
@@ -45,6 +46,10 @@ Examples:
   ${CLI_NAME} whole foods 80
   ${CLI_NAME} costco --in-store
   ${CLI_NAME} delta.com 450 --valuation points-heavy
+
+Compare every card, no wallet needed:
+  ${CLI_NAME} best <merchant or category>          Rank all cards for one purchase.
+  ${CLI_NAME} simulate groceries=600 dining=300    Best cards and pairs for a year of spending.
 
 Set up your wallet:
   ${CLI_NAME} cards [search words]                 Find cards and their ids.
@@ -115,6 +120,8 @@ export async function readWallet(file: string, io: Io): Promise<Wallet | null> {
 export async function run(argv: string[], io: Io): Promise<number> {
   if (argv[0] === 'import') return runImport(argv.slice(1), io)
   if (argv[0] === 'offers') return runOffers(argv.slice(1), io)
+  if (argv[0] === 'best') return runBest(argv.slice(1), io)
+  if (argv[0] === 'simulate') return runSimulate(argv.slice(1), io)
   const command = argv[0]
   if (command !== undefined && Object.hasOwn(WALLET_HELP, command)) {
     return runWalletCommand(
