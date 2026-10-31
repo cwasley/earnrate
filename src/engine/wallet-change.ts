@@ -1,6 +1,7 @@
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
+import { capByKey } from './evaluate.ts'
 import { choicePeriod, periodKey } from './periods.ts'
 import {
   knownMemberships,
@@ -17,6 +18,9 @@ export type CardInput = {
   picks?: Record<string, string[]> // choice id → option ids
   anniversary?: string // MM-DD
   activated?: string[] // replaces the list
+  // Cap key → dollars already spent on it this period, e.g. on a card added
+  // partway through a quarter.
+  capSpent?: Record<string, number>
   // A welcome bonus in progress; null stops tracking it. Spend and deadline
   // default to the card's published offer.
   bonus?: {
@@ -39,6 +43,7 @@ export type CardFields = {
   anniversary?: string
   chosen?: { period: string; picks: Record<string, string[]> }
   activated?: string[]
+  cap_usage?: Record<string, { period: string; spent: number }>
   bonus?: BonusFields | null // null removes it
 }
 
@@ -161,6 +166,37 @@ export function cardFields(
       }
     }
   }
+  if (input.capSpent !== undefined) {
+    const usage = { ...held?.cap_usage }
+    const anniversary = fields.anniversary ?? held?.anniversary ?? null
+    for (const [key, spent] of Object.entries(input.capSpent)) {
+      const cap = capByKey(card, key)
+      if (!cap) {
+        const keys = [
+          ...card.caps.map((c) => c.id),
+          ...card.rules
+            .filter((r) => typeof r.cap === 'object')
+            .map((r) => r.id),
+        ]
+        problems.push(
+          keys.length > 0
+            ? `${card.id} has no cap '${key}'. Its caps are: ${list(keys)}.`
+            : `${card.id} has no spending caps.`,
+        )
+        continue
+      }
+      if (!(spent >= 0)) problems.push('Spending on a cap must be $0 or more.')
+      const period = periodKey(cap.period, today, anniversary)
+      if (period === null) {
+        problems.push(
+          `The '${key}' cap resets on the card's anniversary; give the anniversary (MM-DD) too.`,
+        )
+        continue
+      }
+      usage[key] = { period, spent }
+    }
+    fields.cap_usage = usage
+  }
   if (input.bonus === null) fields.bonus = null
   else if (input.bonus !== undefined) {
     const b = input.bonus
@@ -210,6 +246,7 @@ const withFields = (
   ...(f.anniversary === undefined ? {} : { anniversary: f.anniversary }),
   ...(f.chosen === undefined ? {} : { chosen: f.chosen }),
   ...(f.activated === undefined ? {} : { activated: f.activated }),
+  ...(f.cap_usage === undefined ? {} : { cap_usage: f.cap_usage }),
   ...(f.bonus ? { bonus: f.bonus } : {}),
 })
 

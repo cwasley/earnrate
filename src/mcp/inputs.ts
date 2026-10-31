@@ -92,6 +92,12 @@ const cardFields = {
     .describe(
       'Rule ids the user has activated with the issuer, such as rotating categories. Replaces the current list.',
     ),
+  capSpent: z
+    .record(z.string(), z.number().nonnegative())
+    .optional()
+    .describe(
+      'Dollars already spent this period on a capped bonus, for a card the user starts tracking partway through: cap key (as list_wallet shows it) → dollars, e.g. {"five-percent-quarterly": 400}. Ask; recorded purchases add to it from then on.',
+    ),
   bonus: z
     .object({
       opened: IsoDate.describe('The day the account opened, YYYY-MM-DD.'),

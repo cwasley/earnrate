@@ -334,6 +334,55 @@ describe('wallet operations', () => {
     )
   })
 
+  test('spending already on a cap is saved for the current period', async () => {
+    const file = await walletFile(
+      'cards:\n  - id: chase-freedom-flex # mine\n    cap_usage:\n      five-percent-quarterly: { period: 2026-Q3, spent: 1500 }\n',
+    )
+    const saved = await store(file).updateCard(
+      { id: 'chase-freedom-flex', capSpent: { 'five-percent-quarterly': 400 } },
+      TODAY,
+    )
+    if (!saved.ok) throw new Error(saved.error)
+    expect(saved.wallet.cards[0]?.cap_usage).toEqual({
+      'five-percent-quarterly': { period: '2026-Q4', spent: 400 },
+    })
+    expect(await readFile(file, 'utf8')).toBe(
+      'cards:\n  - id: chase-freedom-flex # mine\n    cap_usage:\n      five-percent-quarterly: { period: 2026-Q4, spent: 400 }\n',
+    )
+
+    expect(
+      errorOf(
+        await store(file).updateCard(
+          { id: 'chase-freedom-flex', capSpent: { dining: 10 } },
+          TODAY,
+        ),
+      ),
+    ).toMatch(/no cap 'dining'. Its caps are: five-percent-quarterly/)
+  })
+
+  test('an anniversary cap needs the anniversary', async () => {
+    const file = await walletFile(
+      'cards:\n  - id: chase-ink-business-preferred\n',
+    )
+    const capSpent = { 'three-x-combined': 20_000 }
+    expect(
+      errorOf(
+        await store(file).updateCard(
+          { id: 'chase-ink-business-preferred', capSpent },
+          TODAY,
+        ),
+      ),
+    ).toMatch(/give the anniversary/)
+    const added = await store(file).updateCard(
+      { id: 'chase-ink-business-preferred', anniversary: '03-15', capSpent },
+      TODAY,
+    )
+    if (!added.ok) throw new Error(added.error)
+    expect(added.wallet.cards[0]?.cap_usage).toEqual({
+      'three-x-combined': { period: '2026', spent: 20_000 },
+    })
+  })
+
   test('activations must be rules that need one', async () => {
     const file = await walletFile('cards:\n  - id: chase-freedom-flex\n')
     const ok = await store(file).updateCard(

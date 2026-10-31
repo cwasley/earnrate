@@ -57,6 +57,16 @@ function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
       return f.activated === undefined
         ? ''
         : `${indent}activated: ${flowList(f.activated)}\n`
+    case 'cap_usage': {
+      if (f.cap_usage === undefined) return ''
+      const caps = Object.entries(f.cap_usage)
+        .map(
+          ([key, u]) =>
+            `${indent}  ${key}: { period: ${scalar(u.period)}, spent: ${String(u.spent)} }\n`,
+        )
+        .join('')
+      return caps === '' ? '' : `${indent}cap_usage:\n${caps}`
+    }
     case 'bonus': {
       if (!f.bonus) return ''
       const b = f.bonus
@@ -83,6 +93,7 @@ const FIELDS = [
   'anniversary',
   'chosen',
   'activated',
+  'cap_usage',
   'bonus',
 ] as const
 
