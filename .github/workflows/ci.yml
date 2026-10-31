@@ -44,3 +44,21 @@ jobs:
       - run: node --version
       - run: yarn smoke:pack
       - run: yarn smoke:mcpb
+
+  # Claude Desktop runs the bundle on macOS and Windows; check it there too.
+  bundle-on-desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn mcpb:pack
+      - run: yarn smoke:mcpb

@@ -4,7 +4,7 @@
 import { Client } from '@modelcontextprotocol/client'
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio'
 import { execFileSync } from 'node:child_process'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -23,7 +23,17 @@ const text = (result: { content: unknown }) =>
 
 try {
   const bundle = path.join(dir, 'bundle')
-  execFileSync('unzip', ['-q', path.join(ROOT, 'earnrate.mcpb'), '-d', bundle])
+  await mkdir(bundle)
+  // Windows has tar (bsdtar, which reads zip) but no unzip.
+  if (process.platform === 'win32')
+    execFileSync('tar', ['-xf', path.join(ROOT, 'earnrate.mcpb'), '-C', bundle])
+  else
+    execFileSync('unzip', [
+      '-q',
+      path.join(ROOT, 'earnrate.mcpb'),
+      '-d',
+      bundle,
+    ])
   const manifest = JSON.parse(
     await readFile(path.join(bundle, 'manifest.json'), 'utf8'),
   ) as {

@@ -8,8 +8,13 @@ import { fileURLToPath } from 'node:url'
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const STAGE = path.join(ROOT, '.mcpb-build')
 const OUT = path.join(ROOT, 'earnrate.mcpb')
+// yarn is yarn.cmd on Windows, which only runs through a shell.
 const run = (command: string, args: string[], cwd = ROOT) =>
-  execFileSync(command, args, { cwd, stdio: 'inherit' })
+  execFileSync(command, args, {
+    cwd,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  })
 
 const pkg = JSON.parse(
   await readFile(path.join(ROOT, 'package.json'), 'utf8'),
@@ -56,7 +61,20 @@ run(
   ],
   STAGE,
 )
-const mcpb = path.join(ROOT, 'node_modules', '.bin', 'mcpb')
-run(mcpb, ['validate', path.join(STAGE, 'manifest.json')])
+const mcpb = path.join(
+  ROOT,
+  'node_modules',
+  '@anthropic-ai',
+  'mcpb',
+  'dist',
+  'cli',
+  'cli.js',
+)
+const node = (args: string[]) =>
+  execFileSync(process.execPath, [mcpb, ...args], {
+    cwd: ROOT,
+    stdio: 'inherit',
+  })
+node(['validate', path.join(STAGE, 'manifest.json')])
 await rm(OUT, { force: true })
-run(mcpb, ['pack', STAGE, OUT])
+node(['pack', STAGE, OUT])
