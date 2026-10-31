@@ -1,4 +1,4 @@
-import type { Catalog } from '../data/load.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
 import { categoryMatches } from '../engine/evaluate.ts'
 import { periodKey } from '../engine/periods.ts'

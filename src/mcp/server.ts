@@ -10,9 +10,10 @@ import {
   formatExploration,
 } from '../format/explore.ts'
 import { formatOffers } from '../format/offers.ts'
+import { parseWalletYaml, walletYaml } from '../format/wallet-yaml.ts'
 import { walletProblems } from '../data/integrity.ts'
-import type { Catalog } from '../data/load.ts'
-import type { SetupResult, WalletStore } from '../data/store.ts'
+import type { Catalog } from '../schema/catalog.ts'
+import type { AccountStore, SetupResult, WalletStore } from '../data/store.ts'
 import type { CardInput } from '../engine/wallet-change.ts'
 import { catalogCheatSheet, cheatSheet } from '../engine/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../engine/explore.ts'
@@ -47,14 +48,33 @@ import {
   WalletSummarySchema,
 } from './schemas.ts'
 
+// Where a saved wallet lives, if anywhere: 'none' drops the tools that need
+// one, 'file' is the local YAML file, 'account' the remote server's anonymous
+// wallets, which add export, import and delete.
+export type WalletSaving =
+  | { savedWallets: 'none' | 'file'; store: WalletStore }
+  | { savedWallets: 'account'; store: AccountStore }
+
 export type ServerDeps = {
   catalog: Catalog
-  store: WalletStore // where a saved wallet lives; it's optional
-  savedWallets: boolean // false: no tools that save, for the public remote server
   today: () => string // YYYY-MM-DD
   llm: LlmSession | null // shared across connections, so the call limit holds
   version: string
-}
+} & WalletSaving
+
+// The tools that read or change a saved wallet. The remote server asks for
+// sign-in before running one.
+export const SAVED_WALLET_TOOLS = [
+  'list_wallet',
+  'record_purchase',
+  'add_card',
+  'update_card',
+  'remove_card',
+  'set_memberships',
+  'export_wallet',
+  'import_wallet',
+  'delete_wallet',
+]
 
 const Merchant = z
   .string()
@@ -72,11 +92,18 @@ const DateInput = IsoDate.optional().describe(
   'Purchase date, YYYY-MM-DD. Defaults to today.',
 )
 
+const SAVING: Record<ServerDeps['savedWallets'], string> = {
+  none: "This server doesn't save wallets: pass the cards each time. For a saved wallet with cap and welcome-bonus tracking, the user can install earnrate locally (earnrate.dev).",
+  file: 'Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools.',
+  account:
+    "Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools. Saved wallets are anonymous: the first wallet tool asks the user to open an earnrate page, where they start a wallet (it shows a recovery code to keep; no email or name) or reconnect one with their code. Never ask for the recovery code in the conversation; it's typed only on that page.",
+}
+
 const INSTRUCTIONS = (
-  savedWallets: boolean,
+  savedWallets: ServerDeps['savedWallets'],
 ) => `earnrate answers which credit card earns the most for a purchase, from each issuer's own terms. Anyone can use it without entering anything: with no cards given, best_card_for_purchase, best_cards_for, cheat_sheet, simulate_spending and compare_welcome_offers answer from every card earnrate knows, and that's a complete answer. Never require the user's cards, and don't ask what they spend unless the answer depends on it; simulate_spending assumes typical amounts when none are given and says so.
 
-Personalizing is optional. If the user names their cards, pass them as \`cards\` (ids from search_cards) for that answer; nothing is saved. ${savedWallets ? 'Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools.' : "This server doesn't save wallets: pass the cards each time. For a saved wallet with cap and welcome-bonus tracking, the user can install earnrate locally (earnrate.dev)."} When a card needs category picks, memberships like Amazon Prime, or activations, ask the user rather than guessing.
+Personalizing is optional. If the user names their cards, pass them as \`cards\` (ids from search_cards) for that answer; nothing is saved. ${SAVING[savedWallets]} When a card needs category picks, memberships like Amazon Prime, or activations, ask the user rather than guessing.
 
 The wallet lists cards by product id, never card numbers; never ask for card numbers, expiry dates or security codes.`
 
@@ -980,7 +1007,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         const result = await deps.store.addCard(cardInput(args), deps.today())
         return changed(
           result,
-          `Added ${cardName(args.cardId)} (${args.cardId})${result.ok && result.created ? `, starting a new wallet at ${deps.store.where}` : ''}.`,
+          `Added ${cardName(args.cardId)} (${args.cardId})${result.ok && result.created ? (deps.savedWallets === 'account' ? ', the first card in your saved wallet' : `, starting a new wallet at ${deps.store.where}`) : ''}.`,
         )
       },
     ),
@@ -1068,6 +1095,92 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
     ),
   )
 
-  if (!deps.savedWallets) for (const tool of walletTools) tool.remove()
+  if (deps.savedWallets === 'account') {
+    const store = deps.store
+    server.registerTool(
+      'export_wallet',
+      {
+        title: 'Export the wallet',
+        description:
+          'The saved wallet as a wallet.yaml file the earnrate command line and earnrate.dev can import: card ids, picks, activations, memberships, cap usage and bonus progress. Never card numbers.',
+        inputSchema: z.object({}),
+        outputSchema: z.object({ yaml: z.string() }),
+        annotations: { readOnlyHint: true, openWorldHint: false },
+      },
+      async () => {
+        const w = await wallet()
+        if (typeof w === 'string') return fail(w)
+        const yaml = walletYaml(w)
+        return {
+          content: [{ type: 'text', text: yaml }],
+          structuredContent: { yaml },
+        }
+      },
+    )
+
+    server.registerTool(
+      'import_wallet',
+      {
+        title: 'Import a wallet',
+        description:
+          'Replaces the saved wallet with a wallet.yaml from the earnrate command line or earnrate.dev, when the user pastes or attaches one. Wallet files only: never statements or card numbers. Confirm with the user first if they already have cards saved.',
+        inputSchema: z.object({
+          yaml: z
+            .string()
+            .min(1)
+            .max(100_000)
+            .describe('The wallet.yaml text, as the user gave it.'),
+        }),
+        outputSchema: WalletChangeSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
+      },
+      async ({ yaml }) => {
+        const parsed = parseWalletYaml(yaml, catalog)
+        if (typeof parsed === 'string') return fail(parsed)
+        return changed(
+          await store.replace(parsed),
+          `Imported a wallet with ${String(parsed.cards.length)} ${parsed.cards.length === 1 ? 'card' : 'cards'}.`,
+          false,
+        )
+      },
+    )
+
+    server.registerTool(
+      'delete_wallet',
+      {
+        title: 'Delete the wallet',
+        description:
+          'Deletes the saved wallet now and for good, and signs out every app using it. Only when the user asks to delete it; confirm first, and offer export_wallet to keep a copy.',
+        inputSchema: z.object({}),
+        outputSchema: z.object({ deleted: z.boolean() }),
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
+      },
+      async () => {
+        await store.erase()
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Deleted the saved wallet. Answers now cover every card, or the cards named in the conversation.',
+            },
+          ],
+          structuredContent: { deleted: true },
+        }
+      },
+    )
+  }
+
+  if (deps.savedWallets === 'none')
+    for (const tool of walletTools) tool.remove()
   return server
 }

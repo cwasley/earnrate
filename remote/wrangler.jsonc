@@ -4,6 +4,8 @@
   "name": "earnrate-mcp",
   "main": "src/worker.ts",
   "compatibility_date": "2026-10-01",
+  // Client ID Metadata Documents are fetched from the public internet only.
+  "compatibility_flags": ["global_fetch_strictly_public"],
   "alias": { "earnrate:bundle": "./catalog.gen.json" },
   "workers_dev": false,
   "preview_urls": false,
@@ -16,9 +18,24 @@
       "namespace_id": "1101",
       "simple": { "limit": 120, "period": 60 },
     },
+    {
+      "name": "SIGN_IN_LIMITER",
+      "namespace_id": "1102",
+      "simple": { "limit": 10, "period": 60 },
+    },
   ],
   // Daily totals by method and tool name only (Workers Analytics Engine).
   "analytics_engine_datasets": [
     { "binding": "USAGE", "dataset": "earnrate_mcp_usage" },
   ],
+  // Sign-in grants and tokens, stored by the OAuth library as hashes and
+  // encrypted props.
+  "kv_namespaces": [
+    { "binding": "OAUTH_KV", "id": "c0de884011c74917bdf8c17ff8a722d3" },
+  ],
+  // One encrypted saved wallet per object.
+  "durable_objects": {
+    "bindings": [{ "name": "WALLETS", "class_name": "WalletObject" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["WalletObject"] }],
 }

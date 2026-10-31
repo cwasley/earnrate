@@ -1,4 +1,4 @@
-import type { Catalog } from '../data/load.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Card, Cap } from '../schema/card.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'

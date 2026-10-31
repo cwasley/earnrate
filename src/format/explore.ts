@@ -1,4 +1,4 @@
-import type { Catalog } from '../data/load.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Exploration, ExploreEntry, Picks } from '../engine/explore.ts'
 import type {
   CatalogSimulation,

@@ -1,4 +1,4 @@
-import type { Catalog } from '../data/load.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import { resolveMerchantById } from '../merchants/resolve.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import {

@@ -20,9 +20,14 @@ import { FileWalletStore } from '../src/data/file-store.ts'
 import {
   JsonWalletStore,
   memoryBackend,
+  noSavedWallet,
   type WalletStore,
 } from '../src/data/store.ts'
-import { createEarnrateServer } from '../src/mcp/server.ts'
+import {
+  createEarnrateServer,
+  SAVED_WALLET_TOOLS,
+  type WalletSaving,
+} from '../src/mcp/server.ts'
 import { TODAY } from './golden/fixtures.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
@@ -45,15 +50,17 @@ afterEach(async () => {
 async function connect(
   wallet: string | WalletStore,
   llm: LlmSession | null = null,
-  savedWallets = true,
 ) {
   const store =
     typeof wallet === 'string' ? new FileWalletStore(catalog, wallet) : wallet
+  return serve({ savedWallets: 'file', store }, llm)
+}
+
+async function serve(saving: WalletSaving, llm: LlmSession | null = null) {
   const handler = createMcpHandler(() =>
     createEarnrateServer({
       catalog,
-      store,
-      savedWallets,
+      ...saving,
       today: () => TODAY,
       llm,
       version: '0.0.0-test',
@@ -399,6 +406,60 @@ describe('wallet setup', () => {
       cards: { bonus?: { spent: number } }[]
     }
     expect(saved.cards[0]?.bonus?.spent).toBe(100)
+  })
+
+  test('an account wallet exports, imports and deletes', async () => {
+    const backend = memoryBackend()
+    const client = await serve({
+      savedWallets: 'account',
+      store: new JsonWalletStore(catalog, backend, 'your saved wallet'),
+    })
+    const names = (await client.listTools()).tools.map((t) => t.name)
+    for (const name of SAVED_WALLET_TOOLS) expect(names).toContain(name)
+
+    const imported = await client.callTool({
+      name: 'import_wallet',
+      arguments: {
+        yaml: 'memberships: [amazon-prime]\ncards:\n  - id: chase-prime-visa\n  - id: amex-gold\n    checkout_label: Gold\n',
+      },
+    })
+    expect(text(imported)).toMatch(/Imported a wallet with 2 cards/)
+    const exported = await client.callTool({
+      name: 'export_wallet',
+      arguments: {},
+    })
+    expect(text(exported)).toMatch(/- id: amex-gold\n\s+checkout_label: Gold/)
+    expect(text(exported)).toContain('amazon-prime')
+
+    const notWallet = await client.callTool({
+      name: 'import_wallet',
+      arguments: { yaml: 'cards:\n  - id: not-a-card\n' },
+    })
+    expect(notWallet.isError).toBe(true)
+
+    await client.callTool({ name: 'delete_wallet', arguments: {} })
+    expect(await backend.read()).toBeNull()
+    const after = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(after)).toMatch(/no wallet yet/)
+  })
+
+  test('a server without saved wallets drops exactly the saved-wallet tools', async () => {
+    const all = (
+      await (
+        await serve({
+          savedWallets: 'account',
+          store: new JsonWalletStore(catalog, memoryBackend(), 'x'),
+        })
+      ).listTools()
+    ).tools.map((t) => t.name)
+    const none = (
+      await (
+        await serve({ savedWallets: 'none', store: noSavedWallet('x') })
+      ).listTools()
+    ).tools.map((t) => t.name)
+    expect(all.filter((n) => !none.includes(n)).sort()).toEqual(
+      [...SAVED_WALLET_TOOLS].sort(),
+    )
   })
 
   test('from no wallet to a recommendation', async () => {

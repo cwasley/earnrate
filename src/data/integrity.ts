@@ -1,7 +1,7 @@
 import type { Card } from '../schema/card.ts'
 import type { Merchant } from '../schema/merchant.ts'
 import type { Wallet } from '../schema/wallet.ts'
-import type { Catalog } from './load.ts'
+import type { Catalog } from '../schema/catalog.ts'
 
 function duplicates(ids: string[]): string[] {
   const seen = new Set<string>()

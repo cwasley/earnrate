@@ -10,7 +10,7 @@ import {
   type WalletChange,
 } from '../engine/wallet-change.ts'
 import { WalletSchema, type Wallet } from '../schema/wallet.ts'
-import type { Catalog } from './load.ts'
+import type { Catalog } from '../schema/catalog.ts'
 
 export type SetupResult =
   | {
@@ -41,9 +41,17 @@ export interface WalletStore {
   ): Promise<RecordResult>
 }
 
+// A saved wallet the user can also replace or delete outright: the remote
+// server's, where there's no file to edit or remove by hand.
+export interface AccountStore extends WalletStore {
+  replace(wallet: Wallet): Promise<SetupResult>
+  erase(): Promise<void>
+}
+
 export type JsonBackend = {
   read(): Promise<string | null>
   write(text: string): Promise<void>
+  remove(): Promise<void>
 }
 
 const failed = (error: string) => ({ ok: false as const, error })
@@ -51,7 +59,7 @@ const failed = (error: string) => ({ ok: false as const, error })
 // A wallet stored as JSON text. Writes are serialized within this instance;
 // a backend shared across processes must serialize them itself (one Durable
 // Object per wallet does).
-export class JsonWalletStore implements WalletStore {
+export class JsonWalletStore implements AccountStore {
   readonly where: string
   private readonly catalog: Catalog
   private readonly backend: JsonBackend
@@ -120,6 +128,14 @@ export class JsonWalletStore implements WalletStore {
     )
   }
 
+  replace(wallet: Wallet): Promise<SetupResult> {
+    return this.change(() => ({ ok: true, wallet, fields: {}, notes: [] }))
+  }
+
+  erase(): Promise<void> {
+    return this.serialized(() => this.backend.remove())
+  }
+
   record(
     purchase: RecordedPurchase,
     merchant: MerchantResolution,
@@ -145,6 +161,10 @@ export function memoryBackend(initial: string | null = null): JsonBackend {
     read: () => Promise.resolve(text),
     write: (next) => {
       text = next
+      return Promise.resolve()
+    },
+    remove: () => {
+      text = null
       return Promise.resolve()
     },
   }

@@ -628,34 +628,11 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
   )
 }
 
-function compact(wallet: Wallet) {
-  return {
-    ...(Object.keys(wallet.valuations).length > 0
-      ? { valuations: wallet.valuations }
-      : {}),
-    ...(wallet.memberships.length > 0
-      ? { memberships: wallet.memberships }
-      : {}),
-    cards: wallet.cards.map((c) => ({
-      id: c.id,
-      ...(c.checkout_label === undefined
-        ? {}
-        : { checkout_label: c.checkout_label }),
-      ...(c.anniversary === undefined ? {} : { anniversary: c.anniversary }),
-      ...(Object.keys(c.cap_usage).length > 0
-        ? { cap_usage: c.cap_usage }
-        : {}),
-      ...(c.chosen === undefined ? {} : { chosen: c.chosen }),
-      ...(c.activated.length > 0 ? { activated: c.activated } : {}),
-      ...(c.bonus === undefined ? {} : { bonus: c.bonus }),
-    })),
-  }
-}
-
 async function exportWallet(wallet: Wallet) {
-  const { stringify } = await import('yaml')
-  const text = `# Your earnrate wallet: the cards you hold, by id. Never card numbers.\n# For the command line, save it as ~/.earnrate/wallet.yaml\n\n${stringify(compact(wallet))}`
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/yaml' }))
+  const { walletYaml } = await import('../../src/format/wallet-yaml.ts')
+  const url = URL.createObjectURL(
+    new Blob([walletYaml(wallet)], { type: 'text/yaml' }),
+  )
   const a = document.createElement('a')
   a.href = url
   a.download = 'wallet.yaml'
@@ -664,20 +641,8 @@ async function exportWallet(wallet: Wallet) {
 }
 
 async function importWallet(file: File): Promise<Wallet | string> {
-  const [{ parse }, { WalletSchema }] = await Promise.all([
-    import('yaml'),
-    import('../../src/schema/wallet.ts'),
-  ])
-  let raw: unknown
-  try {
-    raw = parse(await file.text())
-  } catch {
-    return "That file isn't a wallet: it isn't valid YAML."
-  }
-  const result = WalletSchema.safeParse(raw)
-  if (!result.success) return "That file isn't an earnrate wallet."
-  const problems = walletProblems(result.data, catalog)
-  return problems.length > 0 ? problems.join(' ') : result.data
+  const { parseWalletYaml } = await import('../../src/format/wallet-yaml.ts')
+  return parseWalletYaml(await file.text(), catalog)
 }
 
 function Transfer({

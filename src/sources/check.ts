@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { Catalog } from '../data/load.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import { containsQuote, earningLines, lineKey, pageKey } from './text.ts'
 
 // Each page is loaded more than once: a line counts as new only if every load

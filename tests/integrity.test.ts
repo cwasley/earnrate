@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { parse } from 'yaml'
 import { catalogProblems, walletProblems } from '../src/data/integrity.ts'
-import type { Catalog } from '../src/data/load.ts'
+import type { Catalog } from '../src/schema/catalog.ts'
 import { CardSchema } from '../src/schema/card.ts'
 import { CategoriesFileSchema } from '../src/schema/category.ts'
 import { CurrenciesFileSchema } from '../src/schema/currency.ts'

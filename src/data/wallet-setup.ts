@@ -6,7 +6,7 @@ import {
   type CardInput,
   type WalletChange,
 } from '../engine/wallet-change.ts'
-import type { Catalog } from './load.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { SetupResult } from './store.ts'
 import {
   addCardText,
