@@ -1,14 +1,14 @@
-import type { Catalog } from '../schema/catalog.ts'
 import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
 import { capByKey, categoryMatches } from '../engine/evaluate.ts'
 import { periodKey } from '../engine/periods.ts'
-import { applyBooking, capBooking, type CapBooking } from '../engine/record.ts'
 import { recommend } from '../engine/recommend.ts'
+import { applyBooking, capBooking, type CapBooking } from '../engine/record.ts'
+import { roundCents } from '../engine/text.ts'
 import type { MerchantResolution, Purchase } from '../engine/types.ts'
 import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { cleanDescriptor, type StatementLine } from './statement.ts'
-import { roundCents } from '../engine/text.ts'
 
 export type CardLine = { cardId: string; line: StatementLine }
 

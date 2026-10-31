@@ -1,6 +1,6 @@
 import { LLM_MAX_CALLS_ENV_VAR } from '../brand.ts'
-import type { Catalog } from '../schema/catalog.ts'
 import type { Channel, MerchantResolution } from '../engine/types.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import { describeClassifierError } from './anthropic.ts'
 import type { CachedClassification, MerchantCache } from './cache.ts'
 import type { Classifier } from './classifier.ts'

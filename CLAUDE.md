@@ -8,7 +8,7 @@ The maintainer's full spec (data model, golden tests, milestones, competitive la
 
 - Never store or handle card numbers, CVVs, expiry dates or bank logins. Cards are product IDs only (`amex-gold`).
 - No Plaid, no payments, no checkout automation, no browser extension in v1.
-- Card earn rates live in data files with `last_verified` and `source_url`. Never hardcode a rate in engine code.
+- Card earn rates live in data files with `last_verified` and `source_urls`. Never hardcode a rate in engine code.
 - Don't invent rates. If a rule is ambiguous, leave a TODO and ask. Wrong rates are worse than missing ones.
 - Matching and math are pure and deterministic. The LLM is only a cached, labeled fallback for merchant → category.
 - Every recommendation states its matched rule, assumptions and confidence.

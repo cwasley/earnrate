@@ -12,8 +12,8 @@ const escape = (text: string) =>
   text.replace(/[&<>"']/g, (c) => `&#${String(c.charCodeAt(0))};`)
 
 const STYLE = `
-:root { --bg: #fbfaf7; --text: #1d1b16; --muted: #5f5a4f; --line: #dcd6c8; --accent: #1f6f50; --accent-text: #fff; --warn: #8a4b00; --field: #fff; }
-@media (prefers-color-scheme: dark) { :root { --bg: #16150f; --text: #ede9df; --muted: #a8a294; --line: #3a372e; --accent: #4cb08a; --accent-text: #0d1a14; --warn: #f0b060; --field: #1f1e17; } }
+:root { --bg: #fbfaf7; --text: #1c1d1f; --muted: #5f6368; --line: #e6e2da; --accent: #1f6f54; --accent-text: #fff; --warn: #8a4b00; --field: #ffffff; }
+@media (prefers-color-scheme: dark) { :root { --bg: #121315; --text: #ecebe7; --muted: #a2a6ab; --line: #2b2e32; --accent: #7fd1ad; --accent-text: #0d1a14; --warn: #f0b060; --field: #1a1c1f; } }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, sans-serif; }
 main { max-width: 34rem; margin: 0 auto; padding: 32px 16px 48px; }

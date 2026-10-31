@@ -11,7 +11,6 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
-    passWithNoTests: true,
     // So the alias above reaches the library's own import.
     server: { deps: { inline: ['@cloudflare/workers-oauth-provider'] } },
   },

@@ -1,4 +1,3 @@
-import type { Catalog } from '../../src/schema/catalog.ts'
 import {
   JsonWalletStore,
   type RecordResult,
@@ -9,10 +8,10 @@ import type {
   RecordedPurchase,
 } from '../../src/engine/types.ts'
 import type { CardInput } from '../../src/engine/wallet-change.ts'
+import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { decryptWallet, encryptWallet } from './vault-crypto.ts'
 
-// The subset of Durable Object storage a vault uses.
 export type VaultStorage = {
   get<T>(key: string): Promise<T | undefined>
   put(key: string, value: unknown): Promise<void>

@@ -2,13 +2,13 @@ import { parseArgs } from 'node:util'
 import { CLI_NAME } from '../brand.ts'
 import { loadCatalog, walletPath } from '../data/load.ts'
 import { catalogCheatSheet, cheatSheet } from '../engine/cheat-sheet.ts'
-import { formatCheatSheet } from '../format/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS } from '../engine/explore.ts'
 import {
   isValuationProfile,
   VALUATION_PROFILES,
   withValuationProfile,
 } from '../engine/profiles.ts'
+import { formatCheatSheet } from '../format/cheat-sheet.ts'
 import { cardList, dateProblem, valuationProblem } from './args.ts'
 import {
   cardsToUse,

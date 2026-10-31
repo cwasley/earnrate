@@ -13,7 +13,6 @@ import {
   newCodePage,
 } from './pages.ts'
 import { readBody } from './requests.ts'
-import type { VaultApi } from './vault.ts'
 import {
   keysFromCode,
   newRecoveryCode,
@@ -22,6 +21,7 @@ import {
   unwrapWalletKey,
   wrapWalletKey,
 } from './vault-crypto.ts'
+import type { VaultApi } from './vault.ts'
 
 export const ORIGIN = 'https://mcp.earnrate.dev'
 export const SCOPE = 'wallet'
@@ -51,8 +51,8 @@ function registrationProblem(metadata: Record<string, unknown>) {
   return undefined
 }
 
-// The server's address is the bare origin. /mcp, its first address, stays
-// as an alias with its own resource so connections made there keep working.
+// /mcp is an alias with its own resource, so connections made there keep
+// working.
 export const RESOURCE = ORIGIN
 export const ALIAS_RESOURCE = `${ORIGIN}/mcp`
 const RESOURCES = [RESOURCE, ALIAS_RESOURCE]

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
-import { capBooking } from '../src/engine/record.ts'
 import { recommend } from '../src/engine/recommend.ts'
+import { capBooking } from '../src/engine/record.ts'
 import { WalletSchema, type Wallet } from '../src/schema/wallet.ts'
 import { purchase, TODAY } from './golden/fixtures.ts'
 

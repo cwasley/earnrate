@@ -1,10 +1,10 @@
+import { money, pct } from '../engine/text.ts'
 import type {
   ExcludedCard,
   Purchase,
   RankedCard,
   Recommendation,
 } from '../engine/types.ts'
-import { money, pct } from '../engine/text.ts'
 
 export type Style = (format: 'bold' | 'dim' | 'yellow', text: string) => string
 

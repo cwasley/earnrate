@@ -10,8 +10,8 @@ import { analyzeStatement } from '../src/import/analyze.ts'
 import { mapChaseCategory } from '../src/import/chase.ts'
 import { parseCsv } from '../src/import/csv.ts'
 import { cleanDescriptor, parseStatement } from '../src/import/statement.ts'
+import { TODAY } from './golden/fixtures.ts'
 
-const TODAY = '2026-10-24'
 const HEADER =
   'Date,Description,Amount,Extended Details,Appears On Your Statement As,Address,City/State,Zip Code,Country,Reference,Category'
 

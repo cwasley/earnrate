@@ -34,7 +34,7 @@ Nothing on your computer. It connects Claude to earnrate's hosted MCP server at 
 
 - **Reads and writes** nothing on your computer.
 - **Sends** each question Claude asks earnrate to `mcp.earnrate.dev`: the store or kind of purchase, and anything else you gave for it, like an amount, your spending or the cards you named. The server answers without keeping the question; request logging is off.
-- **Stores**, only if you save a wallet: your cards by product id and what you've told earnrate about them (picks, activations, memberships, cap and bonus totals), encrypted with a key only your recovery code or your connected apps can unlock. It's deleted when you ask, or after 13 months unused.
+- **Stores**, only if you save a wallet: your cards by product ID and what you've told earnrate about them (checkout names, picks, activations, memberships, anniversaries, point values, cap and bonus totals), encrypted with a key only your recovery code or your connected apps can unlock. It's deleted when you ask, after 13 months unused, or after a week if it's never used.
 - **Fetches** nothing else.
 
 ## Privacy Policy

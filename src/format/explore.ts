@@ -1,4 +1,3 @@
-import type { Catalog } from '../schema/catalog.ts'
 import type { Exploration, ExploreEntry, Picks } from '../engine/explore.ts'
 import type {
   CatalogSimulation,
@@ -6,6 +5,7 @@ import type {
   WalletWhatIf,
 } from '../engine/simulate.ts'
 import { feeText, money, pct } from '../engine/text.ts'
+import type { Catalog } from '../schema/catalog.ts'
 
 const wholeUsd = (n: number) => money(Math.round(n))
 

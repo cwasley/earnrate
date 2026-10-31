@@ -2,9 +2,6 @@ import { z } from 'zod'
 import type { Catalog } from '../schema/catalog.ts'
 import { containsQuote, earningLines, lineKey, pageKey } from './text.ts'
 
-// Each page is loaded more than once: a line counts as new only if every load
-// shows it, and as removed only if no load does, so copy that varies between
-// visits (A/B tests, rotating promos) isn't reported.
 export type PageLoad = { innerText: string; textContent: string }
 export type PageSnapshot =
   | { url: string; ok: true; loads: PageLoad[] }
@@ -44,6 +41,9 @@ export function sourceUrls(catalog: Catalog): Map<string, string[]> {
   return pages
 }
 
+// Each page is loaded more than once: a line counts as new only if every load
+// shows it, and as removed only if no load does, so copy that varies between
+// visits (A/B tests, rotating promos) isn't reported.
 export function compareSources(
   catalog: Catalog,
   snapshots: Map<string, PageSnapshot>,

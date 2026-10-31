@@ -2,23 +2,21 @@ import { execFile } from 'node:child_process'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { describe, expect, test } from 'vitest'
 import { WALLET_ENV_VAR } from '../src/brand.ts'
 import { parseCliArgs, type CliOptions } from '../src/cli/args.ts'
 import { run } from '../src/cli/run.ts'
 import type { Recommendation } from '../src/engine/types.ts'
-
-const ROOT = fileURLToPath(new URL('..', import.meta.url))
-const EXAMPLE_WALLET = path.join(ROOT, 'wallet.example.yaml')
+import { TODAY } from './golden/fixtures.ts'
+import { EXAMPLE_WALLET, ROOT } from './helpers.ts'
 
 async function cli(argv: string[], wallet = EXAMPLE_WALLET) {
   let stdout = ''
   let stderr = ''
   const code = await run(argv, {
     env: { [WALLET_ENV_VAR]: wallet },
-    today: '2026-10-24',
+    today: TODAY,
     stdout: (t) => (stdout += t),
     stderr: (t) => (stderr += t),
   })

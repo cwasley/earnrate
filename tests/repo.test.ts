@@ -59,37 +59,33 @@ test('no committed file contains a card number', async () => {
   expect(hits).toEqual([])
 })
 
+const readJson = async (file: string) =>
+  JSON.parse(await readFile(path.join(ROOT, file), 'utf8')) as Record<
+    string,
+    unknown
+  >
+
 test('the MCP registry entry and Claude Desktop bundle match package.json', async () => {
-  const read = async (file: string) =>
-    JSON.parse(await readFile(path.join(ROOT, file), 'utf8')) as Record<
-      string,
-      unknown
-    >
-  const pkg = await read('package.json')
-  const server = await read('server.json')
+  const pkg = await readJson('package.json')
+  const server = await readJson('server.json')
   const packages = server.packages as { identifier: string; version: string }[]
   expect(server.name).toBe(pkg.mcpName)
   expect(server.version).toBe(pkg.version)
   expect(packages.map((p) => [p.identifier, p.version])).toEqual([
     [pkg.name, pkg.version],
   ])
-  const bundle = await read('mcpb/manifest.json')
+  const bundle = await readJson('mcpb/manifest.json')
   expect(bundle.version).toBe(pkg.version)
 })
 
 test('the Claude plugin and registry entry point at the hosted server', async () => {
-  const read = async (file: string) =>
-    JSON.parse(await readFile(path.join(ROOT, file), 'utf8')) as Record<
-      string,
-      unknown
-    >
-  const pkg = await read('package.json')
-  const plugin = await read('plugin/.claude-plugin/plugin.json')
+  const pkg = await readJson('package.json')
+  const plugin = await readJson('plugin/.claude-plugin/plugin.json')
   expect(plugin.version).toBe(pkg.version)
-  expect((await read('plugin/.mcp.json')).mcpServers).toEqual({
+  expect((await readJson('plugin/.mcp.json')).mcpServers).toEqual({
     earnrate: { type: 'http', url: 'https://mcp.earnrate.dev' },
   })
-  expect((await read('server.json')).remotes).toEqual([
+  expect((await readJson('server.json')).remotes).toEqual([
     { type: 'streamable-http', url: 'https://mcp.earnrate.dev' },
   ])
 })

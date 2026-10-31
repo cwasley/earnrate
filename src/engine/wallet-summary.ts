@@ -1,11 +1,11 @@
-import type { Catalog } from '../schema/catalog.ts'
 import type { Card, Cap } from '../schema/card.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
 import { capUsed, pickedCategories } from './evaluate.ts'
 import { daysBetween } from './periods.ts'
-import { rotationGap } from './rotation.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
+import { rotationGap } from './rotation.ts'
 import { cardValuation } from './valuation.ts'
 
 export type CapSummary = {

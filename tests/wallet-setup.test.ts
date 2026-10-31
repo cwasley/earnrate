@@ -2,15 +2,15 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
+import { FileWalletStore } from '../src/data/file-store.ts'
 import { loadCatalog, loadWallet } from '../src/data/load.ts'
+import type { SetupResult } from '../src/data/store.ts'
 import {
   addCardText,
   removeCardText,
   setMembershipsText,
   updateCardText,
 } from '../src/data/wallet-edit.ts'
-import { FileWalletStore } from '../src/data/file-store.ts'
-import type { SetupResult } from '../src/data/store.ts'
 import { searchCards, setupNotes } from '../src/engine/setup.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 

@@ -1,5 +1,5 @@
-import type { SetupNote } from '../engine/setup.ts'
 import { bookPurchase, type BookedPurchase } from '../engine/record.ts'
+import type { SetupNote } from '../engine/setup.ts'
 import type { MerchantResolution, RecordedPurchase } from '../engine/types.ts'
 import {
   addToWallet,
@@ -9,8 +9,8 @@ import {
   type CardInput,
   type WalletChange,
 } from '../engine/wallet-change.ts'
-import { WalletSchema, type Wallet } from '../schema/wallet.ts'
 import type { Catalog } from '../schema/catalog.ts'
+import { WalletSchema, type Wallet } from '../schema/wallet.ts'
 
 export type SetupResult =
   | {

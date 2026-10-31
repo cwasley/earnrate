@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'preact/hooks'
 import { dataVersion } from 'virtual:catalog'
 import { BestFor, SUGGESTIONS } from './BestFor.tsx'
+import { MyWallet } from './MyWallet.tsx'
+import { Spending } from './Spending.tsx'
 import { issuerName, issuers, MEMBERSHIPS } from './format.ts'
 import {
   DEFAULT_SETTINGS,
@@ -9,8 +11,6 @@ import {
   save,
   type Settings,
 } from './settings.ts'
-import { MyWallet } from './MyWallet.tsx'
-import { Spending } from './Spending.tsx'
 
 type Tab = 'best' | 'spending' | 'wallet'
 

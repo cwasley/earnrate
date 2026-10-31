@@ -1,7 +1,6 @@
 import { parseArgs } from 'node:util'
 import { CLI_NAME } from '../brand.ts'
 import { loadCatalog, walletPath } from '../data/load.ts'
-import type { Catalog } from '../schema/catalog.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,
@@ -22,12 +21,13 @@ import {
   TYPICAL_SPEND_NOTE,
   type SpendLine,
 } from '../engine/simulate.ts'
-import type { Wallet } from '../schema/wallet.ts'
 import {
   formatAdditions,
   formatCatalogSimulation,
   formatExploration,
 } from '../format/explore.ts'
+import type { Catalog } from '../schema/catalog.ts'
+import type { Wallet } from '../schema/wallet.ts'
 import {
   BOTH_CHANNELS,
   cardList,

@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
+import { bookPurchase } from '../src/engine/record.ts'
 import {
   addToWallet,
   removeFromWallet,
   updateInWallet,
   withMemberships,
 } from '../src/engine/wallet-change.ts'
-import { bookPurchase } from '../src/engine/record.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 import { TODAY } from './golden/fixtures.ts'
 

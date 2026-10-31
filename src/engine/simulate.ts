@@ -1,6 +1,6 @@
-import type { Catalog } from '../schema/catalog.ts'
 import { resolveMerchant } from '../merchants/resolve.ts'
 import type { Card } from '../schema/card.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { evaluateCard, purchaseContext, usableAt } from './evaluate.ts'
 import {
@@ -14,9 +14,9 @@ import {
 import { choicePeriod, periodKey } from './periods.ts'
 import { applyBooking, capBooking } from './record.ts'
 import { rotationGap } from './rotation.ts'
+import { roundCents } from './text.ts'
 import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
-import { roundCents } from './text.ts'
 
 const EPSILON = 1e-9
 const MONTHS = 12

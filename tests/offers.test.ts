@@ -2,11 +2,12 @@ import { expect, test } from 'vitest'
 import { WALLET_ENV_VAR } from '../src/brand.ts'
 import { run } from '../src/cli/run.ts'
 import { loadCatalog } from '../src/data/load.ts'
-import type { Catalog } from '../src/schema/catalog.ts'
 import { compareOffers, type OfferFilters } from '../src/engine/offers.ts'
 import { CardSchema } from '../src/schema/card.ts'
+import type { Catalog } from '../src/schema/catalog.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 import { TODAY } from './golden/fixtures.ts'
+import { EXAMPLE_WALLET } from './helpers.ts'
 
 const realCatalog = await loadCatalog()
 
@@ -114,7 +115,7 @@ test.each([
 test('earnrate offers explains its usage errors', async () => {
   let stderr = ''
   const code = await run(['offers', '--cash', '--points'], {
-    env: { [WALLET_ENV_VAR]: 'wallet.example.yaml' },
+    env: { [WALLET_ENV_VAR]: EXAMPLE_WALLET },
     today: TODAY,
     stdout: () => undefined,
     stderr: (t) => (stderr += t),

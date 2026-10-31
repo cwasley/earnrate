@@ -1,5 +1,5 @@
-import type { Catalog } from '../schema/catalog.ts'
 import type { Channel, MerchantResolution } from '../engine/types.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import { Network } from '../schema/common.ts'
 import type { Merchant } from '../schema/merchant.ts'
 

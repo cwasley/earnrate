@@ -1,12 +1,9 @@
-// Writes the static search pages into site-dist/ after `vite build site`:
-// /best/<store> and /best/<category>, plus sitemap.xml and robots.txt.
-// Every page is plain HTML rendered from the same engine as the app, so
-// search engines and AI answer tools can read it without running JavaScript.
+// Plain HTML from the same engine as the app, so search engines and AI
+// answer tools can read it without running JavaScript.
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DATA_DIR, loadCatalog } from '../src/data/load.ts'
-import type { Catalog } from '../src/schema/catalog.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,
@@ -16,6 +13,7 @@ import {
 } from '../src/engine/explore.ts'
 import { localToday } from '../src/engine/periods.ts'
 import { pct } from '../src/engine/text.ts'
+import { categoryPhrase, currencyName, earnText } from '../src/engine/text.ts'
 import {
   CAP_PERIODS,
   cardText,
@@ -25,16 +23,15 @@ import {
   usd,
   words,
 } from '../src/format/card-text.ts'
-import { categoryPhrase, currencyName, earnText } from '../src/engine/text.ts'
 import type { Card, Rule } from '../src/schema/card.ts'
+import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const OUT = path.join(ROOT, 'site-dist')
 const SITE = 'https://earnrate.dev'
 const TOP = 10
-const ICON =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='7' width='26' height='18' rx='3' fill='%231f6f54'/%3E%3Crect x='3' y='11' width='26' height='3' fill='%23ffffff' opacity='.85'/%3E%3C/svg%3E"
+const ICON = '/favicon.svg'
 const RELATED = 8
 
 const catalog = await loadCatalog()
@@ -291,7 +288,7 @@ function layout(
       <header><a class="wordmark" href="/">earnrate</a></header>
 ${body}
       <footer>
-        <p>earnrate compares ${String(catalog.cards.length)} US cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(dataVersion)}, updated ${esc(longDate)}. Rates change, so check the issuer's terms before you apply.</p>
+        <p>earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(dataVersion)}, updated ${esc(longDate)}. Rates change, so check the issuer's terms before you apply.</p>
         <p><a href="/">earnrate.dev</a> · <a href="/best/">Best card for every store</a> · <a href="/cards/">All cards</a> · <a href="/privacy">Privacy</a></p>
       </footer>
     </main>
@@ -361,7 +358,7 @@ function renderIndex(all: Page[]): string {
   const body = `
       <h1>Best credit card for every store and category</h1>
       <p class="updated">Updated ${esc(longDate)}</p>
-      <p>Which of ${String(catalog.cards.length)} US credit cards earns the most, store by store, from each issuer's own terms. No affiliate links.</p>
+      <p>Which of ${String(catalog.cards.length)} U.S. credit cards earns the most, store by store, from each issuer's own terms. No affiliate links.</p>
       ${section(
         'Categories',
         all.filter((p) => p.merchant === null),
@@ -702,12 +699,12 @@ function renderCardIndex(): string {
     .join('')
   return layout(
     'Credit card rewards rates, from issuer terms | earnrate',
-    `Earning rates, caps and annual fees for ${String(catalog.cards.length)} US credit cards, each quoted from the issuer's own terms. No affiliate links.`,
+    `Earning rates, caps and annual fees for ${String(catalog.cards.length)} U.S. credit cards, each quoted from the issuer's own terms. No affiliate links.`,
     `${SITE}/cards/`,
     `
       <h1>Credit cards earnrate tracks</h1>
       <p class="updated">Updated ${esc(longDate)}</p>
-      <p>Every earning rule for ${String(catalog.cards.length)} US cards, quoted from the issuer's own terms, and where each card beats the others.</p>
+      <p>Every earning rule for ${String(catalog.cards.length)} U.S. cards, quoted from the issuer's own terms, and where each card beats the others.</p>
       ${sections}`,
     {
       '@context': 'https://schema.org',

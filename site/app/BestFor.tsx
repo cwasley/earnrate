@@ -231,8 +231,8 @@ export function BestFor({
             ))}
             {result.merchant.source === 'none' ? (
               <p>
-                earnrate doesn't know that store yet. Try a category above, or a
-                bigger store name.
+                earnrate doesn't know that store yet. Try a category above, or
+                the name of a larger chain.
               </p>
             ) : null}
             <ol class="result-list">

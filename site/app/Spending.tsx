@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import type { Picks } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
-import { categoryPhrase } from '../../src/engine/text.ts'
 import {
   resolveSpendLines,
   simulateCatalog,
@@ -10,12 +9,11 @@ import {
   TYPICAL_MONTHLY_SPEND,
   type Simulation,
 } from '../../src/engine/simulate.ts'
+import { categoryPhrase } from '../../src/engine/text.ts'
 import { feeLabel, shortName, usd, words } from './format.ts'
 import { engineOptions, loadList, save, type Settings } from './settings.ts'
 
 export type Row = { what: string; monthly: number }
-
-export const STARTER: Row[] = TYPICAL_MONTHLY_SPEND
 
 export const lineFor = (what: string, monthly: number) =>
   spendLineFor(catalog, what, monthly)
@@ -50,7 +48,9 @@ function Split({ sim }: { sim: Simulation }) {
 }
 
 export function Spending({ settings }: { settings: Settings }) {
-  const [rows, setRows] = useState<Row[]>(() => loadList('spending', STARTER))
+  const [rows, setRows] = useState<Row[]>(() =>
+    loadList<Row>('spending', TYPICAL_MONTHLY_SPEND),
+  )
   const [adding, setAdding] = useState('')
   useEffect(() => save('spending', rows), [rows])
 

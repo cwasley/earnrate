@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../../src/data/load.ts'
-import type { Catalog } from '../../src/schema/catalog.ts'
 import { recommend } from '../../src/engine/recommend.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
 import type {
@@ -9,6 +8,7 @@ import type {
   Recommendation,
 } from '../../src/engine/types.ts'
 import { CardSchema } from '../../src/schema/card.ts'
+import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import {
   PROFILES,

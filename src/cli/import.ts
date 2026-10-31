@@ -6,7 +6,6 @@ import { z } from 'zod'
 import { CLI_NAME } from '../brand.ts'
 import { walletProblems } from '../data/integrity.ts'
 import { loadCatalog, walletPath } from '../data/load.ts'
-import type { Catalog } from '../schema/catalog.ts'
 import { writeProgress } from '../data/wallet-edit.ts'
 import { isValuationProfile, withValuationProfile } from '../engine/profiles.ts'
 import { cardValuation } from '../engine/valuation.ts'
@@ -17,6 +16,7 @@ import {
   type StatementAnalysis,
 } from '../import/analyze.ts'
 import { parseStatement } from '../import/statement.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import {
   displayPath,

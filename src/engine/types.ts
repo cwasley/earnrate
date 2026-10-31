@@ -1,5 +1,5 @@
-import type { Network } from '../schema/common.ts'
 import type { z } from 'zod'
+import type { Network } from '../schema/common.ts'
 
 export type Channel = 'online' | 'in_store'
 

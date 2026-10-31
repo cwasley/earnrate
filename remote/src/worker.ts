@@ -1,11 +1,11 @@
 import { DurableObject } from 'cloudflare:workers'
 import bundle from 'earnrate:bundle'
-import type { Wallet } from '../../src/schema/wallet.ts'
 import type {
   MerchantResolution,
   RecordedPurchase,
 } from '../../src/engine/types.ts'
 import type { CardInput } from '../../src/engine/wallet-change.ts'
+import type { Wallet } from '../../src/schema/wallet.ts'
 import { makeWorker, type Env as AppEnv } from './app.ts'
 import { WalletVault, type VaultApi } from './vault.ts'
 

@@ -10,7 +10,7 @@ I wanted a ghost card: one card that always charges the best of my cards. The ca
 **earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which card earns the most there, from your own cards or from every card it knows, and why. Save your cards and it tracks your caps and chosen categories. It's valuation-aware and transparent about its assumptions. It never sees a card number.
 
 - Runs on your machine, in your browser at [earnrate.dev](https://earnrate.dev), or in Claude as a connector at `https://mcp.earnrate.dev`, with nothing to install. No account and no affiliate links; the hosted server counts requests by tool name, nothing about what you ask. See the [privacy page](https://earnrate.dev/privacy).
-- US cards and US merchants, for now.
+- U.S. cards and U.S. merchants, for now.
 
 > **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup, MCP server and the hosted Claude connector. See [the benchmark](docs/benchmark.md) (run 2026-10-24) for how it compares to an existing card-picking MCP server.
 
@@ -27,13 +27,13 @@ earnrate whole foods 80 --cards amex-gold,chase-prime-visa   # just these cards
 You never have to enter your cards: with none, every answer covers every card earnrate knows. To have earnrate remember yours, track caps and welcome bonuses, and give a cheat sheet for your own wallet, save them:
 
 ```sh
-earnrate cards sapphire            # find your cards' ids
+earnrate cards sapphire            # find your cards' IDs
 earnrate add chase-sapphire-preferred
 earnrate add amex-gold
 earnrate whole foods 80
 ```
 
-Adding a card tells you anything else it needs to earn correctly, such as the categories you picked on Cash+, Amazon Prime for Prime Visa's 5%, or which rotating categories you've activated. `earnrate update` sets those. Using an AI assistant instead? [Add the MCP server](#use-it-from-an-ai-agent-mcp) and tell it which cards you have.
+Adding a card tells you anything else it needs to earn correctly, such as the categories you picked on Cash+, Amazon Prime for Prime Visa's 5%, or which rotating categories you've activated. `earnrate update` sets those. Using an AI assistant instead? [Add earnrate to it](#use-it-in-an-ai-assistant-mcp) and ask; name your cards or save them there.
 
 With the [example wallet](wallet.example.yaml), it prints:
 
@@ -81,7 +81,7 @@ cards:
         two-percent: [gas-ev-charging]
 ```
 
-Rule IDs for `activated`, the choice slots for `chosen` and the membership IDs that unlock bonuses (such as `bofa-rewards-premier` for a BofA Rewards tier) are in each card's file. Currencies and their default values are in [`data/currencies.yaml`](data/currencies.yaml). Spending caps fill up as you record purchases from an AI agent or import a statement with `--apply`, and reset with each period.
+Rule IDs for `activated`, the choice slots for `chosen` and the membership IDs that unlock bonuses (such as `bofa-rewards-premier` for a BofA Rewards tier) are in each card's file. Currencies and their default values are in [`data/currencies.yaml`](data/currencies.yaml). Spending caps fill up as you record purchases from an AI assistant or import a statement with `--apply`, and reset with each period.
 
 ### Merchants earnrate doesn't know
 
@@ -165,7 +165,7 @@ Something the format can't express yet (Bilt's rent earning, Citi Nights) is lis
 
 Spotted a wrong rate, or want a card added? [Open an issue](https://github.com/cwasley/earnrate/issues) with a link to the issuer's own page.
 
-## Use it from an AI agent (MCP)
+## Use it in an AI assistant (MCP)
 
 **In Claude, nothing to install:** add a custom connector (Settings → Connectors) with the address `https://mcp.earnrate.dev`. It works in Claude on the web, desktop and phone. Questions need no sign-in. If you ask it to save your cards, it opens an earnrate page where you start an anonymous wallet: no email, just a recovery code you keep. The wallet tracks caps and welcome bonuses across your Claude apps, and you can export it for the command line or delete it from the chat. In Claude Code:
 
@@ -173,7 +173,9 @@ Spotted a wrong rate, or want a card added? [Open an issue](https://github.com/c
 claude mcp add --transport http earnrate https://mcp.earnrate.dev
 ```
 
-**Or run it on your computer:** `earnrate mcp` runs earnrate as a local MCP server over stdio, with thirteen tools (the connector has the same ones, plus `export_wallet`, `import_wallet` and `delete_wallet` for its saved wallets):
+Or install it as a Claude Code plugin, which connects Claude Code and Cowork to the same server: `/plugin marketplace add cwasley/earnrate`, then `/plugin install earnrate@earnrate`.
+
+**Or run it on your computer:** `earnrate mcp` runs earnrate as a local MCP server over stdio, with 13 tools (the connector has the same ones, plus `export_wallet`, `import_wallet` and `delete_wallet` for its saved wallets):
 
 - `best_card_for_purchase`: which card to use, with reasons
 - `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
@@ -184,13 +186,11 @@ claude mcp add --transport http earnrate https://mcp.earnrate.dev
 - `record_purchase`: books a purchase against its cap and any open welcome bonus in your wallet file, keeping your comments
 - `search_cards`, `add_card`, `update_card`, `remove_card` and `set_memberships`: set up the wallet in conversation
 
-There's no wallet to write first: tell the assistant which cards you have, and it finds them, adds them, and asks about anything a card needs, like this quarter's Cash+ picks.
+Saving cards is optional: name them in the conversation for one answer, or ask the assistant to save them, and it finds them, adds them, and asks about anything a card needs, like this quarter's Cash+ picks.
 
 For a merchant earnrate doesn't know, the calling model can pass a `category` (e.g. `grocery.supermarket`). It's used only for unknown merchants and is labeled in the answer. The command line takes the same thing as `--category`.
 
-**Claude Code plugin:** `/plugin marketplace add cwasley/earnrate`, then `/plugin install earnrate@earnrate`, connects Claude Code and Cowork to the same hosted server as the connector.
-
-**Claude Desktop, one click:** download [earnrate.mcpb](https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb) and open it; Claude Desktop installs it (Settings → Extensions). No terminal or Node install needed. Its one setting is where your wallet file lives, by default `~/.earnrate/wallet.yaml`, the same file the command line uses.
+**Claude Desktop, running locally:** download [earnrate.mcpb](https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb) and open it; Claude Desktop installs it (Settings → Extensions). No terminal or Node install needed. Its one setting is where your wallet file lives, by default `~/.earnrate/wallet.yaml`, the same file the command line uses.
 
 To run it locally in Claude Code:
 
@@ -227,7 +227,7 @@ merchant text
 - **Drift detection.** A weekly GitHub Action opens each issuer page in a headless browser, checks every quote is still there, and opens an issue when terms move. It stores only hashes of issuer text.
 - **Tested end to end.** Golden cases written from issuer terms, CLI snapshot tests, an MCP round trip over real stdio, an install test that packs and installs the npm package, and a check that no committed file contains a card number. CI runs all of it on every push.
 
-The code is TypeScript run directly by Node 24 (`src/`), with the engine in `src/engine/`, merchant resolution in `src/merchants/`, and the CLI and MCP server as thin layers over them.
+The code is TypeScript run directly by Node 24 (`src/`), with the engine in `src/engine/`, merchant resolution in `src/merchants/`, and the CLI and MCP server as thin layers over them. `site/` is earnrate.dev, which runs the same engine in the browser, and `remote/` is the hosted server at mcp.earnrate.dev.
 
 ## Keeping card data current
 
@@ -244,15 +244,17 @@ Rotating categories (Freedom Flex) are added each quarter once the issuer posts 
 
 earnrate needs no account. The local version has no telemetry; the hosted server counts requests by tool name only. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
 
-- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests by tool name only. A saved wallet is optional and anonymous (a recovery code, no email), holds card ids and the details you gave, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused.
-- **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product id, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins.
+- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests by tool name only. A saved wallet is optional and anonymous (a recovery code, no email), holds card IDs and the details you gave, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
+- **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product ID, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins.
 - **What the local version sends:** nothing, by default. The optional merchant lookup (off unless you turn it on with your own Anthropic API key) sends only the name of a store earnrate doesn't recognize to Anthropic's API, and saves the answer in `~/.earnrate/merchant-cache.json`.
 - **AI assistants:** when you use earnrate through Claude or another assistant, that assistant's provider sees the conversation, including earnrate's answers, under its own privacy policy.
 - **earnrate.dev:** everything you enter on the site stays in your browser. The site counts visits with Cloudflare Web Analytics, without cookies.
-- **Retention:** locally, your data lives only in files you control, for as long as you keep them. Delete the wallet file, or clear the site's data in your browser, to remove it. A connector wallet lasts until you delete it or leave it unused for 13 months.
+- **Retention:** locally, your data lives only in files you control, for as long as you keep them. Delete the wallet file, or clear the site's data in your browser, to remove it. A saved wallet on mcp.earnrate.dev lasts until you delete it or leave it unused for 13 months.
 - **Contact:** [hello@earnrate.dev](mailto:hello@earnrate.dev).
 
 ## Working on earnrate
+
+Development needs Node 24 or later.
 
 ```sh
 git clone https://github.com/cwasley/earnrate.git && cd earnrate

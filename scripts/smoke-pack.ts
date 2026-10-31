@@ -1,7 +1,7 @@
 import { Client } from '@modelcontextprotocol/client'
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio'
 import { execFileSync } from 'node:child_process'
-import { mkdtemp, readdir, rm } from 'node:fs/promises'
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -10,6 +10,12 @@ import { WALLET_ENV_VAR } from '../src/brand.ts'
 // Installs the packed tarball the way a user would, then runs both commands
 // from node_modules, where Node won't strip TypeScript types.
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
+// The local server's tools, as the Claude Desktop bundle lists them.
+const manifestTools = (
+  JSON.parse(
+    await readFile(path.join(ROOT, 'mcpb', 'manifest.json'), 'utf8'),
+  ) as { tools: unknown[] }
+).tools.length
 const dir = await mkdtemp(path.join(tmpdir(), 'earnrate-pack-'))
 const npmEnv = Object.fromEntries(
   Object.entries(process.env).filter(([k]) => !k.startsWith('npm_config_')),
@@ -83,7 +89,7 @@ try {
     const { tools } = await client.listTools()
     await client.close()
     check(
-      tools.length === 13,
+      tools.length === manifestTools,
       `${path.basename(command)} ${args.join(' ')}`.trim() +
         ` serves ${String(tools.length)} MCP tools`,
     )

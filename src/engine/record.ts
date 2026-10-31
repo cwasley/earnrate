@@ -1,10 +1,10 @@
-import type { Catalog } from '../schema/catalog.ts'
 import { resolveMerchant } from '../merchants/resolve.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { bonusStatus, countsTowardBonus } from './bonus.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
-import type { MerchantResolution, RecordedPurchase } from './types.ts'
 import { roundCents } from './text.ts'
+import type { MerchantResolution, RecordedPurchase } from './types.ts'
 
 export type CapBooking = {
   cardId: string
@@ -128,7 +128,6 @@ export type BookedPurchase = {
   bonus: BonusBooking | null
 }
 
-// Everything recording a purchase changes: its cap and its welcome bonus.
 export function bookPurchase(
   catalog: Catalog,
   wallet: Wallet,

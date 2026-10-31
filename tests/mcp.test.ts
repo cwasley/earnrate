@@ -10,25 +10,26 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, test } from 'vitest'
 import { WALLET_ENV_VAR } from '../src/brand.ts'
-import { loadCatalog } from '../src/data/load.ts'
-import type { Recommendation } from '../src/engine/types.ts'
-import type { WalletSummary } from '../src/engine/wallet-summary.ts'
-import { memoryCache } from '../src/merchants/cache.ts'
-import type { Classifier } from '../src/merchants/classifier.ts'
-import { createLlmSession, type LlmSession } from '../src/merchants/fallback.ts'
 import { FileWalletStore } from '../src/data/file-store.ts'
+import { loadCatalog } from '../src/data/load.ts'
 import {
   JsonWalletStore,
   memoryBackend,
   type WalletStore,
 } from '../src/data/store.ts'
+import type { Recommendation } from '../src/engine/types.ts'
+import type { WalletSummary } from '../src/engine/wallet-summary.ts'
 import {
   ANSWER_TOOLS,
   createEarnrateServer,
   SAVED_WALLET_TOOLS,
   type WalletSaving,
 } from '../src/mcp/server.ts'
+import { memoryCache } from '../src/merchants/cache.ts'
+import type { Classifier } from '../src/merchants/classifier.ts'
+import { createLlmSession, type LlmSession } from '../src/merchants/fallback.ts'
 import { TODAY } from './golden/fixtures.ts'
+import { text } from './helpers.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const EXAMPLE_WALLET = path.join(ROOT, 'wallet.example.yaml')
@@ -80,11 +81,6 @@ async function serve(saving: WalletSaving, llm: LlmSession | null = null) {
     await handler.close()
   })
   return client
-}
-
-function text(result: { content?: unknown }): string {
-  const content = (result.content ?? []) as { type: string; text?: string }[]
-  return content.map((c) => c.text ?? '').join('\n')
 }
 
 describe('tools', () => {

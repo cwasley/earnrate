@@ -13,7 +13,6 @@ import type { VaultApi } from './vault.ts'
 
 const WHERE = 'your saved wallet'
 
-// A signed-in user's wallet: its vault, and the key from their grant.
 export class VaultWalletStore implements AccountStore {
   readonly where = WHERE
   private readonly vault: VaultApi

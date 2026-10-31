@@ -2,8 +2,8 @@ import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { bonusDollars } from './bonus.ts'
 import { matchesFilters } from './explore.ts'
-import { cardValuation } from './valuation.ts'
 import { roundCents } from './text.ts'
+import { cardValuation } from './valuation.ts'
 
 export type OfferFilters = {
   kind: 'any' | 'cash' | 'points'

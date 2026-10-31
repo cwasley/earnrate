@@ -1,5 +1,5 @@
-import type { Catalog } from '../schema/catalog.ts'
 import type { Card } from '../schema/card.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { choicePeriod, periodKey } from './periods.ts'
 import {
@@ -9,8 +9,7 @@ import {
   type SetupNote,
 } from './setup.ts'
 
-// Wallet changes as pure functions, shared by the wallet file edits (CLI and
-// MCP) and the browser, which keeps its wallet in storage.
+// Node-free: earnrate.dev runs these on the wallet it keeps in the browser.
 
 export type CardInput = {
   id: string

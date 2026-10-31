@@ -1,11 +1,11 @@
 import { createMcpHandler } from '@modelcontextprotocol/server'
-import type { Catalog } from '../../src/schema/catalog.ts'
 import type { AccountStore } from '../../src/data/store.ts'
 import {
   ANSWER_TOOLS,
   createEarnrateServer,
   SAVED_WALLET_TOOLS,
 } from '../../src/mcp/server.ts'
+import type { Catalog } from '../../src/schema/catalog.ts'
 import { signedOutStore, VaultWalletStore } from './account-store.ts'
 import {
   challenge,
@@ -44,7 +44,6 @@ const easternToday = () =>
 
 type Call = { method: string; tool: string | null }
 
-// The JSON-RPC methods in a parsed body, and the tool names for tool calls.
 function rpcCalls(body: unknown): Call[] {
   return (Array.isArray(body) ? body : [body]).flatMap((m: unknown) => {
     const msg = m as { method?: unknown; params?: { name?: unknown } } | null
@@ -105,8 +104,8 @@ const unavailable = () =>
     { status: 503, headers: { 'retry-after': '60' } },
   )
 
-// Sign-in depends on KV, whose free daily limits can run out. Count those
-// failures by path so they show up in the usage tally, and say so plainly.
+// Sign-in depends on KV. Its failures are counted by path in the usage
+// tally and answered plainly.
 async function signInStep(
   env: Env,
   pathname: string,

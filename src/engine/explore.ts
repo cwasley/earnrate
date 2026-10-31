@@ -1,10 +1,12 @@
-import type { Catalog } from '../schema/catalog.ts'
 import { resolveMerchant } from '../merchants/resolve.ts'
 import type { Card } from '../schema/card.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
 import { choicePeriod, periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
+import { rotationGap } from './rotation.ts'
+import { membershipsUsed } from './setup.ts'
 import {
   categoryPhrase,
   codesAs,
@@ -12,8 +14,6 @@ import {
   money,
   pointValuesText,
 } from './text.ts'
-import { rotationGap } from './rotation.ts'
-import { membershipsUsed } from './setup.ts'
 import type {
   Channel,
   ExcludedCard,

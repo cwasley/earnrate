@@ -1,24 +1,16 @@
-import type { Catalog } from '../schema/catalog.ts'
 import { resolveMerchant, resolveMerchantById } from '../merchants/resolve.ts'
 import type { Card } from '../schema/card.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
+import { bonusStatus, type BonusStatus } from './bonus.ts'
 import {
   evaluateCard,
   purchaseContext,
   usableAt,
   type CardEvaluation,
 } from './evaluate.ts'
-import { bonusStatus, type BonusStatus } from './bonus.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap } from './rotation.ts'
-import type {
-  Confidence,
-  ExcludedCard,
-  MerchantResolution,
-  Purchase,
-  RankedCard,
-  Recommendation,
-} from './types.ts'
 import {
   categoryPhrase,
   codesAs,
@@ -29,6 +21,14 @@ import {
   num,
   pointValuesText,
 } from './text.ts'
+import type {
+  Confidence,
+  ExcludedCard,
+  MerchantResolution,
+  Purchase,
+  RankedCard,
+  Recommendation,
+} from './types.ts'
 import { cardValuation, type Valuation } from './valuation.ts'
 
 const EPSILON = 1e-9

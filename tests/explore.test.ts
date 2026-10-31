@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
-import type { Catalog } from '../src/schema/catalog.ts'
 import { catalogCheatSheet } from '../src/engine/cheat-sheet.ts'
 import {
   ALL_PERSONAL_CARDS,
@@ -22,6 +21,7 @@ import {
 } from '../src/engine/simulate.ts'
 import { walletFromCards } from '../src/engine/transient.ts'
 import { CardSchema } from '../src/schema/card.ts'
+import type { Catalog } from '../src/schema/catalog.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 import { TODAY } from './golden/fixtures.ts'
 

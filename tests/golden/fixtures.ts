@@ -1,9 +1,9 @@
-import { WalletSchema, type Wallet } from '../../src/schema/wallet.ts'
 import {
   VALUATION_PROFILES,
   withValuationProfile,
 } from '../../src/engine/profiles.ts'
 import type { Purchase } from '../../src/engine/types.ts'
+import { WalletSchema, type Wallet } from '../../src/schema/wallet.ts'
 
 export const TODAY = '2026-10-24'
 

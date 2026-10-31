@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { walletProblems } from '../../src/data/integrity.ts'
-import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
-import { categoryResolution, findCategory } from '../../src/engine/explore.ts'
-import { localToday } from '../../src/engine/periods.ts'
 import { bonusStatus } from '../../src/engine/bonus.ts'
-import { bookPurchase } from '../../src/engine/record.ts'
+import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
+import {
+  ALL_PERSONAL_CARDS,
+  categoryResolution,
+  findCategory,
+} from '../../src/engine/explore.ts'
+import { localToday } from '../../src/engine/periods.ts'
 import { recommend } from '../../src/engine/recommend.ts'
-import { categoryPhrase, currencyName } from '../../src/engine/text.ts'
+import { bookPurchase } from '../../src/engine/record.ts'
 import {
   cardInfo,
   knownMemberships,
@@ -18,7 +21,9 @@ import {
 import {
   resolveSpendLines,
   simulateAdditions,
+  TYPICAL_MONTHLY_SPEND,
 } from '../../src/engine/simulate.ts'
+import { categoryPhrase, currencyName } from '../../src/engine/text.ts'
 import type { Recommendation } from '../../src/engine/types.ts'
 import {
   addToWallet,
@@ -30,6 +35,7 @@ import {
 } from '../../src/engine/wallet-change.ts'
 import { resolveMerchant } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
+import { lineFor, type Row } from './Spending.tsx'
 import {
   cards,
   feeLabel,
@@ -41,7 +47,6 @@ import {
   words,
 } from './format.ts'
 import { loadList, loadWallet, saveWallet } from './settings.ts'
-import { lineFor, STARTER, type Row } from './Spending.tsx'
 
 const QUICK = ['Groceries', 'Dining', 'Gas', 'Amazon', 'Costco', 'Travel']
 
@@ -49,13 +54,13 @@ const QUICK = ['Groceries', 'Dining', 'Gas', 'Amazon', 'Costco', 'Travel']
 function noteText(note: SetupNote, name: string): string {
   switch (note.kind) {
     case 'pick':
-      return `${name} needs its bonus category picks: tap it under Your cards.`
+      return `${name} needs its bonus category picks: select it under Your cards.`
     case 'membership':
       return `${name} earns more with a membership: check Memberships below.`
     case 'activation':
-      return `${name} has bonuses you activate with the issuer: tap it under Your cards to mark them.`
+      return `${name} has bonuses you activate with the issuer: select it under Your cards to mark them.`
     case 'anniversary':
-      return `${name} has a cap that resets on your account anniversary: tap it under Your cards to add it.`
+      return `${name} has a cap that resets on your account anniversary: select it under Your cards to add it.`
     case 'rotation':
       return note.text
   }
@@ -569,20 +574,14 @@ function Memberships({
 
 function WhatIf({ wallet }: { wallet: Wallet }) {
   const result = useMemo(() => {
-    const rows = loadList<Row>('spending', STARTER)
+    const rows = loadList<Row>('spending', TYPICAL_MONTHLY_SPEND)
     const lines = resolveSpendLines(
       catalog,
       rows.map((r) => lineFor(r.what, r.monthly)),
     ).filter((l) => l.merchant.source !== 'none')
     if (lines.length === 0) return null
     return simulateAdditions(catalog, wallet, lines, {
-      filters: {
-        kind: 'any',
-        business: false,
-        noAnnualFee: false,
-        issuer: null,
-        includeClosed: false,
-      },
+      filters: ALL_PERSONAL_CARDS,
       memberships: wallet.memberships,
       valuations: wallet.valuations,
       start: localToday(),
@@ -655,8 +654,9 @@ function Transfer({
     <section>
       <h3>Move your wallet</h3>
       <p class="muted">
-        Your wallet is saved only in this browser. Export it to keep a copy or
-        to use it with the command line version; import one to bring it here.
+        Your wallet is saved only in this browser. Export it to keep a copy, or
+        to use it with the command line or earnrate in Claude; import one to
+        bring it here.
       </p>
       <div class="row-buttons">
         {wallet ? (

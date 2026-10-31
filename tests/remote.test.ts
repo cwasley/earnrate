@@ -17,6 +17,7 @@ import { WalletVault, type VaultStorage } from '../remote/src/vault.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import { SAVED_WALLET_TOOLS } from '../src/mcp/server.ts'
 import { TODAY } from './golden/fixtures.ts'
+import { text } from './helpers.ts'
 
 const ORIGIN = 'https://mcp.earnrate.dev'
 const CALLBACK = 'https://claude.ai/api/mcp/auth_callback'
@@ -142,11 +143,6 @@ async function connect(
   )
   cleanups.push(() => client.close())
   return client
-}
-
-function text(result: { content?: unknown }): string {
-  const content = (result.content ?? []) as { type: string; text?: string }[]
-  return content.map((c) => c.text ?? '').join('\n')
 }
 
 const unescape = (html: string) =>

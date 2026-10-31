@@ -1,12 +1,12 @@
 import { parseArgs } from 'node:util'
 import { CLI_NAME } from '../brand.ts'
-import { loadCatalog, loadWallet, walletPath } from '../data/load.ts'
 import { FileWalletStore } from '../data/file-store.ts'
+import { loadCatalog, loadWallet, walletPath } from '../data/load.ts'
 import type { SetupResult } from '../data/store.ts'
-import type { CardInput } from '../engine/wallet-change.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
-import type { Wallet } from '../schema/wallet.ts'
+import type { CardInput } from '../engine/wallet-change.ts'
 import { formatCardInfo, formatNotes } from '../format/cards.ts'
+import type { Wallet } from '../schema/wallet.ts'
 import { displayPath, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
 
 const CARD_OPTIONS = `Options:

@@ -1,9 +1,2 @@
-node_modules
 yarn.lock
-coverage
 data/sources.lock.json
-.wrangler
-site-dist
-.mcpb-build
-remote/catalog.gen.json
-remote/dist/

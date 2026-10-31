@@ -13,16 +13,22 @@ import {
 } from '../brand.ts'
 import { walletProblems } from '../data/integrity.ts'
 import { loadCatalog, loadWallet, walletPath } from '../data/load.ts'
-import { VALUATION_PROFILES, withValuationProfile } from '../engine/profiles.ts'
 import {
   ALL_PERSONAL_CARDS,
   categoryResolution,
   exploreCards,
   findCategory,
 } from '../engine/explore.ts'
+import { VALUATION_PROFILES, withValuationProfile } from '../engine/profiles.ts'
 import { recommend } from '../engine/recommend.ts'
 import { walletFromCards } from '../engine/transient.ts'
 import type { MerchantResolution, Purchase } from '../engine/types.ts'
+import { formatExploration } from '../format/explore.ts'
+import {
+  formatRecommendation,
+  plain,
+  type Style,
+} from '../format/recommendation.ts'
 import { DEFAULT_LLM_MODEL } from '../merchants/anthropic.ts'
 import type { Classifier } from '../merchants/classifier.ts'
 import { DEFAULT_MAX_CALLS } from '../merchants/fallback.ts'
@@ -37,12 +43,6 @@ import { runBest, runSimulate } from './explore.ts'
 import { runImport } from './import.ts'
 import { runOffers } from './offers.ts'
 import { runWalletCommand, WALLET_HELP } from './wallet.ts'
-import { formatExploration } from '../format/explore.ts'
-import {
-  formatRecommendation,
-  plain,
-  type Style,
-} from '../format/recommendation.ts'
 
 export type Io = {
   env: NodeJS.ProcessEnv

@@ -2,7 +2,11 @@
 
 ## Code
 
-Code contributions (anything outside `data/`) are accepted under the [MIT license](LICENSE): inbound = outbound. Run `yarn validate` before opening a PR.
+Code contributions (anything outside `data/`) are accepted under the [MIT license](LICENSE): inbound = outbound.
+
+Development needs Node 24 or later (`.node-version` has the version CI uses) and Yarn 1. Node runs the TypeScript directly, so there's no build step: `yarn install`, then `yarn earnrate whole foods 80` runs the CLI, `yarn mcp` the local MCP server, `yarn site:dev` the website and `yarn remote:check` bundles the hosted server. Run `yarn validate` (typecheck, lint, format check and tests) before opening a PR.
+
+Report security problems privately: see [SECURITY.md](SECURITY.md).
 
 ## Data
 

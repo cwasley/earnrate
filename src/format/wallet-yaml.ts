@@ -1,6 +1,6 @@
 import { parse, stringify } from 'yaml'
-import type { Catalog } from '../schema/catalog.ts'
 import { walletProblems } from '../data/integrity.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import { WalletSchema, type Wallet } from '../schema/wallet.ts'
 
 // A wallet as the YAML file the CLI reads, for moving it between the

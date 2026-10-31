@@ -6,10 +6,10 @@ import { parse } from 'yaml'
 import { z } from 'zod'
 import { CONFIG_DIR, WALLET_ENV_VAR } from '../brand.ts'
 import { CardSchema, type Card } from '../schema/card.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import { CategoriesFileSchema } from '../schema/category.ts'
 import { CurrenciesFileSchema } from '../schema/currency.ts'
 import { MerchantsFileSchema } from '../schema/merchant.ts'
-import type { Catalog } from '../schema/catalog.ts'
 import { WalletSchema, type Wallet } from '../schema/wallet.ts'
 
 export const DATA_DIR = fileURLToPath(new URL('../../data/', import.meta.url))

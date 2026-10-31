@@ -1,5 +1,5 @@
-import type { Catalog } from '../schema/catalog.ts'
 import type { Card } from '../schema/card.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { pickedCategories } from './evaluate.ts'
 import { daysBetween } from './periods.ts'
