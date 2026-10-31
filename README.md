@@ -250,6 +250,7 @@ earnrate needs no account. The local version has no telemetry; the hosted server
 - **AI assistants:** when you use earnrate through Claude or another assistant, that assistant's provider sees the conversation, including earnrate's answers, under its own privacy policy.
 - **earnrate.dev:** everything you enter on the site stays in your browser. The site counts visits with Cloudflare Web Analytics, without cookies.
 - **Retention:** locally, your data lives only in files you control, for as long as you keep them. Delete the wallet file, or clear the site's data in your browser, to remove it. A saved wallet on mcp.earnrate.dev lasts until you delete it or leave it unused for 13 months.
+- **Terms:** [earnrate.dev/terms](https://earnrate.dev/terms).
 - **Contact:** [hello@earnrate.dev](mailto:hello@earnrate.dev).
 
 ## Working on earnrate

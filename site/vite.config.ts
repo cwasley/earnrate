@@ -35,6 +35,7 @@ export default defineConfig({
       input: {
         index: `${import.meta.dirname}/index.html`,
         privacy: `${import.meta.dirname}/privacy.html`,
+        terms: `${import.meta.dirname}/terms.html`,
       },
     },
   },
