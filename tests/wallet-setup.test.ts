@@ -320,6 +320,20 @@ describe('wallet operations', () => {
     })
   })
 
+  test('a null checkout label goes back to the card name', async () => {
+    const file = await walletFile(
+      'cards:\n  - id: amex-gold # mine\n    checkout_label: ag\n',
+    )
+    const cleared = await store(file).updateCard(
+      { id: 'amex-gold', checkoutLabel: null },
+      TODAY,
+    )
+    expect(cleared.ok).toBe(true)
+    expect(await readFile(file, 'utf8')).toBe(
+      'cards:\n  - id: amex-gold # mine\n',
+    )
+  })
+
   test('activations must be rules that need one', async () => {
     const file = await walletFile('cards:\n  - id: chase-freedom-flex\n')
     const ok = await store(file).updateCard(

@@ -96,6 +96,7 @@ function Answer({
   const [paid, setPaid] = useState('')
   const top = rec.ranked[0]
   const decided = rec.decision
+  const [paidWith, setPaidWith] = useState(decided?.cardId ?? '')
   const held = wallet.cards.find((c) => c.id === decided?.cardId)
   const tracks = wallet.cards.some((h) => {
     const card = cards.get(h.id)
@@ -160,12 +161,26 @@ function Answer({
           onSubmit={(e) => {
             e.preventDefault()
             const amount = Number(paid)
-            if (amount > 0) {
-              onRecord(decided.cardId, amount)
+            if (amount > 0 && paidWith !== '') {
+              onRecord(paidWith, amount)
               setPaid('')
             }
           }}
         >
+          <label class="visually-hidden" for="paid-with">
+            Card you paid with
+          </label>
+          <select
+            id="paid-with"
+            value={paidWith}
+            onChange={(e) => setPaidWith(e.currentTarget.value)}
+          >
+            {rec.ranked.map((r) => (
+              <option key={r.cardId} value={r.cardId}>
+                {r.checkoutLabel ?? shortName(r.cardId)}
+              </option>
+            ))}
+          </select>
           <label class="visually-hidden" for="paid">
             Amount paid
           </label>
@@ -175,7 +190,7 @@ function Answer({
             inputMode="decimal"
             min="0"
             step="0.01"
-            placeholder="Paid with it? Amount"
+            placeholder="Paid? Amount"
             value={paid}
             onInput={(e) => setPaid(e.currentTarget.value)}
           />
@@ -276,6 +291,7 @@ function CardEditor({
     const input: CardInput = { id: held.id, activated }
     if (Object.keys(chosen).length > 0) input.picks = chosen
     if (checkout.trim() !== '') input.checkoutLabel = checkout
+    else if (held.checkout_label !== undefined) input.checkoutLabel = null
     if (anniversary !== '') input.anniversary = anniversary
     if (tracking && opened !== '')
       input.bonus = { opened, spent: Math.max(0, Number(spent) || 0) }
@@ -434,6 +450,11 @@ function CardList({
         const needsPick = info?.choices.some(
           (c) => c.default === null && !held.chosen?.picks[c.id],
         )
+        const note =
+          bonusLine(wallet, held) ??
+          (held.bonus === undefined && card?.welcome_offer
+            ? 'New card? Track its welcome bonus'
+            : null)
         return (
           <li key={held.id}>
             <button
@@ -445,12 +466,14 @@ function CardList({
               <span>
                 <strong>{label(held)}</strong>
                 <span class="muted"> · {feeLabel(held.id)}</span>
-                {bonusLine(wallet, held) ? (
-                  <span class="row-note">{bonusLine(wallet, held)}</span>
-                ) : null}
+                {note ? <span class="row-note">{note}</span> : null}
               </span>
               <span class="muted">
-                {needsPick ? 'Set picks' : open === held.id ? 'Close' : 'Edit'}
+                {needsPick
+                  ? 'Set picks'
+                  : open === held.id
+                    ? 'Close'
+                    : 'Settings'}
               </span>
             </button>
             {open === held.id ? (
@@ -789,6 +812,12 @@ export function MyWallet({ initialQuery }: { initialQuery: string }) {
 
   return (
     <div>
+      <section class="first">
+        <h3>Your cards</h3>
+        <CardList wallet={wallet} onChange={apply} />
+        <AddCard wallet={wallet} onChange={apply} />
+      </section>
+
       <form
         class="ask"
         role="search"
@@ -882,12 +911,6 @@ export function MyWallet({ initialQuery }: { initialQuery: string }) {
 
       <section>
         <CheatSheet wallet={wallet} />
-      </section>
-
-      <section>
-        <h3>Your cards</h3>
-        <CardList wallet={wallet} onChange={apply} />
-        <AddCard wallet={wallet} onChange={apply} />
       </section>
 
       <Memberships wallet={wallet} onChange={apply} />

@@ -13,7 +13,7 @@ import {
 
 export type CardInput = {
   id: string
-  checkoutLabel?: string
+  checkoutLabel?: string | null // null goes back to the card's name
   picks?: Record<string, string[]> // choice id → option ids
   anniversary?: string // MM-DD
   activated?: string[] // replaces the list
@@ -35,7 +35,7 @@ type BonusFields = {
 }
 
 export type CardFields = {
-  checkout_label?: string
+  checkout_label?: string | null // null removes it
   anniversary?: string
   chosen?: { period: string; picks: Record<string, string[]> }
   activated?: string[]
@@ -89,7 +89,8 @@ export function cardFields(
 ): CardFields | string {
   const problems: string[] = []
   const fields: CardFields = {}
-  if (input.checkoutLabel !== undefined) {
+  if (input.checkoutLabel === null) fields.checkout_label = null
+  else if (input.checkoutLabel !== undefined) {
     if (input.checkoutLabel.trim() === '')
       problems.push('The checkout label is empty.')
     // earnrate never stores card numbers; a last four is fine.
@@ -197,14 +198,15 @@ const newHolding = (id: string): WalletCard => ({
 })
 
 const withFields = (
-  { bonus, ...held }: WalletCard,
+  { bonus, checkout_label, ...held }: WalletCard,
   f: CardFields,
 ): WalletCard => ({
   ...held,
   ...(bonus && f.bonus === undefined ? { bonus } : {}),
-  ...(f.checkout_label === undefined
-    ? {}
-    : { checkout_label: f.checkout_label }),
+  ...(checkout_label !== undefined && f.checkout_label === undefined
+    ? { checkout_label }
+    : {}),
+  ...(f.checkout_label ? { checkout_label: f.checkout_label } : {}),
   ...(f.anniversary === undefined ? {} : { anniversary: f.anniversary }),
   ...(f.chosen === undefined ? {} : { chosen: f.chosen }),
   ...(f.activated === undefined ? {} : { activated: f.activated }),

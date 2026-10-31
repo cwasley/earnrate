@@ -51,7 +51,7 @@ function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
     case 'checkout_label':
     case 'anniversary': {
       const value = f[field]
-      return value === undefined ? '' : `${indent}${field}: ${scalar(value)}\n`
+      return value == null ? '' : `${indent}${field}: ${scalar(value)}\n`
     }
     case 'activated':
       return f.activated === undefined

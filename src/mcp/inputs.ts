@@ -68,9 +68,10 @@ const cardFields = {
   checkoutLabel: z
     .string()
     .min(1)
+    .nullable()
     .optional()
     .describe(
-      'How the card appears at checkout or in a browser wallet, e.g. "Amex Gold". Optional.',
+      'How the card appears at checkout or in a browser wallet, e.g. "Amex Gold". Optional; null goes back to the card\'s own name.',
     ),
   picks: z
     .record(z.string(), z.array(z.string()).min(1))
