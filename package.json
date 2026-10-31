@@ -37,6 +37,7 @@
     "earnrate": "node src/cli/bin.ts",
     "mcp": "node src/mcp/bin.ts",
     "check-sources": "node src/sources/bin.ts",
+    "usage": "node scripts/usage.ts",
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "prepack": "yarn build",
     "smoke:pack": "node scripts/smoke-pack.ts",
