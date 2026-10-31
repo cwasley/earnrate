@@ -1,0 +1,209 @@
+import type { McpServer } from '@modelcontextprotocol/server'
+import { z } from 'zod'
+import { walletSummary } from '../../engine/wallet-summary.ts'
+import { formatBooking, formatWalletSummary } from '../../format/wallet.ts'
+import { fail, type Context } from '../context.ts'
+import {
+  CardChange,
+  CardId,
+  cardInput,
+  ChannelInput,
+  DateInput,
+  Merchant,
+  type makeInputs,
+} from '../inputs.ts'
+import {
+  RecordResultSchema,
+  WalletChangeSchema,
+  WalletSummarySchema,
+} from '../schemas.ts'
+import type { ServerDeps } from '../server.ts'
+
+const WRITE = { readOnlyHint: false, openWorldHint: false }
+
+// The tools that read or change a saved wallet.
+export function registerWalletTools(
+  server: McpServer,
+  deps: ServerDeps,
+  ctx: Context,
+  inputs: ReturnType<typeof makeInputs>,
+) {
+  const { catalog, store } = deps
+
+  server.registerTool(
+    'list_wallet',
+    {
+      title: 'List wallet',
+      description:
+        "Lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, and when each card's data was last verified.",
+      outputSchema: WalletSummarySchema,
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    async () => {
+      const read = await ctx.readableWallet()
+      if (typeof read === 'string') return fail(read)
+      const summary = walletSummary(catalog, read.wallet, deps.today())
+      return {
+        content: [
+          { type: 'text', text: read.start ?? formatWalletSummary(summary) },
+        ],
+        structuredContent: summary,
+      }
+    },
+  )
+
+  server.registerTool(
+    'record_purchase',
+    {
+      title: 'Record a purchase',
+      description:
+        "Records a purchase the user has already made, so spending caps and welcome-bonus progress stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap and no open welcome bonus are acknowledged and nothing is written.",
+      inputSchema: z.object({
+        cardId: z
+          .string()
+          .min(1)
+          .describe(
+            'The card used, as a cardId from list_wallet or best_card_for_purchase.',
+          ),
+        merchant: Merchant,
+        amount: z.number().positive().describe('Amount spent in US dollars.'),
+        channel: ChannelInput,
+        date: DateInput,
+        category: inputs.CategoryInput,
+      }),
+      outputSchema: RecordResultSchema,
+      annotations: {
+        ...WRITE,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: deps.llm !== null,
+      },
+    },
+    async ({ cardId, merchant, amount, channel, date, category }) => {
+      const w = await ctx.wallet()
+      if (typeof w === 'string') return fail(w)
+      if (!w.cards.some((c) => c.id === cardId))
+        return fail(
+          `"${cardId}" isn't in the wallet. Cards: ${w.cards.map((c) => c.id).join(', ')}.`,
+        )
+      const purchase = {
+        cardId,
+        merchant,
+        amount,
+        channel: channel ?? null,
+        date: date ?? deps.today(),
+      }
+      const resolved = await ctx.resolve(
+        merchant,
+        purchase.channel,
+        category ?? null,
+      )
+      const result = await store.record(purchase, resolved.merchant)
+      if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
+      const { cap: booking, bonus } = result
+      const output =
+        booking || bonus
+          ? {
+              recorded: true,
+              booking,
+              bonus,
+              message: formatBooking(amount, cardId, booking, bonus),
+            }
+          : {
+              recorded: false,
+              booking: null,
+              bonus: null,
+              message: `Nothing to track: ${cardId} has no spending cap or open welcome bonus for this purchase, so the wallet wasn't changed.`,
+            }
+      return {
+        content: [
+          {
+            type: 'text',
+            text: [output.message, ...resolved.notices].join('\n'),
+          },
+        ],
+        structuredContent: output,
+      }
+    },
+  )
+
+  server.registerTool(
+    'add_card',
+    {
+      title: 'Add a card',
+      description:
+        "Adds a card the user holds to their wallet by its id from search_cards, creating the wallet if there isn't one. The reply says what the card still needs (category picks, memberships, activations); ask the user about those. Stores only the card's product id and settings, never card numbers.",
+      inputSchema: CardChange,
+      outputSchema: WalletChangeSchema,
+      annotations: { ...WRITE, destructiveHint: false, idempotentHint: false },
+    },
+    async (args) => {
+      const result = await store.addCard(cardInput(args), deps.today())
+      const started =
+        !result.ok || !result.created
+          ? ''
+          : deps.savedWallets === 'account'
+            ? ', the first card in your saved wallet'
+            : `, starting a new wallet at ${store.where}`
+      return ctx.changed(
+        result,
+        `Added ${ctx.cardName(args.cardId)} (${args.cardId})${started}.`,
+      )
+    },
+  )
+
+  server.registerTool(
+    'update_card',
+    {
+      title: 'Update a card',
+      description:
+        'Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary or activated categories. Picks for the current period are merged with the ones already saved. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+.',
+      inputSchema: CardChange,
+      outputSchema: WalletChangeSchema,
+      annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
+    },
+    async (args) =>
+      ctx.changed(
+        await store.updateCard(cardInput(args), deps.today()),
+        `Updated ${ctx.cardName(args.cardId)} (${args.cardId}).`,
+      ),
+  )
+
+  server.registerTool(
+    'remove_card',
+    {
+      title: 'Remove a card',
+      description:
+        "Removes a card from the wallet, with its tracked cap usage and bonus progress. Only when the user says they no longer have it or don't want it considered.",
+      inputSchema: z.object({ cardId: CardId }),
+      outputSchema: WalletChangeSchema,
+      annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
+    },
+    async ({ cardId }) =>
+      ctx.changed(
+        await store.removeCard(cardId),
+        `Removed ${ctx.cardName(cardId)} (${cardId}).`,
+        { notes: false },
+      ),
+  )
+
+  server.registerTool(
+    'set_memberships',
+    {
+      title: 'Set memberships',
+      description:
+        "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier. Replaces the whole list, so include the ones to keep.",
+      inputSchema: z.object({ memberships: inputs.AllMemberships }),
+      outputSchema: WalletChangeSchema,
+      annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
+    },
+    async ({ memberships }) =>
+      ctx.changed(
+        await store.setMemberships(memberships),
+        memberships.length > 0
+          ? `Memberships set to ${memberships.join(', ')}.`
+          : 'Memberships cleared.',
+        { notes: false },
+      ),
+  )
+}

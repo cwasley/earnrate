@@ -6,6 +6,12 @@ import {
   type CardInput,
 } from './wallet-change.ts'
 
+export const EMPTY_WALLET: Wallet = {
+  valuations: {},
+  memberships: [],
+  cards: [],
+}
+
 export type NamedCards = {
   cards: CardInput[]
   memberships?: string[]

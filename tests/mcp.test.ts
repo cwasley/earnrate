@@ -20,7 +20,6 @@ import { FileWalletStore } from '../src/data/file-store.ts'
 import {
   JsonWalletStore,
   memoryBackend,
-  noSavedWallet,
   type WalletStore,
 } from '../src/data/store.ts'
 import {
@@ -444,24 +443,28 @@ describe('wallet setup', () => {
     expect(text(after)).toMatch(/no saved wallet yet/)
   })
 
-  test('a server without saved wallets drops exactly the saved-wallet tools', async () => {
-    const all = (
-      await (
-        await serve({
-          savedWallets: 'account',
-          store: new JsonWalletStore(catalog, memoryBackend(), 'x'),
-        })
-      ).listTools()
-    ).tools.map((t) => t.name)
-    const none = (
-      await (
-        await serve({ savedWallets: 'none', store: noSavedWallet('x') })
-      ).listTools()
-    ).tools.map((t) => t.name)
-    expect(all.filter((n) => !none.includes(n)).sort()).toEqual(
-      [...SAVED_WALLET_TOOLS].sort(),
+  test('the tool lists cover every tool, and only hosted wallets add account tools', async () => {
+    const names = async (saving: WalletSaving) =>
+      (await (await serve(saving)).listTools()).tools.map((t) => t.name).sort()
+    expect(
+      await names({
+        savedWallets: 'account',
+        store: new JsonWalletStore(catalog, memoryBackend(), 'x'),
+      }),
+    ).toEqual([...ANSWER_TOOLS, ...SAVED_WALLET_TOOLS].sort())
+    expect(
+      await names({
+        savedWallets: 'file',
+        store: new JsonWalletStore(catalog, memoryBackend(), 'x'),
+      }),
+    ).toEqual(
+      [
+        ...ANSWER_TOOLS,
+        ...SAVED_WALLET_TOOLS.filter(
+          (n) => !n.endsWith('_wallet') || n === 'list_wallet',
+        ),
+      ].sort(),
     )
-    expect([...none].sort()).toEqual([...ANSWER_TOOLS].sort())
   })
 
   test('from no wallet to a recommendation', async () => {
