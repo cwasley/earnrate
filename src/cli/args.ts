@@ -16,6 +16,8 @@ export type CliOptions = {
   all: boolean
   category: string | null // checked against the catalog once it's loaded
   llm: boolean | null // null: follow the environment
+  cards: string[] | null // card ids named for this answer instead of the wallet
+  members: string[]
 }
 
 export type ParsedArgs =
@@ -57,6 +59,8 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
         category: { type: 'string' },
         all: { type: 'boolean' },
         llm: { type: 'boolean' },
+        cards: { type: 'string' },
+        member: { type: 'string', multiple: true },
         help: { type: 'boolean', short: 'h' },
       },
     })
@@ -136,6 +140,14 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
       all: values.all ?? false,
       category: values.category ?? null,
       llm: values.llm ?? null,
+      cards:
+        values.cards === undefined
+          ? null
+          : values.cards
+              .split(',')
+              .map((c) => c.trim())
+              .filter((c) => c !== ''),
+      members: values.member ?? [],
     },
   }
 }

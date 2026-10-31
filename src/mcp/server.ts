@@ -26,8 +26,9 @@ import {
   type SetupResult,
 } from '../data/wallet-setup.ts'
 import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
-import { cheatSheet } from '../engine/cheat-sheet.ts'
+import { catalogCheatSheet, cheatSheet } from '../engine/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../engine/explore.ts'
+import { walletFromCards } from '../engine/transient.ts'
 import { compareOffers } from '../engine/offers.ts'
 import { VALUATION_PROFILES } from '../engine/profiles.ts'
 import { capBooking } from '../engine/record.ts'
@@ -36,6 +37,8 @@ import {
   resolveSpendLines,
   simulateAdditions,
   simulateCatalog,
+  TYPICAL_SPEND_NOTE,
+  typicalSpendLines,
 } from '../engine/simulate.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
 import type { Channel, MerchantResolution } from '../engine/types.ts'
@@ -49,8 +52,8 @@ import {
   CheatSheetSchema,
   ExplorationSchema,
   MerchantResolutionSchema,
+  PurchaseAnswerSchema,
   SpendingSimulationSchema,
-  RecommendationSchema,
   OfferComparisonSchema,
   RecordResultSchema,
   WalletChangeSchema,
@@ -81,9 +84,11 @@ const DateInput = IsoDate.optional().describe(
   'Purchase date, YYYY-MM-DD. Defaults to today.',
 )
 
-const INSTRUCTIONS = `earnrate picks which of the user's credit cards earns the most for a purchase. best_cards_for and simulate_spending compare every card earnrate knows and need no wallet, for questions like "what's the best grocery card?" or "which cards fit my spending?". Its wallet lists the cards they hold by product id, never card numbers; never ask for card numbers, expiry dates or security codes.
+const INSTRUCTIONS = `earnrate answers which credit card earns the most for a purchase, from each issuer's own terms. Anyone can use it without entering anything: with no cards given, best_card_for_purchase, best_cards_for, cheat_sheet, simulate_spending and compare_welcome_offers answer from every card earnrate knows, and that's a complete answer. Never require the user's cards, and don't ask what they spend unless the answer depends on it; simulate_spending assumes typical amounts when none are given and says so.
 
-If a tool says there's no wallet yet, ask the user which cards they have, find each with search_cards, and add it with add_card. add_card and update_card reply with what a card still needs, such as category picks, memberships like Amazon Prime, or activated bonus categories. Ask the user about those and set them with update_card or set_memberships.`
+Personalizing is optional. If the user names their cards, pass them as \`cards\` (ids from search_cards) for that answer; nothing is saved. Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools. When a card needs category picks, memberships like Amazon Prime, or activations, ask the user rather than guessing.
+
+The wallet lists cards by product id, never card numbers; never ask for card numbers, expiry dates or security codes.`
 
 const fail = (text: string) => ({
   content: [{ type: 'text' as const, text }],
@@ -153,12 +158,79 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       `Only for a merchant earnrate may not know, and only if you're confident what kind of business it is: its spending category, e.g. grocery.supermarket for a supermarket, dining for a restaurant, gas for a gas station. Ignored when earnrate knows the merchant. Leave it out if unsure. Categories: ${catalog.categories.map((c) => `${c.id} (${c.name})`).join(', ')}.`,
     )
 
+  const namedMembershipIds = knownMemberships(catalog) as [string, ...string[]]
+  const NamedCardsInput = z
+    .array(
+      z.object({
+        cardId: z.string().min(1).describe('A card id from search_cards.'),
+        picks: z
+          .record(z.string(), z.array(z.string()).min(1))
+          .optional()
+          .describe(
+            "Bonus categories the user picked, for cards that have them: choice id → option ids, from search_cards. Ask; don't guess.",
+          ),
+        activated: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Bonuses the user has activated with the issuer, as rule ids from search_cards.',
+          ),
+      }),
+    )
+    .optional()
+    .describe(
+      "Cards the user named in this conversation, to answer for just those cards without saving anything. Leave out to use the user's saved wallet if they have one; with neither, the answer covers every card earnrate knows.",
+    )
+  const NamedMembershipsInput = z
+    .array(z.enum(namedMembershipIds))
+    .optional()
+    .describe(
+      "Memberships the user has, such as amazon-prime, when they're named in the conversation rather than saved.",
+    )
+  const ALL_CARDS_NOTE =
+    "The user hasn't named their cards, so this covers every card earnrate knows. That's a complete answer. If they want the best of their own cards, they can name them (pass them as `cards`); saving a wallet is optional."
+
+  type NamedCard = {
+    cardId: string
+    picks?: Record<string, string[]> | undefined
+    activated?: string[] | undefined
+  }
+  type Source = { wallet: Wallet; named: boolean } | { wallet: null }
+
+  // Cards named in the conversation come first, then the saved wallet; with
+  // neither, read tools answer from every card earnrate knows.
+  async function sourceFor(
+    cards: NamedCard[] | undefined,
+    memberships: string[] | undefined,
+  ): Promise<Source | string> {
+    if (cards && cards.length > 0) {
+      const w = walletFromCards(
+        catalog,
+        {
+          cards: cards.map((c) => ({
+            id: c.cardId,
+            ...(c.picks ? { picks: c.picks } : {}),
+            ...(c.activated ? { activated: c.activated } : {}),
+          })),
+          ...(memberships ? { memberships } : {}),
+        },
+        deps.today(),
+      )
+      return typeof w === 'string' ? w : { wallet: w, named: true }
+    }
+    const read = await readableWallet()
+    if (typeof read === 'string') return read
+    return read.start !== null
+      ? { wallet: null }
+      : { wallet: read.wallet, named: false }
+  }
+
   server.registerTool(
     'best_card_for_purchase',
     {
       title: 'Best card for a purchase',
       description:
-        "Picks the card in the user's wallet that earns the most rewards for a purchase, and explains why. Call it before paying. `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout. Also returns every usable card ranked with reasons, cards the merchant won't take, the assumptions made, warnings, and when a different point valuation would change the pick. Never needs or returns card numbers.",
+        "Which card earns the most rewards for a purchase, and why. With no cards given and no saved wallet, it ranks every card earnrate knows (in `allCards`): a complete answer for anyone. With cards named in the conversation (`cards`) or a saved wallet, it picks the best of the user's own: `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout, with every usable card ranked with reasons, cards the merchant won't take, assumptions, warnings, and when a different point valuation would change the pick. Never needs or returns card numbers.",
       inputSchema: z.object({
         merchant: Merchant,
         amount: z
@@ -169,17 +241,26 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         channel: ChannelInput,
         date: DateInput,
         category: CategoryInput,
+        cards: NamedCardsInput,
+        memberships: NamedMembershipsInput,
       }),
-      outputSchema: RecommendationSchema,
+      outputSchema: PurchaseAnswerSchema,
       annotations: {
         readOnlyHint: true,
         openWorldHint: deps.llm !== null,
       },
     },
-    async ({ merchant, amount, channel, date, category }) => {
-      const read = await readableWallet()
-      if (typeof read === 'string') return fail(read)
-      const w = read.wallet
+    async ({
+      merchant,
+      amount,
+      channel,
+      date,
+      category,
+      cards,
+      memberships,
+    }) => {
+      const source = await sourceFor(cards, memberships)
+      if (typeof source === 'string') return fail(source)
       const purchase = {
         merchant,
         amount: amount ?? null,
@@ -192,20 +273,45 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         purchase.channel,
         category ?? null,
       )
-      const rec = recommend(catalog, w, purchase, resolved.merchant)
-      if (read.start !== null) {
-        const output = {
-          ...rec,
-          warnings: [read.start, ...resolved.notices],
-        }
+      if (source.wallet === null) {
+        const explored = exploreCards(
+          catalog,
+          {
+            merchant,
+            category: null,
+            amount: purchase.amount,
+            channel: purchase.channel,
+            date: purchase.date,
+          },
+          { ...settings({}), memberships: memberships ?? [] },
+          resolved.merchant,
+        )
+        const allCards = { ...explored, ranked: explored.ranked.slice(0, 10) }
+        const empty = recommend(
+          catalog,
+          { valuations: {}, memberships: [], cards: [] },
+          purchase,
+          resolved.merchant,
+        )
         return {
-          content: [{ type: 'text', text: read.start }],
-          structuredContent: output,
+          content: [
+            {
+              type: 'text',
+              text: `${formatExploration(allCards, true)}\n${ALL_CARDS_NOTE}`,
+            },
+          ],
+          structuredContent: {
+            ...empty,
+            warnings: [ALL_CARDS_NOTE, ...resolved.notices],
+            allCards,
+          },
         }
       }
+      const rec = recommend(catalog, source.wallet, purchase, resolved.merchant)
       const output = {
         ...rec,
         warnings: [...rec.warnings, ...resolved.notices],
+        allCards: null,
       }
       return {
         content: [
@@ -325,16 +431,17 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           .boolean()
           .optional()
           .describe('Include cards already in the wallet.'),
+        cards: NamedCardsInput,
       }),
       outputSchema: OfferComparisonSchema,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async (args) => {
-      const read = await readableWallet()
-      if (typeof read === 'string') return fail(read)
+      const source = await sourceFor(args.cards, undefined)
+      if (typeof source === 'string') return fail(source)
       const comparison = compareOffers(
         catalog,
-        read.wallet,
+        source.wallet ?? { valuations: {}, memberships: [], cards: [] },
         {
           kind: args.kind ?? 'any',
           noAnnualFee: args.noAnnualFee ?? false,
@@ -460,7 +567,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
     {
       title: 'Simulate a year of spending',
       description:
-        'Spends the user\'s monthly amounts for a year across every card earnrate knows, and ranks single cards and two-card pairs by rewards minus annual fees. With compareToWallet, it starts from the user\'s wallet and ranks the cards that would add the most to it. Use it for "which card fits my spending?" or "is it worth adding a card?". Ask for rough monthly amounts if the user hasn\'t given them. It leaves out welcome bonuses.',
+        'Spends monthly amounts for a year across every card earnrate knows, and ranks single cards and two-card pairs by rewards minus annual fees. Spending is optional: without it, typical U.S. household amounts are used and the answer says so. With `cards` (named in the conversation) or compareToWallet (the saved wallet), it ranks the cards that would add the most to those cards instead. Use it for "which card fits my spending?" or "is it worth adding a card?". It leaves out welcome bonuses.',
       inputSchema: z.object({
         spending: z
           .array(
@@ -470,15 +577,16 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
               monthly: z.number().positive().describe('US dollars a month.'),
             }),
           )
-          .min(1)
+          .optional()
           .describe(
-            'Monthly spending lines, each a category (grocery.supermarket, dining, gas, other) or a merchant (Amazon, Costco).',
+            "Monthly spending lines, each a category (grocery.supermarket, dining, gas, other) or a merchant (Amazon, Costco). Optional: leave out to use typical amounts, and don't press the user for numbers they haven't offered.",
           ),
+        cards: NamedCardsInput,
         compareToWallet: z
           .boolean()
           .optional()
           .describe(
-            "Rank the cards that would add the most to the user's wallet.",
+            "Rank the cards that would add the most to the user's saved wallet.",
           ),
         ...CatalogFilters,
       }),
@@ -486,30 +594,39 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async (args) => {
+      const given = args.spending ?? []
       if (
-        args.spending.some(
-          (l) => l.merchant === undefined && l.category === undefined,
-        )
+        given.some((l) => l.merchant === undefined && l.category === undefined)
       )
         return fail('Each spending line needs a merchant or a category.')
-      const lines = resolveSpendLines(
-        catalog,
-        args.spending.map((l) => ({
-          merchant: l.merchant ?? null,
-          category: l.merchant === undefined ? (l.category ?? null) : null,
-          monthly: l.monthly,
-        })),
-      )
+      const lines =
+        given.length === 0
+          ? typicalSpendLines(catalog)
+          : resolveSpendLines(
+              catalog,
+              given.map((l) => ({
+                merchant: l.merchant ?? null,
+                category:
+                  l.merchant === undefined ? (l.category ?? null) : null,
+                monthly: l.monthly,
+              })),
+            )
       const unknown = lines.filter((l) => l.merchant.source === 'none')
       if (unknown.length > 0)
         return fail(
           `earnrate doesn't know ${unknown.map((l) => `"${l.merchant.input}"`).join(', ')}. Give a category for those lines instead.`,
         )
+      const notes = given.length === 0 ? [TYPICAL_SPEND_NOTE] : []
       const options = { ...settings(args), start: deps.today() }
-      const read = args.compareToWallet ? await readableWallet() : null
-      if (typeof read === 'string') return fail(read)
-      if (read && read.start === null) {
-        const w = read.wallet
+      const wantsTheirs =
+        (args.cards !== undefined && args.cards.length > 0) ||
+        args.compareToWallet === true
+      const source = wantsTheirs
+        ? await sourceFor(args.cards, args.memberships)
+        : null
+      if (typeof source === 'string') return fail(source)
+      if (source && source.wallet !== null) {
+        const w = source.wallet
         const valued = args.valuation
           ? {
               ...w,
@@ -520,11 +637,11 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
             }
           : w
         const result = simulateAdditions(catalog, valued, lines, options)
+        const text = formatAdditions(result, catalog, false)
         return {
-          content: [
-            { type: 'text', text: formatAdditions(result, catalog, false) },
-          ],
+          content: [{ type: 'text', text: [...notes, text].join('\n\n') }],
           structuredContent: {
+            notes,
             singles: [],
             pairs: [],
             current: result.current,
@@ -534,16 +651,13 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           },
         }
       }
+      if (source) notes.push(ALL_CARDS_NOTE)
       const result = simulateCatalog(catalog, lines, options)
       const text = formatCatalogSimulation(result, catalog, false)
       return {
-        content: [
-          {
-            type: 'text',
-            text: read?.start ? `${read.start}\n\n${text}` : text,
-          },
-        ],
+        content: [{ type: 'text', text: [...notes, text].join('\n\n') }],
         structuredContent: {
+          notes,
           singles: result.singles.slice(0, 10),
           pairs: result.pairs.slice(0, 5),
           current: null,
@@ -558,20 +672,31 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
     {
       title: 'Cheat sheet',
       description:
-        "The card in the user's wallet to use for each everyday kind of purchase right now: groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores and everything else, with caps, picks and activations as the wallet has them. Use it when the user asks which card to use for what, or wants a quick reference for the quarter. For one specific store, call best_card_for_purchase instead. Pass on the notes: they say what the wallet still needs, like this quarter's picks.",
-      inputSchema: z.object({ date: DateInput }),
+        "The card to use for each everyday kind of purchase right now: groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores and everything else. With no cards given and no saved wallet, it picks from every card earnrate knows (`scope: all cards`, each row noting the card's fee and conditions). With cards named in the conversation or a saved wallet, it picks from the user's own cards, with caps, picks and activations as they are. For one specific store, call best_card_for_purchase instead. Pass on the notes.",
+      inputSchema: z.object({
+        date: DateInput,
+        cards: NamedCardsInput,
+        memberships: NamedMembershipsInput,
+      }),
       outputSchema: CheatSheetSchema,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async (args) => {
-      const read = await readableWallet()
-      if (typeof read === 'string') return fail(read)
-      const sheet = cheatSheet(catalog, read.wallet, args.date ?? deps.today())
-      if (read.start !== null)
+      const source = await sourceFor(args.cards, args.memberships)
+      if (typeof source === 'string') return fail(source)
+      const date = args.date ?? deps.today()
+      if (source.wallet === null) {
+        const sheet = catalogCheatSheet(catalog, date, {
+          ...settings({}),
+          memberships: args.memberships ?? [],
+        })
+        const withNote = { ...sheet, notes: [ALL_CARDS_NOTE] }
         return {
-          content: [{ type: 'text', text: read.start }],
-          structuredContent: { ...sheet, notes: [read.start] },
+          content: [{ type: 'text', text: formatCheatSheet(withNote) }],
+          structuredContent: withNote,
         }
+      }
+      const sheet = cheatSheet(catalog, source.wallet, date)
       return {
         content: [{ type: 'text', text: formatCheatSheet(sheet) }],
         structuredContent: sheet,

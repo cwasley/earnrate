@@ -220,7 +220,9 @@ describe('wallet setup', () => {
       },
     })
     expect(withWallet.isError).toBeFalsy()
-    expect(text(withWallet)).toMatch(/no wallet yet.*Best single cards/is)
+    expect(text(withWallet)).toMatch(
+      /hasn't named their cards.*Best single cards/is,
+    )
   })
 
   test('cheat_sheet answers from the wallet', async () => {
@@ -256,6 +258,95 @@ describe('wallet setup', () => {
     expect(current.rewards).toBeGreaterThan(0)
     expect(additions.length).toBeGreaterThan(0)
     expect(text(result)).toMatch(/^Your wallet earns about/)
+  })
+
+  test('nothing entered: read tools answer from every card', async () => {
+    const client = await connect(await missingWallet())
+    const best = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Whole Foods' },
+    })
+    expect(best.isError).toBeFalsy()
+    const answer = best.structuredContent as {
+      decision: unknown
+      allCards: { ranked: { cardId: string }[] } | null
+    }
+    expect(answer.decision).toBeNull()
+    expect(answer.allCards?.ranked[0]?.cardId).toBe('amex-blue-cash-preferred')
+    expect(text(best)).toMatch(/^Best cards for Whole Foods Market/)
+
+    const unknownPlace = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: "Joe's Diner", category: 'dining' },
+    })
+    expect(
+      (
+        unknownPlace.structuredContent as {
+          allCards: { merchant: { category: string } }
+        }
+      ).allCards.merchant.category,
+    ).toBe('dining')
+
+    const sheet = await client.callTool({ name: 'cheat_sheet', arguments: {} })
+    const allSheet = sheet.structuredContent as {
+      scope: string
+      rows: { label: string; cardId: string | null }[]
+    }
+    expect(allSheet.scope).toBe('all cards')
+    expect(allSheet.rows.find((r) => r.label === 'Groceries')?.cardId).toBe(
+      'amex-blue-cash-preferred',
+    )
+
+    const sim = await client.callTool({
+      name: 'simulate_spending',
+      arguments: {},
+    })
+    expect(sim.isError).toBeFalsy()
+    expect((sim.structuredContent as { notes: string[] }).notes[0]).toMatch(
+      /typical monthly amounts/,
+    )
+  })
+
+  test('cards named in the conversation answer for just those cards', async () => {
+    const file = await missingWallet()
+    const client = await connect(file)
+    const cards = [{ cardId: 'amex-gold' }, { cardId: 'chase-prime-visa' }]
+    const best = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: {
+        merchant: 'Whole Foods',
+        cards,
+        memberships: ['amazon-prime'],
+      },
+    })
+    const answer = best.structuredContent as {
+      decision: { cardId: string; effectiveReturnPct: number }
+      allCards: unknown
+    }
+    expect(answer.decision.cardId).toBe('chase-prime-visa')
+    expect(answer.decision.effectiveReturnPct).toBe(5)
+    expect(answer.allCards).toBeNull()
+
+    const sheet = await client.callTool({
+      name: 'cheat_sheet',
+      arguments: { cards },
+    })
+    expect((sheet.structuredContent as { scope: string }).scope).toBe('wallet')
+
+    const sim = await client.callTool({
+      name: 'simulate_spending',
+      arguments: { cards },
+    })
+    expect(
+      (sim.structuredContent as { additions: unknown[] }).additions.length,
+    ).toBeGreaterThan(0)
+
+    const bad = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Costco', cards: [{ cardId: 'not-a-card' }] },
+    })
+    expect(bad.isError).toBe(true)
+    await expect(readFile(file, 'utf8')).rejects.toThrow()
   })
 
   test('from no wallet to a recommendation', async () => {

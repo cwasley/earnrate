@@ -5,11 +5,24 @@
 
 - id: dining
   name: Restaurants
-  aliases: [dining, restaurant, food, eating out, takeout]
+  aliases:
+    [
+      dining,
+      restaurant,
+      food,
+      eating out,
+      takeout,
+      dinner,
+      lunch,
+      breakfast,
+      brunch,
+      food delivery,
+    ]
   mccs: [5812, 5813, 5814]
 - id: dining.fast_food
   name: Fast food
-  aliases: [fast food restaurants]
+  aliases:
+    [fast food restaurants, coffee shop, coffee shops, coffee, cafe, cafes]
   mccs: [5814]
 
 - id: grocery
@@ -33,11 +46,12 @@
 
 - id: convenience_store
   name: Convenience stores
+  aliases: [convenience store, corner store, bodega]
   mccs: [5499]
 
 - id: gas
   name: Gas stations
-  aliases: [gas, fuel, gas station]
+  aliases: [gas, fuel, gas station, gas stations]
   mccs: [5541, 5542]
 - id: gas.grocery_store
   name: Gas at grocery stores
@@ -50,6 +64,7 @@
 
 - id: transit
   name: Transit
+  aliases: [public transit, train, trains, bus, commuting]
   mccs: [4111, 4112, 4131, 4784, 7523]
 - id: transit.rideshare
   name: Rideshare and taxis
@@ -61,11 +76,11 @@
   mccs: [4722]
 - id: travel.flights
   name: Flights
-  aliases: [flights, airfare, airlines]
+  aliases: [flights, airfare, airlines, flight, plane tickets]
   mccs: [4511]
 - id: travel.hotels
   name: Hotels
-  aliases: [hotel]
+  aliases: [hotel, hotels, motel, motels]
   mccs: [7011]
 - id: travel.car_rental
   name: Car rental
@@ -124,7 +139,7 @@
   mccs: [5941]
 - id: home_improvement
   name: Home improvement
-  aliases: [hardware stores]
+  aliases: [hardware stores, hardware store, home improvement store]
   mccs: [5200, 5211]
 - id: furniture
   name: Furniture stores
@@ -132,7 +147,7 @@
 
 - id: online_retail
   name: Online retail
-  aliases: [online shopping, shopping online]
+  aliases: [online shopping, shopping online, online]
 - id: office_supply
   name: Office supply stores
 - id: shipping

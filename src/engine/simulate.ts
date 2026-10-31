@@ -6,6 +6,7 @@ import { evaluateCard, purchaseContext } from './evaluate.ts'
 import {
   categoryResolution,
   choicePeriod,
+  findCategory,
   idealHolding,
   matchesFilters,
   type CardFilters,
@@ -491,3 +492,35 @@ export function simulateAdditions(
   additions.sort((a, b) => b.gain - a.gain || a.annualFee - b.annualFee)
   return { current, additions }
 }
+
+// Rough monthly amounts for a U.S. household: the starting point when someone
+// hasn't said what they spend. Answers built on them say so.
+export const TYPICAL_MONTHLY_SPEND: { what: string; monthly: number }[] = [
+  { what: 'Groceries', monthly: 500 },
+  { what: 'Dining', monthly: 250 },
+  { what: 'Gas', monthly: 150 },
+  { what: 'Amazon', monthly: 100 },
+  { what: 'Streaming', monthly: 40 },
+  { what: 'Travel', monthly: 150 },
+  { what: 'Everything else', monthly: 800 },
+]
+
+// A spending line from everyday words: a category when one matches
+// ("groceries"), otherwise a merchant ("Amazon").
+export function spendLineFor(
+  catalog: Catalog,
+  what: string,
+  monthly: number,
+): SpendLine {
+  const category = findCategory(catalog, what)
+  return { merchant: category === null ? what : null, category, monthly }
+}
+
+export function typicalSpendLines(catalog: Catalog): ResolvedLine[] {
+  return resolveSpendLines(
+    catalog,
+    TYPICAL_MONTHLY_SPEND.map((t) => spendLineFor(catalog, t.what, t.monthly)),
+  )
+}
+
+export const TYPICAL_SPEND_NOTE = `No spending was given, so this uses rough typical monthly amounts for a U.S. household: ${TYPICAL_MONTHLY_SPEND.map((t) => `${t.what} $${String(t.monthly)}`).join(', ')}. Give your own amounts for a closer answer.`

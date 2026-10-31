@@ -1,7 +1,11 @@
 import type { Catalog } from '../data/load.ts'
 import { resolveMerchantById } from '../merchants/resolve.ts'
 import type { Wallet } from '../schema/wallet.ts'
-import { categoryResolution } from './explore.ts'
+import {
+  categoryResolution,
+  exploreCards,
+  type ExploreOptions,
+} from './explore.ts'
 import { periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
 import { setupNotes } from './setup.ts'
@@ -32,6 +36,7 @@ export type CheatSheetRow = {
 }
 
 export type CheatSheet = {
+  scope: 'wallet' | 'all cards' // whose cards each row picks from
   quarter: string // "Q4 2026"
   date: string
   rows: CheatSheetRow[]
@@ -82,5 +87,72 @@ export function cheatSheet(
     ),
   ]
   const [year, q] = (periodKey('quarter', date, null) ?? '').split('-')
-  return { quarter: `${q ?? ''} ${year ?? ''}`, date, rows, notes }
+  return {
+    scope: 'wallet',
+    quarter: `${q ?? ''} ${year ?? ''}`,
+    date,
+    rows,
+    notes,
+  }
+}
+
+// The best card earnrate knows for each everyday kind of purchase, for
+// someone who hasn't named any cards. Each row's note says what the card
+// costs or needs.
+export function catalogCheatSheet(
+  catalog: Catalog,
+  date: string,
+  options: ExploreOptions,
+  items: CheatSheetItem[] = CHEAT_SHEET_ITEMS,
+): CheatSheet {
+  const rows = items.map((item): CheatSheetRow => {
+    const top = exploreCards(
+      catalog,
+      'merchant' in item
+        ? {
+            merchant:
+              catalog.merchants.seed.find((m) => m.id === item.merchant)
+                ?.name ??
+              catalog.merchants.overrides.find((m) => m.id === item.merchant)
+                ?.name ??
+              item.label,
+            category: null,
+            amount: null,
+            channel: null,
+            date,
+          }
+        : {
+            merchant: null,
+            category: item.category,
+            amount: null,
+            channel: null,
+            date,
+          },
+      options,
+    ).ranked[0]
+    const fee =
+      top?.annualFee === null || top?.annualFee === undefined
+        ? null
+        : top.annualFee === 0
+          ? 'No annual fee.'
+          : `$${String(top.annualFee)} annual fee.`
+    return {
+      label: item.label,
+      cardId: top?.cardId ?? null,
+      cardName: top?.cardName ?? null,
+      effectiveReturnPct: top?.effectiveReturnPct ?? null,
+      matchedRule: top?.matchedRule ?? null,
+      note: top
+        ? [fee, ...top.conditions].filter((n) => n !== null).join(' ')
+        : null,
+    }
+  })
+  const [year, q] = (periodKey('quarter', date, null) ?? '').split('-')
+  return {
+    scope: 'all cards',
+    quarter: `${q ?? ''} ${year ?? ''}`,
+    date,
+    rows,
+    notes: [],
+  }
 }

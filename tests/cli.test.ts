@@ -171,12 +171,10 @@ describe('arguments', () => {
 })
 
 describe('wallet errors', () => {
-  test('a missing wallet says where it looked', async () => {
-    const { code, stderr } = await cli(['costco'], '/nonexistent/wallet.yaml')
-    expect(code).toBe(1)
-    expect(stderr).toMatch(/No wallet at \/nonexistent\/wallet\.yaml/)
-    expect(stderr).toMatch(/earnrate add chase-sapphire-preferred/)
-    expect(stderr).toMatch(/wallet\.example\.yaml/)
+  test('a missing wallet still answers, from every card', async () => {
+    const { code, stdout } = await cli(['costco'], '/nonexistent/wallet.yaml')
+    expect(code).toBe(0)
+    expect(stdout).toMatch(/^Best cards for Costco/)
   })
 
   test('a card id not in the catalog is reported', async () => {
@@ -358,4 +356,52 @@ test('cheatsheet prints the best card per category', async () => {
   expect(stdout).toMatch(/^Your cheat sheet for Q4 2026$/m)
   expect(stdout).toMatch(/^ {2}Groceries +Blue Cash Preferred +6%$/m)
   expect((await cli(['cheatsheet', '--date', 'soon'])).code).toBe(2)
+})
+
+describe('no wallet needed', () => {
+  const noWallet = path.join(tmpdir(), 'earnrate-none', 'wallet.yaml')
+
+  test('a store or category with no wallet ranks every card, with a hint', async () => {
+    const { code, stdout, stderr } = await cli(['restaurants'], noWallet)
+    expect(code).toBe(0)
+    expect(stderr).toBe('')
+    expect(stdout).toMatch(/^Best cards for restaurants:/)
+    expect(stdout).toMatch(/name them with --cards/)
+  })
+
+  test('--cards answers for just the cards named', async () => {
+    const { stdout } = await cli(
+      [
+        'whole',
+        'foods',
+        '80',
+        '--cards',
+        'amex-gold,chase-prime-visa',
+        '--member',
+        'amazon-prime',
+      ],
+      noWallet,
+    )
+    expect(stdout).toMatch(/Use Prime Visa: 5% back, about \$4\.00/)
+    expect((await cli(['costco', '--cards', 'nope'], noWallet)).code).toBe(1)
+  })
+
+  test('a category word with a wallet reads as a category, not an unknown store', async () => {
+    const { stdout } = await cli(['dining'])
+    expect(stdout).toMatch(/^Restaurants/)
+    expect(stdout).not.toMatch(/merchant list/)
+  })
+
+  test('cheatsheet, offers and simulate work without a wallet', async () => {
+    const sheet = await cli(['cheatsheet'], noWallet)
+    expect(sheet.code).toBe(0)
+    expect(sheet.stdout).toMatch(/^The best card for each kind of purchase/)
+    expect((await cli(['offers'], noWallet)).code).toBe(0)
+    const sim = await cli(['simulate'], noWallet)
+    expect(sim.code).toBe(0)
+    expect(sim.stdout).toMatch(/^No spending was given/)
+    expect((await cli(['simulate', '--wallet'], noWallet)).stderr).toMatch(
+      /No saved wallet yet/,
+    )
+  })
 })

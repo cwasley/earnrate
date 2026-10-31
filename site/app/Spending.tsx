@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
-import { findCategory, type Picks } from '../../src/engine/explore.ts'
+import type { Picks } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { categoryPhrase } from '../../src/engine/recommend.ts'
 import {
   resolveSpendLines,
   simulateCatalog,
+  spendLineFor,
+  TYPICAL_MONTHLY_SPEND,
   type Simulation,
 } from '../../src/engine/simulate.ts'
 import { feeText, shortName, usd, words } from './format.ts'
@@ -13,21 +15,10 @@ import { engineOptions, loadList, save, type Settings } from './settings.ts'
 
 export type Row = { what: string; monthly: number }
 
-// Rough monthly amounts for a U.S. household, a starting point to edit.
-export const STARTER: Row[] = [
-  { what: 'Groceries', monthly: 500 },
-  { what: 'Dining', monthly: 250 },
-  { what: 'Gas', monthly: 150 },
-  { what: 'Amazon', monthly: 100 },
-  { what: 'Streaming', monthly: 40 },
-  { what: 'Travel', monthly: 150 },
-  { what: 'Everything else', monthly: 800 },
-]
+export const STARTER: Row[] = TYPICAL_MONTHLY_SPEND
 
-export function lineFor(what: string, monthly: number) {
-  const category = findCategory(catalog, what)
-  return { merchant: category === null ? what : null, category, monthly }
-}
+export const lineFor = (what: string, monthly: number) =>
+  spendLineFor(catalog, what, monthly)
 
 function picksText(picks: Picks): string | null {
   const all = Object.values(picks).flat()

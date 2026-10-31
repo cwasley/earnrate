@@ -185,7 +185,7 @@ export function categoryResolution(
     ambiguity: null,
     channel,
     confidence: 'high',
-    source: 'caller',
+    source: 'category',
     bookedVia: [],
     inference: null,
   }
@@ -345,11 +345,13 @@ export function exploreCards(
   catalog: Catalog,
   query: ExploreQuery,
   options: ExploreOptions,
+  resolved?: MerchantResolution,
 ): Exploration {
   const merchant =
-    query.merchant !== null
+    resolved ??
+    (query.merchant !== null
       ? resolveMerchant(catalog, query.merchant, query.channel)
-      : categoryResolution(catalog, query.category ?? 'other', query.channel)
+      : categoryResolution(catalog, query.category ?? 'other', query.channel))
   const purchase: Purchase = {
     merchant: merchant.input,
     amount: query.amount,
@@ -434,7 +436,7 @@ function exploreAssumptions(
   options: ExploreOptions,
 ): string[] {
   const assumptions: string[] = []
-  if (merchant.source === 'caller') {
+  if (merchant.source === 'category') {
     assumptions.push(
       `Ranks purchases that code as ${categoryPhrase(catalog, merchant.category)}.`,
     )

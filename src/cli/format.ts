@@ -28,11 +28,13 @@ function header(rec: Recommendation, purchase: Purchase): string {
       ? `"${m.resolvedName}" (not recognized)`
       : m.source === 'caller'
         ? `${m.resolvedName} (category given)`
-        : m.source === 'llm'
-          ? m.category === 'other'
-            ? `"${m.resolvedName}" (Claude couldn't place it)`
-            : `${m.resolvedName} (classified by Claude)`
-          : m.resolvedName,
+        : m.source === 'category'
+          ? m.resolvedName
+          : m.source === 'llm'
+            ? m.category === 'other'
+              ? `"${m.resolvedName}" (Claude couldn't place it)`
+              : `${m.resolvedName} (classified by Claude)`
+            : m.resolvedName,
   ]
   if (purchase.amount !== null) parts.push(amountText(purchase.amount))
   if (m.channel) parts.push(m.channel === 'online' ? 'online' : 'in-store')

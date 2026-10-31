@@ -20,7 +20,7 @@ export const MerchantResolutionSchema = z.object({
     .nullable(),
   channel: Channel.nullable(),
   confidence: Confidence,
-  source: z.enum(['override', 'seed', 'llm', 'caller', 'none']),
+  source: z.enum(['override', 'seed', 'llm', 'caller', 'category', 'none']),
   bookedVia: z.array(z.string()),
   inference: z
     .object({
@@ -312,6 +312,7 @@ const SimulationSchema = z.object({
 })
 
 export const SpendingSimulationSchema = z.object({
+  notes: z.array(z.string()),
   singles: z.array(SimulationSchema),
   pairs: z.array(
     SimulationSchema.extend({ alternatives: z.array(z.string()) }),
@@ -329,6 +330,7 @@ export const SpendingSimulationSchema = z.object({
 })
 
 export const CheatSheetSchema = z.object({
+  scope: z.enum(['wallet', 'all cards']),
   quarter: z.string(),
   date: z.string(),
   rows: z.array(
@@ -342,4 +344,9 @@ export const CheatSheetSchema = z.object({
     }),
   ),
   notes: z.array(z.string()),
+})
+
+export const PurchaseAnswerSchema = RecommendationSchema.extend({
+  // Every card earnrate knows, ranked: set when no cards were given.
+  allCards: ExplorationSchema.nullable(),
 })

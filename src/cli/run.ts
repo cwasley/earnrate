@@ -1,3 +1,4 @@
+import { access } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -12,8 +13,15 @@ import {
 } from '../brand.ts'
 import { walletProblems } from '../data/integrity.ts'
 import { loadCatalog, loadWallet, walletPath } from '../data/load.ts'
-import { withValuationProfile } from '../engine/profiles.ts'
+import { VALUATION_PROFILES, withValuationProfile } from '../engine/profiles.ts'
+import {
+  ALL_PERSONAL_CARDS,
+  categoryResolution,
+  exploreCards,
+  findCategory,
+} from '../engine/explore.ts'
 import { recommend } from '../engine/recommend.ts'
+import { walletFromCards } from '../engine/transient.ts'
 import type { MerchantResolution, Purchase } from '../engine/types.ts'
 import { DEFAULT_LLM_MODEL } from '../merchants/anthropic.ts'
 import type { Classifier } from '../merchants/classifier.ts'
@@ -24,7 +32,7 @@ import type { Wallet } from '../schema/wallet.ts'
 import { packageVersion } from '../version.ts'
 import { parseCliArgs } from './args.ts'
 import { runCheatSheet } from './cheatsheet.ts'
-import { runBest, runSimulate } from './explore.ts'
+import { formatExploration, runBest, runSimulate } from './explore.ts'
 import { runImport } from './import.ts'
 import { runOffers } from './offers.ts'
 import { runWalletCommand, WALLET_HELP } from './wallet.ts'
@@ -41,7 +49,9 @@ export type Io = {
 
 export const HELP = `Usage: ${CLI_NAME} <merchant> [amount] [options]
 
-Picks the card in your wallet that earns the most at a merchant, and says why.
+Picks the card that earns the most at a merchant, and says why: from your
+wallet if you've saved one, from cards you name with --cards, or else from
+every card earnrate knows.
 
 Examples:
   ${CLI_NAME} whole foods 80
@@ -74,6 +84,9 @@ Options:
   --json                 Print the full recommendation as JSON.
   --date <YYYY-MM-DD>    Purchase date. Default: today.
   --country <code>       Where you're paying. Default: US.
+  --cards <ids>          Answer for these cards instead of your wallet, comma
+                         separated: --cards amex-gold,chase-prime-visa.
+  --member <name>        A membership you have, with --cards or no wallet.
   --category <id>        For a merchant earnrate doesn't know: its category,
                          e.g. grocery.supermarket. Ignored for known merchants.
   --llm, --no-llm        Ask Claude to classify merchants earnrate doesn't know.
@@ -101,6 +114,48 @@ export function displayPath(file: string): string {
   const home = homedir()
   return file.startsWith(`${home}/`) ? `~${file.slice(home.length)}` : file
 }
+
+// The cards to answer for: those named with --cards, else the wallet file.
+// 'none' means no wallet and no --cards, which answers from every card.
+export async function cardsToUse(
+  file: string,
+  io: Io,
+  named: { cards: string[] | null; members: string[] },
+): Promise<Wallet | 'none' | null> {
+  const catalog = await loadCatalog()
+  if (named.cards !== null) {
+    const wallet = walletFromCards(
+      catalog,
+      {
+        cards: named.cards.map((id) => ({ id })),
+        memberships: named.members,
+      },
+      io.today,
+    )
+    if (typeof wallet === 'string') {
+      io.stderr(`${wallet}\n`)
+      return null
+    }
+    return wallet
+  }
+  try {
+    await access(file)
+  } catch {
+    return 'none'
+  }
+  const loaded = await readWallet(file, io)
+  if (!loaded) return null
+  const problems = walletProblems(loaded, catalog)
+  if (problems.length > 0) {
+    io.stderr(
+      `Your wallet at ${displayPath(file)} has problems:\n${problems.map((p) => `  - ${p}\n`).join('')}`,
+    )
+    return null
+  }
+  return loaded
+}
+
+export const NO_WALLET_HINT = `These are every card earnrate knows. For the best of your own cards, name them with --cards amex-gold,chase-prime-visa, or save them: ${CLI_NAME} add <card-id> (${CLI_NAME} cards finds ids).`
 
 export async function readWallet(file: string, io: Io): Promise<Wallet | null> {
   try {
@@ -151,20 +206,9 @@ export async function run(argv: string[], io: Io): Promise<number> {
   const llmOn = options.llm ?? llmEnabled(io.env)
 
   const file = walletPath(io.env)
-  const loaded = await readWallet(file, io)
-  if (!loaded) return RUNTIME_ERROR
+  const loaded = await cardsToUse(file, io, options)
+  if (loaded === null) return RUNTIME_ERROR
   const catalog = await loadCatalog()
-  const problems = walletProblems(loaded, catalog)
-  if (problems.length > 0) {
-    io.stderr(
-      `Your wallet at ${displayPath(file)} has problems:\n${problems.map((p) => `  - ${p}\n`).join('')}`,
-    )
-    return RUNTIME_ERROR
-  }
-
-  const wallet = options.valuation
-    ? withValuationProfile(loaded, options.valuation)
-    : loaded
   const purchase: Purchase = {
     merchant: options.merchant,
     amount: options.amount,
@@ -183,10 +227,20 @@ export async function run(argv: string[], io: Io): Promise<number> {
     return USAGE_ERROR
   }
 
-  let merchant: MerchantResolution = withCallerCategory(
-    resolveMerchant(catalog, purchase.merchant, purchase.channel),
-    options.category,
+  // Plain category words ("restaurants", "groceries") work like stores.
+  const resolvedName = resolveMerchant(
+    catalog,
+    purchase.merchant,
+    purchase.channel,
   )
+  const named =
+    resolvedName.source === 'none' && options.category === null
+      ? findCategory(catalog, purchase.merchant)
+      : null
+  let merchant: MerchantResolution =
+    named === null
+      ? withCallerCategory(resolvedName, options.category)
+      : categoryResolution(catalog, named, purchase.channel)
   const notices: string[] = []
   if (llmOn && merchant.source === 'none') {
     const opened = await openLlmSession({
@@ -207,6 +261,38 @@ export async function run(argv: string[], io: Io): Promise<number> {
     merchant = resolved.merchant
     notices.push(...resolved.notices)
   }
+  if (loaded === 'none') {
+    const explored = exploreCards(
+      catalog,
+      {
+        merchant: purchase.merchant,
+        category: null,
+        amount: purchase.amount,
+        channel: purchase.channel,
+        date: purchase.date,
+      },
+      {
+        filters: ALL_PERSONAL_CARDS,
+        memberships: options.members,
+        valuations: options.valuation
+          ? VALUATION_PROFILES[options.valuation]
+          : {},
+      },
+      merchant,
+    )
+    if (options.json) {
+      io.stdout(`${JSON.stringify(explored, null, 2)}\n`)
+    } else {
+      io.stdout(
+        `${formatExploration(explored, options.all)}\n${NO_WALLET_HINT}\n`,
+      )
+    }
+    for (const n of notices) io.stderr(`${n}\n`)
+    return 0
+  }
+  const wallet = options.valuation
+    ? withValuationProfile(loaded, options.valuation)
+    : loaded
   const rec = recommend(catalog, wallet, purchase, merchant)
 
   if (options.json) {

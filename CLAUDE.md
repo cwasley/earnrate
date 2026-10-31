@@ -12,6 +12,7 @@ The maintainer's full spec (data model, golden tests, milestones, competitive la
 - Don't invent rates. If a rule is ambiguous, leave a TODO and ask. Wrong rates are worse than missing ones.
 - Matching and math are pure and deterministic. The LLM is only a cached, labeled fallback for merchant → category.
 - Every recommendation states its matched rule, assumptions and confidence.
+- The wallet is optional. No command, MCP tool or page may require one: with no cards, answer from every card earnrate knows; with cards named for one answer (`--cards`, the MCP `cards` input), use only those; a saved wallet adds tracking. Spending is optional too (typical amounts, said so). Statements stay CLI-only.
 
 ## Tooling
 

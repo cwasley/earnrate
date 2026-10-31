@@ -1,6 +1,5 @@
 import { parseArgs } from 'node:util'
 import { CLI_NAME } from '../brand.ts'
-import { walletProblems } from '../data/integrity.ts'
 import { loadCatalog, walletPath, type Catalog } from '../data/load.ts'
 import {
   ALL_PERSONAL_CARDS,
@@ -20,6 +19,9 @@ import {
   resolveSpendLines,
   simulateAdditions,
   simulateCatalog,
+  spendLineFor,
+  TYPICAL_MONTHLY_SPEND,
+  TYPICAL_SPEND_NOTE,
   type CatalogSimulation,
   type Simulation,
   type SpendLine,
@@ -27,13 +29,7 @@ import {
 } from '../engine/simulate.ts'
 import { knownMemberships } from '../engine/setup.ts'
 import type { Wallet } from '../schema/wallet.ts'
-import {
-  displayPath,
-  readWallet,
-  RUNTIME_ERROR,
-  USAGE_ERROR,
-  type Io,
-} from './run.ts'
+import { cardsToUse, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
 
 const FILTER_OPTIONS = `  --cash, --points        Cash back cards only, or points and miles cards only.
   --no-fee                Cards with no annual fee.
@@ -63,12 +59,12 @@ ${FILTER_OPTIONS}
   -h, --help              Show this help.
 `
 
-export const SIMULATE_HELP = `Usage: ${CLI_NAME} simulate <what>=<dollars a month>... [options]
+export const SIMULATE_HELP = `Usage: ${CLI_NAME} simulate [<what>=<dollars a month>...] [options]
 
 Spends this much every month for a year and ranks the cards, and the
 two-card pairs, that earn the most after annual fees. Each <what> is a
 category (groceries, dining, gas, travel, streaming, other) or a merchant
-(amazon, costco).
+(amazon, costco). With no amounts, it uses typical ones for a U.S. household.
 
 Examples:
   ${CLI_NAME} simulate groceries=600 dining=300 gas=150 other=1000
@@ -77,6 +73,7 @@ Examples:
 Options:
   --wallet                Start from your wallet and rank the cards that would
                           add the most to it, after their fee.
+  --cards <ids>           The same, for cards you name instead of your wallet.
 ${FILTER_OPTIONS}
   --start <YYYY-MM-DD>    First month of the year simulated. Default: today.
   --all                   List more results.
@@ -164,7 +161,7 @@ const TOP_BEST = 10
 export function formatExploration(r: Exploration, all: boolean): string {
   const m = r.merchant
   const title =
-    m.source === 'caller'
+    m.source === 'category'
       ? m.resolvedName.toLowerCase()
       : m.source === 'none'
         ? `"${m.input}" (not recognized)`
@@ -400,6 +397,7 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
       options: {
         ...FILTER_FLAGS,
         wallet: { type: 'boolean' },
+        cards: { type: 'string' },
         start: { type: 'string' },
       },
     })
@@ -418,7 +416,10 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
     io.stderr(`${settings}\n`)
     return USAGE_ERROR
   }
-  const spend = parseSpend(catalog, positionals)
+  const typical = positionals.length === 0
+  const spend = typical
+    ? TYPICAL_MONTHLY_SPEND.map((t) => spendLineFor(catalog, t.what, t.monthly))
+    : parseSpend(catalog, positionals)
   if (typeof spend === 'string') {
     io.stderr(`${spend}\n`)
     return USAGE_ERROR
@@ -433,16 +434,17 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
   }
   const options = { ...settings, start: values.start ?? io.today }
 
-  if (values.wallet) {
-    const file = walletPath(io.env)
-    const wallet = await readWallet(file, io)
-    if (!wallet) return RUNTIME_ERROR
-    const problems = walletProblems(wallet, catalog)
-    if (problems.length > 0) {
+  if (values.wallet || values.cards !== undefined) {
+    const wallet = await cardsToUse(walletPath(io.env), io, {
+      cards: values.cards === undefined ? null : values.cards.split(','),
+      members: values.member ?? [],
+    })
+    if (wallet === null) return RUNTIME_ERROR
+    if (wallet === 'none') {
       io.stderr(
-        `Your wallet at ${displayPath(file)} has problems:\n${problems.map((p) => `  - ${p}\n`).join('')}`,
+        `No saved wallet yet. Name your cards instead: --cards amex-gold,chase-prime-visa\n`,
       )
-      return RUNTIME_ERROR
+      return USAGE_ERROR
     }
     const valued =
       values.valuation !== undefined && isValuationProfile(values.valuation)
@@ -452,7 +454,7 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
     io.stdout(
       values.json
         ? `${JSON.stringify(result, null, 2)}\n`
-        : formatAdditions(result, catalog, values.all ?? false),
+        : `${typical ? `${TYPICAL_SPEND_NOTE}\n\n` : ''}${formatAdditions(result, catalog, values.all ?? false)}`,
     )
     return 0
   }
@@ -461,7 +463,7 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
   io.stdout(
     values.json
       ? `${JSON.stringify(result, null, 2)}\n`
-      : formatCatalogSimulation(result, catalog, values.all ?? false),
+      : `${typical ? `${TYPICAL_SPEND_NOTE}\n\n` : ''}${formatCatalogSimulation(result, catalog, values.all ?? false)}`,
   )
   return 0
 }

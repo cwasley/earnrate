@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog, type Catalog } from '../src/data/load.ts'
+import { catalogCheatSheet } from '../src/engine/cheat-sheet.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,
+  findCategory,
   idealHolding,
   type ExploreOptions,
   type ExploreQuery,
@@ -13,8 +15,11 @@ import {
   simulateAdditions,
   simulateCatalog,
   simulateWallet,
+  TYPICAL_SPEND_NOTE,
+  typicalSpendLines,
   type SimulateOptions,
 } from '../src/engine/simulate.ts'
+import { walletFromCards } from '../src/engine/transient.ts'
 import { CardSchema } from '../src/schema/card.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 import { TODAY } from './golden/fixtures.ts'
@@ -355,5 +360,60 @@ describe('a year of spending', () => {
       ['gas-free', 18, 18],
       ['dining-fee', 60, 10],
     ])
+  })
+})
+
+describe('nothing entered, or cards named for one answer', () => {
+  test('everyday words find categories', () => {
+    expect(findCategory(catalog, 'coffee shop')).toBe('dining.fast_food')
+    expect(findCategory(catalog, 'dinner')).toBe('dining')
+    expect(findCategory(catalog, 'corner store')).toBe('convenience_store')
+    expect(findCategory(catalog, 'subway')).toBeNull()
+  })
+
+  test('named cards make a wallet for one answer, with the same rules', () => {
+    const wallet = walletFromCards(
+      catalog,
+      {
+        cards: [{ id: 'amex-gold' }, { id: 'chase-prime-visa' }],
+        memberships: ['amazon-prime'],
+      },
+      TODAY,
+    )
+    expect(typeof wallet).not.toBe('string')
+    if (typeof wallet === 'string') return
+    expect(wallet.cards.map((c) => c.id)).toEqual([
+      'amex-gold',
+      'chase-prime-visa',
+    ])
+    expect(wallet.memberships).toEqual(['amazon-prime'])
+    expect(
+      walletFromCards(catalog, { cards: [{ id: 'nope' }] }, TODAY),
+    ).toMatch(/No card 'nope'/)
+    expect(walletFromCards(catalog, { cards: [] }, TODAY)).toMatch(
+      /at least one card/,
+    )
+  })
+
+  test('the all-cards cheat sheet picks the best card earnrate knows', () => {
+    const sheet = catalogCheatSheet(catalog, TODAY, casual)
+    expect(sheet.scope).toBe('all cards')
+    const groceries = sheet.rows.find((r) => r.label === 'Groceries')
+    expect(groceries?.cardId).toBe('amex-blue-cash-preferred')
+    expect(groceries?.note).toMatch(/^\$95 annual fee\. Up to \$6,000/)
+  })
+
+  test('typical spending stands in when none is given, and says so', () => {
+    const lines = typicalSpendLines(catalog)
+    expect(lines.map((l) => [l.label, l.monthly])).toEqual([
+      ['Supermarkets', 500],
+      ['Restaurants', 250],
+      ['Gas stations', 150],
+      ['Amazon', 100],
+      ['Streaming services', 40],
+      ['Travel', 150],
+      ['Everything else', 800],
+    ])
+    expect(TYPICAL_SPEND_NOTE).toMatch(/^No spending was given/)
   })
 })

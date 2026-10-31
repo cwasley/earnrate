@@ -20,6 +20,13 @@ Needs Node 22 or later.
 
 ```sh
 npm install -g earnrate
+earnrate restaurants               # the best cards earnrate knows, no setup
+earnrate whole foods 80 --cards amex-gold,chase-prime-visa   # just these cards
+```
+
+You never have to enter your cards: with none, every answer covers every card earnrate knows. To have earnrate remember yours, track caps and welcome bonuses, and give a cheat sheet for your own wallet, save them:
+
+```sh
 earnrate cards sapphire            # find your cards' ids
 earnrate add chase-sapphire-preferred
 earnrate add amex-gold

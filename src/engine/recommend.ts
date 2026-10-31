@@ -378,6 +378,10 @@ function assumptionsFor(
     assumptions.push(
       `Treats "${merchant.input}" as an everyday purchase with no bonus category.`,
     )
+  } else if (merchant.source === 'category') {
+    assumptions.push(
+      `Ranks purchases that code as ${categoryPhrase(catalog, merchant.category)}.`,
+    )
   } else if (merchant.category === 'other') {
     assumptions.push(
       `Assumes ${merchant.resolvedName} falls outside the usual bonus categories.`,

@@ -1,6 +1,5 @@
 import { parseArgs } from 'node:util'
 import { CLI_NAME } from '../brand.ts'
-import { walletProblems } from '../data/integrity.ts'
 import { loadCatalog, walletPath } from '../data/load.ts'
 import {
   compareOffers,
@@ -8,13 +7,7 @@ import {
   type OfferSummary,
 } from '../engine/offers.ts'
 import { isValuationProfile, withValuationProfile } from '../engine/profiles.ts'
-import {
-  displayPath,
-  readWallet,
-  RUNTIME_ERROR,
-  USAGE_ERROR,
-  type Io,
-} from './run.ts'
+import { cardsToUse, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
 
 export const OFFERS_HELP = `Usage: ${CLI_NAME} offers [--cash | --points] [--no-fee] [--business] [options]
 
@@ -127,17 +120,14 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
     return USAGE_ERROR
   }
 
-  const walletFile = walletPath(io.env)
-  const loaded = await readWallet(walletFile, io)
-  if (!loaded) return RUNTIME_ERROR
+  const found = await cardsToUse(walletPath(io.env), io, {
+    cards: null,
+    members: [],
+  })
+  if (found === null) return RUNTIME_ERROR
   const catalog = await loadCatalog()
-  const problems = walletProblems(loaded, catalog)
-  if (problems.length > 0) {
-    io.stderr(
-      `Your wallet at ${displayPath(walletFile)} has problems:\n${problems.map((p) => `  - ${p}\n`).join('')}`,
-    )
-    return RUNTIME_ERROR
-  }
+  const loaded =
+    found === 'none' ? { valuations: {}, memberships: [], cards: [] } : found
   const wallet =
     values.valuation && isValuationProfile(values.valuation)
       ? withValuationProfile(loaded, values.valuation)

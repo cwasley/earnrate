@@ -74,15 +74,7 @@ function ask(wallet: Wallet, text: string, amount: number | null) {
     category === null
       ? resolveMerchant(catalog, text, null)
       : categoryResolution(catalog, category, null)
-  const rec = recommend(catalog, wallet, purchase, merchant)
-  // A category asked for directly isn't an unknown merchant.
-  const warnings =
-    category === null
-      ? rec.warnings
-      : rec.warnings.filter(
-          (w) => !w.includes("isn't in earnrate's merchant list"),
-        )
-  return { ...rec, warnings }
+  return recommend(catalog, wallet, purchase, merchant)
 }
 
 function Answer({
@@ -806,7 +798,7 @@ export function MyWallet() {
         {rec ? (
           <section class="results">
             <h3>
-              {rec.merchant.source === 'caller'
+              {rec.merchant.source === 'category'
                 ? `For ${categoryPhrase(catalog, rec.merchant.category)}`
                 : `At ${rec.merchant.resolvedName}`}
             </h3>

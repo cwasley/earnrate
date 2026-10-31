@@ -58,7 +58,7 @@ function explore(text: string, settings: Settings): Exploration {
 
 function title(r: Exploration): string {
   const m = r.merchant
-  if (m.source === 'caller') return categoryPhrase(catalog, m.category)
+  if (m.source === 'category') return categoryPhrase(catalog, m.category)
   return m.source === 'none' ? `“${m.input}”` : m.resolvedName
 }
 
@@ -216,7 +216,7 @@ export function BestFor({
           <section class="results">
             <h3>
               Best cards for {title(result)}
-              {result.merchant.source !== 'caller' &&
+              {result.merchant.source !== 'category' &&
               result.merchant.source !== 'none' ? (
                 <span class="muted">
                   {' '}

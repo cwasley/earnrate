@@ -26,7 +26,9 @@ export type MerchantResolution = {
   channel: Channel | null
   confidence: Confidence
   // 'caller': the category came with the request (an MCP client or --category)
-  source: 'override' | 'seed' | 'llm' | 'caller' | 'none'
+  // for a merchant earnrate doesn't know. 'category': the question was about a
+  // kind of purchase ("restaurants"), not a store.
+  source: 'override' | 'seed' | 'llm' | 'caller' | 'category' | 'none'
   bookedVia: string[] // merchant ids for other ways to book the same thing
   inference: {
     model: string

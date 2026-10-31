@@ -2,6 +2,14 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.10.30.3
+
+More everyday words find categories, for questions asked without a store name ("coffee shop", "dinner", "train"). Each maps to the category those purchases already fall under. No rates changed.
+
+| Category                                                                                                                  | Field   | Old → new           | Source |
+| ------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------- | ------ |
+| dining, dining.fast_food, gas, transit, travel.hotels, travel.flights, convenience_store, home_improvement, online_retail | aliases | adds everyday words | n/a    |
+
 ## 2026.10.30.2
 
 Cards record when the issuer stopped taking applications, so "best card for" lists can leave out cards nobody can get. Categories gain `aliases`, the everyday words people search by ("groceries" finds supermarkets). No rates changed.
