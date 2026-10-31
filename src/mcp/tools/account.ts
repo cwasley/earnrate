@@ -40,13 +40,19 @@ export function registerAccountTools(
     {
       title: 'Import a wallet',
       description:
-        'Replaces the saved wallet with a wallet.yaml from the earnrate command line or earnrate.dev, when the user pastes or attaches one. Wallet files only: never statements or card numbers. Confirm with the user first if they already have cards saved.',
+        'Replaces the saved wallet with a wallet.yaml from the earnrate command line or earnrate.dev, when the user pastes or attaches one. Wallet files only: never statements or card numbers. If cards are already saved, it refuses unless replace is true: confirm with the user first.',
       inputSchema: z.object({
         yaml: z
           .string()
           .min(1)
           .max(100_000)
           .describe('The wallet.yaml text, as the user gave it.'),
+        replace: z
+          .boolean()
+          .optional()
+          .describe(
+            'true to replace a wallet that already has cards, after the user confirms.',
+          ),
       }),
       outputSchema: WalletChangeSchema,
       annotations: {
@@ -56,9 +62,14 @@ export function registerAccountTools(
         openWorldHint: false,
       },
     },
-    async ({ yaml }) => {
+    async ({ yaml, replace }) => {
       const parsed = parseWalletYaml(yaml, catalog)
       if (typeof parsed === 'string') return fail(parsed)
+      const current = await store.load().catch(() => null)
+      if (current !== null && current.cards.length > 0 && replace !== true)
+        return fail(
+          `This would replace the ${String(current.cards.length)} ${current.cards.length === 1 ? 'card' : 'cards'} already saved (${current.cards.map((c) => c.id).join(', ')}). Ask the user, then call again with replace: true.`,
+        )
       const count = parsed.cards.length
       return ctx.changed(
         await store.replace(parsed),

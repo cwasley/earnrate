@@ -17,6 +17,7 @@ import {
   memoryBackend,
   type WalletStore,
 } from '../src/data/store.ts'
+import type { CheatSheet } from '../src/engine/cheat-sheet.ts'
 import type { Recommendation } from '../src/engine/types.ts'
 import type { WalletSummary } from '../src/engine/wallet-summary.ts'
 import {
@@ -173,7 +174,23 @@ describe('tools', () => {
         remaining: 2000,
       }),
     ])
-    expect(text(result)).toMatch(/Cash\+ \(usbank-cash-plus\)/)
+    expect(text(result)).toMatch(/Cash\+ \(usbank-cash-plus\): Visa,/)
+    expect(text(result)).toMatch(/Picks for 2026-Q4: /)
+    expect(text(result)).toMatch(/^Memberships: /m)
+  })
+
+  test('category inputs leave out parents no purchase codes as', async () => {
+    const client = await connect(await walletCopy())
+    const parent = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Corner market', category: 'grocery' },
+    })
+    expect(parent.isError).toBe(true)
+    const child = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Corner market', category: 'grocery.supermarket' },
+    })
+    expect(child.isError).toBeFalsy()
   })
 
   test('a broken wallet is reported, not thrown', async () => {
@@ -195,6 +212,21 @@ describe('wallet setup', () => {
   test('the server tells agents how to set up a wallet', async () => {
     const client = await connect(await walletCopy())
     expect(client.getInstructions()).toMatch(/search_cards.*add_card/s)
+  })
+
+  test('the every-card cheat sheet takes catalog filters', async () => {
+    const client = await connect(await missingWallet())
+    const sheet = await client.callTool({
+      name: 'cheat_sheet',
+      arguments: { noAnnualFee: true },
+    })
+    const rows = (sheet.structuredContent as CheatSheet).rows
+    expect(rows.length).toBeGreaterThan(0)
+    for (const row of rows) {
+      if (row.cardId === null) continue
+      const card = catalog.cards.find((c) => c.id === row.cardId)
+      expect(card?.annual_fee ?? 0).toBe(0)
+    }
   })
 
   test('compares every card with no wallet at all', async () => {
@@ -432,6 +464,19 @@ describe('wallet setup', () => {
       arguments: { yaml: 'cards:\n  - id: not-a-card\n' },
     })
     expect(notWallet.isError).toBe(true)
+
+    const over = { yaml: 'cards:\n  - id: amex-gold\n' }
+    const refused = await client.callTool({
+      name: 'import_wallet',
+      arguments: over,
+    })
+    expect(refused.isError).toBe(true)
+    expect(text(refused)).toMatch(/replace the 2 cards already saved/)
+    const replaced = await client.callTool({
+      name: 'import_wallet',
+      arguments: { ...over, replace: true },
+    })
+    expect(text(replaced)).toMatch(/Imported a wallet with 1 card\./)
 
     await client.callTool({ name: 'delete_wallet', arguments: {} })
     expect(await backend.read()).toBeNull()

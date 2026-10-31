@@ -206,6 +206,7 @@ export function registerAnswerTools(
         "Ranks the public welcome (sign-up) offers on cards the user doesn't have by first-year value: the bonus at the user's point values minus the first year's annual fee. Use it when the user asks which new card to get or which has the best sign-up bonus. It covers only the cards earnrate knows, offers vary by person, and each offer's note gives the issuer's eligibility rules; pass those caveats on. It doesn't account for what a card would earn on the user's spending.",
       inputSchema: z.object({
         ...OfferFilters,
+        valuation: CatalogFilters.valuation,
         includeHeld: z
           .boolean()
           .optional()
@@ -218,9 +219,10 @@ export function registerAnswerTools(
     async (args) => {
       const wallet = await ctx.cardsFor(args.cards, undefined)
       if (typeof wallet === 'string') return fail(wallet)
+      const base = wallet ?? EMPTY_WALLET
       const comparison = compareOffers(
         catalog,
-        wallet ?? EMPTY_WALLET,
+        args.valuation ? withValuationProfile(base, args.valuation) : base,
         {
           kind: args.kind ?? 'any',
           noAnnualFee: args.noAnnualFee ?? false,
@@ -396,11 +398,16 @@ export function registerAnswerTools(
     {
       title: 'Cheat sheet',
       description:
-        "The card to use for each everyday kind of purchase right now: groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores and everything else. With no cards given and no saved wallet, it picks from every card earnrate knows (`scope: all cards`, each row noting the card's fee and conditions). With cards named in the conversation or a saved wallet, it picks from the user's own cards, with caps, picks and activations as they are. For one specific store, call best_card_for_purchase instead. Pass on the notes.",
+        "The card to use for each everyday kind of purchase right now: groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores and everything else. With no cards given and no saved wallet, it picks from every card earnrate knows (`scope: all cards`, each row noting the card's fee and conditions). With cards named in the conversation or a saved wallet, it picks from the user's own cards, with caps, picks and activations as they are. The kind, noAnnualFee, business and issuer filters apply only when it picks from every card. For one specific store, call best_card_for_purchase instead. Pass on the notes.",
       inputSchema: z.object({
         date: DateInput,
         cards: NamedCards,
         memberships: NamedMemberships,
+        kind: CatalogFilters.kind,
+        noAnnualFee: CatalogFilters.noAnnualFee,
+        business: CatalogFilters.business,
+        issuer: CatalogFilters.issuer,
+        valuation: CatalogFilters.valuation,
       }),
       outputSchema: CheatSheetSchema,
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -412,14 +419,16 @@ export function registerAnswerTools(
       const sheet =
         wallet === null
           ? {
-              ...catalogCheatSheet(
-                catalog,
-                date,
-                settings({ memberships: args.memberships }),
-              ),
+              ...catalogCheatSheet(catalog, date, settings(args)),
               notes: [ALL_CARDS_NOTE],
             }
-          : cheatSheet(catalog, wallet, date)
+          : cheatSheet(
+              catalog,
+              args.valuation
+                ? withValuationProfile(wallet, args.valuation)
+                : wallet,
+              date,
+            )
       return {
         content: [{ type: 'text', text: formatCheatSheet(sheet) }],
         structuredContent: sheet,

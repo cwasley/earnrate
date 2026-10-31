@@ -2,33 +2,59 @@ import type { BonusBooking, CapBooking } from '../engine/record.ts'
 import { money } from '../engine/text.ts'
 import type { WalletSummary } from '../engine/wallet-summary.ts'
 
+const NETWORKS: Record<string, string> = {
+  visa: 'Visa',
+  mastercard: 'Mastercard',
+  amex: 'American Express',
+  discover: 'Discover',
+  store: 'store card',
+}
+
+const words = (id: string) => id.replace(/[-_.]/g, ' ')
+
 export function formatWalletSummary(summary: WalletSummary): string {
-  return summary.cards
-    .map((c) => {
-      const caps = c.caps
-        .filter((cap) => cap.remaining !== null)
+  const cards = summary.cards.map((c) => {
+    const lines = [
+      `- ${c.checkoutLabel ?? c.cardName} (${c.cardId}): ${NETWORKS[c.network] ?? c.network}, ${c.currency} at ${String(c.centsPerUnit)}¢. Data checked ${c.lastVerified}${c.dataIsStale ? ' (old; check the issuer)' : ''}.`,
+    ]
+    if (c.onlyAt) lines.push(`  Works only at ${c.onlyAt.join(', ')}.`)
+    if (c.chosen) {
+      const picks = Object.entries(c.chosen.picks)
         .map(
-          (cap) =>
-            `${cap.key} ${money(cap.spent)} of ${money(cap.amount)} used for ${cap.currentPeriod ?? ''}`,
+          ([choice, options]) =>
+            `${words(choice)}: ${options.map(words).join(', ')}`,
         )
-      const chosen = c.chosen
-        ? `; chosen categories for ${c.chosen.period}${c.chosen.current ? '' : ' (out of date)'}`
-        : ''
-      const onlyAt = c.onlyAt ? `; works only at ${c.onlyAt.join(', ')}` : ''
-      const rotation =
-        c.rotationGap === null
-          ? ''
-          : `; rotating categories for ${c.rotationGap} not in earnrate yet`
-      const b = c.bonus
-      const bonus =
-        b?.state === 'open' && b.spend !== null
-          ? `; welcome bonus ${money(b.spent)} of ${money(b.spend)} spent, due ${b.deadline ?? ''}`
-          : b
-            ? `; welcome bonus ${b.state}`
-            : ''
-      return `- ${c.checkoutLabel ?? c.cardName} (${c.cardId}): ${c.currency} at ${String(c.centsPerUnit)}¢${caps.length > 0 ? `; ${caps.join(', ')}` : ''}${chosen}${rotation}${onlyAt}${bonus}`
-    })
-    .join('\n')
+        .join('; ')
+      lines.push(
+        c.chosen.current
+          ? `  Picks for ${c.chosen.period}: ${picks}. They need choosing again when the period ends.`
+          : `  Picks are for ${c.chosen.period}, which is over: ask for this period's picks.`,
+      )
+    }
+    if (c.activated.length > 0)
+      lines.push(`  Activated: ${c.activated.join(', ')}.`)
+    if (c.rotationGap !== null)
+      lines.push(
+        `  Rotating categories for ${c.rotationGap} aren't in earnrate yet.`,
+      )
+    for (const cap of c.caps)
+      if (cap.remaining !== null)
+        lines.push(
+          `  Cap ${cap.key}: ${money(cap.spent)} of ${money(cap.amount)} used for ${cap.currentPeriod ?? ''}.`,
+        )
+    const b = c.bonus
+    if (b?.state === 'open' && b.spend !== null)
+      lines.push(
+        `  Welcome bonus: ${money(b.spent)} of ${money(b.spend)} spent, due ${b.deadline ?? ''}.`,
+      )
+    else if (b) lines.push(`  Welcome bonus: ${b.state}.`)
+    return lines.join('\n')
+  })
+  const memberships =
+    summary.memberships.length > 0
+      ? `Memberships: ${summary.memberships.join(', ')}.`
+      : 'Memberships: none saved.'
+  return [...cards, memberships].join('\n')
 }
 
 export function formatBooking(

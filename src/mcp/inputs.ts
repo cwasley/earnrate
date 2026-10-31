@@ -141,13 +141,15 @@ export function cardInput({
 
 // Inputs that list the catalog's categories, issuers and memberships.
 export function makeInputs(catalog: Catalog) {
-  const categoryIds = catalog.categories.map((c) => c.id) as [
-    string,
-    ...string[],
-  ]
-  const categoryList = catalog.categories
-    .map((c) => `${c.id} (${c.name})`)
-    .join(', ')
+  // A parent with subcategories and no merchant codes of its own ("Grocery")
+  // isn't something a purchase codes as, so it's left out.
+  const categories = catalog.categories.filter(
+    (c) =>
+      c.mccs.length > 0 ||
+      !catalog.categories.some((k) => k.id.startsWith(`${c.id}.`)),
+  )
+  const categoryIds = categories.map((c) => c.id) as [string, ...string[]]
+  const categoryList = categories.map((c) => `${c.id} (${c.name})`).join(', ')
   const membershipIds = knownMemberships(catalog) as [string, ...string[]]
   const issuers = [...new Set(catalog.cards.map((c) => c.issuer))].sort() as [
     string,
