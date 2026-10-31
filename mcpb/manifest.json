@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "earnrate",
   "display_name": "earnrate",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Which of your credit cards earns the most at a store, and why. Your cards stay on your computer.",
   "long_description": "Tell Claude which credit cards you have, then ask which one to use before you pay. earnrate checks every card in your wallet against each issuer's own terms, tracks the caps you've already spent and the categories you've picked, and explains its answer. It can also compare every card it knows for a store or a year of spending, even before you add yours.\n\nYour wallet is a file on your computer, listing cards by product (like amex-gold). earnrate never asks for card numbers, expiry dates, security codes or bank logins, and sends nothing anywhere. No affiliate links.",
   "author": {
