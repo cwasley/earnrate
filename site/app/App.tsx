@@ -3,21 +3,23 @@ import { dataVersion } from 'virtual:catalog'
 import { BestFor, SUGGESTIONS } from './BestFor.tsx'
 import { issuerName, issuers, MEMBERSHIPS } from './format.ts'
 import { DEFAULT_SETTINGS, load, save, type Settings } from './settings.ts'
+import { MyWallet } from './MyWallet.tsx'
 import { Spending } from './Spending.tsx'
 
-type Tab = 'best' | 'spending'
+type Tab = 'best' | 'spending' | 'wallet'
 
 // State lives in the URL fragment, which browsers never send to a server.
 function readHash(): { tab: Tab; query: string } {
   const hash = new URLSearchParams(location.hash.slice(1))
   if (hash.has('spending')) return { tab: 'spending', query: '' }
+  if (hash.has('wallet')) return { tab: 'wallet', query: '' }
   return { tab: 'best', query: hash.get('best') ?? '' }
 }
 
 function writeHash(tab: Tab, query: string) {
   const hash =
-    tab === 'spending'
-      ? '#spending'
+    tab !== 'best'
+      ? `#${tab}`
       : query === ''
         ? ''
         : `#best=${encodeURIComponent(query).replace(/%20/g, '+')}`
@@ -179,7 +181,7 @@ export function App() {
           aria-selected={tab === 'best'}
           onClick={() => setView({ tab: 'best', query })}
         >
-          Best card for…
+          Best for…
         </button>
         <button
           type="button"
@@ -189,8 +191,18 @@ export function App() {
         >
           My spending
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'wallet'}
+          onClick={() => setView({ tab: 'wallet', query })}
+        >
+          My wallet
+        </button>
       </div>
-      <Filters settings={settings} onChange={setSettings} />
+      {tab === 'wallet' ? null : (
+        <Filters settings={settings} onChange={setSettings} />
+      )}
       <div role="tabpanel">
         {tab === 'best' ? (
           <BestFor
@@ -198,8 +210,10 @@ export function App() {
             query={query}
             onQuery={(q) => setView({ tab: 'best', query: q })}
           />
-        ) : (
+        ) : tab === 'spending' ? (
           <Spending settings={settings} />
+        ) : (
+          <MyWallet />
         )}
       </div>
       <datalist id="suggestions">

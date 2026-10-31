@@ -11,10 +11,10 @@ import {
 import { feeText, shortName, usd, words } from './format.ts'
 import { engineOptions, loadList, save, type Settings } from './settings.ts'
 
-type Row = { what: string; monthly: number }
+export type Row = { what: string; monthly: number }
 
 // Rough monthly amounts for a U.S. household, a starting point to edit.
-const STARTER: Row[] = [
+export const STARTER: Row[] = [
   { what: 'Groceries', monthly: 500 },
   { what: 'Dining', monthly: 250 },
   { what: 'Gas', monthly: 150 },
@@ -24,7 +24,7 @@ const STARTER: Row[] = [
   { what: 'Everything else', monthly: 800 },
 ]
 
-function lineFor(what: string, monthly: number) {
+export function lineFor(what: string, monthly: number) {
   const category = findCategory(catalog, what)
   return { merchant: category === null ? what : null, category, monthly }
 }

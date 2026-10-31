@@ -20,7 +20,7 @@
 
 .tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
   padding: 4px;
   background: var(--accent-soft);
@@ -364,4 +364,194 @@
 .data-version {
   font-size: 13px;
   margin-top: 18px;
+}
+
+.app section > h3 {
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  margin: 28px 0 8px;
+}
+
+.app label.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 15px;
+  padding: 3px 0;
+}
+
+.app label.check input {
+  margin-top: 4px;
+  accent-color: var(--accent);
+}
+
+.ask input.amount {
+  flex: 0 0 72px;
+  padding: 12px 8px;
+}
+
+.verdict {
+  font-size: 19px;
+  margin: 4px 0 10px;
+}
+
+.answer .result-list {
+  margin-top: 10px;
+}
+
+table.cheat {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15.5px;
+}
+
+table.cheat th,
+table.cheat td {
+  text-align: left;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+table.cheat th {
+  font-weight: 500;
+  color: var(--muted);
+  width: 38%;
+}
+
+table.cheat td.rate {
+  font-size: 15.5px;
+  text-align: right;
+}
+
+.held {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+.held > li {
+  border-bottom: 1px solid var(--line);
+}
+
+.held-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  padding: 11px 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.held-row .muted {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.editor {
+  padding: 0 0 14px;
+}
+
+.editor fieldset {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin: 0 0 10px;
+  padding: 8px 12px;
+}
+
+.editor legend {
+  font-size: 14px;
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.field input,
+.app input.search {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.app input.search {
+  width: 100%;
+}
+
+.row-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.row-buttons button,
+.file-button,
+.found button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.row-buttons button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.row-buttons button.danger {
+  border-color: #b3261e;
+  color: #b3261e;
+}
+
+.file-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.file-button:focus-within {
+  outline: 2px solid var(--accent);
+}
+
+.found {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0;
+}
+
+.found li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.found button {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.small {
+  font-size: 14px;
 }

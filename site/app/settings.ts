@@ -67,3 +67,28 @@ export function save(key: string, value: unknown): void {
     // Storage is a convenience; without it settings last until reload.
   }
 }
+
+export function loadWallet(): Wallet | null {
+  try {
+    const raw = localStorage.getItem('earnrate:wallet')
+    if (raw === null) return null
+    const parsed = JSON.parse(raw) as Partial<Wallet> | null
+    if (!parsed || !Array.isArray(parsed.cards)) return null
+    return {
+      valuations: parsed.valuations ?? {},
+      memberships: parsed.memberships ?? [],
+      cards: parsed.cards,
+    }
+  } catch {
+    return null
+  }
+}
+
+export function saveWallet(wallet: Wallet | null): void {
+  try {
+    if (wallet === null) localStorage.removeItem('earnrate:wallet')
+    else localStorage.setItem('earnrate:wallet', JSON.stringify(wallet))
+  } catch {
+    // Without storage the wallet lasts until the page closes.
+  }
+}
