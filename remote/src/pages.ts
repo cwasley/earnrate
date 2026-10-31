@@ -24,6 +24,7 @@ a { color: var(--accent); }
 .muted { color: var(--muted); font-size: 0.94rem; }
 .warn { color: var(--warn); }
 .error { color: var(--warn); font-weight: 600; }
+form { margin-bottom: 16px; }
 section { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 20px; }
 button, .button { display: inline-block; font: inherit; font-weight: 600; padding: 10px 18px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-text); cursor: pointer; text-decoration: none; }
 button.quiet { background: transparent; color: var(--muted); border-color: var(--line); font-weight: 500; }
