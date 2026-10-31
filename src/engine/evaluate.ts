@@ -44,6 +44,20 @@ export function singleMcc(catalog: Catalog, category: string): number | null {
   return mccs.length === 1 ? (mccs[0] ?? null) : null
 }
 
+// A store card works only at its own stores; any other card wherever the
+// merchant takes its network, which counts as yes when unknown.
+export function usableAt(card: Card, merchant: MerchantResolution): boolean {
+  if (card.only_at)
+    return (
+      merchant.merchantId !== null && card.only_at.includes(merchant.merchantId)
+    )
+  return (
+    card.network === 'store' ||
+    merchant.accepts === null ||
+    merchant.accepts.includes(card.network)
+  )
+}
+
 export function categoryMatches(
   ruleCategory: string,
   category: string,
@@ -169,6 +183,30 @@ function applicability(
   return 'applies'
 }
 
+// A cap's key in the wallet's cap_usage: the shared cap's id, or the rule's
+// id for a cap written on the rule.
+export function capByKey(card: Card, key: string): Cap | undefined {
+  const shared = card.caps.find((c) => c.id === key)
+  if (shared) return shared
+  const inline = card.rules.find((r) => r.id === key)?.cap
+  return typeof inline === 'object' ? inline : undefined
+}
+
+// How much of a cap has been spent in the period `date` falls in.
+export function capUsed(
+  cap: Cap,
+  key: string,
+  held: WalletCard,
+  date: string,
+): { period: string | null; spent: number } {
+  const period = periodKey(cap.period, date, held.anniversary ?? null)
+  const usage = held.cap_usage[key]
+  return {
+    period,
+    spent: period !== null && usage?.period === period ? usage.spent : 0,
+  }
+}
+
 function capState(
   rule: Rule,
   card: Card,
@@ -176,14 +214,11 @@ function capState(
   date: string,
 ): CapState | null {
   if (rule.cap === undefined) return null
-  const capId = typeof rule.cap === 'string' ? rule.cap : null
-  const cap = capId === null ? rule.cap : card.caps.find((c) => c.id === capId)
-  if (cap === undefined || typeof cap === 'string') return null
-  const key = capId ?? rule.id
-  const period = periodKey(cap.period, date, held.anniversary ?? null)
-  const usage = held.cap_usage[key]
-  const used = period !== null && usage?.period === period ? usage.spent : 0
-  return { key, cap, period, remaining: Math.max(0, cap.amount - used) }
+  const key = typeof rule.cap === 'string' ? rule.cap : rule.id
+  const cap = capByKey(card, key)
+  if (cap === undefined) return null
+  const { period, spent } = capUsed(cap, key, held, date)
+  return { key, cap, period, remaining: Math.max(0, cap.amount - spent) }
 }
 
 function rateAfterCap(

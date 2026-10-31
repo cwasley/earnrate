@@ -2,8 +2,8 @@ import type { Catalog } from '../schema/catalog.ts'
 import type { Card, Cap } from '../schema/card.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
-import { pickedCategories } from './evaluate.ts'
-import { daysBetween, periodKey } from './periods.ts'
+import { capUsed, pickedCategories } from './evaluate.ts'
+import { daysBetween } from './periods.ts'
 import { rotationGap } from './rotation.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { cardValuation } from './valuation.ts'
@@ -64,12 +64,7 @@ function capSummaries(
     }
   }
   return [...caps].map(([key, { cap, rules }]) => {
-    const currentPeriod = periodKey(cap.period, today, held.anniversary ?? null)
-    const usage = held.cap_usage[key]
-    const spent =
-      currentPeriod !== null && usage?.period === currentPeriod
-        ? usage.spent
-        : 0
+    const { period: currentPeriod, spent } = capUsed(cap, key, held, today)
     return {
       key,
       rules,

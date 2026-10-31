@@ -1,3 +1,4 @@
+import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { daysBetween } from './periods.ts'
@@ -29,6 +30,21 @@ export function addMonths(date: string, months: number): string {
   return `${String(year)}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
+// A welcome bonus in dollars at the given point value; null when it has
+// neither points nor dollars.
+export function bonusDollars(
+  card: Card,
+  centsPerUnit: number,
+  points: number | undefined,
+  dollars: number | undefined,
+): number | null {
+  if (points !== undefined) return (points * centsPerUnit) / 100
+  if (dollars === undefined) return null
+  // A cash back card's bonus is paid like its rewards, so it pools when they
+  // do; a points card's dollar bonus is a statement credit.
+  return card.currency === 'cash' ? dollars * centsPerUnit : dollars
+}
+
 export function bonusStatus(
   catalog: Catalog,
   wallet: Wallet,
@@ -50,14 +66,7 @@ export function bonusStatus(
     bonus.points ?? (bonus.dollars === undefined ? offer?.points : undefined)
   const dollars =
     bonus.dollars ?? (bonus.points === undefined ? offer?.dollars : undefined)
-  let value: number | null = null
-  if (points !== undefined) value = (points * valuation.centsPerUnit) / 100
-  else if (dollars !== undefined) {
-    // A cash back card's bonus is paid like its rewards, so it pools when they
-    // do; a points card's dollar bonus is a statement credit.
-    value =
-      card.currency === 'cash' ? dollars * valuation.centsPerUnit : dollars
-  }
+  const value = bonusDollars(card, valuation.centsPerUnit, points, dollars)
 
   const base = {
     cardId: held.id,

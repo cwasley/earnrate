@@ -5,6 +5,7 @@ import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import {
   evaluateCard,
   purchaseContext,
+  usableAt,
   type CardEvaluation,
 } from './evaluate.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
@@ -26,6 +27,7 @@ import {
   earnText,
   money,
   num,
+  pointValuesText,
 } from './text.ts'
 import { cardValuation, type Valuation } from './valuation.ts'
 
@@ -87,17 +89,11 @@ function rankEntries(
   for (const held of wallet.cards) {
     const card = catalog.cards.find((c) => c.id === held.id)
     if (!card) continue
-    if (card.only_at) {
-      if (
-        merchant.merchantId === null ||
-        !card.only_at.includes(merchant.merchantId)
-      )
+    if (!usableAt(card, merchant)) {
+      // A store card elsewhere isn't worth mentioning; a network the merchant
+      // doesn't take is.
+      if (card.only_at || card.network === 'store' || !merchant.accepts)
         continue
-    } else if (
-      card.network !== 'store' &&
-      merchant.accepts &&
-      !merchant.accepts.includes(card.network)
-    ) {
       const takes = merchant.accepts
         .map((n) => NETWORK_NAMES[n] ?? n)
         .join(' or ')
@@ -372,17 +368,11 @@ function assumptionsFor(
       'Assumes an online purchase, since you gave a web address.',
     )
   }
-  const pointValues = new Map<string, number>()
-  for (const e of entries) {
-    if (e.valuation.currency !== 'cash')
-      pointValues.set(e.valuation.currency, e.valuation.centsPerUnit)
-  }
-  if (pointValues.size > 0) {
-    const list = [...pointValues].map(
-      ([id, cents]) => `${currencyLabel(catalog, id)} at ${num(cents)}¢`,
-    )
-    assumptions.push(`Values points at: ${list.join(', ')}.`)
-  }
+  const values = pointValuesText(
+    catalog,
+    entries.map((e) => e.valuation),
+  )
+  if (values !== null) assumptions.push(values)
   return assumptions
 }
 

@@ -1,6 +1,6 @@
 import type { Catalog } from '../schema/catalog.ts'
 import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
-import { categoryMatches } from '../engine/evaluate.ts'
+import { capByKey, categoryMatches } from '../engine/evaluate.ts'
 import { periodKey } from '../engine/periods.ts'
 import { applyBooking, capBooking, type CapBooking } from '../engine/record.ts'
 import { recommend } from '../engine/recommend.ts'
@@ -102,12 +102,9 @@ function capPeriodKey(
 ): string | null {
   const card = catalog.cards.find((c) => c.id === booking.cardId)
   const held = wallet.cards.find((c) => c.id === booking.cardId)
-  const shared = card?.caps.find((c) => c.id === booking.capKey)
-  const inline = card?.rules.find((r) => r.id === booking.capKey)?.cap
-  const period =
-    shared?.period ?? (typeof inline === 'object' ? inline.period : undefined)
-  if (!period) return null
-  return periodKey(period, date, held?.anniversary ?? null)
+  const cap = card && capByKey(card, booking.capKey)
+  if (!cap) return null
+  return periodKey(cap.period, date, held?.anniversary ?? null)
 }
 
 // Replays the statements twice: once on the cards actually used, once on

@@ -1,8 +1,7 @@
 import type { Catalog } from '../schema/catalog.ts'
 import type { Channel, MerchantResolution } from '../engine/types.ts'
+import { Network } from '../schema/common.ts'
 import type { Merchant } from '../schema/merchant.ts'
-
-const ALL_NETWORKS = ['visa', 'mastercard', 'amex', 'discover'] as const
 
 export function normalizeMerchantName(input: string): string {
   return input
@@ -92,7 +91,7 @@ export function resolveMerchant(
       resolvedName: `${found.name} gas`,
       category: storeGas,
       likelyMcc: null,
-      accepts: found.in_store?.accepts ?? found.accepts ?? [...ALL_NETWORKS],
+      accepts: found.in_store?.accepts ?? found.accepts ?? [...Network.options],
       ambiguity:
         storeGas === 'gas.grocery_store'
           ? {
@@ -138,7 +137,7 @@ function fromMerchant(
     resolvedName: found.name,
     category: view?.category ?? found.category,
     likelyMcc: view?.likely_mcc ?? found.likely_mcc ?? null,
-    accepts: view?.accepts ?? found.accepts ?? [...ALL_NETWORKS],
+    accepts: view?.accepts ?? found.accepts ?? [...Network.options],
     ambiguity: found.ambiguity
       ? { mayCodeAs: found.ambiguity.may_code_as, note: found.ambiguity.note }
       : null,

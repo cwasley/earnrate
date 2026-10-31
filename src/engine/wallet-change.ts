@@ -1,7 +1,7 @@
 import type { Catalog } from '../schema/catalog.ts'
 import type { Card } from '../schema/card.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
-import { periodKey } from './periods.ts'
+import { choicePeriod, periodKey } from './periods.ts'
 import {
   knownMemberships,
   searchCards,
@@ -77,16 +77,9 @@ function isAnniversary(text: string): boolean {
   )
 }
 
-// The period key picks are filed under: the card's choice period, or for
-// picks that carry over, the current year (it's never compared).
-function pickPeriod(card: Card, today: string): string | null {
-  const periods = [
-    ...new Set(
-      card.choices.map((c) => c.period).filter((p) => p !== 'until_changed'),
-    ),
-  ]
-  if (periods.length > 1) return null
-  return periodKey(periods[0] ?? 'calendar_year', today, null)
+function pickKey(card: Card, today: string): string | null {
+  const period = choicePeriod(card)
+  return period === null ? null : periodKey(period, today, null)
 }
 
 export function cardFields(
@@ -155,7 +148,7 @@ export function cardFields(
         )
       }
     }
-    const period = pickPeriod(card, today)
+    const period = pickKey(card, today)
     if (period === null) {
       problems.push(
         `${card.id} has picks on different schedules; edit the wallet by hand.`,

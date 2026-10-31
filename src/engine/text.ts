@@ -58,3 +58,19 @@ export function codesAs(
   const code = mcc === null ? '' : ` (MCC ${String(mcc)})`
   return `Assumes ${merchant.resolvedName} codes as ${categoryPhrase(catalog, merchant.category)}${code}.`
 }
+
+// "Values points at: Membership Rewards (MR) at 1¢." for the currencies an
+// answer ranks, or null when every card shown earns cash.
+export function pointValuesText(
+  catalog: Catalog,
+  shown: { currency: string; centsPerUnit: number }[],
+): string | null {
+  const values = new Map<string, number>()
+  for (const e of shown)
+    if (e.currency !== 'cash') values.set(e.currency, e.centsPerUnit)
+  if (values.size === 0) return null
+  const list = [...values].map(
+    ([id, cents]) => `${currencyLabel(catalog, id)} at ${num(cents)}¢`,
+  )
+  return `Values points at: ${list.join(', ')}.`
+}

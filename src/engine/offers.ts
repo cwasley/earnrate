@@ -1,6 +1,7 @@
 import type { Catalog } from '../schema/catalog.ts'
-import type { Card } from '../schema/card.ts'
 import type { Wallet } from '../schema/wallet.ts'
+import { bonusDollars } from './bonus.ts'
+import { matchesFilters } from './explore.ts'
 import { cardValuation } from './valuation.ts'
 import { roundCents } from './text.ts'
 
@@ -39,19 +40,6 @@ export type OfferComparison = {
   notes: string[]
 }
 
-function bonusValue(
-  card: Card,
-  centsPerUnit: number,
-  points: number | undefined,
-  dollars: number | undefined,
-): number {
-  if (points !== undefined) return (points * centsPerUnit) / 100
-  if (dollars === undefined) return 0
-  // A cash back card's bonus is paid like its rewards, so it pools when they
-  // do; a points card's dollar bonus is a statement credit.
-  return card.currency === 'cash' ? dollars * centsPerUnit : dollars
-}
-
 export function compareOffers(
   catalog: Catalog,
   wallet: Wallet,
@@ -63,12 +51,11 @@ export function compareOffers(
   const withoutOffer: string[] = []
   for (const card of catalog.cards) {
     if (card.network === 'store') continue
-    if (card.business !== filters.business) continue
     if (!filters.includeHeld && held.has(card.id)) continue
-    const isCash = card.currency === 'cash'
-    if (filters.kind === 'cash' && !isCash) continue
-    if (filters.kind === 'points' && isCash) continue
-    if (filters.noAnnualFee && card.annual_fee !== 0) continue
+    if (
+      !matchesFilters(card, { ...filters, issuer: null, includeClosed: true })
+    )
+      continue
 
     const offer = card.welcome_offer
     if (!offer || (offer.valid_to !== undefined && offer.valid_to < today)) {
@@ -76,12 +63,9 @@ export function compareOffers(
       continue
     }
     const valuation = cardValuation(catalog, wallet, card)
-    const value = bonusValue(
-      card,
-      valuation.centsPerUnit,
-      offer.points,
-      offer.dollars,
-    )
+    const value =
+      bonusDollars(card, valuation.centsPerUnit, offer.points, offer.dollars) ??
+      0
     const firstYearFee = card.first_year_fee ?? card.annual_fee ?? null
     offers.push({
       cardId: card.id,

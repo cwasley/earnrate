@@ -1,3 +1,5 @@
+import type { Card } from '../schema/card.ts'
+
 export type Period = 'month' | 'quarter' | 'calendar_year' | 'cardmember_year'
 
 // Keys match the wallet's PeriodKey format: "2026" or "2026-Q4". A cardmember
@@ -35,4 +37,16 @@ export function localToday(now = new Date()): string {
     String(now.getMonth() + 1).padStart(2, '0'),
     String(now.getDate()).padStart(2, '0'),
   ].join('-')
+}
+
+// The period a card's picks are filed under in a wallet. Picks that carry
+// over (until_changed) are never compared, so they file under the calendar
+// year. null when the card's picks reset on different schedules.
+export function choicePeriod(card: Card): Period | null {
+  const periods = [
+    ...new Set(
+      card.choices.map((c) => c.period).filter((p) => p !== 'until_changed'),
+    ),
+  ]
+  return periods.length > 1 ? null : (periods[0] ?? 'calendar_year')
 }

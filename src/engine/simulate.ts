@@ -2,17 +2,16 @@ import type { Catalog } from '../schema/catalog.ts'
 import { resolveMerchant } from '../merchants/resolve.ts'
 import type { Card } from '../schema/card.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
-import { evaluateCard, purchaseContext } from './evaluate.ts'
+import { evaluateCard, purchaseContext, usableAt } from './evaluate.ts'
 import {
   categoryResolution,
-  choicePeriod,
   findCategory,
   idealHolding,
   matchesFilters,
   type CardFilters,
   type Picks,
 } from './explore.ts'
-import { periodKey } from './periods.ts'
+import { choicePeriod, periodKey } from './periods.ts'
 import { applyBooking, capBooking } from './record.ts'
 import { rotationGap } from './rotation.ts'
 import type { MerchantResolution } from './types.ts'
@@ -97,21 +96,10 @@ function withCurrentPicks(
     ...held,
     chosen: {
       ...held.chosen,
-      period: periodKey(choicePeriod(card), date, null) ?? '',
+      period:
+        periodKey(choicePeriod(card) ?? 'calendar_year', date, null) ?? '',
     },
   }
-}
-
-function usableAt(card: Card, merchant: MerchantResolution): boolean {
-  if (card.only_at)
-    return (
-      merchant.merchantId !== null && card.only_at.includes(merchant.merchantId)
-    )
-  return (
-    card.network === 'store' ||
-    merchant.accepts === null ||
-    merchant.accepts.includes(card.network)
-  )
 }
 
 // Spends `lines` every month for a year. Each dollar goes to the card that

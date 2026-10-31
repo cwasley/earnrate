@@ -3,15 +3,14 @@ import { resolveMerchant } from '../merchants/resolve.ts'
 import type { Card } from '../schema/card.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
-import { periodKey, type Period } from './periods.ts'
+import { choicePeriod, periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
 import {
   categoryPhrase,
   codesAs,
-  currencyLabel,
   earnText,
   money,
-  num,
+  pointValuesText,
 } from './text.ts'
 import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
@@ -56,13 +55,6 @@ export function matchesFilters(card: Card, filters: CardFilters): boolean {
 
 export type Picks = Record<string, string[]> // choice id → option ids
 
-// The period a card's picks are keyed by in a wallet.
-export function choicePeriod(card: Card): Period {
-  for (const c of card.choices)
-    if (c.period !== 'until_changed') return c.period
-  return 'quarter'
-}
-
 // A card as its holder would set it up for the best result: the given picks,
 // every activation done, and no cap used yet. The anniversary is `date`, so a
 // cardmember-year cap starts fresh.
@@ -71,7 +63,7 @@ export function idealHolding(
   date: string,
   picks: Picks = {},
 ): WalletCard {
-  const period = choicePeriod(card)
+  const period = choicePeriod(card) ?? 'calendar_year'
   return {
     id: card.id,
     anniversary: date.slice(5),
@@ -452,16 +444,8 @@ function exploreAssumptions(
       ? 'Assumes no memberships (like Amazon Prime). Rates that need one are listed separately.'
       : `Assumes these memberships: ${options.memberships.join(', ')}.`,
   )
-  const values = new Map<string, number>()
-  for (const e of ranked.slice(0, 10)) {
-    if (e.currency !== 'cash') values.set(e.currency, e.centsPerUnit)
-  }
-  if (values.size > 0) {
-    const list = [...values].map(
-      ([id, cents]) => `${currencyLabel(catalog, id)} at ${num(cents)}¢`,
-    )
-    assumptions.push(`Values points at: ${list.join(', ')}.`)
-  }
+  const values = pointValuesText(catalog, ranked.slice(0, 10))
+  if (values !== null) assumptions.push(values)
   return assumptions
 }
 
