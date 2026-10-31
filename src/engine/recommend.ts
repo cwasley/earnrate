@@ -5,7 +5,6 @@ import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import {
   evaluateCard,
   purchaseContext,
-  singleMcc,
   type CardEvaluation,
 } from './evaluate.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
@@ -19,6 +18,15 @@ import type {
   RankedCard,
   Recommendation,
 } from './types.ts'
+import {
+  categoryPhrase,
+  codesAs,
+  currencyLabel,
+  currencyName,
+  earnText,
+  money,
+  num,
+} from './text.ts'
 import { cardValuation, type Valuation } from './valuation.ts'
 
 const EPSILON = 1e-9
@@ -50,55 +58,9 @@ type Entry = {
 
 const displayName = (e: Entry) => e.held.checkout_label ?? e.card.name
 
-export const num = (n: number) => String(Number(n.toFixed(2)))
-// Whole dollars stay whole ($2,800); anything else shows cents ($0.40).
-export const money = (n: number) =>
-  `$${n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`
-
-export function codesAs(
-  catalog: Catalog,
-  merchant: MerchantResolution,
-): string {
-  const mcc = merchant.likelyMcc ?? singleMcc(catalog, merchant.category)
-  const code = mcc === null ? '' : ` (MCC ${String(mcc)})`
-  return `Assumes ${merchant.resolvedName} codes as ${categoryPhrase(catalog, merchant.category)}${code}.`
-}
-
-export function currencyName(catalog: Catalog, id: string): string {
-  return catalog.currencies.find((c) => c.id === id)?.name ?? id
-}
-
-export function currencyLabel(catalog: Catalog, id: string): string {
-  const name = currencyName(catalog, id)
-  return /^[A-Z]{2,4}$/.test(id) ? `${name} (${id})` : name
-}
-
 // "Worth X or more" must hold at X itself, so round up; "less than X" rounds down.
 const roundUp = (n: number) => String(Math.ceil(n * 100 - EPSILON) / 100)
 const roundDown = (n: number) => String(Math.floor(n * 100 + EPSILON) / 100)
-
-function categoryName(catalog: Catalog, id: string): string {
-  return catalog.categories.find((c) => c.id === id)?.name ?? id
-}
-
-// Mid-sentence form: "Supermarkets" becomes "supermarkets", but "TV and
-// internet service" and "EV charging" keep their acronyms.
-export function categoryPhrase(catalog: Catalog, id: string): string {
-  const name = categoryName(catalog, id)
-  return /^[A-Z]{2}/.test(name)
-    ? name
-    : name.charAt(0).toLowerCase() + name.slice(1)
-}
-
-export function earnText(
-  catalog: Catalog,
-  rate: number,
-  currency: string,
-): string {
-  return currency === 'cash'
-    ? `${num(rate)}% cash back`
-    : `${num(rate)}x ${currencyName(catalog, currency)}`
-}
 
 function compareEntries(a: Entry, b: Entry): number {
   const byReturn = b.effectiveReturnPct - a.effectiveReturnPct

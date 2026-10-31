@@ -4,6 +4,7 @@ import type {
   RankedCard,
   Recommendation,
 } from '../engine/types.ts'
+import { money, pct } from '../engine/text.ts'
 
 export type Style = (format: 'bold' | 'dim' | 'yellow', text: string) => string
 
@@ -11,13 +12,7 @@ export const plain: Style = (_format, text) => text
 
 const TOP = 3
 
-const pct = (n: number) => `${String(Number(n.toFixed(2)))}%`
 const cents = (n: number) => `$${n.toFixed(2)}`
-const amountText = (n: number) =>
-  `$${n.toLocaleString('en-US', {
-    minimumFractionDigits: Number.isInteger(n) ? 0 : 2,
-    maximumFractionDigits: 2,
-  })}`
 
 const label = (c: RankedCard | ExcludedCard) => c.checkoutLabel ?? c.cardName
 
@@ -36,7 +31,7 @@ function header(rec: Recommendation, purchase: Purchase): string {
               : `${m.resolvedName} (classified by Claude)`
             : m.resolvedName,
   ]
-  if (purchase.amount !== null) parts.push(amountText(purchase.amount))
+  if (purchase.amount !== null) parts.push(money(purchase.amount))
   if (m.channel) parts.push(m.channel === 'online' ? 'online' : 'in-store')
   return parts.join(' · ')
 }

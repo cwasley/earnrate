@@ -6,11 +6,8 @@ import { categoryResolution, findCategory } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { bonusStatus } from '../../src/engine/bonus.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
-import {
-  categoryPhrase,
-  currencyName,
-  recommend,
-} from '../../src/engine/recommend.ts'
+import { recommend } from '../../src/engine/recommend.ts'
+import { categoryPhrase, currencyName } from '../../src/engine/text.ts'
 import {
   cardInfo,
   knownMemberships,
@@ -35,7 +32,7 @@ import { resolveMerchant } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import {
   cards,
-  feeText,
+  feeLabel,
   issuerName,
   membershipName,
   pct,
@@ -442,7 +439,7 @@ function CardList({
             >
               <span>
                 <strong>{label(held)}</strong>
-                <span class="muted"> · {feeText(held.id)}</span>
+                <span class="muted"> · {feeLabel(held.id)}</span>
                 {bonusLine(wallet, held) ? (
                   <span class="row-note">{bonusLine(wallet, held)}</span>
                 ) : null}
@@ -612,7 +609,7 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
                 <div class="result-name">
                   <strong>{shortName(a.cardId)}</strong>
                   <span class="muted">
-                    +{usd(a.extraRewards)} back · {feeText(a.cardId)}
+                    +{usd(a.extraRewards)} back · {feeLabel(a.cardId)}
                   </span>
                 </div>
                 <span class="rate">

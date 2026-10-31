@@ -4,6 +4,7 @@ import type { Card } from '../schema/card.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
 import { periodKey, type Period } from './periods.ts'
+import { recommend } from './recommend.ts'
 import {
   categoryPhrase,
   codesAs,
@@ -11,8 +12,7 @@ import {
   earnText,
   money,
   num,
-  recommend,
-} from './recommend.ts'
+} from './text.ts'
 import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
 import type {

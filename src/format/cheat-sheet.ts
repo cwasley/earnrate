@@ -1,6 +1,5 @@
 import type { CheatSheet } from '../engine/cheat-sheet.ts'
-
-const pct = (n: number) => `${String(Number(n.toFixed(2)))}%`
+import { pct } from '../engine/text.ts'
 
 export function formatCheatSheet(sheet: CheatSheet): string {
   const labelWidth = Math.max(...sheet.rows.map((r) => r.label.length))

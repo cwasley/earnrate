@@ -5,19 +5,9 @@ import type {
   Simulation,
   WalletWhatIf,
 } from '../engine/simulate.ts'
+import { feeText, money, pct } from '../engine/text.ts'
 
-const usd = (n: number) =>
-  `$${n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`
-const wholeUsd = (n: number) => usd(Math.round(n))
-const pct = (n: number) => `${String(Number(n.toFixed(2)))}%`
-
-function feeText(e: { annualFee: number | null; firstYearFee: number | null }) {
-  if (e.annualFee === null) return 'annual fee not on file'
-  if (e.annualFee === 0) return 'no annual fee'
-  if (e.firstYearFee !== null && e.firstYearFee !== e.annualFee)
-    return `${usd(e.annualFee)} annual fee (${e.firstYearFee === 0 ? 'waived' : usd(e.firstYearFee)} the first year)`
-  return `${usd(e.annualFee)} annual fee`
-}
+const wholeUsd = (n: number) => money(Math.round(n))
 
 const TOP_BEST = 10
 
@@ -34,7 +24,7 @@ export function formatExploration(r: Exploration, all: boolean): string {
   const width = Math.max(...shown.map((e) => e.cardName.length))
   const lines = [`Best cards for ${title}:`, '']
   shown.forEach((e: ExploreEntry, i) => {
-    const earned = e.earned === null ? '' : `  ${usd(e.earned)}`
+    const earned = e.earned === null ? '' : `  ${money(e.earned)}`
     lines.push(
       `${String(i + 1).padStart(2)}. ${e.cardName.padEnd(width)}  ${pct(e.effectiveReturnPct).padStart(5)}${earned}  ${feeText(e)}`,
     )

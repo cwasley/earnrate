@@ -12,14 +12,19 @@ import {
   type Exploration,
   type ExploreEntry,
   type ExploreQuery,
-  type Requirements,
 } from '../src/engine/explore.ts'
 import { localToday } from '../src/engine/periods.ts'
+import { pct } from '../src/engine/text.ts'
 import {
-  categoryPhrase,
-  currencyName,
-  earnText,
-} from '../src/engine/recommend.ts'
+  CAP_PERIODS,
+  cardText,
+  issuerName,
+  membershipName,
+  PICK_PERIODS,
+  usd,
+  words,
+} from '../src/format/card-text.ts'
+import { categoryPhrase, currencyName, earnText } from '../src/engine/text.ts'
 import type { Card, Rule } from '../src/schema/card.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 
@@ -51,8 +56,6 @@ const esc = (s: string) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
 
-const pct = (n: number) => `${String(Number(n.toFixed(2)))}%`
-const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`
 const slugify = (s: string) =>
   s
     .toLowerCase()
@@ -61,61 +64,10 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
 
-const cards = new Map(catalog.cards.map((c) => [c.id, c]))
+const { cards, shortName, feeLabel, requirementLines } = cardText(catalog)
 
-function shortName(id: string): string {
-  const name = cards.get(id)?.name ?? id
-  return name
-    .replace(/^American Express /, 'Amex ')
-    .replace(/^The Platinum Card from American Express$/, 'Amex Platinum')
-    .replace(/ (Visa Signature |Visa Infinite )?(Credit )?Card$/, '')
-    .replace(/ Card by /, ' by ')
-}
-
-const ISSUERS: Record<string, string> = {
-  amex: 'American Express',
-  'bank-of-america': 'Bank of America',
-  'capital-one': 'Capital One',
-  chase: 'Chase',
-  citi: 'Citi',
-  column: 'Bilt',
-  sofi: 'SoFi',
-  'td-bank': 'TD Bank',
-  usbank: 'U.S. Bank',
-  'wells-fargo': 'Wells Fargo',
-}
-
-const MEMBERSHIPS: Record<string, string> = {
-  'amazon-prime': 'Amazon Prime',
-  'bank-of-america-account': 'a Bank of America account',
-}
-
-function feeText(id: string): string {
-  const card = cards.get(id)
-  const fee = card?.annual_fee
-  if (fee === undefined) return 'Fee not on file'
-  if (fee === 0) return 'No annual fee'
-  const first = card?.first_year_fee
-  if (first !== undefined && first !== fee)
-    return `${usd(fee)} a year (${first === 0 ? '$0' : usd(first)} the first year)`
-  return `${usd(fee)} a year`
-}
-
-const words = (id: string) => id.replace(/[-_.]/g, ' ')
-
-const PICK_PERIODS = {
-  month: 'each month',
-  quarter: 'each quarter',
-  calendar_year: 'each year',
-  until_changed: 'until you change it',
-}
-
-const CAP_PERIODS: Record<string, string> = {
-  month: 'a month',
-  quarter: 'a quarter',
-  calendar_year: 'a year',
-  cardmember_year: 'a card year',
-}
+// Memberships worth calling out on a search page.
+const HIGHLIGHTED = ['amazon-prime', 'bank-of-america-account']
 
 function untilText(entry: ExploreEntry): string | null {
   const rule = cards
@@ -127,26 +79,6 @@ function untilText(entry: ExploreEntry): string | null {
     day: 'numeric',
     year: 'numeric',
   })
-}
-
-function needs(entry: ExploreEntry): string[] {
-  const r: Requirements = entry.requirements
-  const lines: string[] = []
-  if (r.pick)
-    lines.push(
-      `Pick ${r.pick.options.map(words).join(' or ')} as a bonus category (${PICK_PERIODS[r.pick.period]})`,
-    )
-  if (r.activation !== null)
-    lines.push(
-      `Activate the bonus with ${ISSUERS[entry.issuer] ?? entry.issuer} (free)`,
-    )
-  const until = untilText(entry)
-  if (until !== null) lines.push(`This rate runs through ${until}`)
-  if (r.cap)
-    lines.push(
-      `Up to ${usd(r.cap.amount)} of spending ${CAP_PERIODS[r.cap.period] ?? ''}, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}`,
-    )
-  return lines
 }
 
 const isUnverified = (e: ExploreEntry) =>
@@ -228,7 +160,7 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   const parts = [
     `<strong><a href="/cards/${top.cardId}">${esc(shortName(top.cardId))}</a></strong> earns the most ${where}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ' in points at 1¢ each'}.${codes}`,
   ]
-  const first = needs(top)
+  const first = requirementLines(top.cardId, top.requirements, untilText(top))
   if (first.length > 0) parts.push(`${first.join('. ')}.`)
   const noFee = shown.find((e) => e.annualFee === 0)
   if (noFee && noFee !== top)
@@ -237,14 +169,14 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
     )
   const membership = shown
     .flatMap((e) => e.withMembership.map((m) => ({ entry: e, ...m })))
-    .filter((m) => MEMBERSHIPS[m.membership] !== undefined)
+    .filter((m) => HIGHLIGHTED.includes(m.membership))
     .sort((a, b) => b.effectiveReturnPct - a.effectiveReturnPct)[0]
   if (
     membership &&
     membership.effectiveReturnPct >= (noFee ?? top).effectiveReturnPct
   )
     parts.push(
-      `With ${MEMBERSHIPS[membership.membership] ?? ''}, <strong>${esc(shortName(membership.entry.cardId))}</strong> earns ${pct(membership.effectiveReturnPct)}${membership.entry.annualFee === 0 && membership.entry !== noFee ? ', also with no annual fee' : ''}.`,
+      `With ${membershipName(membership.membership)}, <strong>${esc(shortName(membership.entry.cardId))}</strong> earns ${pct(membership.effectiveReturnPct)}${membership.entry.annualFee === 0 && membership.entry !== noFee ? ', also with no annual fee' : ''}.`,
     )
   return `<p class="answer">${parts.join(' ')}</p>`
 }
@@ -274,13 +206,13 @@ function gotchas(r: Exploration): string {
 function table(shown: ExploreEntry[]): string {
   const rows = shown
     .map((e, i) => {
-      const lines = needs(e)
+      const lines = requirementLines(e.cardId, e.requirements, untilText(e))
       const upgrade = e.withMembership[0]
-      if (upgrade && MEMBERSHIPS[upgrade.membership])
+      if (upgrade && HIGHLIGHTED.includes(upgrade.membership))
         lines.push(
-          `${pct(upgrade.effectiveReturnPct)} with ${MEMBERSHIPS[upgrade.membership] ?? ''}`,
+          `${pct(upgrade.effectiveReturnPct)} with ${membershipName(upgrade.membership)}`,
         )
-      return `<li><span class="rank">${String(i + 1)}</span><div><strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a></strong> <span class="rate">${pct(e.effectiveReturnPct)}</span><br /><span class="muted">${esc(ISSUERS[e.issuer] ?? e.issuer)} · ${esc(feeText(e.cardId))}</span>${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</div></li>`
+      return `<li><span class="rank">${String(i + 1)}</span><div><strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a></strong> <span class="rate">${pct(e.effectiveReturnPct)}</span><br /><span class="muted">${esc(issuerName(e.issuer))} · ${esc(feeLabel(e.cardId))}</span>${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</div></li>`
     })
     .join('')
   return `<ol class="cards">${rows}</ol>`
@@ -411,7 +343,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
         '@type': 'ListItem',
         position: i + 1,
         name: cards.get(e.cardId)?.name ?? e.cardId,
-        description: `${pct(e.effectiveReturnPct)} back; ${feeText(e.cardId)}`,
+        description: `${pct(e.effectiveReturnPct)} back; ${feeLabel(e.cardId)}`,
       })),
     },
   }
@@ -516,11 +448,9 @@ function ruleConditions(card: Card, rule: Rule): string[] {
   if (rule.channel === 'in_store') lines.push('In store only')
   if (rule.geography === 'us_only') lines.push('U.S. purchases only')
   if (rule.requires?.membership !== undefined)
-    lines.push(
-      `With ${MEMBERSHIPS[rule.requires.membership] ?? words(rule.requires.membership)}`,
-    )
+    lines.push(`With ${membershipName(rule.requires.membership)}`)
   if (rule.requires?.activation === true)
-    lines.push(`Activate it with ${ISSUERS[card.issuer] ?? card.issuer} first`)
+    lines.push(`Activate it with ${issuerName(card.issuer)} first`)
   if (rule.valid_from !== undefined || rule.valid_to !== undefined)
     lines.push(
       rule.valid_from !== undefined && rule.valid_to !== undefined
@@ -682,7 +612,7 @@ function headlineFor(card: Card): string {
     ]
     const membership = best.requires?.membership
     clauses.unshift(
-      `${earnText(catalog, best.rate, card.currency)} at ${listWords(names)}${membership ? ` with ${MEMBERSHIPS[membership] ?? words(membership)}` : ''}`,
+      `${earnText(catalog, best.rate, card.currency)} at ${listWords(names)}${membership ? ` with ${membershipName(membership)}` : ''}`,
     )
   }
 
@@ -706,7 +636,7 @@ function renderCard(
   byPage: Map<string, Exploration>,
 ): string {
   const name = shortName(card.id)
-  const issuer = ISSUERS[card.issuer] ?? card.issuer
+  const issuer = issuerName(card.issuer)
   const currency = catalog.currencies.find((c) => c.id === card.currency)
   const headline = headlineFor(card)
   const closed = card.applications_closed !== undefined && !card.only_at
@@ -720,12 +650,12 @@ function renderCard(
       ? ` earnrate counts ${esc(currency.name)} at ${String(currency.value_cents)}¢ each${currency.range ? `; transferring to airlines or hotels can be worth up to about ${String(currency.range[1])}¢` : ''}.`
       : ''
   const title = `${name}: rewards rates, annual fee and where to use it (${monthYear}) | earnrate`
-  const description = `${card.name}: ${headline}. ${feeText(card.id)}. Every earning rule quoted from ${issuer}'s terms, and the stores where it beats other cards. No affiliate links.`
+  const description = `${card.name}: ${headline}. ${feeLabel(card.id)}. Every earning rule quoted from ${issuer}'s terms, and the stores where it beats other cards. No affiliate links.`
   const canonical = `${SITE}/cards/${card.id}`
   const body = `
       <h1>${esc(card.name)}</h1>
       <p class="updated">${esc(issuer)} · ${esc(card.business ? 'Business card' : 'Personal card')} · Checked against ${esc(issuer)}'s terms ${esc(shortDate(card.last_verified))}</p>
-      <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeText(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listWords(card.only_at.map((id) => merchantNames.get(id) ?? words(id))))}.` : ''}</p>
+      <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeLabel(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listWords(card.only_at.map((id) => merchantNames.get(id) ?? words(id))))}.` : ''}</p>
       <p><a class="button" href="/#wallet">Add it to your wallet</a></p>
       ${
         firsts.length > 0
@@ -750,7 +680,7 @@ function renderCard(
     name: card.name,
     url: canonical,
     provider: { '@type': 'BankOrCreditUnion', name: issuer },
-    feesAndCommissionsSpecification: feeText(card.id),
+    feesAndCommissionsSpecification: feeLabel(card.id),
     description: `${headline}.`,
   }
   return layout(title, description, canonical, body, jsonLd)
@@ -761,12 +691,10 @@ function renderCardIndex(): string {
   for (const card of catalog.cards)
     byIssuer.set(card.issuer, [...(byIssuer.get(card.issuer) ?? []), card])
   const sections = [...byIssuer]
-    .sort((a, b) =>
-      (ISSUERS[a[0]] ?? a[0]).localeCompare(ISSUERS[b[0]] ?? b[0]),
-    )
+    .sort((a, b) => issuerName(a[0]).localeCompare(issuerName(b[0])))
     .map(
       ([issuer, list]) =>
-        `<h2>${esc(ISSUERS[issuer] ?? issuer)}</h2><p class="links">${list
+        `<h2>${esc(issuerName(issuer))}</h2><p class="links">${list
           .map((c) => `<a href="/cards/${c.id}">${esc(shortName(c.id))}</a>`)
           .join(' · ')}</p>`,
     )

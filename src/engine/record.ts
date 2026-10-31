@@ -4,6 +4,7 @@ import type { Wallet } from '../schema/wallet.ts'
 import { bonusStatus, countsTowardBonus } from './bonus.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
 import type { MerchantResolution, RecordedPurchase } from './types.ts'
+import { roundCents } from './text.ts'
 
 export type CapBooking = {
   cardId: string
@@ -14,8 +15,6 @@ export type CapBooking = {
   before: number // dollars spent this period before the purchase
   after: number
 }
-
-const roundCents = (n: number) => Math.round(n * 100) / 100
 
 // Books the spend against the cap of the highest-rate rule that matches, even
 // when that cap is already used up, so usage stays accurate across a reset.

@@ -8,6 +8,7 @@ import type { MerchantResolution, Purchase } from '../engine/types.ts'
 import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { cleanDescriptor, type StatementLine } from './statement.ts'
+import { roundCents } from '../engine/text.ts'
 
 export type CardLine = { cardId: string; line: StatementLine }
 
@@ -67,8 +68,6 @@ export type StatementAnalysis = {
   alreadyImported: number // capped purchases an earlier import recorded
   bonuses: BonusProgress[]
 }
-
-const round = (n: number) => Math.round(n * 100) / 100
 
 function resolveLine(
   catalog: Catalog,
@@ -162,7 +161,7 @@ export function analyzeStatement(
       countsTowardBonus(progress, line.date) &&
       !alreadyRecorded(entry, 'bonus')
     ) {
-      progress.after = round(Math.max(0, progress.after + line.amount))
+      progress.after = roundCents(Math.max(0, progress.after + line.amount))
       progress.entries.push(entry)
     }
     const { name, merchant, known } = resolveLine(catalog, line)
@@ -185,7 +184,7 @@ export function analyzeStatement(
           line.amount < 0
             ? {
                 ...booking,
-                after: round(Math.max(0, booking.before + line.amount)),
+                after: roundCents(Math.max(0, booking.before + line.amount)),
               }
             : booking
         bookings.push({ ...entry, booking: signed })
@@ -282,21 +281,21 @@ export function analyzeStatement(
     from: sorted[0]?.line.date ?? '',
     to: sorted.at(-1)?.line.date ?? '',
     purchases,
-    spend: round(spend),
-    refunds: round(refunds),
-    earned: round(earned),
-    best: round(best),
+    spend: roundCents(spend),
+    refunds: roundCents(refunds),
+    earned: roundCents(earned),
+    best: roundCents(best),
     byCard: [...byCard.values()].map((t) => ({
       ...t,
-      spend: round(t.spend),
-      earned: round(t.earned),
+      spend: roundCents(t.spend),
+      earned: roundCents(t.earned),
     })),
     missed: [...missed.values()]
       .map((m) => ({
         ...m,
-        spend: round(m.spend),
-        earned: round(m.earned),
-        best: round(m.best),
+        spend: roundCents(m.spend),
+        earned: roundCents(m.earned),
+        best: roundCents(m.best),
       }))
       .sort((a, b) => b.best - b.earned - (a.best - a.earned)),
     coding: [...coding.values()].sort((a, b) => b.count - a.count),

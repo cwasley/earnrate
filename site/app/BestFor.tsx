@@ -7,10 +7,10 @@ import {
   type ExploreEntry,
 } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
-import { categoryPhrase } from '../../src/engine/recommend.ts'
+import { categoryPhrase } from '../../src/engine/text.ts'
 import {
   cards,
-  feeText,
+  feeLabel,
   hostname,
   issuerName,
   membershipName,
@@ -72,7 +72,7 @@ function CardRow({ entry, rank }: { entry: ExploreEntry; rank: number }) {
         <div class="result-name">
           <strong>{shortName(entry.cardId)}</strong>
           <span class="muted">
-            {issuerName(entry.issuer)} · {feeText(entry.cardId)}
+            {issuerName(entry.issuer)} · {feeLabel(entry.cardId)}
           </span>
         </div>
         <span class="rate">{pct(entry.effectiveReturnPct)}</span>

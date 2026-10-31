@@ -37,7 +37,11 @@ import { formatExploration, runBest, runSimulate } from './explore.ts'
 import { runImport } from './import.ts'
 import { runOffers } from './offers.ts'
 import { runWalletCommand, WALLET_HELP } from './wallet.ts'
-import { formatRecommendation, plain, type Style } from './format.ts'
+import {
+  formatRecommendation,
+  plain,
+  type Style,
+} from '../format/recommendation.ts'
 
 export type Io = {
   env: NodeJS.ProcessEnv

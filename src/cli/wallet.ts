@@ -11,7 +11,7 @@ import {
 } from '../data/wallet-setup.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
 import type { Wallet } from '../schema/wallet.ts'
-import { formatCardInfo, formatNotes } from './cards.ts'
+import { formatCardInfo, formatNotes } from '../format/cards.ts'
 import { displayPath, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
 
 const CARD_OPTIONS = `Options:

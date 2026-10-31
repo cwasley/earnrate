@@ -1,8 +1,8 @@
 import { McpServer, type RegisteredTool } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 import { MCP_SERVER_NAME } from '../brand.ts'
-import { formatCardInfo, formatNotes } from '../cli/cards.ts'
-import { formatRecommendation } from '../cli/format.ts'
+import { formatCardInfo, formatNotes } from '../format/cards.ts'
+import { formatRecommendation } from '../format/recommendation.ts'
 import { formatCheatSheet } from '../format/cheat-sheet.ts'
 import {
   formatAdditions,
@@ -47,6 +47,7 @@ import {
   WalletChangeSchema,
   WalletSummarySchema,
 } from './schemas.ts'
+import { money } from '../engine/text.ts'
 
 // Where a saved wallet lives, if anywhere: 'none' drops the tools that need
 // one, 'file' is the local YAML file, 'account' the remote server's anonymous
@@ -122,9 +123,6 @@ const fail = (text: string) => ({
   content: [{ type: 'text' as const, text }],
   isError: true,
 })
-
-const dollars = (n: number) =>
-  `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 
 export function createEarnrateServer(deps: ServerDeps): McpServer {
   const server = new McpServer(
@@ -417,7 +415,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
             .filter((cap) => cap.remaining !== null)
             .map(
               (cap) =>
-                `${cap.key} ${dollars(cap.spent)} of ${dollars(cap.amount)} used for ${cap.currentPeriod ?? ''}`,
+                `${cap.key} ${money(cap.spent)} of ${money(cap.amount)} used for ${cap.currentPeriod ?? ''}`,
             )
           const chosen = c.chosen
             ? `; chosen categories for ${c.chosen.period}${c.chosen.current ? '' : ' (out of date)'}`
@@ -432,7 +430,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           const b = c.bonus
           const bonus =
             b?.state === 'open' && b.spend !== null
-              ? `; welcome bonus ${dollars(b.spent)} of ${dollars(b.spend)} spent, due ${b.deadline ?? ''}`
+              ? `; welcome bonus ${money(b.spent)} of ${money(b.spend)} spent, due ${b.deadline ?? ''}`
               : b
                 ? `; welcome bonus ${b.state}`
                 : ''
@@ -821,15 +819,15 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         if (booking) {
           const left = Math.max(0, booking.capAmount - booking.after)
           messages.push(
-            `Recorded ${dollars(amount)} on ${cardId} against "${booking.capKey}": ${dollars(booking.before)} → ${dollars(booking.after)} of ${dollars(booking.capAmount)} for ${booking.period}, ${dollars(left)} left.`,
+            `Recorded ${money(amount)} on ${cardId} against "${booking.capKey}": ${money(booking.before)} → ${money(booking.after)} of ${money(booking.capAmount)} for ${booking.period}, ${money(left)} left.`,
           )
         }
         if (bonus) {
           const left = Math.max(0, bonus.spend - bonus.after)
           messages.push(
             left === 0
-              ? `Welcome bonus spend met on ${cardId}: ${dollars(bonus.after)} of ${dollars(bonus.spend)}.`
-              : `Welcome bonus on ${cardId}: ${dollars(bonus.after)} of ${dollars(bonus.spend)} spent, ${dollars(left)} to go by ${bonus.deadline ?? 'the deadline'}.`,
+              ? `Welcome bonus spend met on ${cardId}: ${money(bonus.after)} of ${money(bonus.spend)}.`
+              : `Welcome bonus on ${cardId}: ${money(bonus.after)} of ${money(bonus.spend)} spent, ${money(left)} to go by ${bonus.deadline ?? 'the deadline'}.`,
           )
         }
         const output = {

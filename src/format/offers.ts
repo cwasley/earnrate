@@ -1,21 +1,11 @@
 import type { OfferComparison, OfferSummary } from '../engine/offers.ts'
+import { feeText, money } from '../engine/text.ts'
 
 const TOP = 10
 
-const usd = (n: number) =>
-  `$${n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`
-
 function reward(o: OfferSummary, currencyName: string): string {
-  if (o.dollars !== null) return usd(o.dollars)
+  if (o.dollars !== null) return money(o.dollars)
   return `${(o.points ?? 0).toLocaleString('en-US')} ${currencyName}`
-}
-
-function feeText(o: OfferSummary): string {
-  if (o.annualFee === null) return 'annual fee not on file'
-  if (o.annualFee === 0) return 'no annual fee'
-  if (o.firstYearFee !== null && o.firstYearFee !== o.annualFee)
-    return `${usd(o.annualFee)} annual fee (${o.firstYearFee === 0 ? 'waived' : usd(o.firstYearFee)} the first year)`
-  return `${usd(o.annualFee)} annual fee`
 }
 
 export function formatOffers(
@@ -32,13 +22,13 @@ export function formatOffers(
   shown.forEach((o, i) => {
     const weeks = (o.months * 52) / 12
     const pace =
-      o.spend > 0 ? ` (about ${usd(Math.round(o.spend / weeks))} a week)` : ''
+      o.spend > 0 ? ` (about ${money(Math.round(o.spend / weeks))} a week)` : ''
     const spend =
       o.spend > 0
-        ? `after ${usd(o.spend)} in ${String(o.months)} month${o.months === 1 ? '' : 's'}${pace}`
+        ? `after ${money(o.spend)} in ${String(o.months)} month${o.months === 1 ? '' : 's'}${pace}`
         : 'with no spending required'
     lines.push(
-      `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  about ${usd(Math.round(o.firstYearValue))} the first year`,
+      `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  about ${money(Math.round(o.firstYearValue))} the first year`,
       `    ${reward(o, currencyName(o.currency))} ${spend}. ${feeText(o)[0]?.toUpperCase() ?? ''}${feeText(o).slice(1)}.${o.held ? ' In your wallet.' : ''}`,
     )
     if (o.validTo) lines.push(`    Offer ends ${o.validTo}.`)

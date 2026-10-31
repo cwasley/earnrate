@@ -17,6 +17,7 @@ import { applyBooking, capBooking } from './record.ts'
 import { rotationGap } from './rotation.ts'
 import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
+import { roundCents } from './text.ts'
 
 const EPSILON = 1e-9
 const MONTHS = 12
@@ -59,8 +60,6 @@ export type SimulateOptions = {
   valuations: Wallet['valuations']
   start: string // YYYY-MM-DD; the year simulated starts in this month
 }
-
-const round = (n: number) => Math.round(n * 100) / 100
 
 export function resolveSpendLines(
   catalog: Catalog,
@@ -208,13 +207,13 @@ export function simulateWallet(
     }
     return {
       label: line.label,
-      spend: round(r.spend),
-      earned: round(r.earned),
+      spend: roundCents(r.spend),
+      earned: roundCents(r.earned),
       returnPct: r.spend > 0 ? (r.earned / r.spend) * 100 : 0,
       cards: [...r.byCard].sort((a, b) => b[1] - a[1]).map(([id]) => id),
     }
   })
-  const rewards = round(lineResults.reduce((sum, l) => sum + l.earned, 0))
+  const rewards = roundCents(lineResults.reduce((sum, l) => sum + l.earned, 0))
   const annualFees = cards.reduce((sum, c) => sum + (c.card.annual_fee ?? 0), 0)
   const notes: string[] = []
   const dates = monthDates(start)
@@ -245,10 +244,10 @@ export function simulateWallet(
       cardId: h.id,
       picks: h.chosen?.picks ?? {},
     })),
-    spend: round(lineResults.reduce((sum, l) => sum + l.spend, 0)),
+    spend: roundCents(lineResults.reduce((sum, l) => sum + l.spend, 0)),
     rewards,
     annualFees,
-    net: round(rewards - annualFees),
+    net: roundCents(rewards - annualFees),
     lines: lineResults,
     notes,
   }
@@ -478,14 +477,14 @@ export function simulateAdditions(
       memberships: wallet.memberships,
       valuations: wallet.valuations,
     })
-    const extraRewards = round(simulation.rewards - current.rewards)
+    const extraRewards = roundCents(simulation.rewards - current.rewards)
     const annualFee = card.annual_fee ?? 0
     additions.push({
       cardId: card.id,
       picks: simulation.cards.at(-1)?.picks ?? {},
       extraRewards,
       annualFee,
-      gain: round(extraRewards - annualFee),
+      gain: roundCents(extraRewards - annualFee),
       simulation,
     })
   }

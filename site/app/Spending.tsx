@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import type { Picks } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
-import { categoryPhrase } from '../../src/engine/recommend.ts'
+import { categoryPhrase } from '../../src/engine/text.ts'
 import {
   resolveSpendLines,
   simulateCatalog,
@@ -10,7 +10,7 @@ import {
   TYPICAL_MONTHLY_SPEND,
   type Simulation,
 } from '../../src/engine/simulate.ts'
-import { feeText, shortName, usd, words } from './format.ts'
+import { feeLabel, shortName, usd, words } from './format.ts'
 import { engineOptions, loadList, save, type Settings } from './settings.ts'
 
 export type Row = { what: string; monthly: number }
@@ -174,7 +174,7 @@ export function Spending({ settings }: { settings: Settings }) {
                       <div class="result-name">
                         <strong>{shortName(card.cardId)}</strong>
                         <span class="muted">
-                          {usd(s.rewards)} back · {feeText(card.cardId)}
+                          {usd(s.rewards)} back · {feeLabel(card.cardId)}
                         </span>
                       </div>
                       <span class="rate">

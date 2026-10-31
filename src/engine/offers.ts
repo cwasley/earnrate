@@ -2,6 +2,7 @@ import type { Catalog } from '../schema/catalog.ts'
 import type { Card } from '../schema/card.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { cardValuation } from './valuation.ts'
+import { roundCents } from './text.ts'
 
 export type OfferFilters = {
   kind: 'any' | 'cash' | 'points'
@@ -37,8 +38,6 @@ export type OfferComparison = {
   withoutOffer: string[] // card ids that match the filters but publish no offer
   notes: string[]
 }
-
-const round = (n: number) => Math.round(n * 100) / 100
 
 function bonusValue(
   card: Card,
@@ -99,8 +98,8 @@ export function compareOffers(
       note: offer.note ?? null,
       annualFee: card.annual_fee ?? null,
       firstYearFee,
-      bonusValue: round(value),
-      firstYearValue: round(value - (firstYearFee ?? 0)),
+      bonusValue: roundCents(value),
+      firstYearValue: roundCents(value - (firstYearFee ?? 0)),
       held: held.has(card.id),
       lastVerified: card.last_verified,
       verifiedBy: card.verified_by,

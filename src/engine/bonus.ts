@@ -2,6 +2,7 @@ import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { daysBetween } from './periods.ts'
 import { cardValuation } from './valuation.ts'
+import { roundCents } from './text.ts'
 
 export type BonusStatus = {
   cardId: string
@@ -27,8 +28,6 @@ export function addMonths(date: string, months: number): string {
   const day = Math.min(d, last)
   return `${String(year)}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
-
-const round = (n: number) => Math.round(n * 100) / 100
 
 export function bonusStatus(
   catalog: Catalog,
@@ -66,7 +65,7 @@ export function bonusStatus(
     spent: bonus.spent,
     spend,
     deadline,
-    value: value === null ? null : round(value),
+    value: value === null ? null : roundCents(value),
   }
   if (spend === null || deadline === null) {
     return {
@@ -76,7 +75,7 @@ export function bonusStatus(
       state: 'incomplete',
     }
   }
-  const remaining = round(Math.max(0, spend - bonus.spent))
+  const remaining = roundCents(Math.max(0, spend - bonus.spent))
   const daysLeft = daysBetween(today, deadline)
   return {
     ...base,
