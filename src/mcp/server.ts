@@ -3,13 +3,13 @@ import { z } from 'zod'
 import { MCP_SERVER_NAME } from '../brand.ts'
 import { formatCardInfo, formatNotes } from '../cli/cards.ts'
 import { formatRecommendation } from '../cli/format.ts'
-import { formatCheatSheet } from '../cli/cheatsheet.ts'
+import { formatCheatSheet } from '../format/cheat-sheet.ts'
 import {
   formatAdditions,
   formatCatalogSimulation,
   formatExploration,
-} from '../cli/explore.ts'
-import { formatOffers } from '../cli/offers.ts'
+} from '../format/explore.ts'
+import { formatOffers } from '../format/offers.ts'
 import { walletProblems } from '../data/integrity.ts'
 import type { Catalog } from '../data/load.ts'
 import type { SetupResult, WalletStore } from '../data/store.ts'

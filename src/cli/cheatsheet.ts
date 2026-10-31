@@ -1,11 +1,8 @@
 import { parseArgs } from 'node:util'
 import { CLI_NAME } from '../brand.ts'
 import { loadCatalog, walletPath } from '../data/load.ts'
-import {
-  catalogCheatSheet,
-  cheatSheet,
-  type CheatSheet,
-} from '../engine/cheat-sheet.ts'
+import { catalogCheatSheet, cheatSheet } from '../engine/cheat-sheet.ts'
+import { formatCheatSheet } from '../format/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS } from '../engine/explore.ts'
 import {
   isValuationProfile,
@@ -34,32 +31,6 @@ Options:
   --json                 Print the cheat sheet as JSON.
   -h, --help             Show this help.
 `
-
-const pct = (n: number) => `${String(Number(n.toFixed(2)))}%`
-
-export function formatCheatSheet(sheet: CheatSheet): string {
-  const labelWidth = Math.max(...sheet.rows.map((r) => r.label.length))
-  const cardWidth = Math.max(
-    ...sheet.rows.map((r) => (r.cardName ?? 'none of your cards').length),
-  )
-  const lines = [
-    sheet.scope === 'wallet'
-      ? `Your cheat sheet for ${sheet.quarter}`
-      : `The best card for each kind of purchase, ${sheet.quarter}`,
-    '',
-  ]
-  for (const row of sheet.rows) {
-    lines.push(
-      `  ${row.label.padEnd(labelWidth)}  ${(row.cardName ?? 'none of your cards').padEnd(cardWidth)}  ${row.effectiveReturnPct === null ? '' : pct(row.effectiveReturnPct).padStart(5)}`.trimEnd(),
-    )
-    if (row.note)
-      lines.push(
-        `  ${' '.repeat(labelWidth)}  ${sheet.scope === 'wallet' ? '! ' : ''}${row.note}`,
-      )
-  }
-  if (sheet.notes.length > 0) lines.push('', ...sheet.notes)
-  return `${lines.join('\n')}\n`
-}
 
 export async function runCheatSheet(argv: string[], io: Io): Promise<number> {
   let parsed
@@ -131,3 +102,5 @@ export async function runCheatSheet(argv: string[], io: Io): Promise<number> {
   )
   return 0
 }
+
+export { formatCheatSheet }
