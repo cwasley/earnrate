@@ -59,7 +59,7 @@ test('no committed file contains a card number', async () => {
   expect(hits).toEqual([])
 })
 
-test('the MCP registry entry and Claude Desktop bundle match package.json', async () => {
+test('the MCP registry entry, Claude Desktop bundle and plugin match package.json', async () => {
   const read = async (file: string) =>
     JSON.parse(await readFile(path.join(ROOT, file), 'utf8')) as Record<
       string,
@@ -75,4 +75,11 @@ test('the MCP registry entry and Claude Desktop bundle match package.json', asyn
   ])
   const bundle = await read('mcpb/manifest.json')
   expect(bundle.version).toBe(pkg.version)
+  const plugin = await read('plugin/.claude-plugin/plugin.json')
+  expect(plugin.version).toBe(pkg.version)
+  const servers = (await read('plugin/.mcp.json')).mcpServers as Record<
+    string,
+    { args: string[] }
+  >
+  expect(servers.earnrate?.args).toContain(`earnrate@${String(pkg.version)}`)
 })

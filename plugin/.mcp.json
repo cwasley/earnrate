@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "earnrate": {
+      "command": "npx",
+      "args": ["-y", "earnrate@0.1.4", "mcp"]
+    }
+  }
+}

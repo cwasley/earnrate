@@ -1,0 +1,25 @@
+{
+  "name": "earnrate",
+  "displayName": "earnrate",
+  "version": "0.1.4",
+  "description": "Which of your credit cards earns the most at a store, and why. Checks each card against the issuer's own terms, tracks caps you've spent and categories you've picked, and compares every card it knows. Your cards stay on your computer; no card numbers, ever.",
+  "author": {
+    "name": "Collin Wasley",
+    "email": "hello@earnrate.dev",
+    "url": "https://earnrate.dev"
+  },
+  "homepage": "https://earnrate.dev",
+  "repository": "https://github.com/cwasley/earnrate",
+  "license": "MIT",
+  "keywords": [
+    "credit cards",
+    "rewards",
+    "cash back",
+    "points",
+    "personal finance"
+  ],
+  "icon": "./icon.png",
+  "documentationUrl": "https://github.com/cwasley/earnrate#readme",
+  "supportUrl": "https://github.com/cwasley/earnrate/issues",
+  "privacyPolicyUrl": "https://earnrate.dev/privacy"
+}

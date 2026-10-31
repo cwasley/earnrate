@@ -1,0 +1,16 @@
+{
+  "name": "earnrate",
+  "description": "earnrate: which of your credit cards earns the most at a store, and why.",
+  "owner": {
+    "name": "Collin Wasley",
+    "email": "hello@earnrate.dev",
+    "url": "https://earnrate.dev"
+  },
+  "plugins": [
+    {
+      "name": "earnrate",
+      "source": "./plugin",
+      "description": "Which of your credit cards earns the most at a store, and why."
+    }
+  ]
+}

@@ -169,6 +169,8 @@ There's no wallet to write first: tell the assistant which cards you have, and i
 
 For a merchant earnrate doesn't know, the calling model can pass a `category` (e.g. `grocery.supermarket`). It's used only for unknown merchants and is labeled in the answer. The command line takes the same thing as `--category`.
 
+**Claude Code plugin:** `/plugin install earnrate --marketplace cwasley/earnrate` installs earnrate as a plugin, which also works in Cowork sessions on your computer.
+
 **Claude Desktop, one click:** download [earnrate.mcpb](https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb) and open it; Claude Desktop installs it (Settings → Extensions). No terminal or Node install needed. Its one setting is where your wallet file lives, by default `~/.earnrate/wallet.yaml`, the same file the command line uses.
 
 To add it to Claude Code:
@@ -218,6 +220,17 @@ Every rule in `data/cards/` carries a short quote from the issuer's own page. In
 A GitHub Action runs it every Monday and opens a "Card source changes" issue when something moved. After updating a card file, run `yarn check-sources --update` to record the new baseline. Some issuers block headless browsers on shared servers; those pages are listed as "couldn't check", and running the command locally covers them. The first run needs `yarn playwright install chromium`.
 
 Rotating categories (Freedom Flex) are added each quarter once the issuer posts them. Until then, answers say that quarter's categories are missing rather than guessing.
+
+## Privacy Policy
+
+earnrate collects nothing. There's no account, no server and no telemetry. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
+
+- **What it stores:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product id, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins.
+- **What it sends:** nothing, by default. The optional merchant lookup (off unless you turn it on with your own Anthropic API key) sends only the name of a store earnrate doesn't recognize to Anthropic's API, and saves the answer in `~/.earnrate/merchant-cache.json`.
+- **AI assistants:** when you use earnrate through Claude or another assistant, that assistant's provider sees the conversation, including earnrate's answers, under its own privacy policy.
+- **earnrate.dev:** everything you enter on the site stays in your browser. The site counts visits with Cloudflare Web Analytics, without cookies.
+- **Retention:** your data lives only in files you control, for as long as you keep them. Delete the wallet file, or clear the site's data in your browser, to remove it.
+- **Contact:** [hello@earnrate.dev](mailto:hello@earnrate.dev).
 
 ## Working on earnrate
 
