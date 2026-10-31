@@ -31,3 +31,5 @@ private/
 site-dist
 .playwright-mcp
 .wrangler
+.mcpb-build
+earnrate.mcpb

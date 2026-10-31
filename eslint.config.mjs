@@ -10,6 +10,7 @@ export default defineConfig([
     'dist/**',
     'site-dist/**',
     '.wrangler/**',
+    '.mcpb-build/**',
     'private/**',
   ]),
   js.configs.recommended,

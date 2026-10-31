@@ -23,6 +23,7 @@ The maintainer's full spec (data model, golden tests, milestones, competitive la
 - `earnrate import` (`src/cli/import.ts`, `src/import/`) reads Amex and Chase activity CSVs. Don't add PDF statement parsing: Chase PDFs carry the full card number. Never copy a real statement into the repo, tests or fixtures; `tests/import.test.ts` uses synthetic CSVs, and its privacy test checks that only cap totals and hashes are written.
 - Wallet edits (`src/data/wallet-edit.ts` for setup, `wallet-write.ts` for purchases) splice lines into the user's YAML and must re-parse to exactly the expected wallet before the atomic rename. Never re-serialize the wallet: it drops the user's comments. The add/update/remove/memberships rules live in `src/engine/wallet-change.ts` (pure, also used by the browser wallet on earnrate.dev); `src/data/wallet-setup.ts` applies them to the wallet file for the CLI (`src/cli/wallet.ts`) and the MCP tools.
 - Freedom Flex's quarterly cap is `rotating: true`. When Chase posts a quarter (about two weeks before it starts), add its rules on that cap with `valid_from`/`valid_to` and evidence; until then answers warn that the quarter is missing.
+- `mcpb/manifest.json` describes the Claude Desktop bundle; its `tools` list must match the server's tools (`yarn smoke:mcpb` checks the built bundle). Keep new MCP tools in it.
 - `yarn mcp` runs the MCP server (`src/mcp/bin.ts`, stdio; never write to stdout there). `tests/mcp.test.ts` drives it with an in-process client plus one real stdio round trip.
 - The Claude merchant fallback is tested only with fake classifiers (`tests/llm.test.ts`). Never call the real API from tests.
 - When a card's `todo:` is something the engine or schema can't express (not a data gap), also add it to `docs/feature-gaps.md`.
@@ -32,8 +33,8 @@ The maintainer's full spec (data model, golden tests, milestones, competitive la
 
 ## Releasing
 
-1. Bump `version` in `package.json` and both versions in `server.json` (a test keeps them in step), commit and push.
-2. Create a GitHub release tagged `v<version>`. `.github/workflows/release.yml` validates, checks the tag, and runs `npm stage publish --provenance` through npm trusted publishing (no npm token in the repo).
+1. Bump `version` in `package.json`, both versions in `server.json` and the one in `mcpb/manifest.json` (a test keeps them in step), commit and push.
+2. Create a GitHub release tagged `v<version>`. `.github/workflows/release.yml` validates, checks the tag, and runs `npm stage publish --provenance` through npm trusted publishing (no npm token in the repo), then builds `earnrate.mcpb` (the Claude Desktop one-click install, `yarn mcpb:pack`), smoke-tests it and attaches it to the release.
 3. Collin approves the staged version on npmjs.com (Staged Packages) with 2FA. Nothing is live until then.
 4. Once `npm view earnrate version` shows it, `mcp-publisher publish` updates the MCP registry entry.
 

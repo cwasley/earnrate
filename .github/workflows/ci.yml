@@ -22,6 +22,8 @@ jobs:
       - run: yarn validate
       - run: yarn smoke:pack
       - run: yarn site:build
+      - run: yarn mcpb:pack
+      - run: yarn smoke:mcpb
 
   # The published package runs on older Node than development does; check it
   # installs and runs on the oldest Node users are likely to have.
@@ -35,8 +37,10 @@ jobs:
           node-version: 26
           cache: yarn
       - run: yarn install --frozen-lockfile
+      - run: yarn mcpb:pack
       - uses: actions/setup-node@v7
         with:
           node-version: 22
       - run: node --version
       - run: yarn smoke:pack
+      - run: yarn smoke:mcpb

@@ -1,0 +1,109 @@
+{
+  "manifest_version": "0.3",
+  "name": "earnrate",
+  "display_name": "earnrate",
+  "version": "0.1.3",
+  "description": "Which of your credit cards earns the most at a store, and why. Your cards stay on your computer.",
+  "long_description": "Tell Claude which credit cards you have, then ask which one to use before you pay. earnrate checks every card in your wallet against each issuer's own terms, tracks the caps you've already spent and the categories you've picked, and explains its answer. It can also compare every card it knows for a store or a year of spending, even before you add yours.\n\nYour wallet is a file on your computer, listing cards by product (like amex-gold). earnrate never asks for card numbers, expiry dates, security codes or bank logins, and sends nothing anywhere. No affiliate links.",
+  "author": {
+    "name": "Collin Wasley",
+    "url": "https://earnrate.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cwasley/earnrate"
+  },
+  "homepage": "https://earnrate.dev",
+  "documentation": "https://github.com/cwasley/earnrate#readme",
+  "support": "https://github.com/cwasley/earnrate/issues",
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "dist/mcp/bin.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/mcp/bin.js"],
+      "env": {
+        "EARNRATE_WALLET": "${user_config.wallet}"
+      }
+    }
+  },
+  "user_config": {
+    "wallet": {
+      "type": "string",
+      "title": "Wallet file",
+      "description": "Where earnrate keeps the cards you hold. It's created when you add your first card. The command line version uses the same file.",
+      "default": "${HOME}/.earnrate/wallet.yaml",
+      "required": false
+    }
+  },
+  "tools": [
+    {
+      "name": "best_card_for_purchase",
+      "description": "Which of your cards to use at a store, with reasons."
+    },
+    {
+      "name": "resolve_merchant",
+      "description": "How earnrate identified a store and its category."
+    },
+    {
+      "name": "list_wallet",
+      "description": "Your cards, caps left, picked categories and welcome-bonus progress."
+    },
+    {
+      "name": "cheat_sheet",
+      "description": "Your best card for each everyday kind of purchase this quarter."
+    },
+    {
+      "name": "best_cards_for",
+      "description": "Every card earnrate knows, ranked for one store or category."
+    },
+    {
+      "name": "simulate_spending",
+      "description": "The best cards and pairs for a year of your spending, after fees."
+    },
+    {
+      "name": "compare_welcome_offers",
+      "description": "Public sign-up offers on cards you don't have."
+    },
+    {
+      "name": "record_purchase",
+      "description": "Books a purchase against its cap and welcome bonus."
+    },
+    {
+      "name": "search_cards",
+      "description": "Finds a card by name or issuer."
+    },
+    {
+      "name": "add_card",
+      "description": "Adds a card you hold to your wallet."
+    },
+    {
+      "name": "update_card",
+      "description": "Sets a card's picks, activations or checkout name."
+    },
+    {
+      "name": "remove_card",
+      "description": "Removes a card from your wallet."
+    },
+    {
+      "name": "set_memberships",
+      "description": "Sets memberships like Amazon Prime that unlock some rates."
+    }
+  ],
+  "keywords": [
+    "credit cards",
+    "rewards",
+    "cash back",
+    "points",
+    "personal finance"
+  ],
+  "license": "(MIT AND CC-BY-NC-4.0)",
+  "privacy_policies": ["https://earnrate.dev/privacy"],
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=22.0.0"
+    }
+  }
+}

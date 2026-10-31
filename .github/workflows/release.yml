@@ -5,7 +5,7 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  contents: write # attaches earnrate.mcpb to the release
   id-token: write # npm trusted publishing and provenance
 
 jobs:
@@ -37,3 +37,10 @@ jobs:
           npm install -g npm@11.20.0
           npm stage publish --provenance
           echo "Staged earnrate@$VERSION. Approve it on npmjs.com (Staged Packages) to publish." >> "$GITHUB_STEP_SUMMARY"
+      - name: Attach the Claude Desktop bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          yarn mcpb:pack
+          yarn smoke:mcpb
+          gh release upload "$GITHUB_REF_NAME" earnrate.mcpb --clobber

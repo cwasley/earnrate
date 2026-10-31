@@ -4,3 +4,4 @@ coverage
 data/sources.lock.json
 .wrangler
 site-dist
+.mcpb-build
