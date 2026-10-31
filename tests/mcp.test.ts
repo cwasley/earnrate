@@ -68,13 +68,14 @@ function text(result: { content?: unknown }): string {
 }
 
 describe('tools', () => {
-  test('lists the twelve tools with descriptions and hints', async () => {
+  test('lists the thirteen tools with descriptions and hints', async () => {
     const client = await connect(await walletCopy())
     const { tools } = await client.listTools()
     expect(tools.map((t) => t.name).sort()).toEqual([
       'add_card',
       'best_card_for_purchase',
       'best_cards_for',
+      'cheat_sheet',
       'compare_welcome_offers',
       'list_wallet',
       'record_purchase',
@@ -220,6 +221,19 @@ describe('wallet setup', () => {
     })
     expect(withWallet.isError).toBe(true)
     expect(text(withWallet)).toMatch(/no wallet yet/i)
+  })
+
+  test('cheat_sheet answers from the wallet', async () => {
+    const client = await connect(await walletCopy())
+    const result = await client.callTool({ name: 'cheat_sheet', arguments: {} })
+    expect(result.isError).toBeFalsy()
+    const { rows } = result.structuredContent as {
+      rows: { label: string; cardId: string | null }[]
+    }
+    expect(rows.find((r) => r.label === 'Groceries')?.cardId).toBe(
+      'amex-blue-cash-preferred',
+    )
+    expect(text(result)).toMatch(/^Your cheat sheet for Q4 2026/)
   })
 
   test('simulate_spending against the wallet ranks additions', async () => {

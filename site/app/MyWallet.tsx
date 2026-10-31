@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { walletProblems } from '../../src/data/integrity.ts'
+import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { categoryResolution, findCategory } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { recordPurchase } from '../../src/engine/record.ts'
@@ -41,18 +42,6 @@ import { loadList, loadWallet, saveWallet } from './settings.ts'
 import { lineFor, STARTER, type Row } from './Spending.tsx'
 
 const QUICK = ['Groceries', 'Dining', 'Gas', 'Amazon', 'Costco', 'Travel']
-
-const CHEAT_SHEET = [
-  'Groceries',
-  'Dining',
-  'Gas',
-  'Amazon',
-  'Costco',
-  'Travel',
-  'Streaming',
-  'Drugstores',
-  'Everything else',
-]
 
 // Setup notes name what to set in CLI terms; this says where on the page.
 function noteText(note: SetupNote, name: string): string {
@@ -200,28 +189,36 @@ function Answer({
 }
 
 function CheatSheet({ wallet }: { wallet: Wallet }) {
-  const rows = useMemo(
-    () =>
-      CHEAT_SHEET.map((what) => {
-        const rec = ask(wallet, what, null)
-        const top = rec.ranked[0]
-        const held = wallet.cards.find((c) => c.id === top?.cardId)
-        return { what, top, held }
-      }),
+  const sheet = useMemo(
+    () => cheatSheet(catalog, wallet, localToday()),
     [wallet],
   )
   return (
-    <table class="cheat">
-      <tbody>
-        {rows.map(({ what, top, held }) => (
-          <tr key={what}>
-            <th scope="row">{what}</th>
-            <td>{held ? label(held) : '—'}</td>
-            <td class="rate">{top ? pct(top.effectiveReturnPct) : ''}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <>
+      <h3>Your cheat sheet for {sheet.quarter}</h3>
+      <p class="muted">The card to use for each kind of purchase right now.</p>
+      <table class="cheat">
+        <tbody>
+          {sheet.rows.map((row) => {
+            const held = wallet.cards.find((c) => c.id === row.cardId)
+            return (
+              <tr key={row.label}>
+                <th scope="row">{row.label}</th>
+                <td>
+                  {held ? label(held) : 'None of your cards'}
+                  {row.note ? <span class="row-note">{row.note}</span> : null}
+                </td>
+                <td class="rate">
+                  {row.effectiveReturnPct === null
+                    ? ''
+                    : pct(row.effectiveReturnPct)}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </>
   )
 }
 
@@ -841,10 +838,6 @@ export function MyWallet() {
       ) : null}
 
       <section>
-        <h3>Your cheat sheet</h3>
-        <p class="muted">
-          The card to use for each kind of purchase right now.
-        </p>
         <CheatSheet wallet={wallet} />
       </section>
 

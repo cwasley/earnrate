@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { MCP_SERVER_NAME } from '../brand.ts'
 import { formatCardInfo, formatNotes } from '../cli/cards.ts'
 import { formatRecommendation } from '../cli/format.ts'
+import { formatCheatSheet } from '../cli/cheatsheet.ts'
 import {
   formatAdditions,
   formatCatalogSimulation,
@@ -25,6 +26,7 @@ import {
   type SetupResult,
 } from '../data/wallet-setup.ts'
 import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
+import { cheatSheet } from '../engine/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../engine/explore.ts'
 import { compareOffers } from '../engine/offers.ts'
 import { VALUATION_PROFILES } from '../engine/profiles.ts'
@@ -44,6 +46,7 @@ import { IsoDate } from '../schema/common.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import {
   CardSearchSchema,
+  CheatSheetSchema,
   ExplorationSchema,
   MerchantResolutionSchema,
   SpendingSimulationSchema,
@@ -514,6 +517,27 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           current: null,
           additions: [],
         },
+      }
+    },
+  )
+
+  server.registerTool(
+    'cheat_sheet',
+    {
+      title: 'Cheat sheet',
+      description:
+        "The card in the user's wallet to use for each everyday kind of purchase right now: groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores and everything else, with caps, picks and activations as the wallet has them. Use it when the user asks which card to use for what, or wants a quick reference for the quarter. For one specific store, call best_card_for_purchase instead. Pass on the notes: they say what the wallet still needs, like this quarter's picks.",
+      inputSchema: z.object({ date: DateInput }),
+      outputSchema: CheatSheetSchema,
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    async (args) => {
+      const w = await wallet()
+      if (typeof w === 'string') return fail(w)
+      const sheet = cheatSheet(catalog, w, args.date ?? deps.today())
+      return {
+        content: [{ type: 'text', text: formatCheatSheet(sheet) }],
+        structuredContent: sheet,
       }
     },
   )

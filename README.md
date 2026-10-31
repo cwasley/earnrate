@@ -51,6 +51,8 @@ Assumes Whole Foods Market codes as supermarkets (MCC 5411).
 
 Options: `--online` or `--in-store`, `--valuation flat|points-heavy`, `--all`, `--json`, `--date`, `--country`. Run `earnrate --help` for details. To keep the wallet somewhere else, set `EARNRATE_WALLET` to its path.
 
+`earnrate cheatsheet` prints the card to use for each everyday kind of purchase this quarter (groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores, everything else), with your caps, picks and activations as they are now. It's also in the My wallet tab on [earnrate.dev](https://earnrate.dev).
+
 ### Your wallet
 
 The wallet is a YAML file (`~/.earnrate/wallet.yaml`) listing your cards by ID, which is each card's file name in [`data/cards/`](data/cards). `earnrate add`, `update`, `remove` and `memberships` write it for you and keep your comments, or you can edit it by hand. Only the cards are required:
@@ -152,12 +154,13 @@ Spotted a wrong rate, or want a card added? [Open an issue](https://github.com/c
 
 ## Use it from an AI agent (MCP)
 
-`earnrate mcp` runs earnrate as a local MCP server over stdio, with twelve tools:
+`earnrate mcp` runs earnrate as a local MCP server over stdio, with thirteen tools:
 
 - `best_card_for_purchase`: which card to use, with reasons
 - `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
 - `resolve_merchant`: how a merchant was identified
 - `list_wallet`: your cards, caps left this period, chosen categories and welcome-bonus progress
+- `cheat_sheet`: the card to use for each everyday kind of purchase this quarter
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have
 - `record_purchase`: books a purchase against its cap and any open welcome bonus in your wallet file, keeping your comments
 - `search_cards`, `add_card`, `update_card`, `remove_card` and `set_memberships`: set up the wallet in conversation

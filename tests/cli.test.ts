@@ -351,3 +351,11 @@ describe('comparing every card', () => {
     )
   })
 })
+
+test('cheatsheet prints the best card per category', async () => {
+  const { code, stdout } = await cli(['cheatsheet'])
+  expect(code).toBe(0)
+  expect(stdout).toMatch(/^Your cheat sheet for Q4 2026$/m)
+  expect(stdout).toMatch(/^ {2}Groceries +Blue Cash Preferred +6%$/m)
+  expect((await cli(['cheatsheet', '--date', 'soon'])).code).toBe(2)
+})

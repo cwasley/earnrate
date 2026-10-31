@@ -327,3 +327,19 @@ export const SpendingSimulationSchema = z.object({
     }),
   ),
 })
+
+export const CheatSheetSchema = z.object({
+  quarter: z.string(),
+  date: z.string(),
+  rows: z.array(
+    z.object({
+      label: z.string(),
+      cardId: z.string().nullable(),
+      cardName: z.string().nullable(),
+      effectiveReturnPct: z.number().nullable(),
+      matchedRule: z.string().nullable(),
+      note: z.string().nullable(),
+    }),
+  ),
+  notes: z.array(z.string()),
+})

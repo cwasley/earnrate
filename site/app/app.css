@@ -555,3 +555,9 @@ table.cheat td.rate {
 .small {
   font-size: 14px;
 }
+
+.row-note {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+}
