@@ -36,6 +36,10 @@ One local MCP server: `node ${CLAUDE_PLUGIN_ROOT}/node_modules/earnrate/dist/mcp
 - **Sends** nothing. The card data ships inside the package; the server makes no network requests. An optional merchant lookup through Anthropic's API exists in the command line version, but it's off unless you set `EARNRATE_LLM=on` and your own `ANTHROPIC_API_KEY`, and it sends only the name of a store earnrate doesn't recognize.
 - **Fetches** the packages in `package-lock.json` from the npm registry once, when Claude Code installs the plugin.
 
+## Where the install comes from
+
+Only the public npm registry, `registry.npmjs.org`. `package-lock.json` in this folder names every package by its public registry URL, at an exact version with an integrity hash, and the folder has no `.npmrc`. This folder lives inside earnrate's main repository, whose root also has a `package.json` and `yarn.lock`; those belong to earnrate's own development (building and testing the npm package) and play no part in the plugin. People who install the plugin get only this folder.
+
 ## Privacy Policy
 
 earnrate collects nothing: no account, no server, no telemetry. Your wallet stays in a file you control for as long as you keep it; delete the file to remove it. Claude's provider sees your conversation, including earnrate's answers, under its own privacy policy. Full policy: [earnrate.dev/privacy](https://earnrate.dev/privacy). Contact: [hello@earnrate.dev](mailto:hello@earnrate.dev).
