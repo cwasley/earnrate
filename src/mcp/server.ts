@@ -96,7 +96,7 @@ const SAVING: Record<ServerDeps['savedWallets'], string> = {
   none: "This server doesn't save wallets: pass the cards each time. For a saved wallet with cap and welcome-bonus tracking, the user can install earnrate locally (earnrate.dev).",
   file: 'Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools.',
   account:
-    "Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools. Saved wallets are anonymous: the first wallet tool asks the user to open an earnrate page, where they start a wallet (it shows a recovery code to keep; no email or name) or reconnect one with their code. Never ask for the recovery code in the conversation; it's typed only on that page.",
+    "Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools. Saved wallets are anonymous: the first wallet tool asks the user to open an earnrate page, where they start a wallet (it shows a recovery code to keep; no email or name) or reconnect one with their code. Never ask for the recovery code in the conversation; it's typed only on that page. To change the code, the user opens https://mcp.earnrate.dev/change-code.",
 }
 
 const INSTRUCTIONS = (

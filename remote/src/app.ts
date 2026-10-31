@@ -16,6 +16,7 @@ import {
   type ExecutionContextLike,
   type VaultFor,
 } from './auth.ts'
+import { errorPage, PAGE_HEADERS } from './pages.ts'
 
 type RateLimit = {
   limit(options: { key: string }): Promise<{ success: boolean }>
@@ -74,6 +75,38 @@ const tooMany = () =>
 async function limited(limiter: RateLimit | undefined, request: Request) {
   const ip = request.headers.get('cf-connecting-ip') ?? 'unknown'
   return limiter ? !(await limiter.limit({ key: ip })).success : false
+}
+
+// Sign-in depends on KV, whose free daily limits can run out. Count those
+// failures by path so they show up in the usage tally, and say so plainly.
+async function signInStep(
+  env: Env,
+  pathname: string,
+  step: () => Promise<Response>,
+  isPage: boolean,
+): Promise<Response> {
+  let response: Response
+  try {
+    response = await step()
+  } catch {
+    response = isPage
+      ? new Response(
+          errorPage(
+            "earnrate's sign-in isn't working right now.",
+            'Try again in a few minutes. Questions still work without signing in.',
+          ),
+          { status: 503, headers: PAGE_HEADERS },
+        )
+      : Response.json(
+          { error: 'temporarily_unavailable' },
+          { status: 503, headers: { 'retry-after': '60' } },
+        )
+  }
+  if (response.status >= 500) {
+    const label = `error:${pathname}`
+    env.USAGE?.writeDataPoint({ blobs: [label], indexes: [label] })
+  }
+  return response
 }
 
 export function makeWorker<E extends Env>(
@@ -147,15 +180,24 @@ export function makeWorker<E extends Env>(
       if (pathname === '/.well-known/oauth-protected-resource/mcp')
         return protectedResourceMetadata(resourceFor('/mcp'))
       if (pathname === '/' || pathname === '/mcp') return mcp(request, env)
-      if (pathname === '/authorize') {
-        if (
-          request.method === 'POST' &&
-          (await limited(env.SIGN_IN_LIMITER, request))
-        )
-          return tooMany()
-        return auth.authorize(request, env)
-      }
-      return auth.fetch(request, env, ctx)
+      const page =
+        pathname === '/authorize'
+          ? auth.authorize
+          : pathname === '/change-code'
+            ? auth.changeCode
+            : null
+      if (
+        page &&
+        request.method === 'POST' &&
+        (await limited(env.SIGN_IN_LIMITER, request))
+      )
+        return tooMany()
+      return signInStep(
+        env,
+        pathname,
+        () => page?.(request, env) ?? auth.fetch(request, env, ctx),
+        page !== null,
+      )
     },
   }
 }

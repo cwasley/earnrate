@@ -103,7 +103,11 @@ function deployment() {
   )
   const env: Env = { OAUTH_KV: memoryKv() }
   const ctx = { waitUntil: () => undefined }
-  const fetch = (input: string | Request, init?: RequestInit, extra = {}) =>
+  const fetch = (
+    input: string | Request,
+    init?: RequestInit,
+    extra: Partial<Env> = {},
+  ) =>
     worker.fetch(
       typeof input === 'string'
         ? new Request(`${ORIGIN}${input}`, init)
@@ -481,6 +485,79 @@ describe('anonymous saved wallets', () => {
     expect(challenged.headers.get('www-authenticate')).toContain(
       'oauth-protected-resource/mcp"',
     )
+  })
+
+  test('changing the recovery code moves the wallet and signs out old apps', async () => {
+    const d = deployment()
+    const first = await startWallet(d)
+    await (
+      await connect(d, first.token)
+    ).callTool({ name: 'add_card', arguments: { cardId: 'amex-gold' } })
+
+    expect((await d.fetch('/change-code')).status).toBe(200)
+    const change = (code: string) =>
+      d.fetch('/change-code', {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ code }).toString(),
+      })
+    const wrong = await change(newRecoveryCode())
+    expect(wrong.status).toBe(400)
+    expect(await wrong.text()).toContain('No saved wallet matches')
+
+    const changed = await change(first.code)
+    expect(changed.status).toBe(200)
+    const next = /<div class="code">([^<]+)<\/div>/.exec(
+      await changed.text(),
+    )?.[1]
+    expect(next).toBeDefined()
+    expect(next).not.toBe(first.code)
+
+    const old = await d.fetch('/', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${first.token}`,
+      },
+      body: callTool('list_wallet'),
+    })
+    expect(old.status).toBe(401)
+    expect((await change(first.code)).status).toBe(400)
+
+    const token = await signIn(d, async (_page, post) => {
+      const res = await post({ choice: 'recover', code: next ?? '' })
+      return res.headers.get('location') ?? ''
+    })
+    const listed = await (
+      await connect(d, token)
+    ).callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(listed)).toContain('amex-gold')
+  })
+
+  test('a sign-in failure is counted and answered plainly', async () => {
+    const points: { blobs?: string[] }[] = []
+    const broken = {
+      ...memoryKv(),
+      put: () => Promise.reject(new Error('KV write limit exceeded')),
+    }
+    const res = await deployment().fetch(
+      '/oauth/register',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          client_name: 'Claude',
+          redirect_uris: [CALLBACK],
+          token_endpoint_auth_method: 'none',
+        }),
+      },
+      {
+        OAUTH_KV: broken,
+        USAGE: { writeDataPoint: (p) => points.push(p) },
+      },
+    )
+    expect(res.status).toBeGreaterThanOrEqual(500)
+    expect(points.map((p) => p.blobs)).toContainEqual(['error:/oauth/register'])
   })
 
   test('cancel goes back to the app with access_denied', async () => {

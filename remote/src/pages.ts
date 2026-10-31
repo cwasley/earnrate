@@ -20,6 +20,7 @@ main { max-width: 34rem; margin: 0 auto; padding: 32px 16px 48px; }
 h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 12px; }
 h2 { font-size: 1.05rem; margin: 0 0 8px; }
 p { margin: 0 0 12px; }
+a { color: var(--accent); }
 .muted { color: var(--muted); font-size: 0.94rem; }
 .warn { color: var(--warn); }
 .error { color: var(--warn); font-weight: 600; }
@@ -93,6 +94,7 @@ ${error ? `<p class="error">${escape(error)}</p>` : ''}
 <input type="text" id="code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX">
 <button name="choice" value="recover">Connect</button>
 </form>
+<p class="muted">Need a new recovery code? <a href="/change-code" target="_blank" rel="noopener">Change it</a>.</p>
 </section>
 <section>
 <form method="post"><input type="hidden" name="handle" value="${h}"><button class="quiet" name="choice" value="deny">Cancel</button></form>
@@ -111,9 +113,37 @@ export function newCodePage(code: string, continueTo: string): string {
   )
 }
 
-export function errorPage(message: string): string {
+export function errorPage(
+  message: string,
+  next = 'Go back to the app and try connecting again.',
+): string {
   return page(
     "earnrate couldn't connect",
-    `<h1>That didn't work</h1><p>${escape(message)}</p><p class="muted">Go back to the app and try connecting again.</p>`,
+    `<h1>That didn't work</h1><p>${escape(message)}</p><p class="muted">${escape(next)}</p>`,
+  )
+}
+
+export function changeCodePage(error: string | null = null): string {
+  return page(
+    'Change your earnrate recovery code',
+    `<h1>Change your recovery code</h1>
+<p>Enter your current code. You'll get a new one, and the old one stops working. Every app connected to your wallet is signed out; reconnect them with the new code.</p>
+${error ? `<p class="error">${escape(error)}</p>` : ''}
+<form method="post">
+<label for="code">Current recovery code</label>
+<input type="text" id="code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX">
+<button>Change my code</button>
+</form>
+<p class="muted">Lost your code? earnrate can't look it up. Start a new wallet instead; the old one is deleted after 13 months unused.</p>`,
+  )
+}
+
+export function changedCodePage(code: string): string {
+  return page(
+    'Your new earnrate recovery code',
+    `<h1>Your new recovery code</h1>
+<p>Keep it somewhere safe, like a password manager. Your old code no longer works, and apps that were connected need to reconnect with this one.</p>
+<div class="code">${escape(code)}</div>
+<p class="muted">Don't paste it into a chat. Type it only on the earnrate page that opens when you connect an app.</p>`,
   )
 }

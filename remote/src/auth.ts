@@ -2,7 +2,14 @@ import {
   AuthorizationError,
   OAuthAuthorizationServer,
 } from '@cloudflare/workers-oauth-provider'
-import { choosePage, errorPage, newCodePage, PAGE_HEADERS } from './pages.ts'
+import {
+  changeCodePage,
+  changedCodePage,
+  choosePage,
+  errorPage,
+  newCodePage,
+  PAGE_HEADERS,
+} from './pages.ts'
 import type { VaultApi } from './vault.ts'
 import {
   keysFromCode,
@@ -16,6 +23,9 @@ import {
 export const ORIGIN = 'https://mcp.earnrate.dev'
 export const SCOPE = 'wallet'
 const DAY = 24 * 60 * 60
+const NOT_A_CODE =
+  "That isn't a recovery code. It's 25 letters and digits, like ABCDE-12345-…"
+const NO_MATCH = 'No saved wallet matches that recovery code.'
 
 // The server's address is the bare origin. /mcp, its first address, stays
 // as an alias with its own resource so connections made there keep working.
@@ -179,23 +189,11 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
 
     if (choice === 'recover') {
       const code = normalizeRecoveryCode(field('code'))
-      if (!code)
-        return chooseAgain(
-          env,
-          request,
-          handle,
-          "That isn't a recovery code. It's 25 letters and digits, like ABCDE-12345-…",
-        )
+      if (!code) return chooseAgain(env, request, handle, NOT_A_CODE)
       const keys = await keysFromCode(code)
       const wrapped = await vaultFor(env, keys.walletId).wrappedKey()
       const walletKey = wrapped && (await unwrapWalletKey(wrapped, keys))
-      if (!walletKey)
-        return chooseAgain(
-          env,
-          request,
-          handle,
-          'No saved wallet matches that recovery code.',
-        )
+      if (!walletKey) return chooseAgain(env, request, handle, NO_MATCH)
       const approved = await oauth.approveConsent(request, handle, {
         scope: [SCOPE],
       })
@@ -223,8 +221,51 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
     }
   }
 
+  // The wallet moves to a new object under the new code and a new key; the
+  // old object is deleted, which signs out every app connected with the old
+  // code.
+  async function changeCode(request: Request, env: Env): Promise<Response> {
+    if (request.method === 'GET') return html(changeCodePage())
+    if (request.method !== 'POST')
+      return new Response('Method not allowed', { status: 405 })
+    const typed = (await request.formData()).get('code')
+    const code = normalizeRecoveryCode(typeof typed === 'string' ? typed : '')
+    if (!code) return html(changeCodePage(NOT_A_CODE), 400)
+    const oldKeys = await keysFromCode(code)
+    const oldVault = vaultFor(env, oldKeys.walletId)
+    const wrapped = await oldVault.wrappedKey()
+    const oldKey = wrapped && (await unwrapWalletKey(wrapped, oldKeys))
+    if (!oldKey) return html(changeCodePage(NO_MATCH), 400)
+
+    const wallet = await oldVault.load(oldKey)
+    const next = newRecoveryCode()
+    const keys = await keysFromCode(next)
+    const walletKey = newWalletKey()
+    const vault = vaultFor(env, keys.walletId)
+    const failed = () =>
+      html(
+        errorPage(
+          "Couldn't change the code. Your current code still works.",
+          'Try again in a few minutes.',
+        ),
+        500,
+      )
+    if (
+      !(await vault.create(keys.walletId, await wrapWalletKey(walletKey, keys)))
+    )
+      return failed()
+    if (wallet && !(await vault.replace(walletKey, wallet)).ok) {
+      await vault.destroy()
+      return failed()
+    }
+    await oldVault.destroy()
+    await signOutEverywhere(env, oldKeys.walletId)
+    return html(changedCodePage(next))
+  }
+
   return {
     authorize,
+    changeCode,
     validate,
     signOutEverywhere,
     fetch: (request: Request, env: Env, ctx: ExecutionContextLike) =>
