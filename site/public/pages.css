@@ -1,0 +1,155 @@
+:root {
+  --bg: #fbfaf7;
+  --surface: #ffffff;
+  --text: #1c1d1f;
+  --muted: #5f6368;
+  --line: #e6e2da;
+  --accent: #1f6f54;
+  --accent-soft: #e4f1eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121315;
+    --surface: #1a1c1f;
+    --text: #ecebe7;
+    --muted: #a2a6ab;
+    --line: #2b2e32;
+    --accent: #7fd1ad;
+    --accent-soft: #1c2c25;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    17px/1.6 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 16px 64px;
+}
+
+header {
+  padding: 24px 0 0;
+}
+
+.wordmark {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  font-size: 18px;
+  text-decoration: none;
+}
+
+h1 {
+  font-size: clamp(28px, 6vw, 40px);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  margin: 24px 0 6px;
+}
+
+h2 {
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  margin: 36px 0 10px;
+}
+
+a {
+  color: var(--accent);
+}
+
+.updated,
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.answer {
+  font-size: 18px;
+  background: var(--accent-soft);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.button {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+}
+
+ol.cards {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+ol.cards > li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+ol.cards ul {
+  margin: 6px 0 0;
+  padding-left: 1.1em;
+  font-size: 15px;
+}
+
+.rank {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+}
+
+.rate {
+  color: var(--accent);
+  font-weight: 700;
+  float: right;
+}
+
+.quotes li {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.links {
+  line-height: 1.9;
+}
+
+footer {
+  margin-top: 56px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+}

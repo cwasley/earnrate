@@ -30,3 +30,4 @@ private/
 # Built site
 site-dist
 .playwright-mcp
+.wrangler

@@ -40,7 +40,7 @@
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "prepack": "yarn build",
     "smoke:pack": "node scripts/smoke-pack.ts",
-    "site:build": "vite build site",
+    "site:build": "vite build site && node scripts/build-pages.ts",
     "site:dev": "vite site",
     "site:deploy": "yarn site:build && WRANGLER_SEND_METRICS=false wrangler deploy",
     "test": "vitest run",

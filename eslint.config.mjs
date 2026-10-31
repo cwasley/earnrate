@@ -9,6 +9,7 @@ export default defineConfig([
     'coverage/**',
     'dist/**',
     'site-dist/**',
+    '.wrangler/**',
     'private/**',
   ]),
   js.configs.recommended,
