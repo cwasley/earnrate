@@ -45,6 +45,7 @@ afterEach(async () => {
 async function connect(
   wallet: string | WalletStore,
   llm: LlmSession | null = null,
+  savedWallets = true,
 ) {
   const store =
     typeof wallet === 'string' ? new FileWalletStore(catalog, wallet) : wallet
@@ -52,6 +53,7 @@ async function connect(
     createEarnrateServer({
       catalog,
       store,
+      savedWallets,
       today: () => TODAY,
       llm,
       version: '0.0.0-test',

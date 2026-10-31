@@ -25,6 +25,7 @@ export async function serveMcp(env: NodeJS.ProcessEnv): Promise<void> {
     createEarnrateServer({
       catalog,
       store: new FileWalletStore(catalog, walletPath(env)),
+      savedWallets: true,
       today,
       llm,
       version,

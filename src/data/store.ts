@@ -149,3 +149,23 @@ export function memoryBackend(initial: string | null = null): JsonBackend {
     },
   }
 }
+
+// No saved wallet, and saving refused: the public remote server before
+// anonymous saved wallets exist. Cards named in the conversation still work.
+export function noSavedWallet(where: string): WalletStore {
+  const refused = () =>
+    Promise.resolve(
+      failed(
+        "Saving a wallet isn't available here yet. Name your cards in the conversation instead; nothing is stored.",
+      ),
+    )
+  return {
+    where,
+    load: () => Promise.resolve(null),
+    addCard: refused,
+    updateCard: refused,
+    removeCard: refused,
+    setMemberships: refused,
+    record: refused,
+  }
+}

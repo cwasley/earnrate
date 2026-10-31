@@ -6,3 +6,5 @@ data/sources.lock.json
 site-dist
 .mcpb-build
 plugin/package-lock.json
+remote/catalog.gen.json
+remote/dist/

@@ -1,0 +1,24 @@
+// The public remote MCP server at mcp.earnrate.dev. Deploy with
+// `yarn remote:deploy`. No request logs: what people ask stays unrecorded.
+{
+  "name": "earnrate-mcp",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "alias": { "earnrate:bundle": "./catalog.gen.json" },
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": false },
+  "routes": [{ "pattern": "mcp.earnrate.dev", "custom_domain": true }],
+  // Per IP, per Cloudflare location: generous for a person, tight for a script.
+  "ratelimits": [
+    {
+      "name": "LIMITER",
+      "namespace_id": "1101",
+      "simple": { "limit": 120, "period": 60 },
+    },
+  ],
+  // Daily totals by method and tool name only (Workers Analytics Engine).
+  "analytics_engine_datasets": [
+    { "binding": "USAGE", "dataset": "earnrate_mcp_usage" },
+  ],
+}

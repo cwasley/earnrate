@@ -33,3 +33,5 @@ site-dist
 .wrangler
 .mcpb-build
 earnrate.mcpb
+remote/catalog.gen.json
+remote/dist/

@@ -8,6 +8,7 @@ export default defineConfig([
     'node_modules/**',
     'coverage/**',
     'dist/**',
+    'remote/dist/**',
     'site-dist/**',
     '.wrangler/**',
     '.mcpb-build/**',

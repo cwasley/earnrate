@@ -22,6 +22,7 @@ jobs:
       - run: yarn validate
       - run: yarn smoke:pack
       - run: yarn site:build
+      - run: yarn remote:check
       - run: yarn mcpb:pack
       - run: yarn smoke:mcpb
 

@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/server'
+import { McpServer, type RegisteredTool } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 import { MCP_SERVER_NAME } from '../brand.ts'
 import { formatCardInfo, formatNotes } from '../cli/cards.ts'
@@ -50,6 +50,7 @@ import {
 export type ServerDeps = {
   catalog: Catalog
   store: WalletStore // where a saved wallet lives; it's optional
+  savedWallets: boolean // false: no tools that save, for the public remote server
   today: () => string // YYYY-MM-DD
   llm: LlmSession | null // shared across connections, so the call limit holds
   version: string
@@ -71,9 +72,11 @@ const DateInput = IsoDate.optional().describe(
   'Purchase date, YYYY-MM-DD. Defaults to today.',
 )
 
-const INSTRUCTIONS = `earnrate answers which credit card earns the most for a purchase, from each issuer's own terms. Anyone can use it without entering anything: with no cards given, best_card_for_purchase, best_cards_for, cheat_sheet, simulate_spending and compare_welcome_offers answer from every card earnrate knows, and that's a complete answer. Never require the user's cards, and don't ask what they spend unless the answer depends on it; simulate_spending assumes typical amounts when none are given and says so.
+const INSTRUCTIONS = (
+  savedWallets: boolean,
+) => `earnrate answers which credit card earns the most for a purchase, from each issuer's own terms. Anyone can use it without entering anything: with no cards given, best_card_for_purchase, best_cards_for, cheat_sheet, simulate_spending and compare_welcome_offers answer from every card earnrate knows, and that's a complete answer. Never require the user's cards, and don't ask what they spend unless the answer depends on it; simulate_spending assumes typical amounts when none are given and says so.
 
-Personalizing is optional. If the user names their cards, pass them as \`cards\` (ids from search_cards) for that answer; nothing is saved. Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools. When a card needs category picks, memberships like Amazon Prime, or activations, ask the user rather than guessing.
+Personalizing is optional. If the user names their cards, pass them as \`cards\` (ids from search_cards) for that answer; nothing is saved. ${savedWallets ? 'Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools.' : "This server doesn't save wallets: pass the cards each time. For a saved wallet with cap and welcome-bonus tracking, the user can install earnrate locally (earnrate.dev)."} When a card needs category picks, memberships like Amazon Prime, or activations, ask the user rather than guessing.
 
 The wallet lists cards by product id, never card numbers; never ask for card numbers, expiry dates or security codes.`
 
@@ -88,9 +91,11 @@ const dollars = (n: number) =>
 export function createEarnrateServer(deps: ServerDeps): McpServer {
   const server = new McpServer(
     { name: MCP_SERVER_NAME, version: deps.version },
-    { instructions: INSTRUCTIONS },
+    { instructions: INSTRUCTIONS(deps.savedWallets) },
   )
   const { catalog } = deps
+  // Tools that need a saved wallet; a server without saved wallets drops them.
+  const walletTools: RegisteredTool[] = []
 
   const noWallet = `There's no wallet yet (${deps.store.where}), which is normal before the user adds a card. Ask the user which credit cards they have, find each one with search_cards, and add it with add_card. best_cards_for and simulate_spending work without a wallet.`
 
@@ -343,53 +348,57 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
     },
   )
 
-  server.registerTool(
-    'list_wallet',
-    {
-      title: 'List wallet',
-      description:
-        "Lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, and when each card's data was last verified.",
-      outputSchema: WalletSummarySchema,
-      annotations: { readOnlyHint: true, openWorldHint: false },
-    },
-    async () => {
-      const read = await readableWallet()
-      if (typeof read === 'string') return fail(read)
-      const summary = walletSummary(catalog, read.wallet, deps.today())
-      if (read.start !== null)
+  walletTools.push(
+    server.registerTool(
+      'list_wallet',
+      {
+        title: 'List wallet',
+        description:
+          "Lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, and when each card's data was last verified.",
+        outputSchema: WalletSummarySchema,
+        annotations: { readOnlyHint: true, openWorldHint: false },
+      },
+      async () => {
+        const read = await readableWallet()
+        if (typeof read === 'string') return fail(read)
+        const summary = walletSummary(catalog, read.wallet, deps.today())
+        if (read.start !== null)
+          return {
+            content: [{ type: 'text', text: read.start }],
+            structuredContent: summary,
+          }
+        const lines = summary.cards.map((c) => {
+          const caps = c.caps
+            .filter((cap) => cap.remaining !== null)
+            .map(
+              (cap) =>
+                `${cap.key} ${dollars(cap.spent)} of ${dollars(cap.amount)} used for ${cap.currentPeriod ?? ''}`,
+            )
+          const chosen = c.chosen
+            ? `; chosen categories for ${c.chosen.period}${c.chosen.current ? '' : ' (out of date)'}`
+            : ''
+          const onlyAt = c.onlyAt
+            ? `; works only at ${c.onlyAt.join(', ')}`
+            : ''
+          const rotation =
+            c.rotationGap === null
+              ? ''
+              : `; rotating categories for ${c.rotationGap} not in earnrate yet`
+          const b = c.bonus
+          const bonus =
+            b?.state === 'open' && b.spend !== null
+              ? `; welcome bonus ${dollars(b.spent)} of ${dollars(b.spend)} spent, due ${b.deadline ?? ''}`
+              : b
+                ? `; welcome bonus ${b.state}`
+                : ''
+          return `- ${c.checkoutLabel ?? c.cardName} (${c.cardId}): ${c.currency} at ${String(c.centsPerUnit)}¢${caps.length > 0 ? `; ${caps.join(', ')}` : ''}${chosen}${rotation}${onlyAt}${bonus}`
+        })
         return {
-          content: [{ type: 'text', text: read.start }],
+          content: [{ type: 'text', text: lines.join('\n') }],
           structuredContent: summary,
         }
-      const lines = summary.cards.map((c) => {
-        const caps = c.caps
-          .filter((cap) => cap.remaining !== null)
-          .map(
-            (cap) =>
-              `${cap.key} ${dollars(cap.spent)} of ${dollars(cap.amount)} used for ${cap.currentPeriod ?? ''}`,
-          )
-        const chosen = c.chosen
-          ? `; chosen categories for ${c.chosen.period}${c.chosen.current ? '' : ' (out of date)'}`
-          : ''
-        const onlyAt = c.onlyAt ? `; works only at ${c.onlyAt.join(', ')}` : ''
-        const rotation =
-          c.rotationGap === null
-            ? ''
-            : `; rotating categories for ${c.rotationGap} not in earnrate yet`
-        const b = c.bonus
-        const bonus =
-          b?.state === 'open' && b.spend !== null
-            ? `; welcome bonus ${dollars(b.spent)} of ${dollars(b.spend)} spent, due ${b.deadline ?? ''}`
-            : b
-              ? `; welcome bonus ${b.state}`
-              : ''
-        return `- ${c.checkoutLabel ?? c.cardName} (${c.cardId}): ${c.currency} at ${String(c.centsPerUnit)}¢${caps.length > 0 ? `; ${caps.join(', ')}` : ''}${chosen}${rotation}${onlyAt}${bonus}`
-      })
-      return {
-        content: [{ type: 'text', text: lines.join('\n') }],
-        structuredContent: summary,
-      }
-    },
+      },
+    ),
   )
 
   server.registerTool(
@@ -690,103 +699,105 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
     },
   )
 
-  server.registerTool(
-    'record_purchase',
-    {
-      title: 'Record a purchase',
-      description:
-        "Records a purchase the user has already made, so spending caps and welcome-bonus progress stay accurate for future recommendations. It updates the user's wallet file. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap and no open welcome bonus are acknowledged and nothing is written.",
-      inputSchema: z.object({
-        cardId: z
-          .string()
-          .min(1)
-          .describe(
-            'The card used, as a cardId from list_wallet or best_card_for_purchase.',
-          ),
-        merchant: Merchant,
-        amount: z.number().positive().describe('Amount spent in US dollars.'),
-        channel: ChannelInput,
-        date: DateInput,
-        category: CategoryInput,
-      }),
-      outputSchema: RecordResultSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: deps.llm !== null,
+  walletTools.push(
+    server.registerTool(
+      'record_purchase',
+      {
+        title: 'Record a purchase',
+        description:
+          "Records a purchase the user has already made, so spending caps and welcome-bonus progress stay accurate for future recommendations. It updates the user's wallet file. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap and no open welcome bonus are acknowledged and nothing is written.",
+        inputSchema: z.object({
+          cardId: z
+            .string()
+            .min(1)
+            .describe(
+              'The card used, as a cardId from list_wallet or best_card_for_purchase.',
+            ),
+          merchant: Merchant,
+          amount: z.number().positive().describe('Amount spent in US dollars.'),
+          channel: ChannelInput,
+          date: DateInput,
+          category: CategoryInput,
+        }),
+        outputSchema: RecordResultSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: deps.llm !== null,
+        },
       },
-    },
-    // Queued per wallet file: parallel calls would otherwise each read the
-    // old usage and the last write would drop the others' spend.
-    (args) =>
-      (async () => {
-        const { cardId, merchant, amount, channel, date, category } = args
-        const w = await wallet()
-        if (typeof w === 'string') return fail(w)
-        if (!w.cards.some((c) => c.id === cardId)) {
-          return fail(
-            `"${cardId}" isn't in the wallet. Cards: ${w.cards.map((c) => c.id).join(', ')}.`,
+      // Queued per wallet file: parallel calls would otherwise each read the
+      // old usage and the last write would drop the others' spend.
+      (args) =>
+        (async () => {
+          const { cardId, merchant, amount, channel, date, category } = args
+          const w = await wallet()
+          if (typeof w === 'string') return fail(w)
+          if (!w.cards.some((c) => c.id === cardId)) {
+            return fail(
+              `"${cardId}" isn't in the wallet. Cards: ${w.cards.map((c) => c.id).join(', ')}.`,
+            )
+          }
+          const purchase = {
+            cardId,
+            merchant,
+            amount,
+            channel: channel ?? null,
+            date: date ?? deps.today(),
+          }
+          const resolved = await resolve(
+            merchant,
+            purchase.channel,
+            category ?? null,
           )
-        }
-        const purchase = {
-          cardId,
-          merchant,
-          amount,
-          channel: channel ?? null,
-          date: date ?? deps.today(),
-        }
-        const resolved = await resolve(
-          merchant,
-          purchase.channel,
-          category ?? null,
-        )
-        const result = await deps.store.record(purchase, resolved.merchant)
-        if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
-        const { cap: booking, bonus } = result
-        if (!booking && !bonus) {
+          const result = await deps.store.record(purchase, resolved.merchant)
+          if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
+          const { cap: booking, bonus } = result
+          if (!booking && !bonus) {
+            const output = {
+              recorded: false,
+              booking: null,
+              bonus: null,
+              message: `Nothing to track: ${cardId} has no spending cap or open welcome bonus for this purchase, so the wallet wasn't changed.`,
+            }
+            return {
+              content: [{ type: 'text', text: output.message }],
+              structuredContent: output,
+            }
+          }
+          const messages: string[] = []
+          if (booking) {
+            const left = Math.max(0, booking.capAmount - booking.after)
+            messages.push(
+              `Recorded ${dollars(amount)} on ${cardId} against "${booking.capKey}": ${dollars(booking.before)} → ${dollars(booking.after)} of ${dollars(booking.capAmount)} for ${booking.period}, ${dollars(left)} left.`,
+            )
+          }
+          if (bonus) {
+            const left = Math.max(0, bonus.spend - bonus.after)
+            messages.push(
+              left === 0
+                ? `Welcome bonus spend met on ${cardId}: ${dollars(bonus.after)} of ${dollars(bonus.spend)}.`
+                : `Welcome bonus on ${cardId}: ${dollars(bonus.after)} of ${dollars(bonus.spend)} spent, ${dollars(left)} to go by ${bonus.deadline ?? 'the deadline'}.`,
+            )
+          }
           const output = {
-            recorded: false,
-            booking: null,
-            bonus: null,
-            message: `Nothing to track: ${cardId} has no spending cap or open welcome bonus for this purchase, so the wallet wasn't changed.`,
+            recorded: true,
+            booking,
+            bonus,
+            message: messages.join(' '),
           }
           return {
-            content: [{ type: 'text', text: output.message }],
+            content: [
+              {
+                type: 'text',
+                text: [output.message, ...resolved.notices].join('\n'),
+              },
+            ],
             structuredContent: output,
           }
-        }
-        const messages: string[] = []
-        if (booking) {
-          const left = Math.max(0, booking.capAmount - booking.after)
-          messages.push(
-            `Recorded ${dollars(amount)} on ${cardId} against "${booking.capKey}": ${dollars(booking.before)} → ${dollars(booking.after)} of ${dollars(booking.capAmount)} for ${booking.period}, ${dollars(left)} left.`,
-          )
-        }
-        if (bonus) {
-          const left = Math.max(0, bonus.spend - bonus.after)
-          messages.push(
-            left === 0
-              ? `Welcome bonus spend met on ${cardId}: ${dollars(bonus.after)} of ${dollars(bonus.spend)}.`
-              : `Welcome bonus on ${cardId}: ${dollars(bonus.after)} of ${dollars(bonus.spend)} spent, ${dollars(left)} to go by ${bonus.deadline ?? 'the deadline'}.`,
-          )
-        }
-        const output = {
-          recorded: true,
-          booking,
-          bonus,
-          message: messages.join(' '),
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: [output.message, ...resolved.notices].join('\n'),
-            },
-          ],
-          structuredContent: output,
-        }
-      })(),
+        })(),
+    ),
   )
 
   const CardId = z
@@ -949,105 +960,114 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
     },
   )
 
-  server.registerTool(
-    'add_card',
-    {
-      title: 'Add a card',
-      description:
-        "Adds a card the user holds to their wallet by its id from search_cards, creating the wallet if there isn't one. The reply says what the card still needs (category picks, memberships, activations); ask the user about those. Stores only the card's product id and settings, never card numbers.",
-      inputSchema: z.object({ cardId: CardId, ...cardFields }),
-      outputSchema: WalletChangeSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: false,
+  walletTools.push(
+    server.registerTool(
+      'add_card',
+      {
+        title: 'Add a card',
+        description:
+          "Adds a card the user holds to their wallet by its id from search_cards, creating the wallet if there isn't one. The reply says what the card still needs (category picks, memberships, activations); ask the user about those. Stores only the card's product id and settings, never card numbers.",
+        inputSchema: z.object({ cardId: CardId, ...cardFields }),
+        outputSchema: WalletChangeSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: false,
+        },
       },
-    },
-    async (args) => {
-      const result = await deps.store.addCard(cardInput(args), deps.today())
-      return changed(
-        result,
-        `Added ${cardName(args.cardId)} (${args.cardId})${result.ok && result.created ? `, starting a new wallet at ${deps.store.where}` : ''}.`,
-      )
-    },
+      async (args) => {
+        const result = await deps.store.addCard(cardInput(args), deps.today())
+        return changed(
+          result,
+          `Added ${cardName(args.cardId)} (${args.cardId})${result.ok && result.created ? `, starting a new wallet at ${deps.store.where}` : ''}.`,
+        )
+      },
+    ),
   )
 
-  server.registerTool(
-    'update_card',
-    {
-      title: 'Update a card',
-      description:
-        'Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary or activated categories. Picks for the current period are merged with the ones already saved. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+.',
-      inputSchema: z.object({ cardId: CardId, ...cardFields }),
-      outputSchema: WalletChangeSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: false,
+  walletTools.push(
+    server.registerTool(
+      'update_card',
+      {
+        title: 'Update a card',
+        description:
+          'Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary or activated categories. Picks for the current period are merged with the ones already saved. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+.',
+        inputSchema: z.object({ cardId: CardId, ...cardFields }),
+        outputSchema: WalletChangeSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
       },
-    },
-    async (args) =>
-      changed(
-        await deps.store.updateCard(cardInput(args), deps.today()),
-        `Updated ${cardName(args.cardId)} (${args.cardId}).`,
-      ),
+      async (args) =>
+        changed(
+          await deps.store.updateCard(cardInput(args), deps.today()),
+          `Updated ${cardName(args.cardId)} (${args.cardId}).`,
+        ),
+    ),
   )
 
-  server.registerTool(
-    'remove_card',
-    {
-      title: 'Remove a card',
-      description:
-        "Removes a card from the wallet, with its tracked cap usage and bonus progress. Only when the user says they no longer have it or don't want it considered.",
-      inputSchema: z.object({ cardId: CardId }),
-      outputSchema: WalletChangeSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: true,
-        idempotentHint: true,
-        openWorldHint: false,
+  walletTools.push(
+    server.registerTool(
+      'remove_card',
+      {
+        title: 'Remove a card',
+        description:
+          "Removes a card from the wallet, with its tracked cap usage and bonus progress. Only when the user says they no longer have it or don't want it considered.",
+        inputSchema: z.object({ cardId: CardId }),
+        outputSchema: WalletChangeSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
       },
-    },
-    async ({ cardId }) =>
-      changed(
-        await deps.store.removeCard(cardId),
-        `Removed ${cardName(cardId)} (${cardId}).`,
-        false,
-      ),
+      async ({ cardId }) =>
+        changed(
+          await deps.store.removeCard(cardId),
+          `Removed ${cardName(cardId)} (${cardId}).`,
+          false,
+        ),
+    ),
   )
 
-  server.registerTool(
-    'set_memberships',
-    {
-      title: 'Set memberships',
-      description:
-        "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier. Replaces the whole list, so include the ones to keep.",
-      inputSchema: z.object({
-        memberships: z
-          .array(z.enum(membershipIds))
-          .describe(
-            `Every membership the user has. Known: ${membershipIds.join(', ')}.`,
-          ),
-      }),
-      outputSchema: WalletChangeSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: false,
+  walletTools.push(
+    server.registerTool(
+      'set_memberships',
+      {
+        title: 'Set memberships',
+        description:
+          "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier. Replaces the whole list, so include the ones to keep.",
+        inputSchema: z.object({
+          memberships: z
+            .array(z.enum(membershipIds))
+            .describe(
+              `Every membership the user has. Known: ${membershipIds.join(', ')}.`,
+            ),
+        }),
+        outputSchema: WalletChangeSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
       },
-    },
-    async (args) =>
-      changed(
-        await deps.store.setMemberships(args.memberships),
-        args.memberships.length > 0
-          ? `Memberships set to ${args.memberships.join(', ')}.`
-          : 'Memberships cleared.',
-        false,
-      ),
+      async (args) =>
+        changed(
+          await deps.store.setMemberships(args.memberships),
+          args.memberships.length > 0
+            ? `Memberships set to ${args.memberships.join(', ')}.`
+            : 'Memberships cleared.',
+          false,
+        ),
+    ),
   )
 
+  if (!deps.savedWallets) for (const tool of walletTools) tool.remove()
   return server
 }
