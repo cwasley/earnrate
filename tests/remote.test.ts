@@ -251,6 +251,22 @@ async function startWallet(d: ReturnType<typeof deployment>) {
   return { token, code }
 }
 
+const post = (
+  d: ReturnType<typeof deployment>,
+  path: string,
+  body: string,
+  token?: string,
+) =>
+  d.fetch(path, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      accept: 'application/json, text/event-stream',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+    body,
+  })
+
 const callTool = (name: string, args: Record<string, unknown> = {}) =>
   JSON.stringify({
     jsonrpc: '2.0',
@@ -308,19 +324,85 @@ describe('remote connector, signed out', () => {
     })
   })
 
-  test('refuses a token it did not issue', async () => {
-    const res = await deployment().fetch('/mcp', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: 'Bearer not-a-real-token',
-      },
-      body: callTool('best_card_for_purchase', { merchant: 'Costco' }),
-    })
-    expect(res.status).toBe(401)
-    expect(res.headers.get('www-authenticate')).toContain(
+  test('a token it did not issue gets wallet tools refused, questions answered', async () => {
+    const d = deployment()
+    const wallet = await post(
+      d,
+      '/',
+      callTool('list_wallet'),
+      'not-a-real-token',
+    )
+    expect(wallet.status).toBe(401)
+    expect(wallet.headers.get('www-authenticate')).toContain(
       'error="invalid_token"',
     )
+    const question = await post(
+      d,
+      '/',
+      callTool('best_card_for_purchase', { merchant: 'Costco' }),
+      'not-a-real-token',
+    )
+    expect(question.status).toBe(200)
+  })
+
+  test('a body over 64 KB is refused, even without Content-Length', async () => {
+    const big = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (let i = 0; i < 80; i++)
+          controller.enqueue(new Uint8Array(1024).fill(32))
+        controller.close()
+      },
+    })
+    const res = await deployment().fetch(
+      new Request(`${ORIGIN}/`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: big,
+        duplex: 'half',
+      }),
+    )
+    expect(res.status).toBe(413)
+  })
+
+  test('app registrations are limited in size', async () => {
+    const res = await deployment().fetch('/oauth/register', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        client_name: 'x'.repeat(5000),
+        redirect_uris: [CALLBACK],
+        token_endpoint_auth_method: 'none',
+      }),
+    })
+    expect(res.status).toBe(400)
+  })
+
+  test("sign-in steps have their own rate limit; Anthropic's servers are exempt", async () => {
+    const d = deployment()
+    const keys: string[] = []
+    const env = {
+      SIGN_IN_LIMITER: {
+        limit: ({ key }: { key: string }) => {
+          keys.push(key)
+          return Promise.resolve({ success: false })
+        },
+      },
+    }
+    const from = (ip: string) =>
+      d.fetch(
+        '/oauth/register',
+        { method: 'POST', headers: { 'cf-connecting-ip': ip }, body: '{}' },
+        env,
+      )
+    expect((await from('203.0.113.9')).status).toBe(429)
+    expect((await from('2001:db8:1:2:3:4:5:6')).status).toBe(429)
+    expect((await from('2001:db8:1:2::7')).status).toBe(429)
+    expect((await from('160.79.105.20')).status).not.toBe(429)
+    expect(keys).toEqual([
+      '203.0.113.9',
+      '2001:db8:1:2::/64',
+      '2001:db8:1:2::/64',
+    ])
   })
 
   test('sends a browser at the root to the website and 404s other paths', async () => {
@@ -352,6 +434,10 @@ describe('remote connector, signed out', () => {
     expect(points.map((p) => p.blobs)).toContainEqual([
       'tool:best_card_for_purchase',
     ])
+    await client
+      .callTool({ name: 'Trader Joes at 123 Main St', arguments: {} })
+      .catch(() => undefined)
+    expect(points.map((p) => p.blobs)).toContainEqual(['tool:other'])
     const recorded = JSON.stringify(points)
     expect(recorded).not.toContain('Trader')
     expect(recorded).not.toContain('123')
@@ -444,15 +530,16 @@ describe('anonymous saved wallets', () => {
     const { token } = await startWallet(d)
     const [storage] = [...d.storages.values()]
     await storage?.deleteAll()
-    const res = await d.fetch('/mcp', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${token}`,
-      },
-      body: callTool('best_card_for_purchase', { merchant: 'Costco' }),
-    })
-    expect(res.status).toBe(401)
+    expect((await post(d, '/', callTool('list_wallet'), token)).status).toBe(
+      401,
+    )
+    const question = await post(
+      d,
+      '/',
+      callTool('best_card_for_purchase', { merchant: 'Costco' }),
+      token,
+    )
+    expect(question.status).toBe(200)
   })
 
   test('connections made at the old /mcp address keep working', async () => {
@@ -623,12 +710,13 @@ describe('wallet vault', () => {
       await vault.create(keys.walletId, await wrapWalletKey(walletKey, keys)),
     ).toBe(true)
     expect(await vault.create(keys.walletId, 'again')).toBe(false)
-    expect(storage.alarm).toBe(Date.UTC(2027, 10, 30))
+    expect(storage.alarm).toBe(Date.UTC(2026, 10, 6))
 
     await Promise.all([
       vault.addCard(walletKey, { id: 'amex-gold' }, TODAY),
       vault.addCard(walletKey, { id: 'chase-prime-visa' }, TODAY),
     ])
+    expect(storage.alarm).toBe(Date.UTC(2027, 10, 30))
     const wallet = await vault.load(walletKey)
     expect(wallet?.cards.map((c) => c.id).sort()).toEqual([
       'amex-gold',

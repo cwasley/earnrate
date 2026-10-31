@@ -182,19 +182,22 @@
         <p>
           Each wallet is encrypted with its own key. That key can be unlocked
           only with your recovery code or by an app you connected with it, so
-          the stored wallet can't be read without one of them, including by me.
-          The server unlocks it only in memory, while answering a request from
-          one of your connected apps. Cloudflare stores the encrypted wallet.
-          The record that an app is connected, which app and when, is kept in
-          Cloudflare's storage until that connection is unused for 90 days; its
-          access tokens are stored only in a form that can't be turned back into
-          the token.
+          the stored wallets can't be read without one of them, including by me.
+          earnrate's server unlocks a wallet only in memory, while answering one
+          of your connected apps or changing your recovery code. Its code is
+          open source, on
+          <a href="https://github.com/cwasley/earnrate">GitHub</a>. Cloudflare
+          stores the encrypted wallet. The record that an app is connected,
+          which app and when, is kept in Cloudflare's storage until that
+          connection is unused for 90 days; its access tokens are stored only in
+          a form that can't be turned back into the token.
         </p>
         <p>
           You can export the wallet as a file that works with earnrate.dev and
           the command line, or delete it. Deleting it is immediate and signs out
           every app connected to it. A wallet that goes unused for 13 months is
-          deleted automatically. You can change your recovery code at
+          deleted automatically, and a new one that's never used is deleted
+          after a week. You can change your recovery code at
           <a href="https://mcp.earnrate.dev/change-code"
             >mcp.earnrate.dev/change-code</a
           >; the old code stops working and connected apps are signed out.

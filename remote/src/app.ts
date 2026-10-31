@@ -2,6 +2,7 @@ import { createMcpHandler } from '@modelcontextprotocol/server'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { AccountStore } from '../../src/data/store.ts'
 import {
+  ANSWER_TOOLS,
   createEarnrateServer,
   SAVED_WALLET_TOOLS,
 } from '../../src/mcp/server.ts'
@@ -17,6 +18,7 @@ import {
   type VaultFor,
 } from './auth.ts'
 import { errorPage, PAGE_HEADERS } from './pages.ts'
+import { limitKey, MAX_BODY, readBody } from './requests.ts'
 
 type RateLimit = {
   limit(options: { key: string }): Promise<{ success: boolean }>
@@ -27,7 +29,7 @@ type Dataset = {
 
 export type Env = AuthEnv & {
   LIMITER?: RateLimit // every request, per IP
-  SIGN_IN_LIMITER?: RateLimit // the sign-in page, per IP
+  SIGN_IN_LIMITER?: RateLimit // sign-in steps and rejected tokens, per IP
   USAGE?: Dataset // counts only: the method or tool name, never arguments
 }
 
@@ -40,21 +42,10 @@ const easternToday = () =>
     new Date(),
   )
 
-const MAX_BODY = 64 * 1024
-
 type Call = { method: string; tool: string | null }
 
-// The JSON-RPC methods in a request, and the tool names for tool calls.
-async function rpcCalls(request: Request): Promise<Call[]> {
-  if (request.method !== 'POST') return []
-  const length = request.headers.get('content-length')
-  if (length !== null && Number(length) > MAX_BODY) return []
-  let body: unknown
-  try {
-    body = await request.clone().json()
-  } catch {
-    return []
-  }
+// The JSON-RPC methods in a parsed body, and the tool names for tool calls.
+function rpcCalls(body: unknown): Call[] {
   return (Array.isArray(body) ? body : [body]).flatMap((m: unknown) => {
     const msg = m as { method?: unknown; params?: { name?: unknown } } | null
     if (typeof msg?.method !== 'string') return []
@@ -66,6 +57,32 @@ async function rpcCalls(request: Request): Promise<Call[]> {
   })
 }
 
+// Only names earnrate defines are counted, so a client can't write its own
+// text into the tally.
+const KNOWN_TOOLS = new Set([...ANSWER_TOOLS, ...SAVED_WALLET_TOOLS])
+const KNOWN_METHODS = new Set([
+  'initialize',
+  'notifications/initialized',
+  'ping',
+  'tools/list',
+  'tools/call',
+  'server/discover',
+])
+
+function usageLabels(calls: Call[]): Set<string> {
+  return new Set(
+    calls.map(({ method, tool }) =>
+      tool !== null
+        ? KNOWN_TOOLS.has(tool)
+          ? `tool:${tool}`
+          : 'tool:other'
+        : KNOWN_METHODS.has(method)
+          ? method
+          : 'other',
+    ),
+  )
+}
+
 const tooMany = () =>
   new Response('Too many requests. Try again in a minute.', {
     status: 429,
@@ -73,9 +90,20 @@ const tooMany = () =>
   })
 
 async function limited(limiter: RateLimit | undefined, request: Request) {
-  const ip = request.headers.get('cf-connecting-ip') ?? 'unknown'
-  return limiter ? !(await limiter.limit({ key: ip })).success : false
+  const key = limitKey(request)
+  if (!limiter || key === null) return false
+  return !(await limiter.limit({ key })).success
 }
+
+const unavailable = () =>
+  Response.json(
+    {
+      error: 'temporarily_unavailable',
+      error_description:
+        "Saved wallets aren't available right now. Questions still work.",
+    },
+    { status: 503, headers: { 'retry-after': '60' } },
+  )
 
 // Sign-in depends on KV, whose free daily limits can run out. Count those
 // failures by path so they show up in the usage tally, and say so plainly.
@@ -97,10 +125,7 @@ async function signInStep(
           ),
           { status: 503, headers: PAGE_HEADERS },
         )
-      : Response.json(
-          { error: 'temporarily_unavailable' },
-          { status: 503, headers: { 'retry-after': '60' } },
-        )
+      : unavailable()
   }
   if (response.status >= 500) {
     const label = `error:${pathname}`
@@ -108,6 +133,13 @@ async function signInStep(
   }
   return response
 }
+
+const SIGN_IN_PATHS = new Set([
+  '/authorize',
+  '/change-code',
+  '/oauth/register',
+  '/oauth/token',
+])
 
 export function makeWorker<E extends Env>(
   bundle: Bundle,
@@ -132,31 +164,64 @@ export function makeWorker<E extends Env>(
 
   async function mcp(request: Request, env: E): Promise<Response> {
     const resource = resourceFor(new URL(request.url).pathname)
-    const calls = await rpcCalls(request)
-    for (const { method, tool } of calls) {
-      const label = tool ? `tool:${tool}` : method
-      env.USAGE?.writeDataPoint({ blobs: [label], indexes: [label] })
+    let parsedBody: unknown
+    let forward = request
+    if (request.method === 'POST') {
+      const text = await readBody(request)
+      if (text === null)
+        return new Response('Request too large.', { status: 413 })
+      forward = new Request(request.url, {
+        method: 'POST',
+        headers: request.headers,
+        body: text,
+      })
+      try {
+        parsedBody = JSON.parse(text)
+      } catch {
+        parsedBody = undefined // the SDK answers the parse error
+      }
     }
+    const calls = rpcCalls(parsedBody)
+    for (const label of usageLabels(calls))
+      env.USAGE?.writeDataPoint({ blobs: [label], indexes: [label] })
+
+    const options = parsedBody === undefined ? {} : { parsedBody }
+    const signedOut = () => handler.fetch(forward, options)
+    const wantsWallet = calls.some(
+      (c) => c.tool !== null && SAVED_WALLET_TOOLS.includes(c.tool),
+    )
 
     const header = request.headers.get('authorization')
     const token = /^Bearer (\S+)$/i.exec(header ?? '')?.[1]
-    if (!token) {
-      const needsWallet = calls.some(
-        (c) => c.tool !== null && SAVED_WALLET_TOOLS.includes(c.tool),
-      )
-      return needsWallet ? challenge(resource) : handler.fetch(request)
-    }
+    if (!token) return wantsWallet ? challenge(resource) : signedOut()
 
-    const grant = await auth.validate(env, token)
-    if (!grant) return challenge(resource, true)
+    // A token that doesn't check out only matters for wallet tools: other
+    // questions are answered as if signed out.
+    let grant
+    try {
+      grant = await auth.validate(env, token, resource)
+    } catch {
+      return wantsWallet ? unavailable() : signedOut()
+    }
+    if (!grant) {
+      if (await limited(env.SIGN_IN_LIMITER, request)) return tooMany()
+      return wantsWallet ? challenge(resource, true) : signedOut()
+    }
     // Revoking grants goes through KV, which can lag; the wallet's own
     // storage is consistent, so a deleted wallet signs its apps out here.
     const vault = vaultFor(env, grant.walletId)
-    if (!(await vault.exists())) return challenge(resource, true)
+    let exists
+    try {
+      exists = await vault.exists()
+    } catch {
+      return wantsWallet ? unavailable() : signedOut()
+    }
+    if (!exists) return wantsWallet ? challenge(resource, true) : signedOut()
     const store = new VaultWalletStore(vault, grant.walletKey, () =>
       auth.signOutEverywhere(env, grant.walletId),
     )
-    return handler.fetch(request, {
+    return handler.fetch(forward, {
+      ...options,
       authInfo: { token, clientId: '', scopes: [SCOPE], extra: { store } },
     })
   }
@@ -180,18 +245,18 @@ export function makeWorker<E extends Env>(
       if (pathname === '/.well-known/oauth-protected-resource/mcp')
         return protectedResourceMetadata(resourceFor('/mcp'))
       if (pathname === '/' || pathname === '/mcp') return mcp(request, env)
+      // Each of these writes to KV, whose daily writes are limited.
+      if (
+        SIGN_IN_PATHS.has(pathname) &&
+        (await limited(env.SIGN_IN_LIMITER, request))
+      )
+        return tooMany()
       const page =
         pathname === '/authorize'
           ? auth.authorize
           : pathname === '/change-code'
             ? auth.changeCode
             : null
-      if (
-        page &&
-        request.method === 'POST' &&
-        (await limited(env.SIGN_IN_LIMITER, request))
-      )
-        return tooMany()
       return signInStep(
         env,
         pathname,

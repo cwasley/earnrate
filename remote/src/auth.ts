@@ -1,6 +1,8 @@
 import {
   AuthorizationError,
   OAuthAuthorizationServer,
+  type AuthRequest,
+  type OAuthHelpers,
 } from '@cloudflare/workers-oauth-provider'
 import {
   changeCodePage,
@@ -10,6 +12,7 @@ import {
   newCodePage,
   PAGE_HEADERS,
 } from './pages.ts'
+import { readBody } from './requests.ts'
 import type { VaultApi } from './vault.ts'
 import {
   keysFromCode,
@@ -26,6 +29,27 @@ const DAY = 24 * 60 * 60
 const NOT_A_CODE =
   "That isn't a recovery code. It's 25 letters and digits, like ABCDE-12345-…"
 const NO_MATCH = 'No saved wallet matches that recovery code.'
+const MAX_FORM = 8 * 1024
+
+// A sign-in form's fields; empty for anything else or anything too large.
+async function readForm(request: Request): Promise<URLSearchParams> {
+  const text = await readBody(request, MAX_FORM)
+  return new URLSearchParams(text ?? '')
+}
+
+// Registrations are stored for months; anything bigger than an app needs
+// is refused so they can't fill storage.
+function registrationProblem(metadata: Record<string, unknown>) {
+  const uris = metadata.redirect_uris
+  const name = metadata.client_name
+  if (JSON.stringify(metadata).length > 4096)
+    return { description: 'Client metadata is too large.' }
+  if (Array.isArray(uris) && uris.length > 10)
+    return { description: 'Too many redirect URIs.' }
+  if (typeof name === 'string' && name.length > 100)
+    return { description: 'The client name is too long.' }
+  return undefined
+}
 
 // The server's address is the bare origin. /mcp, its first address, stays
 // as an alias with its own resource so connections made there keep working.
@@ -92,6 +116,8 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
     scopesSupported: [SCOPE],
     clientIdMetadataDocumentEnabled: true,
     clientRegistrationEndpoint: '/oauth/register',
+    clientRegistrationCallback: ({ clientMetadata }) =>
+      registrationProblem(clientMetadata),
     accessTokenTTL: 60 * 60,
     // Stays signed in while used; 90 idle days ends it.
     refreshTokenTTL: 90 * DAY,
@@ -100,8 +126,12 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
 
   // Either address's token works at either address: they reach the same
   // server, so the audience split only keeps old connections valid.
-  async function validate(env: Env, token: string): Promise<Grant | null> {
-    for (const resource of RESOURCES) {
+  async function validate(
+    env: Env,
+    token: string,
+    first: string, // the resource of the address the request came to
+  ): Promise<Grant | null> {
+    for (const resource of [first, ...RESOURCES.filter((r) => r !== first)]) {
       const found = await server.validateToken<Grant>(resource, token, env)
       if (found) return found.scope.includes(SCOPE) ? found.props : null
     }
@@ -120,6 +150,23 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
         await oauth.revokeGrant(grant.id, walletId)
       cursor = page.cursor
     } while (cursor)
+  }
+
+  function connect(
+    oauth: OAuthHelpers,
+    request: AuthRequest,
+    walletId: string,
+    walletKey: string,
+  ) {
+    return oauth.completeAuthorization({
+      request,
+      userId: walletId,
+      metadata: {},
+      scope: [SCOPE],
+      props: { walletId, walletKey } satisfies Grant,
+      // One wallet can be connected from several apps and accounts.
+      revokeExistingGrants: false,
+    })
   }
 
   // Shows the page again after a wrong code. The form posts back to the
@@ -151,11 +198,8 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
     if (request.method !== 'POST')
       return new Response('Method not allowed', { status: 405 })
 
-    const form = await request.formData()
-    const field = (name: string) => {
-      const value = form.get(name)
-      return typeof value === 'string' ? value : ''
-    }
+    const form = await readForm(request)
+    const field = (name: string) => form.get(name) ?? ''
     const handle = field('handle')
     const choice = form.get('choice')
 
@@ -177,13 +221,12 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
       )
       if (!created)
         return html(errorPage("Couldn't start a wallet. Try again."), 500)
-      const { redirectTo } = await oauth.completeAuthorization({
-        request: approved.request,
-        userId: keys.walletId,
-        metadata: {},
-        scope: [SCOPE],
-        props: { walletId: keys.walletId, walletKey } satisfies Grant,
-      })
+      const { redirectTo } = await connect(
+        oauth,
+        approved.request,
+        keys.walletId,
+        walletKey,
+      )
       return html(newCodePage(code, redirectTo), 200, approved.headers)
     }
 
@@ -197,13 +240,12 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
       const approved = await oauth.approveConsent(request, handle, {
         scope: [SCOPE],
       })
-      const { redirectTo } = await oauth.completeAuthorization({
-        request: approved.request,
-        userId: keys.walletId,
-        metadata: {},
-        scope: [SCOPE],
-        props: { walletId: keys.walletId, walletKey } satisfies Grant,
-      })
+      const { redirectTo } = await connect(
+        oauth,
+        approved.request,
+        keys.walletId,
+        walletKey,
+      )
       approved.headers.set('Location', redirectTo)
       return new Response(null, { status: 302, headers: approved.headers })
     }
@@ -228,8 +270,9 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
     if (request.method === 'GET') return html(changeCodePage())
     if (request.method !== 'POST')
       return new Response('Method not allowed', { status: 405 })
-    const typed = (await request.formData()).get('code')
-    const code = normalizeRecoveryCode(typeof typed === 'string' ? typed : '')
+    const code = normalizeRecoveryCode(
+      (await readForm(request)).get('code') ?? '',
+    )
     if (!code) return html(changeCodePage(NOT_A_CODE), 400)
     const oldKeys = await keysFromCode(code)
     const oldVault = vaultFor(env, oldKeys.walletId)

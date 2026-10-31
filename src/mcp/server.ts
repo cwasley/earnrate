@@ -62,6 +62,17 @@ export type ServerDeps = {
   version: string
 } & WalletSaving
 
+// The tools that answer without a saved wallet.
+export const ANSWER_TOOLS = [
+  'best_card_for_purchase',
+  'best_cards_for',
+  'simulate_spending',
+  'compare_welcome_offers',
+  'cheat_sheet',
+  'resolve_merchant',
+  'search_cards',
+]
+
 // The tools that read or change a saved wallet. The remote server asks for
 // sign-in before running one.
 export const SAVED_WALLET_TOOLS = [

@@ -24,6 +24,7 @@ import {
   type WalletStore,
 } from '../src/data/store.ts'
 import {
+  ANSWER_TOOLS,
   createEarnrateServer,
   SAVED_WALLET_TOOLS,
   type WalletSaving,
@@ -460,6 +461,7 @@ describe('wallet setup', () => {
     expect(all.filter((n) => !none.includes(n)).sort()).toEqual(
       [...SAVED_WALLET_TOOLS].sort(),
     )
+    expect([...none].sort()).toEqual([...ANSWER_TOOLS].sort())
   })
 
   test('from no wallet to a recommendation', async () => {

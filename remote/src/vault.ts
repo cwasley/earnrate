@@ -32,7 +32,10 @@ type Meta = {
 const DELETED =
   'This saved wallet was deleted. Sign in again to start a new one.'
 
-// Wallets unused this long are deleted.
+// A new wallet nobody has used yet is deleted after a week; any use keeps
+// it for 13 months from then.
+const UNUSED_NEW_WALLET = 7 * 24 * 60 * 60 * 1000
+
 export function retentionEnd(lastUsed: number): number {
   const end = new Date(lastUsed)
   end.setUTCMonth(end.getUTCMonth() + 13)
@@ -112,7 +115,7 @@ export class WalletVault {
         created: now,
         lastUsed: now,
       } satisfies Meta)
-      await this.storage.setAlarm(retentionEnd(now))
+      await this.storage.setAlarm(now + UNUSED_NEW_WALLET)
       return true
     })
   }

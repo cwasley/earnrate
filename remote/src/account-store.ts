@@ -78,7 +78,7 @@ export const signedOutStore: AccountStore = {
   setMemberships: refuse,
   replace: refuse,
   record: refuse,
-  erase: () => Promise.resolve(),
+  erase: () => Promise.reject(new Error('Connect a saved wallet first.')),
 }
 
 function refuse() {
