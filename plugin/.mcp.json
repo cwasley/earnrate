@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "earnrate": {
-      "command": "npx",
-      "args": ["-y", "earnrate@0.1.4", "mcp"]
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/node_modules/earnrate/dist/mcp/bin.js"]
     }
   }
 }

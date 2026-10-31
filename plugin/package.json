@@ -1,0 +1,10 @@
+{
+  "name": "earnrate-claude-plugin",
+  "version": "0.1.4",
+  "private": true,
+  "description": "Installs the earnrate MCP server for the Claude plugin.",
+  "license": "MIT",
+  "dependencies": {
+    "earnrate": "0.1.4"
+  }
+}

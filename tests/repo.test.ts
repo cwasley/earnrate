@@ -59,7 +59,7 @@ test('no committed file contains a card number', async () => {
   expect(hits).toEqual([])
 })
 
-test('the MCP registry entry, Claude Desktop bundle and plugin match package.json', async () => {
+test('the MCP registry entry and Claude Desktop bundle match package.json', async () => {
   const read = async (file: string) =>
     JSON.parse(await readFile(path.join(ROOT, file), 'utf8')) as Record<
       string,
@@ -75,11 +75,34 @@ test('the MCP registry entry, Claude Desktop bundle and plugin match package.jso
   ])
   const bundle = await read('mcpb/manifest.json')
   expect(bundle.version).toBe(pkg.version)
+})
+
+test('the Claude plugin pins one published earnrate version throughout', async () => {
+  const read = async (file: string) =>
+    JSON.parse(await readFile(path.join(ROOT, file), 'utf8')) as Record<
+      string,
+      unknown
+    >
   const plugin = await read('plugin/.claude-plugin/plugin.json')
-  expect(plugin.version).toBe(pkg.version)
+  const deps = (await read('plugin/package.json')).dependencies as Record<
+    string,
+    string
+  >
+  const lock = (await read('plugin/package-lock.json')).packages as Record<
+    string,
+    { version?: string; integrity?: string }
+  >
+  expect(deps).toEqual({ earnrate: plugin.version })
+  expect(lock['node_modules/earnrate']?.version).toBe(plugin.version)
+  for (const [key, entry] of Object.entries(lock)) {
+    if (key !== '') expect(entry.integrity, key).toMatch(/^sha512-/)
+  }
   const servers = (await read('plugin/.mcp.json')).mcpServers as Record<
     string,
-    { args: string[] }
+    { command: string; args: string[] }
   >
-  expect(servers.earnrate?.args).toContain(`earnrate@${String(pkg.version)}`)
+  expect(servers.earnrate).toEqual({
+    command: 'node',
+    args: ['${CLAUDE_PLUGIN_ROOT}/node_modules/earnrate/dist/mcp/bin.js'],
+  })
 })

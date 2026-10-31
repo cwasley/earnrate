@@ -42,6 +42,7 @@
     "smoke:pack": "node scripts/smoke-pack.ts",
     "mcpb:pack": "node scripts/build-mcpb.ts",
     "smoke:mcpb": "node scripts/smoke-mcpb.ts",
+    "plugin:lock": "node scripts/plugin-lock.ts",
     "site:build": "vite build site && node scripts/build-pages.ts",
     "site:dev": "vite site",
     "site:deploy": "yarn site:build && WRANGLER_SEND_METRICS=false wrangler deploy",

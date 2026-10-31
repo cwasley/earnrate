@@ -24,7 +24,7 @@ Claude asks about anything a card needs, such as this quarter's U.S. Bank Cash+ 
 
 ## What the plugin runs
 
-One local MCP server: `npx -y earnrate@0.1.4 mcp`, the [earnrate package on npm](https://www.npmjs.com/package/earnrate) at that exact version (source: [github.com/cwasley/earnrate](https://github.com/cwasley/earnrate)). It needs Node.js 22 or later. It talks to Claude over stdio and offers 13 tools:
+One local MCP server: `node ${CLAUDE_PLUGIN_ROOT}/node_modules/earnrate/dist/mcp/bin.js`, from the [earnrate package on npm](https://www.npmjs.com/package/earnrate) (source: [github.com/cwasley/earnrate](https://github.com/cwasley/earnrate)). Claude Code installs it when you install the plugin, from the included `package-lock.json`, which pins earnrate and each of its dependencies to an exact version with an integrity hash. No install scripts run. It needs Node.js 22 or later. The server talks to Claude over stdio and offers 13 tools:
 
 - `best_card_for_purchase`, `resolve_merchant`, `list_wallet`, `cheat_sheet`: answers from your wallet.
 - `best_cards_for`, `simulate_spending`, `compare_welcome_offers`: compare every card earnrate knows.
@@ -34,7 +34,7 @@ One local MCP server: `npx -y earnrate@0.1.4 mcp`, the [earnrate package on npm]
 
 - **Reads and writes** one file: your wallet, `~/.earnrate/wallet.yaml` (or the path in `EARNRATE_WALLET`). Edits keep your comments and formatting. The command line version uses the same file.
 - **Sends** nothing. The card data ships inside the package; the server makes no network requests. An optional merchant lookup through Anthropic's API exists in the command line version, but it's off unless you set `EARNRATE_LLM=on` and your own `ANTHROPIC_API_KEY`, and it sends only the name of a store earnrate doesn't recognize.
-- **Fetches** the earnrate package from npm when `npx` first runs it.
+- **Fetches** the packages in `package-lock.json` from the npm registry once, when Claude Code installs the plugin.
 
 ## Privacy Policy
 
