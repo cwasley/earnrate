@@ -55,8 +55,15 @@ export async function loadCatalog(dir = DATA_DIR): Promise<Catalog> {
   return { categories, currencies, cards, merchants: { seed, overrides } }
 }
 
+// MCP clients pass config values through without a shell, so "~" or
+// "${HOME}" can arrive as literal text; expand them here.
 export function walletPath(env: NodeJS.ProcessEnv = process.env): string {
-  return env[WALLET_ENV_VAR] ?? path.join(homedir(), CONFIG_DIR, 'wallet.yaml')
+  const given = env[WALLET_ENV_VAR]?.trim()
+  if (!given) return path.join(homedir(), CONFIG_DIR, 'wallet.yaml')
+  const expanded = given
+    .replace(/^~(?=$|[/\\])/, homedir())
+    .replace(/\$\{HOME\}|\$HOME\b/g, homedir())
+  return path.resolve(expanded)
 }
 
 export function loadWallet(file = walletPath()): Promise<Wallet> {
