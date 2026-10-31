@@ -7,12 +7,12 @@
 
 I wanted a ghost card: one card that always charges the best of my cards. The card networks won't allow one, so I built the next best thing.
 
-**earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which card in your wallet earns the most there, and why. It's stateful (it knows your caps and chosen categories), valuation-aware, and transparent about its assumptions. It never sees a card number.
+**earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which card earns the most there, from your own cards or from every card it knows, and why. It's stateful (it knows your caps and chosen categories), valuation-aware, and transparent about its assumptions. It never sees a card number.
 
-- Runs on your machine, or in your browser at [earnrate.dev](https://earnrate.dev) with nothing to install. No account, no telemetry, no affiliate links. See the [privacy page](https://earnrate.dev/privacy).
+- Runs on your machine, in your browser at [earnrate.dev](https://earnrate.dev), or in Claude as a connector at `https://mcp.earnrate.dev`, with nothing to install. No account, no telemetry, no affiliate links. See the [privacy page](https://earnrate.dev/privacy).
 - US cards and US merchants, for now.
 
-> **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup and MCP server. See [the benchmark](docs/benchmark.md) for how it compares to an existing card-picking MCP server.
+> **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup, MCP server and the hosted Claude connector. See [the benchmark](docs/benchmark.md) for how it compares to an existing card-picking MCP server.
 
 ## Try it
 
@@ -167,7 +167,13 @@ Spotted a wrong rate, or want a card added? [Open an issue](https://github.com/c
 
 ## Use it from an AI agent (MCP)
 
-`earnrate mcp` runs earnrate as a local MCP server over stdio, with thirteen tools:
+**In Claude, nothing to install:** add a custom connector (Settings → Connectors) with the address `https://mcp.earnrate.dev`. It works in Claude on the web, desktop and phone. Questions need no sign-in. If you ask it to save your cards, it opens an earnrate page where you start an anonymous wallet: no email, just a recovery code you keep. The wallet tracks caps and welcome bonuses across your Claude apps, and you can export it for the command line or delete it from the chat. In Claude Code:
+
+```sh
+claude mcp add --transport http earnrate https://mcp.earnrate.dev
+```
+
+**Or run it on your computer:** `earnrate mcp` runs earnrate as a local MCP server over stdio, with thirteen tools (the connector has the same ones, plus `export_wallet`, `import_wallet` and `delete_wallet` for its saved wallets):
 
 - `best_card_for_purchase`: which card to use, with reasons
 - `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
@@ -186,7 +192,7 @@ For a merchant earnrate doesn't know, the calling model can pass a `category` (e
 
 **Claude Desktop, one click:** download [earnrate.mcpb](https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb) and open it; Claude Desktop installs it (Settings → Extensions). No terminal or Node install needed. Its one setting is where your wallet file lives, by default `~/.earnrate/wallet.yaml`, the same file the command line uses.
 
-To add it to Claude Code:
+To run it locally in Claude Code:
 
 ```sh
 claude mcp add --scope user earnrate -- npx -y earnrate mcp
@@ -236,13 +242,14 @@ Rotating categories (Freedom Flex) are added each quarter once the issuer posts 
 
 ## Privacy Policy
 
-earnrate collects nothing. There's no account, no server and no telemetry. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
+earnrate needs no account and has no telemetry. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
 
-- **What it stores:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product id, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins.
-- **What it sends:** nothing, by default. The optional merchant lookup (off unless you turn it on with your own Anthropic API key) sends only the name of a store earnrate doesn't recognize to Anthropic's API, and saves the answer in `~/.earnrate/merchant-cache.json`.
+- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests by tool name only. A saved wallet is optional and anonymous (a recovery code, no email), holds card ids and the details you gave, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused.
+- **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product id, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins.
+- **What the local version sends:** nothing, by default. The optional merchant lookup (off unless you turn it on with your own Anthropic API key) sends only the name of a store earnrate doesn't recognize to Anthropic's API, and saves the answer in `~/.earnrate/merchant-cache.json`.
 - **AI assistants:** when you use earnrate through Claude or another assistant, that assistant's provider sees the conversation, including earnrate's answers, under its own privacy policy.
 - **earnrate.dev:** everything you enter on the site stays in your browser. The site counts visits with Cloudflare Web Analytics, without cookies.
-- **Retention:** your data lives only in files you control, for as long as you keep them. Delete the wallet file, or clear the site's data in your browser, to remove it.
+- **Retention:** locally, your data lives only in files you control, for as long as you keep them. Delete the wallet file, or clear the site's data in your browser, to remove it. A connector wallet lasts until you delete it or leave it unused for 13 months.
 - **Contact:** [hello@earnrate.dev](mailto:hello@earnrate.dev).
 
 ## Working on earnrate

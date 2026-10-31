@@ -419,11 +419,25 @@
       </section>
 
       <section>
-        <h2>Ask it from Claude</h2>
+        <h2>Use it in Claude</h2>
         <p>
-          earnrate runs as an MCP server, so you can ask in a chat with Claude,
-          like the Trader Joe's example above. It can also show what's left on
-          each cap, and record a purchase so the next answer accounts for it.
+          Add earnrate to Claude and ask in a chat, like the Trader Joe's
+          example above. In Claude on the web or the desktop app, open Settings,
+          then Connectors, add a custom connector, and paste this address:
+        </p>
+        <pre class="terminal install">https://mcp.earnrate.dev</pre>
+        <p>
+          It then works in Claude on your phone too. Ask right away, with
+          nothing to enter: it answers from every card. Name your cards for
+          answers about your own. Ask it to save them and it can track your caps
+          and welcome bonuses: you get an anonymous wallet with a recovery code,
+          and no email or sign-up.
+        </p>
+        <p>In Claude Code:</p>
+        <pre
+          class="terminal install"
+        ><span class="prompt">$</span> claude mcp add --transport http earnrate https://mcp.earnrate.dev</pre>
+        <p>
           Answers come back with a stable card id as well as the explanation, so
           an agent that pays for you can use them directly. It never needs or
           returns a card number.
@@ -483,17 +497,17 @@
       </section>
 
       <section>
-        <h2>Nothing leaves your device</h2>
+        <h2>Private by design</h2>
         <p>
           The comparison above runs in your browser: what you type is never sent
           anywhere. The command line version runs on your own machine, and your
-          wallet is a file you control. It never asks for card numbers or bank
-          logins, and there's no tracking. The one exception is optional and off
-          by default: for a store it doesn't recognize, it can ask Claude what
-          kind of store it is. Only the store's name is sent. If you ask through
-          an AI assistant, its provider sees that conversation, like anything
-          else you ask it. The <a href="/privacy">privacy page</a> has the
-          details.
+          wallet is a file you control. In Claude, earnrate's server answers
+          each question without keeping it, and a saved wallet is encrypted so
+          that only your recovery code or your connected apps can open it.
+          earnrate never asks for card numbers or bank logins, and there's no
+          tracking. If you ask through an AI assistant, its provider sees that
+          conversation, like anything else you ask it. The
+          <a href="/privacy">privacy page</a> has the details.
         </p>
       </section>
 

@@ -6,7 +6,7 @@
     <title>Privacy · earnrate</title>
     <meta
       name="description"
-      content="earnrate runs on your computer and collects nothing. Where your data goes, and where it doesn't."
+      content="earnrate needs no account or personal details. What it receives, what it keeps, and what it never sees."
     />
     <meta name="color-scheme" content="light dark" />
     <link rel="canonical" href="https://earnrate.dev/privacy" />
@@ -109,12 +109,14 @@
         <a class="wordmark" href="/">earnrate</a>
         <h1>Privacy</h1>
         <p class="lede">
-          earnrate runs on your own device: in your browser on earnrate.dev, or
-          as software on your computer. There's no account and no service behind
-          it, so there's nothing for me to collect. Here's where your data goes,
+          earnrate needs no account, no email and no card numbers. On
+          earnrate.dev and on your computer it runs on your own device. In
+          Claude it runs on earnrate's server, which answers without keeping
+          your questions, and keeps a saved wallet only if you ask it to,
+          encrypted so that only you can open it. Here's where your data goes,
           and where it doesn't.
         </p>
-        <p class="updated">Updated October 30, 2026.</p>
+        <p class="updated">Updated October 31, 2026.</p>
       </header>
 
       <section>
@@ -133,6 +135,69 @@
           A store you search for appears in the address after a #. Browsers
           don't send that part to the server, and Cloudflare's analytics doesn't
           record it. If you share the link, whoever opens it sees the search.
+        </p>
+      </section>
+
+      <section>
+        <h2>In Claude, through earnrate's server</h2>
+        <p>
+          When you add earnrate to Claude as a connector, Claude sends each
+          question it asks earnrate to earnrate's server at mcp.earnrate.dev:
+          the store or kind of purchase, and whatever else you've given for that
+          question, like an amount, your monthly spending, the cards you named
+          or your bonus picks and memberships. The server works out the answer
+          and sends it back. It doesn't keep the question or the answer, and
+          request logging is turned off.
+        </p>
+        <p>
+          It counts how often each kind of request is made, like "best card for
+          a purchase," without what was asked. To stop abuse, Cloudflare, which
+          runs the server, limits how many requests one IP address can make per
+          minute. earnrate doesn't store IP addresses.
+        </p>
+      </section>
+
+      <section>
+        <h2>A saved wallet, if you want one</h2>
+        <p>
+          You don't need one: earnrate answers from every card, or from the
+          cards you name in the conversation. If you ask Claude to save your
+          cards, earnrate opens a page where you start a wallet. There's no
+          email and no name. You get a recovery code, shown once, which is the
+          only way to connect the wallet from another app or device. You type it
+          only on that earnrate page, never in the chat. earnrate can't look it
+          up or reset it.
+        </p>
+        <p>
+          The wallet holds the cards you saved, by product (like
+          <code>amex-gold</code>), with what you've told earnrate about them: a
+          checkout name, bonus picks, activated offers, memberships, the card's
+          anniversary, how much of each spending cap you've used, your progress
+          toward a welcome bonus, and point values if you've set your own.
+          Recording a purchase adds to those totals; the purchase itself isn't
+          kept. earnrate never asks for card numbers, expiry dates, security
+          codes or bank logins, and won't save a checkout name that looks like a
+          card number.
+        </p>
+        <p>
+          Each wallet is encrypted with its own key. That key can be unlocked
+          only with your recovery code or by an app you connected with it, so
+          the stored wallet can't be read without one of them, including by me.
+          The server unlocks it only in memory, while answering a request from
+          one of your connected apps. Cloudflare stores the encrypted wallet.
+          The record that an app is connected, which app and when, is kept in
+          Cloudflare's storage until that connection is unused for 90 days; its
+          access tokens are stored only in a form that can't be turned back into
+          the token.
+        </p>
+        <p>
+          You can export the wallet as a file that works with earnrate.dev and
+          the command line, or delete it. Deleting it is immediate and signs out
+          every app connected to it. A wallet that goes unused for 13 months is
+          deleted automatically. You can change your recovery code at
+          <a href="https://mcp.earnrate.dev/change-code"
+            >mcp.earnrate.dev/change-code</a
+          >; the old code stops working and connected apps are signed out.
         </p>
       </section>
 
@@ -160,13 +225,13 @@
       </section>
 
       <section>
-        <h2>When you ask through an AI assistant</h2>
+        <h2>The AI assistant you ask</h2>
         <p>
-          If you connect earnrate to Claude or another assistant, earnrate still
-          runs on your computer. But the assistant's provider receives your
-          conversation, including what earnrate tells the assistant: the cards
-          it compared, its answer, and what's left on your caps. That's covered
-          by the provider's privacy policy, not this one.
+          Whether earnrate runs on your computer or on earnrate's server, the
+          assistant's provider receives your conversation, including what
+          earnrate tells the assistant: the cards it compared, its answer, and
+          what's left on your caps. That's covered by the provider's privacy
+          policy, not this one.
         </p>
       </section>
 
@@ -203,7 +268,8 @@
           Cloudflare hosts the site and, like any host, handles your IP address
           and request details to serve the page and block abuse. Its dashboard
           shows me aggregate counts, not who visited. There's no server code and
-          no logging turned on.
+          no logging turned on. The sign-in pages on mcp.earnrate.dev don't load
+          the analytics script.
         </p>
       </section>
 
@@ -220,8 +286,9 @@
       <section>
         <h2>Changes</h2>
         <p>
-          If any of this changes, for example if earnrate ever offers a hosted
-          version, this page will say so first, with a new date.
+          If any of this changes, this page will say so first, with a new date.
+          October 31, 2026: added earnrate's server for Claude and saved
+          wallets.
         </p>
       </section>
 
