@@ -3,7 +3,9 @@ import {
   isValuationProfile,
   type ValuationProfile,
 } from '../engine/profiles.ts'
+import { knownMemberships } from '../engine/setup.ts'
 import type { Channel } from '../engine/types.ts'
+import type { Catalog } from '../schema/catalog.ts'
 
 export type CliOptions = {
   merchant: string
@@ -25,6 +27,9 @@ export type ParsedArgs =
   | { kind: 'run'; options: CliOptions }
   | { kind: 'error'; message: string }
 
+// Shared by every subcommand, so each flag means the same thing everywhere.
+// A string result is the error to show.
+
 const LOOKS_LIKE_AMOUNT = /^\$?[\d,]*\.?\d+$/
 const AMOUNT = /^\$?(\d{1,3}(,\d{3})+|\d+)(\.\d{1,2})?$/
 
@@ -36,10 +41,66 @@ function parseAmount(text: string): number | string {
   return amount > 0 ? amount : 'The amount must be more than $0.'
 }
 
-function isValidDate(text: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false
+// A trailing number is the amount only when something comes before it, so
+// a merchant named "76" still works on its own.
+export function splitAmount(
+  positionals: string[],
+): { text: string; amount: number | null } | string {
+  const words = [...positionals]
+  const last = words.at(-1)
+  let amount: number | null = null
+  if (words.length > 1 && last !== undefined && LOOKS_LIKE_AMOUNT.test(last)) {
+    const result = parseAmount(last)
+    if (typeof result === 'string') return result
+    amount = result
+    words.pop()
+  }
+  return { text: words.join(' ').trim(), amount }
+}
+
+export function dateProblem(text: string | undefined): string | null {
+  if (text === undefined) return null
   const date = new Date(`${text}T00:00:00Z`)
-  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(text)
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) &&
+    !Number.isNaN(date.getTime()) &&
+    date.toISOString().startsWith(text)
+    ? null
+    : `"${text}" isn't a date. Use YYYY-MM-DD.`
+}
+
+export function valuationProblem(text: string | undefined): string | null {
+  return text === undefined || isValuationProfile(text)
+    ? null
+    : `Unknown valuation "${text}". Use flat or points-heavy.`
+}
+
+export function membershipProblem(
+  catalog: Catalog,
+  members: string[],
+): string | null {
+  const known = knownMemberships(catalog)
+  const unknown = members.filter((m) => !known.includes(m))
+  return unknown.length === 0
+    ? null
+    : `Unknown membership "${unknown.join('", "')}". Use one of: ${known.join(', ')}.`
+}
+
+export const BOTH_CHANNELS = 'Pick --online or --in-store, not both.'
+
+export function channelOf(values: {
+  online?: boolean | undefined
+  'in-store'?: boolean | undefined
+}): Channel | null {
+  return values.online ? 'online' : values['in-store'] ? 'in_store' : null
+}
+
+export function cardList(text: string | undefined): string[] | null {
+  return text === undefined
+    ? null
+    : text
+        .split(',')
+        .map((c) => c.trim())
+        .filter((c) => c !== '')
 }
 
 export function parseCliArgs(argv: string[]): ParsedArgs {
@@ -73,51 +134,21 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
   const { values, positionals } = parsed
   if (values.help) return { kind: 'help' }
 
-  // A trailing number is the amount only when something comes before it, so
-  // a merchant named "76" still works on its own.
-  const words = [...positionals]
-  let amount: number | null = null
-  const last = words.at(-1)
-  if (words.length > 1 && last !== undefined && LOOKS_LIKE_AMOUNT.test(last)) {
-    const result = parseAmount(last)
-    if (typeof result === 'string') return { kind: 'error', message: result }
-    amount = result
-    words.pop()
-  }
-  const merchant = words.join(' ').trim()
+  const split = splitAmount(positionals)
+  if (typeof split === 'string') return { kind: 'error', message: split }
+  const { text: merchant, amount } = split
   if (merchant === '') {
     return { kind: 'error', message: 'Name a merchant, like "whole foods".' }
   }
 
-  if (values.online && values['in-store']) {
-    return {
-      kind: 'error',
-      message: 'Pick one of --online and --in-store.',
-    }
-  }
-  const channel: Channel | null = values.online
-    ? 'online'
-    : values['in-store']
-      ? 'in_store'
+  if (values.online && values['in-store'])
+    return { kind: 'error', message: BOTH_CHANNELS }
+  const problem = valuationProblem(values.valuation) ?? dateProblem(values.date)
+  if (problem !== null) return { kind: 'error', message: problem }
+  const valuation =
+    values.valuation !== undefined && isValuationProfile(values.valuation)
+      ? values.valuation
       : null
-
-  let valuation: ValuationProfile | null = null
-  if (values.valuation !== undefined) {
-    if (!isValuationProfile(values.valuation)) {
-      return {
-        kind: 'error',
-        message: `Unknown valuation "${values.valuation}". Use flat or points-heavy.`,
-      }
-    }
-    valuation = values.valuation
-  }
-
-  if (values.date !== undefined && !isValidDate(values.date)) {
-    return {
-      kind: 'error',
-      message: `"${values.date}" isn't a date. Use YYYY-MM-DD.`,
-    }
-  }
 
   const country = values.country ?? 'US'
   if (!/^[A-Za-z]{2}$/.test(country)) {
@@ -132,7 +163,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     options: {
       merchant,
       amount,
-      channel,
+      channel: channelOf(values),
       valuation,
       date: values.date ?? null,
       country: country.toUpperCase(),
@@ -140,13 +171,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
       all: values.all ?? false,
       category: values.category ?? null,
       llm: values.llm ?? null,
-      cards:
-        values.cards === undefined
-          ? null
-          : values.cards
-              .split(',')
-              .map((c) => c.trim())
-              .filter((c) => c !== ''),
+      cards: cardList(values.cards),
       members: values.member ?? [],
     },
   }

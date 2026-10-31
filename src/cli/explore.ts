@@ -21,13 +21,21 @@ import {
   TYPICAL_SPEND_NOTE,
   type SpendLine,
 } from '../engine/simulate.ts'
-import { knownMemberships } from '../engine/setup.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import {
   formatAdditions,
   formatCatalogSimulation,
   formatExploration,
 } from '../format/explore.ts'
+import {
+  BOTH_CHANNELS,
+  cardList,
+  channelOf,
+  dateProblem,
+  membershipProblem,
+  splitAmount,
+  valuationProblem,
+} from './args.ts'
 import { cardsToUse, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
 
 const FILTER_OPTIONS = `  --cash, --points        Cash back cards only, or points and miles cards only.
@@ -116,15 +124,13 @@ function settingsFrom(
   catalog: Catalog,
 ): Settings | string {
   if (values.cash && values.points) return 'Pick --cash or --points, not both.'
-  if (values.valuation !== undefined && !isValuationProfile(values.valuation))
-    return `Unknown valuation "${values.valuation}". Use flat or points-heavy.`
+  const problem =
+    valuationProblem(values.valuation) ??
+    membershipProblem(catalog, values.member ?? [])
+  if (problem !== null) return problem
   const issuers = [...new Set(catalog.cards.map((c) => c.issuer))].sort()
   if (values.issuer !== undefined && !issuers.includes(values.issuer))
     return `Unknown issuer "${values.issuer}". Use one of: ${issuers.join(', ')}.`
-  const known = knownMemberships(catalog)
-  const unknown = (values.member ?? []).filter((m) => !known.includes(m))
-  if (unknown.length > 0)
-    return `Unknown membership "${unknown.join('", "')}". Use one of: ${known.join(', ')}.`
   return {
     filters: {
       ...ALL_PERSONAL_CARDS,
@@ -164,20 +170,23 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
     io.stdout(BEST_HELP)
     return 0
   }
-  const words = [...positionals]
-  const last = words.at(-1)
-  const amount =
-    words.length > 1 && last !== undefined && /^\$?\d+(\.\d+)?$/.test(last)
-      ? Number(last.replace('$', ''))
-      : null
-  if (amount !== null) words.pop()
-  const text = words.join(' ').trim()
+  const split = splitAmount(positionals)
+  if (typeof split === 'string') {
+    io.stderr(`${split}\n`)
+    return USAGE_ERROR
+  }
+  const { text, amount } = split
   if (text === '') {
     io.stderr(`Say what you're buying, e.g. ${CLI_NAME} best groceries.\n`)
     return USAGE_ERROR
   }
   if (values.online && values['in-store']) {
-    io.stderr('Pick --online or --in-store, not both.\n')
+    io.stderr(`${BOTH_CHANNELS}\n`)
+    return USAGE_ERROR
+  }
+  const dated = dateProblem(values.date)
+  if (dated !== null) {
+    io.stderr(`${dated}\n`)
     return USAGE_ERROR
   }
   const catalog = await loadCatalog()
@@ -193,11 +202,7 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
       merchant: category === null ? text : null,
       category,
       amount,
-      channel: values.online
-        ? 'online'
-        : values['in-store']
-          ? 'in_store'
-          : null,
+      channel: channelOf(values),
       date: values.date ?? io.today,
     },
     settings,
@@ -276,11 +281,16 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
     )
     return USAGE_ERROR
   }
+  const started = dateProblem(values.start)
+  if (started !== null) {
+    io.stderr(`${started}\n`)
+    return USAGE_ERROR
+  }
   const options = { ...settings, start: values.start ?? io.today }
 
   if (values.wallet || values.cards !== undefined) {
-    const wallet = await cardsToUse(walletPath(io.env), io, {
-      cards: values.cards === undefined ? null : values.cards.split(','),
+    const wallet = await cardsToUse(catalog, walletPath(io.env), io, {
+      cards: cardList(values.cards),
       members: values.member ?? [],
     })
     if (wallet === null) return RUNTIME_ERROR

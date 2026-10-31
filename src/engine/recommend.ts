@@ -5,6 +5,7 @@ import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import {
   evaluateCard,
   purchaseContext,
+  singleMcc,
   type CardEvaluation,
 } from './evaluate.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
@@ -51,10 +52,17 @@ const displayName = (e: Entry) => e.held.checkout_label ?? e.card.name
 
 export const num = (n: number) => String(Number(n.toFixed(2)))
 // Whole dollars stay whole ($2,800); anything else shows cents ($0.40).
-const money = (n: number) =>
+export const money = (n: number) =>
   `$${n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`
-export const dollars = (n: number) =>
-  `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+
+export function codesAs(
+  catalog: Catalog,
+  merchant: MerchantResolution,
+): string {
+  const mcc = merchant.likelyMcc ?? singleMcc(catalog, merchant.category)
+  const code = mcc === null ? '' : ` (MCC ${String(mcc)})`
+  return `Assumes ${merchant.resolvedName} codes as ${categoryPhrase(catalog, merchant.category)}${code}.`
+}
 
 export function currencyName(catalog: Catalog, id: string): string {
   return catalog.currencies.find((c) => c.id === id)?.name ?? id
@@ -189,7 +197,7 @@ function reasoningFor(
   if (cap && amount !== null && amount > cap.remaining) {
     const over = amount - cap.remaining
     lines.push(
-      `${dollars(cap.remaining)} earns ${earnText(catalog, best.nominalRate, currency)} before the cap, then ${dollars(over)} earns ${earnText(catalog, cap.cap.then_rate, currency)}: ${num(best.rate)} per dollar overall.`,
+      `${money(cap.remaining)} earns ${earnText(catalog, best.nominalRate, currency)} before the cap, then ${money(over)} earns ${earnText(catalog, cap.cap.then_rate, currency)}: ${num(best.rate)} per dollar overall.`,
     )
   }
 
@@ -226,7 +234,7 @@ function warningsFor(
   const warnings: string[] = []
   const capLabel = (e: typeof best) =>
     e.cap
-      ? `${dollars(e.cap.cap.amount)} ${PERIOD_WORDS[e.cap.cap.period] ?? ''} cap`
+      ? `${money(e.cap.cap.amount)} ${PERIOD_WORDS[e.cap.cap.period] ?? ''} cap`
       : ''
 
   if (best.cap && best.rule) {
@@ -237,11 +245,11 @@ function warningsFor(
       )
     } else if (purchase.amount !== null && purchase.amount > remaining) {
       warnings.push(
-        `This purchase crosses the ${capLabel(best)} on "${best.rule.id}": only ${dollars(remaining)} is left for ${period}.`,
+        `This purchase crosses the ${capLabel(best)} on "${best.rule.id}": only ${money(remaining)} is left for ${period}.`,
       )
     } else if (remaining < cap.amount * NEAR_CAP_SHARE) {
       warnings.push(
-        `Only ${dollars(remaining)} left of the ${capLabel(best)} on "${best.rule.id}" for ${period}.`,
+        `Only ${money(remaining)} left of the ${capLabel(best)} on "${best.rule.id}" for ${period}.`,
       )
     }
   }
@@ -387,14 +395,7 @@ function assumptionsFor(
       `Assumes ${merchant.resolvedName} falls outside the usual bonus categories.`,
     )
   } else {
-    const category = catalog.categories.find((c) => c.id === merchant.category)
-    const mcc =
-      merchant.likelyMcc ??
-      (category?.mccs.length === 1 ? category.mccs[0] : undefined)
-    const code = mcc === undefined ? '' : ` (MCC ${String(mcc)})`
-    assumptions.push(
-      `Assumes ${merchant.resolvedName} codes as ${categoryPhrase(catalog, merchant.category)}${code}.`,
-    )
+    assumptions.push(codesAs(catalog, merchant))
   }
   if (merchant.inference) {
     assumptions.push(`Claude's reasoning: ${merchant.inference.rationale}`)

@@ -12,7 +12,8 @@ type Tab = 'best' | 'spending' | 'wallet'
 function readHash(): { tab: Tab; query: string } {
   const hash = new URLSearchParams(location.hash.slice(1))
   if (hash.has('spending')) return { tab: 'spending', query: '' }
-  if (hash.has('wallet')) return { tab: 'wallet', query: '' }
+  if (hash.has('wallet'))
+    return { tab: 'wallet', query: hash.get('wallet') ?? '' }
   return { tab: 'best', query: hash.get('best') ?? '' }
 }
 
@@ -213,7 +214,7 @@ export function App() {
         ) : tab === 'spending' ? (
           <Spending settings={settings} />
         ) : (
-          <MyWallet />
+          <MyWallet initialQuery={query} />
         )}
       </div>
       <datalist id="suggestions">

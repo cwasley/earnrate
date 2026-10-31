@@ -113,8 +113,8 @@
           earnrate.dev and on your computer it runs on your own device. In
           Claude it runs on earnrate's server, which answers without keeping
           your questions, and keeps a saved wallet only if you ask it to,
-          encrypted so that only you can open it. Here's where your data goes,
-          and where it doesn't.
+          encrypted so that only your recovery code or the apps you connect can
+          open it. Here's where your data goes, and where it doesn't.
         </p>
         <p class="updated">Updated October 31, 2026.</p>
       </header>
@@ -210,10 +210,10 @@
           Your wallet is a file you control,
           <code>~/.earnrate/wallet.yaml</code> unless you point
           <code>EARNRATE_WALLET</code> somewhere else. earnrate reads it, and
-          writes to it only when you record a purchase or apply an imported
-          statement. Cards are named by product, like <code>amex-gold</code>.
-          earnrate never asks for card numbers, expiry dates, security codes or
-          bank logins.
+          writes to it only when you change your cards or settings, record a
+          purchase, or apply an imported statement. Cards are named by product,
+          like <code>amex-gold</code>. earnrate never asks for card numbers,
+          expiry dates, security codes or bank logins.
         </p>
         <p>
           When you import a statement, earnrate reads the file on your computer
@@ -266,13 +266,12 @@
           earnrate.dev is a static site with no cookies and no server code. It
           counts visits with Cloudflare Web Analytics, a small script that
           records which page you opened, the site that linked you here, how fast
-          the page loaded, and your country, browser and device type. It sets no
-          cookies and doesn't recognize you from one visit to the next.
-          Cloudflare hosts the site and, like any host, handles your IP address
-          and request details to serve the page and block abuse. Its dashboard
-          shows me aggregate counts, not who visited. There's no server code and
-          no logging turned on. The sign-in pages on mcp.earnrate.dev don't load
-          the analytics script.
+          the page loaded, and your country, browser and device type. It doesn't
+          recognize you from one visit to the next. Cloudflare hosts the site
+          and, like any host, handles your IP address and request details to
+          serve the page and block abuse. Its dashboard shows me aggregate
+          counts, not who visited. Logging is off. The sign-in pages on
+          mcp.earnrate.dev don't load the analytics script.
         </p>
       </section>
 

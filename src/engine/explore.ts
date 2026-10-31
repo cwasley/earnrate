@@ -6,9 +6,10 @@ import { evaluateCard, purchaseContext } from './evaluate.ts'
 import { periodKey, type Period } from './periods.ts'
 import {
   categoryPhrase,
+  codesAs,
   currencyLabel,
-  dollars,
   earnText,
+  money,
   num,
   recommend,
 } from './recommend.ts'
@@ -291,7 +292,7 @@ function conditionsText(catalog: Catalog, r: Requirements): string[] {
   if (r.membership !== null) conditions.push(`Needs ${r.membership}.`)
   if (r.cap) {
     conditions.push(
-      `Up to ${dollars(r.cap.amount)} ${CAP_PERIODS[r.cap.period] ?? ''} at this rate, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}.`,
+      `Up to ${money(r.cap.amount)} ${CAP_PERIODS[r.cap.period] ?? ''} at this rate, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}.`,
     )
   }
   return conditions
@@ -441,11 +442,7 @@ function exploreAssumptions(
       `Ranks purchases that code as ${categoryPhrase(catalog, merchant.category)}.`,
     )
   } else if (merchant.source !== 'none') {
-    const code =
-      merchant.likelyMcc === null ? '' : ` (MCC ${String(merchant.likelyMcc)})`
-    assumptions.push(
-      `Assumes ${merchant.resolvedName} codes as ${categoryPhrase(catalog, merchant.category)}${code}.`,
-    )
+    assumptions.push(codesAs(catalog, merchant))
   }
   assumptions.push(
     'Assumes each card is set up for this purchase: the right category pick, any activation done, and none of its cap used yet. A card you hold may differ.',

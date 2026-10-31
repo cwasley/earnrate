@@ -7,12 +7,12 @@
 
 I wanted a ghost card: one card that always charges the best of my cards. The card networks won't allow one, so I built the next best thing.
 
-**earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which card earns the most there, from your own cards or from every card it knows, and why. It's stateful (it knows your caps and chosen categories), valuation-aware, and transparent about its assumptions. It never sees a card number.
+**earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which card earns the most there, from your own cards or from every card it knows, and why. Save your cards and it tracks your caps and chosen categories. It's valuation-aware and transparent about its assumptions. It never sees a card number.
 
-- Runs on your machine, in your browser at [earnrate.dev](https://earnrate.dev), or in Claude as a connector at `https://mcp.earnrate.dev`, with nothing to install. No account, no telemetry, no affiliate links. See the [privacy page](https://earnrate.dev/privacy).
+- Runs on your machine, in your browser at [earnrate.dev](https://earnrate.dev), or in Claude as a connector at `https://mcp.earnrate.dev`, with nothing to install. No account and no affiliate links; the hosted server counts requests by tool name, nothing about what you ask. See the [privacy page](https://earnrate.dev/privacy).
 - US cards and US merchants, for now.
 
-> **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup, MCP server and the hosted Claude connector. See [the benchmark](docs/benchmark.md) for how it compares to an existing card-picking MCP server.
+> **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup, MCP server and the hosted Claude connector. See [the benchmark](docs/benchmark.md) (run 2026-10-24) for how it compares to an existing card-picking MCP server.
 
 ## Try it
 
@@ -113,7 +113,7 @@ While the bonus is open, that card wins wherever it's accepted, and the answer s
 
 ### Which new card?
 
-No wallet needed for these:
+These compare every card earnrate knows:
 
 ```sh
 earnrate best groceries                               # every card, ranked for one purchase
@@ -188,7 +188,7 @@ There's no wallet to write first: tell the assistant which cards you have, and i
 
 For a merchant earnrate doesn't know, the calling model can pass a `category` (e.g. `grocery.supermarket`). It's used only for unknown merchants and is labeled in the answer. The command line takes the same thing as `--category`.
 
-**Claude Code plugin:** `/plugin install earnrate --marketplace cwasley/earnrate` connects Claude Code and Cowork to the same hosted server as the connector.
+**Claude Code plugin:** `/plugin marketplace add cwasley/earnrate`, then `/plugin install earnrate@earnrate`, connects Claude Code and Cowork to the same hosted server as the connector.
 
 **Claude Desktop, one click:** download [earnrate.mcpb](https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb) and open it; Claude Desktop installs it (Settings → Extensions). No terminal or Node install needed. Its one setting is where your wallet file lives, by default `~/.earnrate/wallet.yaml`, the same file the command line uses.
 
@@ -222,7 +222,7 @@ merchant text
 
 - **Card terms are data, not code.** Each card is a YAML file of rules (category, rate, cap, channel, dates, activation, required membership), validated with Zod. Every rule carries a short quote from the issuer's own page, and a test fails if one is missing. The engine has no card-specific branches.
 - **Merchants resolve to a category plus the assumption behind it.** "Whole Foods codes as a supermarket (MCC 5411)" is stated in the answer, and venues that can code more than one way (a restaurant inside a stadium or hotel) come back at medium confidence with the alternative spelled out. Unknown merchants fall back to base rates, or to an opt-in, cached and labeled Claude guess.
-- **The engine is pure and deterministic.** Given a purchase, a date and a wallet, it checks every rule against network acceptance, the date window, caps already used (split when a purchase straddles one), quarterly picks and activations, then values points at your cents-per-point, including pooling (Freedom Unlimited points are worth Sapphire points when you hold both). Ties, the valuation at which the runner-up would win, stale data, and a rotating card whose new quarter isn't in the data yet all show up in the answer.
+- **The engine is pure and deterministic.** Given a purchase, a date and a set of cards (yours, or every card), it checks every rule against network acceptance, the date window, caps already used (split when a purchase straddles one), quarterly picks and activations, then values points at your cents-per-point, including pooling (Freedom Unlimited points are worth Sapphire points when you hold both). Ties, the valuation at which the runner-up would win, stale data, and a rotating card whose new quarter isn't in the data yet all show up in the answer.
 - **Wallet edits keep your file intact.** Adding or changing a card, or recording a purchase, splices in only the lines that changed and checks the result before saving, so comments and formatting in your YAML survive.
 - **Drift detection.** A weekly GitHub Action opens each issuer page in a headless browser, checks every quote is still there, and opens an issue when terms move. It stores only hashes of issuer text.
 - **Tested end to end.** Golden cases written from issuer terms, CLI snapshot tests, an MCP round trip over real stdio, an install test that packs and installs the npm package, and a check that no committed file contains a card number. CI runs all of it on every push.
@@ -242,7 +242,7 @@ Rotating categories (Freedom Flex) are added each quarter once the issuer posts 
 
 ## Privacy Policy
 
-earnrate needs no account and has no telemetry. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
+earnrate needs no account. The local version has no telemetry; the hosted server counts requests by tool name only. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
 
 - **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests by tool name only. A saved wallet is optional and anonymous (a recovery code, no email), holds card ids and the details you gave, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused.
 - **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product id, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins.

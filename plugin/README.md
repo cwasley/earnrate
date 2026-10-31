@@ -9,7 +9,8 @@ earnrate lists cards by product, like `amex-gold`, and never asks for card numbe
 In Claude Code:
 
 ```
-/plugin install earnrate --marketplace cwasley/earnrate
+/plugin marketplace add cwasley/earnrate
+/plugin install earnrate@earnrate
 ```
 
 ## Try it
@@ -38,7 +39,7 @@ Nothing on your computer. It connects Claude to earnrate's hosted MCP server at 
 
 ## Privacy Policy
 
-No account and no telemetry. earnrate counts requests by tool name only. Claude's provider sees your conversation, including earnrate's answers, under its own privacy policy. Full policy: [earnrate.dev/privacy](https://earnrate.dev/privacy). Contact: [hello@earnrate.dev](mailto:hello@earnrate.dev).
+No account. earnrate counts requests by tool name only, never what was asked. Claude's provider sees your conversation, including earnrate's answers, under its own privacy policy. Full policy: [earnrate.dev/privacy](https://earnrate.dev/privacy). Contact: [hello@earnrate.dev](mailto:hello@earnrate.dev).
 
 ## Prefer it on your computer?
 

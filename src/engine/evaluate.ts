@@ -39,7 +39,7 @@ export function purchaseContext(
 
 // A category with one typical MCC (travel agencies are 4722) implies it, the
 // same assumption explanations state.
-function singleMcc(catalog: Catalog, category: string): number | null {
+export function singleMcc(catalog: Catalog, category: string): number | null {
   const mccs = catalog.categories.find((c) => c.id === category)?.mccs ?? []
   return mccs.length === 1 ? (mccs[0] ?? null) : null
 }

@@ -6,7 +6,7 @@
     <title>earnrate: which card should I use?</title>
     <meta
       name="description"
-      content="Compare every credit card for any store, or find the cards that fit your spending. Free, no sign-up, no affiliate links, and it runs in your browser."
+      content="Compare U.S. credit cards for any store, or find the cards that fit your spending. Free, no sign-up, no affiliate links, and it runs in your browser."
     />
     <meta name="color-scheme" content="light dark" />
     <link rel="canonical" href="https://earnrate.dev/" />
@@ -16,7 +16,7 @@
     <meta property="og:title" content="earnrate: which card should I use?" />
     <meta
       property="og:description"
-      content="Compare every credit card for any store, or find the cards that fit your spending. Free, no sign-up, no affiliate links."
+      content="Compare U.S. credit cards for any store, or find the cards that fit your spending. Free, no sign-up, no affiliate links."
     />
     <meta property="og:image" content="https://earnrate.dev/og.png" />
     <meta property="og:image:width" content="1200" />
@@ -504,21 +504,22 @@
           wallet is a file you control. In Claude, earnrate's server answers
           each question without keeping it, and a saved wallet is encrypted so
           that only your recovery code or your connected apps can open it.
-          earnrate never asks for card numbers or bank logins, and there's no
-          tracking. If you ask through an AI assistant, its provider sees that
-          conversation, like anything else you ask it. The
+          earnrate never asks for card numbers or bank logins, and nothing
+          follows you from one visit to the next. If you ask through an AI
+          assistant, its provider sees that conversation, like anything else you
+          ask it. The
           <a href="/privacy">privacy page</a> has the details.
         </p>
       </section>
 
       <section>
-        <h2>Use it from your terminal</h2>
+        <h2>Run it on your computer</h2>
         <p>
           My wallet above keeps your cards in this browser. The command line
-          version keeps them in a file on your computer, can replay a statement
-          to catch up your caps, and works with AI assistants. Export your
-          wallet above and it works there too. It needs Node 22 or later. Add
-          the cards you hold, then ask about a merchant:
+          version keeps them in a file on your computer and can replay a
+          statement to catch up your caps. Export your wallet above and it works
+          there too. It needs Node 22 or later. Add the cards you hold, then ask
+          about a merchant:
         </p>
         <pre
           class="terminal install"
@@ -527,18 +528,17 @@
 <span class="prompt">$</span> earnrate add chase-sapphire-preferred
 <span class="prompt">$</span> earnrate whole foods 80</pre>
         <p>
-          Use Claude Desktop? Download
+          It also runs as a local MCP server, with your wallet in that same
+          file. In Claude Desktop, download
           <a
             href="https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb"
             >earnrate for Claude Desktop</a
           >
-          and open it to install it in one click, with no terminal needed. Then
-          tell Claude which cards you have. Or add it to another AI assistant as
-          an MCP server:
+          and open it. In Claude Code:
         </p>
         <pre
           class="terminal install"
-        ><span class="prompt">$</span> claude mcp add earnrate -- npx -y earnrate mcp</pre>
+        ><span class="prompt">$</span> claude mcp add --scope user earnrate -- npx -y earnrate mcp</pre>
         <p>
           Adding a card tells you anything else it needs, like your Cash+
           categories this quarter. Options and the full card list are in the

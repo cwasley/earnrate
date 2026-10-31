@@ -28,9 +28,10 @@ import type { Classifier } from '../merchants/classifier.ts'
 import { DEFAULT_MAX_CALLS } from '../merchants/fallback.ts'
 import { llmEnabled, openLlmSession } from '../merchants/from-env.ts'
 import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { packageVersion } from '../version.ts'
-import { parseCliArgs } from './args.ts'
+import { membershipProblem, parseCliArgs } from './args.ts'
 import { runCheatSheet } from './cheatsheet.ts'
 import { formatExploration, runBest, runSimulate } from './explore.ts'
 import { runImport } from './import.ts'
@@ -62,7 +63,7 @@ Compare every card, no wallet needed:
   ${CLI_NAME} best <merchant or category>          Rank all cards for one purchase.
   ${CLI_NAME} simulate groceries=600 dining=300    Best cards and pairs for a year of spending.
 
-Set up your wallet:
+Save your cards (optional):
   ${CLI_NAME} cards [search words]                 Find cards and their ids.
   ${CLI_NAME} add <card-id> [--pick ...]           Add a card you hold.
   ${CLI_NAME} update <card-id> [--pick ...]        Change picks, label or activations.
@@ -70,10 +71,10 @@ Set up your wallet:
   ${CLI_NAME} memberships [names...]               Show or set memberships (amazon-prime).
 
 Other commands:
-  ${CLI_NAME} cheatsheet                           Your best card for each category this quarter.
+  ${CLI_NAME} cheatsheet                           The best card for each category this quarter.
   ${CLI_NAME} import <statement.csv> --card <id>   Replay a statement against your wallet.
   ${CLI_NAME} offers [--cash | --points]           Rank welcome offers on cards you don't have.
-  ${CLI_NAME} mcp                                  Run the MCP server over stdio, for AI agents.
+  ${CLI_NAME} mcp                                  Run the MCP server over stdio, for AI assistants.
   Add --help to any command for its options.
 
 Options:
@@ -118,11 +119,16 @@ export function displayPath(file: string): string {
 // The cards to answer for: those named with --cards, else the wallet file.
 // 'none' means no wallet and no --cards, which answers from every card.
 export async function cardsToUse(
+  catalog: Catalog,
   file: string,
   io: Io,
   named: { cards: string[] | null; members: string[] },
 ): Promise<Wallet | 'none' | null> {
-  const catalog = await loadCatalog()
+  const problem = membershipProblem(catalog, named.members)
+  if (problem !== null) {
+    io.stderr(`${problem}\n`)
+    return null
+  }
   if (named.cards !== null) {
     const wallet = walletFromCards(
       catalog,
@@ -205,10 +211,9 @@ export async function run(argv: string[], io: Io): Promise<number> {
 
   const llmOn = options.llm ?? llmEnabled(io.env)
 
-  const file = walletPath(io.env)
-  const loaded = await cardsToUse(file, io, options)
-  if (loaded === null) return RUNTIME_ERROR
   const catalog = await loadCatalog()
+  const loaded = await cardsToUse(catalog, walletPath(io.env), io, options)
+  if (loaded === null) return RUNTIME_ERROR
   const purchase: Purchase = {
     merchant: options.merchant,
     amount: options.amount,

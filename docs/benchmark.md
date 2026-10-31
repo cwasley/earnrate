@@ -4,8 +4,8 @@ Golden cases from `tests/golden/`, run through RightCard's `best_card` tool and 
 
 ## Setup (2026-10-24)
 
-- **RightCard:** `rightcard-mcp@0.1.14`, local stdio, with its live public catalog. Re-run on 2026-10-24 after M2 with the same calls, and it gave identical answers.
-- **earnrate:** engine at M2 plus the web-address fix below, data `2026.10.24.1`.
+- **RightCard:** `rightcard-mcp@0.1.14`, local stdio, with its live public catalog. Re-run later that day with the same calls, and it gave identical answers.
+- **earnrate:** engine as of 2026-10-24, plus the web-address fix below, data `2026.10.24.1`.
 - **Wallet:** the same nine cards in both. RightCard ids: `amex_gold`, `amex_blue_cash_preferred`, `amex_platinum`, `chase_sapphire_preferred`, `chase_freedom_unlimited`, `amazon_prime_visa`, `usbank_cash_plus`, `citi_my_best_buy_visa_card`, `sofi_credit_card`. All nine are in its catalog and marked `verified`. The earnrate wallet is `tests/golden/fixtures.ts`: Prime membership, Cash+ Q4 picks of 5% on TV/internet/streaming and movie theaters and 2% on gas/EV, and SoFi redeemed into a SoFi account.
 - **Valuation:** RightCard has two fixed modes. `cash` caps points at 1¢, which matches our `flat`. `points` uses a fixed 1.8¢ for MR and UR, close to our `points-heavy` at 1.7¢. RightCard doesn't let you pass your own values.
 - **Inputs:** both got the same merchant strings, with no channel and no amount, except where a case needs state. RightCard has **no** input for amount, channel, cap usage or memberships, and returns a single winner. earnrate returns a ranked list.
@@ -44,9 +44,8 @@ The wording for known merchants with no bonus category also changed. "Assumes Am
 
 ## Where RightCard is still ahead
 
-- **Merchant directory breadth.** Its curated aliases and family collapsing, plus 3,100+ cases checked against its iOS app. Our table has 91 merchants. The M4 LLM fallback is our answer for the long tail, not a bigger table.
+- **Merchant directory breadth.** Its curated aliases and family collapsing, plus 3,100+ cases checked against its iOS app. earnrate's table had 91 merchants then. Its optional Claude merchant lookup is the answer for the long tail, not a bigger table.
 - **Portal notes.** It mentions the Amex Travel portal on airline purchases. earnrate doesn't model portals as a separate channel yet.
-- **Distribution.** It has a hosted Streamable HTTP endpoint and is listed in the MCP registry. earnrate will be local stdio only at M5.
 
 Things RightCard did well that earnrate now matches: the next-best card after a cap (from the ranked list), points pooling (Freedom Unlimited counts as UR when Sapphire Preferred is held), and explained tie-breaks.
 

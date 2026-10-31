@@ -1,7 +1,7 @@
 {
   "name": "earnrate",
   "version": "0.2.0",
-  "description": "Picks the best credit card from your wallet for a merchant, and explains why",
+  "description": "Which credit card earns the most at a merchant, from your cards or every card, and why",
   "keywords": [
     "credit cards",
     "rewards",

@@ -56,7 +56,10 @@ export function cheatSheet(
       'merchant' in item
         ? resolveMerchantById(catalog, item.merchant, null)
         : categoryResolution(catalog, item.category, null)
-    if (!merchant) throw new Error(`unknown merchant '${item.label}'`)
+    if (!merchant)
+      throw new Error(
+        `unknown merchant '${'merchant' in item ? item.merchant : item.category}' for ${item.label}`,
+      )
     const rec = recommend(
       catalog,
       wallet,

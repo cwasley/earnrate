@@ -3,8 +3,8 @@
   "name": "earnrate",
   "display_name": "earnrate",
   "version": "0.2.0",
-  "description": "Which of your credit cards earns the most at a store, and why. Your cards stay on your computer.",
-  "long_description": "Tell Claude which credit cards you have, then ask which one to use before you pay. earnrate checks every card in your wallet against each issuer's own terms, tracks the caps you've already spent and the categories you've picked, and explains its answer. It can also compare every card it knows for a store or a year of spending, even before you add yours.\n\nYour wallet is a file on your computer, listing cards by product (like amex-gold). earnrate never asks for card numbers, expiry dates, security codes or bank logins, and sends nothing anywhere. No affiliate links.",
+  "description": "Which credit card earns the most at a store, from yours or every card, and why. Runs on your computer.",
+  "long_description": "Ask which credit card to use before you pay. earnrate checks each card against the issuer's own terms and explains its answer: from every card it knows, from the cards you name, or from a wallet you save, where it also tracks the caps you've spent and the categories you've picked.\n\nYour wallet is a file on your computer, listing cards by product (like amex-gold). earnrate never asks for card numbers, expiry dates, security codes or bank logins, and sends nothing anywhere. No affiliate links.",
   "author": {
     "name": "Collin Wasley",
     "url": "https://earnrate.dev"
@@ -40,7 +40,7 @@
   "tools": [
     {
       "name": "best_card_for_purchase",
-      "description": "Which of your cards to use at a store, with reasons."
+      "description": "Which card earns the most at a store, from yours or every card, with reasons."
     },
     {
       "name": "resolve_merchant",
@@ -52,7 +52,7 @@
     },
     {
       "name": "cheat_sheet",
-      "description": "Your best card for each everyday kind of purchase this quarter."
+      "description": "The best card for each everyday kind of purchase this quarter."
     },
     {
       "name": "best_cards_for",
@@ -60,7 +60,7 @@
     },
     {
       "name": "simulate_spending",
-      "description": "The best cards and pairs for a year of your spending, after fees."
+      "description": "The best cards and pairs for a year of spending, after fees."
     },
     {
       "name": "compare_welcome_offers",

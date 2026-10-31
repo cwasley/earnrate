@@ -1,6 +1,6 @@
 # earnrate
 
-Rewards rules engine: given a merchant (plus optional amount and channel), pick the card in my wallet that earns the most and explain why. Exposed as a CLI and an MCP server.
+Rewards rules engine: given a merchant (plus optional amount and channel), pick the card that earns the most, from every card or the user's own, and explain why. Exposed as a CLI, a local MCP server, the hosted server at mcp.earnrate.dev and the website earnrate.dev.
 
 The maintainer's full spec (data model, golden tests, milestones, competitive landscape) is `private/PROJECT_CONTEXT.md`, a separate private repo checked out inside this one and ignored by it. Read the relevant section before starting a milestone when it's there. This file is only the summary.
 

@@ -376,7 +376,7 @@ describe('wallet setup', () => {
       new JsonWalletStore(catalog, backend, 'your saved wallet'),
     )
     const before = await client.callTool({ name: 'list_wallet', arguments: {} })
-    expect(text(before)).toMatch(/no wallet yet \(your saved wallet\)/)
+    expect(text(before)).toMatch(/no saved wallet yet/)
     await client.callTool({
       name: 'add_card',
       arguments: {
@@ -441,7 +441,7 @@ describe('wallet setup', () => {
     await client.callTool({ name: 'delete_wallet', arguments: {} })
     expect(await backend.read()).toBeNull()
     const after = await client.callTool({ name: 'list_wallet', arguments: {} })
-    expect(text(after)).toMatch(/no wallet yet/)
+    expect(text(after)).toMatch(/no saved wallet yet/)
   })
 
   test('a server without saved wallets drops exactly the saved-wallet tools', async () => {
@@ -470,7 +470,9 @@ describe('wallet setup', () => {
 
     const before = await client.callTool({ name: 'list_wallet', arguments: {} })
     expect(before.isError).toBeFalsy()
-    expect(text(before)).toMatch(/no wallet yet.*search_cards.*add_card/is)
+    expect(text(before)).toMatch(
+      /no saved wallet yet.*search_cards.*add_card/is,
+    )
     expect(before.structuredContent).toEqual({ memberships: [], cards: [] })
 
     for (const [name, args] of [

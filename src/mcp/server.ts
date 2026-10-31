@@ -135,7 +135,11 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
   // Tools that need a saved wallet; a server without saved wallets drops them.
   const walletTools: RegisteredTool[] = []
 
-  const noWallet = `There's no wallet yet (${deps.store.where}), which is normal before the user adds a card. Ask the user which credit cards they have, find each one with search_cards, and add it with add_card. best_cards_for and simulate_spending work without a wallet.`
+  const theWallet =
+    deps.savedWallets === 'file'
+      ? `the wallet at ${deps.store.where}`
+      : 'the saved wallet'
+  const noWallet = `There's no saved wallet yet${deps.savedWallets === 'file' ? ` (${deps.store.where})` : ''}. Answers don't need one: they cover every card, or the cards the user names. If the user wants their cards remembered, find each with search_cards and save it with add_card.`
 
   // Read on every call, so edits to the wallet apply without a restart.
   async function wallet(): Promise<Wallet | string> {
@@ -145,16 +149,16 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       if (found === null) return noWallet
       loaded = found
     } catch (e) {
-      return `Couldn't read the wallet at ${deps.store.where}: ${e instanceof Error ? e.message : String(e)}`
+      return `Couldn't read ${theWallet}: ${e instanceof Error ? e.message : String(e)}`
     }
     const problems = walletProblems(loaded, catalog)
     return problems.length > 0
-      ? `The wallet at ${deps.store.where} has problems:\n${problems.map((p) => `- ${p}`).join('\n')}`
+      ? `${theWallet[0]?.toUpperCase() ?? ''}${theWallet.slice(1)} has problems:\n${problems.map((p) => `- ${p}`).join('\n')}`
       : loaded
   }
 
-  // No wallet yet is the first-run state, not a failure: read-only tools
-  // answer from an empty wallet and say how to start one.
+  // No saved wallet is the normal state, not a failure: it reads as an
+  // empty one, with a note on how to start one.
   async function readableWallet(): Promise<
     { wallet: Wallet; start: string | null } | string
   > {
@@ -344,7 +348,10 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       }
       return {
         content: [
-          { type: 'text', text: formatRecommendation(output, purchase) },
+          {
+            type: 'text',
+            text: formatRecommendation(output, purchase, { all: true }),
+          },
         ],
         structuredContent: output,
       }
@@ -485,11 +492,20 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       )
       const currencyName = (id: string) =>
         catalog.currencies.find((c) => c.id === id)?.name ?? id
+      const trimmed = { ...comparison, offers: comparison.offers.slice(0, 10) }
+      const more = comparison.offers.length - trimmed.offers.length
       return {
         content: [
-          { type: 'text', text: formatOffers(comparison, currencyName, false) },
+          {
+            type: 'text',
+            text:
+              formatOffers(trimmed, currencyName, true) +
+              (more > 0
+                ? `\nThe top 10 of ${String(comparison.offers.length)} offers. Narrow them with kind, noAnnualFee or business.\n`
+                : ''),
+          },
         ],
-        structuredContent: comparison,
+        structuredContent: trimmed,
       }
     },
   )
@@ -743,7 +759,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       {
         title: 'Record a purchase',
         description:
-          "Records a purchase the user has already made, so spending caps and welcome-bonus progress stay accurate for future recommendations. It updates the user's wallet file. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap and no open welcome bonus are acknowledged and nothing is written.",
+          "Records a purchase the user has already made, so spending caps and welcome-bonus progress stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap and no open welcome bonus are acknowledged and nothing is written.",
         inputSchema: z.object({
           cardId: z
             .string()
@@ -765,76 +781,73 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           openWorldHint: deps.llm !== null,
         },
       },
-      // Queued per wallet file: parallel calls would otherwise each read the
-      // old usage and the last write would drop the others' spend.
-      (args) =>
-        (async () => {
-          const { cardId, merchant, amount, channel, date, category } = args
-          const w = await wallet()
-          if (typeof w === 'string') return fail(w)
-          if (!w.cards.some((c) => c.id === cardId)) {
-            return fail(
-              `"${cardId}" isn't in the wallet. Cards: ${w.cards.map((c) => c.id).join(', ')}.`,
-            )
-          }
-          const purchase = {
-            cardId,
-            merchant,
-            amount,
-            channel: channel ?? null,
-            date: date ?? deps.today(),
-          }
-          const resolved = await resolve(
-            merchant,
-            purchase.channel,
-            category ?? null,
+      async (args) => {
+        const { cardId, merchant, amount, channel, date, category } = args
+        const w = await wallet()
+        if (typeof w === 'string') return fail(w)
+        if (!w.cards.some((c) => c.id === cardId)) {
+          return fail(
+            `"${cardId}" isn't in the wallet. Cards: ${w.cards.map((c) => c.id).join(', ')}.`,
           )
-          const result = await deps.store.record(purchase, resolved.merchant)
-          if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
-          const { cap: booking, bonus } = result
-          if (!booking && !bonus) {
-            const output = {
-              recorded: false,
-              booking: null,
-              bonus: null,
-              message: `Nothing to track: ${cardId} has no spending cap or open welcome bonus for this purchase, so the wallet wasn't changed.`,
-            }
-            return {
-              content: [{ type: 'text', text: output.message }],
-              structuredContent: output,
-            }
-          }
-          const messages: string[] = []
-          if (booking) {
-            const left = Math.max(0, booking.capAmount - booking.after)
-            messages.push(
-              `Recorded ${dollars(amount)} on ${cardId} against "${booking.capKey}": ${dollars(booking.before)} → ${dollars(booking.after)} of ${dollars(booking.capAmount)} for ${booking.period}, ${dollars(left)} left.`,
-            )
-          }
-          if (bonus) {
-            const left = Math.max(0, bonus.spend - bonus.after)
-            messages.push(
-              left === 0
-                ? `Welcome bonus spend met on ${cardId}: ${dollars(bonus.after)} of ${dollars(bonus.spend)}.`
-                : `Welcome bonus on ${cardId}: ${dollars(bonus.after)} of ${dollars(bonus.spend)} spent, ${dollars(left)} to go by ${bonus.deadline ?? 'the deadline'}.`,
-            )
-          }
+        }
+        const purchase = {
+          cardId,
+          merchant,
+          amount,
+          channel: channel ?? null,
+          date: date ?? deps.today(),
+        }
+        const resolved = await resolve(
+          merchant,
+          purchase.channel,
+          category ?? null,
+        )
+        const result = await deps.store.record(purchase, resolved.merchant)
+        if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
+        const { cap: booking, bonus } = result
+        if (!booking && !bonus) {
           const output = {
-            recorded: true,
-            booking,
-            bonus,
-            message: messages.join(' '),
+            recorded: false,
+            booking: null,
+            bonus: null,
+            message: `Nothing to track: ${cardId} has no spending cap or open welcome bonus for this purchase, so the wallet wasn't changed.`,
           }
           return {
-            content: [
-              {
-                type: 'text',
-                text: [output.message, ...resolved.notices].join('\n'),
-              },
-            ],
+            content: [{ type: 'text', text: output.message }],
             structuredContent: output,
           }
-        })(),
+        }
+        const messages: string[] = []
+        if (booking) {
+          const left = Math.max(0, booking.capAmount - booking.after)
+          messages.push(
+            `Recorded ${dollars(amount)} on ${cardId} against "${booking.capKey}": ${dollars(booking.before)} → ${dollars(booking.after)} of ${dollars(booking.capAmount)} for ${booking.period}, ${dollars(left)} left.`,
+          )
+        }
+        if (bonus) {
+          const left = Math.max(0, bonus.spend - bonus.after)
+          messages.push(
+            left === 0
+              ? `Welcome bonus spend met on ${cardId}: ${dollars(bonus.after)} of ${dollars(bonus.spend)}.`
+              : `Welcome bonus on ${cardId}: ${dollars(bonus.after)} of ${dollars(bonus.spend)} spent, ${dollars(left)} to go by ${bonus.deadline ?? 'the deadline'}.`,
+          )
+        }
+        const output = {
+          recorded: true,
+          booking,
+          bonus,
+          message: messages.join(' '),
+        }
+        return {
+          content: [
+            {
+              type: 'text',
+              text: [output.message, ...resolved.notices].join('\n'),
+            },
+          ],
+          structuredContent: output,
+        }
+      },
     ),
   )
 

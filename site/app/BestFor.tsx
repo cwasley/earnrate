@@ -254,8 +254,8 @@ export function BestFor({
           </section>
         ) : (
           <p class="muted hint">
-            Pick a category or type a store to rank all {catalog.cards.length}{' '}
-            cards earnrate knows.
+            Pick a category or type a store to rank every card that fits your
+            filters.
           </p>
         )}
       </div>

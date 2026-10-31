@@ -4,6 +4,7 @@ import { loadCatalog, walletPath } from '../data/load.ts'
 import { compareOffers } from '../engine/offers.ts'
 import { isValuationProfile, withValuationProfile } from '../engine/profiles.ts'
 import { formatOffers } from '../format/offers.ts'
+import { valuationProblem } from './args.ts'
 import { cardsToUse, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
 
 export const OFFERS_HELP = `Usage: ${CLI_NAME} offers [--cash | --points] [--no-fee] [--business] [options]
@@ -53,19 +54,18 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
     io.stderr('Pick --cash or --points, not both.\n')
     return USAGE_ERROR
   }
-  if (values.valuation !== undefined && !isValuationProfile(values.valuation)) {
-    io.stderr(
-      `Unknown valuation "${values.valuation}". Use flat or points-heavy.\n`,
-    )
+  const problem = valuationProblem(values.valuation)
+  if (problem !== null) {
+    io.stderr(`${problem}\n`)
     return USAGE_ERROR
   }
 
-  const found = await cardsToUse(walletPath(io.env), io, {
+  const catalog = await loadCatalog()
+  const found = await cardsToUse(catalog, walletPath(io.env), io, {
     cards: null,
     members: [],
   })
   if (found === null) return RUNTIME_ERROR
-  const catalog = await loadCatalog()
   const loaded =
     found === 'none' ? { valuations: {}, memberships: [], cards: [] } : found
   const wallet =
@@ -93,5 +93,3 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
   io.stdout(formatOffers(comparison, currencyName, values.all ?? false))
   return 0
 }
-
-export { formatOffers }

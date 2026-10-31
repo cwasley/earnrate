@@ -123,7 +123,7 @@ describe('arguments', () => {
   test('rejects bad input', () => {
     expect(argError(['whole foods', '0'])).toMatch(/more than \$0/)
     expect(argError(['whole foods', '1,2'])).toMatch(/isn't an amount/)
-    expect(argError(['costco', '--online', '--in-store'])).toMatch(/Pick one/)
+    expect(argError(['costco', '--online', '--in-store'])).toMatch(/not both/)
     expect(argError(['costco', '--valuation', 'max'])).toMatch(
       /flat or points-heavy/,
     )
@@ -347,6 +347,36 @@ describe('comparing every card', () => {
     expect((await cli(['simulate', 'zzzshop=50'], noWallet)).stderr).toMatch(
       /Not a category or a merchant earnrate knows: "zzzshop"/,
     )
+  })
+
+  test('best states the merchant code it assumes, like a recommendation', async () => {
+    expect((await cli(['best', 'expedia'], noWallet)).stdout).toMatch(
+      /Assumes Expedia codes as travel \(MCC 4722\)/,
+    )
+  })
+
+  test('flags are checked the same way in every subcommand', async () => {
+    for (const argv of [
+      ['cheatsheet', '--date', '2026-13-45'],
+      ['best', 'groceries', '--date', 'soon'],
+      ['simulate', 'groceries=600', '--start', '2026-02-30'],
+    ])
+      expect((await cli(argv, noWallet)).stderr).toMatch(/isn't a date/)
+    for (const argv of [
+      ['amazon', '--member', 'amazon-prme'],
+      ['cheatsheet', '--member', 'amazon-prme'],
+      ['best', 'amazon', '--member', 'amazon-prme'],
+    ])
+      expect((await cli(argv, noWallet)).stderr).toMatch(
+        /Unknown membership "amazon-prme"/,
+      )
+    const best = await cli(['best', 'amazon', '1,200', '--json'], noWallet)
+    const top = (JSON.parse(best.stdout) as { ranked: { earned: number }[] })
+      .ranked[0]
+    expect(top?.earned).toBeGreaterThan(12)
+    expect(
+      (await cli(['cheatsheet', '--cards', 'amex-gold,'], noWallet)).code,
+    ).toBe(0)
   })
 })
 

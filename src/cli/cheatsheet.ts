@@ -9,6 +9,7 @@ import {
   VALUATION_PROFILES,
   withValuationProfile,
 } from '../engine/profiles.ts'
+import { cardList, dateProblem, valuationProblem } from './args.ts'
 import {
   cardsToUse,
   NO_WALLET_HINT,
@@ -57,22 +58,17 @@ export async function runCheatSheet(argv: string[], io: Io): Promise<number> {
     io.stdout(CHEATSHEET_HELP)
     return 0
   }
-  if (values.valuation !== undefined && !isValuationProfile(values.valuation)) {
-    io.stderr(
-      `Unknown valuation "${values.valuation}". Use flat or points-heavy.\n`,
-    )
+  const problem = valuationProblem(values.valuation) ?? dateProblem(values.date)
+  if (problem !== null) {
+    io.stderr(`${problem}\n`)
     return USAGE_ERROR
   }
-  if (values.date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(values.date)) {
-    io.stderr(`"${values.date}" isn't a date. Use YYYY-MM-DD.\n`)
-    return USAGE_ERROR
-  }
-  const loaded = await cardsToUse(walletPath(io.env), io, {
-    cards: values.cards === undefined ? null : values.cards.split(','),
+  const catalog = await loadCatalog()
+  const loaded = await cardsToUse(catalog, walletPath(io.env), io, {
+    cards: cardList(values.cards),
     members: values.member ?? [],
   })
   if (loaded === null) return RUNTIME_ERROR
-  const catalog = await loadCatalog()
   const date = values.date ?? io.today
   if (loaded === 'none') {
     const sheet = catalogCheatSheet(catalog, date, {

@@ -714,18 +714,22 @@ function Transfer({
   )
 }
 
-export function MyWallet() {
+export function MyWallet({ initialQuery }: { initialQuery: string }) {
   const [wallet, setWallet] = useState<Wallet | null>(loadWallet)
   const [message, setMessage] = useState<{
     text: string
     error: boolean
   } | null>(null)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [amount, setAmount] = useState('')
   const [asked, setAsked] = useState<{
     text: string
     amount: number | null
-  } | null>(null)
+  } | null>(
+    initialQuery.trim() === ''
+      ? null
+      : { text: initialQuery.trim(), amount: null },
+  )
 
   const replace = (next: Wallet | null) => {
     setWallet(next)
