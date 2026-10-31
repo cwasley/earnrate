@@ -42,7 +42,7 @@ export const PAGE_HEADERS = {
     "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'",
   'Referrer-Policy': 'no-referrer',
   'X-Content-Type-Options': 'nosniff',
-  'Cache-Control': 'no-store',
+  'Cache-Control': 'no-store, no-transform', // keeps Cloudflare from injecting scripts
 }
 
 function page(title: string, body: string): string {
