@@ -94,6 +94,10 @@ export const WelcomeOfferSchema = z
     spend: z.number().nonnegative(), // dollars of purchases required
     months: z.number().int().positive(), // from account opening
     valid_to: IsoDate.optional(), // when the issuer says the offer ends
+    // The issuer shows each applicant their own amount ("as high as"), or
+    // the page showed different offers on different visits. The amount
+    // above is then the most it shows.
+    varies: z.literal(true).optional(),
     note: z.string().optional(),
   })
   .refine(

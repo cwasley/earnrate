@@ -3,18 +3,18 @@ name: Citi / AAdvantage Platinum Select World Elite Mastercard
 issuer: citi
 network: mastercard
 currency: aadvantage-miles
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-10-31
+verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
 base_rate: 1
 annual_fee: 99
 first_year_fee: 0
 welcome_offer:
-  points: 80000
-  spend: 3500
-  months: 4
-  note: 'Citi labels it a limited time offer but states no end date. Not available if you received a new account bonus for a Citi / AAdvantage Platinum Select account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one.'
+  points: 50000
+  spend: 2500
+  months: 3
+  note: 'Not available if you received a new account bonus for a Citi / AAdvantage Platinum Select account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one.'
 rules:
   - id: american-airlines
     match: { merchants: [american-airlines] }
@@ -62,7 +62,10 @@ evidence:
     quote: 'Annual fee - $99, waived for the first 12 months.'
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
-    quote: 'Earn 80,000 AAdvantage® bonus miles after $3,500 in purchases in the first 4 months.'
+    quote: 'Earn 50,000 AAdvantage® bonus miles'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'after $2,500 in purchases in the first 3 months'
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'new account bonus for a Citi® / AAdvantage® Platinum Select® account in the past 48 months'

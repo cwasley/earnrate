@@ -169,4 +169,40 @@ describe('compareSources', () => {
     )
     expect(Object.keys(nextLock.pages)).toEqual([url])
   })
+
+  test('an offer shown on some visits but not others is reported', () => {
+    const offer = 'Earn a $300 bonus after you spend $3,000'
+    const withOffer = {
+      ...catalog,
+      cards: [
+        {
+          ...card,
+          welcome_offer: { dollars: 300, spend: 3000, months: 3 },
+          evidence: [
+            ...card.evidence,
+            { rule: 'welcome_offer', url, quote: offer },
+          ],
+        },
+      ],
+    }
+    const loads = new Map([[url, ok(`${PAGE}\n${offer}.`, PAGE)]])
+    const { report } = compareSources(withOffer, loads, baseline(PAGE), 'today')
+    expect(report.varyingOffers).toEqual([
+      { cardId: card.id, url, quote: offer },
+    ])
+    expect(hasChanges(report)).toBe(true)
+    expect(formatReport(report, 'today')).toMatch(/differed between visits/)
+
+    const marked = {
+      ...withOffer,
+      cards: withOffer.cards.map((c) => ({
+        ...c,
+        welcome_offer: { ...c.welcome_offer, varies: true as const },
+      })),
+    }
+    expect(
+      compareSources(marked, loads, baseline(PAGE), 'today').report
+        .varyingOffers,
+    ).toEqual([])
+  })
 })

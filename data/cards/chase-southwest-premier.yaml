@@ -3,18 +3,18 @@ name: Southwest Rapid Rewards Premier Credit Card
 issuer: chase
 network: visa
 currency: southwest-rapid-rewards
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-10-31
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/travel-credit-cards/southwest/premier
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
 base_rate: 1
 annual_fee: 149
 welcome_offer:
-  points: 55000
-  spend: 1500
+  points: 85000
+  spend: 2000
   months: 3
-  note: 'Not available to current cardmembers of any Southwest Rapid Rewards Credit Card, or previous cardmembers of any Southwest Rapid Rewards Credit Card who received a new Cardmember bonus within the last 24 months (this does not apply to business cards).'
+  note: 'Chase labels it a limited-time offer and states no end date. Not available to current cardmembers of any Southwest Rapid Rewards Credit Card, or previous cardmembers of any Southwest Rapid Rewards Credit Card who received a new Cardmember bonus within the last 24 months (this does not apply to business cards).'
 caps:
   - id: grocery-and-dining
     amount: 8000
@@ -48,7 +48,7 @@ evidence:
     quote: '$149 applied to first billing statement.'
   - rule: welcome_offer
     url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
-    quote: 'Earn 55,000 bonus points after you spend $1,500 on purchases in the first 3 months from account opening'
+    quote: 'Earn 85,000 bonus points after you spend $2,000 on purchases in the first 3 months from account opening'
   - rule: base_rate
     url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
     quote: 'Earn 1 point for each dollar spent on all other purchases.'

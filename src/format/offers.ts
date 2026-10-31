@@ -4,9 +4,20 @@ import { feeText, money } from '../engine/text.ts'
 const TOP = 10
 
 function reward(o: OfferSummary, currencyName: string): string {
-  if (o.dollars !== null) return money(o.dollars)
-  return `${(o.points ?? 0).toLocaleString('en-US')} ${currencyName}`
+  const amount =
+    o.dollars !== null
+      ? money(o.dollars)
+      : `${(o.points ?? 0).toLocaleString('en-US')} ${currencyName}`
+  return o.varies ? `Up to ${amount}` : amount
 }
+
+const asOf = (date: string) =>
+  new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
 
 export function formatOffers(
   c: OfferComparison,
@@ -31,7 +42,9 @@ export function formatOffers(
       `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  about ${money(Math.round(o.firstYearValue))} the first year`,
       `    ${reward(o, currencyName(o.currency))} ${spend}. ${feeText(o)[0]?.toUpperCase() ?? ''}${feeText(o).slice(1)}.${o.held ? ' In your wallet.' : ''}`,
     )
-    if (o.validTo) lines.push(`    Offer ends ${o.validTo}.`)
+    lines.push(
+      `    ${o.validTo ? `Offer ends ${o.validTo}. ` : ''}Public offer as of ${asOf(o.lastVerified)}; yours may differ.`,
+    )
     if (o.note) lines.push(`    ${o.note}`)
   })
   if (c.offers.length > shown.length)

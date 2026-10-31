@@ -28,6 +28,9 @@ export type SourcesReport = {
   removedLines: { url: string; count: number }[]
   unreachable: { url: string; reason: string; cards: string[] }[]
   newPages: string[]
+  // Offer text on some loads of a page but not others: an A/B test or a
+  // targeted offer. Cards already marked `varies` aren't listed.
+  varyingOffers: { cardId: string; url: string; quote: string }[]
 }
 
 export function sourceUrls(catalog: Catalog): Map<string, string[]> {
@@ -56,6 +59,7 @@ export function compareSources(
     removedLines: [],
     unreachable: [],
     newPages: [],
+    varyingOffers: [],
   }
   const nextLock: SourcesLock = { version: 1, pages: {} }
 
@@ -94,6 +98,20 @@ export function compareSources(
       const snap = snapshots.get(pageKey(e.url))
       if (!snap?.ok) continue
       const texts = snap.loads.flatMap((l) => [l.innerText, l.textContent])
+      const inEveryLoad = snap.loads.every((l) =>
+        containsQuote([l.innerText, l.textContent], e.quote),
+      )
+      if (
+        e.rule === 'welcome_offer' &&
+        card.welcome_offer?.varies !== true &&
+        !inEveryLoad &&
+        containsQuote(texts, e.quote)
+      )
+        report.varyingOffers.push({
+          cardId: card.id,
+          url: e.url,
+          quote: e.quote,
+        })
       if (!containsQuote(texts, e.quote)) {
         report.missingEvidence.push({
           cardId: card.id,
@@ -110,7 +128,11 @@ export function compareSources(
 // Removed lines alone don't count: a rule that loses its backing text is
 // already caught by its evidence, and the rest is mostly rotating copy.
 export function hasChanges(report: SourcesReport): boolean {
-  return report.missingEvidence.length > 0 || report.newLines.length > 0
+  return (
+    report.missingEvidence.length > 0 ||
+    report.newLines.length > 0 ||
+    report.varyingOffers.length > 0
+  )
 }
 
 const truncate = (s: string, n: number) =>
@@ -147,6 +169,18 @@ export function formatReport(report: SourcesReport, today: string): string {
       for (const l of p.lines.slice(0, 15)) out.push(`  - ${truncate(l, 220)}`)
       if (p.lines.length > 15)
         out.push(`  - …and ${String(p.lines.length - 15)} more`)
+    }
+    out.push('')
+  }
+  if (report.varyingOffers.length > 0) {
+    out.push(
+      '## Offers that differed between visits',
+      '',
+      "Some loads of the page showed this offer and some didn't: likely an issuer test or a targeted offer. Record the public one and add `varies: true` to the card's welcome_offer.",
+      '',
+    )
+    for (const v of report.varyingOffers) {
+      out.push(`- **${v.cardId}**: "${v.quote}" (${v.url})`)
     }
     out.push('')
   }

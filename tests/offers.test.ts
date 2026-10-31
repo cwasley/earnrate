@@ -3,6 +3,7 @@ import { WALLET_ENV_VAR } from '../src/brand.ts'
 import { run } from '../src/cli/run.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import { compareOffers, type OfferFilters } from '../src/engine/offers.ts'
+import { formatOffers } from '../src/format/offers.ts'
 import { CardSchema } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
@@ -88,6 +89,25 @@ test('ranks offers by bonus value minus the first-year fee', () => {
       ['pooling-cash', 400, 400],
     ],
   )
+})
+
+test('an offer that varies reads as "up to", and every offer says when it was checked', () => {
+  const varying = card('varies', {
+    welcome_offer: { points: 100000, spend: 6000, months: 6, varies: true },
+  })
+  const text = formatOffers(
+    compareOffers(
+      { ...catalog, cards: [varying, ...cards] },
+      wallet,
+      filters(),
+      TODAY,
+    ),
+    () => 'points',
+    true,
+  )
+  expect(text).toMatch(/Up to 100,000 points after \$6,000/)
+  expect(text).toMatch(/^ {4}60,000 points after \$4,000/m)
+  expect(text).toMatch(/Public offer as of Oct 1, 2026; yours may differ\./)
 })
 
 test('skips held, business, store and expired cards, and lists those with no offer', () => {

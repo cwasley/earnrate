@@ -510,7 +510,7 @@ function offerText(card: Card): string {
     o.spend > 0
       ? `after ${usd(o.spend)} in purchases in ${String(o.months)} month${o.months === 1 ? '' : 's'}`
       : 'with no spending required'
-  return `<h2>Public welcome offer</h2><p>${esc(reward)} ${esc(spend)}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page. Offers vary by person and by how you apply.${o.note ? ` ${esc(o.note)}` : ''}</p>`
+  return `<h2>Public welcome offer</h2><p>${o.varies ? 'Up to ' : ''}${esc(reward)} ${esc(spend)}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(card.last_verified))}. Yours may differ: issuers test and target offers, so use the one shown to you when you apply.${o.note ? ` ${esc(o.note)}` : ''}</p>`
 }
 
 function placements(

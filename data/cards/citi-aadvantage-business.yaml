@@ -3,8 +3,8 @@ name: Citi / AAdvantage Business World Elite Mastercard
 issuer: citi
 network: mastercard
 currency: aadvantage-miles
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-10-31
+verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
 # Miles post to the company's AAdvantage Business account, not a personal
@@ -14,9 +14,9 @@ business: true
 annual_fee: 99
 first_year_fee: 0
 welcome_offer:
-  points: 65000
-  spend: 4000
-  months: 4
+  points: 75000
+  spend: 5000
+  months: 5
   note: "Miles post to the business's AAdvantage Business account. Not available if you received a new account bonus for a Citi / AAdvantage Business account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one."
 rules:
   - id: american-airlines
@@ -72,7 +72,7 @@ evidence:
     quote: 'The annual fee is $99. However, this fee is waived for the first 12 months.'
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
-    quote: '65,000 AAdvantage® bonus miles For your business after $4,000 in purchases within the first 4 months of account opening'
+    quote: '75,000 AAdvantage® bonus miles For your business after $5,000 in purchases within the first 5 months of account opening'
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'new account bonus for a Citi® / AAdvantage® Business account in the past 48 months'

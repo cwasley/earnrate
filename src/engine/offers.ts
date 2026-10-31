@@ -24,6 +24,7 @@ export type OfferSummary = {
   spend: number
   months: number
   validTo: string | null
+  varies: boolean // the amount is the most it can be ("up to")
   note: string | null
   annualFee: number | null
   firstYearFee: number | null // what the first year costs
@@ -79,6 +80,7 @@ export function compareOffers(
       spend: offer.spend,
       months: offer.months,
       validTo: offer.valid_to ?? null,
+      varies: offer.varies === true,
       note: offer.note ?? null,
       annualFee: card.annual_fee ?? null,
       firstYearFee,
@@ -96,7 +98,7 @@ export function compareOffers(
 
   const notes = [
     `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`,
-    "Each offer is the public one on the issuer's page, checked weekly. Offers can differ by person and by how you apply, and issuers limit who can get a bonus; each card's note says how.",
+    "Each offer is the public one on the issuer's page on the date shown, checked weekly. Yours may differ: issuers test and target offers, so use the one shown to you when you apply. Issuers also limit who can get a bonus; each card's note says how.",
     "First-year value is the bonus at your point values minus the first year's annual fee. It leaves out what the card earns on your spending and any credits or perks.",
   ]
   return { offers, withoutOffer, notes }

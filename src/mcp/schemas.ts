@@ -176,6 +176,7 @@ export const OfferComparisonSchema = z.object({
       spend: z.number(),
       months: z.number(),
       validTo: z.string().nullable(),
+      varies: z.boolean(), // the amount is the most the issuer shows
       note: z.string().nullable(),
       annualFee: z.number().nullable(),
       firstYearFee: z.number().nullable(),

@@ -3,8 +3,8 @@ name: Southwest Rapid Rewards Premier Business Credit Card
 issuer: chase
 network: visa
 currency: southwest-rapid-rewards
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-10-31
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/southwest/premier-business-credit-card
   - https://creditcards.chase.com/business-credit-cards/southwest/premier-business
@@ -12,10 +12,10 @@ base_rate: 1
 business: true
 annual_fee: 149
 welcome_offer:
-  points: 80000
+  points: 60000
   spend: 3000
   months: 3
-  note: 'Marked a limited-time offer, with 60,000 struck through; the page states no end date. Not available to current cardmembers of this business card, or previous cardmembers who received a new Cardmember bonus for this business card within the last 24 months.'
+  note: 'Not available to current cardmembers of this business card, or previous cardmembers who received a new Cardmember bonus for this business card within the last 24 months.'
 caps:
   - id: gas-and-dining
     amount: 8000
@@ -48,7 +48,10 @@ evidence:
     quote: '$149 applied to first billing statement.'
   - rule: welcome_offer
     url: https://creditcards.chase.com/business-credit-cards/southwest/premier-business
-    quote: '80,000 points after you spend $3,000 on purchases in the first 3 months from account opening'
+    quote: 'Earn 60,000 points'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/business-credit-cards/southwest/premier-business
+    quote: 'after you spend $3,000 on purchases in the first 3 months from account opening'
   - rule: base_rate
     url: https://creditcards.chase.com/southwest/premier-business-credit-card
     quote: 'You’ll earn 1 point for each $1 spent on all other purchases'

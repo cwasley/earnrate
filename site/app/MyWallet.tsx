@@ -277,7 +277,7 @@ function offerText(card: NonNullable<ReturnType<typeof cards.get>>): string {
     o.points !== undefined
       ? `${o.points.toLocaleString('en-US')} ${currencyName(catalog, card.currency)}`
       : usd(o.dollars ?? 0)
-  return `Published offer: ${reward} after ${usd(o.spend)} in purchases within ${String(o.months)} month${o.months === 1 ? '' : 's'}.`
+  return `Published offer${o.varies ? ', up to' : ''}: ${reward} after ${usd(o.spend)} in purchases within ${String(o.months)} month${o.months === 1 ? '' : 's'}.`
 }
 
 function bonusLine(wallet: Wallet, held: WalletCard): string | null {

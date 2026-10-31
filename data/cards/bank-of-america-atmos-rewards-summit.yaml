@@ -3,15 +3,15 @@ name: Atmos Rewards Summit Visa Infinite Credit Card
 issuer: bank-of-america
 network: visa
 currency: atmos-points
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-10-31
+verified_by: claude
 source_urls:
   - https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
 base_rate: 1
 annual_fee: 395
 welcome_offer:
-  points: 70000
-  spend: 3000
+  points: 80000
+  spend: 4000
   months: 3
   note: Limited-time online offer, no end date stated; it may not be available elsewhere after leaving the page. The window is 90 days from account opening. The offer also includes a 25,000-point Global Companion Award.
 rules:
@@ -61,10 +61,10 @@ evidence:
     quote: '$395 annual fee and no foreign transaction fees'
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
-    quote: 'Earn 70,000 bonus points and a 25,000-point Global Companion Award after spending $3,000 or more on purchases'
+    quote: 'Earn 80,000 bonus points and a 25,000-point Global Companion Award after spending $4,000 or more on purchases'
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
-    quote: '$3,000 or more on purchases within the first 90 days of opening your account'
+    quote: '$4,000 or more on purchases within the first 90 days of opening your account'
 todo:
   - '3x on "foreign transaction" purchases (anything charged in a foreign currency or processed abroad) is not modeled: rules have no foreign-only geography. It would make this card the pick for most purchases abroad.'
   - 'The 10% rewards bonus rules use a proposed membership id, bank-of-america-account. Bank of America does not say on this page which accounts are "eligible".'
