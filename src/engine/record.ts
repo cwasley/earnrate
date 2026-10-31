@@ -1,6 +1,7 @@
 import type { Catalog } from '../data/load.ts'
 import { resolveMerchant } from '../merchants/resolve.ts'
 import type { Wallet } from '../schema/wallet.ts'
+import { bonusStatus, countsTowardBonus } from './bonus.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
 import type { MerchantResolution, RecordedPurchase } from './types.ts'
 
@@ -83,4 +84,67 @@ export function recordPurchase(
 ): Wallet {
   const booking = capBooking(catalog, wallet, purchase)
   return booking ? applyBooking(wallet, booking) : wallet
+}
+
+export type BonusBooking = {
+  cardId: string
+  before: number // dollars toward the welcome bonus before the purchase
+  after: number
+  spend: number
+  deadline: string | null
+}
+
+// The purchase's progress toward the card's open welcome bonus, if it counts.
+export function bonusBooking(
+  catalog: Catalog,
+  wallet: Wallet,
+  purchase: RecordedPurchase,
+): BonusBooking | null {
+  const held = wallet.cards.find((c) => c.id === purchase.cardId)
+  const status = held ? bonusStatus(catalog, wallet, held, purchase.date) : null
+  if (
+    !status ||
+    status.spend === null ||
+    (status.remaining ?? 0) <= 0 ||
+    !countsTowardBonus(status, purchase.date)
+  )
+    return null
+  return {
+    cardId: purchase.cardId,
+    before: status.spent,
+    after: roundCents(status.spent + purchase.amount),
+    spend: status.spend,
+    deadline: status.deadline,
+  }
+}
+
+export function applyBonusBooking(wallet: Wallet, b: BonusBooking): Wallet {
+  return {
+    ...wallet,
+    cards: wallet.cards.map((c) =>
+      c.id === b.cardId && c.bonus
+        ? { ...c, bonus: { ...c.bonus, spent: b.after } }
+        : c,
+    ),
+  }
+}
+
+export type BookedPurchase = {
+  wallet: Wallet
+  cap: CapBooking | null
+  bonus: BonusBooking | null
+}
+
+// Everything recording a purchase changes: its cap and its welcome bonus.
+export function bookPurchase(
+  catalog: Catalog,
+  wallet: Wallet,
+  purchase: RecordedPurchase,
+  merchant?: MerchantResolution,
+): BookedPurchase {
+  const cap = capBooking(catalog, wallet, purchase, merchant)
+  const bonus = bonusBooking(catalog, wallet, purchase)
+  let next = cap ? applyBooking(wallet, cap) : wallet
+  if (bonus) next = applyBonusBooking(next, bonus)
+  return { wallet: next, cap, bonus }
 }

@@ -390,3 +390,34 @@ describe('wallet operations', () => {
     )
   })
 })
+
+test('a welcome bonus is written into the file and removed again, keeping comments', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'earnrate-bonus-'))
+  const file = path.join(dir, 'wallet.yaml')
+  await writeFile(
+    file,
+    'cards:\n  - id: amex-gold # my favorite\n  - id: chase-prime-visa\n',
+  )
+  const set = await updateCard(
+    file,
+    catalog,
+    { id: 'amex-gold', bonus: { opened: '2026-09-15', spent: 1200 } },
+    TODAY,
+  )
+  expect(set.ok).toBe(true)
+  const text = await readFile(file, 'utf8')
+  expect(text).toContain('# my favorite')
+  expect(text).toContain(
+    'bonus:\n      opened: 2026-09-15\n      spent: 1200\n',
+  )
+  const removed = await updateCard(
+    file,
+    catalog,
+    { id: 'amex-gold', bonus: null },
+    TODAY,
+  )
+  expect(removed.ok).toBe(true)
+  const after = await readFile(file, 'utf8')
+  expect(after).not.toContain('bonus:')
+  expect(after).toContain('# my favorite')
+})

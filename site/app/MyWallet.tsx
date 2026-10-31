@@ -4,8 +4,13 @@ import { walletProblems } from '../../src/data/integrity.ts'
 import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { categoryResolution, findCategory } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
-import { recordPurchase } from '../../src/engine/record.ts'
-import { categoryPhrase, recommend } from '../../src/engine/recommend.ts'
+import { bonusStatus } from '../../src/engine/bonus.ts'
+import { bookPurchase } from '../../src/engine/record.ts'
+import {
+  categoryPhrase,
+  currencyName,
+  recommend,
+} from '../../src/engine/recommend.ts'
 import {
   cardInfo,
   knownMemberships,
@@ -92,7 +97,11 @@ function Answer({
   const held = wallet.cards.find((c) => c.id === decided?.cardId)
   const tracks = wallet.cards.some((h) => {
     const card = cards.get(h.id)
-    return (card?.caps.length ?? 0) > 0 || card?.rules.some((r) => r.cap)
+    return (
+      h.bonus !== undefined ||
+      (card?.caps.length ?? 0) > 0 ||
+      card?.rules.some((r) => r.cap)
+    )
   })
   return (
     <div class="answer">
@@ -214,6 +223,27 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
   )
 }
 
+function offerText(card: NonNullable<ReturnType<typeof cards.get>>): string {
+  const o = card.welcome_offer
+  if (!o) return ''
+  const reward =
+    o.points !== undefined
+      ? `${o.points.toLocaleString('en-US')} ${currencyName(catalog, card.currency)}`
+      : usd(o.dollars ?? 0)
+  return `Published offer: ${reward} after ${usd(o.spend)} in purchases within ${String(o.months)} month${o.months === 1 ? '' : 's'}.`
+}
+
+function bonusLine(wallet: Wallet, held: WalletCard): string | null {
+  const status = bonusStatus(catalog, wallet, held, localToday())
+  if (!status) return null
+  if (status.state === 'met') return 'Welcome bonus: met'
+  if (status.state === 'expired') return 'Welcome bonus: deadline passed'
+  if (status.spend === null) return 'Welcome bonus: tracking'
+  const days =
+    status.daysLeft === null ? '' : ` · ${String(status.daysLeft)} days left`
+  return `Welcome bonus: ${usd(status.spent)} of ${usd(status.spend)}${days}`
+}
+
 function CardEditor({
   wallet,
   held,
@@ -231,7 +261,11 @@ function CardEditor({
   const [activated, setActivated] = useState<string[]>(held.activated)
   const [checkout, setCheckout] = useState(held.checkout_label ?? '')
   const [anniversary, setAnniversary] = useState(held.anniversary ?? '')
-  if (!info) return null
+  const [tracking, setTracking] = useState(held.bonus !== undefined)
+  const [opened, setOpened] = useState(held.bonus?.opened ?? '')
+  const [spent, setSpent] = useState(held.bonus ? String(held.bonus.spent) : '')
+  if (!info || !card) return null
+  const offer = card.welcome_offer
 
   const save = () => {
     const chosen = Object.fromEntries(
@@ -241,6 +275,9 @@ function CardEditor({
     if (Object.keys(chosen).length > 0) input.picks = chosen
     if (checkout.trim() !== '') input.checkoutLabel = checkout
     if (anniversary !== '') input.anniversary = anniversary
+    if (tracking && opened !== '')
+      input.bonus = { opened, spent: Math.max(0, Number(spent) || 0) }
+    else if (!tracking && held.bonus) input.bonus = null
     onChange(updateInWallet(catalog, wallet, input, localToday()), held.id)
   }
 
@@ -302,6 +339,44 @@ function CardEditor({
               {words(rule)}
             </label>
           ))}
+        </fieldset>
+      ) : null}
+      {offer || held.bonus ? (
+        <fieldset>
+          <legend>Welcome bonus</legend>
+          {offer ? <p class="muted small">{offerText(card)}</p> : null}
+          <label class="check">
+            <input
+              type="checkbox"
+              checked={tracking}
+              onChange={(e) => setTracking(e.currentTarget.checked)}
+            />
+            I'm working on this card's welcome bonus
+          </label>
+          {tracking ? (
+            <>
+              <label class="field">
+                Account opened
+                <input
+                  type="date"
+                  value={opened}
+                  max={localToday()}
+                  onInput={(e) => setOpened(e.currentTarget.value)}
+                />
+              </label>
+              <label class="field">
+                Spent toward it so far
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  placeholder="0"
+                  value={spent}
+                  onInput={(e) => setSpent(e.currentTarget.value)}
+                />
+              </label>
+            </>
+          ) : null}
         </fieldset>
       ) : null}
       <label class="field">
@@ -368,6 +443,9 @@ function CardList({
               <span>
                 <strong>{label(held)}</strong>
                 <span class="muted"> · {feeText(held.id)}</span>
+                {bonusLine(wallet, held) ? (
+                  <span class="row-note">{bonusLine(wallet, held)}</span>
+                ) : null}
               </span>
               <span class="muted">
                 {needsPick ? 'Set picks' : open === held.id ? 'Close' : 'Edit'}
@@ -806,17 +884,24 @@ export function MyWallet() {
               wallet={wallet}
               rec={rec}
               onRecord={(cardId, paid) => {
-                replace(
-                  recordPurchase(catalog, wallet, {
+                const booked = bookPurchase(
+                  catalog,
+                  wallet,
+                  {
                     cardId,
                     merchant: asked?.text ?? '',
                     amount: paid,
                     date: localToday(),
                     channel: null,
-                  }),
+                  },
+                  rec.merchant,
                 )
+                replace(booked.wallet)
+                const bonus = booked.bonus
+                  ? ` ${usd(booked.bonus.after)} of ${usd(booked.bonus.spend)} toward its welcome bonus.`
+                  : ''
                 setMessage({
-                  text: `Recorded ${usd(paid)} on ${shortName(cardId)}. Caps update for your next answer.`,
+                  text: `Recorded ${usd(paid)} on ${shortName(cardId)}.${bonus} Caps update for your next answer.`,
                   error: false,
                 })
               }}

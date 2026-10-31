@@ -94,14 +94,20 @@ earnrate ships with a curated list of merchants. For anything else it falls back
 
 ### Welcome bonuses
 
-When you're working toward a card's sign-up bonus, add it to that card in your wallet:
+When you're working toward a card's sign-up bonus, tell earnrate when the account opened:
+
+```sh
+earnrate update chase-sapphire-preferred --bonus-opened 2026-10-01 --bonus-spent 400
+```
+
+Or tell your AI assistant ("I opened my Sapphire Preferred on October 1"), or check "I'm working on this card's welcome bonus" in My wallet on earnrate.dev. `--no-bonus` stops tracking it. In the wallet file it looks like this:
 
 ```yaml
 - id: chase-sapphire-preferred
   bonus: { opened: 2026-10-01, spend: 5000, by: 2026-12-31, points: 75000 }
 ```
 
-While the bonus is open, that card wins wherever it's accepted, and the answer says how much is left, the weekly pace to finish on time, what the bonus is worth at your point values, and what using it costs compared with your best earner. Spend counts up as you record purchases from an AI agent or import a statement with `--apply`; refunds count down. Once it's met or the deadline passes, the card goes back to the normal ranking. With two open bonuses, the one needing more spend per day comes first.
+While the bonus is open, that card wins wherever it's accepted, and the answer says how much is left, the weekly pace to finish on time, what the bonus is worth at your point values, and what using it costs compared with your best earner. Spend counts up as you record purchases (from an AI assistant or the website) or import a statement with `--apply`; refunds count down. Once it's met or the deadline passes, the card goes back to the normal ranking. With two open bonuses, the one needing more spend per day comes first.
 
 `spend`, `by` and the reward (`points`, or `dollars` for cash back) default to the card's published offer once earnrate has one; set them when your offer was different.
 

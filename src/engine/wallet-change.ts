@@ -19,6 +19,14 @@ export type CardInput = {
   picks?: Record<string, string[]> // choice id → option ids
   anniversary?: string // MM-DD
   activated?: string[] // replaces the list
+  // A welcome bonus in progress; null stops tracking it. Spend and deadline
+  // default to the card's published offer.
+  bonus?: {
+    opened: string // YYYY-MM-DD the account opened
+    spent?: number // dollars toward it so far
+    spend?: number // dollars needed, when the offer differs
+    by?: string // YYYY-MM-DD deadline, when the offer differs
+  } | null
 }
 
 export type WalletChange =
@@ -146,6 +154,33 @@ export function cardFields(
       }
     }
   }
+  if (input.bonus === null) fields.bonus = null
+  else if (input.bonus !== undefined) {
+    const b = input.bonus
+    const isDate = (d: string) =>
+      /^\d{4}-\d{2}-\d{2}$/.test(d) &&
+      new Date(`${d}T00:00:00Z`).toISOString().startsWith(d)
+    if (!isDate(b.opened))
+      problems.push(`"${b.opened}" isn't a date. Use YYYY-MM-DD.`)
+    else if (b.opened > today)
+      problems.push("The account's opening date is in the future.")
+    if (b.spent !== undefined && !(b.spent >= 0))
+      problems.push('Spending toward the bonus must be $0 or more.')
+    if (b.spend !== undefined && !(b.spend > 0))
+      problems.push('The spending needed must be more than $0.')
+    if (b.by !== undefined && (!isDate(b.by) || b.by < b.opened))
+      problems.push(`"${b.by}" isn't a deadline after the opening date.`)
+    if (!card.welcome_offer && (b.spend === undefined || b.by === undefined))
+      problems.push(
+        `earnrate has no published welcome offer for ${card.id}, so give the spending needed and the deadline.`,
+      )
+    fields.bonus = {
+      opened: b.opened,
+      spent: b.spent ?? held?.bonus?.spent ?? 0,
+      ...(b.spend === undefined ? {} : { spend: b.spend }),
+      ...(b.by === undefined ? {} : { by: b.by }),
+    }
+  }
   return problems.length > 0 ? problems.join('\n') : fields
 }
 
@@ -155,14 +190,19 @@ export const newHolding = (id: string): WalletCard => ({
   activated: [],
 })
 
-export const withFields = (held: WalletCard, f: CardFields): WalletCard => ({
+export const withFields = (
+  { bonus, ...held }: WalletCard,
+  f: CardFields,
+): WalletCard => ({
   ...held,
+  ...(bonus && f.bonus === undefined ? { bonus } : {}),
   ...(f.checkout_label === undefined
     ? {}
     : { checkout_label: f.checkout_label }),
   ...(f.anniversary === undefined ? {} : { anniversary: f.anniversary }),
   ...(f.chosen === undefined ? {} : { chosen: f.chosen }),
   ...(f.activated === undefined ? {} : { activated: f.activated }),
+  ...(f.bonus ? { bonus: f.bonus } : {}),
 })
 
 // `wallet` is null when there isn't one yet; adding a card starts it.

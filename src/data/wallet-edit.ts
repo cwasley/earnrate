@@ -4,11 +4,19 @@ import { isDeepStrictEqual } from 'node:util'
 import { isMap, isSeq, parseDocument, stringify, type Node } from 'yaml'
 import { WalletSchema, type Wallet } from '../schema/wallet.ts'
 
+export type BonusFields = {
+  opened: string
+  spent: number
+  spend?: number
+  by?: string
+}
+
 export type CardFields = {
   checkout_label?: string
   anniversary?: string
   chosen?: { period: string; picks: Record<string, string[]> }
   activated?: string[]
+  bonus?: BonusFields | null // null removes it
 }
 
 export type CardEntry = CardFields & { id: string }
@@ -57,6 +65,17 @@ function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
       return f.activated === undefined
         ? ''
         : `${indent}activated: ${flowList(f.activated)}\n`
+    case 'bonus': {
+      if (!f.bonus) return ''
+      const b = f.bonus
+      return [
+        `${indent}bonus:\n`,
+        `${indent}  opened: ${scalar(b.opened)}\n`,
+        `${indent}  spent: ${String(b.spent)}\n`,
+        b.spend === undefined ? '' : `${indent}  spend: ${String(b.spend)}\n`,
+        b.by === undefined ? '' : `${indent}  by: ${scalar(b.by)}\n`,
+      ].join('')
+    }
     case 'chosen': {
       if (f.chosen === undefined) return ''
       const picks = Object.entries(f.chosen.picks)
@@ -67,7 +86,13 @@ function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
   }
 }
 
-const FIELDS = ['checkout_label', 'anniversary', 'chosen', 'activated'] as const
+const FIELDS = [
+  'checkout_label',
+  'anniversary',
+  'chosen',
+  'activated',
+  'bonus',
+] as const
 
 function cardsSeq(text: string) {
   const doc = parseDocument(text)
@@ -133,7 +158,11 @@ export function updateCardText(
     const indent = ' '.repeat(column(out, range(card)[0]))
     const lines = fieldLines(field, fields, indent)
     const pair = card.items.find((p) => keyOf(p) === field)
-    if (pair) {
+    if (pair && lines === '') {
+      const start = lineStart(out, range(pair.key)[0])
+      const end = afterLine(out, range(pair.value)[1] - 1)
+      out = out.slice(0, start) + out.slice(end)
+    } else if (pair) {
       const start = range(pair.key)[0]
       const end = afterLine(out, range(pair.value)[1] - 1)
       out = out.slice(0, start) + lines.trimStart() + out.slice(end)

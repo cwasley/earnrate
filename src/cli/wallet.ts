@@ -22,6 +22,13 @@ const CARD_OPTIONS = `Options:
   --anniversary <MM-DD>      Account anniversary, for caps that reset on it.
   --activated <rules>        Rules you've activated with the issuer, comma
                              separated. Replaces the current list.
+  --bonus-opened <date>      Track a welcome bonus: the day the account opened
+                             (YYYY-MM-DD). Spending needed and the deadline
+                             default to the card's published offer.
+  --bonus-spent <dollars>    Spending toward it so far. Default 0.
+  --bonus-spend <dollars>    The spending needed, if your offer differs.
+  --bonus-by <date>          The deadline, if your offer differs.
+  --no-bonus                 Stop tracking the welcome bonus.
   -h, --help                 Show this help.`
 
 export const WALLET_HELP = {
@@ -130,6 +137,11 @@ export async function runWalletCommand(
         pick: { type: 'string', multiple: true },
         anniversary: { type: 'string' },
         activated: { type: 'string' },
+        'bonus-opened': { type: 'string' },
+        'bonus-spent': { type: 'string' },
+        'bonus-spend': { type: 'string' },
+        'bonus-by': { type: 'string' },
+        'no-bonus': { type: 'boolean' },
         none: { type: 'boolean' },
         help: { type: 'boolean', short: 'h' },
       },
@@ -229,6 +241,31 @@ export async function runWalletCommand(
     const picks = parsePicks(values.pick)
     if (typeof picks === 'string') return usage(picks)
     input.picks = picks
+  }
+  const dollarsFlag = (flag: string, text: string | undefined) => {
+    if (text === undefined) return undefined
+    const n = Number(text.replace(/[$,]/g, ''))
+    return Number.isFinite(n) ? n : `--${flag} takes dollars, like 1200.`
+  }
+  if (values['no-bonus']) {
+    input.bonus = null
+  } else if (values['bonus-opened'] !== undefined) {
+    const spent = dollarsFlag('bonus-spent', values['bonus-spent'])
+    const spend = dollarsFlag('bonus-spend', values['bonus-spend'])
+    if (typeof spent === 'string') return usage(spent)
+    if (typeof spend === 'string') return usage(spend)
+    input.bonus = {
+      opened: values['bonus-opened'],
+      ...(spent === undefined ? {} : { spent }),
+      ...(spend === undefined ? {} : { spend }),
+      ...(values['bonus-by'] === undefined ? {} : { by: values['bonus-by'] }),
+    }
+  } else if (
+    values['bonus-spent'] !== undefined ||
+    values['bonus-spend'] !== undefined ||
+    values['bonus-by'] !== undefined
+  ) {
+    return usage('Give --bonus-opened with the other --bonus options.')
   }
 
   if (command === 'add') {

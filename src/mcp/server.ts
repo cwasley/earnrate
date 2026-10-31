@@ -25,13 +25,12 @@ import {
   type CardInput,
   type SetupResult,
 } from '../data/wallet-setup.ts'
-import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
 import { catalogCheatSheet, cheatSheet } from '../engine/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../engine/explore.ts'
 import { walletFromCards } from '../engine/transient.ts'
 import { compareOffers } from '../engine/offers.ts'
 import { VALUATION_PROFILES } from '../engine/profiles.ts'
-import { capBooking } from '../engine/record.ts'
+import { bonusBooking, capBooking } from '../engine/record.ts'
 import { recommend } from '../engine/recommend.ts'
 import {
   resolveSpendLines,
@@ -756,23 +755,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           category ?? null,
         )
         const booking = capBooking(catalog, w, purchase, resolved.merchant)
-        const held = w.cards.find((c) => c.id === cardId)
-        const status = held
-          ? bonusStatus(catalog, w, held, purchase.date)
-          : null
-        const bonus =
-          status &&
-          status.spend !== null &&
-          (status.remaining ?? 0) > 0 &&
-          countsTowardBonus(status, purchase.date)
-            ? {
-                cardId,
-                before: status.spent,
-                after: Math.round((status.spent + amount) * 100) / 100,
-                spend: status.spend,
-                deadline: status.deadline,
-              }
-            : null
+        const bonus = bonusBooking(catalog, w, purchase)
         if (!booking && !bonus) {
           const output = {
             recorded: false,
@@ -857,6 +840,30 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       .describe(
         'Rule ids the user has activated with the issuer, such as rotating categories. Replaces the current list.',
       ),
+    bonus: z
+      .object({
+        opened: IsoDate.describe('The day the account opened, YYYY-MM-DD.'),
+        spent: z
+          .number()
+          .nonnegative()
+          .optional()
+          .describe('Dollars already spent toward the bonus. Default 0.'),
+        spend: z
+          .number()
+          .positive()
+          .optional()
+          .describe(
+            "Dollars of spending the bonus needs, only if the user's offer differs from the published one.",
+          ),
+        by: IsoDate.optional().describe(
+          "The deadline, YYYY-MM-DD, only if the user's offer differs from the published one.",
+        ),
+      })
+      .nullable()
+      .optional()
+      .describe(
+        "A welcome bonus the user is working toward, so purchases recorded on this card count toward it and answers can favor it. Ask when they opened the account; spending needed and the deadline default to the card's published offer. null stops tracking it.",
+      ),
   }
 
   // A card change reports what that card still needs; other changes don't.
@@ -886,6 +893,15 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
     picks?: Record<string, string[]> | undefined
     anniversary?: string | undefined
     activated?: string[] | undefined
+    bonus?:
+      | {
+          opened: string
+          spent?: number | undefined
+          spend?: number | undefined
+          by?: string | undefined
+        }
+      | null
+      | undefined
   }): CardInput => ({
     id: args.cardId,
     ...(args.checkoutLabel === undefined
@@ -896,6 +912,23 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       ? {}
       : { anniversary: args.anniversary }),
     ...(args.activated === undefined ? {} : { activated: args.activated }),
+    ...(args.bonus === undefined
+      ? {}
+      : {
+          bonus:
+            args.bonus === null
+              ? null
+              : {
+                  opened: args.bonus.opened,
+                  ...(args.bonus.spent === undefined
+                    ? {}
+                    : { spent: args.bonus.spent }),
+                  ...(args.bonus.spend === undefined
+                    ? {}
+                    : { spend: args.bonus.spend }),
+                  ...(args.bonus.by === undefined ? {} : { by: args.bonus.by }),
+                },
+        }),
   })
 
   const cardName = (id: string) =>
