@@ -9,17 +9,13 @@ import {
   setMembershipsText,
   updateCardText,
 } from '../src/data/wallet-edit.ts'
-import {
-  addCard,
-  removeCard,
-  setMemberships,
-  updateCard,
-  type SetupResult,
-} from '../src/data/wallet-setup.ts'
+import { FileWalletStore } from '../src/data/file-store.ts'
+import type { SetupResult } from '../src/data/store.ts'
 import { searchCards, setupNotes } from '../src/engine/setup.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 
 const catalog = await loadCatalog()
+const store = (file: string) => new FileWalletStore(catalog, file)
 const TODAY = '2026-10-30'
 
 function errorOf(result: SetupResult): string {
@@ -244,7 +240,7 @@ describe('setupNotes', () => {
 describe('wallet operations', () => {
   test('the first card creates the wallet file', async () => {
     const file = path.join(await walletFile(), '..', 'new', 'wallet.yaml')
-    const result = await addCard(file, catalog, { id: 'amex-gold' }, TODAY)
+    const result = await store(file).addCard({ id: 'amex-gold' }, TODAY)
     expect(result).toMatchObject({ ok: true, created: true })
     expect((await loadWallet(file)).cards.map((c) => c.id)).toEqual([
       'amex-gold',
@@ -253,9 +249,7 @@ describe('wallet operations', () => {
 
   test('adds with picks for the current period and reports what is left', async () => {
     const file = await walletFile(COMMENTED)
-    const result = await addCard(
-      file,
-      catalog,
+    const result = await store(file).addCard(
       {
         id: 'usbank-cash-plus',
         picks: { 'five-percent': ['tv-internet-streaming', 'fast-food'] },
@@ -275,18 +269,16 @@ describe('wallet operations', () => {
   test('refuses a card it already has, an unknown card and a bad pick', async () => {
     const file = await walletFile(COMMENTED)
     expect(
-      errorOf(await addCard(file, catalog, { id: 'amex-gold' }, TODAY)),
+      errorOf(await store(file).addCard({ id: 'amex-gold' }, TODAY)),
     ).toMatch(/already in the wallet/)
     expect(
       errorOf(
-        await addCard(file, catalog, { id: 'chase-saphire-reserve' }, TODAY),
+        await store(file).addCard({ id: 'chase-saphire-reserve' }, TODAY),
       ),
     ).toMatch(/chase-sapphire-reserve/)
     expect(
       errorOf(
-        await addCard(
-          file,
-          catalog,
+        await store(file).addCard(
           { id: 'usbank-cash-plus', picks: { 'five-percent': ['groceries'] } },
           TODAY,
         ),
@@ -294,9 +286,7 @@ describe('wallet operations', () => {
     ).toMatch(/'groceries'.*tv-internet-streaming/s)
     expect(
       errorOf(
-        await addCard(
-          file,
-          catalog,
+        await store(file).addCard(
           { id: 'citi-double-cash', checkoutLabel: 'Citi 4111 1111 1111 1112' },
           TODAY,
         ),
@@ -309,9 +299,7 @@ describe('wallet operations', () => {
     const file = await walletFile(
       'cards:\n  - id: usbank-cash-plus\n    chosen:\n      period: 2026-Q4\n      picks:\n        five-percent: [fast-food, movie-theaters]\n',
     )
-    const merged = await updateCard(
-      file,
-      catalog,
+    const merged = await store(file).updateCard(
       { id: 'usbank-cash-plus', picks: { 'two-percent': ['gas-ev-charging'] } },
       TODAY,
     )
@@ -321,9 +309,7 @@ describe('wallet operations', () => {
       'two-percent': ['gas-ev-charging'],
     })
 
-    const nextQuarter = await updateCard(
-      file,
-      catalog,
+    const nextQuarter = await store(file).updateCard(
       { id: 'usbank-cash-plus', picks: { 'five-percent': ['fast-food'] } },
       '2027-01-05',
     )
@@ -336,18 +322,14 @@ describe('wallet operations', () => {
 
   test('activations must be rules that need one', async () => {
     const file = await walletFile('cards:\n  - id: chase-freedom-flex\n')
-    const ok = await updateCard(
-      file,
-      catalog,
+    const ok = await store(file).updateCard(
       { id: 'chase-freedom-flex', activated: ['q4-2026-grocery'] },
       TODAY,
     )
     expect(ok.ok).toBe(true)
     expect(
       errorOf(
-        await updateCard(
-          file,
-          catalog,
+        await store(file).updateCard(
           { id: 'chase-freedom-flex', activated: ['dining'] },
           TODAY,
         ),
@@ -357,19 +339,19 @@ describe('wallet operations', () => {
 
   test('removes a card but never the last one', async () => {
     const file = await walletFile(COMMENTED)
-    const removed = await removeCard(file, catalog, 'amex-gold')
+    const removed = await store(file).removeCard('amex-gold')
     if (!removed.ok) throw new Error(removed.error)
     expect(removed.wallet.cards.map((c) => c.id)).toEqual([
       'chase-sapphire-preferred',
     ])
     expect(
-      errorOf(await removeCard(file, catalog, 'chase-sapphire-preferred')),
+      errorOf(await store(file).removeCard('chase-sapphire-preferred')),
     ).toMatch(/last card/)
   })
 
   test('memberships must be ones a card rule uses', async () => {
     const file = await walletFile(COMMENTED)
-    const set = await setMemberships(file, catalog, [
+    const set = await store(file).setMemberships([
       'amazon-prime',
       'bofa-rewards-premier',
     ])
@@ -378,14 +360,14 @@ describe('wallet operations', () => {
       'amazon-prime',
       'bofa-rewards-premier',
     ])
-    expect(errorOf(await setMemberships(file, catalog, ['costco']))).toMatch(
+    expect(errorOf(await store(file).setMemberships(['costco']))).toMatch(
       /'costco'.*amazon-prime/s,
     )
   })
 
   test('without a wallet, only adding works', async () => {
     const file = path.join(await walletFile(), '..', 'none.yaml')
-    expect(errorOf(await removeCard(file, catalog, 'amex-gold'))).toMatch(
+    expect(errorOf(await store(file).removeCard('amex-gold'))).toMatch(
       /No wallet/,
     )
   })
@@ -398,9 +380,7 @@ test('a welcome bonus is written into the file and removed again, keeping commen
     file,
     'cards:\n  - id: amex-gold # my favorite\n  - id: chase-prime-visa\n',
   )
-  const set = await updateCard(
-    file,
-    catalog,
+  const set = await store(file).updateCard(
     { id: 'amex-gold', bonus: { opened: '2026-09-15', spent: 1200 } },
     TODAY,
   )
@@ -410,9 +390,7 @@ test('a welcome bonus is written into the file and removed again, keeping commen
   expect(text).toContain(
     'bonus:\n      opened: 2026-09-15\n      spent: 1200\n',
   )
-  const removed = await updateCard(
-    file,
-    catalog,
+  const removed = await store(file).updateCard(
     { id: 'amex-gold', bonus: null },
     TODAY,
   )

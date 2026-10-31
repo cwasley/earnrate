@@ -117,7 +117,10 @@ export function bonusBooking(
   }
 }
 
-export function applyBonusBooking(wallet: Wallet, b: BonusBooking): Wallet {
+export function applyBonusBooking(
+  wallet: Wallet,
+  b: Pick<BonusBooking, 'cardId' | 'after'>,
+): Wallet {
   return {
     ...wallet,
     cards: wallet.cards.map((c) =>

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { loadCatalog, type Catalog } from '../src/data/load.ts'
-import { writeBonusSpent } from '../src/data/wallet-write.ts'
+import { writeProgress } from '../src/data/wallet-edit.ts'
 import { addMonths, bonusStatus } from '../src/engine/bonus.ts'
 import { recommend } from '../src/engine/recommend.ts'
 import { CardSchema } from '../src/schema/card.ts'
@@ -192,12 +192,12 @@ describe('recommendations', () => {
   })
 })
 
-describe('writeBonusSpent', () => {
+describe('writing welcome-bonus progress', () => {
   async function write(yaml: string, spent = 1250.5): Promise<string> {
     const dir = await mkdtemp(path.join(tmpdir(), 'earnrate-bonus-'))
     const file = path.join(dir, 'wallet.yaml')
     await writeFile(file, yaml)
-    await writeBonusSpent(file, 'amex-gold', spent)
+    await writeProgress(file, [], [{ cardId: 'amex-gold', after: spent }])
     return readFile(file, 'utf8')
   }
 

@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { CLI_NAME } from '../brand.ts'
 import { walletProblems } from '../data/integrity.ts'
 import { loadCatalog, walletPath, type Catalog } from '../data/load.ts'
-import { writeBonusSpent, writeCapBooking } from '../data/wallet-write.ts'
+import { writeProgress } from '../data/wallet-edit.ts'
 import { isValuationProfile, withValuationProfile } from '../engine/profiles.ts'
 import { cardValuation } from '../engine/valuation.ts'
 import {
@@ -333,12 +333,11 @@ export async function runImport(argv: string[], io: Io): Promise<number> {
     )
     return 0
   }
-  for (const { booking } of analysis.bookings) {
-    await writeCapBooking(walletFile, booking)
-  }
-  for (const b of analysis.bonuses) {
-    await writeBonusSpent(walletFile, b.cardId, b.after)
-  }
+  await writeProgress(
+    walletFile,
+    analysis.bookings.map((e) => e.booking),
+    analysis.bonuses,
+  )
   for (const entry of analysis.bookings) recorded.add(fingerprint(entry))
   for (const entry of bonusEntries) recorded.add(fingerprint(entry, 'bonus'))
   await mkdir(path.dirname(ledgerFile), { recursive: true })

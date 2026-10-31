@@ -1,14 +1,9 @@
 import { parseArgs } from 'node:util'
 import { CLI_NAME } from '../brand.ts'
 import { loadCatalog, loadWallet, walletPath } from '../data/load.ts'
-import {
-  addCard,
-  removeCard,
-  setMemberships,
-  updateCard,
-  type CardInput,
-  type SetupResult,
-} from '../data/wallet-setup.ts'
+import { FileWalletStore } from '../data/file-store.ts'
+import type { SetupResult } from '../data/store.ts'
+import type { CardInput } from '../engine/wallet-change.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { formatCardInfo, formatNotes } from '../format/cards.ts'
@@ -176,6 +171,7 @@ export async function runWalletCommand(
   const catalog = await loadCatalog()
   const file = walletPath(io.env)
   const where = displayPath(file)
+  const store = new FileWalletStore(catalog, file)
 
   if (command === 'cards') {
     const query = positionals.join(' ')
@@ -204,7 +200,7 @@ export async function runWalletCommand(
     }
     const list = values.none ? [] : positionals
     return report(
-      await setMemberships(file, catalog, list),
+      await store.setMemberships(list),
       list.length > 0
         ? `Memberships set to ${list.join(', ')} in ${where}.`
         : `Memberships cleared in ${where}.`,
@@ -221,7 +217,7 @@ export async function runWalletCommand(
 
   if (command === 'remove') {
     return report(
-      await removeCard(file, catalog, id),
+      await store.removeCard(id),
       `Removed ${name} from ${where}.`,
       null,
       io,
@@ -269,7 +265,7 @@ export async function runWalletCommand(
   }
 
   if (command === 'add') {
-    const result = await addCard(file, catalog, input, io.today)
+    const result = await store.addCard(input, io.today)
     return report(
       result,
       `Added ${name} to ${where}${result.ok && result.created ? ' (a new wallet)' : ''}.`,
@@ -278,7 +274,7 @@ export async function runWalletCommand(
     )
   }
   return report(
-    await updateCard(file, catalog, input, io.today),
+    await store.updateCard(input, io.today),
     `Updated ${name} in ${where}.`,
     id,
     io,

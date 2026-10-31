@@ -2,6 +2,12 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { isDeepStrictEqual } from 'node:util'
 import { isMap, isSeq, parseDocument, stringify, type Node } from 'yaml'
+import {
+  applyBonusBooking,
+  applyBooking,
+  type BonusBooking,
+  type CapBooking,
+} from '../engine/record.ts'
 import { WalletSchema, type Wallet } from '../schema/wallet.ts'
 
 export type BonusFields = {
@@ -194,6 +200,87 @@ export function setMembershipsText(
   return insertLines(text, lineStart(text, range(cards?.key)[0]), line)
 }
 
+function flowUsage(booking: CapBooking): string {
+  const period = /^\d+$/.test(booking.period)
+    ? `"${booking.period}"`
+    : booking.period
+  return `{ period: ${period}, spent: ${String(booking.after)} }`
+}
+
+export function capUsageText(text: string, booking: CapBooking): string {
+  const card = findCard(text, booking.cardId)
+  const value = flowUsage(booking)
+  const usage = card.get('cap_usage', true)
+  if (isMap(usage) && !usage.flow && usage.items.length > 0) {
+    const existing = usage.items.find((p) => keyOf(p) === booking.capKey)
+    if (existing) {
+      const [start, end] = range(existing.value)
+      return text.slice(0, start) + value + text.slice(end)
+    }
+    const indent = ' '.repeat(column(text, range(usage.items[0]?.key)[0]))
+    const at = afterLine(text, range(usage)[1] - 1)
+    return insertLines(text, at, `${indent}${booking.capKey}: ${value}\n`)
+  }
+  if (usage !== undefined)
+    throw new Error(
+      `card '${booking.cardId}' has a cap_usage that isn't a block map; ${BY_HAND}`,
+    )
+  const indent = ' '.repeat(column(text, range(card.items[0]?.key)[0]))
+  const at = afterLine(text, range(card)[1] - 1)
+  return insertLines(
+    text,
+    at,
+    `${indent}cap_usage:\n${indent}  ${booking.capKey}: ${value}\n`,
+  )
+}
+
+export function bonusSpentText(
+  text: string,
+  cardId: string,
+  spent: number,
+): string {
+  const bonus = findCard(text, cardId).get('bonus', true)
+  if (!isMap(bonus)) throw new Error(`card '${cardId}' has no bonus`)
+  const value = String(spent)
+  const existing = bonus.items.find((p) => keyOf(p) === 'spent')
+  if (existing) {
+    const [start, end] = range(existing.value)
+    return text.slice(0, start) + value + text.slice(end)
+  }
+  if (bonus.flow) {
+    const close = text.lastIndexOf('}', range(bonus)[1])
+    return `${text.slice(0, close).trimEnd()}, spent: ${value} ${text.slice(close)}`
+  }
+  const indent = ' '.repeat(column(text, range(bonus.items[0]?.key)[0]))
+  const at = afterLine(text, range(bonus)[1] - 1)
+  return insertLines(text, at, `${indent}spent: ${value}\n`)
+}
+
+// Writes spending toward caps and welcome bonuses in one checked write.
+export async function writeProgress(
+  file: string,
+  caps: CapBooking[],
+  bonuses: Pick<BonusBooking, 'cardId' | 'after'>[],
+): Promise<void> {
+  const { text, wallet } = await readWalletText(file)
+  if (text === null || wallet === null) throw new Error(`No wallet at ${file}.`)
+  let after = text
+  let expected = wallet
+  for (const b of caps) {
+    after = capUsageText(after, b)
+    expected = applyBooking(expected, b)
+  }
+  for (const b of bonuses) {
+    after = bonusSpentText(after, b.cardId, b.after)
+    expected = applyBonusBooking(expected, b)
+  }
+  const byHand = [
+    ...caps.map((b) => `${b.cardId} cap_usage ${b.capKey}: ${flowUsage(b)}`),
+    ...bonuses.map((b) => `${b.cardId} bonus spent: ${String(b.after)}`),
+  ].join('; ')
+  await commitWalletText(file, after, expected, `add it by hand: ${byHand}`)
+}
+
 async function readText(file: string): Promise<string | null> {
   try {
     return await readFile(file, 'utf8')
@@ -220,10 +307,11 @@ export async function commitWalletText(
   file: string,
   after: string,
   expected: Wallet,
+  fallback = BY_HAND,
 ): Promise<void> {
   const parsed = WalletSchema.safeParse(parseDocument(after).toJS())
   if (!parsed.success || !isDeepStrictEqual(parsed.data, expected)) {
-    throw new Error(`couldn't update ${file} safely; ${BY_HAND}`)
+    throw new Error(`couldn't update ${file} safely; ${fallback}`)
   }
   await mkdir(path.dirname(file), { recursive: true })
   const tmp = `${file}.${String(process.pid)}.tmp`

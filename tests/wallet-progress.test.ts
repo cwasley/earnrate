@@ -2,7 +2,7 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { expect, test } from 'vitest'
-import { writeCapBooking } from '../src/data/wallet-write.ts'
+import { writeProgress } from '../src/data/wallet-edit.ts'
 import type { CapBooking } from '../src/engine/record.ts'
 
 const booking: CapBooking = {
@@ -19,7 +19,7 @@ async function write(yaml: string): Promise<string> {
   const dir = await mkdtemp(path.join(tmpdir(), 'earnrate-write-'))
   const file = path.join(dir, 'wallet.yaml')
   await writeFile(file, yaml)
-  await writeCapBooking(file, booking)
+  await writeProgress(file, [booking], [])
   return readFile(file, 'utf8')
 }
 
@@ -44,5 +44,5 @@ test('keeps a comment line that follows the card', async () => {
 test('refuses a cap_usage written inline, rather than reformatting it', async () => {
   await expect(
     write('cards:\n  - id: amex-blue-cash-preferred\n    cap_usage: {}\n'),
-  ).rejects.toThrow(/edit it by hand/)
+  ).rejects.toThrow(/by hand/)
 })
