@@ -66,7 +66,7 @@ rules:
     requires: { activation: true }
     valid_from: 2026-10-01
     valid_to: 2026-12-31
-    note: Dining already earns 3%, so this adds 2% until the $1,500 quarterly cap.
+    note: Chase says activated categories earn 5% total (4% on top of the 1% base) and doesn't say whether that stacks with the 3% dining rate, so earnrate shows 5%, not 7%, until the $1,500 quarterly cap.
   - id: q4-2026-american-red-cross
     match: { merchants: [american-red-cross] }
     rate: 5
@@ -120,6 +120,9 @@ evidence:
   - rule: q4-2026-dining
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'Dining American Red Cross'
+  - rule: q4-2026-dining
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: '5% Cash Back rewards total for each $1 spent until $1,500 is spent'
   - rule: q4-2026-american-red-cross
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'American Red Cross'
@@ -144,4 +147,5 @@ evidence:
 todo:
   - "Chase's offer-details overlays for the Q4 2026 and Q1 2027 categories (exact grocery exclusions, what counts for American Red Cross) didn't render in the page dump; rules follow the calendar labels and the rewards-category FAQ."
   - 'q4-2026-american-red-cross: what counts (presumably donations) is unconfirmed.'
+  - 'q4-2026-dining: whether the 4% additional stacks on the 3% dining rate (7% total) is unstated; showing 5% until Chase says.'
   - 'Q2 2027 (Apr-Jun) shows "Coming Soon"; add it after Chase posts it (activation opens March 15, 2027).'
