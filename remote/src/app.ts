@@ -114,10 +114,12 @@ export function makeWorker<E extends Env>(
 
     const grant = await auth.validate(env, token)
     if (!grant) return challenge(true)
-    const store = new VaultWalletStore(
-      vaultFor(env, grant.walletId),
-      grant.walletKey,
-      () => auth.signOutEverywhere(env, grant.walletId),
+    // Revoking grants goes through KV, which can lag; the wallet's own
+    // storage is consistent, so a deleted wallet signs its apps out here.
+    const vault = vaultFor(env, grant.walletId)
+    if (!(await vault.exists())) return challenge(true)
+    const store = new VaultWalletStore(vault, grant.walletKey, () =>
+      auth.signOutEverywhere(env, grant.walletId),
     )
     return handler.fetch(request, {
       authInfo: { token, clientId: '', scopes: [SCOPE], extra: { store } },

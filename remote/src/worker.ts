@@ -21,6 +21,9 @@ export class WalletObject extends DurableObject<Env> {
   create(walletId: string, wrappedKey: string) {
     return this.vault.create(walletId, wrappedKey)
   }
+  exists() {
+    return this.vault.exists()
+  }
   wrappedKey() {
     return this.vault.wrappedKey()
   }

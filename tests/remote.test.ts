@@ -433,6 +433,22 @@ describe('anonymous saved wallets', () => {
     expect(after.status).toBe(401)
   })
 
+  test('a token for a deleted wallet is refused even if revoking it failed', async () => {
+    const d = deployment()
+    const { token } = await startWallet(d)
+    const [storage] = [...d.storages.values()]
+    await storage?.deleteAll()
+    const res = await d.fetch('/mcp', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${token}`,
+      },
+      body: callTool('best_card_for_purchase', { merchant: 'Costco' }),
+    })
+    expect(res.status).toBe(401)
+  })
+
   test('cancel goes back to the app with access_denied', async () => {
     const d = deployment()
     await expect(

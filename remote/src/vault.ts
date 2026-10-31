@@ -117,6 +117,10 @@ export class WalletVault {
     })
   }
 
+  async exists(): Promise<boolean> {
+    return (await this.storage.get<Meta>('meta')) !== undefined
+  }
+
   async wrappedKey(): Promise<string | null> {
     return (await this.storage.get<Meta>('meta'))?.wrappedKey ?? null
   }
@@ -185,6 +189,7 @@ const failed = () => ({ ok: false as const, error: DELETED })
 export type VaultApi = Pick<
   WalletVault,
   | 'create'
+  | 'exists'
   | 'wrappedKey'
   | 'load'
   | 'addCard'
