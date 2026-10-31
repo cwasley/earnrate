@@ -2,7 +2,13 @@ import { useEffect, useState } from 'preact/hooks'
 import { dataVersion } from 'virtual:catalog'
 import { BestFor, SUGGESTIONS } from './BestFor.tsx'
 import { issuerName, issuers, MEMBERSHIPS } from './format.ts'
-import { DEFAULT_SETTINGS, load, save, type Settings } from './settings.ts'
+import {
+  DEFAULT_SETTINGS,
+  load,
+  loadWallet,
+  save,
+  type Settings,
+} from './settings.ts'
 import { MyWallet } from './MyWallet.tsx'
 import { Spending } from './Spending.tsx'
 
@@ -12,8 +18,13 @@ type Tab = 'best' | 'spending' | 'wallet'
 function readHash(): { tab: Tab; query: string } {
   const hash = new URLSearchParams(location.hash.slice(1))
   if (hash.has('spending')) return { tab: 'spending', query: '' }
-  if (hash.has('wallet'))
-    return { tab: 'wallet', query: hash.get('wallet') ?? '' }
+  if (hash.has('wallet')) {
+    // A store sent here from a search page: with no saved cards, the
+    // all-cards ranking answers it instead.
+    const query = hash.get('wallet') ?? ''
+    const saved = (loadWallet()?.cards.length ?? 0) > 0
+    return { tab: saved || query === '' ? 'wallet' : 'best', query }
+  }
   return { tab: 'best', query: hash.get('best') ?? '' }
 }
 
