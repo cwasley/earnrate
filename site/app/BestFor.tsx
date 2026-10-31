@@ -213,7 +213,7 @@ export function BestFor({
 
       <div aria-live="polite">
         {result ? (
-          <section class="results">
+          <section class="results" key={query}>
             <h3>
               Best cards for {title(result)}
               {result.merchant.source !== 'category' &&

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { walletProblems } from '../../src/data/integrity.ts'
 import { bonusStatus } from '../../src/engine/bonus.ts'
-import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
+import { cheatSheet, type CheatSheet } from '../../src/engine/cheat-sheet.ts'
 import {
   ALL_PERSONAL_CARDS,
   categoryResolution,
@@ -35,6 +35,7 @@ import {
 } from '../../src/engine/wallet-change.ts'
 import { resolveMerchant } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
+import { cheatSheetImage } from './sheet-image.ts'
 import { lineFor, type Row } from './Spending.tsx'
 import {
   cards,
@@ -236,8 +237,36 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
           })}
         </tbody>
       </table>
+      <div class="row-buttons">
+        <button
+          type="button"
+          onClick={() => {
+            void saveSheet(sheet, wallet)
+          }}
+        >
+          Save as image
+        </button>
+      </div>
     </>
   )
+}
+
+async function saveSheet(sheet: CheatSheet, wallet: Wallet) {
+  const blob = await cheatSheetImage(
+    sheet,
+    (id) => {
+      const held = wallet.cards.find((c) => c.id === id)
+      return held ? label(held) : shortName(id)
+    },
+    pct,
+  )
+  if (!blob) return
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `earnrate-cheat-sheet-${sheet.quarter.toLowerCase().replace(/\s+/g, '-')}.png`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 function offerText(card: NonNullable<ReturnType<typeof cards.get>>): string {
@@ -442,54 +471,60 @@ function CardList({
 }) {
   const [open, setOpen] = useState<string | null>(null)
   const today = localToday()
+  const untracked = wallet.cards.some(
+    (h) => h.bonus === undefined && cards.get(h.id)?.welcome_offer,
+  )
   return (
-    <ul class="held">
-      {wallet.cards.map((held) => {
-        const card = cards.get(held.id)
-        const info = card ? cardInfo(card, wallet, today) : null
-        const needsPick = info?.choices.some(
-          (c) => c.default === null && !held.chosen?.picks[c.id],
-        )
-        const note =
-          bonusLine(wallet, held) ??
-          (held.bonus === undefined && card?.welcome_offer
-            ? 'New card? Track its welcome bonus'
-            : null)
-        return (
-          <li key={held.id}>
-            <button
-              type="button"
-              class="held-row"
-              aria-expanded={open === held.id}
-              onClick={() => setOpen(open === held.id ? null : held.id)}
-            >
-              <span>
-                <strong>{label(held)}</strong>
-                <span class="muted"> · {feeLabel(held.id)}</span>
-                {note ? <span class="row-note">{note}</span> : null}
-              </span>
-              <span class="muted">
-                {needsPick
-                  ? 'Set picks'
-                  : open === held.id
-                    ? 'Close'
-                    : 'Settings'}
-              </span>
-            </button>
-            {open === held.id ? (
-              <CardEditor
-                wallet={wallet}
-                held={held}
-                onChange={(change, id) => {
-                  if (change.ok) setOpen(null)
-                  onChange(change, id)
-                }}
-              />
-            ) : null}
-          </li>
-        )
-      })}
-    </ul>
+    <>
+      <ul class="held">
+        {wallet.cards.map((held) => {
+          const card = cards.get(held.id)
+          const info = card ? cardInfo(card, wallet, today) : null
+          const needsPick = info?.choices.some(
+            (c) => c.default === null && !held.chosen?.picks[c.id],
+          )
+          const note = bonusLine(wallet, held)
+          return (
+            <li key={held.id}>
+              <button
+                type="button"
+                class="held-row"
+                aria-expanded={open === held.id}
+                onClick={() => setOpen(open === held.id ? null : held.id)}
+              >
+                <span>
+                  <strong>{label(held)}</strong>
+                  <span class="muted"> · {feeLabel(held.id)}</span>
+                  {note ? <span class="row-note">{note}</span> : null}
+                </span>
+                <span class="muted">
+                  {needsPick
+                    ? 'Set picks'
+                    : open === held.id
+                      ? 'Close'
+                      : 'Settings'}
+                </span>
+              </button>
+              {open === held.id ? (
+                <CardEditor
+                  wallet={wallet}
+                  held={held}
+                  onChange={(change, id) => {
+                    if (change.ok) setOpen(null)
+                    onChange(change, id)
+                  }}
+                />
+              ) : null}
+            </li>
+          )
+        })}
+      </ul>
+      {untracked ? (
+        <p class="muted small">
+          Opened one of these recently? Its Settings track the welcome bonus.
+        </p>
+      ) : null}
+    </>
   )
 }
 
@@ -869,7 +904,10 @@ export function MyWallet({ initialQuery }: { initialQuery: string }) {
       </div>
       <div aria-live="polite">
         {rec ? (
-          <section class="results">
+          <section
+            class="results"
+            key={`${asked?.text ?? ''} ${String(asked?.amount ?? '')}`}
+          >
             <h3>
               {rec.merchant.source === 'category'
                 ? `For ${categoryPhrase(catalog, rec.merchant.category)}`
