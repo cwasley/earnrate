@@ -90,10 +90,28 @@ export type ExploreEntry = RankedCard & {
   annualFee: number | null
   firstYearFee: number | null
   picks: Picks
-  conditions: string[] // what earning this rate takes: a pick, activation, a cap
+  requirements: Requirements
+  conditions: string[] // the requirements in words
   evidence: { quote: string; url: string } | null
   // Higher returns with a membership this card's rules ask for, best first.
   withMembership: { membership: string; effectiveReturnPct: number }[]
+}
+
+// What earning the ranked rate takes.
+export type Requirements = {
+  pick: {
+    choice: string
+    options: string[]
+    period: Card['choices'][number]['period']
+  } | null
+  activation: string | null // the rule id to activate
+  membership: string | null
+  cap: {
+    amount: number
+    period: string
+    thenRate: number
+    currency: string
+  } | null
 }
 
 export type Exploration = {
@@ -219,14 +237,14 @@ function bestPicksForPurchase(
   return picks
 }
 
-function conditionsFor(
+function requirementsFor(
   catalog: Catalog,
   card: Card,
   held: WalletCard,
   wallet: Wallet,
   merchant: MerchantResolution,
   purchase: Purchase,
-): string[] {
+): Requirements {
   const ctx = purchaseContext(
     catalog,
     wallet,
@@ -236,28 +254,44 @@ function conditionsFor(
   )
   const { best } = evaluateCard(card, held, ctx)
   const rule = best.rule
-  if (!rule) return []
-  const conditions: string[] = []
+  const none = { pick: null, activation: null, membership: null, cap: null }
+  if (!rule) return none
   const choiceId = rule.match.choice
   const choice = card.choices.find((c) => c.id === choiceId)
   const picked =
     choiceId === undefined ? undefined : held.chosen?.picks[choiceId]
-  if (choice && picked) {
+  const cap = best.cap?.cap
+  return {
+    pick:
+      choice && picked
+        ? { choice: choice.id, options: picked, period: choice.period }
+        : null,
+    activation: rule.requires?.activation === true ? rule.id : null,
+    membership: rule.requires?.membership ?? null,
+    cap: cap
+      ? {
+          amount: cap.amount,
+          period: cap.period,
+          thenRate: cap.then_rate,
+          currency: cardValuation(catalog, wallet, card).currency,
+        }
+      : null,
+  }
+}
+
+function conditionsText(catalog: Catalog, r: Requirements): string[] {
+  const conditions: string[] = []
+  if (r.pick) {
     conditions.push(
-      `Needs "${picked.join('", "')}" as its ${choice.id} pick (${PICK_PERIODS[choice.period]}).`,
+      `Needs "${r.pick.options.join('", "')}" as its ${r.pick.choice} pick (${PICK_PERIODS[r.pick.period]}).`,
     )
   }
-  if (rule.requires?.activation === true) {
-    conditions.push(`Needs activating with the issuer ("${rule.id}").`)
-  }
-  if (rule.requires?.membership !== undefined) {
-    conditions.push(`Needs ${rule.requires.membership}.`)
-  }
-  const cap = best.cap?.cap
-  if (cap) {
-    const currency = cardValuation(catalog, wallet, card).currency
+  if (r.activation !== null)
+    conditions.push(`Needs activating with the issuer ("${r.activation}").`)
+  if (r.membership !== null) conditions.push(`Needs ${r.membership}.`)
+  if (r.cap) {
     conditions.push(
-      `Up to ${dollars(cap.amount)} ${CAP_PERIODS[cap.period] ?? ''} at this rate, then ${earnText(catalog, cap.then_rate, currency)}.`,
+      `Up to ${dollars(r.cap.amount)} ${CAP_PERIODS[r.cap.period] ?? ''} at this rate, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}.`,
     )
   }
   return conditions
@@ -343,6 +377,14 @@ export function exploreCards(
       excluded.push(...rec.excluded)
       continue
     }
+    const requirements = requirementsFor(
+      catalog,
+      card,
+      held,
+      wallet,
+      merchant,
+      purchase,
+    )
     const gap = rotationGap(card, query.date)
     const evidenceRule = top.matchedRule ?? 'base_rate'
     const evidence = card.evidence.find((e) => e.rule === evidenceRule)
@@ -360,14 +402,8 @@ export function exploreCards(
       annualFee: card.annual_fee ?? null,
       firstYearFee: card.first_year_fee ?? null,
       picks,
-      conditions: conditionsFor(
-        catalog,
-        card,
-        held,
-        wallet,
-        merchant,
-        purchase,
-      ),
+      requirements,
+      conditions: conditionsText(catalog, requirements),
       evidence: evidence ? { quote: evidence.quote, url: evidence.url } : null,
       withMembership: membershipUpgrades(
         catalog,

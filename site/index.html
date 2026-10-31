@@ -6,7 +6,7 @@
     <title>earnrate: which card should I use?</title>
     <meta
       name="description"
-      content="Ask earnrate which card to use before you pay. It checks every card in your wallet, remembers what you've already spent, and tells you which one earns the most."
+      content="Compare every credit card for any store, or find the cards that fit your spending. Free, no sign-up, no affiliate links, and it runs in your browser."
     />
     <meta name="color-scheme" content="light dark" />
     <link rel="canonical" href="https://earnrate.dev/" />
@@ -16,7 +16,7 @@
     <meta property="og:title" content="earnrate: which card should I use?" />
     <meta
       property="og:description"
-      content="Ask before you pay. earnrate checks every card in your wallet and tells you which one earns the most at that store, and why."
+      content="Compare every credit card for any store, or find the cards that fit your spending. Free, no sign-up, no affiliate links."
     />
     <meta property="og:image" content="https://earnrate.dev/og.png" />
     <meta property="og:image:width" content="1200" />
@@ -294,9 +294,18 @@
         </div>
         <h1>Which card should I use?</h1>
         <p class="lede">
-          Ask earnrate before you pay. It checks every card in your wallet and
-          tells you which one earns the most at that store, and why.
+          Compare every card for any store, or find the cards that fit your
+          spending. Free, with no sign-up and no affiliate links. It runs in
+          your browser, so what you type stays on your device.
         </p>
+        <div id="app">
+          <noscript>
+            <p>
+              The card comparison needs JavaScript. The command line version
+              below works without it.
+            </p>
+          </noscript>
+        </div>
       </header>
 
       <section>
@@ -455,23 +464,26 @@
       </section>
 
       <section>
-        <h2>Nothing leaves your laptop</h2>
+        <h2>Nothing leaves your device</h2>
         <p>
-          earnrate runs on your own machine, and your wallet is a file you
-          control. It never asks for card numbers or bank logins, and there's no
-          tracking. The one exception is optional and off by default: for a
-          store it doesn't recognize, it can ask Claude what kind of store it
-          is. Only the store's name is sent. If you ask through an AI assistant,
-          its provider sees that conversation, like anything else you ask it.
-          The <a href="/privacy">privacy page</a> has the details.
+          The comparison above runs in your browser: what you type is never sent
+          anywhere. The command line version runs on your own machine, and your
+          wallet is a file you control. It never asks for card numbers or bank
+          logins, and there's no tracking. The one exception is optional and off
+          by default: for a store it doesn't recognize, it can ask Claude what
+          kind of store it is. Only the store's name is sent. If you ask through
+          an AI assistant, its provider sees that conversation, like anything
+          else you ask it. The <a href="/privacy">privacy page</a> has the
+          details.
         </p>
       </section>
 
       <section>
-        <h2>Get it</h2>
+        <h2>Use it with your own cards</h2>
         <p>
-          Needs Node 22 or later. Install it, add the cards you hold, then ask
-          about a merchant:
+          To ask which of your own cards to use, with caps you've already spent
+          and your quarterly picks, install the command line version. It needs
+          Node 22 or later. Add the cards you hold, then ask about a merchant:
         </p>
         <pre
           class="terminal install"
@@ -502,11 +514,12 @@
           <a href="mailto:licensing@earnrate.dev">licensing@earnrate.dev</a>.
         </p>
         <p>
-          No affiliate links, ever. Rankings depend only on your own cards and
-          settings.
+          No affiliate links, ever. Rankings depend only on the issuers' terms
+          and your own cards and settings.
         </p>
         <p><a href="/privacy">Privacy</a></p>
       </footer>
     </main>
+    <script type="module" src="/app/main.tsx"></script>
   </body>
 </html>

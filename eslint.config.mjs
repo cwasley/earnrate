@@ -4,7 +4,13 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
-  globalIgnores(['node_modules/**', 'coverage/**', 'dist/**', 'private/**']),
+  globalIgnores([
+    'node_modules/**',
+    'coverage/**',
+    'dist/**',
+    'site-dist/**',
+    'private/**',
+  ]),
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   {
@@ -25,6 +31,16 @@ export default defineConfig([
           varsIgnorePattern: '^_',
           ignoreRestSiblings: true,
         },
+      ],
+    },
+  },
+  {
+    // One-line JSX event handlers like onClick={() => setOpen(true)}.
+    files: ['site/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/no-confusing-void-expression': [
+        'error',
+        { ignoreArrowShorthand: true },
       ],
     },
   },

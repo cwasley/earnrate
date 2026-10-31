@@ -262,6 +262,25 @@ export const ExplorationSchema = z.object({
       annualFee: z.number().nullable(),
       firstYearFee: z.number().nullable(),
       picks: Picks,
+      requirements: z.object({
+        pick: z
+          .object({
+            choice: z.string(),
+            options: z.array(z.string()),
+            period: z.string(),
+          })
+          .nullable(),
+        activation: z.string().nullable(),
+        membership: z.string().nullable(),
+        cap: z
+          .object({
+            amount: z.number(),
+            period: z.string(),
+            thenRate: z.number(),
+            currency: z.string(),
+          })
+          .nullable(),
+      }),
       conditions: z.array(z.string()),
       evidence: z.object({ quote: z.string(), url: z.string() }).nullable(),
       withMembership: z.array(

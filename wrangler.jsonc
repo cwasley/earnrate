@@ -1,5 +1,5 @@
-// Serves site/ as static assets on Cloudflare (free). Deploy with
-// `yarn site:deploy`.
+// Serves the built site (site-dist/, from `yarn site:build`) as static
+// assets on Cloudflare (free). Deploy with `yarn site:deploy`.
 {
   "name": "earnrate",
   "compatibility_date": "2026-10-01",
@@ -7,7 +7,7 @@
   "workers_dev": false,
   "preview_urls": false,
   "assets": {
-    "directory": "./site",
+    "directory": "./site-dist",
   },
   "routes": [
     { "pattern": "earnrate.dev", "custom_domain": true },

@@ -21,6 +21,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn validate
       - run: yarn smoke:pack
+      - run: yarn site:build
 
   # The published package runs on older Node than development does; check it
   # installs and runs on the oldest Node users are likely to have.

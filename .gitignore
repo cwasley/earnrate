@@ -26,3 +26,7 @@ coverage
 
 # Maintainer-only files, a separate private repo
 private/
+
+# Built site
+site-dist
+.playwright-mcp
