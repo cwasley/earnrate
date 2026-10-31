@@ -126,7 +126,36 @@ export function pickedCategories(
 
 type Applicability = 'applies' | 'needs-activation' | 'no'
 
+// Activating a rotating quarter (Freedom Flex) turns on all its categories:
+// rules on the same rotating cap with the same dates share one activation.
+export function activationGroup(card: Card, ruleId: string): string[] {
+  const rule = card.rules.find((r) => r.id === ruleId)
+  const cap =
+    typeof rule?.cap === 'string'
+      ? card.caps.find((c) => c.id === rule.cap)
+      : undefined
+  if (!rule || !cap?.rotating) return [ruleId]
+  return card.rules
+    .filter(
+      (r) =>
+        r.requires?.activation === true &&
+        r.cap === rule.cap &&
+        r.valid_from === rule.valid_from &&
+        r.valid_to === rule.valid_to,
+    )
+    .map((r) => r.id)
+}
+
+export function isActivated(
+  card: Card,
+  held: WalletCard,
+  ruleId: string,
+): boolean {
+  return activationGroup(card, ruleId).some((id) => held.activated.includes(id))
+}
+
 function applicability(
+  card: Card,
   rule: Rule,
   ctx: PurchaseContext,
   held: WalletCard,
@@ -178,7 +207,7 @@ function applicability(
   if (rule.valid_to !== undefined && ctx.date > rule.valid_to) return 'no'
   const membership = rule.requires?.membership
   if (membership !== undefined && !ctx.memberships.has(membership)) return 'no'
-  if (rule.requires?.activation && !held.activated.includes(rule.id))
+  if (rule.requires?.activation && !isActivated(card, held, rule.id))
     return 'needs-activation'
   return 'applies'
 }
@@ -258,7 +287,7 @@ export function evaluateCard(
   const blocked: Rule[] = []
 
   for (const rule of card.rules) {
-    const status = applicability(rule, ctx, held, picked)
+    const status = applicability(card, rule, ctx, held, picked)
     if (status === 'no') continue
     if (status === 'needs-activation') {
       blocked.push(rule)

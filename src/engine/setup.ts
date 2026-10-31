@@ -1,7 +1,7 @@
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
-import { pickedCategories } from './evaluate.ts'
+import { isActivated, pickedCategories } from './evaluate.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap } from './rotation.ts'
 
@@ -234,7 +234,7 @@ export function setupNotes(
   }
 
   const toActivate = activationRules(card, today).filter(
-    (id) => !held.activated.includes(id),
+    (id) => !isActivated(card, held, id),
   )
   if (toActivate.length > 0) {
     notes.push({

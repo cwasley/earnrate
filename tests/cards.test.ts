@@ -72,6 +72,21 @@ describe('the 16 popular cards', () => {
     expect(rates('Walmart', activated)['chase-freedom-flex']).toBe(1)
   })
 
+  test("Freedom Flex: one activation covers the quarter's categories, not the next", () => {
+    const activated = wallet({
+      'chase-freedom-flex': { activated: ['q4-2026-grocery'] },
+    })
+    expect(rates('Chipotle')['chase-freedom-flex']).toBe(3)
+    expect(rates('Chipotle', activated)['chase-freedom-flex']).toBe(5)
+    const nextQuarter = recommend(catalog, activated, {
+      ...purchase('Kroger'),
+      date: '2027-01-15',
+    })
+    expect(
+      nextQuarter.ranked.find((r) => r.cardId === 'chase-freedom-flex')?.rate,
+    ).toBe(1)
+  })
+
   test('Ink Business Cash and Preferred', () => {
     expect(rates('Staples')['chase-ink-business-cash']).toBe(5)
     expect(rates('Comcast')['chase-ink-business-cash']).toBe(5)

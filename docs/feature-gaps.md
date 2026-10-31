@@ -78,6 +78,25 @@ Merchant types some cards name that have no earnrate category, so they fall to `
 
 - `bank-of-america-atmos-rewards-business`: $25 a year per card on top of the $70 per-company fee.
 
+### Memberships a card implies
+
+Holding some cards means holding a membership, but the wallet asks for memberships separately, so a rate gated on one stays off until the user adds it.
+
+- `chase-prime-visa`: needs Amazon Prime for its Amazon and Whole Foods rates.
+- `citi-costco-anywhere-visa`, `-business`: need a paid Costco membership.
+
+### Credits that offset the annual fee
+
+Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. It would need a per-card credit value with evidence, kept apart from earn rates (credits as rewards stay out of scope, below).
+
+### Welcome-offer end dates
+
+`welcome_offer` has no end date, so answers can't say when a limited-time offer expires. Add one only from the issuer's own page: the IHG pages say "launch offer" with no date.
+
+### Wallet file version
+
+`wallet.yaml` has no version field, so a future format change can't tell old files from new ones.
+
 ## Not planned
 
 Out of scope per the project's non-goals, or too variable to model as a rate.

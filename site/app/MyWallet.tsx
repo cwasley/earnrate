@@ -8,6 +8,7 @@ import {
   categoryResolution,
   findCategory,
 } from '../../src/engine/explore.ts'
+import { activationGroup } from '../../src/engine/evaluate.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { recommend } from '../../src/engine/recommend.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
@@ -375,11 +376,16 @@ function CardEditor({
             <label class="check" key={rule}>
               <input
                 type="checkbox"
-                checked={activated.includes(rule)}
+                checked={activationGroup(card, rule).some((r) =>
+                  activated.includes(r),
+                )}
                 onChange={(e) => {
                   const checked = e.currentTarget.checked
+                  const group = activationGroup(card, rule)
                   setActivated((prev) =>
-                    checked ? [...prev, rule] : prev.filter((r) => r !== rule),
+                    checked
+                      ? [...prev, rule]
+                      : prev.filter((r) => !group.includes(r)),
                   )
                 }}
               />
