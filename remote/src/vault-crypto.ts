@@ -24,13 +24,12 @@ function fromBase64(text: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(binary, (c) => c.charCodeAt(0))
 }
 
+const grouped = (chars: string) =>
+  (chars.match(new RegExp(`.{1,${String(GROUP)}}`, 'g')) ?? []).join('-')
+
 export function newRecoveryCode(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(CODE_LENGTH))
-  const chars = [...bytes].map((b) => CROCKFORD[b & 31] ?? '')
-  const groups: string[] = []
-  for (let i = 0; i < CODE_LENGTH; i += GROUP)
-    groups.push(chars.slice(i, i + GROUP).join(''))
-  return groups.join('-')
+  return grouped([...bytes].map((b) => CROCKFORD[b & 31] ?? '').join(''))
 }
 
 // Forgiving about case, spaces, dashes and the letters people confuse with
@@ -43,10 +42,7 @@ export function normalizeRecoveryCode(text: string): string | null {
     .replace(/[IL]/g, '1')
   if (chars.length !== CODE_LENGTH) return null
   if (!/^[0-9A-HJKMNP-TV-Z]+$/.test(chars)) return null
-  const groups: string[] = []
-  for (let i = 0; i < CODE_LENGTH; i += GROUP)
-    groups.push(chars.slice(i, i + GROUP))
-  return groups.join('-')
+  return grouped(chars)
 }
 
 type CodeKeys = {

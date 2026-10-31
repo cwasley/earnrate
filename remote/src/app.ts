@@ -17,7 +17,7 @@ import {
   type ExecutionContextLike,
   type VaultFor,
 } from './auth.ts'
-import { errorPage, PAGE_HEADERS } from './pages.ts'
+import { errorPage, html } from './pages.ts'
 import { limitKey, MAX_BODY, readBody } from './requests.ts'
 
 type RateLimit = {
@@ -118,12 +118,12 @@ async function signInStep(
     response = await step()
   } catch {
     response = isPage
-      ? new Response(
+      ? html(
           errorPage(
             "earnrate's sign-in isn't working right now.",
             'Try again in a few minutes. Questions still work without signing in.',
           ),
-          { status: 503, headers: PAGE_HEADERS },
+          503,
         )
       : unavailable()
   }

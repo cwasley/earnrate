@@ -36,13 +36,19 @@ input[type=text] { width: 100%; font: 1.05rem ui-monospace, monospace; padding: 
 #saved:not(:checked) ~ .button { opacity: 0.45; pointer-events: none; }
 `
 
-export const PAGE_HEADERS = {
+const PAGE_HEADERS = {
   'Content-Type': 'text/html; charset=utf-8',
   'Content-Security-Policy':
     "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'",
   'Referrer-Policy': 'no-referrer',
   'X-Content-Type-Options': 'nosniff',
   'Cache-Control': 'no-store, no-transform', // keeps Cloudflare from injecting scripts
+}
+
+export function html(body: string, status = 200, extra?: Headers): Response {
+  const headers = new Headers(extra)
+  for (const [k, v] of Object.entries(PAGE_HEADERS)) headers.set(k, v)
+  return new Response(body, { status, headers })
 }
 
 function page(title: string, body: string): string {

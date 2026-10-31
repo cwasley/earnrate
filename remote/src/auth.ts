@@ -9,8 +9,8 @@ import {
   changedCodePage,
   choosePage,
   errorPage,
+  html,
   newCodePage,
-  PAGE_HEADERS,
 } from './pages.ts'
 import { readBody } from './requests.ts'
 import type { VaultApi } from './vault.ts'
@@ -100,12 +100,6 @@ export function challenge(resource: string, invalidToken = false): Response {
       headers: { 'WWW-Authenticate': `Bearer ${params.join(', ')}` },
     },
   )
-}
-
-function html(body: string, status = 200, extra?: Headers): Response {
-  const headers = new Headers(extra)
-  for (const [k, v] of Object.entries(PAGE_HEADERS)) headers.set(k, v)
-  return new Response(body, { status, headers })
 }
 
 export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
