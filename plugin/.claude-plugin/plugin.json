@@ -2,7 +2,7 @@
   "name": "earnrate",
   "displayName": "earnrate",
   "version": "0.1.4",
-  "description": "Which of your credit cards earns the most at a store, and why. Checks each card against the issuer's own terms, tracks caps you've spent and categories you've picked, and compares every card it knows. Your cards stay on your computer; no card numbers, ever.",
+  "description": "Which credit card earns the most at a store, and why. Checks each card against the issuer's own terms, compares every card it knows, and, if you save your cards, tracks the caps you've spent and categories you've picked. No account, no card numbers, ever.",
   "author": {
     "name": "Collin Wasley",
     "email": "hello@earnrate.dev",

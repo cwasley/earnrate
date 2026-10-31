@@ -188,7 +188,7 @@ There's no wallet to write first: tell the assistant which cards you have, and i
 
 For a merchant earnrate doesn't know, the calling model can pass a `category` (e.g. `grocery.supermarket`). It's used only for unknown merchants and is labeled in the answer. The command line takes the same thing as `--category`.
 
-**Claude Code plugin:** `/plugin install earnrate --marketplace cwasley/earnrate` installs earnrate as a plugin, which also works in Cowork sessions on your computer.
+**Claude Code plugin:** `/plugin install earnrate --marketplace cwasley/earnrate` connects Claude Code and Cowork to the same hosted server as the connector.
 
 **Claude Desktop, one click:** download [earnrate.mcpb](https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb) and open it; Claude Desktop installs it (Settings → Extensions). No terminal or Node install needed. Its one setting is where your wallet file lives, by default `~/.earnrate/wallet.yaml`, the same file the command line uses.
 

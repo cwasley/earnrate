@@ -77,32 +77,19 @@ test('the MCP registry entry and Claude Desktop bundle match package.json', asyn
   expect(bundle.version).toBe(pkg.version)
 })
 
-test('the Claude plugin pins one published earnrate version throughout', async () => {
+test('the Claude plugin and registry entry point at the hosted server', async () => {
   const read = async (file: string) =>
     JSON.parse(await readFile(path.join(ROOT, file), 'utf8')) as Record<
       string,
       unknown
     >
+  const pkg = await read('package.json')
   const plugin = await read('plugin/.claude-plugin/plugin.json')
-  const deps = (await read('plugin/package.json')).dependencies as Record<
-    string,
-    string
-  >
-  const lock = (await read('plugin/package-lock.json')).packages as Record<
-    string,
-    { version?: string; integrity?: string }
-  >
-  expect(deps).toEqual({ earnrate: plugin.version })
-  expect(lock['node_modules/earnrate']?.version).toBe(plugin.version)
-  for (const [key, entry] of Object.entries(lock)) {
-    if (key !== '') expect(entry.integrity, key).toMatch(/^sha512-/)
-  }
-  const servers = (await read('plugin/.mcp.json')).mcpServers as Record<
-    string,
-    { command: string; args: string[] }
-  >
-  expect(servers.earnrate).toEqual({
-    command: 'node',
-    args: ['${CLAUDE_PLUGIN_ROOT}/node_modules/earnrate/dist/mcp/bin.js'],
+  expect(plugin.version).toBe(pkg.version)
+  expect((await read('plugin/.mcp.json')).mcpServers).toEqual({
+    earnrate: { type: 'http', url: 'https://mcp.earnrate.dev' },
   })
+  expect((await read('server.json')).remotes).toEqual([
+    { type: 'streamable-http', url: 'https://mcp.earnrate.dev' },
+  ])
 })

@@ -1,8 +1,8 @@
 # earnrate for Claude
 
-Ask which of your credit cards to use before you pay. earnrate checks every card in your wallet against each issuer's own terms, remembers the caps you've already spent and the bonus categories you've picked, and explains its answer. It can also compare every card it knows for a store or a year of spending, before you've added any of yours.
+Ask which credit card to use before you pay. earnrate checks each card against the issuer's own terms and explains its answer. With nothing set up it compares every card it knows; name your cards and it picks the best of yours; save them and it remembers the caps you've already spent and the bonus categories you've picked.
 
-Your cards stay on your computer. earnrate lists them by product, like `amex-gold`, and never asks for card numbers, expiry dates, security codes or bank logins. There are no affiliate links: rankings depend only on the issuers' terms and your own cards.
+earnrate lists cards by product, like `amex-gold`, and never asks for card numbers, expiry dates, security codes or bank logins. There are no affiliate links: rankings depend only on the issuers' terms and your own cards.
 
 ## Install
 
@@ -14,39 +14,39 @@ In Claude Code:
 
 ## Try it
 
-- "I have an Amex Gold, a Chase Sapphire Preferred and a Prime Visa. Add them to earnrate."
-- "Which card should I use for $80 at Whole Foods?"
-- "Give me my cheat sheet for this quarter."
 - "What's the best card for groceries if I don't want an annual fee?"
+- "I have an Amex Gold, a Chase Sapphire Preferred and a Prime Visa. Which should I use for $80 at Whole Foods?"
+- "Save my cards in earnrate."
+- "Give me my cheat sheet for this quarter."
 - "I spend about $600 a month on groceries, $300 on dining and $1,000 on everything else. Which card would add the most to my wallet?"
 
 Claude asks about anything a card needs, such as this quarter's U.S. Bank Cash+ picks, Amazon Prime for Prime Visa's 5%, or Chase Freedom Flex activations.
 
 ## What the plugin runs
 
-One local MCP server: `node ${CLAUDE_PLUGIN_ROOT}/node_modules/earnrate/dist/mcp/bin.js`, from the [earnrate package on npm](https://www.npmjs.com/package/earnrate) (source: [github.com/cwasley/earnrate](https://github.com/cwasley/earnrate)). Claude Code installs it when you install the plugin, from the included `package-lock.json`, which pins earnrate and each of its dependencies to an exact version with an integrity hash. No install scripts run. It needs Node.js 22 or later. The server talks to Claude over stdio and offers 13 tools:
+Nothing on your computer. It connects Claude to earnrate's hosted MCP server at `https://mcp.earnrate.dev` over HTTPS. The server's code is in [github.com/cwasley/earnrate](https://github.com/cwasley/earnrate) (`remote/`). It offers 16 tools:
 
-- `best_card_for_purchase`, `resolve_merchant`, `list_wallet`, `cheat_sheet`: answers from your wallet.
-- `best_cards_for`, `simulate_spending`, `compare_welcome_offers`: compare every card earnrate knows.
-- `record_purchase`, `search_cards`, `add_card`, `update_card`, `remove_card`, `set_memberships`: change your wallet. Only `remove_card` deletes anything, and only the card you name.
+- `best_card_for_purchase`, `best_cards_for`, `simulate_spending`, `compare_welcome_offers`, `cheat_sheet`, `resolve_merchant`, `search_cards`: answers, from every card or the cards you name. No sign-in.
+- `list_wallet`, `add_card`, `update_card`, `remove_card`, `set_memberships`, `record_purchase`, `export_wallet`, `import_wallet`, `delete_wallet`: a saved wallet, used only if you ask to save your cards. The first one you use opens an earnrate page where you start an anonymous wallet (no email; you keep a recovery code) or reconnect one. `remove_card` deletes only the card you name; `delete_wallet` deletes the whole wallet.
 
 ## What it reads, writes, sends and fetches
 
-- **Reads and writes** one file: your wallet, `~/.earnrate/wallet.yaml` (or the path in `EARNRATE_WALLET`). Edits keep your comments and formatting. The command line version uses the same file.
-- **Sends** nothing. The card data ships inside the package; the server makes no network requests. An optional merchant lookup through Anthropic's API exists in the command line version, but it's off unless you set `EARNRATE_LLM=on` and your own `ANTHROPIC_API_KEY`, and it sends only the name of a store earnrate doesn't recognize.
-- **Fetches** the packages in `package-lock.json` from the npm registry once, when Claude Code installs the plugin.
-
-## Where the install comes from
-
-Only the public npm registry, `registry.npmjs.org`. `package-lock.json` in this folder names every package by its public registry URL, at an exact version with an integrity hash, and the folder has no `.npmrc`. This folder lives inside earnrate's main repository, whose root also has a `package.json` and `yarn.lock`; those belong to earnrate's own development (building and testing the npm package) and play no part in the plugin. People who install the plugin get only this folder.
+- **Reads and writes** nothing on your computer.
+- **Sends** each question Claude asks earnrate to `mcp.earnrate.dev`: the store or kind of purchase, and anything else you gave for it, like an amount, your spending or the cards you named. The server answers without keeping the question; request logging is off.
+- **Stores**, only if you save a wallet: your cards by product id and what you've told earnrate about them (picks, activations, memberships, cap and bonus totals), encrypted with a key only your recovery code or your connected apps can unlock. It's deleted when you ask, or after 13 months unused.
+- **Fetches** nothing else.
 
 ## Privacy Policy
 
-earnrate collects nothing: no account, no server, no telemetry. Your wallet stays in a file you control for as long as you keep it; delete the file to remove it. Claude's provider sees your conversation, including earnrate's answers, under its own privacy policy. Full policy: [earnrate.dev/privacy](https://earnrate.dev/privacy). Contact: [hello@earnrate.dev](mailto:hello@earnrate.dev).
+No account and no telemetry. earnrate counts requests by tool name only. Claude's provider sees your conversation, including earnrate's answers, under its own privacy policy. Full policy: [earnrate.dev/privacy](https://earnrate.dev/privacy). Contact: [hello@earnrate.dev](mailto:hello@earnrate.dev).
+
+## Prefer it on your computer?
+
+earnrate also runs locally, with your wallet in a file you control (`~/.earnrate/wallet.yaml`): `npm install -g earnrate`, or [earnrate.mcpb](https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb) for Claude Desktop. Export a saved wallet with `export_wallet` and the local version reads it. See the [README](https://github.com/cwasley/earnrate#readme).
 
 ## Where it works
 
-Claude Code, and Cowork sessions that run on your computer. In Claude Desktop chat, install the one-click extension instead: [earnrate.mcpb](https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb). There's also a browser version at [earnrate.dev](https://earnrate.dev).
+Claude Code and Cowork. In claude.ai and the Claude apps, add `https://mcp.earnrate.dev` as a custom connector instead. There's also a browser version at [earnrate.dev](https://earnrate.dev).
 
 ## Support
 
