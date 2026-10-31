@@ -5,7 +5,7 @@ import {
 import { readFile } from 'node:fs/promises'
 import { afterEach, describe, expect, test } from 'vitest'
 import { makeWorker, type Env } from '../remote/src/app.ts'
-import { RESOURCE } from '../remote/src/auth.ts'
+import { ALIAS_RESOURCE, RESOURCE } from '../remote/src/auth.ts'
 import {
   keysFromCode,
   newRecoveryCode,
@@ -123,13 +123,14 @@ async function connect(
   d: ReturnType<typeof deployment>,
   token: string | null = null,
   extra: Partial<Env> = {},
+  path = '/',
 ): Promise<Client> {
   const client = new Client(
     { name: 'earnrate-test', version: '0.0.0' },
     { versionNegotiation: { mode: 'auto' } },
   )
   await client.connect(
-    new StreamableHTTPClientTransport(new URL(`${ORIGIN}/mcp`), {
+    new StreamableHTTPClientTransport(new URL(`${ORIGIN}${path}`), {
       fetch: (url, init) => {
         const request = new Request(url, init)
         if (token) request.headers.set('authorization', `Bearer ${token}`)
@@ -163,6 +164,7 @@ async function signIn(
     post: (fields: Record<string, string>) => Promise<Response>,
   ) => Promise<string>, // returns the redirect back to Claude
   clientName = 'Claude',
+  resource = RESOURCE,
 ) {
   const registered = await d.fetch('/oauth/register', {
     method: 'POST',
@@ -193,7 +195,7 @@ async function signIn(
     code_challenge_method: 'S256',
     state: 'state-123',
     scope: 'wallet',
-    resource: RESOURCE,
+    resource,
   })
   const path = `/authorize?${query.toString()}`
   const shown = await d.fetch(path)
@@ -226,7 +228,7 @@ async function signIn(
       redirect_uri: CALLBACK,
       client_id: clientId,
       code_verifier: verifier,
-      resource: RESOURCE,
+      resource,
     }).toString(),
   })
   expect(tokens.status).toBe(200)
@@ -281,7 +283,7 @@ describe('remote connector, signed out', () => {
 
   test('asks for sign-in only when a saved-wallet tool is called', async () => {
     const d = deployment()
-    const res = await d.fetch('/mcp', {
+    const res = await d.fetch('/', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -291,10 +293,10 @@ describe('remote connector, signed out', () => {
     })
     expect(res.status).toBe(401)
     expect(res.headers.get('www-authenticate')).toBe(
-      `Bearer resource_metadata="${ORIGIN}/.well-known/oauth-protected-resource/mcp", scope="wallet"`,
+      `Bearer resource_metadata="${ORIGIN}/.well-known/oauth-protected-resource", scope="wallet"`,
     )
     const metadata = (await (
-      await d.fetch('/.well-known/oauth-protected-resource/mcp')
+      await d.fetch('/.well-known/oauth-protected-resource')
     ).json()) as { resource: string; authorization_servers: string[] }
     expect(metadata).toMatchObject({
       resource: RESOURCE,
@@ -317,9 +319,9 @@ describe('remote connector, signed out', () => {
     )
   })
 
-  test('redirects the root to the website and 404s other paths', async () => {
+  test('sends a browser at the root to the website and 404s other paths', async () => {
     const d = deployment()
-    const root = await d.fetch('/')
+    const root = await d.fetch('/', { headers: { accept: 'text/html' } })
     expect(root.status).toBe(302)
     expect(root.headers.get('location')).toBe('https://earnrate.dev/')
     expect((await d.fetch('/wallet')).status).toBe(404)
@@ -447,6 +449,38 @@ describe('anonymous saved wallets', () => {
       body: callTool('best_card_for_purchase', { merchant: 'Costco' }),
     })
     expect(res.status).toBe(401)
+  })
+
+  test('connections made at the old /mcp address keep working', async () => {
+    const d = deployment()
+    const token = await signIn(
+      d,
+      async (_page, post) => {
+        const res = await post({ choice: 'new' })
+        const html = await res.text()
+        return unescape(/class="button" href="([^"]+)"/.exec(html)?.[1] ?? '')
+      },
+      'Claude',
+      ALIAS_RESOURCE,
+    )
+    const old = await connect(d, token, {}, '/mcp')
+    const added = await old.callTool({
+      name: 'add_card',
+      arguments: { cardId: 'amex-gold' },
+    })
+    expect(added.isError).toBeFalsy()
+    const listed = await (
+      await connect(d, token)
+    ).callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(listed)).toContain('amex-gold')
+    const challenged = await d.fetch('/mcp', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: callTool('list_wallet'),
+    })
+    expect(challenged.headers.get('www-authenticate')).toContain(
+      'oauth-protected-resource/mcp"',
+    )
   })
 
   test('cancel goes back to the app with access_denied', async () => {

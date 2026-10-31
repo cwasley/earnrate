@@ -10,6 +10,7 @@ import {
   challenge,
   makeAuth,
   protectedResourceMetadata,
+  resourceFor,
   SCOPE,
   type AuthEnv,
   type ExecutionContextLike,
@@ -97,6 +98,7 @@ export function makeWorker<E extends Env>(
   )
 
   async function mcp(request: Request, env: E): Promise<Response> {
+    const resource = resourceFor(new URL(request.url).pathname)
     const calls = await rpcCalls(request)
     for (const { method, tool } of calls) {
       const label = tool ? `tool:${tool}` : method
@@ -109,15 +111,15 @@ export function makeWorker<E extends Env>(
       const needsWallet = calls.some(
         (c) => c.tool !== null && SAVED_WALLET_TOOLS.includes(c.tool),
       )
-      return needsWallet ? challenge() : handler.fetch(request)
+      return needsWallet ? challenge(resource) : handler.fetch(request)
     }
 
     const grant = await auth.validate(env, token)
-    if (!grant) return challenge(true)
+    if (!grant) return challenge(resource, true)
     // Revoking grants goes through KV, which can lag; the wallet's own
     // storage is consistent, so a deleted wallet signs its apps out here.
     const vault = vaultFor(env, grant.walletId)
-    if (!(await vault.exists())) return challenge(true)
+    if (!(await vault.exists())) return challenge(resource, true)
     const store = new VaultWalletStore(vault, grant.walletKey, () =>
       auth.signOutEverywhere(env, grant.walletId),
     )
@@ -133,15 +135,18 @@ export function makeWorker<E extends Env>(
       ctx: ExecutionContextLike,
     ): Promise<Response> {
       const { pathname } = new URL(request.url)
-      if (pathname === '/' && request.method === 'GET')
+      // A person opening the address in a browser gets the website.
+      const browsing =
+        request.method === 'GET' &&
+        (request.headers.get('accept') ?? '').includes('text/html')
+      if (pathname === '/' && browsing)
         return Response.redirect('https://earnrate.dev/', 302)
       if (await limited(env.LIMITER, request)) return tooMany()
-      if (
-        pathname === '/.well-known/oauth-protected-resource' ||
-        pathname === '/.well-known/oauth-protected-resource/mcp'
-      )
-        return protectedResourceMetadata()
-      if (pathname === '/mcp') return mcp(request, env)
+      if (pathname === '/.well-known/oauth-protected-resource')
+        return protectedResourceMetadata(resourceFor('/'))
+      if (pathname === '/.well-known/oauth-protected-resource/mcp')
+        return protectedResourceMetadata(resourceFor('/mcp'))
+      if (pathname === '/' || pathname === '/mcp') return mcp(request, env)
       if (pathname === '/authorize') {
         if (
           request.method === 'POST' &&

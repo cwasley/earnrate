@@ -14,10 +14,20 @@ import {
 } from './vault-crypto.ts'
 
 export const ORIGIN = 'https://mcp.earnrate.dev'
-export const RESOURCE = `${ORIGIN}/mcp`
 export const SCOPE = 'wallet'
-const METADATA_URL = `${ORIGIN}/.well-known/oauth-protected-resource/mcp`
 const DAY = 24 * 60 * 60
+
+// The server's address is the bare origin. /mcp, its first address, stays
+// as an alias with its own resource so connections made there keep working.
+export const RESOURCE = ORIGIN
+export const ALIAS_RESOURCE = `${ORIGIN}/mcp`
+const RESOURCES = [RESOURCE, ALIAS_RESOURCE]
+
+export const resourceFor = (pathname: string) =>
+  pathname === '/mcp' ? ALIAS_RESOURCE : RESOURCE
+
+const metadataUrl = (resource: string) =>
+  `${ORIGIN}/.well-known/oauth-protected-resource${new URL(resource).pathname.replace(/^\/$/, '')}`
 
 // What a grant carries, encrypted by the OAuth library for the token holder.
 export type Grant = { walletId: string; walletKey: string }
@@ -26,9 +36,9 @@ export type AuthEnv = { OAUTH_KV: unknown }
 
 export type VaultFor<Env> = (env: Env, walletId: string) => VaultApi
 
-export function protectedResourceMetadata(): Response {
+export function protectedResourceMetadata(resource: string): Response {
   return Response.json({
-    resource: RESOURCE,
+    resource,
     authorization_servers: [ORIGIN],
     scopes_supported: [SCOPE],
     bearer_methods_supported: ['header'],
@@ -38,10 +48,10 @@ export function protectedResourceMetadata(): Response {
 }
 
 // Sends the client to sign in. Claude asks only when a tool needs it.
-export function challenge(invalidToken = false): Response {
+export function challenge(resource: string, invalidToken = false): Response {
   const params = [
     ...(invalidToken ? ['error="invalid_token"'] : []),
-    `resource_metadata="${METADATA_URL}"`,
+    `resource_metadata="${metadataUrl(resource)}"`,
     `scope="${SCOPE}"`,
   ]
   return Response.json(
@@ -67,7 +77,8 @@ function html(body: string, status = 200, extra?: Headers): Response {
 export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
   const server = new OAuthAuthorizationServer<Env>({
     issuer: ORIGIN,
-    resources: [RESOURCE],
+    resources: RESOURCES,
+    defaultResource: RESOURCE,
     scopesSupported: [SCOPE],
     clientIdMetadataDocumentEnabled: true,
     clientRegistrationEndpoint: '/oauth/register',
@@ -77,9 +88,14 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
     refreshTokenIdleTTL: 90 * DAY,
   })
 
+  // Either address's token works at either address: they reach the same
+  // server, so the audience split only keeps old connections valid.
   async function validate(env: Env, token: string): Promise<Grant | null> {
-    const found = await server.validateToken<Grant>(RESOURCE, token, env)
-    return found?.scope.includes(SCOPE) ? found.props : null
+    for (const resource of RESOURCES) {
+      const found = await server.validateToken<Grant>(resource, token, env)
+      if (found) return found.scope.includes(SCOPE) ? found.props : null
+    }
+    return null
   }
 
   async function signOutEverywhere(env: Env, walletId: string) {
