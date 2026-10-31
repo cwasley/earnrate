@@ -1,4 +1,5 @@
 import { serveStdio } from '@modelcontextprotocol/server/stdio'
+import { FileWalletStore } from '../data/file-store.ts'
 import { loadCatalog, walletPath } from '../data/load.ts'
 import { localToday as today } from '../engine/periods.ts'
 import { llmEnabled, openLlmSession } from '../merchants/from-env.ts'
@@ -23,7 +24,7 @@ export async function serveMcp(env: NodeJS.ProcessEnv): Promise<void> {
   serveStdio(() =>
     createEarnrateServer({
       catalog,
-      walletFile: walletPath(env),
+      store: new FileWalletStore(catalog, walletPath(env)),
       today,
       llm,
       version,

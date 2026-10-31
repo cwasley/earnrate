@@ -6,9 +6,8 @@ import {
   type CardInput,
   type WalletChange,
 } from '../engine/wallet-change.ts'
-import type { SetupNote } from '../engine/setup.ts'
-import type { Wallet } from '../schema/wallet.ts'
 import type { Catalog } from './load.ts'
+import type { SetupResult } from './store.ts'
 import {
   addCardText,
   commitWalletText,
@@ -20,14 +19,7 @@ import {
 
 export type { CardInput }
 
-export type SetupResult =
-  | {
-      ok: true
-      wallet: Wallet
-      created: boolean // the wallet file didn't exist before
-      notes: SetupNote[] // what the changed card still needs
-    }
-  | { ok: false; error: string }
+export type { SetupResult }
 
 const failed = (error: string) => ({ ok: false as const, error })
 

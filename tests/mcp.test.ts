@@ -16,6 +16,12 @@ import type { WalletSummary } from '../src/engine/wallet-summary.ts'
 import { memoryCache } from '../src/merchants/cache.ts'
 import type { Classifier } from '../src/merchants/classifier.ts'
 import { createLlmSession, type LlmSession } from '../src/merchants/fallback.ts'
+import { FileWalletStore } from '../src/data/file-store.ts'
+import {
+  JsonWalletStore,
+  memoryBackend,
+  type WalletStore,
+} from '../src/data/store.ts'
 import { createEarnrateServer } from '../src/mcp/server.ts'
 import { TODAY } from './golden/fixtures.ts'
 
@@ -36,11 +42,16 @@ afterEach(async () => {
   for (const c of cleanups.splice(0)) await c()
 })
 
-async function connect(walletFile: string, llm: LlmSession | null = null) {
+async function connect(
+  wallet: string | WalletStore,
+  llm: LlmSession | null = null,
+) {
+  const store =
+    typeof wallet === 'string' ? new FileWalletStore(catalog, wallet) : wallet
   const handler = createMcpHandler(() =>
     createEarnrateServer({
       catalog,
-      walletFile,
+      store,
       today: () => TODAY,
       llm,
       version: '0.0.0-test',
@@ -347,6 +358,45 @@ describe('wallet setup', () => {
     })
     expect(bad.isError).toBe(true)
     await expect(readFile(file, 'utf8')).rejects.toThrow()
+  })
+
+  test('a JSON-backed saved wallet works through the same tools', async () => {
+    const backend = memoryBackend()
+    const client = await connect(
+      new JsonWalletStore(catalog, backend, 'your saved wallet'),
+    )
+    const before = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(before)).toMatch(/no wallet yet \(your saved wallet\)/)
+    await client.callTool({
+      name: 'add_card',
+      arguments: {
+        cardId: 'amex-blue-cash-preferred',
+        bonus: { opened: '2026-10-01' },
+      },
+    })
+    const best = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Whole Foods', amount: 100 },
+    })
+    expect(
+      (best.structuredContent as { decision: { cardId: string } }).decision
+        .cardId,
+    ).toBe('amex-blue-cash-preferred')
+    const recorded = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'amex-blue-cash-preferred',
+        merchant: 'Whole Foods',
+        amount: 100,
+      },
+    })
+    expect(text(recorded)).toMatch(
+      /Welcome bonus on amex-blue-cash-preferred: \$100 of \$3,000/,
+    )
+    const saved = JSON.parse((await backend.read()) ?? '{}') as {
+      cards: { bonus?: { spent: number } }[]
+    }
+    expect(saved.cards[0]?.bonus?.spent).toBe(100)
   })
 
   test('from no wallet to a recommendation', async () => {

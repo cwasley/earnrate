@@ -11,26 +11,14 @@ import {
 } from '../cli/explore.ts'
 import { formatOffers } from '../cli/offers.ts'
 import { walletProblems } from '../data/integrity.ts'
-import { loadWallet, type Catalog } from '../data/load.ts'
-import {
-  withWalletLock,
-  writeBonusSpent,
-  writeCapBooking,
-} from '../data/wallet-write.ts'
-import {
-  addCard,
-  removeCard,
-  setMemberships,
-  updateCard,
-  type CardInput,
-  type SetupResult,
-} from '../data/wallet-setup.ts'
+import type { Catalog } from '../data/load.ts'
+import type { SetupResult, WalletStore } from '../data/store.ts'
+import type { CardInput } from '../engine/wallet-change.ts'
 import { catalogCheatSheet, cheatSheet } from '../engine/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../engine/explore.ts'
 import { walletFromCards } from '../engine/transient.ts'
 import { compareOffers } from '../engine/offers.ts'
 import { VALUATION_PROFILES } from '../engine/profiles.ts'
-import { bonusBooking, capBooking } from '../engine/record.ts'
 import { recommend } from '../engine/recommend.ts'
 import {
   resolveSpendLines,
@@ -61,7 +49,7 @@ import {
 
 export type ServerDeps = {
   catalog: Catalog
-  walletFile: string
+  store: WalletStore // where a saved wallet lives; it's optional
   today: () => string // YYYY-MM-DD
   llm: LlmSession | null // shared across connections, so the call limit holds
   version: string
@@ -104,22 +92,21 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
   )
   const { catalog } = deps
 
-  const noWallet = `There's no wallet yet (${deps.walletFile}), which is normal before the user adds a card. Ask the user which credit cards they have, find each one with search_cards, and add it with add_card. best_cards_for and simulate_spending work without a wallet.`
+  const noWallet = `There's no wallet yet (${deps.store.where}), which is normal before the user adds a card. Ask the user which credit cards they have, find each one with search_cards, and add it with add_card. best_cards_for and simulate_spending work without a wallet.`
 
-  // Read on every call, so edits to the wallet file apply without a restart.
+  // Read on every call, so edits to the wallet apply without a restart.
   async function wallet(): Promise<Wallet | string> {
     let loaded: Wallet
     try {
-      loaded = await loadWallet(deps.walletFile)
+      const found = await deps.store.load()
+      if (found === null) return noWallet
+      loaded = found
     } catch (e) {
-      if (e instanceof Error && 'code' in e && e.code === 'ENOENT') {
-        return noWallet
-      }
-      return `Couldn't read the wallet at ${deps.walletFile}: ${e instanceof Error ? e.message : String(e)}`
+      return `Couldn't read the wallet at ${deps.store.where}: ${e instanceof Error ? e.message : String(e)}`
     }
     const problems = walletProblems(loaded, catalog)
     return problems.length > 0
-      ? `The wallet at ${deps.walletFile} has problems:\n${problems.map((p) => `- ${p}`).join('\n')}`
+      ? `The wallet at ${deps.store.where} has problems:\n${problems.map((p) => `- ${p}`).join('\n')}`
       : loaded
   }
 
@@ -733,7 +720,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
     // Queued per wallet file: parallel calls would otherwise each read the
     // old usage and the last write would drop the others' spend.
     (args) =>
-      withWalletLock(deps.walletFile, async () => {
+      (async () => {
         const { cardId, merchant, amount, channel, date, category } = args
         const w = await wallet()
         if (typeof w === 'string') return fail(w)
@@ -754,8 +741,9 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           purchase.channel,
           category ?? null,
         )
-        const booking = capBooking(catalog, w, purchase, resolved.merchant)
-        const bonus = bonusBooking(catalog, w, purchase)
+        const result = await deps.store.record(purchase, resolved.merchant)
+        if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
+        const { cap: booking, bonus } = result
         if (!booking && !bonus) {
           const output = {
             recorded: false,
@@ -767,14 +755,6 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
             content: [{ type: 'text', text: output.message }],
             structuredContent: output,
           }
-        }
-        try {
-          if (booking) await writeCapBooking(deps.walletFile, booking)
-          if (bonus) await writeBonusSpent(deps.walletFile, cardId, bonus.after)
-        } catch (e) {
-          return fail(
-            `Couldn't record it: ${e instanceof Error ? e.message : String(e)}`,
-          )
         }
         const messages: string[] = []
         if (booking) {
@@ -806,7 +786,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           ],
           structuredContent: output,
         }
-      }),
+      })(),
   )
 
   const CardId = z
@@ -950,7 +930,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ query }) => {
-      const held = await loadWallet(deps.walletFile).catch(() => null)
+      const held = await deps.store.load().catch(() => null)
       const result = searchCards(catalog, query ?? '', held, deps.today())
       const header = result.exact
         ? ''
@@ -984,19 +964,13 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         openWorldHint: false,
       },
     },
-    (args) =>
-      withWalletLock(deps.walletFile, async () => {
-        const result = await addCard(
-          deps.walletFile,
-          catalog,
-          cardInput(args),
-          deps.today(),
-        )
-        return changed(
-          result,
-          `Added ${cardName(args.cardId)} (${args.cardId})${result.ok && result.created ? `, starting a new wallet at ${deps.walletFile}` : ''}.`,
-        )
-      }),
+    async (args) => {
+      const result = await deps.store.addCard(cardInput(args), deps.today())
+      return changed(
+        result,
+        `Added ${cardName(args.cardId)} (${args.cardId})${result.ok && result.created ? `, starting a new wallet at ${deps.store.where}` : ''}.`,
+      )
+    },
   )
 
   server.registerTool(
@@ -1014,17 +988,10 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         openWorldHint: false,
       },
     },
-    (args) =>
-      withWalletLock(deps.walletFile, async () =>
-        changed(
-          await updateCard(
-            deps.walletFile,
-            catalog,
-            cardInput(args),
-            deps.today(),
-          ),
-          `Updated ${cardName(args.cardId)} (${args.cardId}).`,
-        ),
+    async (args) =>
+      changed(
+        await deps.store.updateCard(cardInput(args), deps.today()),
+        `Updated ${cardName(args.cardId)} (${args.cardId}).`,
       ),
   )
 
@@ -1043,13 +1010,11 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         openWorldHint: false,
       },
     },
-    ({ cardId }) =>
-      withWalletLock(deps.walletFile, async () =>
-        changed(
-          await removeCard(deps.walletFile, catalog, cardId),
-          `Removed ${cardName(cardId)} (${cardId}).`,
-          false,
-        ),
+    async ({ cardId }) =>
+      changed(
+        await deps.store.removeCard(cardId),
+        `Removed ${cardName(cardId)} (${cardId}).`,
+        false,
       ),
   )
 
@@ -1074,15 +1039,13 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         openWorldHint: false,
       },
     },
-    (args) =>
-      withWalletLock(deps.walletFile, async () =>
-        changed(
-          await setMemberships(deps.walletFile, catalog, args.memberships),
-          args.memberships.length > 0
-            ? `Memberships set to ${args.memberships.join(', ')}.`
-            : 'Memberships cleared.',
-          false,
-        ),
+    async (args) =>
+      changed(
+        await deps.store.setMemberships(args.memberships),
+        args.memberships.length > 0
+          ? `Memberships set to ${args.memberships.join(', ')}.`
+          : 'Memberships cleared.',
+        false,
       ),
   )
 
