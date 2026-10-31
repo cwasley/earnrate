@@ -219,8 +219,8 @@ describe('wallet setup', () => {
         compareToWallet: true,
       },
     })
-    expect(withWallet.isError).toBe(true)
-    expect(text(withWallet)).toMatch(/no wallet yet/i)
+    expect(withWallet.isError).toBeFalsy()
+    expect(text(withWallet)).toMatch(/no wallet yet.*Best single cards/is)
   })
 
   test('cheat_sheet answers from the wallet', async () => {
@@ -263,8 +263,23 @@ describe('wallet setup', () => {
     const client = await connect(file)
 
     const before = await client.callTool({ name: 'list_wallet', arguments: {} })
-    expect(before.isError).toBe(true)
+    expect(before.isError).toBeFalsy()
     expect(text(before)).toMatch(/no wallet yet.*search_cards.*add_card/is)
+    expect(before.structuredContent).toEqual({ memberships: [], cards: [] })
+
+    for (const [name, args] of [
+      ['best_card_for_purchase', { merchant: 'Whole Foods' }],
+      ['cheat_sheet', {}],
+      ['compare_welcome_offers', {}],
+    ] as const) {
+      const empty = await client.callTool({ name, arguments: args })
+      expect(empty.isError, name).toBeFalsy()
+    }
+    const record = await client.callTool({
+      name: 'record_purchase',
+      arguments: { cardId: 'amex-gold', merchant: 'Whole Foods', amount: 10 },
+    })
+    expect(record.isError).toBe(true)
 
     const found = await client.callTool({
       name: 'search_cards',

@@ -100,6 +100,8 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
   )
   const { catalog } = deps
 
+  const noWallet = `There's no wallet yet (${deps.walletFile}), which is normal before the user adds a card. Ask the user which credit cards they have, find each one with search_cards, and add it with add_card. best_cards_for and simulate_spending work without a wallet.`
+
   // Read on every call, so edits to the wallet file apply without a restart.
   async function wallet(): Promise<Wallet | string> {
     let loaded: Wallet
@@ -107,7 +109,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       loaded = await loadWallet(deps.walletFile)
     } catch (e) {
       if (e instanceof Error && 'code' in e && e.code === 'ENOENT') {
-        return `There's no wallet yet (${deps.walletFile}). Ask the user which credit cards they have, find each one with search_cards, and add it with add_card.`
+        return noWallet
       }
       return `Couldn't read the wallet at ${deps.walletFile}: ${e instanceof Error ? e.message : String(e)}`
     }
@@ -115,6 +117,18 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
     return problems.length > 0
       ? `The wallet at ${deps.walletFile} has problems:\n${problems.map((p) => `- ${p}`).join('\n')}`
       : loaded
+  }
+
+  // No wallet yet is the first-run state, not a failure: read-only tools
+  // answer from an empty wallet and say how to start one.
+  async function readableWallet(): Promise<
+    { wallet: Wallet; start: string | null } | string
+  > {
+    const w = await wallet()
+    if (typeof w !== 'string') return { wallet: w, start: null }
+    return w === noWallet
+      ? { wallet: { valuations: {}, memberships: [], cards: [] }, start: w }
+      : w
   }
 
   // The caller's category is free and comes before the paid Claude fallback;
@@ -163,8 +177,9 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       },
     },
     async ({ merchant, amount, channel, date, category }) => {
-      const w = await wallet()
-      if (typeof w === 'string') return fail(w)
+      const read = await readableWallet()
+      if (typeof read === 'string') return fail(read)
+      const w = read.wallet
       const purchase = {
         merchant,
         amount: amount ?? null,
@@ -178,6 +193,16 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         category ?? null,
       )
       const rec = recommend(catalog, w, purchase, resolved.merchant)
+      if (read.start !== null) {
+        const output = {
+          ...rec,
+          warnings: [read.start, ...resolved.notices],
+        }
+        return {
+          content: [{ type: 'text', text: read.start }],
+          structuredContent: output,
+        }
+      }
       const output = {
         ...rec,
         warnings: [...rec.warnings, ...resolved.notices],
@@ -236,9 +261,14 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async () => {
-      const w = await wallet()
-      if (typeof w === 'string') return fail(w)
-      const summary = walletSummary(catalog, w, deps.today())
+      const read = await readableWallet()
+      if (typeof read === 'string') return fail(read)
+      const summary = walletSummary(catalog, read.wallet, deps.today())
+      if (read.start !== null)
+        return {
+          content: [{ type: 'text', text: read.start }],
+          structuredContent: summary,
+        }
       const lines = summary.cards.map((c) => {
         const caps = c.caps
           .filter((cap) => cap.remaining !== null)
@@ -300,11 +330,11 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async (args) => {
-      const w = await wallet()
-      if (typeof w === 'string') return fail(w)
+      const read = await readableWallet()
+      if (typeof read === 'string') return fail(read)
       const comparison = compareOffers(
         catalog,
-        w,
+        read.wallet,
         {
           kind: args.kind ?? 'any',
           noAnnualFee: args.noAnnualFee ?? false,
@@ -476,9 +506,10 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
           `earnrate doesn't know ${unknown.map((l) => `"${l.merchant.input}"`).join(', ')}. Give a category for those lines instead.`,
         )
       const options = { ...settings(args), start: deps.today() }
-      if (args.compareToWallet) {
-        const w = await wallet()
-        if (typeof w === 'string') return fail(w)
+      const read = args.compareToWallet ? await readableWallet() : null
+      if (typeof read === 'string') return fail(read)
+      if (read && read.start === null) {
+        const w = read.wallet
         const valued = args.valuation
           ? {
               ...w,
@@ -504,11 +535,12 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
         }
       }
       const result = simulateCatalog(catalog, lines, options)
+      const text = formatCatalogSimulation(result, catalog, false)
       return {
         content: [
           {
             type: 'text',
-            text: formatCatalogSimulation(result, catalog, false),
+            text: read?.start ? `${read.start}\n\n${text}` : text,
           },
         ],
         structuredContent: {
@@ -532,9 +564,14 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async (args) => {
-      const w = await wallet()
-      if (typeof w === 'string') return fail(w)
-      const sheet = cheatSheet(catalog, w, args.date ?? deps.today())
+      const read = await readableWallet()
+      if (typeof read === 'string') return fail(read)
+      const sheet = cheatSheet(catalog, read.wallet, args.date ?? deps.today())
+      if (read.start !== null)
+        return {
+          content: [{ type: 'text', text: read.start }],
+          structuredContent: { ...sheet, notes: [read.start] },
+        }
       return {
         content: [{ type: 'text', text: formatCheatSheet(sheet) }],
         structuredContent: sheet,
