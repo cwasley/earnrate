@@ -1,5 +1,6 @@
-// The sign-in pages for saved wallets. No scripts: the policy below allows
-// none. Everything from the client (its name, the redirect host) is escaped.
+// The sign-in pages for saved wallets. The policy below allows one script,
+// COPY_SCRIPT, by its hash. Everything from the client (its name, the
+// redirect host) is escaped.
 
 type ClientFacts = {
   clientName: string
@@ -30,6 +31,7 @@ section { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 20px
 button, .button { display: inline-block; font: inherit; font-weight: 600; padding: 10px 18px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-text); cursor: pointer; text-decoration: none; }
 button.quiet { background: transparent; color: var(--muted); border-color: var(--line); font-weight: 500; }
 input[type=text] { width: 100%; font: 1.05rem ui-monospace, monospace; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); color: var(--text); margin-bottom: 12px; }
+.copy { margin: -4px 0 16px; }
 .code { font: 600 1.2rem/1.6 ui-monospace, monospace; letter-spacing: 0.04em; overflow-wrap: normal; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); margin: 12px 0 16px; user-select: all; }
 .confirm { display: grid; grid-template-columns: auto 1fr; gap: 16px 10px; align-items: start; margin-top: 16px; }
 .confirm input { margin-top: 5px; }
@@ -37,10 +39,16 @@ input[type=text] { width: 100%; font: 1.05rem ui-monospace, monospace; padding: 
 #saved:not(:checked) ~ .button { opacity: 0.45; pointer-events: none; }
 `
 
+// Shows the hidden copy button and copies the code shown above it. Changing
+// a single character changes its hash: update COPY_SCRIPT_HASH (a test checks).
+export const COPY_SCRIPT =
+  "for(const b of document.querySelectorAll('.copy')){b.hidden=false;b.onclick=()=>navigator.clipboard.writeText(document.querySelector('.code').textContent).then(()=>{b.textContent='Copied'})}"
+export const COPY_SCRIPT_HASH =
+  'sha256-JG21rBTtwWMDOsbaB6zCMQHjZ8YmxZkb1wuzkP5fsiA='
+
 const PAGE_HEADERS = {
   'Content-Type': 'text/html; charset=utf-8',
-  'Content-Security-Policy':
-    "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'",
+  'Content-Security-Policy': `default-src 'none'; script-src '${COPY_SCRIPT_HASH}'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'`,
   'Referrer-Policy': 'no-referrer',
   'X-Content-Type-Options': 'nosniff',
   'Cache-Control': 'no-store, no-transform', // keeps Cloudflare from injecting scripts
@@ -110,12 +118,18 @@ ${error ? `<p class="error">${escape(error)}</p>` : ''}
   )
 }
 
+function shownCode(code: string): string {
+  return `<div class="code">${escape(code)}</div>
+<button type="button" class="copy quiet" hidden>Copy code</button>
+<script>${COPY_SCRIPT}</script>`
+}
+
 export function newCodePage(code: string, continueTo: string): string {
   return page(
     'Your earnrate recovery code',
     `<h1>Your recovery code</h1>
 <p>Keep it somewhere safe, like a password manager. It's the only way to connect this wallet from another app or device, and earnrate can't look it up or reset it for you.</p>
-<div class="code">${escape(code)}</div>
+${shownCode(code)}
 <p class="muted">Don't paste it into a chat. Type it only on this earnrate page when you connect another app.</p>
 <div class="confirm"><input type="checkbox" id="saved"><label for="saved">I've saved my recovery code</label><a class="button" href="${escape(continueTo)}">Continue</a></div>`,
   )
@@ -151,7 +165,7 @@ export function changedCodePage(code: string): string {
     'Your new earnrate recovery code',
     `<h1>Your new recovery code</h1>
 <p>Keep it somewhere safe, like a password manager. Your old code no longer works, and apps that were connected need to reconnect with this one.</p>
-<div class="code">${escape(code)}</div>
+${shownCode(code)}
 <p class="muted">Don't paste it into a chat. Type it only on the earnrate page that opens when you connect an app.</p>`,
   )
 }

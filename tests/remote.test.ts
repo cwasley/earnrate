@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import {
   Client,
   StreamableHTTPClientTransport,
@@ -14,6 +15,7 @@ import {
   wrapWalletKey,
 } from '../remote/src/vault-crypto.ts'
 import { WalletVault, type VaultStorage } from '../remote/src/vault.ts'
+import { COPY_SCRIPT, COPY_SCRIPT_HASH } from '../remote/src/pages.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import { SAVED_WALLET_TOOLS } from '../src/mcp/server.ts'
 import { TODAY } from './golden/fixtures.ts'
@@ -652,6 +654,23 @@ describe('anonymous saved wallets', () => {
         throw new Error('denied')
       }),
     ).rejects.toThrow('denied')
+  })
+
+  test('the recovery code page allows only its copy script', async () => {
+    expect(COPY_SCRIPT_HASH).toBe(
+      `sha256-${createHash('sha256').update(COPY_SCRIPT).digest('base64')}`,
+    )
+    const d = deployment()
+    await expect(
+      signIn(d, async (_page, post) => {
+        const res = await post({ choice: 'new' })
+        const csp = res.headers.get('content-security-policy') ?? ''
+        expect(csp).toContain(`script-src '${COPY_SCRIPT_HASH}'`)
+        expect(csp).not.toMatch(/script-src[^;]*unsafe/)
+        expect(await res.text()).toContain(`<script>${COPY_SCRIPT}</script>`)
+        throw new Error('stop')
+      }),
+    ).rejects.toThrow('stop')
   })
 
   test("the sign-in page escapes the app's self-chosen name", async () => {
