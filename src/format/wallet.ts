@@ -40,6 +40,8 @@ export function formatWalletSummary(summary: WalletSummary): string {
         lines.push(
           `  Cap on ${cap.label}: ${money(cap.spent)} of ${money(cap.amount)} used for ${cap.currentPeriod ?? ''} (cap key ${cap.key}).`,
         )
+    if (c.anniversary !== null)
+      lines.push(`  Account anniversary: ${c.anniversary}.`)
     const b = c.bonus
     if (b?.state === 'open' && b.spend !== null)
       lines.push(

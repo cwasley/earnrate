@@ -85,7 +85,13 @@ describe.each(stores)('the %s store', (_name, make) => {
       period: '2026',
       spent: 100,
     })
-    expect(bcp?.bonus).toEqual({ opened: '2026-10-01', spent: 500 })
+    expect(bcp?.bonus).toEqual({
+      opened: '2026-10-01',
+      spent: 500,
+      spend: 3000,
+      by: '2027-04-01',
+      dollars: 300,
+    })
 
     expect((await store.removeCard('chase-prime-visa')).ok).toBe(true)
     expect((await store.load())?.cards.map((c) => c.id)).toEqual([

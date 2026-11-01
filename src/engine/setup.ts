@@ -96,7 +96,7 @@ function matcher(card: Card) {
       ))
 }
 
-function needsAnniversary(card: Card): boolean {
+export function needsAnniversary(card: Card): boolean {
   return (
     card.caps.some((c) => c.period === 'cardmember_year') ||
     card.rules.some(

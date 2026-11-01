@@ -88,7 +88,13 @@ describe('welcome bonuses', () => {
         TODAY,
       ),
     )
-    expect(wallet.cards[0]?.bonus).toEqual({ opened: '2026-10-01', spent: 400 })
+    expect(wallet.cards[0]?.bonus).toEqual({
+      opened: '2026-10-01',
+      spent: 400,
+      spend: 3000,
+      by: '2027-04-01',
+      dollars: 300,
+    })
     const booked = bookPurchase(catalog, wallet, {
       cardId: 'amex-blue-cash-preferred',
       merchant: 'Whole Foods',

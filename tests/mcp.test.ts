@@ -162,6 +162,38 @@ describe('tools', () => {
     expect(text(result)).toMatch(/Takes Visa only\./)
   })
 
+  test('recording at an unknown merchant asks for its category', async () => {
+    const client = await connect(await walletCopy())
+    const result = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'amex-gold',
+        merchant: 'Tacos Por Favor Santa Monica',
+        amount: 20,
+      },
+    })
+    expect(result.isError).toBe(true)
+    expect(text(result)).toMatch(/Nothing was recorded\..*again with category/)
+  })
+
+  test('settings that change nothing say so', async () => {
+    const client = await connect(await walletCopy())
+    const anniversary = await client.callTool({
+      name: 'update_card',
+      arguments: { cardId: 'amex-gold', anniversary: '03-14' },
+    })
+    expect(text(anniversary)).toMatch(
+      /anniversary 03-14\. None of its caps reset on the account anniversary/,
+    )
+    const memberships = await client.callTool({
+      name: 'set_memberships',
+      arguments: { memberships: ['amazon-prime', 'nordy-club-ambassador'] },
+    })
+    expect(text(memberships)).toMatch(
+      /nordy-club-ambassador doesn't change any saved card's rates yet/,
+    )
+  })
+
   test('an unknown merchant asks for its category', async () => {
     const client = await connect(await walletCopy())
     const unknown = await client.callTool({
@@ -504,7 +536,9 @@ describe('wallet setup', () => {
       name: 'import_wallet',
       arguments: { ...over, replace: true },
     })
-    expect(text(replaced)).toMatch(/Imported a wallet with 1 card\./)
+    expect(text(replaced)).toMatch(
+      /Replaced the 2 cards that were saved with the 1 card imported\./,
+    )
 
     const unconfirmed = await client.callTool({
       name: 'delete_wallet',

@@ -1,4 +1,4 @@
-import { parse, stringify } from 'yaml'
+import { Document, parse, visit } from 'yaml'
 import { walletProblems } from '../data/integrity.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { WalletSchema, type Wallet } from '../schema/wallet.ts'
@@ -30,8 +30,25 @@ function compact(wallet: Wallet) {
   }
 }
 
+// Dates, periods and anniversaries are quoted: YAML 1.1 parsers read a bare 2026-10-15 as a
+// date, not a string.
+function quotedYaml(value: unknown): string {
+  const doc = new Document(value)
+  visit(doc, {
+    Scalar(key, node) {
+      if (
+        key === 'value' &&
+        typeof node.value === 'string' &&
+        /^(\d{4}(-|$)|\d{2}-\d{2}$)/.test(node.value)
+      )
+        node.type = 'QUOTE_DOUBLE'
+    },
+  })
+  return doc.toString()
+}
+
 export function walletYaml(wallet: Wallet): string {
-  return `# Your earnrate wallet: the cards you hold, by id. Never card numbers.\n# For the command line, save it as ~/.earnrate/wallet.yaml\n\n${stringify(compact(wallet))}`
+  return `# Your earnrate wallet: the cards you hold, by id. Never card numbers.\n# For the command line, save it as ~/.earnrate/wallet.yaml\n\n${quotedYaml(compact(wallet))}`
 }
 
 export function parseWalletYaml(

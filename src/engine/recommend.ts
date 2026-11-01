@@ -492,9 +492,6 @@ export function recommend(
     }
   }
 
-  const tie = tieNote(entries)
-  if (tie) notes.push(tie)
-
   for (const id of merchant.bookedVia) {
     const via = resolveMerchantById(catalog, id, purchase.channel)
     if (!via || !winner) continue
@@ -509,6 +506,9 @@ export function recommend(
 
   const bonus = bonusPick(catalog, wallet, entries, purchase.date)
   const chosen = bonus?.entry ?? winner
+  // A tie among the top cards doesn't matter when a welcome bonus decides.
+  const tie = bonus ? null : tieNote(entries)
+  if (tie) notes.push(tie)
   const top = ranked.find((r) => r.cardId === chosen?.card.id)
   const best = ranked[0]
   let bonusResult: Recommendation['bonus'] = null

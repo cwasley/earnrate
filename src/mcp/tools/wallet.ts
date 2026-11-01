@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
+import { membershipsUsed, needsAnniversary } from '../../engine/setup.ts'
 import { money, words } from '../../engine/text.ts'
 import { walletSummary } from '../../engine/wallet-summary.ts'
 import { formatBooking, formatWalletSummary } from '../../format/wallet.ts'
@@ -125,6 +126,10 @@ export function registerWalletTools(
         purchase.channel,
         category ?? null,
       )
+      if (resolved.merchant.source === 'none')
+        return fail(
+          `earnrate doesn't recognize "${merchant}", so it can't tell which caps this purchase counts toward. Nothing was recorded. Call record_purchase again with category if you can tell what kind of business it is (a restaurant, a grocery store, a gas station); otherwise ask the user.`,
+        )
       const result = await store.record(purchase, resolved.merchant)
       if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
       const { cap: booking, bonus } = result
@@ -184,16 +189,21 @@ export function registerWalletTools(
     {
       title: 'Update a card',
       description:
-        'Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary or activated categories. Picks for the current period are merged with the ones already saved. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+.',
+        'Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary or activated categories. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+.',
       inputSchema: CardChange,
       outputSchema: WalletChangeSchema,
       annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
     },
     async (args) => {
       const what = changes(args)
+      const card = catalog.cards.find((c) => c.id === args.cardId)
+      const unused =
+        args.anniversary !== undefined && card && !needsAnniversary(card)
+          ? " None of its caps reset on the account anniversary, so earnrate doesn't use it."
+          : ''
       return ctx.changed(
         await store.updateCard(cardInput(args), deps.today()),
-        `Updated ${ctx.cardName(args.cardId)} (${args.cardId})${what.length > 0 ? `: ${what.join('; ')}` : ''}.`,
+        `Updated ${ctx.cardName(args.cardId)} (${args.cardId})${what.length > 0 ? `: ${what.join('; ')}` : ''}.${unused}`,
       )
     },
   )
@@ -226,13 +236,24 @@ export function registerWalletTools(
       outputSchema: WalletChangeSchema,
       annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
     },
-    async ({ memberships }) =>
-      ctx.changed(
-        await store.setMemberships(memberships),
-        memberships.length > 0
-          ? `Memberships set to ${memberships.join(', ')}.`
-          : 'Memberships cleared.',
+    async ({ memberships }) => {
+      const result = await store.setMemberships(memberships)
+      const used = new Set(
+        (result.ok ? result.wallet.cards : []).flatMap((held) => {
+          const card = catalog.cards.find((c) => c.id === held.id)
+          return card ? membershipsUsed(card) : []
+        }),
+      )
+      const unused = memberships.filter((m) => !used.has(m))
+      return ctx.changed(
+        result,
+        `${
+          memberships.length > 0
+            ? `Memberships set to ${memberships.join(', ')}.`
+            : 'Memberships cleared.'
+        }${unused.length > 0 ? ` ${unused.join(', ')} ${unused.length === 1 ? "doesn't" : "don't"} change any saved card's rates yet; kept for cards that use ${unused.length === 1 ? 'it' : 'them'}.` : ''}`,
         { notes: false },
-      ),
+      )
+    },
   )
 }

@@ -1,6 +1,7 @@
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
+import { addMonths } from './bonus.ts'
 import { capByKey } from './evaluate.ts'
 import { choicePeriod, periodKey } from './periods.ts'
 import {
@@ -36,6 +37,8 @@ type BonusFields = {
   spent: number
   spend?: number
   by?: string
+  points?: number
+  dollars?: number
 }
 
 export type CardFields = {
@@ -217,11 +220,28 @@ export function cardFields(
       problems.push(
         `earnrate has no published welcome offer for ${card.id}, so give the spending needed and the deadline.`,
       )
+    // The terms are saved with the bonus, so a later change to the published
+    // offer, or a wallet exported and imported again, keeps the user's own.
+    const offer = card.welcome_offer
+    const before = held?.bonus?.opened === b.opened ? held.bonus : undefined
+    const spend = b.spend ?? before?.spend ?? offer?.spend
+    const by =
+      b.by ??
+      before?.by ??
+      (offer && isDate(b.opened)
+        ? addMonths(b.opened, offer.months)
+        : undefined)
+    const points =
+      before?.points ?? (before?.dollars ? undefined : offer?.points)
+    const dollars =
+      before?.dollars ?? (points !== undefined ? undefined : offer?.dollars)
     fields.bonus = {
       opened: b.opened,
       spent: b.spent ?? held?.bonus?.spent ?? 0,
-      ...(b.spend === undefined ? {} : { spend: b.spend }),
-      ...(b.by === undefined ? {} : { by: b.by }),
+      ...(spend === undefined ? {} : { spend }),
+      ...(by === undefined ? {} : { by }),
+      ...(points === undefined ? {} : { points }),
+      ...(dollars === undefined ? {} : { dollars }),
     }
   }
   return problems.length > 0 ? problems.join('\n') : fields

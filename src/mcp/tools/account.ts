@@ -79,10 +79,13 @@ export function registerAccountTools(
         return fail(
           `This would replace the ${String(current.cards.length)} ${current.cards.length === 1 ? 'card' : 'cards'} already saved (${current.cards.map((c) => c.id).join(', ')}). Ask the user, then call again with replace: true.`,
         )
-      const count = parsed.cards.length
+      const cards = (n: number) => `${String(n)} ${n === 1 ? 'card' : 'cards'}`
+      const before = current?.cards.length ?? 0
       return ctx.changed(
         await store.replace(parsed),
-        `Imported a wallet with ${String(count)} ${count === 1 ? 'card' : 'cards'}.`,
+        before > 0
+          ? `Replaced the ${cards(before)} that were saved with the ${cards(parsed.cards.length)} imported.`
+          : `Imported a wallet with ${cards(parsed.cards.length)}.`,
         { notes: false },
       )
     },
@@ -140,7 +143,7 @@ export function registerAccountTools(
     {
       title: 'Switch wallets',
       description:
-        "Disconnects this app from its saved wallet so the user can connect a different one with its recovery code, or start a new one, on earnrate's page. Nothing is deleted. Use it when the user wants another wallet. Never ask for the recovery code in the conversation.",
+        "Disconnects this app from its saved wallet so the user can connect a different one with its recovery code, or start a new one, on earnrate's page. Nothing is deleted. It also signs out anyone else connected to this wallet through the same app (another Claude account the recovery code was shared with): say so before calling it. Use it when the user wants another wallet. Never ask for the recovery code in the conversation.",
       inputSchema: z.object({}),
       outputSchema: z.object({ disconnected: z.boolean() }),
       annotations: {

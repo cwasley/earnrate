@@ -36,16 +36,23 @@ function header(rec: Recommendation, purchase: Purchase): string {
   return parts.join(' · ')
 }
 
-function cardLines(cards: RankedCard[], style: Style): string[] {
+function cardLines(
+  cards: (RankedCard & { rank: number })[],
+  style: Style,
+  bonusPick: string | null,
+): string[] {
+  const rankWidth = Math.max(...cards.map((c) => c.rank))
   const nameWidth = Math.max(...cards.map((c) => label(c).length))
   const pctWidth = Math.max(
     ...cards.map((c) => pct(c.effectiveReturnPct).length),
   )
   const lines: string[] = []
-  cards.forEach((c, i) => {
+  cards.forEach((c) => {
     const earned = c.earned === null ? '' : `  ${cents(c.earned)}`
+    const pick =
+      c.cardId === bonusPick ? '  ← the pick, for its welcome bonus' : ''
     lines.push(
-      `  ${String(i + 1).padStart(String(cards.length).length)}. ${label(c).padEnd(nameWidth)}  ${pct(c.effectiveReturnPct).padStart(pctWidth)}${earned}`,
+      `  ${String(c.rank).padStart(String(rankWidth).length)}. ${label(c).padEnd(nameWidth)}  ${pct(c.effectiveReturnPct).padStart(pctWidth)}${earned}${pick}`,
     )
     for (const r of c.reasoning) lines.push(style('dim', `     ${r}`))
     for (const w of c.warnings) lines.push(style('yellow', `     ! ${w}`))
@@ -89,8 +96,12 @@ export function formatRecommendation(
     lines.push(style('bold', noCard))
   }
 
-  const shown = all ? rec.ranked : rec.ranked.slice(0, TOP)
-  if (shown.length > 0) lines.push('', ...cardLines(shown, style))
+  const bonusPick = rec.bonus?.cardId ?? null
+  const ranked = rec.ranked.map((c, i) => ({ ...c, rank: i + 1 }))
+  const shown = all
+    ? ranked
+    : ranked.filter((c, i) => i < TOP || c.cardId === bonusPick)
+  if (shown.length > 0) lines.push('', ...cardLines(shown, style, bonusPick))
   const hidden = rec.ranked.length - shown.length
   if (hidden > 0) {
     lines.push(

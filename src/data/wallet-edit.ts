@@ -76,6 +76,12 @@ function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
         `${indent}  spent: ${String(b.spent)}\n`,
         b.spend === undefined ? '' : `${indent}  spend: ${String(b.spend)}\n`,
         b.by === undefined ? '' : `${indent}  by: ${scalar(b.by)}\n`,
+        b.points === undefined
+          ? ''
+          : `${indent}  points: ${String(b.points)}\n`,
+        b.dollars === undefined
+          ? ''
+          : `${indent}  dollars: ${String(b.dollars)}\n`,
       ].join('')
     }
     case 'chosen': {
