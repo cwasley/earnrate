@@ -18,7 +18,6 @@ import {
   CAP_PERIODS,
   cardText,
   issuerName,
-  membershipName,
   PICK_PERIODS,
   usd,
   words,
@@ -62,10 +61,14 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
 
-const { cards, shortName, feeLabel, requirementLines } = cardText(catalog)
+const { cards, shortName, feeLabel, requirementLines, membershipName } =
+  cardText(catalog)
 
-// Memberships worth calling out on a search page.
-const HIGHLIGHTED = ['amazon-prime', 'bank-of-america-account']
+// Memberships worth calling out on a search page: the ones most people would
+// know, which the site asks about too.
+const HIGHLIGHTED = catalog.memberships
+  .filter((m) => m.ask !== undefined)
+  .map((m) => m.id)
 
 function untilText(entry: ExploreEntry): string | null {
   const rule = cards

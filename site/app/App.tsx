@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'preact/hooks'
-import { dataVersion } from 'virtual:catalog'
+import { catalog, dataVersion } from 'virtual:catalog'
 import { BestFor, SUGGESTIONS } from './BestFor.tsx'
 import { MyWallet } from './MyWallet.tsx'
 import { Spending } from './Spending.tsx'
-import { issuerName, issuers, MEMBERSHIPS } from './format.ts'
+import { issuerName, issuers } from './format.ts'
 import {
   DEFAULT_SETTINGS,
   load,
@@ -38,9 +38,30 @@ function writeHash(tab: Tab, query: string) {
   history.replaceState(null, '', `${location.pathname}${hash}`)
 }
 
-const BOFA_TIERS = Object.keys(MEMBERSHIPS).filter((m) =>
-  m.startsWith('bofa-rewards-'),
-)
+// Memberships the site asks about, from data/memberships.yaml: one checkbox
+// each, and one menu per group of tiers (BofA Preferred Rewards).
+const ASKED = catalog.memberships.filter((m) => m.ask !== undefined)
+const TIER_GROUPS = [
+  ...new Set(catalog.memberships.flatMap((m) => m.group ?? [])),
+].map((group) => {
+  const tiers = catalog.memberships.filter((m) => m.group === group)
+  const names = tiers.map((m) => m.name)
+  const words = names[0]?.split(' ') ?? []
+  let shared = 0
+  while (
+    shared < words.length - 1 &&
+    names.every((n) => n.split(' ')[shared] === words[shared])
+  )
+    shared++
+  const prefix = words.slice(0, shared).join(' ')
+  return {
+    label: `${prefix} tier`,
+    tiers: tiers.map((m) => ({
+      id: m.id,
+      name: m.name.slice(prefix.length).trim(),
+    })),
+  }
+})
 
 function Filters({
   settings,
@@ -57,7 +78,6 @@ function Filters({
         ? [...settings.memberships, m]
         : settings.memberships.filter((x) => x !== m),
     })
-  const tier = settings.memberships.find((m) => BOFA_TIERS.includes(m)) ?? ''
   const active =
     (settings.noFee ? 1 : 0) +
     (settings.kind !== 'any' ? 1 : 0) +
@@ -116,55 +136,42 @@ function Filters({
           />
           Business cards instead
         </label>
-        <label class="check">
-          <input
-            type="checkbox"
-            checked={has('amazon-prime')}
-            onChange={(e) => toggle('amazon-prime', e.currentTarget.checked)}
-          />
-          I have Amazon Prime
-        </label>
-        <label class="check">
-          <input
-            type="checkbox"
-            checked={has('costco')}
-            onChange={(e) => toggle('costco', e.currentTarget.checked)}
-          />
-          I have a Costco membership
-        </label>
-        <label class="check">
-          <input
-            type="checkbox"
-            checked={has('bank-of-america-account')}
-            onChange={(e) =>
-              toggle('bank-of-america-account', e.currentTarget.checked)
-            }
-          />
-          I bank with Bank of America
-        </label>
-        <label>
-          BofA Rewards tier
-          <select
-            value={tier}
-            onChange={(e) =>
-              set({
-                memberships: [
-                  ...settings.memberships.filter(
-                    (m) => !BOFA_TIERS.includes(m),
-                  ),
-                  ...(e.currentTarget.value ? [e.currentTarget.value] : []),
-                ],
-              })
-            }
-          >
-            <option value="">None</option>
-            {BOFA_TIERS.map((m) => (
-              <option value={m} key={m}>
-                {MEMBERSHIPS[m]?.replace('BofA Rewards ', '')}
-              </option>
-            ))}
-          </select>
-        </label>
+        {ASKED.map((m) => (
+          <label class="check" key={m.id}>
+            <input
+              type="checkbox"
+              checked={has(m.id)}
+              onChange={(e) => toggle(m.id, e.currentTarget.checked)}
+            />
+            {m.ask}
+          </label>
+        ))}
+        {TIER_GROUPS.map(({ label, tiers }) => {
+          const ids = tiers.map((t) => t.id)
+          return (
+            <label key={label}>
+              {label}
+              <select
+                value={settings.memberships.find((m) => ids.includes(m)) ?? ''}
+                onChange={(e) =>
+                  set({
+                    memberships: [
+                      ...settings.memberships.filter((m) => !ids.includes(m)),
+                      ...(e.currentTarget.value ? [e.currentTarget.value] : []),
+                    ],
+                  })
+                }
+              >
+                <option value="">None</option>
+                {tiers.map((t) => (
+                  <option value={t.id} key={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )
+        })}
         <label class="check">
           <input
             type="checkbox"

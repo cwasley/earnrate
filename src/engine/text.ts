@@ -125,19 +125,3 @@ export function choiceName(id: string): string {
     ),
   )
 }
-
-// Display names for membership ids in the card data.
-export const MEMBERSHIPS: Record<string, string> = {
-  'amazon-prime': 'Amazon Prime',
-  'bank-of-america-account': 'Bank of America checking or savings',
-  'bank-of-america-small-business-account':
-    'Bank of America small business checking or savings',
-  'bofa-rewards-member': 'BofA Rewards Member',
-  'bofa-rewards-preferred-plus': 'BofA Rewards Preferred Plus',
-  'bofa-rewards-preferred-honors': 'BofA Rewards Preferred Honors',
-  'bofa-rewards-premier': 'BofA Rewards Premier',
-  costco: 'Costco membership',
-  'nordy-club-ambassador': 'Nordy Club Ambassador',
-}
-
-export const membershipName = (id: string) => MEMBERSHIPS[id] ?? words(id)

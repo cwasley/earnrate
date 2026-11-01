@@ -211,7 +211,7 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
   io.stdout(
     values.json
       ? `${JSON.stringify(result, null, 2)}\n`
-      : formatExploration(result, values.all ?? false),
+      : formatExploration(result, catalog, values.all ?? false),
   )
   return 0
 }

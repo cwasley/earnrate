@@ -153,7 +153,7 @@ export function registerAnswerTools(
           content: [
             {
               type: 'text',
-              text: `${retry}${formatExploration(allCards, true)}\n${ALL_CARDS_NOTE}`,
+              text: `${retry}${formatExploration(allCards, catalog, true)}\n${ALL_CARDS_NOTE}`,
             },
           ],
           structuredContent: {
@@ -313,7 +313,9 @@ export function registerAnswerTools(
       )
       const trimmed = { ...result, ranked: result.ranked.slice(0, TOP) }
       return {
-        content: [{ type: 'text', text: formatExploration(trimmed, true) }],
+        content: [
+          { type: 'text', text: formatExploration(trimmed, catalog, true) },
+        ],
         structuredContent: trimmed,
       }
     },

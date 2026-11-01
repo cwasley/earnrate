@@ -2,6 +2,7 @@ import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { isActivated, pickedCategories } from './evaluate.ts'
+import { membership, membershipName, sameGroup } from './memberships.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap } from './rotation.ts'
 
@@ -119,10 +120,6 @@ export function activationRules(card: Card, today: string): string[] {
     .map((r) => r.id)
 }
 
-// Bank of America Preferred Rewards tiers: a person holds one at a time, so
-// with one saved the others aren't missing.
-const TIER = /^bofa-rewards-/
-
 export function membershipsUsed(card: Card): string[] {
   return [
     ...new Set(
@@ -138,15 +135,16 @@ export function membershipsUsed(card: Card): string[] {
 export function membershipsFor(card: Card): string[] {
   return [
     ...membershipsUsed(card),
-    ...(card.requires_membership ? [card.requires_membership.id] : []),
+    ...(card.requires_membership ? [card.requires_membership] : []),
   ]
 }
 
 export function knownMemberships(catalog: Catalog): string[] {
-  return [...new Set(catalog.cards.flatMap(membershipsFor))].sort()
+  return catalog.memberships.map((m) => m.id).sort()
 }
 
 export function cardInfo(
+  catalog: Catalog,
   card: Card,
   wallet: Wallet | null,
   today: string,
@@ -169,13 +167,15 @@ export function cardInfo(
       default: c.default ?? null,
     })),
     memberships: membershipsUsed(card),
-    requiresMembership: card.requires_membership
-      ? {
-          id: card.requires_membership.id,
-          name: card.requires_membership.name,
-          annualFee: card.requires_membership.annual_fee,
-        }
-      : null,
+    requiresMembership:
+      card.requires_membership === undefined
+        ? null
+        : {
+            id: card.requires_membership,
+            name: membershipName(catalog, card.requires_membership),
+            annualFee:
+              membership(catalog, card.requires_membership)?.annual_fee ?? 0,
+          },
     activation: activationRules(card, today),
     needsAnniversary: needsAnniversary(card),
   }
@@ -210,7 +210,7 @@ export function searchCards(
           .sort(byShortestId)
           .slice(0, 5)
   return {
-    cards: chosen.map((s) => cardInfo(s.card, wallet, today)),
+    cards: chosen.map((s) => cardInfo(catalog, s.card, wallet, today)),
     exact,
   }
 }
@@ -245,9 +245,12 @@ export function setupNotes(
     })
   }
 
-  const hasTier = wallet.memberships.some((m) => TIER.test(m))
+  // With one tier of a group saved, the others aren't missing.
   const missing = membershipsUsed(card).filter(
-    (m) => !wallet.memberships.includes(m) && !(hasTier && TIER.test(m)),
+    (m) =>
+      !wallet.memberships.some(
+        (held) => held === m || sameGroup(catalog, held, m),
+      ),
   )
   if (missing.length > 0) {
     notes.push({

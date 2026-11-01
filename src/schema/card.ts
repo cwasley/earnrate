@@ -173,17 +173,10 @@ export const CardSchema = z
     // When the first year differs, usually a waived fee.
     first_year_fee: z.number().nonnegative().optional(),
     welcome_offer: WelcomeOfferSchema.optional(),
-    // A paid membership the card can't be had without (Costco Anywhere). Its
-    // cost counts like an annual fee for anyone not already paying for it.
-    requires_membership: z
-      .strictObject({
-        id: KebabId,
-        name: z.string().min(1), // "a Costco membership"
-        annual_fee: z.number().nonnegative(), // the basic tier, dollars
-        // Only members can buy here, so spending here means a member.
-        members_shop_at: z.array(KebabId).default([]),
-      })
-      .optional(),
+    // A paid membership (data/memberships.yaml) the card can't be had
+    // without, Costco's for Costco Anywhere. Its fee counts like an annual
+    // fee for anyone not already paying it.
+    requires_membership: KebabId.optional(),
     pools_into: z
       .strictObject({
         currency: CurrencyId,

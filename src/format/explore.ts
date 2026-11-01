@@ -4,29 +4,26 @@ import type {
   Simulation,
   WalletWhatIf,
 } from '../engine/simulate.ts'
-import { membershipNote, type MembershipCost } from '../engine/memberships.ts'
 import {
-  choiceName,
-  feeText,
   membershipName,
-  money,
-  pct,
-  words,
-} from '../engine/text.ts'
+  membershipNote,
+  type MembershipCost,
+} from '../engine/memberships.ts'
+import { choiceName, feeText, money, pct, words } from '../engine/text.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
 const wholeUsd = (n: number) => money(Math.round(n))
 
-const membershipText = (memberships: MembershipCost[]) =>
-  memberships
-    .map(
-      (m) => ` + ${wholeUsd(m.annualFee)} for ${m.name.replace(/^an? /, '')}`,
-    )
-    .join('')
+const membershipFees = (memberships: MembershipCost[]) =>
+  memberships.map((m) => ` + ${wholeUsd(m.annualFee)} for ${m.name}`).join('')
 
 const TOP_BEST = 10
 
-export function formatExploration(r: Exploration, all: boolean): string {
+export function formatExploration(
+  r: Exploration,
+  catalog: Catalog,
+  all: boolean,
+): string {
   const m = r.merchant
   const title =
     m.source === 'category'
@@ -47,7 +44,7 @@ export function formatExploration(r: Exploration, all: boolean): string {
     const upgrade = e.withMembership[0]
     if (upgrade)
       lines.push(
-        `    With ${membershipName(upgrade.membership)}: ${pct(upgrade.effectiveReturnPct)}.`,
+        `    With ${membershipName(catalog, upgrade.membership)}: ${pct(upgrade.effectiveReturnPct)}.`,
       )
     for (const w of e.warnings) lines.push(`    ! ${w}`)
   })
@@ -102,7 +99,7 @@ export function formatCatalogSimulation(
     const card = s.cards[0]
     if (!card) return
     lines.push(
-      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeUsd(s.net)}  (${wholeUsd(s.rewards)} rewards, ${wholeUsd(s.annualFees)} fee${membershipText(s.memberships)})${picksText(card.picks)}`,
+      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeUsd(s.net)}  (${wholeUsd(s.rewards)} rewards, ${wholeUsd(s.annualFees)} fee${membershipFees(s.memberships)})${picksText(card.picks)}`,
     )
   })
   const pairs = r.pairs.slice(0, top)
@@ -157,7 +154,7 @@ export function formatAdditions(
     )
     gains.slice(0, all ? 20 : TOP_SIMULATED).forEach((a, i) => {
       lines.push(
-        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeUsd(a.gain)} a year  (+${wholeUsd(a.extraRewards)} rewards, ${wholeUsd(a.annualFee)} fee${membershipText(a.simulation.memberships.filter((m) => m.cardIds.includes(a.cardId)))})${picksText(a.picks)}`,
+        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeUsd(a.gain)} a year  (+${wholeUsd(a.extraRewards)} rewards, ${wholeUsd(a.annualFee)} fee${membershipFees(a.simulation.memberships.filter((m) => m.cardIds.includes(a.cardId)))})${picksText(a.picks)}`,
       )
     })
   }

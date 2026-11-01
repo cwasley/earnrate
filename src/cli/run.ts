@@ -294,7 +294,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
       io.stdout(`${JSON.stringify(explored, null, 2)}\n`)
     } else {
       io.stdout(
-        `${formatExploration(explored, options.all)}\n${NO_WALLET_HINT}\n`,
+        `${formatExploration(explored, catalog, options.all)}\n${NO_WALLET_HINT}\n`,
       )
     }
     for (const n of notices) io.stderr(`${n}\n`)

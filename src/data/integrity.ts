@@ -78,8 +78,25 @@ function cardProblems(
   for (const id of card.welcome_offer?.not_with ?? [])
     if (!cardIds.has(id))
       problems.push(`${where} welcome_offer.not_with: unknown card '${id}'`)
-  for (const m of card.requires_membership?.members_shop_at ?? [])
-    checkMerchant(m, 'requires_membership')
+  const memberships = new Set(catalog.memberships.map((m) => m.id))
+  for (const id of [
+    ...(card.requires_membership === undefined
+      ? []
+      : [card.requires_membership]),
+    ...card.rules.flatMap((r) => r.requires?.membership ?? []),
+  ])
+    if (!memberships.has(id))
+      problems.push(
+        `${where}: unknown membership '${id}' (data/memberships.yaml)`,
+      )
+  if (
+    card.requires_membership !== undefined &&
+    catalog.memberships.find((m) => m.id === card.requires_membership)
+      ?.annual_fee === undefined
+  )
+    problems.push(
+      `${where}: requires_membership '${card.requires_membership}' has no annual_fee`,
+    )
   if (card.pools_into) {
     if (!currencies.has(card.pools_into.currency)) {
       problems.push(
@@ -202,6 +219,7 @@ export function catalogProblems(catalog: Catalog): string[] {
     ['category', catalog.categories.map((c) => c.id)],
     ['currency', catalog.currencies.map((c) => c.id)],
     ['card', catalog.cards.map((c) => c.id)],
+    ['membership', catalog.memberships.map((m) => m.id)],
   ] as const) {
     for (const id of duplicates(ids))
       problems.push(`duplicate ${kind} id '${id}'`)
@@ -224,6 +242,12 @@ export function catalogProblems(catalog: Catalog): string[] {
         problems.push(`merchant ${m.id}: booked_via '${via}' is not a merchant`)
     }
   }
+  for (const m of catalog.memberships)
+    for (const id of m.members_shop_at)
+      if (!merchantIds.has(id))
+        problems.push(
+          `membership ${m.id}: members_shop_at '${id}' is not a merchant`,
+        )
   for (const card of catalog.cards) {
     problems.push(...cardProblems(card, catalog, merchantIds))
   }

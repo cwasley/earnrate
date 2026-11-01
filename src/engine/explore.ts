@@ -3,7 +3,11 @@ import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
-import { membershipNeeded, paidMemberships } from './memberships.ts'
+import {
+  membershipName,
+  membershipNeeded,
+  paidMemberships,
+} from './memberships.ts'
 import { choicePeriod, periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
@@ -13,7 +17,6 @@ import {
   choiceName,
   codesAs,
   earnText,
-  membershipName,
   money,
   pointValuesText,
   words,
@@ -286,7 +289,7 @@ function conditionsText(catalog: Catalog, r: Requirements): string[] {
   if (r.activation !== null)
     conditions.push('Needs its bonus activated with the issuer (free).')
   if (r.membership !== null)
-    conditions.push(`Needs ${membershipName(r.membership)}.`)
+    conditions.push(`Needs ${membershipName(catalog, r.membership)}.`)
   if (r.cap) {
     conditions.push(
       `Up to ${money(r.cap.amount)} ${CAP_PERIODS[r.cap.period] ?? ''} at this rate, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}.`,
@@ -410,7 +413,7 @@ export function exploreCards(
       requirements,
       conditions: [
         ...conditionsText(catalog, requirements),
-        ...membershipNeeded(card, paid),
+        ...membershipNeeded(catalog, card, paid),
       ],
       evidence: evidence ? { quote: evidence.quote, url: evidence.url } : null,
       withMembership: membershipUpgrades(

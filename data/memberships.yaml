@@ -1,0 +1,33 @@
+# Memberships that raise a card's rates (a rule's `requires.membership`) or
+# that a card can't be had without (a card's `requires_membership`). The
+# fee for one a card needs is quoted in that card's evidence.
+
+- id: amazon-prime
+  name: Amazon Prime
+  ask: I have Amazon Prime
+- id: costco
+  name: Costco membership
+  ask: I have a Costco membership
+  # Gold Star, the basic tier. Executive ($130) pays some of its cost back
+  # as Costco's own 2% reward, which earnrate doesn't model.
+  annual_fee: 65
+  members_shop_at: [costco, costco-gas, costco-travel]
+- id: bank-of-america-account
+  name: Bank of America checking or savings
+  ask: I bank with Bank of America
+- id: bank-of-america-small-business-account
+  name: Bank of America small business checking or savings
+- id: bofa-rewards-member
+  name: BofA Rewards Member
+  group: bofa-preferred-rewards
+- id: bofa-rewards-preferred-plus
+  name: BofA Rewards Preferred Plus
+  group: bofa-preferred-rewards
+- id: bofa-rewards-preferred-honors
+  name: BofA Rewards Preferred Honors
+  group: bofa-preferred-rewards
+- id: bofa-rewards-premier
+  name: BofA Rewards Premier
+  group: bofa-preferred-rewards
+- id: nordy-club-ambassador
+  name: Nordy Club Ambassador

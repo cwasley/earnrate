@@ -261,7 +261,7 @@ function CardEditor({
   onRemove: (cardId: string) => void
 }) {
   const card = cards.get(held.id)
-  const info = card ? cardInfo(card, wallet, localToday()) : null
+  const info = card ? cardInfo(catalog, card, wallet, localToday()) : null
   const [picks, setPicks] = useState<Record<string, string[]>>(
     held.chosen?.picks ?? {},
   )
@@ -432,7 +432,7 @@ function CardList({
       <ul class="held">
         {wallet.cards.map((held) => {
           const card = cards.get(held.id)
-          const info = card ? cardInfo(card, wallet, today) : null
+          const info = card ? cardInfo(catalog, card, wallet, today) : null
           const needsPick = info?.choices.some(
             (c) => c.default === null && !held.chosen?.picks[c.id],
           )

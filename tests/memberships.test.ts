@@ -58,10 +58,10 @@ test('two cards that need one membership pay for it once', () => {
   const both = catalog.cards.filter((c) =>
     c.id.startsWith('citi-costco-anywhere'),
   )
-  expect(membershipCosts(both, new Set())).toEqual([
+  expect(membershipCosts(catalog, both, new Set())).toEqual([
     {
       id: 'costco',
-      name: 'a Costco membership',
+      name: 'Costco membership',
       annualFee: 65,
       cardIds: both.map((c) => c.id),
     },

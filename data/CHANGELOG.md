@@ -2,6 +2,15 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.01.4
+
+Memberships move to `data/memberships.yaml`: each one's name, the Costco membership's fee and the stores that imply it, and the BofA Preferred Rewards tiers as one group. Cards name the membership they need by id (`requires_membership: costco`). No rates changed.
+
+| File                                 | Field               | Old → new                                | Source |
+| ------------------------------------ | ------------------- | ---------------------------------------- | ------ |
+| memberships.yaml                     | (new)               | names, Costco fee and stores, BofA tiers | n/a    |
+| citi-costco-anywhere-visa, -business | requires_membership | inline block → `costco`                  | n/a    |
+
 ## 2026.11.01.3
 
 Welcome offers can name other cards whose holders the issuer rules out (`welcome_offer.not_with`), so offer comparisons mark them and list them last for a wallet holding one. No rates changed.

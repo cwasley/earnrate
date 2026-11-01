@@ -33,8 +33,9 @@ export const CAP_PERIODS: Record<string, string> = {
   cardmember_year: 'a card year',
 }
 
-export { MEMBERSHIPS, membershipName, words } from '../engine/text.ts'
-import { membershipName, words } from '../engine/text.ts'
+export { words } from '../engine/text.ts'
+import { membershipName, membershipText } from '../engine/memberships.ts'
+import { words } from '../engine/text.ts'
 
 // Whole dollars, for fees and caps.
 export const usd = (n: number) =>
@@ -57,7 +58,7 @@ export function cardText(catalog: Catalog) {
   function feeLabel(id: string): string {
     const card = cards.get(id)
     const m = card?.requires_membership
-    const needs = m ? `; needs ${m.name} (${usd(m.annual_fee)} a year)` : ''
+    const needs = m === undefined ? '' : `; needs ${membershipText(catalog, m)}`
     const fee = card?.annual_fee
     if (fee === undefined) return 'Annual fee not on file'
     if (fee === 0) return `No annual fee${needs}`
@@ -83,7 +84,7 @@ export function cardText(catalog: Catalog) {
         `Activate the bonus with ${issuerName(cards.get(cardId)?.issuer ?? '')} (free)`,
       )
     if (r.membership !== null)
-      lines.push(`With ${membershipName(r.membership)}`)
+      lines.push(`With ${membershipName(catalog, r.membership)}`)
     if (until !== null) lines.push(`This rate runs through ${until}`)
     if (r.cap)
       lines.push(
@@ -92,5 +93,13 @@ export function cardText(catalog: Catalog) {
     return lines
   }
 
-  return { cards, shortName, feeLabel, requirementLines }
+  const memberName = (id: string) => membershipName(catalog, id)
+
+  return {
+    cards,
+    shortName,
+    feeLabel,
+    requirementLines,
+    membershipName: memberName,
+  }
 }

@@ -223,6 +223,7 @@ export function simulateWallet(
     merchantIds: lines.map((l) => l.merchant.merchantId),
   })
   const memberships = membershipCosts(
+    catalog,
     cards.map((c) => c.card),
     paid,
   )

@@ -59,6 +59,7 @@ function catalog(cardYaml = cashPlusYaml): Catalog {
     currencies: CurrenciesFileSchema.parse([
       { id: 'cash', name: 'Cash', value_cents: 1 },
     ]),
+    memberships: [],
     cards: [CardSchema.parse(parse(cardYaml))],
     merchants: {
       seed: MerchantsFileSchema.parse([

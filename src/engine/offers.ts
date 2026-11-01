@@ -95,7 +95,8 @@ export function compareOffers(
       bonusDollars(card, valuation.centsPerUnit, offer.points, offer.dollars) ??
       0
     const firstYearFee = card.first_year_fee ?? card.annual_fee ?? null
-    const membershipFee = membershipCosts([card], paid)[0]?.annualFee ?? 0
+    const membershipFee =
+      membershipCosts(catalog, [card], paid)[0]?.annualFee ?? 0
     offers.push({
       cardId: card.id,
       cardName: card.name,
