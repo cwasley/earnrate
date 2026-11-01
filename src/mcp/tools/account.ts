@@ -22,7 +22,11 @@ export function registerAccountTools(
         'The saved wallet as a wallet.yaml file the earnrate command line and earnrate.dev can import: card ids, picks, activations, memberships, point values, cap usage and bonus progress. Never card numbers.',
       inputSchema: z.object({}),
       outputSchema: z.object({ yaml: z.string() }),
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        title: 'Export the wallet',
+        readOnlyHint: true,
+        openWorldHint: false,
+      },
     },
     async () => {
       const w = await ctx.wallet()
@@ -56,6 +60,7 @@ export function registerAccountTools(
       }),
       outputSchema: WalletChangeSchema,
       annotations: {
+        title: 'Import a wallet',
         readOnlyHint: false,
         destructiveHint: true,
         idempotentHint: true,
@@ -111,6 +116,7 @@ export function registerAccountTools(
       }),
       outputSchema: z.object({ deleted: z.boolean() }),
       annotations: {
+        title: 'Delete the wallet',
         readOnlyHint: false,
         destructiveHint: true,
         idempotentHint: true,
@@ -147,6 +153,7 @@ export function registerAccountTools(
       inputSchema: z.object({}),
       outputSchema: z.object({ disconnected: z.boolean() }),
       annotations: {
+        title: 'Switch wallets',
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: true,

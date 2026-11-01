@@ -92,7 +92,11 @@ export function registerWalletTools(
       description:
         "Lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started.",
       outputSchema: WalletSummarySchema,
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        title: 'List wallet',
+        readOnlyHint: true,
+        openWorldHint: false,
+      },
     },
     async () => {
       const read = await ctx.readableWallet()
@@ -138,6 +142,7 @@ export function registerWalletTools(
       }),
       outputSchema: RecordResultSchema,
       annotations: {
+        title: 'Record a purchase',
         ...WRITE,
         destructiveHint: false,
         idempotentHint: false,
@@ -204,7 +209,12 @@ export function registerWalletTools(
         "Adds a card the user holds to their wallet by its id from search_cards, creating the wallet if there isn't one. The reply says what the card still needs (category picks, memberships, activations); ask the user about those. Stores only the card's product id and settings, never card numbers.",
       inputSchema: CardChange,
       outputSchema: WalletChangeSchema,
-      annotations: { ...WRITE, destructiveHint: false, idempotentHint: false },
+      annotations: {
+        title: 'Add a card',
+        ...WRITE,
+        destructiveHint: false,
+        idempotentHint: false,
+      },
     },
     async (args) => {
       const result = await store.addCard(cardInput(args), deps.today())
@@ -229,7 +239,12 @@ export function registerWalletTools(
         'Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, activated categories, cap spending so far (capSpent) or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+.',
       inputSchema: CardChange,
       outputSchema: WalletChangeSchema,
-      annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
+      annotations: {
+        title: 'Update a card',
+        ...WRITE,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
     },
     async (args) => {
       const what = changes(catalog, args)
@@ -253,7 +268,12 @@ export function registerWalletTools(
         "Removes a card from the wallet, with its tracked cap usage and bonus progress. Only when the user says they no longer have it or don't want it considered.",
       inputSchema: z.object({ cardId: CardId }),
       outputSchema: WalletChangeSchema,
-      annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
+      annotations: {
+        title: 'Remove a card',
+        ...WRITE,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
     },
     async ({ cardId }) =>
       ctx.changed(
@@ -271,7 +291,12 @@ export function registerWalletTools(
         "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep.",
       inputSchema: z.object({ memberships: inputs.AllMemberships }),
       outputSchema: WalletChangeSchema,
-      annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
+      annotations: {
+        title: 'Set memberships',
+        ...WRITE,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
     },
     async ({ memberships }) => {
       const result = await store.setMemberships(memberships)
@@ -314,7 +339,12 @@ export function registerWalletTools(
           ),
       }),
       outputSchema: WalletChangeSchema,
-      annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
+      annotations: {
+        title: 'Set point values',
+        ...WRITE,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
     },
     async ({ values, profile }) => {
       const changes: Record<string, number | null> = {

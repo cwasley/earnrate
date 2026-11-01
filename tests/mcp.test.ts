@@ -89,6 +89,11 @@ describe('tools', () => {
   test('lists the fourteen tools with descriptions and hints', async () => {
     const client = await connect(await walletCopy())
     const { tools } = await client.listTools()
+    // The directory reads the listing name from annotations.title.
+    for (const tool of tools) {
+      expect(tool.title, tool.name).toBeTruthy()
+      expect(tool.annotations?.title, tool.name).toBe(tool.title)
+    }
     expect(tools.map((t) => t.name).sort()).toEqual([
       'add_card',
       'best_card_for_purchase',

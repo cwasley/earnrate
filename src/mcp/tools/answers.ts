@@ -101,6 +101,7 @@ export function registerAnswerTools(
       }),
       outputSchema: PurchaseAnswerSchema,
       annotations: {
+        title: 'Best card for a purchase',
         readOnlyHint: true,
         openWorldHint: deps.llm !== null,
       },
@@ -196,7 +197,11 @@ export function registerAnswerTools(
         category: CategoryInput,
       }),
       outputSchema: MerchantResolutionSchema,
-      annotations: { readOnlyHint: true, openWorldHint: deps.llm !== null },
+      annotations: {
+        title: 'Resolve a merchant',
+        readOnlyHint: true,
+        openWorldHint: deps.llm !== null,
+      },
     },
     async ({ merchant, channel, category }) => {
       const resolved = await ctx.resolve(
@@ -241,7 +246,11 @@ export function registerAnswerTools(
         cards: NamedCards,
       }),
       outputSchema: OfferComparisonSchema,
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        title: 'Compare welcome offers',
+        readOnlyHint: true,
+        openWorldHint: false,
+      },
     },
     async (args) => {
       const wallet = await ctx.cardsFor(args.cards, undefined)
@@ -301,7 +310,11 @@ export function registerAnswerTools(
         ...CatalogFilters,
       }),
       outputSchema: ExplorationSchema,
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        title: 'Best cards for a purchase',
+        readOnlyHint: true,
+        openWorldHint: false,
+      },
     },
     async (args) => {
       if (args.merchant === undefined && args.category === undefined)
@@ -357,7 +370,11 @@ export function registerAnswerTools(
         ...CatalogFilters,
       }),
       outputSchema: SpendingSimulationSchema,
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        title: 'Simulate a year of spending',
+        readOnlyHint: true,
+        openWorldHint: false,
+      },
     },
     async (args) => {
       const given = args.spending ?? []
@@ -452,7 +469,11 @@ export function registerAnswerTools(
         valuation: CatalogFilters.valuation,
       }),
       outputSchema: CheatSheetSchema,
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        title: 'Cheat sheet',
+        readOnlyHint: true,
+        openWorldHint: false,
+      },
     },
     async (args) => {
       const wallet =
@@ -500,7 +521,11 @@ export function registerAnswerTools(
           .describe('Card name or issuer, as the user said it.'),
       }),
       outputSchema: CardSearchSchema,
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        title: 'Search cards',
+        readOnlyHint: true,
+        openWorldHint: false,
+      },
     },
     async ({ query }) => {
       const held = await deps.store.load().catch(() => null)
