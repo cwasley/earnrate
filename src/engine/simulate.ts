@@ -20,7 +20,7 @@ import {
 import { choicePeriod, periodKey } from './periods.ts'
 import { applyBooking, capBooking } from './record.ts'
 import { rotationGap } from './rotation.ts'
-import { roundCents } from './text.ts'
+import { money, roundCents } from './text.ts'
 import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
 import { EPSILON } from './compare.ts'
@@ -251,7 +251,7 @@ export function simulateWallet(
       card.first_year_fee !== card.annual_fee
     )
       notes.push(
-        `${card.name}'s fee is $${String(card.first_year_fee)} the first year; the yearly figure uses the $${String(card.annual_fee)} that follows.`,
+        `${card.name}'s fee is ${money(card.first_year_fee)} the first year; the yearly figure uses the ${money(card.annual_fee)} that follows.`,
       )
   }
   return {
@@ -559,4 +559,4 @@ export function typicalSpendLines(catalog: Catalog): ResolvedLine[] {
   )
 }
 
-export const TYPICAL_SPEND_NOTE = `No spending was given, so this uses rough typical monthly amounts for a U.S. household: ${TYPICAL_MONTHLY_SPEND.map((t) => `${t.what} $${String(t.monthly)}`).join(', ')}. Give your own amounts for a closer answer.`
+export const TYPICAL_SPEND_NOTE = `No spending was given, so this uses rough typical monthly amounts for a U.S. household: ${TYPICAL_MONTHLY_SPEND.map((t) => `${t.what} ${money(t.monthly)}`).join(', ')}. Give your own amounts for a closer answer.`

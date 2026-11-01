@@ -13,7 +13,7 @@ import {
 } from '../src/engine/explore.ts'
 import { EPSILON } from '../src/engine/compare.ts'
 import { localToday } from '../src/engine/periods.ts'
-import { num, pct } from '../src/engine/text.ts'
+import { longDate, monthYear, num, pct, shortDate } from '../src/engine/text.ts'
 import { categoryPhrase, currencyName, earnText } from '../src/engine/text.ts'
 import {
   CAP_PERIODS,
@@ -38,15 +38,8 @@ const RELATED = 8
 const catalog = await loadCatalog()
 const dataVersion = (await readFile(`${DATA_DIR}VERSION`, 'utf8')).trim()
 const today = localToday()
-const monthYear = new Date(`${today}T12:00:00`).toLocaleDateString('en-US', {
-  month: 'long',
-  year: 'numeric',
-})
-const longDate = new Date(`${today}T12:00:00`).toLocaleDateString('en-US', {
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
-})
+const thisMonth = monthYear(today)
+const todayWords = longDate(today)
 
 const esc = (s: string) =>
   s
@@ -77,11 +70,7 @@ function untilText(entry: ExploreEntry): string | null {
     .get(entry.cardId)
     ?.rules.find((r) => r.id === entry.matchedRule)
   if (rule?.valid_to === undefined) return null
-  return new Date(`${rule.valid_to}T12:00:00`).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  return longDate(rule.valid_to)
 }
 
 const isUnverified = (e: ExploreEntry) =>
@@ -301,7 +290,7 @@ function layout(
       <header><a class="wordmark" href="/">earnrate</a></header>
 ${body}
       <footer>
-        <p>earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(dataVersion)}, updated ${esc(longDate)}. Rates change, so check the issuer's terms before you apply.</p>
+        <p>earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(dataVersion)}, updated ${esc(todayWords)}. Rates change, so check the issuer's terms before you apply.</p>
         <p><a href="/">earnrate.dev</a> · <a href="/best/">Best card for every store</a> · <a href="/cards/">All cards</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></p>
       </footer>
     </main>
@@ -320,8 +309,8 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   const subject = page.label
   const title =
     page.merchant === null
-      ? `Best credit card for ${subject} (${monthYear}) | earnrate`
-      : `Best credit card to use at ${subject} (${monthYear}) | earnrate`
+      ? `Best credit card for ${subject} (${thisMonth}) | earnrate`
+      : `Best credit card to use at ${subject} (${thisMonth}) | earnrate`
   const description = top
     ? `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${page.merchant === null ? 'on' : 'at'} ${subject}. Compare ${String(r.ranked.length)} cards by rate, annual fee and conditions, quoted from issuer terms. No affiliate links.`
     : `Which credit card earns the most ${page.merchant === null ? 'on' : 'at'} ${subject}, compared across ${String(catalog.cards.length)} cards from issuer terms.`
@@ -329,7 +318,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   const appLink = `/#wallet=${encodeURIComponent(page.merchant?.name ?? catalog.categories.find((c) => c.id === page.categoryId)?.name ?? page.label).replace(/%20/g, '+')}`
   const body = `
       <h1>Best credit card ${page.merchant === null ? 'for' : 'to use at'} ${esc(subject)}</h1>
-      <p class="updated">Updated ${esc(longDate)}</p>
+      <p class="updated">Updated ${esc(todayWords)}</p>
       ${answer(page, r, shown)}
       <p><a class="button" href="${appLink}">Check with your own cards</a></p>
       <h2>Top ${String(shown.length)} cards ${page.merchant === null ? 'for' : 'at'} ${esc(subject)}</h2>
@@ -370,7 +359,7 @@ function renderIndex(all: Page[]): string {
       .join(' · ')}</p>`
   const body = `
       <h1>Best credit card for every store and category</h1>
-      <p class="updated">Updated ${esc(longDate)}</p>
+      <p class="updated">Updated ${esc(todayWords)}</p>
       <p>Which of ${String(catalog.cards.length)} U.S. credit cards earns the most, store by store, from each issuer's own terms. No affiliate links.</p>
       ${section(
         'Categories',
@@ -404,13 +393,6 @@ const listWords = (items: string[], joiner = 'and') =>
   items.length <= 2
     ? items.join(` ${joiner} `)
     : `${items.slice(0, -1).join(', ')} ${joiner} ${items.at(-1) ?? ''}`
-
-const shortDate = (date: string) =>
-  new Date(`${date}T12:00:00`).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
 
 const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
@@ -652,7 +634,7 @@ function renderCard(
     currency && card.currency !== 'cash'
       ? ` earnrate counts ${esc(currency.name)} at ${String(currency.value_cents)}¢ each${currency.range ? `; transferring to airlines or hotels can be worth up to about ${String(currency.range[1])}¢` : ''}.`
       : ''
-  const title = `${name}: rewards rates, annual fee and where to use it (${monthYear}) | earnrate`
+  const title = `${name}: rewards rates, annual fee and where to use it (${thisMonth}) | earnrate`
   const description = `${card.name}: ${headline}. ${feeLabel(card.id)}. Every earning rule quoted from ${issuer}'s terms, and the stores where it beats other cards. No affiliate links.`
   const canonical = `${SITE}/cards/${card.id}`
   const body = `
@@ -708,7 +690,7 @@ function renderCardIndex(): string {
     `${SITE}/cards/`,
     `
       <h1>Credit cards earnrate tracks</h1>
-      <p class="updated">Updated ${esc(longDate)}</p>
+      <p class="updated">Updated ${esc(todayWords)}</p>
       <p>Every earning rule for ${String(catalog.cards.length)} U.S. cards, quoted from the issuer's own terms, and where each card beats the others.</p>
       ${sections}`,
     {

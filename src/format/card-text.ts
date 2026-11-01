@@ -21,11 +21,15 @@ const ISSUERS: Record<string, string> = {
 
 export { CAP_PERIODS, PICK_PERIODS, words } from '../engine/text.ts'
 import { membershipName, membershipText } from '../engine/memberships.ts'
-import { CAP_PERIODS, PICK_PERIODS, words } from '../engine/text.ts'
+import {
+  CAP_PERIODS,
+  PICK_PERIODS,
+  wholeDollars,
+  words,
+} from '../engine/text.ts'
 
 // Whole dollars, for fees and caps.
-export const usd = (n: number) =>
-  `${n < 0 ? '−' : ''}$${Math.abs(Math.round(n)).toLocaleString('en-US')}`
+export const usd = wholeDollars
 
 export const issuerName = (id: string) => ISSUERS[id] ?? id
 

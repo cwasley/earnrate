@@ -51,6 +51,7 @@ import {
 import { SearchInput } from './SearchInput.tsx'
 import { loadList, loadWallet, saveWallet } from './settings.ts'
 import { offerTerms } from '../../src/engine/offers.ts'
+import { dollarsAndCents } from '../../src/engine/text.ts'
 
 const QUICK = ['Groceries', 'Dining', 'Gas', 'Amazon', 'Costco', 'Travel']
 
@@ -98,7 +99,7 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
           {rec.bonus ? ' for its welcome bonus' : ''}:{' '}
           {pct(decided.effectiveReturnPct)} back
           {top?.earned !== null && top?.earned !== undefined
-            ? `, about $${top.earned.toFixed(2)}`
+            ? `, about ${dollarsAndCents(top.earned)}`
             : ''}
           .
         </p>

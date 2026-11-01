@@ -401,7 +401,9 @@ describe('nothing entered, or cards named for one answer', () => {
     expect(sheet.scope).toBe('all cards')
     const groceries = sheet.rows.find((r) => r.label === 'Groceries')
     expect(groceries?.cardId).toBe('amex-blue-cash-preferred')
-    expect(groceries?.note).toMatch(/^\$95 annual fee\. Up to \$6,000/)
+    expect(groceries?.note).toMatch(
+      /^\$95 annual fee \(waived the first year\)\. Up to \$6,000/,
+    )
   })
 
   test('typical spending stands in when none is given, and says so', () => {

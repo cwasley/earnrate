@@ -1,4 +1,4 @@
-import { NETWORK_NAMES } from '../engine/text.ts'
+import { money, NETWORK_NAMES } from '../engine/text.ts'
 import type { CardInfo, SetupNote } from '../engine/setup.ts'
 
 export function formatCardInfo(card: CardInfo): string {
@@ -7,7 +7,7 @@ export function formatCardInfo(card: CardInfo): string {
       ? ''
       : card.annualFee === 0
         ? ', no annual fee'
-        : `, $${String(card.annualFee)} a year`
+        : `, ${money(card.annualFee)} a year`
   const needs = [
     ...card.choices.map(
       (c) =>
@@ -15,7 +15,7 @@ export function formatCardInfo(card: CardInfo): string {
     ),
     ...(card.requiresMembership
       ? [
-          `needs ${card.requiresMembership.name} ($${String(card.requiresMembership.annualFee)} a year; membership id ${card.requiresMembership.id})`,
+          `needs ${card.requiresMembership.name} (${money(card.requiresMembership.annualFee)} a year; membership id ${card.requiresMembership.id})`,
         ]
       : []),
     ...(card.memberships.length > 0

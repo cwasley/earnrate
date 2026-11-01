@@ -10,17 +10,30 @@ export const roundCents = (n: number) => Math.round(n * 100) / 100
 // An id in words: "gas-ev-charging" reads "gas ev charging".
 export const words = (id: string) => id.replace(/[-_.]/g, ' ')
 
-// "Dec 31, 2026" from YYYY-MM-DD, the same in every time zone.
-export const shortDate = (date: string) =>
+const dateWords = (date: string, options: Intl.DateTimeFormatOptions) =>
   new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+    ...options,
     timeZone: 'UTC',
   })
 
+// From YYYY-MM-DD, the same in every time zone: "Dec 31, 2026",
+// "December 31, 2026", "December 2026".
+export const shortDate = (date: string) =>
+  dateWords(date, { month: 'short', day: 'numeric', year: 'numeric' })
+export const longDate = (date: string) =>
+  dateWords(date, { month: 'long', day: 'numeric', year: 'numeric' })
+export const monthYear = (date: string) =>
+  dateWords(date, { month: 'long', year: 'numeric' })
+
 // Whole dollars stay whole ($2,800); anything else shows cents ($0.40). A
 // loss reads −$618.
+// Always cents ($4.00), for what one purchase earns.
+export const dollarsAndCents = (n: number) =>
+  `${n < 0 ? '−' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+// Rounded to whole dollars ($2,800), for fees, caps and yearly totals.
+export const wholeDollars = (n: number) => money(Math.round(n))
+
 export const money = (n: number) =>
   `${n < 0 ? '−' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`
 

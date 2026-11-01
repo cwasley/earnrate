@@ -11,7 +11,7 @@ import { EPSILON, isClose } from './compare.ts'
 import { periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
 import { setupNotes } from './setup.ts'
-import { listed, money, shortDate } from './text.ts'
+import { feeText, listed, money, shortDate } from './text.ts'
 import type { RankedCard } from './types.ts'
 
 // `merchant` is a merchant id.
@@ -143,6 +143,8 @@ export function cheatSheet(
 // The best card earnrate knows for each everyday kind of purchase, for
 // someone who hasn't named any cards. Each row's note says what the card
 // costs or needs.
+const capitalized = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
+
 export function catalogCheatSheet(
   catalog: Catalog,
   date: string,
@@ -174,12 +176,7 @@ export function catalogCheatSheet(
           },
       options,
     ).ranked[0]
-    const fee =
-      top?.annualFee === null || top?.annualFee === undefined
-        ? null
-        : top.annualFee === 0
-          ? 'No annual fee.'
-          : `$${String(top.annualFee)} annual fee.`
+    const fee = top ? `${capitalized(feeText(top))}.` : null
     return {
       label: item.label,
       cardId: top?.cardId ?? null,

@@ -25,6 +25,7 @@ import {
   USAGE_ERROR,
   type Io,
 } from './run.ts'
+import { dollarsAndCents } from '../engine/text.ts'
 
 const IMPORT_HELP = `Usage: ${CLI_NAME} import <statement.csv> --card <card-id> [--apply]
        ${CLI_NAME} import <statement.csv>:<card-id> [<statement.csv>:<card-id> ...]
@@ -64,9 +65,6 @@ const fingerprint = ({ cardId, line }: CardLine, kind: RecordKind = 'cap') =>
       `${kind === 'bonus' ? 'bonus|' : ''}${cardId}|${line.date}|${String(line.amount)}|${line.description}`,
     )
     .digest('hex')
-
-const usd = (n: number) =>
-  `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 // "statement.csv:chase-sapphire-preferred" names the card inline.
 function splitTarget(arg: string): { file: string; cardId: string | null } {
@@ -113,22 +111,22 @@ function formatAnalysis(
     several
       ? `${String(a.byCard.length)} statements (${names.join(', ')}) · ${a.from} to ${a.to}`
       : `${names[0] ?? ''} statement · ${a.from} to ${a.to}`,
-    `${String(a.purchases)} purchases, ${usd(a.spend)}${a.refunds > 0 ? ` (refunds and credits: ${usd(a.refunds)})` : ''}`,
+    `${String(a.purchases)} purchases, ${dollarsAndCents(a.spend)}${a.refunds > 0 ? ` (refunds and credits: ${dollarsAndCents(a.refunds)})` : ''}`,
     '',
   ]
   if (several) {
-    out.push(`Earned on the cards you used: about ${usd(a.earned)}`)
+    out.push(`Earned on the cards you used: about ${dollarsAndCents(a.earned)}`)
     const width = Math.max(...names.map((n) => n.length))
     for (const t of a.byCard) {
       out.push(
-        `  ${labelOf(t.cardId).padEnd(width)}  ${String(t.purchases).padStart(4)} × ${usd(t.spend).padStart(11)}  ${usd(t.earned)}`,
+        `  ${labelOf(t.cardId).padEnd(width)}  ${String(t.purchases).padStart(4)} × ${dollarsAndCents(t.spend).padStart(11)}  ${dollarsAndCents(t.earned)}`,
       )
     }
   } else {
-    out.push(`Earned on ${names[0] ?? ''}: about ${usd(a.earned)}`)
+    out.push(`Earned on ${names[0] ?? ''}: about ${dollarsAndCents(a.earned)}`)
   }
   out.push(
-    `With earnrate's picks: about ${usd(a.best)} (+${usd(a.best - a.earned)})`,
+    `With earnrate's picks: about ${dollarsAndCents(a.best)} (+${dollarsAndCents(a.best - a.earned)})`,
     valuation,
   )
   if (a.missed.length > 0) {
@@ -143,7 +141,7 @@ function formatAnalysis(
     for (const m of shown) {
       const used = several ? `${labelOf(m.usedCardId).padEnd(cardWidth)}  ` : ''
       out.push(
-        `  ${name(m).slice(0, width).padEnd(width)}  ${used}${String(m.count).padStart(3)} × ${usd(m.spend).padStart(10)}  ${usd(m.earned)} → ${m.bestCard} ${usd(m.best)}  (+${usd(m.best - m.earned)})`,
+        `  ${name(m).slice(0, width).padEnd(width)}  ${used}${String(m.count).padStart(3)} × ${dollarsAndCents(m.spend).padStart(10)}  ${dollarsAndCents(m.earned)} → ${m.bestCard} ${dollarsAndCents(m.best)}  (+${dollarsAndCents(m.best - m.earned)})`,
       )
     }
     if (a.missed.length > 10)
@@ -173,7 +171,7 @@ function formatAnalysis(
         booking.after,
       )
     out.push(
-      `Cap usage for the current period: ${[...last].map(([k, v]) => `${k} ${usd(v)}`).join(', ')}.`,
+      `Cap usage for the current period: ${[...last].map(([k, v]) => `${k} ${dollarsAndCents(v)}`).join(', ')}.`,
     )
   } else if (a.alreadyImported > 0) {
     out.push(
@@ -188,7 +186,7 @@ function formatAnalysis(
   }
   for (const b of a.bonuses) {
     out.push(
-      `Welcome bonus on ${labelOf(b.cardId)}: ${usd(b.before)} → ${usd(b.after)} of ${usd(b.spend)}${b.deadline ? ` by ${b.deadline}` : ''}.`,
+      `Welcome bonus on ${labelOf(b.cardId)}: ${dollarsAndCents(b.before)} → ${dollarsAndCents(b.after)} of ${dollarsAndCents(b.spend)}${b.deadline ? ` by ${b.deadline}` : ''}.`,
     )
   }
   return `${out.join('\n')}\n`

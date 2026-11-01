@@ -9,13 +9,20 @@ import {
   membershipNote,
   type MembershipCost,
 } from '../engine/memberships.ts'
-import { choiceName, feeText, money, pct, words } from '../engine/text.ts'
+import {
+  choiceName,
+  feeText,
+  money,
+  pct,
+  wholeDollars,
+  words,
+} from '../engine/text.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
-const wholeUsd = (n: number) => money(Math.round(n))
-
 const membershipFees = (memberships: MembershipCost[]) =>
-  memberships.map((m) => ` + ${wholeUsd(m.annualFee)} for ${m.name}`).join('')
+  memberships
+    .map((m) => ` + ${wholeDollars(m.annualFee)} for ${m.name}`)
+    .join('')
 
 const TOP_BEST = 10
 
@@ -91,7 +98,7 @@ export function formatCatalogSimulation(
   if (!first) return 'No cards match.\n'
   const top = all ? 20 : TOP_SIMULATED
   const lines = [
-    `A year of this spending: ${wholeUsd(first.spend)}.`,
+    `A year of this spending: ${wholeDollars(first.spend)}.`,
     '',
     'Best single cards (rewards minus annual fee, per year):',
   ]
@@ -99,7 +106,7 @@ export function formatCatalogSimulation(
     const card = s.cards[0]
     if (!card) return
     lines.push(
-      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeUsd(s.net)}  (${wholeUsd(s.rewards)} rewards, ${wholeUsd(s.annualFees)} fee${membershipFees(s.memberships)})${picksText(card.picks)}`,
+      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeDollars(s.net)}  (${wholeDollars(s.rewards)} rewards, ${wholeDollars(s.annualFees)} fee${membershipFees(s.memberships)})${picksText(card.picks)}`,
     )
   })
   const pairs = r.pairs.slice(0, top)
@@ -107,7 +114,7 @@ export function formatCatalogSimulation(
     lines.push('', 'Best two-card pairs:')
     pairs.forEach((s, i) => {
       lines.push(
-        `${String(i + 1).padStart(2)}. ${s.cards.map((c) => `${name(c.cardId)}${picksText(c.picks)}`).join(' + ')}  ${wholeUsd(s.net)}`,
+        `${String(i + 1).padStart(2)}. ${s.cards.map((c) => `${name(c.cardId)}${picksText(c.picks)}`).join(' + ')}  ${wholeDollars(s.net)}`,
       )
       if (s.alternatives.length > 0)
         lines.push(
@@ -141,7 +148,7 @@ export function formatAdditions(
 ): string {
   const name = cardNamer(catalog)
   const lines = [
-    `Your wallet earns about ${wholeUsd(r.current.rewards)} a year on this spending${r.current.annualFees > 0 ? `, with ${wholeUsd(r.current.annualFees)} in annual fees: ${wholeUsd(r.current.net)} after fees` : ''}.`,
+    `Your wallet earns about ${wholeDollars(r.current.rewards)} a year on this spending${r.current.annualFees > 0 ? `, with ${wholeDollars(r.current.annualFees)} in annual fees: ${wholeDollars(r.current.net)} after fees` : ''}.`,
   ]
   for (const split of splitText(r.current, name)) lines.push(`  ${split}`)
   const gains = r.additions.filter((a) => a.gain > 0)
@@ -154,7 +161,7 @@ export function formatAdditions(
     )
     gains.slice(0, all ? 20 : TOP_SIMULATED).forEach((a, i) => {
       lines.push(
-        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeUsd(a.gain)} a year  (+${wholeUsd(a.extraRewards)} rewards, ${wholeUsd(a.annualFee)} fee${membershipFees(a.simulation.memberships.filter((m) => m.cardIds.includes(a.cardId)))})${picksText(a.picks)}`,
+        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeDollars(a.gain)} a year  (+${wholeDollars(a.extraRewards)} rewards, ${wholeDollars(a.annualFee)} fee${membershipFees(a.simulation.memberships.filter((m) => m.cardIds.includes(a.cardId)))})${picksText(a.picks)}`,
       )
     })
   }

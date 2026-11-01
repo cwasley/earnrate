@@ -1,4 +1,4 @@
-import { money, pct } from '../engine/text.ts'
+import { dollarsAndCents, money, pct } from '../engine/text.ts'
 import type {
   ExcludedCard,
   Purchase,
@@ -11,8 +11,6 @@ export type Style = (format: 'bold' | 'dim' | 'yellow', text: string) => string
 export const plain: Style = (_format, text) => text
 
 const TOP = 3
-
-const cents = (n: number) => `$${n.toFixed(2)}`
 
 const label = (c: RankedCard | ExcludedCard) => c.checkoutLabel ?? c.cardName
 
@@ -48,7 +46,7 @@ function cardLines(
   )
   const lines: string[] = []
   cards.forEach((c) => {
-    const earned = c.earned === null ? '' : `  ${cents(c.earned)}`
+    const earned = c.earned === null ? '' : `  ${dollarsAndCents(c.earned)}`
     const pick =
       c.cardId === bonusPick ? '  ← the pick, for its welcome bonus' : ''
     lines.push(
@@ -85,7 +83,8 @@ export function formatRecommendation(
   const noCard = `None of your cards work at ${rec.merchant.resolvedName}.`
 
   if (rec.decision && top) {
-    const earned = top.earned === null ? '' : `, about ${cents(top.earned)}`
+    const earned =
+      top.earned === null ? '' : `, about ${dollarsAndCents(top.earned)}`
     const confidence = rec.decision.confidence
     const why = rec.bonus ? ' for its welcome bonus' : ''
     lines.push(

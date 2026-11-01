@@ -1,4 +1,5 @@
 import type { CheatSheet } from '../../src/engine/cheat-sheet.ts'
+import { longDate } from '../../src/engine/text.ts'
 
 // A branded, shareable picture of a cheat sheet, drawn in the browser so
 // nothing leaves the device. Colors match the page in light and dark mode.
@@ -128,11 +129,7 @@ export function cheatSheetImage(
   ctx.textBaseline = 'alphabetic'
   ctx.fillStyle = muted
   ctx.font = `400 26px ${FONT}`
-  const asOf = new Date(`${sheet.date}T12:00:00`).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  const asOf = longDate(sheet.date)
   ctx.fillText(
     `Rates from each issuer's own terms, as of ${asOf}.`,
     PAD,
