@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
+import type { Catalog } from '../../schema/catalog.ts'
 import { membershipsFor, needsAnniversary } from '../../engine/setup.ts'
 import {
   choiceName,
@@ -9,7 +10,7 @@ import {
   words,
 } from '../../engine/text.ts'
 import { profileText, VALUATION_PROFILES } from '../../engine/profiles.ts'
-import { walletSummary } from '../../engine/wallet-summary.ts'
+import { optionName, walletSummary } from '../../engine/wallet-summary.ts'
 import { formatBooking, formatWalletSummary } from '../../format/wallet.ts'
 import { fail, type Context } from '../context.ts'
 import {
@@ -47,10 +48,13 @@ function startedText(started: string, now: number): string {
 }
 
 // What update_card changed, so the reply confirms the values it saved.
-function changes(args: z.infer<typeof CardChange>): string[] {
+function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
+  const card = catalog.cards.find((c) => c.id === args.cardId)
   const out: string[] = []
   for (const [choice, options] of Object.entries(args.picks ?? {}))
-    out.push(`${choiceName(choice)} picks: ${options.map(words).join(', ')}`)
+    out.push(
+      `${choiceName(choice)} picks: ${options.map((o) => (card ? optionName(catalog, card, choice, o) : words(o))).join('; ')}`,
+    )
   if (args.checkoutLabel === null) out.push('checkout name cleared')
   else if (args.checkoutLabel !== undefined)
     out.push(`checkout name "${args.checkoutLabel}"`)
@@ -228,7 +232,7 @@ export function registerWalletTools(
       annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
     },
     async (args) => {
-      const what = changes(args)
+      const what = changes(catalog, args)
       const card = catalog.cards.find((c) => c.id === args.cardId)
       const unused =
         args.anniversary !== undefined && card && !needsAnniversary(card)

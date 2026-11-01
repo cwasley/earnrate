@@ -807,6 +807,14 @@ describe('wallet setup', () => {
         'two-percent': ['restaurants'],
       },
     })
+    const gas = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'usbank-cash-plus',
+        picks: { 'two-percent': ['gas-ev-charging'] },
+      },
+    })
+    expect(text(gas)).toMatch(/2% picks: gas stations and EV charging\./)
   })
 
   test('remove_card refuses the last card', async () => {
