@@ -73,13 +73,18 @@ export function makeContext(deps: ServerDeps) {
 
   // Cards named in the conversation come first, then the saved wallet; with
   // neither (null), answers cover every card earnrate knows.
-  // The point values the user saved apply to every answer, not just ones
-  // from their saved cards. A wallet that can't be read has none.
-  async function savedValuations(): Promise<Wallet['valuations']> {
+  // The point values and memberships the user saved apply to every answer,
+  // not just ones from their saved cards. A wallet that can't be read has
+  // none.
+  async function saved(): Promise<Pick<Wallet, 'valuations' | 'memberships'>> {
     try {
-      return (await deps.store.load())?.valuations ?? {}
+      const wallet = await deps.store.load()
+      return {
+        valuations: wallet?.valuations ?? {},
+        memberships: wallet?.memberships ?? [],
+      }
     } catch {
-      return {}
+      return { valuations: {}, memberships: [] }
     }
   }
 
@@ -95,13 +100,13 @@ export function makeContext(deps: ServerDeps) {
             id: cardId,
             ...defined(rest),
           })),
-          ...(memberships ? { memberships } : {}),
+          memberships: memberships ?? (await saved()).memberships,
         },
         deps.today(),
       )
       return typeof named === 'string'
         ? named
-        : { ...named, valuations: await savedValuations() }
+        : { ...named, valuations: (await saved()).valuations }
     }
     const read = await readableWallet()
     if (typeof read === 'string') return read
@@ -143,7 +148,7 @@ export function makeContext(deps: ServerDeps) {
     readableWallet,
     resolve,
     cardsFor,
-    savedValuations,
+    saved,
     changed,
     cardName,
   }

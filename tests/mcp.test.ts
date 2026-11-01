@@ -508,7 +508,7 @@ describe('wallet setup', () => {
     expect(saved.cards[0]?.bonus?.spent).toBe(100)
   })
 
-  test('saved point values apply to every answer, unless a profile is asked for', async () => {
+  test('saved point values and memberships apply to every answer, unless asked otherwise', async () => {
     const client = await serve({
       savedWallets: 'account',
       store: new JsonWalletStore(
@@ -517,7 +517,7 @@ describe('wallet setup', () => {
           JSON.stringify({
             version: 1,
             valuations: { UR: 2 },
-            memberships: [],
+            memberships: ['amazon-prime'],
             cards: [{ id: 'amex-gold', cap_usage: {}, activated: [] }],
           }),
         ),
@@ -534,6 +534,16 @@ describe('wallet setup', () => {
       arguments: { category: 'dining', valuation: 'flat' },
     })
     expect(text(flat)).not.toMatch(/ 1\. Chase Sapphire Preferred Card/)
+    const amazon = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { merchant: 'Amazon' },
+    })
+    expect(text(amazon)).toMatch(/Prime Visa +5%/)
+    const sheet = await client.callTool({
+      name: 'cheat_sheet',
+      arguments: { everyCard: true },
+    })
+    expect(text(sheet)).toMatch(/not just the user's saved cards/)
   })
 
   test("every tool's answer matches its declared output schema", async () => {

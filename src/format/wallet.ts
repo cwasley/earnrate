@@ -1,5 +1,5 @@
 import type { BonusBooking, CapBooking } from '../engine/record.ts'
-import { money, NETWORK_NAMES, shortDate, words } from '../engine/text.ts'
+import { money, NETWORK_NAMES, shortDate } from '../engine/text.ts'
 import type { WalletSummary } from '../engine/wallet-summary.ts'
 
 export function formatWalletSummary(summary: WalletSummary): string {
@@ -56,7 +56,7 @@ export function formatWalletSummary(summary: WalletSummary): string {
       : 'Memberships: none saved.'
   const values =
     summary.pointValues.length > 0
-      ? `Point values in the wallet: ${summary.pointValues.map((v) => `${v.name} at ${String(v.centsPerUnit)}¢${v.redemption === null ? '' : ` (redeemed as ${words(v.redemption)})`}`).join(', ')}. Others use earnrate's defaults.`
+      ? `Point values in the wallet: ${summary.pointValues.map((v) => `${v.name} at ${String(v.centsPerUnit)}¢${v.redemption === null ? '' : ` (redeemed ${v.redemption})`}`).join(', ')}. Others use earnrate's defaults.`
       : "Point values: earnrate's defaults."
   return [...cards, memberships, values].join('\n')
 }

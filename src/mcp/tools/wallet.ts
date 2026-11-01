@@ -30,13 +30,20 @@ import type { ServerDeps } from '../server.ts'
 
 const WRITE = { readOnlyHint: false, openWorldHint: false }
 
-// "Saved wallet started today at 8:28 AM Eastern": the time tells apart two
-// wallets started the same day.
-function startedText(started: string, today: string): string {
-  const [date = '', time = ''] = started.split('T')
-  const [h = 0, m = 0] = time.split(':').map(Number)
-  const clock = `${String(h % 12 === 0 ? 12 : h % 12)}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`
-  return `Saved wallet started ${date === today ? 'today' : shortDate(date)} at ${clock} Eastern.`
+// "Saved wallet started 4 minutes ago": relative, since the server doesn't
+// know the user's time zone, and precise enough to tell apart two wallets
+// started the same day.
+function startedText(started: string, now: number): string {
+  const minutes = Math.floor((now - Date.parse(started)) / 60_000)
+  const ago =
+    minutes < 1
+      ? 'just now'
+      : minutes < 60
+        ? `${String(minutes)} minute${minutes === 1 ? '' : 's'} ago`
+        : minutes < 48 * 60
+          ? `${String(Math.floor(minutes / 60))} hour${minutes < 120 ? '' : 's'} ago`
+          : `on ${shortDate(started.slice(0, 10))}`
+  return `Saved wallet started ${ago}.`
 }
 
 // What update_card changed, so the reply confirms the values it saved.
@@ -93,7 +100,7 @@ export function registerWalletTools(
         started,
       }
       const when =
-        started === null ? '' : `${startedText(started, deps.today())}\n`
+        started === null ? '' : `${startedText(started, Date.now())}\n`
       return {
         content: [
           {

@@ -49,7 +49,7 @@ export interface AccountStore extends WalletStore {
   replace(wallet: Wallet): Promise<SetupResult>
   erase(): Promise<void>
   disconnect(): Promise<void> // signs this app out; the wallet stays
-  started(): Promise<string | null> // YYYY-MM-DDTHH:MM, when the wallet began
+  started(): Promise<string | null> // ISO time, when the wallet began
 }
 
 export type JsonBackend = {

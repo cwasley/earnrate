@@ -2,6 +2,14 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.01.7
+
+Currencies can name how a redemption reads (`redemption_names`), so a wallet valuing SoFi points by redeeming into a SoFi account says so. No rates changed.
+
+| Currency     | Field            | Old → new                           | Source |
+| ------------ | ---------------- | ----------------------------------- | ------ |
+| sofi-rewards | redemption_names | sofi-account: "into a SoFi account" | n/a    |
+
 ## 2026.11.01.6
 
 Freedom Flex's dining note says 5x rather than 5%, since its points can pool into Ultimate Rewards worth more than 1¢. No rates changed.

@@ -12,6 +12,7 @@ import { choicePeriod, periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
+import { optionName } from './wallet-summary.ts'
 import {
   CAP_PERIODS,
   categoryPhrase,
@@ -21,7 +22,6 @@ import {
   money,
   PICK_PERIODS,
   pointValuesText,
-  words,
 } from './text.ts'
 import type {
   Channel,
@@ -266,11 +266,15 @@ function requirementsFor(
   }
 }
 
-function conditionsText(catalog: Catalog, r: Requirements): string[] {
+function conditionsText(
+  catalog: Catalog,
+  card: Card,
+  r: Requirements,
+): string[] {
   const conditions: string[] = []
   if (r.pick) {
     conditions.push(
-      `Needs ${r.pick.options.map(words).join(' or ')} as its ${choiceName(r.pick.choice)} pick (${r.pick.period === 'until_changed' ? '' : 'picked '}${PICK_PERIODS[r.pick.period]}).`,
+      `Needs ${r.pick.options.map((o) => optionName(catalog, card, r.pick?.choice ?? '', o)).join(' or ')} as its ${choiceName(r.pick.choice)} pick (${r.pick.period === 'until_changed' ? '' : 'picked '}${PICK_PERIODS[r.pick.period]}).`,
     )
   }
   if (r.activation !== null)
@@ -399,7 +403,7 @@ export function exploreCards(
       picks,
       requirements,
       conditions: [
-        ...conditionsText(catalog, requirements),
+        ...conditionsText(catalog, card, requirements),
         ...membershipNeeded(catalog, card, paid),
       ],
       evidence: evidence ? { quote: evidence.quote, url: evidence.url } : null,

@@ -10,6 +10,8 @@ export const CurrencySchema = z.strictObject({
   // Value per redemption option, for currencies whose worth depends on how
   // they're redeemed. A wallet picks one by key.
   redemptions: z.record(z.string(), z.number().positive()).optional(),
+  // How each redemption reads after "redeemed": "into a SoFi account".
+  redemption_names: z.record(z.string(), z.string()).optional(),
   sources: z.array(z.url()).default([]),
   note: z.string().optional(),
 })

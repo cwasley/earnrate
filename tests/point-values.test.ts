@@ -55,11 +55,11 @@ test('a redemption choice in the wallet reads as one, not as a set value', () =>
       currency: 'sofi-rewards',
       name: 'SoFi Member Rewards',
       centsPerUnit: 1,
-      redemption: 'sofi-account',
+      redemption: 'into a SoFi account',
     },
   ])
   expect(formatWalletSummary(summary)).toMatch(
-    /Point values in the wallet: SoFi Member Rewards at 1¢ \(redeemed as sofi account\)/,
+    /Point values in the wallet: SoFi Member Rewards at 1¢ \(redeemed into a SoFi account\)/,
   )
 })
 

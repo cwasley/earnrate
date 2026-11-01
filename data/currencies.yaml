@@ -27,6 +27,8 @@
   value_cents: 1.0
   redemptions:
     sofi-account: 1.0 # SoFi Checking, Savings, Invest, the SoFi Credit Card account, loans, or SoFi Travel
+  redemption_names:
+    sofi-account: into a SoFi account
   sources:
     - https://www.sofi.com/credit-card/unlimited/
     - https://www.sofi.com/card/rewards?cardtype=c

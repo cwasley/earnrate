@@ -73,7 +73,7 @@ export type WalletSummary = {
     centsPerUnit: number
     redemption: string | null
   }[]
-  started: string | null // YYYY-MM-DDTHH:MM US Eastern, for a hosted wallet
+  started: string | null // ISO time, for a hosted wallet
   cards: CardSummary[]
 }
 
@@ -90,7 +90,7 @@ function merchantName(catalog: Catalog, id: string): string {
     : name
 }
 
-function optionName(
+export function optionName(
   catalog: Catalog,
   card: Card,
   choiceId: string,
@@ -260,8 +260,18 @@ function capSummaries(
   })
 }
 
-const redemptionOf = (v: Wallet['valuations'][string] | undefined) =>
-  typeof v === 'object' ? (v.redemption ?? null) : null
+// "into a SoFi account", for a wallet that values points by a redemption.
+function redemptionOf(
+  catalog: Catalog,
+  currency: string,
+  v: Wallet['valuations'][string] | undefined,
+): string | null {
+  if (typeof v !== 'object' || v.redemption === undefined) return null
+  const names = catalog.currencies.find(
+    (c) => c.id === currency,
+  )?.redemption_names
+  return names?.[v.redemption] ?? `as ${words(v.redemption)}`
+}
 
 export function walletSummary(
   catalog: Catalog,
@@ -328,7 +338,7 @@ export function walletSummary(
       currency: id,
       name: currencyLabel(catalog, id),
       centsPerUnit: currencyValuation(catalog, wallet, id).centsPerUnit,
-      redemption: redemptionOf(wallet.valuations[id]),
+      redemption: redemptionOf(catalog, id, wallet.valuations[id]),
     }))
   return { memberships: wallet.memberships, pointValues, started: null, cards }
 }

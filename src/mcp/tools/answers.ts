@@ -57,6 +57,9 @@ const SOURCES: Record<MerchantResolution['source'], string> = {
   none: 'not recognized',
 }
 
+const EVERY_CARD_NOTE =
+  "Picked from every card earnrate knows, as asked, not just the user's saved cards. The user's saved memberships and point values still apply."
+
 const TOP = 10
 
 // The tools that answer without a saved wallet: from every card, the cards
@@ -139,7 +142,7 @@ export function registerAnswerTools(
             channel: purchase.channel,
             date: purchase.date,
           },
-          settings({ memberships }, await ctx.savedValuations()),
+          settings({ memberships }, await ctx.saved()),
           resolved.merchant,
         )
         const allCards = { ...explored, ranked: explored.ranked.slice(0, TOP) }
@@ -243,10 +246,7 @@ export function registerAnswerTools(
     async (args) => {
       const wallet = await ctx.cardsFor(args.cards, undefined)
       if (typeof wallet === 'string') return fail(wallet)
-      const base = wallet ?? {
-        ...EMPTY_WALLET,
-        valuations: await ctx.savedValuations(),
-      }
+      const base = wallet ?? { ...EMPTY_WALLET, ...(await ctx.saved()) }
       const comparison = compareOffers(
         catalog,
         args.valuation ? withValuationProfile(base, args.valuation) : base,
@@ -274,7 +274,7 @@ export function registerAnswerTools(
             text:
               formatOffers(trimmed, (id) => currencyName(catalog, id), true) +
               (more > 0
-                ? `\nThe top ${String(TOP)} of ${String(comparison.offers.length)} offers. Narrow them with kind, noAnnualFee or business.\n`
+                ? `\nThe top ${String(TOP)} of ${String(comparison.offers.length)} offers${trimmed.offers.length > TOP ? `, plus ${String(trimmed.offers.length - TOP)} likely not eligible` : ''}. Narrow them with kind, noAnnualFee or business.\n`
                 : ''),
           },
         ],
@@ -316,7 +316,7 @@ export function registerAnswerTools(
           channel: args.channel ?? null,
           date: deps.today(),
         },
-        settings(args, await ctx.savedValuations()),
+        settings(args, await ctx.saved()),
       )
       const trimmed = { ...result, ranked: result.ranked.slice(0, TOP) }
       return {
@@ -384,7 +384,7 @@ export function registerAnswerTools(
         )
       const notes = given.length === 0 ? [TYPICAL_SPEND_NOTE] : []
       const options = {
-        ...settings(args, await ctx.savedValuations()),
+        ...settings(args, await ctx.saved()),
         start: deps.today(),
       }
       const wantsTheirs =
@@ -467,9 +467,11 @@ export function registerAnswerTools(
               ...catalogCheatSheet(
                 catalog,
                 date,
-                settings(args, await ctx.savedValuations()),
+                settings(args, await ctx.saved()),
               ),
-              notes: [ALL_CARDS_NOTE],
+              notes: [
+                args.everyCard === true ? EVERY_CARD_NOTE : ALL_CARDS_NOTE,
+              ],
             }
           : cheatSheet(
               catalog,

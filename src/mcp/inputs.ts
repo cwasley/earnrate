@@ -224,11 +224,14 @@ type FilterArgs = {
   valuation?: 'flat' | 'points-heavy' | undefined
 }
 
-// The catalog filters as exploreCards and simulate take them. A valuation
-// profile asked for wins over the user's saved point values.
+// The catalog filters as exploreCards and simulate take them. Memberships or
+// a valuation profile asked for win over the user's saved ones.
 export const settings = (
   args: FilterArgs,
-  saved: Wallet['valuations'] = {},
+  saved: Pick<Wallet, 'valuations' | 'memberships'> = {
+    valuations: {},
+    memberships: [],
+  },
 ) => ({
   filters: {
     ...ALL_PERSONAL_CARDS,
@@ -237,6 +240,8 @@ export const settings = (
     business: args.business ?? false,
     issuer: args.issuer ?? null,
   },
-  memberships: args.memberships ?? [],
-  valuations: args.valuation ? VALUATION_PROFILES[args.valuation] : saved,
+  memberships: args.memberships ?? saved.memberships,
+  valuations: args.valuation
+    ? VALUATION_PROFILES[args.valuation]
+    : saved.valuations,
 })
