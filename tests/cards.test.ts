@@ -108,6 +108,17 @@ describe('the 16 popular cards', () => {
     expect(online.excluded.map((e) => e.cardId)).toEqual(['amex-gold'])
   })
 
+  test('no online hint where earnrate knows nothing about a website', () => {
+    const w = WalletSchema.parse({ cards: [{ id: 'amex-gold' }] })
+    const pump = recommend(
+      catalog,
+      w,
+      purchase('Costco Gas', { channel: 'in_store' }),
+    )
+    expect(pump.decision).toBeNull()
+    expect(pump.warnings.join(' ')).not.toMatch(/online/)
+  })
+
   test('Ink Business Cash and Preferred', () => {
     expect(rates('Staples')['chase-ink-business-cash']).toBe(5)
     expect(rates('Comcast')['chase-ink-business-cash']).toBe(5)

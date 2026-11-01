@@ -1,5 +1,5 @@
 import type { OfferComparison, OfferSummary } from '../engine/offers.ts'
-import { feeText, money } from '../engine/text.ts'
+import { feeText, money, shortDate } from '../engine/text.ts'
 
 const TOP = 10
 
@@ -10,14 +10,6 @@ function reward(o: OfferSummary, currencyName: string): string {
       : `${(o.points ?? 0).toLocaleString('en-US')} ${currencyName}`
   return o.varies ? `Up to ${amount}` : amount
 }
-
-const asOf = (date: string) =>
-  new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
 
 export function formatOffers(
   c: OfferComparison,
@@ -43,7 +35,7 @@ export function formatOffers(
       `    ${reward(o, currencyName(o.currency))} ${spend}. ${feeText(o)[0]?.toUpperCase() ?? ''}${feeText(o).slice(1)}.${o.held ? ' In your wallet.' : ''}`,
     )
     lines.push(
-      `    ${o.validTo ? `Offer ends ${o.validTo}. ` : ''}Public offer as of ${asOf(o.lastVerified)}; yours may differ.`,
+      `    ${o.validTo ? `Offer ends ${o.validTo}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ.`,
     )
     if (o.note) lines.push(`    ${o.note}`)
   })

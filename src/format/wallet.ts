@@ -1,5 +1,5 @@
 import type { BonusBooking, CapBooking } from '../engine/record.ts'
-import { money } from '../engine/text.ts'
+import { money, shortDate } from '../engine/text.ts'
 import type { WalletSummary } from '../engine/wallet-summary.ts'
 
 const NETWORKS: Record<string, string> = {
@@ -9,14 +9,6 @@ const NETWORKS: Record<string, string> = {
   discover: 'Discover',
   store: 'store card',
 }
-
-const day = (date: string) =>
-  new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
 
 export function formatWalletSummary(summary: WalletSummary): string {
   const cards = summary.cards.map((c) => {
@@ -32,11 +24,15 @@ export function formatWalletSummary(summary: WalletSummary): string {
       const picks = Object.entries(c.chosen.pickNames)
         .map(([choice, names]) => `${choice}: ${names.join(', ')}`)
         .join('; ')
-      const until = c.chosen.until ? `, through ${day(c.chosen.until)}` : ''
+      const until = c.chosen.until
+        ? `, through ${shortDate(c.chosen.until)}`
+        : ''
       lines.push(
-        c.chosen.current
-          ? `  Picks for ${c.chosen.period}${until}: ${picks}. Pick again after that.`
-          : `  Picks are for ${c.chosen.period}, which is over: ask for this period's picks.`,
+        !c.chosen.current
+          ? `  Picks are for ${c.chosen.period}, which is over: ask for this period's picks.`
+          : c.chosen.until === null
+            ? `  Picks: ${picks}. They stay until the user changes them.`
+            : `  Picks for ${c.chosen.period}${until}: ${picks}. Pick again after that.`,
       )
     }
     if (c.toActivate.length > 0)

@@ -443,8 +443,16 @@ export function recommend(
 
   if (!winner) {
     warnings.push(`None of your cards work at ${merchant.resolvedName}.`)
+    // Only where the merchant's data says what its website takes: without
+    // that, every network is assumed, and a gas pump has no website.
+    const record = [
+      ...catalog.merchants.overrides,
+      ...catalog.merchants.seed,
+    ].find((m) => m.id === merchant.merchantId)
     const online =
-      merchant.channel === 'in_store' && merchant.merchantId !== null
+      merchant.channel === 'in_store' &&
+      merchant.merchantId !== null &&
+      record?.online?.accepts !== undefined
         ? resolveMerchantById(catalog, merchant.merchantId, 'online')
         : null
     const alt = online

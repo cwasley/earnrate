@@ -493,17 +493,22 @@ describe('wallet setup', () => {
     expect(await backend.read()).not.toBeNull()
     await client.callTool({
       name: 'delete_wallet',
-      arguments: { confirm: true },
+      arguments: { confirm: true, cards: 1 },
     })
     expect(await backend.read()).toBeNull()
     const after = await client.callTool({ name: 'list_wallet', arguments: {} })
     expect(text(after)).toMatch(/saved wallet has no cards yet/)
-    const again = await client.callTool({
+    const stale = await client.callTool({
       name: 'delete_wallet',
-      arguments: { confirm: true },
+      arguments: { confirm: true, cards: 1 },
     })
-    expect(again.isError).toBe(true)
-    expect(text(again)).toMatch(/nothing to delete/)
+    expect(stale.isError).toBe(true)
+    expect(text(stale)).toMatch(/holds 0 cards, not 1/)
+    const empty = await client.callTool({
+      name: 'delete_wallet',
+      arguments: { confirm: true, cards: 0 },
+    })
+    expect(empty.isError).toBeFalsy()
   })
 
   test('the tool lists cover every tool, and only hosted wallets add account tools', async () => {

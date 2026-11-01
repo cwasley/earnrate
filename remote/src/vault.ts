@@ -120,18 +120,17 @@ export class WalletVault {
     })
   }
 
-  async exists(): Promise<boolean> {
-    return (await this.storage.get<Meta>('meta')) !== undefined
-  }
-
-  // Every request from a connected app counts as use, so a wallet used only
-  // for questions isn't deleted. Written at most once a day.
-  checkIn(): Promise<boolean> {
+  // Any tool call counts as use, so a wallet used only for questions isn't
+  // deleted; an app's own setup requests don't. Written at most once a day.
+  checkIn(used: boolean): Promise<boolean> {
     return this.serialized(async () => {
       const meta = await this.storage.get<Meta>('meta')
       if (!meta) return false
       const now = this.now()
-      if (meta.lastUsed === meta.created || now - meta.lastUsed >= DAY) {
+      if (
+        used &&
+        (meta.lastUsed === meta.created || now - meta.lastUsed >= DAY)
+      ) {
         await this.storage.put('meta', { ...meta, lastUsed: now })
         await this.storage.setAlarm(retentionEnd(now))
       }
@@ -207,7 +206,6 @@ const failed = () => ({ ok: false as const, error: DELETED })
 export type VaultApi = Pick<
   WalletVault,
   | 'create'
-  | 'exists'
   | 'checkIn'
   | 'wrappedKey'
   | 'load'

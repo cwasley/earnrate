@@ -12,7 +12,7 @@ import { daysBetween } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { activationRules } from './setup.ts'
-import { categoryPhrase, earnText } from './text.ts'
+import { categoryPhrase, earnText, words } from './text.ts'
 import { cardValuation } from './valuation.ts'
 
 export type CapSummary = {
@@ -70,12 +70,12 @@ const NUMBERS: Record<string, string> = {
 
 // "five-percent" reads "5%"; other ids read as words.
 export function choiceName(id: string): string {
-  return id
-    .replace(
+  return words(
+    id.replace(
       /\b(one|two|three|four|five|six)-percent\b/g,
       (_, n: string) => `${NUMBERS[n] ?? n}%`,
-    )
-    .replace(/[-_.]/g, ' ')
+    ),
+  )
 }
 
 const listed = (parts: string[]) =>
@@ -85,7 +85,7 @@ const listed = (parts: string[]) =>
 
 function merchantName(catalog: Catalog, id: string): string {
   const all = [...catalog.merchants.overrides, ...catalog.merchants.seed]
-  return all.find((m) => m.id === id)?.name ?? id.replace(/[-_.]/g, ' ')
+  return all.find((m) => m.id === id)?.name ?? words(id)
 }
 
 function optionName(
@@ -95,13 +95,13 @@ function optionName(
   option: string,
 ): string {
   const o = card.choices.find((c) => c.id === choiceId)?.options[option]
-  if (!o) return option.replace(/[-_.]/g, ' ')
+  if (!o) return words(option)
   const parts = [
     ...o.categories.map((c) => categoryPhrase(catalog, c)),
     ...o.merchants.map((m) => merchantName(catalog, m)),
   ]
   if (o.online) parts.push('online shopping')
-  return parts.length > 0 ? listed(parts) : option.replace(/[-_.]/g, ' ')
+  return parts.length > 0 ? listed(parts) : words(option)
 }
 
 function ruleWhat(catalog: Catalog, rule: Rule): string {
@@ -111,7 +111,7 @@ function ruleWhat(catalog: Catalog, rule: Rule): string {
     ...(rule.match.categories ?? []).map((c) => categoryPhrase(catalog, c)),
     ...(rule.match.merchants ?? []).map((m) => merchantName(catalog, m)),
   ]
-  return parts.length > 0 ? listed(parts) : rule.id.replace(/[-_.]/g, ' ')
+  return parts.length > 0 ? listed(parts) : words(rule.id)
 }
 
 function periodEnd(period: string): string | null {
@@ -132,22 +132,31 @@ const applies = (rule: Rule, today: string) =>
   (rule.valid_from === undefined || rule.valid_from <= today) &&
   (rule.valid_to === undefined || rule.valid_to >= today)
 
+// Every bonus rate the cardholder gets now, best first, so none reads as the
+// base rate. Rates behind a membership the wallet lacks are left out.
 function headlineRates(
   catalog: Catalog,
+  wallet: Wallet,
   card: Card,
+  held: WalletCard,
   currency: string,
   today: string,
 ): string[] {
-  const best = card.rules
-    .filter((r) => applies(r, today) && r.rate > card.base_rate)
+  const lines = card.rules
+    .filter(
+      (r) =>
+        applies(r, today) &&
+        r.rate > card.base_rate &&
+        (r.requires?.membership === undefined ||
+          wallet.memberships.includes(r.requires.membership)),
+    )
     .sort((a, b) => b.rate - a.rate)
-    .slice(0, 4)
     .map(
       (r) =>
-        `${earnText(catalog, r.rate, currency)} on ${ruleWhat(catalog, r)}${r.requires?.activation ? ' (once activated)' : ''}`,
+        `${earnText(catalog, r.rate, currency)} on ${ruleWhat(catalog, r)}${r.requires?.activation && !isActivated(card, held, r.id) ? ' (once activated)' : ''}`,
     )
   return [
-    ...best,
+    ...new Set(lines),
     `${earnText(catalog, card.base_rate, currency)} on everything else`,
   ]
 }
@@ -199,7 +208,7 @@ function capSummaries(
     const label = shared?.rotating
       ? 'the rotating bonus categories'
       : [...new Set(covered.map((r) => ruleWhat(catalog, r)))].join(', ') ||
-        key.replace(/[-_.]/g, ' ')
+        words(key)
     return {
       key,
       label,
@@ -243,7 +252,10 @@ export function walletSummary(
         ? {
             period: held.chosen.period,
             current: pickedCategories(card, held, today).staleChoice === null,
-            until: periodEnd(held.chosen.period),
+            // Picks that carry over have no end date.
+            until: card.choices.every((c) => c.period === 'until_changed')
+              ? null
+              : periodEnd(held.chosen.period),
             picks: held.chosen.picks,
             pickNames: Object.fromEntries(
               Object.entries(held.chosen.picks).map(([choice, options]) => [
@@ -253,7 +265,14 @@ export function walletSummary(
             ),
           }
         : null,
-      rates: headlineRates(catalog, card, valuation.currency, today),
+      rates: headlineRates(
+        catalog,
+        wallet,
+        card,
+        held,
+        valuation.currency,
+        today,
+      ),
       activated: held.activated,
       toActivate: toActivate(catalog, card, held, today),
       anniversary: held.anniversary ?? null,

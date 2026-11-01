@@ -98,21 +98,21 @@ export function compareSources(
       const snap = snapshots.get(pageKey(e.url))
       if (!snap?.ok) continue
       const texts = snap.loads.flatMap((l) => [l.innerText, l.textContent])
-      const inEveryLoad = snap.loads.every((l) =>
-        containsQuote([l.innerText, l.textContent], e.quote),
-      )
+      const found = containsQuote(texts, e.quote)
       if (
+        found &&
         e.rule === 'welcome_offer' &&
         card.welcome_offer?.varies !== true &&
-        !inEveryLoad &&
-        containsQuote(texts, e.quote)
+        !snap.loads.every((l) =>
+          containsQuote([l.innerText, l.textContent], e.quote),
+        )
       )
         report.varyingOffers.push({
           cardId: card.id,
           url: e.url,
           quote: e.quote,
         })
-      if (!containsQuote(texts, e.quote)) {
+      if (!found) {
         report.missingEvidence.push({
           cardId: card.id,
           rule: e.rule,

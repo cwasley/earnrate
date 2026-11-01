@@ -6,6 +6,18 @@ export const num = (n: number) => String(Number(n.toFixed(2)))
 export const pct = (n: number) => `${num(n)}%`
 export const roundCents = (n: number) => Math.round(n * 100) / 100
 
+// An id in words: "gas-ev-charging" reads "gas ev charging".
+export const words = (id: string) => id.replace(/[-_.]/g, ' ')
+
+// "Dec 31, 2026" from YYYY-MM-DD, the same in every time zone.
+export const shortDate = (date: string) =>
+  new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+
 // Whole dollars stay whole ($2,800); anything else shows cents ($0.40).
 export const money = (n: number) =>
   `$${n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`

@@ -65,7 +65,16 @@ export function registerAccountTools(
     async ({ yaml, replace }) => {
       const parsed = parseWalletYaml(yaml, catalog)
       if (typeof parsed === 'string') return fail(parsed)
-      const current = await store.load().catch(() => null)
+      let current
+      try {
+        current = await store.load()
+      } catch (e) {
+        if (replace !== true)
+          return fail(
+            `Couldn't read the saved wallet to check what it holds (${e instanceof Error ? e.message : String(e)}). Ask the user, then call again with replace: true to overwrite it.`,
+          )
+        current = null
+      }
       if (current !== null && current.cards.length > 0 && replace !== true)
         return fail(
           `This would replace the ${String(current.cards.length)} ${current.cards.length === 1 ? 'card' : 'cards'} already saved (${current.cards.map((c) => c.id).join(', ')}). Ask the user, then call again with replace: true.`,
@@ -84,11 +93,18 @@ export function registerAccountTools(
     {
       title: 'Delete the wallet',
       description:
-        "Deletes the saved wallet and its recovery code now and for good, and signs out every Claude app connected to it, this one included. earnrate.dev and the earnrate command line keep their own wallets and aren't affected. Only when the user asks to delete it: offer export_wallet first, and pass confirm only after the user confirms. It refuses when the wallet has no cards, since there's nothing to delete.",
+        "Deletes the saved wallet and its recovery code now and for good, and signs out every Claude app connected to it, this one included. earnrate.dev and the earnrate command line keep their own wallets and aren't affected. Only when the user asks to delete it: show it with list_wallet, offer export_wallet, and pass confirm and cards only after the user confirms. It refuses if the wallet no longer holds that many cards, so a retried call can't delete a different wallet.",
       inputSchema: z.object({
         confirm: z
           .literal(true)
           .describe('true, only after the user confirms the deletion.'),
+        cards: z
+          .number()
+          .int()
+          .nonnegative()
+          .describe(
+            'How many cards the wallet held when the user confirmed, from list_wallet: 0 for an empty wallet.',
+          ),
       }),
       outputSchema: z.object({ deleted: z.boolean() }),
       annotations: {
@@ -98,11 +114,13 @@ export function registerAccountTools(
         openWorldHint: false,
       },
     },
-    async () => {
-      const current = await store.load().catch(() => null)
-      if (current === null || current.cards.length === 0)
+    async ({ cards }) => {
+      // An unreadable wallet can still be deleted: the user confirmed it.
+      const current = await store.load().catch(() => undefined)
+      const held = current === undefined ? cards : (current?.cards.length ?? 0)
+      if (held !== cards)
         return fail(
-          "This saved wallet has no cards, so there's nothing to delete. If the user meant a different wallet, it may already be deleted.",
+          `This saved wallet holds ${String(held)} ${held === 1 ? 'card' : 'cards'}, not ${String(cards)}, so it isn't the wallet the user confirmed (it may have been deleted and a new one connected). Show it with list_wallet and confirm again.`,
         )
       await store.erase()
       return {

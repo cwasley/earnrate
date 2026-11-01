@@ -212,7 +212,7 @@ export function makeWorker<E extends Env>(
     const vault = vaultFor(env, grant.walletId)
     let exists
     try {
-      exists = await vault.checkIn()
+      exists = await vault.checkIn(calls.some((c) => c.tool !== null))
     } catch {
       return wantsWallet ? unavailable() : signedOut()
     }

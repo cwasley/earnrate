@@ -546,7 +546,7 @@ describe('anonymous saved wallets', () => {
     })
     const deleted = await client.callTool({
       name: 'delete_wallet',
-      arguments: { confirm: true },
+      arguments: { confirm: true, cards: 1 },
     })
     expect(deleted.isError).toBeFalsy()
     const [storage] = [...d.storages.values()]
@@ -590,16 +590,19 @@ describe('anonymous saved wallets', () => {
     })
     const deleted = await client.callTool({
       name: 'delete_wallet',
-      arguments: { confirm: true },
+      arguments: { confirm: true, cards: 1 },
     })
     expect(deleted.isError).toBeFalsy()
 
     const next = await startWallet(d)
     const replayed = await (
       await connect(d, next.token)
-    ).callTool({ name: 'delete_wallet', arguments: { confirm: true } })
+    ).callTool({
+      name: 'delete_wallet',
+      arguments: { confirm: true, cards: 1 },
+    })
     expect(replayed.isError).toBe(true)
-    expect(text(replayed)).toMatch(/nothing to delete/)
+    expect(text(replayed)).toMatch(/holds 0 cards, not 1/)
     expect(
       (await post(d, '/', callTool('list_wallet'), next.token)).status,
     ).toBe(200)
@@ -629,6 +632,28 @@ describe('anonymous saved wallets', () => {
       await connect(d, again)
     ).callTool({ name: 'list_wallet', arguments: {} })
     expect(text(listed)).toContain('amex-gold')
+  })
+
+  test('an empty wallet can be deleted when the user confirms it is empty', async () => {
+    const d = deployment()
+    const { token } = await startWallet(d)
+    const deleted = await (
+      await connect(d, token)
+    ).callTool({
+      name: 'delete_wallet',
+      arguments: { confirm: true, cards: 0 },
+    })
+    expect(deleted.isError).toBeFalsy()
+    const [storage] = [...d.storages.values()]
+    expect(storage?.values.size).toBe(0)
+  })
+
+  test("an app's own setup requests don't count as using a new wallet", async () => {
+    const d = deployment()
+    const { token } = await startWallet(d)
+    const [storage] = [...d.storages.values()]
+    await (await connect(d, token)).listTools()
+    expect(storage?.alarm).toBeLessThan(Date.now() + 8 * 24 * 3600_000)
   })
 
   test('questions alone keep a wallet from being deleted as unused', async () => {

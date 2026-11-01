@@ -208,7 +208,8 @@ async function saveSheet(sheet: CheatSheet, wallet: Wallet) {
   a.href = url
   a.download = `earnrate-cheat-sheet-${sheet.quarter.toLowerCase().replace(/\s+/g, '-')}.png`
   a.click()
-  URL.revokeObjectURL(url)
+  // Some browsers start the download after click() returns.
+  setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }
 
 function offerText(card: NonNullable<ReturnType<typeof cards.get>>): string {
@@ -643,7 +644,8 @@ async function exportWallet(wallet: Wallet) {
   a.href = url
   a.download = 'wallet.yaml'
   a.click()
-  URL.revokeObjectURL(url)
+  // Some browsers start the download after click() returns.
+  setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }
 
 async function importWallet(file: File): Promise<Wallet | string> {

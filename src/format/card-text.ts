@@ -42,7 +42,8 @@ export const CAP_PERIODS: Record<string, string> = {
   cardmember_year: 'a card year',
 }
 
-export const words = (id: string) => id.replace(/[-_.]/g, ' ')
+export { words } from '../engine/text.ts'
+import { words } from '../engine/text.ts'
 
 // Whole dollars, for fees and caps.
 export const usd = (n: number) =>
