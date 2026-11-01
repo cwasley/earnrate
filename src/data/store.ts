@@ -89,7 +89,9 @@ export class JsonWalletStore implements AccountStore {
       const before = await this.load()
       const change = apply(before)
       if (!change.ok) return failed(change.error)
-      await this.backend.write(JSON.stringify(change.wallet))
+      // An empty wallet is stored as none: the schema needs a card.
+      if (change.wallet.cards.length === 0) await this.backend.remove()
+      else await this.backend.write(JSON.stringify(change.wallet))
       return {
         ok: true,
         wallet: change.wallet,

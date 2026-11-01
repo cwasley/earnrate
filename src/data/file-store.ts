@@ -110,7 +110,13 @@ export class FileWalletStore implements WalletStore {
 
   removeCard(cardId: string): Promise<SetupResult> {
     return this.change(
-      this.existing((w) => removeFromWallet(w, cardId)),
+      this.existing((w) =>
+        w.cards.length === 1 && w.cards[0]?.id === cardId
+          ? failed(
+              `${cardId} is the last card in ${this.where}. To start over, delete that file; to swap cards, add the new one first.`,
+            )
+          : removeFromWallet(w, cardId),
+      ),
       (text) => removeCardText(text ?? '', cardId),
     )
   }

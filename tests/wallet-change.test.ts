@@ -65,7 +65,8 @@ describe('wallet changes without a file', () => {
       false,
     )
     expect(withMemberships(catalog, wallet, ['costco-gold']).ok).toBe(false)
-    expect(removeFromWallet(wallet, 'amex-gold').ok).toBe(false)
+    const emptied = removeFromWallet(wallet, 'amex-gold')
+    expect(emptied.ok && emptied.wallet.cards).toEqual([])
   })
 })
 

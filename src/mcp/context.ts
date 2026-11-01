@@ -110,7 +110,9 @@ export function makeContext(deps: ServerDeps) {
     }
     const text = [
       message,
-      `Wallet: ${output.cardIds.join(', ')}.`,
+      output.cardIds.length > 0
+        ? `Wallet: ${output.cardIds.join(', ')}.`
+        : 'The wallet has no cards now; answers cover every card.',
       ...(notes ? [formatNotes(result.notes)] : []),
     ].join('\n')
     return {

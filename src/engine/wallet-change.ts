@@ -311,11 +311,8 @@ export function removeFromWallet(wallet: Wallet, id: string): WalletChange {
       `${id} isn't in the wallet. Cards: ${list(wallet.cards.map((c) => c.id))}.`,
     )
   }
-  if (wallet.cards.length === 1) {
-    return failed(
-      `${id} is the last card in the wallet, and a wallet needs one. Add the new card first, then remove this one.`,
-    )
-  }
+  // Removing the last card leaves an empty wallet, which each store keeps
+  // in its own way (or refuses, for a wallet file).
   return {
     ok: true,
     wallet: { ...wallet, cards: wallet.cards.filter((c) => c.id !== id) },

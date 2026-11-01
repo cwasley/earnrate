@@ -91,7 +91,13 @@ describe.each(stores)('the %s store', (_name, make) => {
     expect((await store.load())?.cards.map((c) => c.id)).toEqual([
       'amex-blue-cash-preferred',
     ])
-    expect((await store.removeCard('amex-blue-cash-preferred')).ok).toBe(false)
+    const last = await store.removeCard('amex-blue-cash-preferred')
+    if (_name === 'file') {
+      expect(!last.ok && last.error).toMatch(/last card in .*delete that file/)
+    } else {
+      expect(last.ok).toBe(true)
+      expect(await store.load()).toBeNull()
+    }
   })
 
   test('concurrent writes all land', async () => {
