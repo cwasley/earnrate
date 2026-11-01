@@ -157,7 +157,7 @@ export function compareOffers(
   const notes = [
     `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`,
     `Each offer is the public one on the issuer's page on the date shown, checked weekly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how.`,
-    "First-year value is the bonus at your point values minus the first year's annual fee. It leaves out what the card earns on your spending and any credits or perks.",
+    "First-year value is the bonus at your point values minus the first year's annual fee and any membership the card needs that you don't have. It leaves out what the card earns on your spending and any credits or perks.",
   ]
   return { offers, withoutOffer, notes }
 }

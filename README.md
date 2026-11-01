@@ -62,7 +62,7 @@ Options: `--online` or `--in-store`, `--valuation flat|points-heavy`, `--all`, `
 
 ### Your wallet
 
-The wallet is a YAML file (`~/.earnrate/wallet.yaml`) listing your cards by ID, which is each card's file name in [`data/cards/`](data/cards). `earnrate add`, `update`, `remove` and `memberships` write it for you and keep your comments, or you can edit it by hand. Only the cards are required:
+The wallet is a YAML file (`~/.earnrate/wallet.yaml`) listing your cards by ID, which is each card's file name in [`data/cards/`](data/cards). `earnrate add`, `update`, `remove`, `memberships` and `values` write it for you and keep your comments, or you can edit it by hand. Only the cards are required:
 
 ```yaml
 version: 1 # the file's format; earnrate writes it
@@ -82,7 +82,7 @@ cards:
         two-percent: [gas-ev-charging]
 ```
 
-Rule IDs for `activated`, the choice slots for `chosen` and the membership IDs that unlock bonuses (such as `bofa-rewards-premier` for a BofA Rewards tier) are in each card's file. Add `costco` if you have a Costco membership: Costco Anywhere needs one, and spending answers count its $65 a year unless you have it, hold the card or spend at Costco. Currencies and their default values are in [`data/currencies.yaml`](data/currencies.yaml). Spending caps fill up as you record purchases from an AI assistant or import a statement with `--apply`, and reset with each period.
+Rule IDs for `activated` and the choice slots for `chosen` are in each card's file; membership IDs (such as `bofa-rewards-premier` for a BofA Rewards tier) are in [`data/memberships.yaml`](data/memberships.yaml), and `earnrate memberships` lists them. `earnrate values UR=1.5` saves what a program's points are worth to you; every answer uses it. Add `costco` if you have a Costco membership: Costco Anywhere needs one, and spending answers count its $65 a year unless you have it, hold the card or spend at Costco. Currencies and their default values are in [`data/currencies.yaml`](data/currencies.yaml). Spending caps fill up as you record purchases from an AI assistant or import a statement with `--apply`, and reset with each period.
 
 ### Merchants earnrate doesn't know
 
@@ -181,7 +181,7 @@ Or install it as a Claude Code plugin, which connects Claude Code and Cowork to 
 - `best_card_for_purchase`: which card to use, with reasons
 - `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
 - `resolve_merchant`: how a merchant was identified
-- `list_wallet`: your cards, caps left this period, chosen categories and welcome-bonus progress
+- `list_wallet`: your cards, caps left this period, chosen categories, welcome-bonus progress and the point values you've set
 - `cheat_sheet`: the card to use for each everyday kind of purchase this quarter
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have
 - `record_purchase`: books a purchase against its cap and any open welcome bonus in your wallet file, keeping your comments

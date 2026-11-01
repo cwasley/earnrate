@@ -83,6 +83,12 @@ Holding some cards means holding a membership, but the wallet asks for membershi
 
 - `chase-prime-visa`: needs Amazon Prime for its Amazon and Whole Foods rates.
 
+### Spend milestones
+
+A bonus for reaching a spend total in a year, paid once rather than per dollar, isn't a rate and has no field.
+
+- `chase-ihg-one-rewards`: 10,000 bonus points after $15,000 in purchases each calendar year.
+
 ### Credits that offset the annual fee
 
 Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. It would need a per-card credit value with evidence, kept apart from earn rates (credits as rewards stay out of scope, below).

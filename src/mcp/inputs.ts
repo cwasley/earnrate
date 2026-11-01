@@ -5,6 +5,7 @@ import { knownMemberships } from '../engine/setup.ts'
 import type { CardInput } from '../engine/wallet-change.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { IsoDate } from '../schema/common.ts'
+import type { Wallet } from '../schema/wallet.ts'
 
 export const Merchant = z
   .string()
@@ -166,7 +167,7 @@ export function makeInputs(catalog: Catalog) {
     .enum(categoryIds)
     .optional()
     .describe(
-      `Only for a merchant earnrate may not know, and only if you're confident what kind of business it is: its spending category, e.g. grocery.supermarket for a supermarket, dining for a restaurant, gas for a gas station. Ignored when earnrate knows the merchant. Leave it out if unsure. Categories: ${categoryList}.`,
+      `Only for a merchant earnrate may not know, and only if you're confident what kind of business it is: its spending category, e.g. grocery.supermarket for a supermarket, dining for a restaurant, gas for a gas station. Ignored when earnrate knows the merchant. Leave it out if unsure, except for record_purchase, which needs it for a merchant earnrate doesn't know: there, other records the purchase toward a welcome bonus without touching any cap. Categories: ${categoryList}.`,
     )
   const CatalogCategory = z
     .enum(categoryIds)
@@ -191,7 +192,7 @@ export function makeInputs(catalog: Catalog) {
       .enum(['flat', 'points-heavy'])
       .optional()
       .describe(
-        `flat (default): points at their cash-out value, ${profileText('flat')}. points-heavy: ${profileText('points-heavy')}, for people who transfer points to airlines and hotels.`,
+        `Instead of the user's saved point values (or earnrate's defaults): flat, points at their cash-out value, ${profileText('flat')}; or points-heavy, ${profileText('points-heavy')}, for people who transfer points to airlines and hotels.`,
       ),
   }
   const AllMemberships = Memberships.describe(
@@ -218,8 +219,12 @@ type FilterArgs = {
   valuation?: 'flat' | 'points-heavy' | undefined
 }
 
-// The catalog filters as exploreCards and simulate take them.
-export const settings = (args: FilterArgs) => ({
+// The catalog filters as exploreCards and simulate take them. A valuation
+// profile asked for wins over the user's saved point values.
+export const settings = (
+  args: FilterArgs,
+  saved: Wallet['valuations'] = {},
+) => ({
   filters: {
     ...ALL_PERSONAL_CARDS,
     kind: args.kind ?? 'any',
@@ -228,5 +233,5 @@ export const settings = (args: FilterArgs) => ({
     issuer: args.issuer ?? null,
   },
   memberships: args.memberships ?? [],
-  valuations: args.valuation ? VALUATION_PROFILES[args.valuation] : {},
+  valuations: args.valuation ? VALUATION_PROFILES[args.valuation] : saved,
 })

@@ -12,9 +12,19 @@ import {
   type ExploreQuery,
 } from '../src/engine/explore.ts'
 import { EPSILON } from '../src/engine/compare.ts'
+import { membershipNeeded, paidMemberships } from '../src/engine/memberships.ts'
 import { localToday } from '../src/engine/periods.ts'
-import { longDate, monthYear, num, pct, shortDate } from '../src/engine/text.ts'
-import { categoryPhrase, currencyName, earnText } from '../src/engine/text.ts'
+import {
+  categoryPhrase,
+  currencyName,
+  earnText,
+  listed,
+  longDate,
+  monthYear,
+  num,
+  pct,
+  shortDate,
+} from '../src/engine/text.ts'
 import {
   CAP_PERIODS,
   cardText,
@@ -142,7 +152,7 @@ const options = {
 function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   const [top] = shown
   if (!top) return `<p>No card in earnrate's data earns a bonus here.</p>`
-  const where = `${page.merchant === null && page.categoryId === 'other' ? 'on' : 'at'} ${esc(page.label)}`
+  const where = `${page.merchant === null && (page.categoryId === 'other' || readsOn(page.categoryId)) ? 'on' : 'at'} ${esc(page.label)}`
   const codes =
     page.merchant === null || r.merchant.source === 'none'
       ? ''
@@ -150,12 +160,21 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   const parts = [
     `<strong><a href="/cards/${top.cardId}">${esc(shortName(top.cardId))}</a></strong> earns the most ${where}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ` in points at ${num(top.centsPerUnit)}¢ each`}.${codes}`,
   ]
+  const topCard = cards.get(top.cardId)
+  const needs = topCard
+    ? membershipNeeded(
+        catalog,
+        topCard,
+        paidMemberships(catalog, {
+          memberships: [],
+          merchantIds: [r.merchant.merchantId],
+        }),
+      )
+    : []
   const first = [
     ...requirementLines(top.cardId, top.requirements, untilText(top)),
     // "Needs a Costco membership", except where buying means being a member.
-    ...top.conditions
-      .filter((c) => c.includes('membership ('))
-      .map((c) => c.replace(/\.$/, '')),
+    ...needs.map((c) => c.replace(/\.$/, '')),
   ]
   if (first.length > 0) parts.push(`${first.join('. ')}.`)
   const noFee = shown.find(
@@ -401,11 +420,6 @@ const readsOn = (id: string): boolean => {
   return dot !== -1 && readsOn(id.slice(0, dot))
 }
 
-const listWords = (items: string[], joiner = 'and') =>
-  items.length <= 2
-    ? items.join(` ${joiner} `)
-    : `${items.slice(0, -1).join(', ')} ${joiner} ${items.at(-1) ?? ''}`
-
 const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
 function ruleWhat(card: Card, rule: Rule): string {
@@ -426,12 +440,10 @@ function ruleWhatRaw(card: Card, rule: Rule): string {
   }
   if (m.merchants?.length)
     parts.push(
-      listWords(m.merchants.map((id) => merchantNames.get(id) ?? words(id))),
+      listed(m.merchants.map((id) => merchantNames.get(id) ?? words(id))),
     )
   if (m.categories?.length) {
-    const cats = listWords(
-      m.categories.map((id) => categoryPhrase(catalog, id)),
-    )
+    const cats = listed(m.categories.map((id) => categoryPhrase(catalog, id)))
     parts.push(m.merchants?.length ? `when it codes as ${cats}` : cats)
   }
   if (m.mccs?.length)
@@ -447,7 +459,7 @@ function ruleConditions(card: Card, rule: Rule): string[] {
       ...(ex.categories ?? []).map((id) => categoryPhrase(catalog, id)),
       ...(ex.merchants ?? []).map((id) => merchantNames.get(id) ?? words(id)),
     ]
-    if (names.length > 0) lines.push(`Not at ${listWords(names, 'or')}`)
+    if (names.length > 0) lines.push(`Not at ${listed(names, 'or')}`)
   }
   if (rule.channel === 'online') lines.push('Online only')
   if (rule.channel === 'in_store') lines.push('In store only')
@@ -488,7 +500,7 @@ function rulesList(card: Card): string {
   const rules = [...card.rules].sort((a, b) => b.rate - a.rate)
   const items = rules.map((rule) => {
     const lines = ruleConditions(card, rule)
-    return `<li><span class="rank">${esc(String(Number(rule.rate.toFixed(2))))}</span><div><strong>${esc(ruleWhat(card, rule))}</strong> <span class="rate">${esc(earnText(catalog, rule.rate, card.currency))}</span>${rule.note ? `<br /><span class="muted">${esc(rule.note)}</span>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${evidenceFor(card, rule.id)}</div></li>`
+    return `<li><span class="rank">${esc(num(rule.rate))}</span><div><strong>${esc(ruleWhat(card, rule))}</strong> <span class="rate">${esc(earnText(catalog, rule.rate, card.currency))}</span>${rule.note ? `<br /><span class="muted">${esc(rule.note)}</span>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${evidenceFor(card, rule.id)}</div></li>`
   })
   items.push(
     `<li><span class="rank">${esc(String(card.base_rate))}</span><div><strong>Everything else</strong> <span class="rate">${esc(earnText(catalog, card.base_rate, card.currency))}</span>${evidenceFor(card, 'base_rate')}</div></li>`,
@@ -501,7 +513,7 @@ function choicesText(card: Card): string {
   const items = card.choices.map((c) => {
     const options = Object.keys(c.options).map(words)
     const when = PICK_PERIODS[c.period]
-    return `<li>Pick ${String(c.pick)} of: ${esc(listWords(options))} (${esc(when)})${c.default ? `. If you don't pick, it's ${esc(listWords(c.default.map(words)))}` : ''}.</li>`
+    return `<li>Pick ${String(c.pick)} of: ${esc(listed(options))} (${esc(when)})${c.default ? `. If you don't pick, it's ${esc(listed(c.default.map(words)))}` : ''}.</li>`
   })
   return `<h2>Categories you choose</h2><ul>${items.join('')}</ul>`
 }
@@ -561,7 +573,7 @@ function headlineFor(card: Card): string {
   }
   const clauses = [...byRate].map(
     ([rate, whats]) =>
-      `${earnText(catalog, rate, card.currency)} ${listWords(whats)}`,
+      `${earnText(catalog, rate, card.currency)} ${listed(whats)}`,
   )
 
   const stores = current
@@ -590,7 +602,7 @@ function headlineFor(card: Card): string {
     ]
     const membership = best.requires?.membership
     clauses.unshift(
-      `${earnText(catalog, best.rate, card.currency)} at ${listWords(names)}${membership ? ` with ${membershipName(membership)}` : ''}`,
+      `${earnText(catalog, best.rate, card.currency)} at ${listed(names)}${membership ? ` with ${membershipName(membership)}` : ''}`,
     )
   }
 
@@ -604,7 +616,7 @@ function headlineFor(card: Card): string {
     )
 
   const base = `${earnText(catalog, card.base_rate, card.currency)} on everything${clauses.length > 0 ? ' else' : ''}`
-  if (card.only_at) return listWords(clauses) || base
+  if (card.only_at) return listed(clauses) || base
   return clauses.length > 0 ? `${clauses.join('; ')}; and ${base}` : base
 }
 
@@ -633,7 +645,7 @@ function renderCard(
   const body = `
       <h1>${esc(card.name)}</h1>
       <p class="updated">${esc(issuer)} · ${esc(card.business ? 'Business card' : 'Personal card')} · Checked against ${esc(issuer)}'s terms ${esc(shortDate(card.last_verified))}</p>
-      <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeLabel(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listWords(card.only_at.map((id) => merchantNames.get(id) ?? words(id))))}.` : ''}</p>
+      <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeLabel(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listed(card.only_at.map((id) => merchantNames.get(id) ?? words(id))))}.` : ''}</p>
       <p><a class="button" href="/#wallet">Add it to your wallet</a></p>
       ${
         firsts.length > 0

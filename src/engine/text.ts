@@ -25,15 +25,15 @@ export const longDate = (date: string) =>
 export const monthYear = (date: string) =>
   dateWords(date, { month: 'long', year: 'numeric' })
 
-// Whole dollars stay whole ($2,800); anything else shows cents ($0.40). A
-// loss reads −$618.
-// Always cents ($4.00), for what one purchase earns.
+// Always cents ($4.00), for what one purchase earns. A loss reads −$4.00.
 export const dollarsAndCents = (n: number) =>
   `${n < 0 ? '−' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 // Rounded to whole dollars ($2,800), for fees, caps and yearly totals.
 export const wholeDollars = (n: number) => money(Math.round(n))
 
+// Whole dollars stay whole ($2,800); anything else shows cents ($0.40). A
+// loss reads −$618.
 export const money = (n: number) =>
   `${n < 0 ? '−' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`
 
@@ -112,13 +112,13 @@ export const NETWORK_NAMES: Record<string, string> = {
 
 // A name with its own "and" ("drugstores and pharmacies") would run into the
 // list's: those lists use commas only, with those names last.
-export const listed = (parts: string[]) => {
+export const listed = (parts: string[], joiner = 'and') => {
   const anded = parts.filter((p) => p.includes(' and '))
   if (anded.length > 0)
     return [...parts.filter((p) => !p.includes(' and ')), ...anded].join(', ')
   return parts.length <= 2
-    ? parts.join(' and ')
-    : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1) ?? ''}`
+    ? parts.join(` ${joiner} `)
+    : `${parts.slice(0, -1).join(', ')} ${joiner} ${parts.at(-1) ?? ''}`
 }
 
 const NUMBERS: Record<string, string> = {

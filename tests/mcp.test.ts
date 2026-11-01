@@ -508,6 +508,34 @@ describe('wallet setup', () => {
     expect(saved.cards[0]?.bonus?.spent).toBe(100)
   })
 
+  test('saved point values apply to every answer, unless a profile is asked for', async () => {
+    const client = await serve({
+      savedWallets: 'account',
+      store: new JsonWalletStore(
+        catalog,
+        memoryBackend(
+          JSON.stringify({
+            version: 1,
+            valuations: { UR: 2 },
+            memberships: [],
+            cards: [{ id: 'amex-gold', cap_usage: {}, activated: [] }],
+          }),
+        ),
+        'your saved wallet',
+      ),
+    })
+    const best = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { category: 'dining' },
+    })
+    expect(text(best)).toMatch(/ 1\. Chase Sapphire Preferred Card +6%/)
+    const flat = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { category: 'dining', valuation: 'flat' },
+    })
+    expect(text(flat)).not.toMatch(/ 1\. Chase Sapphire Preferred Card/)
+  })
+
   test("every tool's answer matches its declared output schema", async () => {
     // A client that has listed the tools checks each answer against its
     // outputSchema, as Claude Desktop does.

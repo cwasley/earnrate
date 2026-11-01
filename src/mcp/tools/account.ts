@@ -19,7 +19,7 @@ export function registerAccountTools(
     {
       title: 'Export the wallet',
       description:
-        'The saved wallet as a wallet.yaml file the earnrate command line and earnrate.dev can import: card ids, picks, activations, memberships, cap usage and bonus progress. Never card numbers.',
+        'The saved wallet as a wallet.yaml file the earnrate command line and earnrate.dev can import: card ids, picks, activations, memberships, point values, cap usage and bonus progress. Never card numbers.',
       inputSchema: z.object({}),
       outputSchema: z.object({ yaml: z.string() }),
       annotations: { readOnlyHint: true, openWorldHint: false },

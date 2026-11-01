@@ -23,7 +23,9 @@ import {
   NETWORK_NAMES,
   num,
   pointValuesText,
+  roundCents,
   shortDate,
+  wholeDollars,
 } from './text.ts'
 import type {
   Confidence,
@@ -547,7 +549,7 @@ export function recommend(
     const costHere =
       ties || top.earned === null || first.earned === null
         ? null
-        : Math.round((first.earned - top.earned) * 100) / 100
+        : roundCents(first.earned - top.earned)
     bonusResult = {
       cardId: top.cardId,
       checkoutLabel: top.checkoutLabel,
@@ -559,12 +561,10 @@ export function recommend(
     }
     const pace =
       daysLeft >= 7
-        ? ` (about ${money(Math.round(remaining / (daysLeft / 7)))} a week)`
+        ? ` (about ${wholeDollars(remaining / (daysLeft / 7))} a week)`
         : ''
     const worth =
-      status.value === null
-        ? ''
-        : `, worth about ${money(Math.round(status.value))}`
+      status.value === null ? '' : `, worth about ${wholeDollars(status.value)}`
     notes.unshift(
       ties
         ? `${displayName(bonus.entry)} earns as much here as any of your cards, so it's the pick: it helps its welcome bonus, ${money(remaining)} more to spend by ${deadline}${worth}.`

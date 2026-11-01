@@ -38,7 +38,13 @@ import {
   splitAmount,
   valuationProblem,
 } from './args.ts'
-import { cardsToUse, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
+import {
+  cardsToUse,
+  type Io,
+  RUNTIME_ERROR,
+  savedValuations,
+  USAGE_ERROR,
+} from './run.ts'
 
 const FILTER_OPTIONS = `  --cash, --points        Cash back cards only, or points and miles cards only.
   --no-fee                Cards with no annual fee.
@@ -46,8 +52,9 @@ const FILTER_OPTIONS = `  --cash, --points        Cash back cards only, or point
   --business              Business cards instead of personal ones.
   --closed                Include cards the issuer no longer takes applications for.
   --member <name>         A membership you have, e.g. amazon-prime or costco. Repeatable.
-  --valuation <profile>   flat (${profileText('flat')}, the default) or
-                          points-heavy (${profileText('points-heavy')}).`
+  --valuation <profile>   flat (${profileText('flat')}) or points-heavy
+                          (${profileText('points-heavy')}), instead of your
+                          saved point values.`
 
 const BEST_HELP = `Usage: ${CLI_NAME} best <merchant or category> [amount] [options]
 
@@ -124,6 +131,7 @@ type Settings = {
 function settingsFrom(
   values: FilterValues,
   catalog: Catalog,
+  saved: Wallet['valuations'],
 ): Settings | string {
   if (values.cash && values.points) return 'Pick --cash or --points, not both.'
   const problem =
@@ -146,7 +154,7 @@ function settingsFrom(
     valuations:
       values.valuation !== undefined && isValuationProfile(values.valuation)
         ? VALUATION_PROFILES[values.valuation]
-        : {},
+        : saved,
   }
 }
 
@@ -192,7 +200,7 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
     return USAGE_ERROR
   }
   const catalog = await loadCatalog()
-  const settings = settingsFrom(values, catalog)
+  const settings = settingsFrom(values, catalog, await savedValuations(io))
   if (typeof settings === 'string') {
     io.stderr(`${settings}\n`)
     return USAGE_ERROR
@@ -259,7 +267,7 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
     return 0
   }
   const catalog = await loadCatalog()
-  const settings = settingsFrom(values, catalog)
+  const settings = settingsFrom(values, catalog, await savedValuations(io))
   if (typeof settings === 'string') {
     io.stderr(`${settings}\n`)
     return USAGE_ERROR

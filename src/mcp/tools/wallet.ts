@@ -70,7 +70,7 @@ export function registerWalletTools(
     {
       title: 'List wallet',
       description:
-        "Lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, and when each card's data was last verified.",
+        "Lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started.",
       outputSchema: WalletSummarySchema,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
@@ -280,7 +280,7 @@ export function registerWalletTools(
     'set_point_values',
     {
       title: 'Set point values',
-      description: `Saves what the user's points are worth to them, in cents per point, so answers compare cards at those values. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies: ${catalog.currencies.map((c) => c.id).join(', ')}.`,
+      description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. It needs a saved wallet with a card in it. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies: ${catalog.currencies.map((c) => c.id).join(', ')}.`,
       inputSchema: z.object({
         values: z
           .record(z.string(), z.number().positive().max(5).nullable())

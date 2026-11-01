@@ -66,8 +66,9 @@ names, replaces the list. --none clears it.
 `,
   values: `Usage: ${CLI_NAME} values [<currency>=<cents>...] [--profile <name>]
 
-What your points are worth to you, in cents per point, so answers compare
-cards at those values. With no arguments, shows them.
+What your points are worth to you, in cents per point, saved in your wallet
+file; every answer then uses them unless you pass --valuation. With no
+arguments, shows them.
 
 Examples:
   ${CLI_NAME} values UR=1.5 MR=1.6

@@ -12,10 +12,11 @@ import { formatCheatSheet } from '../format/cheat-sheet.ts'
 import { cardList, dateProblem, valuationProblem } from './args.ts'
 import {
   cardsToUse,
+  type Io,
   NO_WALLET_HINT,
   RUNTIME_ERROR,
+  savedValuations,
   USAGE_ERROR,
-  type Io,
 } from './run.ts'
 
 const CHEATSHEET_HELP = `Usage: ${CLI_NAME} cheatsheet [options]
@@ -77,7 +78,7 @@ export async function runCheatSheet(argv: string[], io: Io): Promise<number> {
       valuations:
         values.valuation !== undefined && isValuationProfile(values.valuation)
           ? VALUATION_PROFILES[values.valuation]
-          : {},
+          : await savedValuations(io),
     })
     io.stdout(
       values.json

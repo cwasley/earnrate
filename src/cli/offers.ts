@@ -10,7 +10,8 @@ import { cardsToUse, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
 const OFFERS_HELP = `Usage: ${CLI_NAME} offers [--cash | --points] [--no-fee] [--business] [options]
 
 Ranks the welcome offers on cards you don't have by first-year value: the
-bonus at your point values minus the first year's annual fee.
+bonus at your point values minus the first year's annual fee and any
+membership the card needs that you don't have.
 
 Options:
   --cash                 Cash back cards only.

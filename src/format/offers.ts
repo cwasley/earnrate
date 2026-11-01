@@ -1,5 +1,5 @@
 import { offerTerms, type OfferComparison } from '../engine/offers.ts'
-import { feeText, money, shortDate } from '../engine/text.ts'
+import { feeText, money, shortDate, wholeDollars } from '../engine/text.ts'
 
 const TOP = 10
 
@@ -17,13 +17,13 @@ export function formatOffers(
   shown.forEach((o, i) => {
     const weeks = (o.months * 52) / 12
     const pace =
-      o.spend > 0 ? ` (about ${money(Math.round(o.spend / weeks))} a week)` : ''
+      o.spend > 0 ? ` (about ${wholeDollars(o.spend / weeks)} a week)` : ''
     lines.push(
-      `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  about ${money(Math.round(o.firstYearValue))} the first year`,
+      `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  about ${wholeDollars(o.firstYearValue)} the first year`,
       `    ${offerTerms(o, currencyName(o.currency))}${pace}. ${feeText(o)[0]?.toUpperCase() ?? ''}${feeText(o).slice(1)}.${o.membershipFee > 0 ? ` Needs a ${money(o.membershipFee)} membership, counted in the first year.` : ''}${o.held ? ' In your wallet.' : ''}`,
     )
     lines.push(
-      `    ${o.validTo ? `Offer ends ${o.validTo}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ.`,
+      `    ${o.validTo ? `Offer ends ${shortDate(o.validTo)}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ.`,
     )
     if (o.ineligible) lines.push(`    ${o.ineligible}`)
     if (o.note) lines.push(`    ${o.note}`)

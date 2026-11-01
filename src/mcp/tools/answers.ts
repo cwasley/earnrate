@@ -139,7 +139,7 @@ export function registerAnswerTools(
             channel: purchase.channel,
             date: purchase.date,
           },
-          settings({ memberships }),
+          settings({ memberships }, await ctx.savedValuations()),
           resolved.merchant,
         )
         const allCards = { ...explored, ranked: explored.ranked.slice(0, TOP) }
@@ -243,7 +243,10 @@ export function registerAnswerTools(
     async (args) => {
       const wallet = await ctx.cardsFor(args.cards, undefined)
       if (typeof wallet === 'string') return fail(wallet)
-      const base = wallet ?? EMPTY_WALLET
+      const base = wallet ?? {
+        ...EMPTY_WALLET,
+        valuations: await ctx.savedValuations(),
+      }
       const comparison = compareOffers(
         catalog,
         args.valuation ? withValuationProfile(base, args.valuation) : base,
@@ -296,7 +299,7 @@ export function registerAnswerTools(
       outputSchema: ExplorationSchema,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    (args) => {
+    async (args) => {
       if (args.merchant === undefined && args.category === undefined)
         return fail('Give a merchant or a category.')
       const result = exploreCards(
@@ -309,7 +312,7 @@ export function registerAnswerTools(
           channel: args.channel ?? null,
           date: deps.today(),
         },
-        settings(args),
+        settings(args, await ctx.savedValuations()),
       )
       const trimmed = { ...result, ranked: result.ranked.slice(0, TOP) }
       return {
@@ -376,7 +379,10 @@ export function registerAnswerTools(
           `earnrate doesn't know ${unknown.map((l) => `"${l.merchant.input}"`).join(', ')}. Give a category for those lines instead.`,
         )
       const notes = given.length === 0 ? [TYPICAL_SPEND_NOTE] : []
-      const options = { ...settings(args), start: deps.today() }
+      const options = {
+        ...settings(args, await ctx.savedValuations()),
+        start: deps.today(),
+      }
       const wantsTheirs =
         (args.cards !== undefined && args.cards.length > 0) ||
         args.compareToWallet === true
@@ -445,7 +451,11 @@ export function registerAnswerTools(
       const sheet =
         wallet === null
           ? {
-              ...catalogCheatSheet(catalog, date, settings(args)),
+              ...catalogCheatSheet(
+                catalog,
+                date,
+                settings(args, await ctx.savedValuations()),
+              ),
               notes: [ALL_CARDS_NOTE],
             }
           : cheatSheet(

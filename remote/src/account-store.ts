@@ -10,6 +10,7 @@ import type {
 import type { CardInput } from '../../src/engine/wallet-change.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import type { VaultApi } from './vault.ts'
+import { easternDate } from './dates.ts'
 
 const WHERE = 'your saved wallet'
 
@@ -78,9 +79,7 @@ export class VaultWalletStore implements AccountStore {
 
   async started(): Promise<string | null> {
     const created = await this.vault.started()
-    return created === null
-      ? null
-      : new Date(created).toISOString().slice(0, 10)
+    return created === null ? null : easternDate(created)
   }
 }
 

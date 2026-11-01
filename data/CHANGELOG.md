@@ -18,7 +18,7 @@ Offers the issuer rules out for holders of another card, and Bank of America's t
 
 ## 2026.11.01.4
 
-Memberships move to `data/memberships.yaml`: each one's name, the Costco membership's fee and the stores that imply it, and the BofA Preferred Rewards tiers as one group. Cards name the membership they need by id (`requires_membership: costco`). No rates changed.
+Memberships move to `data/memberships.yaml`: each one's name, the site's checkbox label (`ask`) for the common ones, the Costco membership's fee and the stores that imply it, and the BofA Preferred Rewards tiers as one group. Cards name the membership they need by id (`requires_membership: costco`). No rates changed.
 
 | File                                 | Field               | Old → new                                | Source |
 | ------------------------------------ | ------------------- | ---------------------------------------- | ------ |

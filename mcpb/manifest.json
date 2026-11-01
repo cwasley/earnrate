@@ -48,7 +48,7 @@
     },
     {
       "name": "list_wallet",
-      "description": "Your cards, caps left, picked categories and welcome-bonus progress."
+      "description": "Your cards, caps left, picked categories, welcome-bonus progress and point values."
     },
     {
       "name": "cheat_sheet",

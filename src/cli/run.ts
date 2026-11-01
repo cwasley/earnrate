@@ -89,7 +89,8 @@ Other commands:
 
 Options:
   --online, --in-store   How you're paying. Default: inferred from the merchant.
-  --valuation <profile>  flat (${profileText('flat')}) or points-heavy (${profileText('points-heavy')}).
+  --valuation <profile>  flat (${profileText('flat')}) or points-heavy (${profileText('points-heavy')}),
+                         instead of your saved point values.
                          Default: the values in your wallet.
   --all                  List every card, not just the top three.
   --json                 Print the full recommendation as JSON.
@@ -172,6 +173,17 @@ export async function cardsToUse(
 }
 
 export const NO_WALLET_HINT = `These are every card earnrate knows. For the best of your own cards, name them with --cards amex-gold,chase-prime-visa, or save them: ${CLI_NAME} add <card-id> (${CLI_NAME} cards finds ids).`
+
+// The point values saved in the wallet, which every answer uses unless
+// --valuation asks for a profile. No wallet, or one that can't be read, has
+// none.
+export async function savedValuations(io: Io): Promise<Wallet['valuations']> {
+  try {
+    return (await loadWallet(walletPath(io.env))).valuations
+  } catch {
+    return {}
+  }
+}
 
 export async function readWallet(file: string, io: Io): Promise<Wallet | null> {
   try {
