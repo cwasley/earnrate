@@ -86,14 +86,15 @@ function ask(wallet: Wallet, text: string, amount: number | null) {
 }
 
 function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
-  const top = rec.ranked[0]
   const decided = rec.decision
+  const top = rec.ranked.find((r) => r.cardId === decided?.cardId)
   const held = wallet.cards.find((c) => c.id === decided?.cardId)
   return (
     <div class="answer">
       {decided && held ? (
         <p class="verdict">
-          Use <strong>{shortName(held.id)}</strong>:{' '}
+          Use <strong>{shortName(held.id)}</strong>
+          {rec.bonus ? ' for its welcome bonus' : ''}:{' '}
           {pct(decided.effectiveReturnPct)} back
           {top?.earned !== null && top?.earned !== undefined
             ? `, about $${top.earned.toFixed(2)}`
@@ -114,28 +115,34 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
         </p>
       ))}
       <ol class="result-list">
-        {rec.ranked.slice(0, 3).map((r, i) => (
-          <li class="result" key={r.cardId}>
-            <div class="result-top">
-              <span class="rank">{i + 1}</span>
-              <div class="result-name">
-                <strong>{shortName(r.cardId)}</strong>
+        {rec.ranked
+          .map((r, i) => ({ r, rank: i + 1 }))
+          .filter(({ r, rank }) => rank <= 3 || r.cardId === rec.bonus?.cardId)
+          .map(({ r, rank }) => (
+            <li class="result" key={r.cardId}>
+              <div class="result-top">
+                <span class="rank">{rank}</span>
+                <div class="result-name">
+                  <strong>{shortName(r.cardId)}</strong>
+                  {r.cardId === rec.bonus?.cardId ? (
+                    <span class="muted">The pick, for its welcome bonus</span>
+                  ) : null}
+                </div>
+                <span class="rate">{pct(r.effectiveReturnPct)}</span>
               </div>
-              <span class="rate">{pct(r.effectiveReturnPct)}</span>
-            </div>
-            {r.warnings.map((w) => (
-              <p class="warn" key={w}>
-                {w}
-              </p>
-            ))}
-            <details>
-              <summary>Why</summary>
-              {r.reasoning.map((line) => (
-                <p key={line}>{line}</p>
+              {r.warnings.map((w) => (
+                <p class="warn" key={w}>
+                  {w}
+                </p>
               ))}
-            </details>
-          </li>
-        ))}
+              <details>
+                <summary>Why</summary>
+                {r.reasoning.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </details>
+            </li>
+          ))}
       </ol>
       {rec.sensitivity ? <p class="muted">{rec.sensitivity}</p> : null}
       <ul class="assumptions">
