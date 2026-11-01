@@ -10,6 +10,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, test } from 'vitest'
 import { WALLET_ENV_VAR } from '../src/brand.ts'
+import { parseWalletYaml } from '../src/format/wallet-yaml.ts'
 import { FileWalletStore } from '../src/data/file-store.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import {
@@ -504,6 +505,65 @@ describe('wallet setup', () => {
       cards: { bonus?: { spent: number } }[]
     }
     expect(saved.cards[0]?.bonus?.spent).toBe(100)
+  })
+
+  test("every tool's answer matches its declared output schema", async () => {
+    // A client that has listed the tools checks each answer against its
+    // outputSchema, as Claude Desktop does.
+    const parsed = parseWalletYaml(
+      await readFile(EXAMPLE_WALLET, 'utf8'),
+      catalog,
+    )
+    if (typeof parsed === 'string') throw new Error(parsed)
+    const client = await serve({
+      savedWallets: 'account',
+      store: new JsonWalletStore(
+        catalog,
+        memoryBackend(JSON.stringify(parsed)),
+        'your saved wallet',
+      ),
+    })
+    const { tools } = await client.listTools()
+    const calls: [string, Record<string, unknown>][] = [
+      ['list_wallet', {}],
+      ['best_card_for_purchase', { merchant: 'Whole Foods', amount: 80 }],
+      [
+        'best_card_for_purchase',
+        { merchant: 'Costco', cards: [{ cardId: 'amex-gold' }] },
+      ],
+      ['resolve_merchant', { merchant: 'Costco' }],
+      ['cheat_sheet', {}],
+      ['best_cards_for', { category: 'gas' }],
+      ['simulate_spending', {}],
+      ['simulate_spending', { compareToWallet: true }],
+      ['compare_welcome_offers', {}],
+      ['search_cards', { query: 'gold' }],
+      ['add_card', { cardId: 'chase-freedom-unlimited' }],
+      [
+        'update_card',
+        { cardId: 'chase-freedom-unlimited', checkoutLabel: 'CFU' },
+      ],
+      [
+        'record_purchase',
+        { cardId: 'amex-gold', merchant: 'Whole Foods', amount: 20 },
+      ],
+      ['set_memberships', { memberships: ['amazon-prime', 'costco'] }],
+      ['remove_card', { cardId: 'chase-freedom-unlimited' }],
+      ['export_wallet', {}],
+      ['delete_wallet', { confirm: true, cards: parsed.cards.length }],
+      ['switch_wallet', {}],
+    ]
+    const called = new Set<string>()
+    for (const [name, args] of calls) {
+      const result = await client.callTool({ name, arguments: args })
+      expect(result.isError, `${name}: ${text(result)}`).toBeFalsy()
+      called.add(name)
+    }
+    expect(
+      tools
+        .map((t) => t.name)
+        .filter((n) => !called.has(n) && n !== 'import_wallet'),
+    ).toEqual([])
   })
 
   test('an account wallet exports, imports and deletes', async () => {

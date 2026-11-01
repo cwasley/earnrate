@@ -5,7 +5,14 @@ import type {
   WalletWhatIf,
 } from '../engine/simulate.ts'
 import { membershipNote, type MembershipCost } from '../engine/memberships.ts'
-import { feeText, membershipName, money, pct } from '../engine/text.ts'
+import {
+  choiceName,
+  feeText,
+  membershipName,
+  money,
+  pct,
+  words,
+} from '../engine/text.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
 const wholeUsd = (n: number) => money(Math.round(n))
@@ -55,9 +62,10 @@ export function formatExploration(r: Exploration, all: boolean): string {
 
 function picksText(picks: Picks): string {
   const parts = Object.entries(picks).map(
-    ([choice, options]) => `${choice}: ${options.join(', ')}`,
+    ([choice, options]) =>
+      `${options.map(words).join(' and ')} as its ${choiceName(choice)} ${options.length === 1 ? 'pick' : 'picks'}`,
   )
-  return parts.length === 0 ? '' : ` (picks ${parts.join('; ')})`
+  return parts.length === 0 ? '' : ` (with ${parts.join('; ')})`
 }
 
 function cardNamer(catalog: Catalog) {
@@ -164,7 +172,7 @@ export function formatAdditions(
   if (notes.size > 0) lines.push('', ...notes)
   lines.push(
     '',
-    'Assumes your picks carry over, rotating categories get activated, and caps start fresh. Each kind of spending lists the card that earns the most on it over the whole year, so a one-quarter bonus may not show.',
+    'Assumes your picks carry over, rotating categories get activated, and caps start fresh. Annual fees are counted in full: statement credits and perks that offset them are left out. Each kind of spending lists the card that earns the most on it over the whole year, so a one-quarter bonus may not show.',
   )
   return `${lines.join('\n')}\n`
 }

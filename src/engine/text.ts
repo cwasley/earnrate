@@ -18,9 +18,10 @@ export const shortDate = (date: string) =>
     timeZone: 'UTC',
   })
 
-// Whole dollars stay whole ($2,800); anything else shows cents ($0.40).
+// Whole dollars stay whole ($2,800); anything else shows cents ($0.40). A
+// loss reads −$618.
 export const money = (n: number) =>
-  `$${n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`
+  `${n < 0 ? '−' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`
 
 export function feeText(fees: {
   annualFee: number | null

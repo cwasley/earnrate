@@ -108,6 +108,7 @@ export const WalletSummarySchema = z.object({
         })
         .nullable(),
       currency: z.string(),
+      currencyName: z.string(),
       centsPerUnit: z.number(),
       lastVerified: z.string(),
       verifiedBy: z.string(),
