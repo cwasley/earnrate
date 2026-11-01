@@ -63,16 +63,15 @@ export function Spending({ settings }: { settings: Settings }) {
     [rows],
   )
   const unknown = lines.filter((l) => l.merchant.source === 'none')
-  const result = useMemo(
-    () =>
-      lines.length === 0 || unknown.length > 0
-        ? null
-        : simulateCatalog(catalog, lines, {
-            ...engineOptions(settings),
-            start: localToday(),
-          }),
-    [lines, settings, unknown.length],
-  )
+  const result = useMemo(() => {
+    const known = lines.filter((l) => l.merchant.source !== 'none')
+    return known.length === 0
+      ? null
+      : simulateCatalog(catalog, known, {
+          ...engineOptions(settings),
+          start: localToday(),
+        })
+  }, [lines, settings])
   const total = rows.reduce((sum, r) => sum + r.monthly, 0)
   const single = result?.singles[0]
   const pair = result?.pairs[0]
@@ -154,7 +153,8 @@ export function Spending({ settings }: { settings: Settings }) {
         {unknown.length > 0 ? (
           <p class="callout">
             earnrate doesn't know{' '}
-            {unknown.map((l) => `“${l.merchant.input}”`).join(', ')}. Use a
+            {unknown.map((l) => `“${l.merchant.input}”`).join(', ')}, so the
+            results leave {unknown.length === 1 ? 'it' : 'them'} out. Use a
             category like dining or groceries instead.
           </p>
         ) : null}

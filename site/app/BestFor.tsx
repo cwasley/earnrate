@@ -18,6 +18,7 @@ import {
   requirementLines,
   shortName,
 } from './format.ts'
+import { SearchInput } from './SearchInput.tsx'
 import { engineOptions, type Settings } from './settings.ts'
 
 const QUICK = [
@@ -179,7 +180,7 @@ export function BestFor({
           <label class="visually-hidden" for="best-for">
             Store or category
           </label>
-          <input
+          <SearchInput
             id="best-for"
             type="search"
             list="suggestions"
@@ -195,6 +196,7 @@ export function BestFor({
               )
                 ask(value)
             }}
+            onClear={() => setText('')}
           />
           <button type="submit">Compare</button>
         </form>

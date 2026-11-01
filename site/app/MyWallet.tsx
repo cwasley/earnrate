@@ -35,6 +35,7 @@ import {
 } from '../../src/engine/wallet-change.ts'
 import { resolveMerchant } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
+import { Logo } from './Logo.tsx'
 import { cheatSheetImage } from './sheet-image.ts'
 import { lineFor, type Row } from './Spending.tsx'
 import {
@@ -47,6 +48,7 @@ import {
   usd,
   words,
 } from './format.ts'
+import { SearchInput } from './SearchInput.tsx'
 import { loadList, loadWallet, saveWallet } from './settings.ts'
 
 const QUICK = ['Groceries', 'Dining', 'Gas', 'Amazon', 'Costco', 'Travel']
@@ -66,8 +68,6 @@ function noteText(note: SetupNote, name: string): string {
       return note.text
   }
 }
-
-const label = (held: WalletCard) => held.checkout_label ?? shortName(held.id)
 
 function ask(wallet: Wallet, text: string, amount: number | null) {
   const category = findCategory(catalog, text)
@@ -93,8 +93,8 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
     <div class="answer">
       {decided && held ? (
         <p class="verdict">
-          Use <strong>{label(held)}</strong>: {pct(decided.effectiveReturnPct)}{' '}
-          back
+          Use <strong>{shortName(held.id)}</strong>:{' '}
+          {pct(decided.effectiveReturnPct)} back
           {top?.earned !== null && top?.earned !== undefined
             ? `, about $${top.earned.toFixed(2)}`
             : ''}
@@ -119,7 +119,7 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
             <div class="result-top">
               <span class="rank">{i + 1}</span>
               <div class="result-name">
-                <strong>{r.checkoutLabel ?? shortName(r.cardId)}</strong>
+                <strong>{shortName(r.cardId)}</strong>
               </div>
               <span class="rate">{pct(r.effectiveReturnPct)}</span>
             </div>
@@ -155,10 +155,35 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
   return (
     <section class="panel sheet" aria-labelledby="sheet-title">
       <div class="sheet-head">
-        <span class="sheet-brand">earnrate</span>
-        <h3 id="sheet-title">My card cheat sheet</h3>
-        <p>{sheet.quarter} · the card to use for each purchase</p>
-        <span class="sheet-card" aria-hidden="true" />
+        <div>
+          <span class="sheet-brand">earnrate</span>
+          <h3 id="sheet-title">My card cheat sheet</h3>
+          <p>{sheet.quarter} · the card to use for each purchase</p>
+        </div>
+        <div class="sheet-tools">
+          <button
+            type="button"
+            class="sheet-download"
+            aria-label="Download as an image"
+            title="Download as an image"
+            onClick={() => {
+              void saveSheet(sheet)
+            }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />
+            </svg>
+          </button>
+          <Logo class="sheet-logo" />
+        </div>
       </div>
       <ol class="sheet-rows">
         {sheet.rows.map((row) => {
@@ -167,7 +192,7 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
             <li key={row.label}>
               <span class="sheet-label">{row.label}</span>
               <span class="sheet-card-name">
-                {held ? label(held) : 'None of your cards'}
+                {held ? shortName(held.id) : 'None of your cards'}
                 {row.note ? <span class="row-note">{row.note}</span> : null}
               </span>
               <span class="sheet-rate">
@@ -179,29 +204,13 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
           )
         })}
       </ol>
-      <div class="sheet-foot">
-        <button
-          type="button"
-          onClick={() => {
-            void saveSheet(sheet, wallet)
-          }}
-        >
-          Save as image
-        </button>
-      </div>
     </section>
   )
 }
 
-async function saveSheet(sheet: CheatSheet, wallet: Wallet) {
-  const blob = await cheatSheetImage(
-    sheet,
-    (id) => {
-      const held = wallet.cards.find((c) => c.id === id)
-      return held ? label(held) : shortName(id)
-    },
-    pct,
-  )
+async function saveSheet(sheet: CheatSheet) {
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const blob = await cheatSheetImage(sheet, shortName, pct, dark)
   if (!blob) return
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -250,7 +259,6 @@ function CardEditor({
     held.chosen?.picks ?? {},
   )
   const [activated, setActivated] = useState<string[]>(held.activated)
-  const [checkout, setCheckout] = useState(held.checkout_label ?? '')
   const [anniversary, setAnniversary] = useState(held.anniversary ?? '')
   const [tracking, setTracking] = useState(held.bonus !== undefined)
   const [opened, setOpened] = useState(held.bonus?.opened ?? '')
@@ -264,8 +272,6 @@ function CardEditor({
     )
     const input: CardInput = { id: held.id, activated }
     if (Object.keys(chosen).length > 0) input.picks = chosen
-    if (checkout.trim() !== '') input.checkoutLabel = checkout
-    else if (held.checkout_label !== undefined) input.checkoutLabel = null
     if (anniversary !== '') input.anniversary = anniversary
     if (tracking && opened !== '')
       input.bonus = { opened, spent: Math.max(0, Number(spent) || 0) }
@@ -376,15 +382,6 @@ function CardEditor({
           ) : null}
         </fieldset>
       ) : null}
-      <label class="field">
-        Name at checkout (optional)
-        <input
-          type="text"
-          placeholder={shortName(held.id)}
-          value={checkout}
-          onInput={(e) => setCheckout(e.currentTarget.value)}
-        />
-      </label>
       {info.needsAnniversary ? (
         <label class="field">
           Account anniversary (MM-DD), for its yearly cap
@@ -442,7 +439,7 @@ function CardList({
                 onClick={() => setOpen(open === held.id ? null : held.id)}
               >
                 <span>
-                  <strong>{label(held)}</strong>
+                  <strong>{shortName(held.id)}</strong>
                   <span class="muted"> · {feeLabel(held.id)}</span>
                   {note ? <span class="row-note">{note}</span> : null}
                 </span>
@@ -501,7 +498,7 @@ function AddCard({
       <label class="visually-hidden" for="card-search">
         Find a card
       </label>
-      <input
+      <SearchInput
         id="card-search"
         class="search"
         type="search"
@@ -509,6 +506,7 @@ function AddCard({
         autocomplete="off"
         value={query}
         onInput={(e) => setQuery(e.currentTarget.value)}
+        onClear={() => setQuery('')}
       />
       <ul class="found">
         {found.map((c) => (
@@ -808,10 +806,6 @@ export function MyWallet({ initialQuery }: { initialQuery: string }) {
     }
     replace(null)
     setAsked(null)
-    setMessage({
-      text: 'Removed your last card, so your wallet is empty.',
-      error: false,
-    })
   }
 
   return (
@@ -839,7 +833,7 @@ export function MyWallet({ initialQuery }: { initialQuery: string }) {
           <label class="visually-hidden" for="wallet-ask">
             Where are you paying?
           </label>
-          <input
+          <SearchInput
             id="wallet-ask"
             type="search"
             list="suggestions"
@@ -848,6 +842,7 @@ export function MyWallet({ initialQuery }: { initialQuery: string }) {
             enterkeyhint="search"
             value={query}
             onInput={(e) => setQuery(e.currentTarget.value)}
+            onClear={() => setQuery('')}
           />
           <input
             class="amount"
