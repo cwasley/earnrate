@@ -18,6 +18,7 @@ import {
   type VaultFor,
 } from './auth.ts'
 import { errorPage, html } from './pages.ts'
+import { RATE_LIMIT_SECONDS } from './policy.ts'
 import { limitKey, MAX_BODY, readBody } from './requests.ts'
 
 type RateLimit = {
@@ -85,7 +86,7 @@ function usageLabels(calls: Call[]): Set<string> {
 const tooMany = () =>
   new Response('Too many requests. Try again in a minute.', {
     status: 429,
-    headers: { 'retry-after': '60' },
+    headers: { 'retry-after': String(RATE_LIMIT_SECONDS) },
   })
 
 async function limited(limiter: RateLimit | undefined, request: Request) {
@@ -101,7 +102,7 @@ const unavailable = () =>
       error_description:
         "Saved wallets aren't available right now. Questions still work.",
     },
-    { status: 503, headers: { 'retry-after': '60' } },
+    { status: 503, headers: { 'retry-after': String(RATE_LIMIT_SECONDS) } },
   )
 
 // Sign-in depends on KV. Its failures are counted by path in the usage

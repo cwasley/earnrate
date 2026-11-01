@@ -3,6 +3,12 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vitest'
+import {
+  CONNECTION_IDLE_DAYS,
+  RATE_LIMIT_SECONDS,
+  RETENTION_MONTHS,
+  UNUSED_NEW_WALLET,
+} from '../remote/src/policy.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const BINARY = /\.(png|jpe?g|gif|ico|webp|woff2?)$/i
@@ -88,4 +94,23 @@ test('the Claude plugin and registry entry point at the hosted server', async ()
   expect((await readJson('server.json')).remotes).toEqual([
     { type: 'streamable-http', url: 'https://mcp.earnrate.dev' },
   ])
+})
+
+test('the policy pages and READMEs state the hosted server’s retention', async () => {
+  const read = (file: string) => readFile(path.join(ROOT, file), 'utf8')
+  const flat = (text: string) => text.replace(/\s+/g, ' ')
+  const privacy = await read('site/privacy.html')
+  const terms = await read('site/terms.html')
+  const readme = await read('README.md')
+  const plugin = await read('plugin/README.md')
+  const wrangler = await read('remote/wrangler.jsonc')
+  for (const [file, text] of Object.entries({ privacy, terms, readme, plugin }))
+    expect(flat(text), file).toContain(`${String(RETENTION_MONTHS)} months`)
+  for (const [file, text] of Object.entries({ privacy, terms, readme, plugin }))
+    expect(flat(text), file).toContain(UNUSED_NEW_WALLET.words)
+  expect(flat(privacy)).toContain(`${String(CONNECTION_IDLE_DAYS)} days`)
+  expect(flat(readme)).toContain(`${String(CONNECTION_IDLE_DAYS)} days`)
+  expect(flat(privacy)).toContain('per minute')
+  for (const period of wrangler.matchAll(/"period": (\d+)/g))
+    expect(Number(period[1])).toBe(RATE_LIMIT_SECONDS)
 })

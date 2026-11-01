@@ -10,6 +10,7 @@ import type {
 import type { CardInput } from '../../src/engine/wallet-change.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
+import { RETENTION_MONTHS, UNUSED_NEW_WALLET } from './policy.ts'
 import { decryptWallet, encryptWallet } from './vault-crypto.ts'
 
 export type VaultStorage = {
@@ -34,11 +35,11 @@ const DELETED =
 // A new wallet nobody has used yet is deleted after a week; any use keeps
 // it for 13 months from then.
 const DAY = 24 * 60 * 60 * 1000
-const UNUSED_NEW_WALLET = 7 * DAY
+const UNUSED_NEW_WALLET_MS = UNUSED_NEW_WALLET.days * DAY
 
 function retentionEnd(lastUsed: number): number {
   const end = new Date(lastUsed)
-  end.setUTCMonth(end.getUTCMonth() + 13)
+  end.setUTCMonth(end.getUTCMonth() + RETENTION_MONTHS)
   return end.getTime()
 }
 
@@ -115,7 +116,7 @@ export class WalletVault {
         created: now,
         lastUsed: now,
       } satisfies Meta)
-      await this.storage.setAlarm(now + UNUSED_NEW_WALLET)
+      await this.storage.setAlarm(now + UNUSED_NEW_WALLET_MS)
       return true
     })
   }

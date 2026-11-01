@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { ALL_PERSONAL_CARDS } from '../engine/explore.ts'
-import { VALUATION_PROFILES } from '../engine/profiles.ts'
+import { profileText, VALUATION_PROFILES } from '../engine/profiles.ts'
 import { knownMemberships } from '../engine/setup.ts'
 import type { CardInput } from '../engine/wallet-change.ts'
 import type { Catalog } from '../schema/catalog.ts'
@@ -191,7 +191,7 @@ export function makeInputs(catalog: Catalog) {
       .enum(['flat', 'points-heavy'])
       .optional()
       .describe(
-        'flat (default): points at their cash-out value, about 1¢. points-heavy: Amex MR and Chase UR at 1.7¢, for people who transfer points to airlines and hotels.',
+        `flat (default): points at their cash-out value, ${profileText('flat')}. points-heavy: ${profileText('points-heavy')}, for people who transfer points to airlines and hotels.`,
       ),
   }
   const AllMemberships = Memberships.describe(

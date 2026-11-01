@@ -2,6 +2,8 @@
 // PAGE_SCRIPT, by its hash. Everything from the client (its name, the
 // redirect host) is escaped.
 
+import { RETENTION_MONTHS, UNUSED_NEW_WALLET } from './policy.ts'
+
 type ClientFacts = {
   clientName: string
   clientDomain?: string | undefined // set only for a verified (CIMD) client
@@ -101,7 +103,7 @@ export function choosePage(
     'Connect your earnrate wallet',
     `<h1>Connect your earnrate wallet</h1>
 ${whoIsAsking(client)}
-<p class="muted">Saved wallets are anonymous: no email, no name. earnrate stores your cards by product name, never card numbers, encrypted so that only your apps and your recovery code can open them. Wallets unused for 13 months are deleted, and a new one that's never used is deleted after a week.</p>
+<p class="muted">Saved wallets are anonymous: no email, no name. earnrate stores your cards by product name, never card numbers, encrypted so that only your apps and your recovery code can open them. Wallets unused for ${String(RETENTION_MONTHS)} months are deleted, and a new one that's never used is deleted after ${UNUSED_NEW_WALLET.words}.</p>
 <section>
 <h2>New here?</h2>
 <p>Start a wallet. You'll get a recovery code to keep.</p>
@@ -161,7 +163,7 @@ ${error ? `<p class="error">${escape(error)}</p>` : ''}
 <input type="text" id="code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX">
 <button>Change my code</button>
 </form>
-<p class="muted">Lost your code? earnrate can't look it up. Start a new wallet instead; the old one is deleted after 13 months unused.</p>`,
+<p class="muted">Lost your code? earnrate can't look it up. Start a new wallet instead; the old one is deleted after ${String(RETENTION_MONTHS)} months unused.</p>`,
   )
 }
 

@@ -12,6 +12,7 @@ import {
   html,
   newCodePage,
 } from './pages.ts'
+import { CONNECTION_IDLE_DAYS } from './policy.ts'
 import { readBody } from './requests.ts'
 import {
   keysFromCode,
@@ -115,8 +116,8 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
       registrationProblem(clientMetadata),
     accessTokenTTL: 60 * 60,
     // Stays signed in while used; 90 idle days ends it.
-    refreshTokenTTL: 90 * DAY,
-    refreshTokenIdleTTL: 90 * DAY,
+    refreshTokenTTL: CONNECTION_IDLE_DAYS * DAY,
+    refreshTokenIdleTTL: CONNECTION_IDLE_DAYS * DAY,
   })
 
   // Either address's token works at either address: they reach the same

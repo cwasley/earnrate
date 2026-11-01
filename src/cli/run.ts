@@ -19,7 +19,11 @@ import {
   exploreCards,
   findCategory,
 } from '../engine/explore.ts'
-import { VALUATION_PROFILES, withValuationProfile } from '../engine/profiles.ts'
+import {
+  profileText,
+  VALUATION_PROFILES,
+  withValuationProfile,
+} from '../engine/profiles.ts'
 import { recommend } from '../engine/recommend.ts'
 import { walletFromCards } from '../engine/transient.ts'
 import type { MerchantResolution, Purchase } from '../engine/types.ts'
@@ -84,7 +88,7 @@ Other commands:
 
 Options:
   --online, --in-store   How you're paying. Default: inferred from the merchant.
-  --valuation <profile>  flat (points at 1¢) or points-heavy (MR and UR at 1.7¢).
+  --valuation <profile>  flat (${profileText('flat')}) or points-heavy (${profileText('points-heavy')}).
                          Default: the values in your wallet.
   --all                  List every card, not just the top three.
   --json                 Print the full recommendation as JSON.

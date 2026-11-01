@@ -9,6 +9,7 @@ import {
 } from '../engine/explore.ts'
 import {
   isValuationProfile,
+  profileText,
   VALUATION_PROFILES,
   withValuationProfile,
 } from '../engine/profiles.ts'
@@ -45,8 +46,8 @@ const FILTER_OPTIONS = `  --cash, --points        Cash back cards only, or point
   --business              Business cards instead of personal ones.
   --closed                Include cards the issuer no longer takes applications for.
   --member <name>         A membership you have, e.g. amazon-prime or costco. Repeatable.
-  --valuation <profile>   flat (points at 1¢, the default) or points-heavy
-                          (MR and UR at 1.7¢).`
+  --valuation <profile>   flat (${profileText('flat')}, the default) or
+                          points-heavy (${profileText('points-heavy')}).`
 
 const BEST_HELP = `Usage: ${CLI_NAME} best <merchant or category> [amount] [options]
 

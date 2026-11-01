@@ -11,6 +11,7 @@ import {
   save,
   type Settings,
 } from './settings.ts'
+import { profileText } from '../../src/engine/profiles.ts'
 
 type Tab = 'best' | 'spending' | 'wallet'
 
@@ -178,8 +179,9 @@ function Filters({
             checked={settings.pointsHeavy}
             onChange={(e) => set({ pointsHeavy: e.currentTarget.checked })}
           />
-          I transfer points to airlines and hotels (Amex and Chase points at
-          1.7¢ instead of 1¢)
+          I transfer points to airlines and hotels (
+          {profileText('points-heavy')} instead of{' '}
+          {profileText('flat').replace(/.* at /, '')})
         </label>
       </div>
     </details>
