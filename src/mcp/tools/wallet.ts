@@ -1,7 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 import { membershipsFor, needsAnniversary } from '../../engine/setup.ts'
-import { choiceName, money, words } from '../../engine/text.ts'
+import {
+  choiceName,
+  currencyLabel,
+  money,
+  shortDate,
+  words,
+} from '../../engine/text.ts'
+import { profileText, VALUATION_PROFILES } from '../../engine/profiles.ts'
 import { walletSummary } from '../../engine/wallet-summary.ts'
 import { formatBooking, formatWalletSummary } from '../../format/wallet.ts'
 import { fail, type Context } from '../context.ts'
@@ -70,10 +77,22 @@ export function registerWalletTools(
     async () => {
       const read = await ctx.readableWallet()
       if (typeof read === 'string') return fail(read)
-      const summary = walletSummary(catalog, read.wallet, deps.today())
+      const started =
+        deps.savedWallets === 'account' ? await deps.store.started() : null
+      const summary = {
+        ...walletSummary(catalog, read.wallet, deps.today()),
+        started,
+      }
+      const when =
+        started === null
+          ? ''
+          : `Saved wallet started ${started === deps.today() ? 'today' : shortDate(started)}.\n`
       return {
         content: [
-          { type: 'text', text: read.start ?? formatWalletSummary(summary) },
+          {
+            type: 'text',
+            text: `${when}${read.start ?? formatWalletSummary(summary)}`,
+          },
         ],
         structuredContent: summary,
       }
@@ -254,6 +273,47 @@ export function registerWalletTools(
         }${unused.length > 0 ? ` ${unused.join(', ')} ${unused.length === 1 ? "doesn't" : "don't"} change any saved card's rates yet; kept for cards that use ${unused.length === 1 ? 'it' : 'them'}.` : ''}`,
         { notes: false },
       )
+    },
+  )
+
+  server.registerTool(
+    'set_point_values',
+    {
+      title: 'Set point values',
+      description: `Saves what the user's points are worth to them, in cents per point, so answers compare cards at those values. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies: ${catalog.currencies.map((c) => c.id).join(', ')}.`,
+      inputSchema: z.object({
+        values: z
+          .record(z.string(), z.number().positive().max(5).nullable())
+          .optional()
+          .describe(
+            'Cents per point by currency id, e.g. {"UR": 1.5, "MR": 1.6}. null goes back to the default.',
+          ),
+        profile: z
+          .enum(['flat', 'points-heavy'])
+          .optional()
+          .describe(
+            `A preset: flat (${profileText('flat')}) or points-heavy (${profileText('points-heavy')}). Values given too win over it.`,
+          ),
+      }),
+      outputSchema: WalletChangeSchema,
+      annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
+    },
+    async ({ values, profile }) => {
+      const changes: Record<string, number | null> = {
+        ...(profile ? VALUATION_PROFILES[profile] : {}),
+        ...(values ?? {}),
+      }
+      if (Object.keys(changes).length === 0)
+        return fail('Give values (cents per point by currency) or a profile.')
+      const result = await store.setValuations(changes)
+      const set = Object.entries(changes).map(([id, cents]) =>
+        cents === null
+          ? `${currencyLabel(catalog, id)} back to the default`
+          : `${currencyLabel(catalog, id)} at ${String(cents)}¢`,
+      )
+      return ctx.changed(result, `Point values: ${set.join(', ')}.`, {
+        notes: false,
+      })
     },
   )
 }

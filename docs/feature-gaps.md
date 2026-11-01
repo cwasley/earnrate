@@ -24,7 +24,6 @@ A shared cap has one `then_rate`. Some cards drop to a different rate depending 
 A tier that scales every rate on a card is written today as one membership-gated rule per rate. A multiplier on the card would cut that to one line per tier and fix the cap case above.
 
 - `bank-of-america-customized-cash-rewards`: 12 rules for the four BofA Rewards tiers.
-- `bank-of-america-atmos-rewards-ascent`, `-summit`, `-business`: the 10% bonus for a Bank of America account. Bank of America's terms now say a BofA Rewards tier bonus replaces the 10% customer bonus on eligible cards; whether the Atmos cards are eligible is unchecked.
 
 ### Rate increase after a spend threshold
 
@@ -87,6 +86,10 @@ Holding some cards means holding a membership, but the wallet asks for membershi
 ### Credits that offset the annual fee
 
 Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. It would need a per-card credit value with evidence, kept apart from earn rates (credits as rewards stay out of scope, below).
+
+### Known issue: switch_wallet signs out after a short delay
+
+`switch_wallet` revokes the app's sign-in in Cloudflare KV, which can take up to about a minute to reach every location. Until then the old connection can still reach the old wallet. Deleting a wallet doesn't have this gap: the wallet's own storage refuses at once. A fix would check a per-wallet sign-out list in the vault on each request.
 
 ## Not planned
 

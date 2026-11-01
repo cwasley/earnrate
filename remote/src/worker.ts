@@ -42,6 +42,9 @@ export class WalletObject extends DurableObject<Env> {
   setMemberships(walletKey: string, memberships: string[]) {
     return this.vault.setMemberships(walletKey, memberships)
   }
+  setValuations(walletKey: string, changes: Record<string, number | null>) {
+    return this.vault.setValuations(walletKey, changes)
+  }
   replace(walletKey: string, wallet: Wallet) {
     return this.vault.replace(walletKey, wallet)
   }
@@ -51,6 +54,9 @@ export class WalletObject extends DurableObject<Env> {
     merchant: MerchantResolution,
   ) {
     return this.vault.record(walletKey, purchase, merchant)
+  }
+  started() {
+    return this.vault.started()
   }
   destroy() {
     return this.vault.destroy()

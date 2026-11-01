@@ -5,6 +5,7 @@ import {
   removeFromWallet,
   updateInWallet,
   withMemberships,
+  withValuations,
   type CardInput,
   type WalletChange,
 } from '../engine/wallet-change.ts'
@@ -18,6 +19,7 @@ import {
   readWalletText,
   removeCardText,
   setMembershipsText,
+  setValuationsText,
   updateCardText,
   writeProgress,
 } from './wallet-edit.ts'
@@ -126,6 +128,13 @@ export class FileWalletStore implements WalletStore {
       this.existing((w) => withMemberships(this.catalog, w, memberships)),
       (text, change) =>
         setMembershipsText(text ?? '', change.wallet.memberships),
+    )
+  }
+
+  setValuations(changes: Record<string, number | null>): Promise<SetupResult> {
+    return this.change(
+      this.existing((w) => withValuations(this.catalog, w, changes)),
+      (text) => setValuationsText(text ?? '', changes),
     )
   }
 

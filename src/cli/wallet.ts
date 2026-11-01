@@ -3,6 +3,11 @@ import { CLI_NAME } from '../brand.ts'
 import { FileWalletStore } from '../data/file-store.ts'
 import { loadCatalog, loadWallet, walletPath } from '../data/load.ts'
 import type { SetupResult } from '../data/store.ts'
+import {
+  isValuationProfile,
+  profileText,
+  VALUATION_PROFILES,
+} from '../engine/profiles.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
 import type { CardInput } from '../engine/wallet-change.ts'
 import { formatCardInfo, formatNotes } from '../format/cards.ts'
@@ -58,6 +63,19 @@ Removes a card from your wallet, with its tracked cap usage.
 
 With no arguments, shows your memberships and the ones earnrate knows. With
 names, replaces the list. --none clears it.
+`,
+  values: `Usage: ${CLI_NAME} values [<currency>=<cents>...] [--profile <name>]
+
+What your points are worth to you, in cents per point, so answers compare
+cards at those values. With no arguments, shows them.
+
+Examples:
+  ${CLI_NAME} values UR=1.5 MR=1.6
+  ${CLI_NAME} values UR=default          back to earnrate's value
+  ${CLI_NAME} values --profile points-heavy
+
+Options:
+  --profile <name>       flat (${profileText('flat')}) or points-heavy (${profileText('points-heavy')}).
 `,
 }
 
@@ -138,6 +156,7 @@ export async function runWalletCommand(
         'bonus-by': { type: 'string' },
         'no-bonus': { type: 'boolean' },
         none: { type: 'boolean' },
+        profile: { type: 'string' },
         help: { type: 'boolean', short: 'h' },
       },
     })
@@ -185,6 +204,47 @@ export async function runWalletCommand(
     const header = result.exact ? '' : 'No card matches every word. Closest:\n'
     io.stdout(`${header}${result.cards.map(formatCardInfo).join('\n')}\n`)
     return 0
+  }
+
+  if (command === 'values') {
+    const changes: Record<string, number | null> = {}
+    if (values.profile !== undefined) {
+      if (!isValuationProfile(values.profile))
+        return usage(
+          `Unknown profile "${values.profile}". Use flat or points-heavy.`,
+        )
+      Object.assign(changes, VALUATION_PROFILES[values.profile])
+    }
+    for (const arg of positionals) {
+      const [id, value] = arg.split('=')
+      const cents = value === 'default' ? null : Number(value)
+      if (
+        !id ||
+        value === undefined ||
+        (cents !== null && !Number.isFinite(cents))
+      )
+        return usage(`"${arg}" isn't <currency>=<cents>, like UR=1.5.`)
+      changes[id] = cents
+    }
+    if (Object.keys(changes).length === 0) {
+      const held = await heldWallet(io)
+      const set = Object.entries(held?.valuations ?? {})
+      io.stdout(
+        `${set.length > 0 ? `Yours: ${set.map(([id, v]) => `${id}=${typeof v === 'number' ? String(v) : JSON.stringify(v)}`).join(' ')}` : "Yours: earnrate's defaults"}\nCurrencies: ${catalog.currencies.map((c) => c.id).join(', ')}\n`,
+      )
+      return 0
+    }
+    return report(
+      await store.setValuations(changes),
+      `Point values updated in ${where}: ${Object.entries(changes)
+        .map(
+          ([id, c]) =>
+            `${id} ${c === null ? 'back to the default' : `${String(c)}¢`}`,
+        )
+        .join(', ')}.`,
+      null,
+      io,
+    )
   }
 
   if (command === 'memberships') {

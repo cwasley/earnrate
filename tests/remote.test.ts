@@ -288,6 +288,9 @@ describe('remote connector', () => {
     const client = await connect(d, token)
     const listed = await client.callTool({ name: 'list_wallet', arguments: {} })
     expect(text(listed)).toMatch(/saved wallet has no cards yet/)
+    expect(text(listed)).toMatch(
+      /^Saved wallet started (today|\w{3} \d+, \d{4})\./,
+    )
     const all = await client.callTool({
       name: 'best_card_for_purchase',
       arguments: { merchant: 'Whole Foods', amount: 80 },
@@ -458,7 +461,7 @@ describe('remote connector', () => {
     expect(res.status).toBe(429)
   })
 
-  test('counts only the method and tool name, never arguments', async () => {
+  test('counts only the method and tool name, and refusals by tool, never arguments', async () => {
     const points: { blobs?: string[]; indexes?: string[] }[] = []
     const d = deployment()
     const { token } = await startWallet(d)
@@ -476,6 +479,13 @@ describe('remote connector', () => {
       .callTool({ name: 'Trader Joes at 123 Main St', arguments: {} })
       .catch(() => undefined)
     expect(points.map((p) => p.blobs)).toContainEqual(['tool:other'])
+    await client.callTool({
+      name: 'record_purchase',
+      arguments: { cardId: 'amex-gold', merchant: 'Trader Joes', amount: 5 },
+    })
+    expect(points.map((p) => p.blobs)).toContainEqual([
+      'tool-error:record_purchase',
+    ])
     const recorded = JSON.stringify(points)
     expect(recorded).not.toContain('Trader')
     expect(recorded).not.toContain('123')

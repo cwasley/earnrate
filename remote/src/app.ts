@@ -83,6 +83,22 @@ function usageLabels(calls: Call[]): Set<string> {
   )
 }
 
+// A tool that answered with an error (a refusal, like an unknown merchant)
+// is counted by tool name only, like every other use.
+async function countRefusals(
+  env: Env,
+  calls: Call[],
+  response: Response,
+): Promise<void> {
+  const tools = calls.flatMap((c) => (c.tool === null ? [] : [c.tool]))
+  if (tools.length !== 1 || !env.USAGE || response.status !== 200) return
+  const text = await response.clone().text()
+  if (!/"isError":\s*true/.test(text)) return
+  const tool = tools[0] ?? ''
+  const label = `tool-error:${KNOWN_TOOLS.has(tool) ? tool : 'other'}`
+  env.USAGE.writeDataPoint({ blobs: [label], indexes: [label] })
+}
+
 const tooMany = () =>
   new Response('Too many requests. Try again in a minute.', {
     status: 429,
@@ -224,10 +240,12 @@ export function makeWorker<E extends Env>(
       () => auth.signOutEverywhere(env, grant.walletId),
       () => auth.signOutEverywhere(env, grant.walletId, clientId),
     )
-    return handler.fetch(forward, {
+    const response = await handler.fetch(forward, {
       ...options,
       authInfo: { token, clientId: '', scopes: [SCOPE], extra: { store } },
     })
+    await countRefusals(env, calls, response)
+    return response
   }
 
   return {

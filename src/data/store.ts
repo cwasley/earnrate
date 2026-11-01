@@ -6,6 +6,7 @@ import {
   removeFromWallet,
   updateInWallet,
   withMemberships,
+  withValuations,
   type CardInput,
   type WalletChange,
 } from '../engine/wallet-change.ts'
@@ -34,6 +35,8 @@ export interface WalletStore {
   updateCard(input: CardInput, today: string): Promise<SetupResult>
   removeCard(cardId: string): Promise<SetupResult>
   setMemberships(memberships: string[]): Promise<SetupResult>
+  // Cents per point by currency id; null goes back to the default.
+  setValuations(changes: Record<string, number | null>): Promise<SetupResult>
   record(
     purchase: RecordedPurchase,
     merchant: MerchantResolution,
@@ -46,6 +49,7 @@ export interface AccountStore extends WalletStore {
   replace(wallet: Wallet): Promise<SetupResult>
   erase(): Promise<void>
   disconnect(): Promise<void> // signs this app out; the wallet stays
+  started(): Promise<string | null> // YYYY-MM-DD, when the wallet began
 }
 
 export type JsonBackend = {
@@ -130,6 +134,12 @@ export class JsonWalletStore implements AccountStore {
     )
   }
 
+  setValuations(changes: Record<string, number | null>): Promise<SetupResult> {
+    return this.change(
+      this.needsWallet((w) => withValuations(this.catalog, w, changes)),
+    )
+  }
+
   replace(wallet: Wallet): Promise<SetupResult> {
     return this.change(() => ({ ok: true, wallet, fields: {}, notes: [] }))
   }
@@ -141,6 +151,11 @@ export class JsonWalletStore implements AccountStore {
   // Nothing to sign out of: the backend is the caller's own storage.
   disconnect(): Promise<void> {
     return Promise.resolve()
+  }
+
+  // The backend doesn't record when it began.
+  started(): Promise<string | null> {
+    return Promise.resolve(null)
   }
 
   record(

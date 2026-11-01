@@ -9,6 +9,8 @@ import {
   RETENTION_MONTHS,
   UNUSED_NEW_WALLET,
 } from '../remote/src/policy.ts'
+import { loadCatalog } from '../src/data/load.ts'
+import { ANSWER_TOOLS, SAVED_WALLET_TOOLS } from '../src/mcp/server.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const BINARY = /\.(png|jpe?g|gif|ico|webp|woff2?)$/i
@@ -113,4 +115,27 @@ test('the policy pages and READMEs state the hosted server’s retention', async
   expect(flat(privacy)).toContain('per minute')
   for (const period of wrangler.matchAll(/"period": (\d+)/g))
     expect(Number(period[1])).toBe(RATE_LIMIT_SECONDS)
+})
+
+test('counts in the docs match the catalog and the tool lists', async () => {
+  const read = (file: string) => readFile(path.join(ROOT, file), 'utf8')
+  const flat = (text: string) => text.replace(/\s+/g, ' ')
+  const catalog = await loadCatalog()
+  const cards = `${String(catalog.cards.length)} cards`
+  expect(flat(await read('README.md'))).toContain(cards)
+  expect(flat(await read('site/index.html'))).toContain(cards)
+
+  const hosted = ANSWER_TOOLS.length + SAVED_WALLET_TOOLS.length
+  const manifest = JSON.parse(await read('mcpb/manifest.json')) as {
+    tools: unknown[]
+  }
+  expect(flat(await read('README.md'))).toContain(
+    `${String(manifest.tools.length)} tools`,
+  )
+  expect(flat(await read('plugin/README.md'))).toContain(
+    `${String(hosted)} tools`,
+  )
+  expect(await read('scripts/live-check.ts')).toContain(
+    `tools.length === ${String(hosted)}`,
+  )
 })

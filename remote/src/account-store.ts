@@ -52,6 +52,10 @@ export class VaultWalletStore implements AccountStore {
     return this.vault.setMemberships(this.walletKey, memberships)
   }
 
+  setValuations(changes: Record<string, number | null>): Promise<SetupResult> {
+    return this.vault.setValuations(this.walletKey, changes)
+  }
+
   replace(wallet: Wallet): Promise<SetupResult> {
     return this.vault.replace(this.walletKey, wallet)
   }
@@ -71,6 +75,13 @@ export class VaultWalletStore implements AccountStore {
   disconnect(): Promise<void> {
     return this.signOutHere()
   }
+
+  async started(): Promise<string | null> {
+    const created = await this.vault.started()
+    return created === null
+      ? null
+      : new Date(created).toISOString().slice(0, 10)
+  }
 }
 
 // Only while sign-in itself is down: questions are still answered, and the
@@ -82,10 +93,12 @@ export const signedOutStore: AccountStore = {
   updateCard: refuse,
   removeCard: refuse,
   setMemberships: refuse,
+  setValuations: refuse,
   replace: refuse,
   record: refuse,
   erase: () => Promise.reject(new Error('Connect a saved wallet first.')),
   disconnect: () => Promise.reject(new Error('Connect a saved wallet first.')),
+  started: () => Promise.resolve(null),
 }
 
 function refuse() {

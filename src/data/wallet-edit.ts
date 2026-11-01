@@ -203,6 +203,101 @@ export function setMembershipsText(
   return insertLines(text, lineStart(text, range(cards?.key)[0]), line)
 }
 
+// Point values, one currency at a time so the rest of the file, comments
+// included, stays as it was: a value is replaced in place, a new one goes
+// after the last, a removed one loses its line. An inline map is rewritten.
+export function setValuationsText(
+  text: string,
+  changes: Record<string, number | null>,
+): string {
+  let out = text
+  for (const [id, cents] of Object.entries(changes))
+    out = setValuationText(out, id, cents)
+  return out
+}
+
+// The start of the line at `at`, moved up past the comments right above it,
+// so a comment stays with the line it describes.
+function aboveComments(text: string, at: number): number {
+  let start = lineStart(text, at)
+  while (start > 0) {
+    const previous = lineStart(text, start - 1)
+    if (!text.slice(previous, start).trimStart().startsWith('#')) break
+    start = previous
+  }
+  return start
+}
+
+function setValuationText(
+  text: string,
+  id: string,
+  cents: number | null,
+): string {
+  const { doc } = cardsSeq(text)
+  const root = doc.contents
+  if (!isMap(root)) throw new Error(`the wallet isn't a map; ${BY_HAND}`)
+  const pair = root.items.find((p) => keyOf(p) === 'valuations')
+  const map = pair?.value
+  const line = cents === null ? '' : `${id}: ${String(cents)}`
+  if (!pair || map === null || (isMap(map) && map.items.length === 0)) {
+    if (cents === null) return text
+    const block = `valuations:\n  ${line}\n`
+    if (pair) {
+      const start = range(pair.key)[0]
+      const end = afterLine(text, range(map ?? pair.key)[1] - 1)
+      return text.slice(0, start) + block + text.slice(end)
+    }
+    const before = root.items.find(
+      (p) => keyOf(p) === 'memberships' || keyOf(p) === 'cards',
+    )
+    return insertLines(text, aboveComments(text, range(before?.key)[0]), block)
+  }
+  if (!isMap(map)) throw new Error(`"valuations" isn't a map; ${BY_HAND}`)
+  if (map.flow) {
+    const values = Object.entries(
+      map.toJSON() as Record<string, unknown>,
+    ).filter(([k]) => k !== id)
+    if (cents !== null) values.push([id, cents])
+    const entries = values.map(
+      ([k, v]) => `${k}: ${stringify(v, { flow: true }).trimEnd()}`,
+    )
+    const start = range(pair.key)[0]
+    const end = afterLine(text, range(map)[1] - 1)
+    return (
+      text.slice(0, start) +
+      (entries.length === 0 ? '' : `valuations: { ${entries.join(', ')} }\n`) +
+      text.slice(end)
+    )
+  }
+  const own = map.items.find((p) => keyOf(p) === id)
+  if (own) {
+    if (cents === null) {
+      if (map.items.length === 1) {
+        const start = lineStart(text, range(pair.key)[0])
+        return (
+          text.slice(0, start) + text.slice(afterLine(text, range(map)[1] - 1))
+        )
+      }
+      const start = lineStart(text, range(own.key)[0])
+      return (
+        text.slice(0, start) +
+        text.slice(afterLine(text, range(own.value)[1] - 1))
+      )
+    }
+    const [start, end] = range(own.value)
+    return text.slice(0, start) + String(cents) + text.slice(end)
+  }
+  if (cents === null) return text
+  const first = map.items[0]
+  const last = map.items.at(-1)
+  const indent = ' '.repeat(column(text, range(first?.key)[0]))
+  return insertLines(
+    text,
+    afterLine(text, range(last?.value ?? last?.key)[1] - 1),
+    `${indent}${line}\n`,
+  )
+}
+
 function flowUsage(booking: CapBooking): string {
   const period = /^\d+$/.test(booking.period)
     ? `"${booking.period}"`

@@ -25,10 +25,10 @@ Claude asks about anything a card needs, such as this quarter's U.S. Bank Cash+ 
 
 ## What the plugin runs
 
-Nothing on your computer. It connects Claude to earnrate's hosted MCP server at `https://mcp.earnrate.dev` over HTTPS. The server's code is in [github.com/cwasley/earnrate](https://github.com/cwasley/earnrate) (`remote/`). The first time Claude Code uses it, earnrate's sign-in page opens in your browser: start an anonymous wallet (no email; you keep a recovery code) or reconnect one. It offers 17 tools:
+Nothing on your computer. It connects Claude to earnrate's hosted MCP server at `https://mcp.earnrate.dev` over HTTPS. The server's code is in [github.com/cwasley/earnrate](https://github.com/cwasley/earnrate) (`remote/`). The first time Claude Code uses it, earnrate's sign-in page opens in your browser: start an anonymous wallet (no email; you keep a recovery code) or reconnect one. It offers 18 tools:
 
 - `best_card_for_purchase`, `best_cards_for`, `simulate_spending`, `compare_welcome_offers`, `cheat_sheet`, `resolve_merchant`, `search_cards`: answers, from your saved cards, the cards you name, or every card when there are none.
-- `list_wallet`, `add_card`, `update_card`, `remove_card`, `set_memberships`, `record_purchase`, `export_wallet`, `import_wallet`, `delete_wallet`, `switch_wallet`: your saved wallet. It holds cards only if you save some. `remove_card` deletes only the card you name; `delete_wallet` deletes the whole wallet; `switch_wallet` disconnects so you can connect another one.
+- `list_wallet`, `add_card`, `update_card`, `remove_card`, `set_memberships`, `set_point_values`, `record_purchase`, `export_wallet`, `import_wallet`, `delete_wallet`, `switch_wallet`: your saved wallet. It holds cards only if you save some. `remove_card` deletes only the card you name; `delete_wallet` deletes the whole wallet; `switch_wallet` disconnects so you can connect another one.
 
 ## What it reads, writes, sends and fetches
 

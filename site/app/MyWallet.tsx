@@ -2,7 +2,11 @@ import { useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { walletProblems } from '../../src/data/integrity.ts'
 import { bonusStatus } from '../../src/engine/bonus.ts'
-import { cheatSheet, type CheatSheet } from '../../src/engine/cheat-sheet.ts'
+import {
+  cheatSheet,
+  EVERYDAY_PURCHASES,
+  type CheatSheet,
+} from '../../src/engine/cheat-sheet.ts'
 import {
   ALL_PERSONAL_CARDS,
   categoryResolution,
@@ -23,13 +27,19 @@ import {
   simulateAdditions,
   TYPICAL_MONTHLY_SPEND,
 } from '../../src/engine/simulate.ts'
-import { categoryPhrase, currencyName } from '../../src/engine/text.ts'
+import {
+  categoryPhrase,
+  currencyLabel,
+  currencyName,
+} from '../../src/engine/text.ts'
+import { cardValuation } from '../../src/engine/valuation.ts'
 import type { Recommendation } from '../../src/engine/types.ts'
 import {
   addToWallet,
   removeFromWallet,
   updateInWallet,
   withMemberships,
+  withValuations,
   type CardInput,
   type WalletChange,
 } from '../../src/engine/wallet-change.ts'
@@ -53,7 +63,8 @@ import { loadList, loadWallet, saveWallet } from './settings.ts'
 import { offerTerms } from '../../src/engine/offers.ts'
 import { dollarsAndCents } from '../../src/engine/text.ts'
 
-const QUICK = ['Groceries', 'Dining', 'Gas', 'Amazon', 'Costco', 'Travel']
+// The first everyday purchases, as quick picks for one question.
+const QUICK = EVERYDAY_PURCHASES.slice(0, 6).map((p) => p.label)
 
 // Setup notes name what to set in CLI terms; this says where on the page.
 function noteText(note: SetupNote, name: string): string {
@@ -586,6 +597,64 @@ function Memberships({
   )
 }
 
+// What the wallet's points are worth to the person, per program: blank
+// means earnrate's own value.
+function PointValues({
+  wallet,
+  onChange,
+}: {
+  wallet: Wallet
+  onChange: (change: WalletChange) => void
+}) {
+  const ids = [
+    ...new Set(
+      wallet.cards.flatMap((h) => {
+        const card = cards.get(h.id)
+        return card ? [cardValuation(catalog, wallet, card).currency] : []
+      }),
+    ),
+  ].filter((id) => id !== 'cash')
+  if (ids.length === 0) return null
+  return (
+    <section class="panel">
+      <h3>Point values</h3>
+      <p class="muted">
+        What your points are worth to you, in cents. Leave blank for earnrate's
+        value; transferring to airlines and hotels can be worth more.
+      </p>
+      {ids.map((id) => {
+        const own = wallet.valuations[id]
+        const currency = catalog.currencies.find((c) => c.id === id)
+        return (
+          <label class="field" key={id}>
+            {currencyLabel(catalog, id)}
+            <span class="dollar">
+              <input
+                type="number"
+                inputMode="decimal"
+                min="0.1"
+                max="5"
+                step="0.1"
+                placeholder={String(currency?.value_cents ?? 1)}
+                value={typeof own === 'number' ? own : ''}
+                onChange={(e) => {
+                  const raw = e.currentTarget.value
+                  onChange(
+                    withValuations(catalog, wallet, {
+                      [id]: raw === '' ? null : Number(raw),
+                    }),
+                  )
+                }}
+              />
+              ¢
+            </span>
+          </label>
+        )
+      })}
+    </section>
+  )
+}
+
 function WhatIf({
   wallet,
   memberships,
@@ -911,6 +980,7 @@ export function MyWallet({
 
       <CheatSheet wallet={wallet} />
       <Memberships wallet={wallet} onChange={apply} />
+      <PointValues wallet={wallet} onChange={apply} />
       <WhatIf wallet={wallet} memberships={memberships} />
       <Transfer wallet={wallet} onReplace={replace} />
     </div>

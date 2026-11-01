@@ -54,7 +54,11 @@ export function formatWalletSummary(summary: WalletSummary): string {
     summary.memberships.length > 0
       ? `Memberships: ${summary.memberships.join(', ')}.`
       : 'Memberships: none saved.'
-  return [...cards, memberships].join('\n')
+  const values =
+    summary.pointValues.length > 0
+      ? `Point values set: ${summary.pointValues.map((v) => `${v.name} at ${String(v.centsPerUnit)}¢`).join(', ')}. Others use earnrate's defaults.`
+      : "Point values: earnrate's defaults."
+  return [...cards, memberships, values].join('\n')
 }
 
 export function formatBooking(

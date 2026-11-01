@@ -178,6 +178,13 @@ export class WalletVault {
     )
   }
 
+  setValuations(
+    walletKey: string,
+    changes: Record<string, number | null>,
+  ): Promise<SetupResult> {
+    return this.withStore(walletKey, failed(), (s) => s.setValuations(changes))
+  }
+
   replace(walletKey: string, wallet: Wallet): Promise<SetupResult> {
     return this.withStore(walletKey, failed(), (s) => s.replace(wallet))
   }
@@ -190,6 +197,11 @@ export class WalletVault {
     return this.withStore(walletKey, failed(), (s) =>
       s.record(purchase, merchant),
     )
+  }
+
+  // When the wallet began, as milliseconds since 1970; null once it's gone.
+  async started(): Promise<number | null> {
+    return (await this.storage.get<Meta>('meta'))?.created ?? null
   }
 
   // Everything, including the recovery code's wrapped key.
@@ -214,7 +226,9 @@ export type VaultApi = Pick<
   | 'updateCard'
   | 'removeCard'
   | 'setMemberships'
+  | 'setValuations'
   | 'replace'
   | 'record'
+  | 'started'
   | 'destroy'
 >

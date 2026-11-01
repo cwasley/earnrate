@@ -369,3 +369,34 @@ export function withMemberships(
     notes: [],
   }
 }
+
+// Point values in cents per point, by currency id; null goes back to
+// earnrate's default for that currency.
+export function withValuations(
+  catalog: Catalog,
+  wallet: Wallet,
+  changes: Record<string, number | null>,
+): WalletChange {
+  const unknown = Object.keys(changes).filter(
+    (id) => !catalog.currencies.some((c) => c.id === id),
+  )
+  if (unknown.length > 0)
+    return failed(
+      `Unknown currency ${unknown.map((id) => `'${id}'`).join(', ')}. Currencies: ${list(catalog.currencies.map((c) => c.id))}.`,
+    )
+  const odd = Object.entries(changes).filter(
+    ([, cents]) => cents !== null && !(cents > 0 && cents <= MAX_CENTS),
+  )
+  if (odd.length > 0)
+    return failed(
+      `A point is worth more than 0¢ and at most ${String(MAX_CENTS)}¢; check ${odd.map(([id]) => id).join(', ')}.`,
+    )
+  const valuations = Object.fromEntries([
+    ...Object.entries(wallet.valuations).filter(([id]) => !(id in changes)),
+    ...Object.entries(changes).filter(([, cents]) => cents !== null),
+  ]) as Wallet['valuations']
+  return { ok: true, wallet: { ...wallet, valuations }, fields: {}, notes: [] }
+}
+
+// Higher than any program's points are worth, even transferred.
+const MAX_CENTS = 5

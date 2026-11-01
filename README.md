@@ -176,7 +176,7 @@ claude mcp add --transport http earnrate https://mcp.earnrate.dev
 
 Or install it as a Claude Code plugin, which connects Claude Code and Cowork to the same server: `/plugin marketplace add cwasley/earnrate`, then `/plugin install earnrate@earnrate`.
 
-**Or run it on your computer:** `earnrate mcp` runs earnrate as a local MCP server over stdio, with 13 tools (the connector has the same ones, plus `export_wallet`, `import_wallet`, `delete_wallet` and `switch_wallet` for its saved wallets):
+**Or run it on your computer:** `earnrate mcp` runs earnrate as a local MCP server over stdio, with 14 tools (the connector has the same ones, plus `export_wallet`, `import_wallet`, `delete_wallet` and `switch_wallet` for its saved wallets):
 
 - `best_card_for_purchase`: which card to use, with reasons
 - `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
@@ -185,7 +185,7 @@ Or install it as a Claude Code plugin, which connects Claude Code and Cowork to 
 - `cheat_sheet`: the card to use for each everyday kind of purchase this quarter
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have
 - `record_purchase`: books a purchase against its cap and any open welcome bonus in your wallet file, keeping your comments
-- `search_cards`, `add_card`, `update_card`, `remove_card` and `set_memberships`: set up the wallet in conversation
+- `search_cards`, `add_card`, `update_card`, `remove_card`, `set_memberships` and `set_point_values`: set up the wallet in conversation, including what your points are worth
 
 Saving cards is optional: name them in the conversation for one answer, or ask the assistant to save them, and it finds them, adds them, and asks about anything a card needs, like this quarter's Cash+ picks.
 

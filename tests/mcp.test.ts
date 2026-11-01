@@ -86,7 +86,7 @@ async function serve(saving: WalletSaving, llm: LlmSession | null = null) {
 }
 
 describe('tools', () => {
-  test('lists the thirteen tools with descriptions and hints', async () => {
+  test('lists the fourteen tools with descriptions and hints', async () => {
     const client = await connect(await walletCopy())
     const { tools } = await client.listTools()
     expect(tools.map((t) => t.name).sort()).toEqual([
@@ -101,6 +101,7 @@ describe('tools', () => {
       'resolve_merchant',
       'search_cards',
       'set_memberships',
+      'set_point_values',
       'simulate_spending',
       'update_card',
     ])
@@ -548,6 +549,7 @@ describe('wallet setup', () => {
         { cardId: 'amex-gold', merchant: 'Whole Foods', amount: 20 },
       ],
       ['set_memberships', { memberships: ['amazon-prime', 'costco'] }],
+      ['set_point_values', { values: { UR: 1.5 }, profile: 'points-heavy' }],
       ['remove_card', { cardId: 'chase-freedom-unlimited' }],
       ['export_wallet', {}],
       ['delete_wallet', { confirm: true, cards: parsed.cards.length }],
@@ -669,7 +671,12 @@ describe('wallet setup', () => {
     expect(text(before)).toMatch(
       /no saved wallet yet.*search_cards.*add_card/is,
     )
-    expect(before.structuredContent).toEqual({ memberships: [], cards: [] })
+    expect(before.structuredContent).toEqual({
+      memberships: [],
+      pointValues: [],
+      started: null,
+      cards: [],
+    })
 
     for (const [name, args] of [
       ['best_card_for_purchase', { merchant: 'Whole Foods' }],

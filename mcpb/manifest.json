@@ -89,6 +89,10 @@
     {
       "name": "set_memberships",
       "description": "Sets memberships like Amazon Prime or Costco that unlock rates or that a card needs."
+    },
+    {
+      "name": "set_point_values",
+      "description": "Saves what your points are worth to you, in cents per point."
     }
   ],
   "keywords": [

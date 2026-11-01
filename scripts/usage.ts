@@ -74,9 +74,11 @@ for (const row of data) {
 }
 for (const [day, rows] of byDay) {
   const tools = rows.filter((r) => r.label.startsWith('tool:'))
+  // A refusal is counted on top of its tool call, not as another request.
+  const refusals = rows.filter((r) => r.label.startsWith('tool-error:'))
   const total = (list: typeof rows) => list.reduce((n, r) => n + r.count, 0)
   console.log(
-    `${day}  ${String(total(rows))} requests, ${String(total(tools))} tool calls`,
+    `${day}  ${String(total(rows) - total(refusals))} requests, ${String(total(tools))} tool calls, ${String(total(refusals))} refused`,
   )
   for (const r of rows)
     console.log(`  ${r.label.padEnd(32)} ${String(r.count).padStart(6)}`)
