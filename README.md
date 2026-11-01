@@ -175,7 +175,7 @@ claude mcp add --transport http earnrate https://mcp.earnrate.dev
 
 Or install it as a Claude Code plugin, which connects Claude Code and Cowork to the same server: `/plugin marketplace add cwasley/earnrate`, then `/plugin install earnrate@earnrate`.
 
-**Or run it on your computer:** `earnrate mcp` runs earnrate as a local MCP server over stdio, with 13 tools (the connector has the same ones, plus `export_wallet`, `import_wallet` and `delete_wallet` for its saved wallets):
+**Or run it on your computer:** `earnrate mcp` runs earnrate as a local MCP server over stdio, with 13 tools (the connector has the same ones, plus `export_wallet`, `import_wallet`, `delete_wallet` and `switch_wallet` for its saved wallets):
 
 - `best_card_for_purchase`: which card to use, with reasons
 - `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
@@ -244,7 +244,7 @@ Rotating categories (Freedom Flex) are added each quarter once the issuer posts 
 
 earnrate needs no account. The local version has no telemetry; the hosted server counts requests by tool name only. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
 
-- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests by tool name only. A saved wallet is optional and anonymous (a recovery code, no email), holds card IDs and the details you gave, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
+- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests by tool name only. Connecting it starts an anonymous wallet (a recovery code, no email). It holds cards only if you save some: card IDs and the details you gave, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
 - **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product ID, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins.
 - **What the local version sends:** nothing, by default. The optional merchant lookup (off unless you turn it on with your own Anthropic API key) sends only the name of a store earnrate doesn't recognize to Anthropic's API, and saves the answer in `~/.earnrate/merchant-cache.json`.
 - **AI assistants:** when you use earnrate through Claude or another assistant, that assistant's provider sees the conversation, including earnrate's answers, under its own privacy policy.

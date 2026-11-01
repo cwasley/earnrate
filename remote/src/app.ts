@@ -120,7 +120,7 @@ async function signInStep(
       ? html(
           errorPage(
             "earnrate's sign-in isn't working right now.",
-            'Try again in a few minutes. Questions still work without signing in.',
+            'Try again in a few minutes.',
           ),
           503,
         )
