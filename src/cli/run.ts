@@ -73,7 +73,7 @@ Save your cards (optional):
   ${CLI_NAME} add <card-id> [--pick ...]           Add a card you hold.
   ${CLI_NAME} update <card-id> [--pick ...]        Change picks, label or activations.
   ${CLI_NAME} remove <card-id>                     Remove a card.
-  ${CLI_NAME} memberships [names...]               Show or set memberships (amazon-prime).
+  ${CLI_NAME} memberships [names...]               Show or set memberships (amazon-prime, costco).
 
 Other commands:
   ${CLI_NAME} cheatsheet                           The best card for each category this quarter.

@@ -5,7 +5,7 @@ import type {
   WalletWhatIf,
 } from '../engine/simulate.ts'
 import { membershipNote, type MembershipCost } from '../engine/memberships.ts'
-import { feeText, money, pct } from '../engine/text.ts'
+import { feeText, membershipName, money, pct } from '../engine/text.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
 const wholeUsd = (n: number) => money(Math.round(n))
@@ -40,7 +40,7 @@ export function formatExploration(r: Exploration, all: boolean): string {
     const upgrade = e.withMembership[0]
     if (upgrade)
       lines.push(
-        `    With ${upgrade.membership}: ${pct(upgrade.effectiveReturnPct)}.`,
+        `    With ${membershipName(upgrade.membership)}: ${pct(upgrade.effectiveReturnPct)}.`,
       )
     for (const w of e.warnings) lines.push(`    ! ${w}`)
   })

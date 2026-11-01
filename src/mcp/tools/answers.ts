@@ -227,7 +227,7 @@ export function registerAnswerTools(
     {
       title: 'Compare welcome offers',
       description:
-        "Ranks the public welcome (sign-up) offers on cards the user doesn't have by first-year value: the bonus at the user's point values minus the first year's annual fee. Use it when the user asks which new card to get or which has the best sign-up bonus. It covers only the cards earnrate knows, offers vary by person, and each offer's note gives the issuer's eligibility rules; pass those caveats on. It doesn't account for what a card would earn on the user's spending.",
+        "Ranks the public welcome (sign-up) offers on cards the user doesn't have by first-year value: the bonus at the user's point values minus the first year's annual fee and any membership the card needs that the user doesn't have. Offers the issuer rules out because of a card in the user's wallet are marked likely not eligible and listed last. Use it when the user asks which new card to get or which has the best sign-up bonus. It covers only the cards earnrate knows, offers vary by person, and each offer's note gives the issuer's eligibility rules; pass those caveats on. It doesn't account for what a card would earn on the user's spending.",
       inputSchema: z.object({
         ...OfferFilters,
         valuation: CatalogFilters.valuation,
@@ -324,7 +324,7 @@ export function registerAnswerTools(
     {
       title: 'Simulate a year of spending',
       description:
-        'Spends monthly amounts for a year across every card earnrate knows, and ranks single cards and two-card pairs by rewards minus annual fees. Spending is optional: without it, typical U.S. household amounts are used and the answer says so. With `cards` (named in the conversation) or compareToWallet (the saved wallet), it ranks the cards that would add the most to those cards instead. Use it for "which card fits my spending?" or "is it worth adding a card?". It leaves out welcome bonuses.',
+        'Spends monthly amounts for a year across every card earnrate knows, and ranks single cards and two-card pairs by rewards minus annual fees, and minus a membership a card needs (a Costco membership) unless the user has it or spends at Costco. Spending is optional: without it, typical U.S. household amounts are used and the answer says so. With `cards` (named in the conversation) or compareToWallet (the saved wallet), it ranks the cards that would add the most to those cards instead. Use it for "which card fits my spending?" or "is it worth adding a card?". It leaves out welcome bonuses.',
       inputSchema: z.object({
         spending: z
           .array(

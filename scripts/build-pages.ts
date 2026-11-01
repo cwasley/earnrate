@@ -12,7 +12,7 @@ import {
   type ExploreQuery,
 } from '../src/engine/explore.ts'
 import { localToday } from '../src/engine/periods.ts'
-import { pct } from '../src/engine/text.ts'
+import { num, pct } from '../src/engine/text.ts'
 import { categoryPhrase, currencyName, earnText } from '../src/engine/text.ts'
 import {
   CAP_PERIODS,
@@ -156,11 +156,19 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
       ? ''
       : ` ${esc(page.label)} usually codes as ${esc(categoryPhrase(catalog, r.merchant.category))}${r.merchant.likelyMcc === null ? '' : ` (MCC ${String(r.merchant.likelyMcc)})`}.`
   const parts = [
-    `<strong><a href="/cards/${top.cardId}">${esc(shortName(top.cardId))}</a></strong> earns the most ${where}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ' in points at 1¢ each'}.${codes}`,
+    `<strong><a href="/cards/${top.cardId}">${esc(shortName(top.cardId))}</a></strong> earns the most ${where}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ` in points at ${num(top.centsPerUnit)}¢ each`}.${codes}`,
   ]
-  const first = requirementLines(top.cardId, top.requirements, untilText(top))
+  const first = [
+    ...requirementLines(top.cardId, top.requirements, untilText(top)),
+    // "Needs a Costco membership", except where buying means being a member.
+    ...top.conditions
+      .filter((c) => c.includes('membership ('))
+      .map((c) => c.replace(/\.$/, '')),
+  ]
   if (first.length > 0) parts.push(`${first.join('. ')}.`)
-  const noFee = shown.find((e) => e.annualFee === 0)
+  const noFee = shown.find(
+    (e) => e.annualFee === 0 && !cards.get(e.cardId)?.requires_membership,
+  )
   if (noFee && noFee !== top)
     parts.push(
       `With no annual fee, <strong>${esc(shortName(noFee.cardId))}</strong> earns ${pct(noFee.effectiveReturnPct)}.`,
@@ -325,7 +333,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       ${gotchas(r)}
       ${sources(shown)}
       <h2>How this is ranked</h2>
-      <p>Every personal card earnrate tracks, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at 1¢, what most are worth as cash or travel credit; transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, use <a href="/#spending">My spending</a>.</p>
+      <p>Every personal card earnrate tracks that's open to new applicants, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, use <a href="/#spending">My spending</a>.</p>
       ${related(page, all)}`
   const jsonLd = {
     '@context': 'https://schema.org',

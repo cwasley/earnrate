@@ -108,7 +108,7 @@ Or tell your AI assistant ("I opened my Sapphire Preferred on October 1"), or ch
   bonus: { opened: 2026-10-01, spend: 5000, by: 2026-12-31, points: 75000 }
 ```
 
-While the bonus is open, that card wins wherever it's accepted, and the answer says how much is left, the weekly pace to finish on time, what the bonus is worth at your point values, and what using it costs compared with your best earner. Spend counts up as you record purchases (from an AI assistant or the website) or import a statement with `--apply`; refunds count down. Once it's met or the deadline passes, the card goes back to the normal ranking. With two open bonuses, the one needing more spend per day comes first.
+While the bonus is open and you're behind an even pace to the deadline, that card wins wherever it's accepted, and the answer says how much is left, the weekly pace to finish on time, what the bonus is worth at your point values, and what using it costs compared with your best earner. On pace, it's the pick only where it earns as much as your best card, and it's mentioned where it comes within a point; otherwise your best card wins. Spend counts up as you record purchases from an AI assistant or import a statement with `--apply`; refunds count down. Once it's met or the deadline passes, the card goes back to the normal ranking. With two open bonuses, one behind pace comes first, then the one needing more spend per day.
 
 `spend`, `by` and the reward (`points`, or `dollars` for cash back) default to the card's published offer once earnrate has one; set them when your offer was different.
 
@@ -122,13 +122,13 @@ earnrate simulate groceries=600 dining=300 other=1000 # best cards and pairs for
 earnrate simulate groceries=600 other=1000 --wallet   # what a new card would add to yours
 ```
 
-`best` ranks every card earnrate knows for a merchant or a category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Rates that need a membership like Amazon Prime are listed separately unless you pass `--member amazon-prime`. `simulate` spends your monthly amounts for a year, applying caps as they fill and reset, and ranks single cards and two-card pairs by rewards minus annual fees. Both take `--no-fee`, `--cash` or `--points`, `--issuer`, `--business` and `--valuation`. Welcome bonuses are left out of both; for those:
+`best` ranks every card earnrate knows for a merchant or a category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Rates that need a membership like Amazon Prime are listed separately unless you pass `--member amazon-prime`, and a card that needs a membership to get (Costco Anywhere) says so. `simulate` spends your monthly amounts for a year, applying caps as they fill and reset, and ranks single cards and two-card pairs by rewards minus annual fees, counting the cost of a membership a card needs (Costco's, for Costco Anywhere) unless you pass `--member costco` or spend at Costco. Both take `--no-fee`, `--cash` or `--points`, `--issuer`, `--business` and `--valuation`. Welcome bonuses are left out of both; for those:
 
 ```sh
 earnrate offers --cash
 ```
 
-Ranks the welcome offers on cards you don't have by first-year value: the bonus at your point values minus the first year's annual fee. `--points`, `--no-fee` and `--business` narrow it down. Each offer is the public one on the issuer's page, checked weekly like the earning rules, with the issuer's eligibility rules in its note. Offers can differ by person and by how you apply, and it covers only the cards earnrate knows. There are no affiliate or apply links.
+Ranks the welcome offers on cards you don't have by first-year value: the bonus at your point values minus the first year's annual fee (and a membership the card needs, if you don't have it). An offer the issuer rules out because of a card in your wallet is marked "likely not eligible" and listed last. `--points`, `--no-fee` and `--business` narrow it down. Each offer is the public one on the issuer's page, checked weekly like the earning rules, with the issuer's eligibility rules in its note. Offers can differ by person and by how you apply, and it covers only the cards earnrate knows. There are no affiliate or apply links.
 
 ### Import a statement
 
@@ -141,8 +141,8 @@ earnrate import gold.csv:amex-gold sapphire.csv:chase-sapphire-preferred
 
 It totals what each card earned against the best card in your wallet for each purchase, lists the merchants where another card would have earned the most, and flags merchants your issuer codes differently than earnrate assumes. Name several statements, each with its card, to get one report across them. It reads Amex and Chase activity CSVs. Download the CSV rather than a PDF statement: Chase's PDFs print the full card number in the payment coupon, and earnrate never handles card numbers.
 
-- It's a dry run unless you pass `--apply`, which records cap usage for the current period in your wallet. Refunds lower it.
-- Only the date, description, amount, category and (for Chase) transaction type columns are read. The statements themselves are never stored: `--apply` writes cap totals plus a hash of each recorded purchase to `~/.earnrate/imported.json`, so importing the same file twice never counts twice.
+- It's a dry run unless you pass `--apply`, which records cap usage for the current period and spending toward an open welcome bonus in your wallet. Refunds lower both.
+- Only the date, description, amount, category and (for Chase) transaction type columns are read. The statements themselves are never stored: `--apply` writes cap and bonus totals plus a hash of each recorded purchase to `~/.earnrate/imported.json`, so importing the same file twice never counts twice.
 - For a merchant earnrate doesn't know, it uses the statement's category and marks the row, since another issuer may code it differently.
 - `--valuation points-heavy` values points at transfer rates instead of your wallet's values, which can change which card wins.
 
@@ -225,7 +225,7 @@ merchant text
 - **Merchants resolve to a category plus the assumption behind it.** "Whole Foods codes as a supermarket (MCC 5411)" is stated in the answer, and venues that can code more than one way (a restaurant inside a stadium or hotel) come back at medium confidence with the alternative spelled out. Unknown merchants fall back to base rates, or to an opt-in, cached and labeled Claude guess.
 - **The engine is pure and deterministic.** Given a purchase, a date and a set of cards (yours, or every card), it checks every rule against network acceptance, the date window, caps already used (split when a purchase straddles one), quarterly picks and activations, then values points at your cents-per-point, including pooling (Freedom Unlimited points are worth Sapphire points when you hold both). Ties, the valuation at which the runner-up would win, stale data, and a rotating card whose new quarter isn't in the data yet all show up in the answer.
 - **Wallet edits keep your file intact.** Adding or changing a card, or recording a purchase, splices in only the lines that changed and checks the result before saving, so comments and formatting in your YAML survive.
-- **Drift detection.** A weekly GitHub Action opens each issuer page in a headless browser, checks every quote is still there, and opens an issue when terms move. It stores only hashes of issuer text.
+- **Drift detection.** A weekly GitHub Action opens each issuer page in a headless browser, checks every quote is still there, and opens an issue when terms move. It stores only hashes of issuer text. A daily one checks earnrate.dev and the hosted server end to end (sign in, ask, save a card, delete the wallet) and opens an issue if anything fails.
 - **Tested end to end.** Golden cases written from issuer terms, CLI snapshot tests, an MCP round trip over real stdio, an install test that packs and installs the npm package, and a check that no committed file contains a card number. CI runs all of it on every push.
 
 The code is TypeScript run directly by Node 24 (`src/`), with the engine in `src/engine/`, merchant resolution in `src/merchants/`, and the CLI and MCP server as thin layers over them. `site/` is earnrate.dev, which runs the same engine in the browser, and `remote/` is the hosted server at mcp.earnrate.dev.
@@ -243,14 +243,14 @@ Rotating categories (Freedom Flex) are added each quarter once the issuer posts 
 
 ## Privacy Policy
 
-earnrate needs no account. The local version has no telemetry; the hosted server counts requests by tool name only. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
+earnrate needs no account. The local version has no telemetry; the hosted server counts requests by method and tool name only. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
 
-- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests by tool name only. Connecting it starts an anonymous wallet (a recovery code, no email). It holds cards only if you save some: card IDs and the details you gave, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
+- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests by method and tool name only. Connecting it starts an anonymous wallet (a recovery code, no email). It holds cards only if you save some: card IDs and the details you gave, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
 - **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product ID, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins.
 - **What the local version sends:** nothing, by default. The optional merchant lookup (off unless you turn it on with your own Anthropic API key) sends only the name of a store earnrate doesn't recognize to Anthropic's API, and saves the answer in `~/.earnrate/merchant-cache.json`.
 - **AI assistants:** when you use earnrate through Claude or another assistant, that assistant's provider sees the conversation, including earnrate's answers, under its own privacy policy.
 - **earnrate.dev:** everything you enter on the site stays in your browser. The site counts visits with Cloudflare Web Analytics, without cookies.
-- **Retention:** locally, your data lives only in files you control, for as long as you keep them. Delete the wallet file, or clear the site's data in your browser, to remove it. A saved wallet on mcp.earnrate.dev lasts until you delete it or leave it unused for 13 months.
+- **Retention:** locally, your data lives only in files you control, for as long as you keep them. Delete the wallet file, or clear the site's data in your browser, to remove it. A saved wallet on mcp.earnrate.dev lasts until you delete it or leave it unused for 13 months (a week, if it's never used); the record that an app is connected goes after 90 days unused.
 - **Terms:** [earnrate.dev/terms](https://earnrate.dev/terms).
 - **Contact:** [hello@earnrate.dev](mailto:hello@earnrate.dev).
 

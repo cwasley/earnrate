@@ -44,7 +44,7 @@ const FILTER_OPTIONS = `  --cash, --points        Cash back cards only, or point
   --issuer <id>           One issuer's cards, e.g. chase or amex.
   --business              Business cards instead of personal ones.
   --closed                Include cards the issuer no longer takes applications for.
-  --member <name>         A membership you have, e.g. amazon-prime. Repeatable.
+  --member <name>         A membership you have, e.g. amazon-prime or costco. Repeatable.
   --valuation <profile>   flat (points at 1¢, the default) or points-heavy
                           (MR and UR at 1.7¢).`
 

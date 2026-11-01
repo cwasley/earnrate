@@ -230,7 +230,7 @@ async function saveSheet(sheet: CheatSheet) {
 
 function offerText(card: NonNullable<ReturnType<typeof cards.get>>): string {
   const o = card.welcome_offer
-  if (!o) return ''
+  if (!o || (o.valid_to !== undefined && o.valid_to < localToday())) return ''
   const reward =
     o.points !== undefined
       ? `${o.points.toLocaleString('en-US')} ${currencyName(catalog, card.currency)}`

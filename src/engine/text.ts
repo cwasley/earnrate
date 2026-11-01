@@ -105,3 +105,38 @@ export const listed = (parts: string[]) => {
     ? parts.join(' and ')
     : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1) ?? ''}`
 }
+
+const NUMBERS: Record<string, string> = {
+  one: '1',
+  two: '2',
+  three: '3',
+  four: '4',
+  five: '5',
+  six: '6',
+}
+
+// "five-percent" reads "5%"; other ids read as words.
+export function choiceName(id: string): string {
+  return words(
+    id.replace(
+      /\b(one|two|three|four|five|six)-percent\b/g,
+      (_, n: string) => `${NUMBERS[n] ?? n}%`,
+    ),
+  )
+}
+
+// Display names for membership ids in the card data.
+export const MEMBERSHIPS: Record<string, string> = {
+  'amazon-prime': 'Amazon Prime',
+  'bank-of-america-account': 'Bank of America checking or savings',
+  'bank-of-america-small-business-account':
+    'Bank of America small business checking or savings',
+  'bofa-rewards-member': 'BofA Rewards Member',
+  'bofa-rewards-preferred-plus': 'BofA Rewards Preferred Plus',
+  'bofa-rewards-preferred-honors': 'BofA Rewards Preferred Honors',
+  'bofa-rewards-premier': 'BofA Rewards Premier',
+  costco: 'Costco membership',
+  'nordy-club-ambassador': 'Nordy Club Ambassador',
+}
+
+export const membershipName = (id: string) => MEMBERSHIPS[id] ?? words(id)

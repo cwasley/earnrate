@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 import { membershipsFor, needsAnniversary } from '../../engine/setup.ts'
-import { money, words } from '../../engine/text.ts'
-import { choiceName, walletSummary } from '../../engine/wallet-summary.ts'
+import { choiceName, money, words } from '../../engine/text.ts'
+import { walletSummary } from '../../engine/wallet-summary.ts'
 import { formatBooking, formatWalletSummary } from '../../format/wallet.ts'
 import { fail, type Context } from '../context.ts'
 import {
@@ -85,7 +85,7 @@ export function registerWalletTools(
     {
       title: 'Record a purchase',
       description:
-        "Records a purchase the user has already made, so spending caps and welcome-bonus progress stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap and no open welcome bonus are acknowledged and nothing is written.",
+        "Records a purchase the user has already made, so spending caps and welcome-bonus progress stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap and no open welcome bonus are acknowledged and nothing is written. For a merchant earnrate doesn't recognize it asks for category first, so caps aren't missed.",
       inputSchema: z.object({
         cardId: z
           .string()
@@ -189,7 +189,7 @@ export function registerWalletTools(
     {
       title: 'Update a card',
       description:
-        'Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary or activated categories. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+.',
+        'Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, activated categories, cap spending so far (capSpent) or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+.',
       inputSchema: CardChange,
       outputSchema: WalletChangeSchema,
       annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },

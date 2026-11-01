@@ -80,7 +80,7 @@
     },
     {
       "name": "update_card",
-      "description": "Sets a card's picks, activations or checkout name."
+      "description": "Sets a card's picks, activations, checkout name, cap spending or welcome bonus."
     },
     {
       "name": "remove_card",
@@ -88,7 +88,7 @@
     },
     {
       "name": "set_memberships",
-      "description": "Sets memberships like Amazon Prime that unlock some rates."
+      "description": "Sets memberships like Amazon Prime or Costco that unlock rates or that a card needs."
     }
   ],
   "keywords": [

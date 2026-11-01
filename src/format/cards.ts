@@ -1,12 +1,5 @@
+import { NETWORK_NAMES } from '../engine/text.ts'
 import type { CardInfo, SetupNote } from '../engine/setup.ts'
-
-const NETWORKS: Record<CardInfo['network'], string> = {
-  visa: 'Visa',
-  mastercard: 'Mastercard',
-  amex: 'Amex',
-  discover: 'Discover',
-  store: 'store card',
-}
 
 export function formatCardInfo(card: CardInfo): string {
   const fee =
@@ -35,7 +28,7 @@ export function formatCardInfo(card: CardInfo): string {
     ...(card.onlyAt ? [`works only at ${card.onlyAt.join(', ')}`] : []),
   ]
   return [
-    `${card.id}: ${card.name} (${NETWORKS[card.network]}${fee})${card.held ? ' [in wallet]' : ''}`,
+    `${card.id}: ${card.name} (${NETWORK_NAMES[card.network] ?? card.network}${fee})${card.held ? ' [in wallet]' : ''}`,
     ...needs.map((n) => `    ${n}`),
   ].join('\n')
 }

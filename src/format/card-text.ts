@@ -19,16 +19,6 @@ const ISSUERS: Record<string, string> = {
   'wells-fargo': 'Wells Fargo',
 }
 
-export const MEMBERSHIPS: Record<string, string> = {
-  'amazon-prime': 'Amazon Prime',
-  'bank-of-america-account': 'Bank of America checking or savings',
-  'bofa-rewards-member': 'BofA Rewards Member',
-  'bofa-rewards-preferred-plus': 'BofA Rewards Preferred Plus',
-  'bofa-rewards-preferred-honors': 'BofA Rewards Preferred Honors',
-  'bofa-rewards-premier': 'BofA Rewards Premier',
-  costco: 'Costco membership',
-}
-
 export const PICK_PERIODS = {
   month: 'each month',
   quarter: 'each quarter',
@@ -43,16 +33,14 @@ export const CAP_PERIODS: Record<string, string> = {
   cardmember_year: 'a card year',
 }
 
-export { words } from '../engine/text.ts'
-import { words } from '../engine/text.ts'
+export { MEMBERSHIPS, membershipName, words } from '../engine/text.ts'
+import { membershipName, words } from '../engine/text.ts'
 
 // Whole dollars, for fees and caps.
 export const usd = (n: number) =>
   `${n < 0 ? '−' : ''}$${Math.abs(Math.round(n)).toLocaleString('en-US')}`
 
 export const issuerName = (id: string) => ISSUERS[id] ?? id
-
-export const membershipName = (id: string) => MEMBERSHIPS[id] ?? words(id)
 
 export function cardText(catalog: Catalog) {
   const cards = new Map<string, Card>(catalog.cards.map((c) => [c.id, c]))

@@ -18,6 +18,7 @@ import {
   currencyName,
   earnText,
   money,
+  NETWORK_NAMES,
   num,
   pointValuesText,
   shortDate,
@@ -39,13 +40,6 @@ const CLOSE_SHARE = 0.75
 const EPSILON = 1e-9
 export const STALE_AFTER_DAYS = 180
 const NEAR_CAP_SHARE = 0.2
-
-const NETWORK_NAMES: Record<string, string> = {
-  visa: 'Visa',
-  mastercard: 'Mastercard',
-  amex: 'American Express',
-  discover: 'Discover',
-}
 
 const PERIOD_WORDS: Record<string, string> = {
   month: 'monthly',
@@ -534,7 +528,9 @@ export function recommend(
     open && winner
       ? winner.effectiveReturnPct - open.entry.effectiveReturnPct
       : Infinity
-  const ties = gap <= EPSILON
+  // Already the best card, it's the pick anyway: a tie needs no note.
+  const isBest = open !== null && open.entry === winner
+  const ties = !isBest && gap <= EPSILON
   const bonus = open && (open.behind || ties) ? open : null
   const best = winner?.effectiveReturnPct ?? 0
   if (
@@ -584,9 +580,11 @@ export function recommend(
       ties
         ? `${displayName(bonus.entry)} earns as much here as any of your cards, so it's the pick: it helps its welcome bonus, ${money(remaining)} more to spend by ${deadline}${worth}.`
         : `You're behind pace on ${displayName(bonus.entry)}'s welcome bonus: ${money(remaining)} more to spend by ${deadline}${pace}${worth}.${
-            costHere === null
-              ? ` It earns ${num(top.effectiveReturnPct)}% here against ${num(first.effectiveReturnPct)}% on ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
-              : ` Using it here earns ${money(costHere)} less than ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
+            isBest
+              ? ''
+              : costHere === null
+                ? ` It earns ${num(top.effectiveReturnPct)}% here against ${num(first.effectiveReturnPct)}% on ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
+                : ` Using it here earns ${money(costHere)} less than ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
           }`,
     )
   }

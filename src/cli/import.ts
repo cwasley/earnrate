@@ -36,13 +36,14 @@ Reads card statements (Amex and Chase activity CSVs) and reports:
 
 Name several statements, each with its card, to see one report across them.
 
-Nothing is written unless you pass --apply, and then only cap totals plus a
-fingerprint of each recorded purchase, so importing twice never counts twice.
+Nothing is written unless you pass --apply, and then only cap totals,
+welcome-bonus spending and a fingerprint of each recorded purchase, so
+importing twice never counts twice.
 The statements themselves are never stored.
 
 Options:
   --card <id>            The card a statement is for, as in your wallet.
-  --apply                Record cap usage for the current period.
+  --apply                Record cap usage and welcome-bonus spending.
   --valuation <profile>  flat or points-heavy, instead of your wallet's values.
   -h, --help             Show this help.
 `

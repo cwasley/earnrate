@@ -33,6 +33,24 @@
           "isSecret": false
         },
         {
+          "name": "EARNRATE_LLM_MODEL",
+          "description": "The Claude model for merchant lookups, when EARNRATE_LLM is on.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "EARNRATE_LLM_MAX_CALLS",
+          "description": "Most Claude merchant lookups per session, when EARNRATE_LLM is on.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "EARNRATE_MERCHANT_CACHE",
+          "description": "Where Claude's merchant answers are saved. Default: ~/.earnrate/merchant-cache.json",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
           "name": "ANTHROPIC_API_KEY",
           "description": "Your own Anthropic key, used only when EARNRATE_LLM is on.",
           "isRequired": false,

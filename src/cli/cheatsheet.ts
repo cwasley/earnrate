@@ -26,7 +26,7 @@ name with --cards, or else from every card earnrate knows.
 
 Options:
   --cards <ids>          Use these cards instead of your wallet, comma separated.
-  --member <name>        A membership you have, like amazon-prime. Repeatable.
+  --member <name>        A membership you have, like amazon-prime or costco. Repeatable.
   --valuation <profile>  flat or points-heavy, instead of your wallet's values.
   --date <YYYY-MM-DD>    The day to check. Default: today.
   --json                 Print the cheat sheet as JSON.

@@ -14,6 +14,7 @@ import { rotationGap } from './rotation.ts'
 import { activationRules } from './setup.ts'
 import {
   categoryPhrase,
+  choiceName,
   currencyLabel,
   earnText,
   listed,
@@ -64,25 +65,6 @@ export type CardSummary = {
 export type WalletSummary = {
   memberships: string[]
   cards: CardSummary[]
-}
-
-const NUMBERS: Record<string, string> = {
-  one: '1',
-  two: '2',
-  three: '3',
-  four: '4',
-  five: '5',
-  six: '6',
-}
-
-// "five-percent" reads "5%"; other ids read as words.
-export function choiceName(id: string): string {
-  return words(
-    id.replace(
-      /\b(one|two|three|four|five|six)-percent\b/g,
-      (_, n: string) => `${NUMBERS[n] ?? n}%`,
-    ),
-  )
 }
 
 // Travel-site bookings ("Flight through Amex Travel") read mid-sentence in

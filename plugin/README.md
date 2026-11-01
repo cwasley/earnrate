@@ -39,7 +39,7 @@ Nothing on your computer. It connects Claude to earnrate's hosted MCP server at 
 
 ## Privacy Policy
 
-No email, name or password: the wallet is anonymous. earnrate counts requests by tool name only, never what was asked. Claude's provider sees your conversation, including earnrate's answers, under its own privacy policy. Full policy: [earnrate.dev/privacy](https://earnrate.dev/privacy). Terms: [earnrate.dev/terms](https://earnrate.dev/terms). Contact: [hello@earnrate.dev](mailto:hello@earnrate.dev).
+No email, name or password: the wallet is anonymous. earnrate counts requests by method and tool name only, never what was asked. Claude's provider sees your conversation, including earnrate's answers, under its own privacy policy. Full policy: [earnrate.dev/privacy](https://earnrate.dev/privacy). Terms: [earnrate.dev/terms](https://earnrate.dev/terms). Contact: [hello@earnrate.dev](mailto:hello@earnrate.dev).
 
 ## Prefer it on your computer?
 

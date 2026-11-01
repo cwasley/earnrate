@@ -72,7 +72,7 @@ describe('best cards for a purchase', () => {
     )
     expect(flex?.effectiveReturnPct).toBe(5)
     expect(flex?.conditions[0]).toBe(
-      'Needs activating with the issuer ("q4-2026-grocery").',
+      'Needs its bonus activated with the issuer (free).',
     )
   })
 
@@ -83,7 +83,7 @@ describe('best cards for a purchase', () => {
     expect(cashPlus?.effectiveReturnPct).toBe(5)
     expect(cashPlus?.picks).toEqual({ 'five-percent': ['fast-food'] })
     expect(cashPlus?.conditions).toEqual([
-      'Needs "fast-food" as its five-percent pick (picked each quarter).',
+      'Needs fast food as its 5% pick (picked each quarter).',
       'Up to $2,000 a quarter at this rate, then 1% cash back.',
     ])
   })
@@ -102,7 +102,7 @@ describe('best cards for a purchase', () => {
     )
     expect(member?.effectiveReturnPct).toBe(5)
     expect(member?.withMembership).toEqual([])
-    expect(member?.conditions).toEqual(['Needs amazon-prime.'])
+    expect(member?.conditions).toEqual(['Needs Amazon Prime.'])
   })
 
   test('filters: no annual fee, issuer, closed cards and business cards', () => {

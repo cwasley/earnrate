@@ -88,10 +88,6 @@ Holding some cards means holding a membership, but the wallet asks for membershi
 
 Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. It would need a per-card credit value with evidence, kept apart from earn rates (credits as rewards stay out of scope, below).
 
-### Welcome-offer end dates
-
-`welcome_offer` has no end date, so answers can't say when a limited-time offer expires. Add one only from the issuer's own page: the IHG pages say "launch offer" with no date.
-
 ## Not planned
 
 Out of scope per the project's non-goals, or too variable to model as a rate.

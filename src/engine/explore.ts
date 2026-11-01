@@ -10,10 +10,13 @@ import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
 import {
   categoryPhrase,
+  choiceName,
   codesAs,
   earnText,
+  membershipName,
   money,
   pointValuesText,
+  words,
 } from './text.ts'
 import type {
   Channel,
@@ -277,12 +280,13 @@ function conditionsText(catalog: Catalog, r: Requirements): string[] {
   const conditions: string[] = []
   if (r.pick) {
     conditions.push(
-      `Needs "${r.pick.options.join('", "')}" as its ${r.pick.choice} pick (${PICK_PERIODS[r.pick.period]}).`,
+      `Needs ${r.pick.options.map(words).join(' or ')} as its ${choiceName(r.pick.choice)} pick (${PICK_PERIODS[r.pick.period]}).`,
     )
   }
   if (r.activation !== null)
-    conditions.push(`Needs activating with the issuer ("${r.activation}").`)
-  if (r.membership !== null) conditions.push(`Needs ${r.membership}.`)
+    conditions.push('Needs its bonus activated with the issuer (free).')
+  if (r.membership !== null)
+    conditions.push(`Needs ${membershipName(r.membership)}.`)
   if (r.cap) {
     conditions.push(
       `Up to ${money(r.cap.amount)} ${CAP_PERIODS[r.cap.period] ?? ''} at this rate, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}.`,

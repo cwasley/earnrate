@@ -303,7 +303,7 @@ describe('comparing every card', () => {
       noWallet,
     )
     expect(stdout).toMatch(/^ 1\. Prime Visa +5% +\$6 +no annual fee$/m)
-    expect(stdout).toMatch(/^ {4}Needs amazon-prime\.$/m)
+    expect(stdout).toMatch(/^ {4}Needs Amazon Prime\.$/m)
   })
 
   test('simulate ranks single cards and pairs after fees', async () => {
