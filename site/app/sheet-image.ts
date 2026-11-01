@@ -30,36 +30,40 @@ function fit(ctx: CanvasRenderingContext2D, text: string, width: number) {
   return `${out.trimEnd()}…`
 }
 
-// The stacked-cards mark (Logo.tsx), in its 120 × 80 box at (x, y).
+// The stacked-cards mark (Logo.tsx), in its 120 × 80 box at (x, y): stroke
+// and fill in the current stroke color, the chip in `chip`.
 function drawLogo(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   scale: number,
+  chip: string,
 ) {
-  const card = (cx: number, cy: number, w: number, h: number, r: number) => {
+  const box = (bx: number, by: number, w: number, h: number, r: number) => {
     ctx.beginPath()
     ctx.roundRect(
-      x + cx * scale,
-      y + cy * scale,
+      x + bx * scale,
+      y + by * scale,
       w * scale,
       h * scale,
       r * scale,
     )
-    ctx.stroke()
   }
   ctx.save()
-  ctx.lineWidth = scale
-  ctx.globalAlpha = 0.25
-  card(22, 6, 92, 58, 9)
-  ctx.globalAlpha = 0.45
-  card(14, 12, 92, 58, 9)
-  ctx.globalAlpha = 1
   ctx.lineWidth = 2 * scale
-  ctx.setLineDash([6 * scale, 5 * scale])
-  card(6, 18, 92, 58, 9)
-  ctx.setLineDash([])
-  card(18, 34, 16, 12, 2)
+  ctx.globalAlpha = 0.3
+  box(22, 6, 92, 58, 9)
+  ctx.stroke()
+  ctx.globalAlpha = 0.55
+  box(14, 12, 92, 58, 9)
+  ctx.stroke()
+  ctx.globalAlpha = 1
+  ctx.fillStyle = ctx.strokeStyle
+  box(6, 18, 92, 58, 9)
+  ctx.fill()
+  ctx.fillStyle = chip
+  box(18, 34, 16, 12, 2)
+  ctx.fill()
   ctx.restore()
 }
 
@@ -91,7 +95,7 @@ export function cheatSheetImage(
   ctx.fillText(`${sheet.quarter} · the card to use for each purchase`, PAD, 240)
   ctx.globalAlpha = 1
   ctx.strokeStyle = paper
-  drawLogo(ctx, W - PAD - 205, 52, 1.8)
+  drawLogo(ctx, W - PAD - 205, 52, 1.8, accent)
 
   const top = 330
   const bottom = H - 190

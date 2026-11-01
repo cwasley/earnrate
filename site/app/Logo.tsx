@@ -1,6 +1,6 @@
-// The stacked-cards mark from the top of earnrate.dev. sheet-image.ts draws
-// the same shapes.
-export function Logo({ class: cls }: { class?: string }) {
+// The stacked-cards mark from the top of earnrate.dev; sheet-image.ts draws
+// the same shapes. The chip is cut out in the color behind the mark.
+export function Logo({ class: cls, chip }: { class?: string; chip: string }) {
   return (
     <svg
       class={cls}
@@ -8,19 +8,28 @@ export function Logo({ class: cls }: { class?: string }) {
       aria-hidden="true"
       fill="none"
       stroke="currentColor"
+      stroke-width="2"
     >
-      <rect x="22" y="6" width="92" height="58" rx="9" opacity="0.25" />
-      <rect x="14" y="12" width="92" height="58" rx="9" opacity="0.45" />
+      <rect x="22" y="6" width="92" height="58" rx="9" opacity="0.3" />
+      <rect x="14" y="12" width="92" height="58" rx="9" opacity="0.55" />
       <rect
         x="6"
         y="18"
         width="92"
         height="58"
         rx="9"
-        stroke-width="2"
-        stroke-dasharray="6 5"
+        fill="currentColor"
+        stroke="none"
       />
-      <rect x="18" y="34" width="16" height="12" rx="2" stroke-width="2" />
+      <rect
+        x="18"
+        y="34"
+        width="16"
+        height="12"
+        rx="2"
+        fill={chip}
+        stroke="none"
+      />
     </svg>
   )
 }

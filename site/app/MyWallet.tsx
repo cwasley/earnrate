@@ -182,7 +182,7 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
               <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />
             </svg>
           </button>
-          <Logo class="sheet-logo" />
+          <Logo class="sheet-logo" chip="var(--accent)" />
         </div>
       </div>
       <ol class="sheet-rows">
