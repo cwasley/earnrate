@@ -91,6 +91,7 @@ export const WalletSummarySchema = z.object({
       currency: z.string(),
       name: z.string(),
       centsPerUnit: z.number(),
+      redemption: z.string().nullable(),
     }),
   ),
   started: z.string().nullable(),

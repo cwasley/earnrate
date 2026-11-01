@@ -2,6 +2,10 @@ import { expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
 import { setValuationsText } from '../src/data/wallet-edit.ts'
 import { withValuations } from '../src/engine/wallet-change.ts'
+import { compareOffers } from '../src/engine/offers.ts'
+import { walletSummary } from '../src/engine/wallet-summary.ts'
+import { formatOffers } from '../src/format/offers.ts'
+import { formatWalletSummary } from '../src/format/wallet.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 
 const catalog = await loadCatalog()
@@ -38,4 +42,37 @@ test('wallet file edits keep comments and the rest of the file', () => {
       UR: null,
     }),
   ).toBe('cards:\n  - id: amex-gold\n')
+})
+
+test('a redemption choice in the wallet reads as one, not as a set value', () => {
+  const wallet = WalletSchema.parse({
+    valuations: { 'sofi-rewards': { redemption: 'sofi-account' } },
+    cards: [{ id: 'sofi-unlimited-2' }],
+  })
+  const summary = walletSummary(catalog, wallet, '2026-11-01')
+  expect(summary.pointValues).toEqual([
+    {
+      currency: 'sofi-rewards',
+      name: 'SoFi Member Rewards',
+      centsPerUnit: 1,
+      redemption: 'sofi-account',
+    },
+  ])
+  expect(formatWalletSummary(summary)).toMatch(
+    /Point values in the wallet: SoFi Member Rewards at 1¢ \(redeemed as sofi account\)/,
+  )
+})
+
+test('offers ruled out by a held card stay in view past the top ten', () => {
+  const holder = WalletSchema.parse({ cards: [{ id: 'amex-platinum' }] })
+  const comparison = compareOffers(
+    catalog,
+    holder,
+    { kind: 'any', noAnnualFee: false, business: false, includeHeld: false },
+    '2026-11-01',
+  )
+  const text = formatOffers(comparison, (id) => id, false)
+  expect(text).toMatch(
+    /more left out as likely not eligible with a card you hold: American Express Gold Card/,
+  )
 })

@@ -260,7 +260,11 @@ export function registerAnswerTools(
       )
       const trimmed = {
         ...comparison,
-        offers: comparison.offers.slice(0, TOP),
+        // Offers ruled out by a card the user holds sort last; keep them in
+        // view so the reason shows.
+        offers: comparison.offers.filter(
+          (o, i) => i < TOP || o.ineligible !== null,
+        ),
       }
       const more = comparison.offers.length - trimmed.offers.length
       return {
@@ -434,6 +438,12 @@ export function registerAnswerTools(
       inputSchema: z.object({
         date: DateInput,
         cards: NamedCards,
+        everyCard: z
+          .boolean()
+          .optional()
+          .describe(
+            'true to pick from every card earnrate knows even when the user has a saved wallet ("which cards should I get?"); the filters then apply.',
+          ),
         memberships: NamedMemberships,
         kind: CatalogFilters.kind,
         noAnnualFee: CatalogFilters.noAnnualFee,
@@ -445,7 +455,10 @@ export function registerAnswerTools(
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async (args) => {
-      const wallet = await ctx.cardsFor(args.cards, args.memberships)
+      const wallet =
+        args.everyCard === true
+          ? null
+          : await ctx.cardsFor(args.cards, args.memberships)
       if (typeof wallet === 'string') return fail(wallet)
       const date = args.date ?? deps.today()
       const sheet =

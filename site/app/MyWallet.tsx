@@ -619,36 +619,62 @@ function PointValues({
     <section class="panel">
       <h3>Point values</h3>
       <p class="muted">
-        What your points are worth to you, in cents. Leave blank for earnrate's
-        value; transferring to airlines and hotels can be worth more.
+        What your points are worth to you, from 0.1¢ to 5¢ each. earnrate starts
+        at what they're worth as cash or travel credit; transferring to airlines
+        and hotels can be worth more.
       </p>
       {ids.map((id) => {
         const own = wallet.valuations[id]
-        const currency = catalog.currencies.find((c) => c.id === id)
+        const set = typeof own === 'number'
+        const base =
+          catalog.currencies.find((c) => c.id === id)?.value_cents ?? 1
+        const value = set ? own : base
+        const save = (cents: number | null) =>
+          onChange(withValuations(catalog, wallet, { [id]: cents }))
+        const step = (by: number) =>
+          save(Math.min(5, Math.max(0.1, Math.round((value + by) * 10) / 10)))
+        const name = currencyLabel(catalog, id)
         return (
-          <label class="field" key={id}>
-            {currencyLabel(catalog, id)}
-            <span class="dollar">
+          <div class="point-value" key={id}>
+            <span>{name}</span>
+            <span class="stepper">
+              <button
+                type="button"
+                aria-label={`Lower ${name}`}
+                disabled={value <= 0.1}
+                onClick={() => step(-0.1)}
+              >
+                −
+              </button>
               <input
                 type="number"
                 inputMode="decimal"
                 min="0.1"
                 max="5"
                 step="0.1"
-                placeholder={String(currency?.value_cents ?? 1)}
-                value={typeof own === 'number' ? own : ''}
+                aria-label={`${name}, cents per point`}
+                value={value}
                 onChange={(e) => {
-                  const raw = e.currentTarget.value
-                  onChange(
-                    withValuations(catalog, wallet, {
-                      [id]: raw === '' ? null : Number(raw),
-                    }),
-                  )
+                  const cents = Number(e.currentTarget.value)
+                  if (cents > 0 && cents <= 5) save(cents)
                 }}
               />
+              <button
+                type="button"
+                aria-label={`Raise ${name}`}
+                disabled={value >= 5}
+                onClick={() => step(0.1)}
+              >
+                +
+              </button>
               ¢
             </span>
-          </label>
+            {set ? (
+              <button type="button" class="link" onClick={() => save(null)}>
+                Reset
+              </button>
+            ) : null}
+          </div>
         )
       })}
     </section>

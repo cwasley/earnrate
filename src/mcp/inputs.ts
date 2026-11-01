@@ -167,8 +167,12 @@ export function makeInputs(catalog: Catalog) {
     .enum(categoryIds)
     .optional()
     .describe(
-      `Only for a merchant earnrate may not know, and only if you're confident what kind of business it is: its spending category, e.g. grocery.supermarket for a supermarket, dining for a restaurant, gas for a gas station. Ignored when earnrate knows the merchant. Leave it out if unsure, except for record_purchase, which needs it for a merchant earnrate doesn't know: there, other records the purchase toward a welcome bonus without touching any cap. Categories: ${categoryList}.`,
+      `Only for a merchant earnrate may not know, and only if you're confident what kind of business it is: its spending category, e.g. grocery.supermarket for a supermarket, dining for a restaurant, gas for a gas station. Ignored when earnrate knows the merchant. Leave it out if unsure. Categories: ${categoryList}.`,
     )
+  // record_purchase can't skip an unknown merchant's caps, so it asks.
+  const RecordCategoryInput = CategoryInput.describe(
+    `For a merchant earnrate doesn't know, its spending category, e.g. dining for a restaurant: without one the purchase isn't recorded, since its caps can't be told. If nobody knows, other records it toward a welcome bonus without touching any cap. Ignored when earnrate knows the merchant. Categories: ${categoryList}.`,
+  )
   const CatalogCategory = z
     .enum(categoryIds)
     .describe(`A spending category: ${categoryList}.`)
@@ -201,6 +205,7 @@ export function makeInputs(catalog: Catalog) {
 
   return {
     CategoryInput,
+    RecordCategoryInput,
     CatalogCategory,
     NamedCards,
     NamedMemberships,

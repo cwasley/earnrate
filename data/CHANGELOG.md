@@ -2,6 +2,14 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.01.6
+
+Freedom Flex's dining note says 5x rather than 5%, since its points can pool into Ultimate Rewards worth more than 1¢. No rates changed.
+
+| Card               | Field               | Old → new              | Source                                                                         |
+| ------------------ | ------------------- | ---------------------- | ------------------------------------------------------------------------------ |
+| chase-freedom-flex | q4-2026-dining.note | "5x (5% as cash back)" | [card page](https://creditcards.chase.com/cash-back-credit-cards/freedom/flex) |
+
 ## 2026.11.01.5
 
 Offers the issuer rules out for holders of another card, and Bank of America's terms for the Atmos account bonus. No rates changed.

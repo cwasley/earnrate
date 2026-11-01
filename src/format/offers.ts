@@ -28,9 +28,16 @@ export function formatOffers(
     if (o.ineligible) lines.push(`    ${o.ineligible}`)
     if (o.note) lines.push(`    ${o.note}`)
   })
-  if (c.offers.length > shown.length)
+  const ruledOut = c.offers.filter(
+    (o) => o.ineligible !== null && !shown.includes(o),
+  )
+  if (ruledOut.length > 0)
     lines.push(
-      `  + ${String(c.offers.length - shown.length)} more (--all lists them)`,
+      `  ${String(ruledOut.length)} more left out as likely not eligible with a card you hold: ${ruledOut.map((o) => o.cardName).join(', ')}.`,
+    )
+  if (c.offers.length > shown.length + ruledOut.length)
+    lines.push(
+      `  + ${String(c.offers.length - shown.length - ruledOut.length)} more (--all lists them)`,
     )
   if (c.withoutOffer.length > 0)
     lines.push(

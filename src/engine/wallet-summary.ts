@@ -65,8 +65,15 @@ export type CardSummary = {
 export type WalletSummary = {
   memberships: string[]
   // Point values the user set, in place of earnrate's defaults.
-  pointValues: { currency: string; name: string; centsPerUnit: number }[]
-  started: string | null // YYYY-MM-DD, for a hosted wallet
+  // Point values the wallet sets: a number, or a way of redeeming (like
+  // SoFi points into a SoFi account), which `redemption` names.
+  pointValues: {
+    currency: string
+    name: string
+    centsPerUnit: number
+    redemption: string | null
+  }[]
+  started: string | null // YYYY-MM-DDTHH:MM US Eastern, for a hosted wallet
   cards: CardSummary[]
 }
 
@@ -253,6 +260,9 @@ function capSummaries(
   })
 }
 
+const redemptionOf = (v: Wallet['valuations'][string] | undefined) =>
+  typeof v === 'object' ? (v.redemption ?? null) : null
+
 export function walletSummary(
   catalog: Catalog,
   wallet: Wallet,
@@ -318,6 +328,7 @@ export function walletSummary(
       currency: id,
       name: currencyLabel(catalog, id),
       centsPerUnit: currencyValuation(catalog, wallet, id).centsPerUnit,
+      redemption: redemptionOf(wallet.valuations[id]),
     }))
   return { memberships: wallet.memberships, pointValues, started: null, cards }
 }

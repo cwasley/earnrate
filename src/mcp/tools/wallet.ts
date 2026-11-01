@@ -30,6 +30,15 @@ import type { ServerDeps } from '../server.ts'
 
 const WRITE = { readOnlyHint: false, openWorldHint: false }
 
+// "Saved wallet started today at 8:28 AM Eastern": the time tells apart two
+// wallets started the same day.
+function startedText(started: string, today: string): string {
+  const [date = '', time = ''] = started.split('T')
+  const [h = 0, m = 0] = time.split(':').map(Number)
+  const clock = `${String(h % 12 === 0 ? 12 : h % 12)}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`
+  return `Saved wallet started ${date === today ? 'today' : shortDate(date)} at ${clock} Eastern.`
+}
+
 // What update_card changed, so the reply confirms the values it saved.
 function changes(args: z.infer<typeof CardChange>): string[] {
   const out: string[] = []
@@ -84,9 +93,7 @@ export function registerWalletTools(
         started,
       }
       const when =
-        started === null
-          ? ''
-          : `Saved wallet started ${started === deps.today() ? 'today' : shortDate(started)}.\n`
+        started === null ? '' : `${startedText(started, deps.today())}\n`
       return {
         content: [
           {
@@ -116,7 +123,7 @@ export function registerWalletTools(
         amount: z.number().positive().describe('Amount spent in US dollars.'),
         channel: ChannelInput,
         date: DateInput,
-        category: inputs.CategoryInput,
+        category: inputs.RecordCategoryInput,
       }),
       outputSchema: RecordResultSchema,
       annotations: {
@@ -283,7 +290,7 @@ export function registerWalletTools(
       description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. It needs a saved wallet with a card in it. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies: ${catalog.currencies.map((c) => c.id).join(', ')}.`,
       inputSchema: z.object({
         values: z
-          .record(z.string(), z.number().positive().max(5).nullable())
+          .record(z.string(), z.number().nullable())
           .optional()
           .describe(
             'Cents per point by currency id, e.g. {"UR": 1.5, "MR": 1.6}. null goes back to the default.',

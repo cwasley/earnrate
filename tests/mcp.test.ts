@@ -562,6 +562,7 @@ describe('wallet setup', () => {
       ],
       ['resolve_merchant', { merchant: 'Costco' }],
       ['cheat_sheet', {}],
+      ['cheat_sheet', { everyCard: true, noAnnualFee: true }],
       ['best_cards_for', { category: 'gas' }],
       ['simulate_spending', {}],
       ['simulate_spending', { compareToWallet: true }],
