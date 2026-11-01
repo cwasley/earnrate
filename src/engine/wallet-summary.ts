@@ -12,7 +12,13 @@ import { daysBetween } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { activationRules } from './setup.ts'
-import { categoryPhrase, currencyLabel, earnText, words } from './text.ts'
+import {
+  categoryPhrase,
+  currencyLabel,
+  earnText,
+  listed,
+  words,
+} from './text.ts'
 import { cardValuation } from './valuation.ts'
 
 export type CapSummary = {
@@ -78,11 +84,6 @@ export function choiceName(id: string): string {
     ),
   )
 }
-
-const listed = (parts: string[]) =>
-  parts.length <= 2
-    ? parts.join(' and ')
-    : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1) ?? ''}`
 
 // Travel-site bookings ("Flight through Amex Travel") read mid-sentence in
 // lower case and plural; brand names keep theirs.

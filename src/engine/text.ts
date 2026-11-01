@@ -94,3 +94,14 @@ export const NETWORK_NAMES: Record<string, string> = {
   discover: 'Discover',
   store: 'store card',
 }
+
+// A name with its own "and" ("drugstores and pharmacies") would run into the
+// list's: those lists use commas only, with those names last.
+export const listed = (parts: string[]) => {
+  const anded = parts.filter((p) => p.includes(' and '))
+  if (anded.length > 0)
+    return [...parts.filter((p) => !p.includes(' and ')), ...anded].join(', ')
+  return parts.length <= 2
+    ? parts.join(' and ')
+    : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1) ?? ''}`
+}

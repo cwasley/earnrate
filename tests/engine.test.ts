@@ -108,7 +108,7 @@ describe('merchant lookup', () => {
   })
 
   test('falls back to the seed table, then to unknown', () => {
-    expect(resolveMerchant(catalog, 'chipotle', null).source).toBe('seed')
+    expect(resolveMerchant(catalog, 'sweetgreen', null).source).toBe('seed')
     const unknown = resolveMerchant(catalog, 'Tiny Bookshop', null)
     expect(unknown.source).toBe('none')
     expect(unknown.category).toBe('other')

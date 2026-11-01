@@ -2,6 +2,14 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.01.2
+
+Chipotle may post as fast food (MCC 5814) instead of a restaurant, so answers there say which card wins either way. No rates changed.
+
+| Merchant | Field     | Old → new             | Source |
+| -------- | --------- | --------------------- | ------ |
+| chipotle | ambiguity | may code as fast food | n/a    |
+
 ## 2026.11.01.1
 
 Freedom Flex's Q4 dining note quotes Chase's "5% total" and says where the 7% figure comes from. No rates changed.

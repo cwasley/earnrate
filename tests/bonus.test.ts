@@ -143,7 +143,7 @@ describe('recommendations', () => {
     )
   })
 
-  test('a bonus on pace is mentioned, not picked', () => {
+  test("a bonus on pace isn't picked, or mentioned where its card trails", () => {
     const rec = recommend(
       catalog,
       wallet({ opened: '2026-10-01', spent: 1000 }),
@@ -151,9 +151,7 @@ describe('recommendations', () => {
     )
     expect(rec.decision?.cardId).toBe('amex-blue-cash-preferred')
     expect(rec.bonus).toBeNull()
-    expect(rec.notes.join(' ')).toMatch(
-      /on pace for .*welcome bonus \(\$3,000 more by 2027-01-01\), so this purchase goes on the card that earns the most/,
-    )
+    expect(rec.notes.join(' ')).not.toMatch(/welcome bonus/)
   })
 
   test.each([

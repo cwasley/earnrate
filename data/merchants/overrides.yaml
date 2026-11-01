@@ -160,6 +160,14 @@
     may_code_as: [dining, entertainment]
     note: Restaurants inside a hotel may code as dining, or as lodging if charged to the room. Shows and casino charges code separately.
 
+- id: chipotle
+  name: Chipotle
+  aliases: [chipotle mexican grill]
+  category: dining
+  ambiguity:
+    may_code_as: [dining.fast_food]
+    note: Fast-casual chains can post as fast food (MCC 5814) instead of a restaurant (5812); a statement shows which.
+
 - id: comcast
   name: Comcast Xfinity
   aliases: [comcast, xfinity]

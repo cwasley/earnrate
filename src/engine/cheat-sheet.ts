@@ -10,7 +10,8 @@ import { bonusStatus } from './bonus.ts'
 import { periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
 import { setupNotes } from './setup.ts'
-import { money, shortDate } from './text.ts'
+import { listed, money, shortDate } from './text.ts'
+import type { RankedCard } from './types.ts'
 
 // `merchant` is a merchant id.
 export type CheatSheetItem =
@@ -53,6 +54,7 @@ export function cheatSheet(
   date: string,
   items: CheatSheetItem[] = CHEAT_SHEET_ITEMS,
 ): CheatSheet {
+  const ranked: { label: string; cards: RankedCard[] }[] = []
   const rows = items.map((item): CheatSheetRow => {
     const merchant =
       'merchant' in item
@@ -77,6 +79,7 @@ export function cheatSheet(
     // The card that earns the most, even when a welcome bonus would take the
     // pick for one purchase: the sheet is for the whole quarter.
     const top = rec.decision ? rec.ranked[0] : undefined
+    ranked.push({ label: item.label, cards: rec.ranked })
     return {
       label: item.label,
       cardId: top?.cardId ?? null,
@@ -93,8 +96,20 @@ export function cheatSheet(
       held.checkout_label ??
       catalog.cards.find((c) => c.id === held.id)?.name ??
       held.id
+    // Rows where the bonus card earns within a point of the row's card.
+    const close = ranked
+      .filter(({ cards }) => {
+        const best = cards[0]?.effectiveReturnPct
+        const own = cards.find((c) => c.cardId === held.id)?.effectiveReturnPct
+        return best !== undefined && own !== undefined && best - own <= 1
+      })
+      .map((r) => r.label.toLowerCase())
     return [
-      `Working on ${name}'s welcome bonus: ${money(status.remaining ?? 0)} more by ${shortDate(status.deadline ?? date)}. Put it on purchases where it earns about as much as the card this sheet lists.`,
+      `Working on ${name}'s welcome bonus: ${money(status.remaining ?? 0)} more by ${shortDate(status.deadline ?? date)}. ${
+        close.length > 0
+          ? `It earns about as much as the cards listed on ${listed(close)}, so those are the places to use it.`
+          : 'It trails the cards listed everywhere, so use it on everyday spending only as needed to reach the bonus.'
+      }`,
     ]
   })
   const notes = [

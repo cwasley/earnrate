@@ -45,12 +45,6 @@
   }
 
 # Restaurants and fast food
-- {
-    id: chipotle,
-    name: Chipotle,
-    aliases: [chipotle mexican grill],
-    category: dining,
-  }
 - { id: sweetgreen, name: Sweetgreen, category: dining }
 - {
     id: cheesecake-factory,

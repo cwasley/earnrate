@@ -32,6 +32,8 @@ import type {
 } from './types.ts'
 import { cardValuation, type Valuation } from './valuation.ts'
 
+// Points of return within which an on-pace welcome bonus card is mentioned.
+const CLOSE_PCT = 1
 const EPSILON = 1e-9
 export const STALE_AFTER_DAYS = 180
 const NEAR_CAP_SHARE = 0.2
@@ -506,11 +508,18 @@ export function recommend(
   }
 
   const open = bonusPick(catalog, wallet, entries, purchase.date)
-  const bonus = open?.behind ? open : null
-  if (open && !bonus && open.entry.card.id !== winner?.card.id) {
-    const remaining = open.status.remaining ?? 0
+  // Behind pace, the bonus card takes the pick; on pace, only where it earns
+  // as much as the best card (it costs nothing there). Within a point, it's
+  // mentioned; otherwise the bonus isn't this purchase's business.
+  const gap =
+    open && winner
+      ? winner.effectiveReturnPct - open.entry.effectiveReturnPct
+      : Infinity
+  const ties = gap <= EPSILON
+  const bonus = open && (open.behind || ties) ? open : null
+  if (open && !bonus && gap <= CLOSE_PCT) {
     notes.push(
-      `You're on pace for ${displayName(open.entry)}'s welcome bonus (${money(remaining)} more by ${open.status.deadline ?? ''}), so this purchase goes on the card that earns the most. Put ${displayName(open.entry)} on purchases where it earns about as much.`,
+      `${displayName(open.entry)} earns ${num(open.entry.effectiveReturnPct)}% here, close to ${num(winner?.effectiveReturnPct ?? 0)}%, and would help its welcome bonus (${money(open.status.remaining ?? 0)} more by ${open.status.deadline ?? ''}). You're on pace, so either works.`,
     )
   }
   const chosen = bonus?.entry ?? winner
@@ -526,7 +535,7 @@ export function recommend(
     const deadline = status.deadline ?? purchase.date
     const daysLeft = status.daysLeft ?? 0
     const costHere =
-      top.cardId === best.cardId || top.earned === null || best.earned === null
+      ties || top.earned === null || best.earned === null
         ? null
         : Math.round((best.earned - top.earned) * 100) / 100
     bonusResult = {
@@ -547,13 +556,13 @@ export function recommend(
         ? ''
         : `, worth about ${money(Math.round(status.value))}`
     notes.unshift(
-      `You're behind pace on ${displayName(bonus.entry)}'s welcome bonus: ${money(remaining)} more to spend by ${deadline}${pace}${worth}.${
-        top.cardId === best.cardId
-          ? ''
-          : costHere === null
-            ? ` It earns ${num(top.effectiveReturnPct)}% here against ${num(best.effectiveReturnPct)}% on ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
-            : ` Using it here earns ${money(costHere)} less than ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
-      }`,
+      ties
+        ? `${displayName(bonus.entry)} earns as much here as any of your cards, so it's the pick: it helps its welcome bonus, ${money(remaining)} more to spend by ${deadline}${worth}.`
+        : `You're behind pace on ${displayName(bonus.entry)}'s welcome bonus: ${money(remaining)} more to spend by ${deadline}${pace}${worth}.${
+            costHere === null
+              ? ` It earns ${num(top.effectiveReturnPct)}% here against ${num(best.effectiveReturnPct)}% on ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
+              : ` Using it here earns ${money(costHere)} less than ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
+          }`,
     )
   }
 

@@ -31,7 +31,9 @@ test('every bonus rate is listed, and an activated quarter says so', () => {
   })
   const [flex] = walletSummary(catalog, wallet, '2026-11-01').cards
   const rates = flex?.rates.join('; ') ?? ''
-  expect(rates).toMatch(/3% cash back on restaurants and drugstores/)
+  expect(rates).toMatch(
+    /3% cash back on restaurants, drugstores and pharmacies/,
+  )
   expect(rates).not.toMatch(/once activated/)
   expect(flex?.toActivate).toEqual([])
 })
