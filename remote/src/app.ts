@@ -192,32 +192,36 @@ export function makeWorker<E extends Env>(
 
     const header = request.headers.get('authorization')
     const token = /^Bearer (\S+)$/i.exec(header ?? '')?.[1]
-    if (!token) return wantsWallet ? challenge(resource) : signedOut()
-
-    // A token that doesn't check out only matters for wallet tools: other
-    // questions are answered as if signed out.
-    let grant
+    // Every request needs a connected wallet, so apps ask the user to sign
+    // in when they add earnrate. Only while sign-in itself is down are
+    // questions answered without one.
+    if (!token) return challenge(resource)
+    let found
     try {
-      grant = await auth.validate(env, token, resource)
+      found = await auth.validate(env, token, resource)
     } catch {
       return wantsWallet ? unavailable() : signedOut()
     }
-    if (!grant) {
+    if (!found) {
       if (await limited(env.SIGN_IN_LIMITER, request)) return tooMany()
-      return wantsWallet ? challenge(resource, true) : signedOut()
+      return challenge(resource, true)
     }
+    const { grant, clientId } = found
     // Revoking grants goes through KV, which can lag; the wallet's own
     // storage is consistent, so a deleted wallet signs its apps out here.
     const vault = vaultFor(env, grant.walletId)
     let exists
     try {
-      exists = await vault.exists()
+      exists = await vault.checkIn()
     } catch {
       return wantsWallet ? unavailable() : signedOut()
     }
-    if (!exists) return wantsWallet ? challenge(resource, true) : signedOut()
-    const store = new VaultWalletStore(vault, grant.walletKey, () =>
-      auth.signOutEverywhere(env, grant.walletId),
+    if (!exists) return challenge(resource, true)
+    const store = new VaultWalletStore(
+      vault,
+      grant.walletKey,
+      () => auth.signOutEverywhere(env, grant.walletId),
+      () => auth.signOutEverywhere(env, grant.walletId, clientId),
     )
     return handler.fetch(forward, {
       ...options,

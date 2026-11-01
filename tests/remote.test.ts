@@ -15,7 +15,7 @@ import {
   wrapWalletKey,
 } from '../remote/src/vault-crypto.ts'
 import { WalletVault, type VaultStorage } from '../remote/src/vault.ts'
-import { COPY_SCRIPT, COPY_SCRIPT_HASH } from '../remote/src/pages.ts'
+import { PAGE_SCRIPT, PAGE_SCRIPT_HASH } from '../remote/src/pages.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import { SAVED_WALLET_TOOLS } from '../src/mcp/server.ts'
 import { TODAY } from './golden/fixtures.ts'
@@ -271,16 +271,22 @@ const callTool = (name: string, args: Record<string, unknown> = {}) =>
     params: { name, arguments: args },
   })
 
-describe('remote connector, signed out', () => {
-  test('lists every tool, saved-wallet ones included', async () => {
-    const client = await connect(deployment())
+describe('remote connector', () => {
+  test('lists every tool once signed in', async () => {
+    const d = deployment()
+    const { token } = await startWallet(d)
+    const client = await connect(d, token)
     const names = (await client.listTools()).tools.map((t) => t.name)
     expect(names).toContain('best_card_for_purchase')
     for (const name of SAVED_WALLET_TOOLS) expect(names).toContain(name)
   })
 
-  test('answers from every card, or from cards named for one answer', async () => {
-    const client = await connect(deployment())
+  test('a wallet with no cards answers from every card, or from cards named for one answer', async () => {
+    const d = deployment()
+    const { token } = await startWallet(d)
+    const client = await connect(d, token)
+    const listed = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(listed)).toMatch(/saved wallet has no cards yet/)
     const all = await client.callTool({
       name: 'best_card_for_purchase',
       arguments: { merchant: 'Whole Foods', amount: 80 },
@@ -297,16 +303,21 @@ describe('remote connector, signed out', () => {
     ).toBe('amex-gold')
   })
 
-  test('asks for sign-in only when a saved-wallet tool is called', async () => {
+  test('asks for sign-in on every request without a token', async () => {
     const d = deployment()
-    const res = await d.fetch('/', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        accept: 'application/json, text/event-stream',
-      },
-      body: callTool('add_card', { cardId: 'amex-gold' }),
-    })
+    for (const body of [
+      callTool('best_card_for_purchase', { merchant: 'Costco' }),
+      JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+    ]) {
+      const res = await post(d, '/', body)
+      expect(res.status).toBe(401)
+      expect(res.headers.get('www-authenticate')).toContain('scope="wallet"')
+    }
+    const res = await post(
+      d,
+      '/',
+      callTool('add_card', { cardId: 'amex-gold' }),
+    )
     expect(res.status).toBe(401)
     expect(res.headers.get('www-authenticate')).toBe(
       `Bearer resource_metadata="${ORIGIN}/.well-known/oauth-protected-resource", scope="wallet"`,
@@ -320,7 +331,7 @@ describe('remote connector, signed out', () => {
     })
   })
 
-  test('a token it did not issue gets wallet tools refused, questions answered', async () => {
+  test('a token it did not issue is sent to sign in again', async () => {
     const d = deployment()
     const wallet = await post(
       d,
@@ -338,7 +349,35 @@ describe('remote connector, signed out', () => {
       callTool('best_card_for_purchase', { merchant: 'Costco' }),
       'not-a-real-token',
     )
-    expect(question.status).toBe(200)
+    expect(question.status).toBe(401)
+  })
+
+  test('while sign-in is down, questions are answered and wallet tools wait', async () => {
+    const d = deployment()
+    const { token } = await startWallet(d)
+    const broken = {
+      ...memoryKv(),
+      get: () => Promise.reject(new Error('KV is down')),
+    }
+    const call = (body: string) =>
+      d.fetch(
+        '/',
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            accept: 'application/json, text/event-stream',
+            authorization: `Bearer ${token}`,
+          },
+          body,
+        },
+        { OAUTH_KV: broken },
+      )
+    expect(
+      (await call(callTool('best_card_for_purchase', { merchant: 'Costco' })))
+        .status,
+    ).toBe(200)
+    expect((await call(callTool('list_wallet'))).status).toBe(503)
   })
 
   test('a body over 64 KB is refused, even without Content-Length', async () => {
@@ -420,7 +459,9 @@ describe('remote connector, signed out', () => {
 
   test('counts only the method and tool name, never arguments', async () => {
     const points: { blobs?: string[]; indexes?: string[] }[] = []
-    const client = await connect(deployment(), null, {
+    const d = deployment()
+    const { token } = await startWallet(d)
+    const client = await connect(d, token, {
       USAGE: { writeDataPoint: (p) => points.push(p) },
     })
     await client.callTool({
@@ -504,7 +545,7 @@ describe('anonymous saved wallets', () => {
     })
     const deleted = await client.callTool({
       name: 'delete_wallet',
-      arguments: {},
+      arguments: { confirm: true },
     })
     expect(deleted.isError).toBeFalsy()
     const [storage] = [...d.storages.values()]
@@ -535,7 +576,72 @@ describe('anonymous saved wallets', () => {
       callTool('best_card_for_purchase', { merchant: 'Costco' }),
       token,
     )
-    expect(question.status).toBe(200)
+    expect(question.status).toBe(401)
+  })
+
+  test('a delete replayed after signing in to a new wallet deletes nothing', async () => {
+    const d = deployment()
+    const first = await startWallet(d)
+    const client = await connect(d, first.token)
+    await client.callTool({
+      name: 'add_card',
+      arguments: { cardId: 'amex-gold' },
+    })
+    const deleted = await client.callTool({
+      name: 'delete_wallet',
+      arguments: { confirm: true },
+    })
+    expect(deleted.isError).toBeFalsy()
+
+    const next = await startWallet(d)
+    const replayed = await (
+      await connect(d, next.token)
+    ).callTool({ name: 'delete_wallet', arguments: { confirm: true } })
+    expect(replayed.isError).toBe(true)
+    expect(text(replayed)).toMatch(/nothing to delete/)
+    expect(
+      (await post(d, '/', callTool('list_wallet'), next.token)).status,
+    ).toBe(200)
+  })
+
+  test('switch_wallet signs this app out and keeps the wallet', async () => {
+    const d = deployment()
+    const { token, code } = await startWallet(d)
+    const client = await connect(d, token)
+    await client.callTool({
+      name: 'add_card',
+      arguments: { cardId: 'amex-gold' },
+    })
+    const switched = await client.callTool({
+      name: 'switch_wallet',
+      arguments: {},
+    })
+    expect(switched.isError).toBeFalsy()
+    expect((await post(d, '/', callTool('list_wallet'), token)).status).toBe(
+      401,
+    )
+    const again = await signIn(d, async (_page, post) => {
+      const res = await post({ choice: 'recover', code })
+      return res.headers.get('location') ?? ''
+    })
+    const listed = await (
+      await connect(d, again)
+    ).callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(listed)).toContain('amex-gold')
+  })
+
+  test('questions alone keep a wallet from being deleted as unused', async () => {
+    const d = deployment()
+    const { token } = await startWallet(d)
+    const [storage] = [...d.storages.values()]
+    expect(storage?.alarm).toBeLessThan(Date.now() + 8 * 24 * 3600_000)
+    await (
+      await connect(d, token)
+    ).callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Costco' },
+    })
+    expect(storage?.alarm).toBeGreaterThan(Date.now() + 390 * 24 * 3600_000)
   })
 
   test('connections made at the old /mcp address keep working', async () => {
@@ -656,18 +762,18 @@ describe('anonymous saved wallets', () => {
     ).rejects.toThrow('denied')
   })
 
-  test('the recovery code page allows only its copy script', async () => {
-    expect(COPY_SCRIPT_HASH).toBe(
-      `sha256-${createHash('sha256').update(COPY_SCRIPT).digest('base64')}`,
+  test('sign-in pages allow only their own script', async () => {
+    expect(PAGE_SCRIPT_HASH).toBe(
+      `sha256-${createHash('sha256').update(PAGE_SCRIPT).digest('base64')}`,
     )
     const d = deployment()
     await expect(
       signIn(d, async (_page, post) => {
         const res = await post({ choice: 'new' })
         const csp = res.headers.get('content-security-policy') ?? ''
-        expect(csp).toContain(`script-src '${COPY_SCRIPT_HASH}'`)
+        expect(csp).toContain(`script-src '${PAGE_SCRIPT_HASH}'`)
         expect(csp).not.toMatch(/script-src[^;]*unsafe/)
-        expect(await res.text()).toContain(`<script>${COPY_SCRIPT}</script>`)
+        expect(await res.text()).toContain(`<script>${PAGE_SCRIPT}</script>`)
         throw new Error('stop')
       }),
     ).rejects.toThrow('stop')
@@ -679,7 +785,8 @@ describe('anonymous saved wallets', () => {
       signIn(
         d,
         (page) => {
-          expect(page).not.toContain('<script>')
+          expect(page.split('<script>')).toHaveLength(2)
+          expect(page).toContain(`<script>${PAGE_SCRIPT}</script>`)
           expect(page).toContain('&#60;script&#62;')
           expect(page).toContain("isn't verified")
           throw new Error('stop')

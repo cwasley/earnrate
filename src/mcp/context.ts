@@ -14,7 +14,7 @@ export const fail = (text: string) => ({
 })
 
 export const ALL_CARDS_NOTE =
-  "The user hasn't named their cards, so this covers every card earnrate knows. That's a complete answer. If they want the best of their own cards, they can name them (pass them as `cards`); saving a wallet is optional."
+  "No cards are saved or named, so this covers every card earnrate knows. That's a complete answer. If the user wants the best of their own cards, they can name them (pass them as `cards`); saving them is optional."
 
 export type Context = ReturnType<typeof makeContext>
 
@@ -26,7 +26,10 @@ export function makeContext(deps: ServerDeps) {
     deps.savedWallets === 'file'
       ? `the wallet at ${deps.store.where}`
       : 'the saved wallet'
-  const noWallet = `There's no saved wallet yet${deps.savedWallets === 'file' ? ` (${deps.store.where})` : ''}. Answers don't need one: they cover every card, or the cards the user names. If the user wants their cards remembered, find each with search_cards and save it with add_card.`
+  const noWallet =
+    deps.savedWallets === 'file'
+      ? `There's no saved wallet yet (${deps.store.where}). Answers don't need one: they cover every card, or the cards the user names. If the user wants their cards remembered, find each with search_cards and save it with add_card.`
+      : "The user's saved wallet has no cards yet. Answers cover every card, or the cards the user names. If the user wants their cards remembered, find each with search_cards and save it with add_card."
 
   // Read on every call, so edits to the wallet apply without a restart.
   async function wallet(): Promise<Wallet | string> {

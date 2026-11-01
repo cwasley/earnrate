@@ -167,7 +167,7 @@ Spotted a wrong rate, or want a card added? [Open an issue](https://github.com/c
 
 ## Use it in an AI assistant (MCP)
 
-**In Claude, nothing to install:** add a custom connector (Settings → Connectors) with the address `https://mcp.earnrate.dev`. It works in Claude on the web, desktop and phone. Questions need no sign-in. If you ask it to save your cards, it opens an earnrate page where you start an anonymous wallet: no email, just a recovery code you keep. The wallet tracks caps and welcome bonuses across your Claude apps, and you can export it for the command line or delete it from the chat. In Claude Code:
+**In Claude, nothing to install:** add a custom connector (Settings → Connectors) with the address `https://mcp.earnrate.dev`. It works in Claude on the web, desktop and phone. When you add it, an earnrate page opens once, where you start an anonymous wallet: no email, just a recovery code you keep. Then ask anything: with no cards saved it answers from every card. Name your cards for answers about yours, and save them to track caps and welcome bonuses across your Claude apps. From the chat you can export the wallet for the command line, switch to another one, or delete it. In Claude Code:
 
 ```sh
 claude mcp add --transport http earnrate https://mcp.earnrate.dev

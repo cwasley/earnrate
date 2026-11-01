@@ -25,21 +25,21 @@ Claude asks about anything a card needs, such as this quarter's U.S. Bank Cash+ 
 
 ## What the plugin runs
 
-Nothing on your computer. It connects Claude to earnrate's hosted MCP server at `https://mcp.earnrate.dev` over HTTPS. The server's code is in [github.com/cwasley/earnrate](https://github.com/cwasley/earnrate) (`remote/`). It offers 16 tools:
+Nothing on your computer. It connects Claude to earnrate's hosted MCP server at `https://mcp.earnrate.dev` over HTTPS. The server's code is in [github.com/cwasley/earnrate](https://github.com/cwasley/earnrate) (`remote/`). The first time Claude Code uses it, earnrate's sign-in page opens in your browser: start an anonymous wallet (no email; you keep a recovery code) or reconnect one. It offers 17 tools:
 
-- `best_card_for_purchase`, `best_cards_for`, `simulate_spending`, `compare_welcome_offers`, `cheat_sheet`, `resolve_merchant`, `search_cards`: answers, from every card or the cards you name. No sign-in.
-- `list_wallet`, `add_card`, `update_card`, `remove_card`, `set_memberships`, `record_purchase`, `export_wallet`, `import_wallet`, `delete_wallet`: a saved wallet, used only if you ask to save your cards. The first one you use opens an earnrate page where you start an anonymous wallet (no email; you keep a recovery code) or reconnect one. `remove_card` deletes only the card you name; `delete_wallet` deletes the whole wallet.
+- `best_card_for_purchase`, `best_cards_for`, `simulate_spending`, `compare_welcome_offers`, `cheat_sheet`, `resolve_merchant`, `search_cards`: answers, from your saved cards, the cards you name, or every card when there are none.
+- `list_wallet`, `add_card`, `update_card`, `remove_card`, `set_memberships`, `record_purchase`, `export_wallet`, `import_wallet`, `delete_wallet`, `switch_wallet`: your saved wallet. It holds cards only if you save some. `remove_card` deletes only the card you name; `delete_wallet` deletes the whole wallet; `switch_wallet` disconnects so you can connect another one.
 
 ## What it reads, writes, sends and fetches
 
 - **Reads and writes** nothing on your computer.
 - **Sends** each question Claude asks earnrate to `mcp.earnrate.dev`: the store or kind of purchase, and anything else you gave for it, like an amount, your spending or the cards you named. The server answers without keeping the question; request logging is off.
-- **Stores**, only if you save a wallet: your cards by product ID and what you've told earnrate about them (checkout names, picks, activations, memberships, anniversaries, point values, cap and bonus totals), encrypted with a key only your recovery code or your connected apps can unlock. It's deleted when you ask, after 13 months unused, or after a week if it's never used.
+- **Stores** an anonymous wallet, made when you connect. It holds your cards by product ID, if you save any, and what you've told earnrate about them (checkout names, picks, activations, memberships, anniversaries, point values, cap and bonus totals), encrypted with a key only your recovery code or your connected apps can unlock. It's deleted when you ask, after 13 months unused (any question counts as use), or a week after it's started if it's never used.
 - **Fetches** nothing else.
 
 ## Privacy Policy
 
-No account. earnrate counts requests by tool name only, never what was asked. Claude's provider sees your conversation, including earnrate's answers, under its own privacy policy. Full policy: [earnrate.dev/privacy](https://earnrate.dev/privacy). Terms: [earnrate.dev/terms](https://earnrate.dev/terms). Contact: [hello@earnrate.dev](mailto:hello@earnrate.dev).
+No email, name or password: the wallet is anonymous. earnrate counts requests by tool name only, never what was asked. Claude's provider sees your conversation, including earnrate's answers, under its own privacy policy. Full policy: [earnrate.dev/privacy](https://earnrate.dev/privacy). Terms: [earnrate.dev/terms](https://earnrate.dev/terms). Contact: [hello@earnrate.dev](mailto:hello@earnrate.dev).
 
 ## Prefer it on your computer?
 

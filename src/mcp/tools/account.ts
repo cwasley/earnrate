@@ -84,8 +84,12 @@ export function registerAccountTools(
     {
       title: 'Delete the wallet',
       description:
-        'Deletes the saved wallet now and for good, and signs out every app using it. Only when the user asks to delete it; confirm first, and offer export_wallet to keep a copy.',
-      inputSchema: z.object({}),
+        "Deletes the saved wallet and its recovery code now and for good, and signs out every Claude app connected to it, this one included. earnrate.dev and the earnrate command line keep their own wallets and aren't affected. Only when the user asks to delete it: offer export_wallet first, and pass confirm only after the user confirms. It refuses when the wallet has no cards, since there's nothing to delete.",
+      inputSchema: z.object({
+        confirm: z
+          .literal(true)
+          .describe('true, only after the user confirms the deletion.'),
+      }),
       outputSchema: z.object({ deleted: z.boolean() }),
       annotations: {
         readOnlyHint: false,
@@ -95,15 +99,49 @@ export function registerAccountTools(
       },
     },
     async () => {
+      const current = await store.load().catch(() => null)
+      if (current === null || current.cards.length === 0)
+        return fail(
+          "This saved wallet has no cards, so there's nothing to delete. If the user meant a different wallet, it may already be deleted.",
+        )
       await store.erase()
       return {
         content: [
           {
             type: 'text',
-            text: 'Deleted the saved wallet. Answers now cover every card, or the cards named in the conversation.',
+            text: "Deleted the saved wallet and its recovery code, and signed out every Claude app connected to it, this one included. To keep using earnrate here, the user connects again on earnrate's page and starts a new wallet.",
           },
         ],
         structuredContent: { deleted: true },
+      }
+    },
+  )
+
+  server.registerTool(
+    'switch_wallet',
+    {
+      title: 'Switch wallets',
+      description:
+        "Disconnects this app from its saved wallet so the user can connect a different one with its recovery code, or start a new one, on earnrate's page. Nothing is deleted. Use it when the user wants another wallet. Never ask for the recovery code in the conversation.",
+      inputSchema: z.object({}),
+      outputSchema: z.object({ disconnected: z.boolean() }),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async () => {
+      await store.disconnect()
+      return {
+        content: [
+          {
+            type: 'text',
+            text: "Disconnected from this saved wallet; nothing was deleted. earnrate's sign-in page opens on the next earnrate request (or reconnect earnrate in the app's connector settings). There the user chooses \"Already have a wallet?\" and types the other wallet's recovery code, or starts a new wallet. Other Claude accounts connected to this wallet through the same app are signed out too.",
+          },
+        ],
+        structuredContent: { disconnected: true },
       }
     },
   )

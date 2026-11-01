@@ -81,7 +81,8 @@ export function protectedResourceMetadata(resource: string): Response {
   })
 }
 
-// Sends the client to sign in. Claude asks only when a tool needs it.
+// Sends the client to sign in: earnrate's page, where the user starts or
+// reconnects a wallet.
 export function challenge(resource: string, invalidToken = false): Response {
   const params = [
     ...(invalidToken ? ['error="invalid_token"'] : []),
@@ -92,8 +93,8 @@ export function challenge(resource: string, invalidToken = false): Response {
     {
       error: invalidToken ? 'invalid_token' : 'unauthorized',
       error_description: invalidToken
-        ? 'Sign in again to use your saved wallet.'
-        : 'Connect a saved wallet to use this tool.',
+        ? 'Sign in to earnrate again: start a wallet or reconnect one with its recovery code.'
+        : 'Sign in to earnrate: start a wallet or reconnect one with its recovery code.',
     },
     {
       status: 401,
@@ -124,15 +125,25 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
     env: Env,
     token: string,
     first: string, // the resource of the address the request came to
-  ): Promise<Grant | null> {
+  ): Promise<{ grant: Grant; clientId: string } | null> {
     for (const resource of [first, ...RESOURCES.filter((r) => r !== first)]) {
       const found = await server.validateToken<Grant>(resource, token, env)
-      if (found) return found.scope.includes(SCOPE) ? found.props : null
+      if (found)
+        return found.scope.includes(SCOPE)
+          ? { grant: found.props, clientId: found.clientId }
+          : null
     }
     return null
   }
 
-  async function signOutEverywhere(env: Env, walletId: string) {
+  // `clientId` limits it to one app's connections. A token doesn't say
+  // which grant it came from, so every connection that app made to this
+  // wallet is signed out (for claude.ai, every account connected to it).
+  async function signOutEverywhere(
+    env: Env,
+    walletId: string,
+    clientId: string | null = null,
+  ) {
     const oauth = server.getOAuthApi(env)
     let cursor: string | undefined
     do {
@@ -141,7 +152,8 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
         cursor ? { cursor } : {},
       )
       for (const grant of page.items)
-        await oauth.revokeGrant(grant.id, walletId)
+        if (clientId === null || grant.clientId === clientId)
+          await oauth.revokeGrant(grant.id, walletId)
       cursor = page.cursor
     } while (cursor)
   }

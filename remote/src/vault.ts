@@ -33,7 +33,8 @@ const DELETED =
 
 // A new wallet nobody has used yet is deleted after a week; any use keeps
 // it for 13 months from then.
-const UNUSED_NEW_WALLET = 7 * 24 * 60 * 60 * 1000
+const DAY = 24 * 60 * 60 * 1000
+const UNUSED_NEW_WALLET = 7 * DAY
 
 function retentionEnd(lastUsed: number): number {
   const end = new Date(lastUsed)
@@ -123,6 +124,21 @@ export class WalletVault {
     return (await this.storage.get<Meta>('meta')) !== undefined
   }
 
+  // Every request from a connected app counts as use, so a wallet used only
+  // for questions isn't deleted. Written at most once a day.
+  checkIn(): Promise<boolean> {
+    return this.serialized(async () => {
+      const meta = await this.storage.get<Meta>('meta')
+      if (!meta) return false
+      const now = this.now()
+      if (meta.lastUsed === meta.created || now - meta.lastUsed >= DAY) {
+        await this.storage.put('meta', { ...meta, lastUsed: now })
+        await this.storage.setAlarm(retentionEnd(now))
+      }
+      return true
+    })
+  }
+
   async wrappedKey(): Promise<string | null> {
     return (await this.storage.get<Meta>('meta'))?.wrappedKey ?? null
   }
@@ -192,6 +208,7 @@ export type VaultApi = Pick<
   WalletVault,
   | 'create'
   | 'exists'
+  | 'checkIn'
   | 'wrappedKey'
   | 'load'
   | 'addCard'

@@ -276,7 +276,7 @@ describe('wallet setup', () => {
     })
     expect(withWallet.isError).toBeFalsy()
     expect(text(withWallet)).toMatch(
-      /hasn't named their cards.*Best single cards/is,
+      /No cards are saved or named.*Best single cards/is,
     )
   })
 
@@ -485,10 +485,25 @@ describe('wallet setup', () => {
     })
     expect(text(replaced)).toMatch(/Imported a wallet with 1 card\./)
 
-    await client.callTool({ name: 'delete_wallet', arguments: {} })
+    const unconfirmed = await client.callTool({
+      name: 'delete_wallet',
+      arguments: {},
+    })
+    expect(unconfirmed.isError).toBe(true)
+    expect(await backend.read()).not.toBeNull()
+    await client.callTool({
+      name: 'delete_wallet',
+      arguments: { confirm: true },
+    })
     expect(await backend.read()).toBeNull()
     const after = await client.callTool({ name: 'list_wallet', arguments: {} })
-    expect(text(after)).toMatch(/no saved wallet yet/)
+    expect(text(after)).toMatch(/saved wallet has no cards yet/)
+    const again = await client.callTool({
+      name: 'delete_wallet',
+      arguments: { confirm: true },
+    })
+    expect(again.isError).toBe(true)
+    expect(text(again)).toMatch(/nothing to delete/)
   })
 
   test('the tool lists cover every tool, and only hosted wallets add account tools', async () => {

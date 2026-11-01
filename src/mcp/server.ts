@@ -33,8 +33,7 @@ export const ANSWER_TOOLS = [
   'search_cards',
 ]
 
-// The tools that read or change a saved wallet. The hosted server asks for
-// sign-in before running one.
+// The tools that read or change a saved wallet.
 export const SAVED_WALLET_TOOLS = [
   'list_wallet',
   'record_purchase',
@@ -45,12 +44,13 @@ export const SAVED_WALLET_TOOLS = [
   'export_wallet',
   'import_wallet',
   'delete_wallet',
+  'switch_wallet',
 ]
 
 const SAVING: Record<ServerDeps['savedWallets'], string> = {
   file: 'Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools.',
   account:
-    "Only if they want earnrate to remember their cards, track spending caps or welcome bonuses, or record purchases, save a wallet with add_card and the other wallet tools. Saved wallets are anonymous: the first wallet tool asks the user to open an earnrate page, where they start a wallet (it shows a recovery code to keep; no email or name) or reconnect one with their code. Never ask for the recovery code in the conversation; it's typed only on that page. To change the code, the user opens https://mcp.earnrate.dev/change-code.",
+    "The user signed in to earnrate when they connected it, to an anonymous saved wallet (no email or name). It may have no cards yet; answers then cover every card. Save cards with add_card only when the user agrees. The wallet can change outside this conversation when the user signs in again on earnrate's page, so read it with list_wallet rather than from memory. To use a different wallet or start a new one, call switch_wallet; the user then connects on earnrate's page with that wallet's recovery code. Never ask for the recovery code in the conversation; it's typed only on earnrate's page. To change the code, the user opens https://mcp.earnrate.dev/change-code. earnrate.dev and the earnrate command line keep their own separate wallets; export_wallet and import_wallet move one between them.",
 }
 
 const instructions = (

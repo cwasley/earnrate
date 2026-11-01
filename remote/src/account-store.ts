@@ -18,15 +18,18 @@ export class VaultWalletStore implements AccountStore {
   private readonly vault: VaultApi
   private readonly walletKey: string
   private readonly signOut: () => Promise<void>
+  private readonly signOutHere: () => Promise<void>
 
   constructor(
     vault: VaultApi,
     walletKey: string,
     signOut: () => Promise<void>, // revokes every grant for this wallet
+    signOutHere: () => Promise<void>, // revokes this app's grants for it
   ) {
     this.vault = vault
     this.walletKey = walletKey
     this.signOut = signOut
+    this.signOutHere = signOutHere
   }
 
   load(): Promise<Wallet | null> {
@@ -64,10 +67,14 @@ export class VaultWalletStore implements AccountStore {
     await this.vault.destroy()
     await this.signOut()
   }
+
+  disconnect(): Promise<void> {
+    return this.signOutHere()
+  }
 }
 
-// Before sign-in. The Worker asks for sign-in before any saved-wallet tool
-// runs, so only load() is reached here; the refusals are a backstop.
+// Only while sign-in itself is down: questions are still answered, and the
+// Worker refuses saved-wallet tools before they get here.
 export const signedOutStore: AccountStore = {
   where: WHERE,
   load: () => Promise.resolve(null),
@@ -78,6 +85,7 @@ export const signedOutStore: AccountStore = {
   replace: refuse,
   record: refuse,
   erase: () => Promise.reject(new Error('Connect a saved wallet first.')),
+  disconnect: () => Promise.reject(new Error('Connect a saved wallet first.')),
 }
 
 function refuse() {

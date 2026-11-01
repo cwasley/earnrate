@@ -45,6 +45,7 @@ export interface WalletStore {
 export interface AccountStore extends WalletStore {
   replace(wallet: Wallet): Promise<SetupResult>
   erase(): Promise<void>
+  disconnect(): Promise<void> // signs this app out; the wallet stays
 }
 
 export type JsonBackend = {
@@ -133,6 +134,11 @@ export class JsonWalletStore implements AccountStore {
 
   erase(): Promise<void> {
     return this.serialized(() => this.backend.remove())
+  }
+
+  // Nothing to sign out of: the backend is the caller's own storage.
+  disconnect(): Promise<void> {
+    return Promise.resolve()
   }
 
   record(
