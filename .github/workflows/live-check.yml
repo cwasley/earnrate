@@ -1,0 +1,45 @@
+name: Live check
+
+on:
+  schedule:
+    - cron: '30 14 * * *' # every day, 14:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - id: check
+        run: |
+          set +e
+          node scripts/live-check.ts --report report.md
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+      - name: Open, update or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODE: ${{ steps.check.outputs.code }}
+        run: |
+          gh label create live-check --color D93F0B --description "earnrate.dev or mcp.earnrate.dev failed its daily check" 2>/dev/null || true
+          number=$(gh issue list --label live-check --state open --json number --jq '.[0].number')
+          if [ "$CODE" != 0 ]; then
+            if [ -n "$number" ]; then
+              gh issue comment "$number" --body-file report.md
+            else
+              gh issue create --title "Live check failing" --label live-check --body-file report.md
+            fi
+            exit 1
+          elif [ -n "$number" ]; then
+            gh issue close "$number" --comment "Passing again: $(head -n 1 report.md | sed 's/^# //')"
+          fi
