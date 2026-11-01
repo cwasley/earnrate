@@ -45,7 +45,7 @@ function cardLines(cards: RankedCard[], style: Style): string[] {
   cards.forEach((c, i) => {
     const earned = c.earned === null ? '' : `  ${cents(c.earned)}`
     lines.push(
-      `  ${String(i + 1)}. ${label(c).padEnd(nameWidth)}  ${pct(c.effectiveReturnPct).padStart(pctWidth)}${earned}`,
+      `  ${String(i + 1).padStart(String(cards.length).length)}. ${label(c).padEnd(nameWidth)}  ${pct(c.effectiveReturnPct).padStart(pctWidth)}${earned}`,
     )
     for (const r of c.reasoning) lines.push(style('dim', `     ${r}`))
     for (const w of c.warnings) lines.push(style('yellow', `     ! ${w}`))

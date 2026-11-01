@@ -13,8 +13,13 @@ import {
   TYPICAL_SPEND_NOTE,
   typicalSpendLines,
 } from '../../engine/simulate.ts'
-import { currencyName } from '../../engine/text.ts'
+import {
+  categoryPhrase,
+  currencyName,
+  NETWORK_NAMES,
+} from '../../engine/text.ts'
 import { EMPTY_WALLET } from '../../engine/transient.ts'
+import type { MerchantResolution } from '../../engine/types.ts'
 import { formatCardInfo } from '../../format/cards.ts'
 import { formatCheatSheet } from '../../format/cheat-sheet.ts'
 import {
@@ -43,6 +48,15 @@ import {
 } from '../schemas.ts'
 import type { ServerDeps } from '../server.ts'
 
+const SOURCES: Record<MerchantResolution['source'], string> = {
+  override: "from earnrate's merchant list",
+  seed: "from earnrate's merchant list",
+  llm: 'classified by Claude',
+  caller: 'from the category given with the request',
+  category: 'a kind of purchase, not a store',
+  none: 'not recognized',
+}
+
 const TOP = 10
 
 // The tools that answer without a saved wallet: from every card, the cards
@@ -68,7 +82,7 @@ export function registerAnswerTools(
     {
       title: 'Best card for a purchase',
       description:
-        "Which card earns the most rewards for a purchase, and why. With no cards given and no saved wallet, it ranks every card earnrate knows (in `allCards`): a complete answer for anyone. With cards named in the conversation (`cards`) or a saved wallet, it picks the best of the user's own: `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout, with every usable card ranked with reasons, cards the merchant won't take, assumptions, warnings, and when a different point valuation would change the pick. Never needs or returns card numbers.",
+        "Which card earns the most rewards for a purchase, and why. With no cards given and no saved wallet, it ranks every card earnrate knows (in `allCards`): a complete answer for anyone. With cards named in the conversation (`cards`) or a saved wallet, it picks the best of the user's own: `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout, with every usable card ranked with reasons, cards the merchant won't take, assumptions, warnings, and when a different point valuation would change the pick. For a business earnrate may not know, like a local restaurant, pass `category` when you can tell what kind of business it is. Never needs or returns card numbers.",
       inputSchema: z.object({
         merchant: Merchant,
         amount: z
@@ -111,6 +125,10 @@ export function registerAnswerTools(
         purchase.channel,
         category ?? null,
       )
+      const retry =
+        resolved.merchant.source === 'none'
+          ? `earnrate doesn't recognize "${merchant}", so this answer uses only base rates and may miss the best card. If you can tell what kind of business it is (a restaurant, a grocery store, a gas station), call best_card_for_purchase again with category; otherwise ask the user.\n\n`
+          : ''
       if (wallet === null) {
         const explored = exploreCards(
           catalog,
@@ -135,7 +153,7 @@ export function registerAnswerTools(
           content: [
             {
               type: 'text',
-              text: `${formatExploration(allCards, true)}\n${ALL_CARDS_NOTE}`,
+              text: `${retry}${formatExploration(allCards, true)}\n${ALL_CARDS_NOTE}`,
             },
           ],
           structuredContent: {
@@ -155,7 +173,7 @@ export function registerAnswerTools(
         content: [
           {
             type: 'text',
-            text: formatRecommendation(output, purchase, { all: true }),
+            text: `${retry}${formatRecommendation(output, purchase, { all: true })}`,
           },
         ],
         structuredContent: output,
@@ -185,7 +203,13 @@ export function registerAnswerTools(
       )
       const m = resolved.merchant
       const text = [
-        `${m.resolvedName}: ${m.category}${m.likelyMcc === null ? '' : ` (MCC ${String(m.likelyMcc)})`}, ${m.confidence} confidence, from ${m.source}.`,
+        `${m.resolvedName}: ${categoryPhrase(catalog, m.category)}${m.likelyMcc === null ? '' : ` (MCC ${String(m.likelyMcc)})`}, ${m.confidence} confidence, ${SOURCES[m.source]}.`,
+        m.accepts === null
+          ? m.source === 'none'
+            ? 'Which card networks it takes is unknown.'
+            : 'Takes all major card networks.'
+          : `Takes ${m.accepts.map((n) => NETWORK_NAMES[n] ?? n).join(', ')} only.`,
+        ...(m.ambiguity ? [m.ambiguity.note] : []),
         ...(m.inference
           ? [`Claude's reasoning: ${m.inference.rationale}`]
           : []),

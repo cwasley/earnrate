@@ -31,7 +31,31 @@ test('every bonus rate is listed, and an activated quarter says so', () => {
   })
   const [flex] = walletSummary(catalog, wallet, '2026-11-01').cards
   const rates = flex?.rates.join('; ') ?? ''
-  expect(rates).toMatch(/on drugstores/)
+  expect(rates).toMatch(/3% cash back on restaurants and drugstores/)
   expect(rates).not.toMatch(/once activated/)
   expect(flex?.toActivate).toEqual([])
+})
+
+test('a lower tier a held membership replaces is left out', () => {
+  const wallet = WalletSchema.parse({
+    memberships: ['amazon-prime'],
+    cards: [{ id: 'chase-prime-visa' }],
+  })
+  const [prime] = walletSummary(catalog, wallet, '2026-11-01').cards
+  const rates = prime?.rates.join('; ') ?? ''
+  expect(rates).toMatch(/^5% cash back on Amazon, /)
+  expect(rates).not.toMatch(/3% cash back/)
+})
+
+test('rates share a line, travel bookings read in lower case', () => {
+  const wallet = WalletSchema.parse({
+    cards: [{ id: 'amex-gold' }, { id: 'sofi-unlimited-2' }],
+  })
+  const summary = walletSummary(catalog, wallet, '2026-11-01')
+  expect(summary.cards[0]?.rates).toContain(
+    '3x Amex Membership Rewards on flights and flights through Amex Travel',
+  )
+  expect(formatWalletSummary(summary)).toMatch(
+    /\(sofi-unlimited-2\): Mastercard, SoFi Member Rewards at 1¢/,
+  )
 })

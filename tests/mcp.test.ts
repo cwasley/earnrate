@@ -158,6 +158,27 @@ describe('tools', () => {
       accepts: ['visa'],
       source: 'override',
     })
+    expect(text(result)).toMatch(/from earnrate's merchant list\./)
+    expect(text(result)).toMatch(/Takes Visa only\./)
+  })
+
+  test('an unknown merchant asks for its category', async () => {
+    const client = await connect(await walletCopy())
+    const unknown = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Tacos Por Favor Santa Monica' },
+    })
+    expect(text(unknown)).toMatch(
+      /^earnrate doesn't recognize "Tacos Por Favor Santa Monica".*call best_card_for_purchase again with category/,
+    )
+    const known = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: {
+        merchant: 'Tacos Por Favor Santa Monica',
+        category: 'dining',
+      },
+    })
+    expect(text(known)).not.toMatch(/doesn't recognize/)
   })
 
   test('list_wallet shows caps and chosen categories', async () => {
@@ -623,6 +644,7 @@ describe('wallet setup', () => {
       },
     })
     expect(good.isError).toBeFalsy()
+    expect(text(good)).toMatch(/: two percent picks: restaurants\./)
     const wallet = await client.callTool({ name: 'list_wallet', arguments: {} })
     const cashPlus = (wallet.structuredContent as WalletSummary).cards.find(
       (c) => c.cardId === 'usbank-cash-plus',

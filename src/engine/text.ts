@@ -86,3 +86,11 @@ export function pointValuesText(
   )
   return `Values points at: ${list.join(', ')}.`
 }
+
+export const NETWORK_NAMES: Record<string, string> = {
+  visa: 'Visa',
+  mastercard: 'Mastercard',
+  amex: 'American Express',
+  discover: 'Discover',
+  store: 'store card',
+}

@@ -110,6 +110,7 @@ export function simulateWallet(
   wallet: Wallet,
   lines: ResolvedLine[],
   start: string,
+  held = false, // the user's own cards: their first year is behind them
 ): Simulation {
   const cards = wallet.cards.map((held) => {
     const card = catalog.cards.find((c) => c.id === held.id)
@@ -220,6 +221,7 @@ export function simulateWallet(
         `${card.name}'s annual fee isn't on file, so none is subtracted.`,
       )
     else if (
+      !held &&
       card.first_year_fee !== undefined &&
       card.first_year_fee !== card.annual_fee
     )
@@ -455,7 +457,7 @@ export function simulateAdditions(
   options: SimulateOptions,
 ): WalletWhatIf {
   const projected = projectedWallet(wallet, catalog, options.start)
-  const current = simulateWallet(catalog, projected, lines, options.start)
+  const current = simulateWallet(catalog, projected, lines, options.start, true)
   const held = new Set(wallet.cards.map((c) => c.id))
   const additions: Addition[] = []
   for (const card of catalog.cards) {

@@ -406,7 +406,7 @@ export function recommend(
 
   if (merchant.source === 'none') {
     warnings.push(
-      `Couldn't identify "${merchant.input}", so only base rates apply. A more specific name may find a bonus category.`,
+      `Couldn't identify "${merchant.input}", so only base rates apply. If you know what kind of business it is, give its category (like dining or grocery) to find bonus rates.`,
     )
   }
   if (merchant.source === 'caller') {

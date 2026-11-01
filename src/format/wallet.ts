@@ -1,14 +1,6 @@
 import type { BonusBooking, CapBooking } from '../engine/record.ts'
-import { money, shortDate } from '../engine/text.ts'
+import { money, NETWORK_NAMES, shortDate } from '../engine/text.ts'
 import type { WalletSummary } from '../engine/wallet-summary.ts'
-
-const NETWORKS: Record<string, string> = {
-  visa: 'Visa',
-  mastercard: 'Mastercard',
-  amex: 'American Express',
-  discover: 'Discover',
-  store: 'store card',
-}
 
 export function formatWalletSummary(summary: WalletSummary): string {
   const cards = summary.cards.map((c) => {
@@ -16,7 +8,7 @@ export function formatWalletSummary(summary: WalletSummary): string {
       ? `, shown at checkout as "${c.checkoutLabel}"`
       : ''
     const lines = [
-      `- ${c.cardName} (${c.cardId})${label}: ${NETWORKS[c.network] ?? c.network}, ${c.currency} at ${String(c.centsPerUnit)}¢. Data checked ${c.lastVerified}${c.dataIsStale ? ' (old; check the issuer)' : ''}.`,
+      `- ${c.cardName} (${c.cardId})${label}: ${NETWORK_NAMES[c.network] ?? c.network}, ${c.currencyName} at ${String(c.centsPerUnit)}¢. Data checked ${c.lastVerified}${c.dataIsStale ? ' (old; check the issuer)' : ''}.`,
       `  Earns: ${c.rates.join('; ')}.`,
     ]
     if (c.onlyAt) lines.push(`  Works only at ${c.onlyAt.join(', ')}.`)

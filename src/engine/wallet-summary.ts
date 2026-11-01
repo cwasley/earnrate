@@ -12,7 +12,7 @@ import { daysBetween } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { activationRules } from './setup.ts'
-import { categoryPhrase, earnText, words } from './text.ts'
+import { categoryPhrase, currencyLabel, earnText, words } from './text.ts'
 import { cardValuation } from './valuation.ts'
 
 export type CapSummary = {
@@ -35,6 +35,7 @@ export type CardSummary = {
   onlyAt: string[] | null // merchant ids, for a store card
   bonus: BonusStatus | null
   currency: string // after pooling
+  currencyName: string
   centsPerUnit: number
   lastVerified: string
   verifiedBy: string
@@ -83,9 +84,14 @@ const listed = (parts: string[]) =>
     ? parts.join(' and ')
     : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1) ?? ''}`
 
+// Travel-site bookings ("Flight through Amex Travel") read mid-sentence in
+// lower case and plural; brand names keep theirs.
+const BOOKING = /^(Attraction|Car rental|Cruise|Flight|Hotel|Vacation)\b/
+
 function merchantName(catalog: Catalog, id: string): string {
   const all = [...catalog.merchants.overrides, ...catalog.merchants.seed]
-  return all.find((m) => m.id === id)?.name ?? words(id)
+  const name = all.find((m) => m.id === id)?.name ?? words(id)
+  return name.replace(BOOKING, (kind) => `${kind.toLowerCase()}s`)
 }
 
 function optionName(
@@ -132,8 +138,19 @@ const applies = (rule: Rule, today: string) =>
   (rule.valid_from === undefined || rule.valid_from <= today) &&
   (rule.valid_to === undefined || rule.valid_to >= today)
 
+const matchKeys = (rule: Rule) =>
+  rule.match.choice !== undefined
+    ? []
+    : [
+        ...(rule.match.categories ?? []).map((c) => `category:${c}`),
+        ...(rule.match.merchants ?? []).map((m) => `merchant:${m}`),
+      ]
+
 // Every bonus rate the cardholder gets now, best first, so none reads as the
-// base rate. Rates behind a membership the wallet lacks are left out.
+// base rate. Rates behind a membership the wallet lacks are left out, and so
+// is a lower tier that an uncapped, always-on higher rate fully covers (Prime
+// Visa's 3% without Prime, once Prime is held). Rules at the same rate share
+// a line.
 function headlineRates(
   catalog: Catalog,
   wallet: Wallet,
@@ -142,7 +159,7 @@ function headlineRates(
   currency: string,
   today: string,
 ): string[] {
-  const lines = card.rules
+  const shown = card.rules
     .filter(
       (r) =>
         applies(r, today) &&
@@ -151,12 +168,31 @@ function headlineRates(
           wallet.memberships.includes(r.requires.membership)),
     )
     .sort((a, b) => b.rate - a.rate)
-    .map(
-      (r) =>
-        `${earnText(catalog, r.rate, currency)} on ${ruleWhat(catalog, r)}${r.requires?.activation && !isActivated(card, held, r.id) ? ' (once activated)' : ''}`,
-    )
+  const lines = new Map<string, string[]>()
+  for (const r of shown) {
+    const keys = matchKeys(r)
+    const higher = shown
+      .filter(
+        (h) =>
+          h.rate > r.rate &&
+          h.cap === undefined &&
+          (!h.requires?.activation || isActivated(card, held, h.id)),
+      )
+      .flatMap(matchKeys)
+    if (keys.length > 0 && keys.every((k) => higher.includes(k))) continue
+    const pending = r.requires?.activation && !isActivated(card, held, r.id)
+    const head = `${earnText(catalog, r.rate, currency)} on`
+    const key = pending ? `${head}|activate` : head
+    const whats = lines.get(key) ?? []
+    const what = ruleWhat(catalog, r)
+    if (!whats.includes(what)) whats.push(what)
+    lines.set(key, whats)
+  }
   return [
-    ...new Set(lines),
+    ...[...lines].map(
+      ([key, whats]) =>
+        `${key.replace('|activate', '')} ${listed(whats)}${key.endsWith('|activate') ? ' (once activated)' : ''}`,
+    ),
     `${earnText(catalog, card.base_rate, currency)} on everything else`,
   ]
 }
@@ -242,6 +278,7 @@ export function walletSummary(
       onlyAt: card.only_at ?? null,
       bonus: bonusStatus(catalog, wallet, held, today),
       currency: valuation.currency,
+      currencyName: currencyLabel(catalog, valuation.currency),
       centsPerUnit: valuation.centsPerUnit,
       lastVerified: card.last_verified,
       verifiedBy: card.verified_by,

@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
+import { money, words } from '../../engine/text.ts'
 import { walletSummary } from '../../engine/wallet-summary.ts'
 import { formatBooking, formatWalletSummary } from '../../format/wallet.ts'
 import { fail, type Context } from '../context.ts'
@@ -20,6 +21,32 @@ import {
 import type { ServerDeps } from '../server.ts'
 
 const WRITE = { readOnlyHint: false, openWorldHint: false }
+
+// What update_card changed, so the reply confirms the values it saved.
+function changes(args: z.infer<typeof CardChange>): string[] {
+  const out: string[] = []
+  for (const [choice, options] of Object.entries(args.picks ?? {}))
+    out.push(`${words(choice)} picks: ${options.map(words).join(', ')}`)
+  if (args.checkoutLabel === null) out.push('checkout name cleared')
+  else if (args.checkoutLabel !== undefined)
+    out.push(`checkout name "${args.checkoutLabel}"`)
+  if (args.anniversary !== undefined)
+    out.push(`anniversary ${args.anniversary}`)
+  if (args.activated !== undefined)
+    out.push(
+      args.activated.length === 0
+        ? 'nothing activated'
+        : `activated: ${args.activated.join(', ')}`,
+    )
+  for (const [key, spent] of Object.entries(args.capSpent ?? {}))
+    out.push(`${money(spent)} already spent on ${key} this period`)
+  if (args.bonus === null) out.push('welcome bonus no longer tracked')
+  else if (args.bonus !== undefined)
+    out.push(
+      `welcome bonus tracked from ${args.bonus.opened}, ${money(args.bonus.spent ?? 0)} spent so far`,
+    )
+  return out
+}
 
 // The tools that read or change a saved wallet.
 export function registerWalletTools(
@@ -162,11 +189,13 @@ export function registerWalletTools(
       outputSchema: WalletChangeSchema,
       annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
     },
-    async (args) =>
-      ctx.changed(
+    async (args) => {
+      const what = changes(args)
+      return ctx.changed(
         await store.updateCard(cardInput(args), deps.today()),
-        `Updated ${ctx.cardName(args.cardId)} (${args.cardId}).`,
-      ),
+        `Updated ${ctx.cardName(args.cardId)} (${args.cardId})${what.length > 0 ? `: ${what.join('; ')}` : ''}.`,
+      )
+    },
   )
 
   server.registerTool(

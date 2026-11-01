@@ -128,7 +128,7 @@ export function formatAdditions(
 ): string {
   const name = cardNamer(catalog)
   const lines = [
-    `Your wallet earns about ${wholeUsd(r.current.rewards)} a year on this spending${r.current.annualFees > 0 ? `, with ${wholeUsd(r.current.annualFees)} in annual fees` : ''}.`,
+    `Your wallet earns about ${wholeUsd(r.current.rewards)} a year on this spending${r.current.annualFees > 0 ? `, with ${wholeUsd(r.current.annualFees)} in annual fees: ${wholeUsd(r.current.net)} after fees` : ''}.`,
   ]
   for (const split of splitText(r.current, name)) lines.push(`  ${split}`)
   const gains = r.additions.filter((a) => a.gain > 0)
@@ -146,7 +146,7 @@ export function formatAdditions(
   if (notes.size > 0) lines.push('', ...notes)
   lines.push(
     '',
-    'Assumes your picks carry over, rotating categories get activated, and caps start fresh.',
+    'Assumes your picks carry over, rotating categories get activated, and caps start fresh. Each kind of spending lists the card that earns the most on it over the whole year, so a one-quarter bonus may not show.',
   )
   return `${lines.join('\n')}\n`
 }
