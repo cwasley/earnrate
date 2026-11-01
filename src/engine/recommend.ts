@@ -62,6 +62,12 @@ const displayName = (e: Entry) => e.held.checkout_label ?? e.card.name
 
 // "Worth X or more" must hold at X itself, so round up; "less than X" rounds down.
 const roundUp = (n: number) => String(Math.ceil(n * 100 - EPSILON) / 100)
+// At exactly the break-even value the two cards tie, so only an exact
+// threshold reads "more than".
+const worthAbove = (n: number) =>
+  Math.abs(n * 100 - Math.round(n * 100)) < EPSILON
+    ? `more than ${num(n)}¢`
+    : `${roundUp(n)}¢ or more`
 const roundDown = (n: number) => String(Math.floor(n * 100 + EPSILON) / 100)
 
 function compareEntries(a: Entry, b: Entry): number {
@@ -325,7 +331,7 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
       if (threshold > o.centsPerUnit && threshold <= o.range[1]) {
         consider(
           (threshold - o.centsPerUnit) / o.centsPerUnit,
-          `${displayName(other)} beats ${displayName(winner)} here if ${currencyLabel(catalog, o.currency)} points are worth ${roundUp(threshold)}¢ or more (you value them at ${num(o.centsPerUnit)}¢).`,
+          `${displayName(other)} beats ${displayName(winner)} here if ${currencyLabel(catalog, o.currency)} points are worth ${worthAbove(threshold)} (you value them at ${num(o.centsPerUnit)}¢).`,
         )
       }
     }
@@ -437,6 +443,23 @@ export function recommend(
 
   if (!winner) {
     warnings.push(`None of your cards work at ${merchant.resolvedName}.`)
+    const online =
+      merchant.channel === 'in_store' && merchant.merchantId !== null
+        ? resolveMerchantById(catalog, merchant.merchantId, 'online')
+        : null
+    const alt = online
+      ? rankEntries(
+          catalog,
+          wallet,
+          { ...purchase, channel: 'online' },
+          online,
+          online.category,
+        ).entries[0]
+      : undefined
+    if (alt)
+      warnings.push(
+        `Ordering online instead? ${displayName(alt)} works there (${num(alt.effectiveReturnPct)}%).`,
+      )
   } else if (
     merchant.accepts === null &&
     (winner.card.network === 'amex' || winner.card.network === 'discover')

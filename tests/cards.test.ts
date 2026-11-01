@@ -87,6 +87,27 @@ describe('the 16 popular cards', () => {
     ).toBe(1)
   })
 
+  test('Costco: Visa in the warehouse, Visa or Mastercard online, with a hint when only online works', () => {
+    const w = WalletSchema.parse({
+      cards: [{ id: 'amex-gold' }, { id: 'citi-double-cash' }],
+    })
+    const inStore = recommend(
+      catalog,
+      w,
+      purchase('Costco', { channel: 'in_store' }),
+    )
+    expect(inStore.decision).toBeNull()
+    expect(inStore.warnings.join(' ')).toMatch(
+      /Ordering online instead\? Citi Double Cash Card works there/,
+    )
+    const online = recommend(
+      catalog,
+      w,
+      purchase('Costco', { channel: 'online' }),
+    )
+    expect(online.excluded.map((e) => e.cardId)).toEqual(['amex-gold'])
+  })
+
   test('Ink Business Cash and Preferred', () => {
     expect(rates('Staples')['chase-ink-business-cash']).toBe(5)
     expect(rates('Comcast')['chase-ink-business-cash']).toBe(5)

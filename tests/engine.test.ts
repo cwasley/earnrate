@@ -119,20 +119,23 @@ describe('merchant lookup', () => {
     expect(resolveMerchant(catalog, 'Costco', 'in_store').accepts).toEqual([
       'visa',
     ])
-    expect(resolveMerchant(catalog, 'Costco', 'online').accepts).toHaveLength(4)
+    expect(resolveMerchant(catalog, 'Costco', 'online').accepts).toEqual([
+      'visa',
+      'mastercard',
+    ])
   })
 
   test('a web address with no channel is taken as online', () => {
     const r = resolveMerchant(catalog, 'Costco.com', null)
     expect(r.channel).toBe('online')
-    expect(r.accepts).toHaveLength(4)
+    expect(r.accepts).toEqual(['visa', 'mastercard'])
     expect(resolveMerchant(catalog, 'Costco', null).channel).toBe('in_store')
   })
 
   test('says so when it assumes online from a web address', () => {
     const rec = recommend(catalog, wallet(), purchase('costco.com'))
     expect(rec.assumptions.join(' ')).toMatch(/online purchase/)
-    expect(rec.excluded).toHaveLength(0)
+    expect(rec.excluded.map((e) => e.network)).toEqual(['discover'])
   })
 })
 
@@ -354,7 +357,7 @@ describe('wallet valuations', () => {
 
   test('a narrower range removes a flip point outside it', () => {
     const wide = recommend(realCatalog, gold(1.0), purchase('Whole Foods'))
-    expect(wide.sensitivity).toMatch(/1\.5¢ or more/)
+    expect(wide.sensitivity).toMatch(/more than 1\.5¢/)
     const narrow = recommend(
       realCatalog,
       gold({ range: [1.0, 1.2] }),

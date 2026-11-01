@@ -113,7 +113,10 @@
   category: warehouse_club
   in_store:
     accepts: [visa]
-  note: Warehouse registers take Visa only for credit. Costco.com takes other networks.
+  online:
+    accepts: [visa, mastercard]
+  # customerservice.costco.com/app/answers/answer_view/a_id/719 (2026-10-31)
+  note: Warehouse registers take Visa only for credit; Costco.com takes Visa and Mastercard.
 - id: costco-gas
   name: Costco Gas
   aliases: [costco gas station]
