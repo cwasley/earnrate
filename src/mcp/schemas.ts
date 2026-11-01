@@ -116,6 +116,7 @@ export const WalletSummarySchema = z.object({
       caps: z.array(
         z.object({
           key: z.string(),
+          label: z.string(),
           rules: z.array(z.string()),
           amount: z.number(),
           period: CapPeriod,
@@ -128,10 +129,14 @@ export const WalletSummarySchema = z.object({
         .object({
           period: z.string(),
           current: z.boolean(),
+          until: z.string().nullable(),
           picks: z.record(z.string(), z.array(z.string())),
+          pickNames: z.record(z.string(), z.array(z.string())),
         })
         .nullable(),
+      rates: z.array(z.string()),
       activated: z.array(z.string()),
+      toActivate: z.array(z.string()),
       anniversary: z.string().nullable(),
     }),
   ),

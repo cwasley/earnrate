@@ -10,29 +10,39 @@ const NETWORKS: Record<string, string> = {
   store: 'store card',
 }
 
-const words = (id: string) => id.replace(/[-_.]/g, ' ')
+const day = (date: string) =>
+  new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
 
 export function formatWalletSummary(summary: WalletSummary): string {
   const cards = summary.cards.map((c) => {
+    const label = c.checkoutLabel
+      ? `, shown at checkout as "${c.checkoutLabel}"`
+      : ''
     const lines = [
-      `- ${c.checkoutLabel ?? c.cardName} (${c.cardId}): ${NETWORKS[c.network] ?? c.network}, ${c.currency} at ${String(c.centsPerUnit)}¢. Data checked ${c.lastVerified}${c.dataIsStale ? ' (old; check the issuer)' : ''}.`,
+      `- ${c.cardName} (${c.cardId})${label}: ${NETWORKS[c.network] ?? c.network}, ${c.currency} at ${String(c.centsPerUnit)}¢. Data checked ${c.lastVerified}${c.dataIsStale ? ' (old; check the issuer)' : ''}.`,
+      `  Earns: ${c.rates.join('; ')}.`,
     ]
     if (c.onlyAt) lines.push(`  Works only at ${c.onlyAt.join(', ')}.`)
     if (c.chosen) {
-      const picks = Object.entries(c.chosen.picks)
-        .map(
-          ([choice, options]) =>
-            `${words(choice)}: ${options.map(words).join(', ')}`,
-        )
+      const picks = Object.entries(c.chosen.pickNames)
+        .map(([choice, names]) => `${choice}: ${names.join(', ')}`)
         .join('; ')
+      const until = c.chosen.until ? `, through ${day(c.chosen.until)}` : ''
       lines.push(
         c.chosen.current
-          ? `  Picks for ${c.chosen.period}: ${picks}. They need choosing again when the period ends.`
+          ? `  Picks for ${c.chosen.period}${until}: ${picks}. Pick again after that.`
           : `  Picks are for ${c.chosen.period}, which is over: ask for this period's picks.`,
       )
     }
-    if (c.activated.length > 0)
-      lines.push(`  Activated: ${c.activated.join(', ')}.`)
+    if (c.toActivate.length > 0)
+      lines.push(
+        `  Not activated yet: ${c.toActivate.join('; ')}. Activating once with the issuer covers each group.`,
+      )
     if (c.rotationGap !== null)
       lines.push(
         `  Rotating categories for ${c.rotationGap} aren't in earnrate yet.`,
@@ -40,7 +50,7 @@ export function formatWalletSummary(summary: WalletSummary): string {
     for (const cap of c.caps)
       if (cap.remaining !== null)
         lines.push(
-          `  Cap ${cap.key}: ${money(cap.spent)} of ${money(cap.amount)} used for ${cap.currentPeriod ?? ''}.`,
+          `  Cap on ${cap.label}: ${money(cap.spent)} of ${money(cap.amount)} used for ${cap.currentPeriod ?? ''} (cap key ${cap.key}).`,
         )
     const b = c.bonus
     if (b?.state === 'open' && b.spend !== null)

@@ -105,7 +105,7 @@ function needsAnniversary(card: Card): boolean {
   )
 }
 
-function activationRules(card: Card, today: string): string[] {
+export function activationRules(card: Card, today: string): string[] {
   return card.rules
     .filter(
       (r) =>

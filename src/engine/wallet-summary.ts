@@ -1,15 +1,23 @@
-import type { Card, Cap } from '../schema/card.ts'
+import type { Card, Cap, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
-import { capUsed, pickedCategories } from './evaluate.ts'
+import {
+  activationGroup,
+  capUsed,
+  isActivated,
+  pickedCategories,
+} from './evaluate.ts'
 import { daysBetween } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
+import { activationRules } from './setup.ts'
+import { categoryPhrase, earnText } from './text.ts'
 import { cardValuation } from './valuation.ts'
 
 export type CapSummary = {
   key: string // what cap_usage and record_purchase call it
+  label: string // what it covers, in words
   rules: string[] // the rules that spend against it
   amount: number
   period: Cap['period']
@@ -36,9 +44,13 @@ export type CardSummary = {
   chosen: {
     period: string
     current: boolean
+    until: string | null // the period's last day, YYYY-MM-DD
     picks: Record<string, string[]>
+    pickNames: Record<string, string[]> // the same picks, in words
   } | null
+  rates: string[] // the card's best rates right now, in words
   activated: string[]
+  toActivate: string[] // bonuses current or starting soon, not yet activated, in words
   anniversary: string | null
 }
 
@@ -47,7 +59,124 @@ export type WalletSummary = {
   cards: CardSummary[]
 }
 
+const NUMBERS: Record<string, string> = {
+  one: '1',
+  two: '2',
+  three: '3',
+  four: '4',
+  five: '5',
+  six: '6',
+}
+
+// "five-percent" reads "5%"; other ids read as words.
+export function choiceName(id: string): string {
+  return id
+    .replace(
+      /\b(one|two|three|four|five|six)-percent\b/g,
+      (_, n: string) => `${NUMBERS[n] ?? n}%`,
+    )
+    .replace(/[-_.]/g, ' ')
+}
+
+const listed = (parts: string[]) =>
+  parts.length <= 2
+    ? parts.join(' and ')
+    : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1) ?? ''}`
+
+function merchantName(catalog: Catalog, id: string): string {
+  const all = [...catalog.merchants.overrides, ...catalog.merchants.seed]
+  return all.find((m) => m.id === id)?.name ?? id.replace(/[-_.]/g, ' ')
+}
+
+function optionName(
+  catalog: Catalog,
+  card: Card,
+  choiceId: string,
+  option: string,
+): string {
+  const o = card.choices.find((c) => c.id === choiceId)?.options[option]
+  if (!o) return option.replace(/[-_.]/g, ' ')
+  const parts = [
+    ...o.categories.map((c) => categoryPhrase(catalog, c)),
+    ...o.merchants.map((m) => merchantName(catalog, m)),
+  ]
+  if (o.online) parts.push('online shopping')
+  return parts.length > 0 ? listed(parts) : option.replace(/[-_.]/g, ' ')
+}
+
+function ruleWhat(catalog: Catalog, rule: Rule): string {
+  if (rule.match.choice !== undefined)
+    return `your ${choiceName(rule.match.choice)} picks`
+  const parts = [
+    ...(rule.match.categories ?? []).map((c) => categoryPhrase(catalog, c)),
+    ...(rule.match.merchants ?? []).map((m) => merchantName(catalog, m)),
+  ]
+  return parts.length > 0 ? listed(parts) : rule.id.replace(/[-_.]/g, ' ')
+}
+
+function periodEnd(period: string): string | null {
+  const quarter = /^(\d{4})-Q([1-4])$/.exec(period)
+  if (quarter) {
+    const end = ['03-31', '06-30', '09-30', '12-31'][Number(quarter[2]) - 1]
+    return `${quarter[1] ?? ''}-${end ?? ''}`
+  }
+  const month = /^(\d{4})-(\d{2})$/.exec(period)
+  if (month) {
+    const last = new Date(Date.UTC(Number(month[1]), Number(month[2]), 0))
+    return last.toISOString().slice(0, 10)
+  }
+  return /^\d{4}$/.test(period) ? `${period}-12-31` : null
+}
+
+const applies = (rule: Rule, today: string) =>
+  (rule.valid_from === undefined || rule.valid_from <= today) &&
+  (rule.valid_to === undefined || rule.valid_to >= today)
+
+function headlineRates(
+  catalog: Catalog,
+  card: Card,
+  currency: string,
+  today: string,
+): string[] {
+  const best = card.rules
+    .filter((r) => applies(r, today) && r.rate > card.base_rate)
+    .sort((a, b) => b.rate - a.rate)
+    .slice(0, 4)
+    .map(
+      (r) =>
+        `${earnText(catalog, r.rate, currency)} on ${ruleWhat(catalog, r)}${r.requires?.activation ? ' (once activated)' : ''}`,
+    )
+  return [
+    ...best,
+    `${earnText(catalog, card.base_rate, currency)} on everything else`,
+  ]
+}
+
+function toActivate(
+  catalog: Catalog,
+  card: Card,
+  held: WalletCard,
+  today: string,
+): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const id of activationRules(card, today)) {
+    if (seen.has(id) || isActivated(card, held, id)) continue
+    const group = activationGroup(card, id)
+    for (const g of group) seen.add(g)
+    const rules = card.rules.filter((r) => group.includes(r.id))
+    const first = rules[0]
+    const when =
+      first?.valid_from !== undefined && first.valid_to !== undefined
+        ? ` (${first.valid_from} to ${first.valid_to})`
+        : ''
+    out.push(`${rules.map((r) => ruleWhat(catalog, r)).join(', ')}${when}`)
+  }
+  return out
+}
+
 function capSummaries(
+  catalog: Catalog,
   card: Card,
   held: WalletCard,
   today: string,
@@ -65,8 +194,15 @@ function capSummaries(
   }
   return [...caps].map(([key, { cap, rules }]) => {
     const { period: currentPeriod, spent } = capUsed(cap, key, held, today)
+    const covered = card.rules.filter((r) => rules.includes(r.id))
+    const shared = card.caps.find((c) => c.id === key)
+    const label = shared?.rotating
+      ? 'the rotating bonus categories'
+      : [...new Set(covered.map((r) => ruleWhat(catalog, r)))].join(', ') ||
+        key.replace(/[-_.]/g, ' ')
     return {
       key,
+      label,
       rules,
       amount: cap.amount,
       period: cap.period,
@@ -102,15 +238,24 @@ export function walletSummary(
       verifiedBy: card.verified_by,
       dataIsStale: daysBetween(card.last_verified, today) > STALE_AFTER_DAYS,
       rotationGap: rotationGap(card, today),
-      caps: capSummaries(card, held, today),
+      caps: capSummaries(catalog, card, held, today),
       chosen: held.chosen
         ? {
             period: held.chosen.period,
             current: pickedCategories(card, held, today).staleChoice === null,
+            until: periodEnd(held.chosen.period),
             picks: held.chosen.picks,
+            pickNames: Object.fromEntries(
+              Object.entries(held.chosen.picks).map(([choice, options]) => [
+                choiceName(choice),
+                options.map((o) => optionName(catalog, card, choice, o)),
+              ]),
+            ),
           }
         : null,
+      rates: headlineRates(catalog, card, valuation.currency, today),
       activated: held.activated,
+      toActivate: toActivate(catalog, card, held, today),
       anniversary: held.anniversary ?? null,
     })
   }

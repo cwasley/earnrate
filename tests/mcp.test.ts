@@ -174,8 +174,15 @@ describe('tools', () => {
         remaining: 2000,
       }),
     ])
-    expect(text(result)).toMatch(/Cash\+ \(usbank-cash-plus\): Visa,/)
-    expect(text(result)).toMatch(/Picks for 2026-Q4: /)
+    expect(text(result)).toMatch(
+      /Cash\+ Visa Signature Card \(usbank-cash-plus\), shown at checkout as "Cash\+": Visa,/,
+    )
+    expect(text(result)).toMatch(
+      /Picks for 2026-Q4, through Dec 31, 2026: 5%: /,
+    )
+    expect(text(result)).toMatch(
+      /Cap on your 5% picks: .* \(cap key five-percent-combined\)/,
+    )
     expect(text(result)).toMatch(/^Memberships: /m)
   })
 
@@ -600,7 +607,7 @@ describe('wallet setup', () => {
     const cashPlus = (wallet.structuredContent as WalletSummary).cards.find(
       (c) => c.cardId === 'usbank-cash-plus',
     )
-    expect(cashPlus?.chosen).toEqual({
+    expect(cashPlus?.chosen).toMatchObject({
       period: '2026-Q4',
       current: true,
       picks: {
