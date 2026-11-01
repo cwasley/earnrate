@@ -2,15 +2,18 @@
 
 # Issuer travel portals. Each issuer's own bonuses match them by id.
 - id: chase-travel
+  kind: portal
   name: Chase Travel
   domains: [travelsecure.chase.com]
   category: travel
 - id: renowned-hotels-chase-travel
+  kind: booking
   name: Renowned Hotels and Resorts (Chase Travel)
   aliases: [renowned hotels, renowned hotels and resorts]
   category: travel
   note: Prepaid stays in the Renowned Hotels and Resorts collection for United cardmembers on Chase Travel.
 - id: costco-travel
+  kind: portal
   name: Costco Travel
   domains: [costcotravel.com]
   category: travel
@@ -25,6 +28,7 @@
   domains: [aadvantagecars.com]
   category: travel
 - id: amex-travel
+  kind: portal
   name: American Express Travel
   aliases: [amex travel]
   domains: [amextravel.com]
@@ -42,15 +46,18 @@
 # bank's own bonuses match these merchants by id. Bonuses that depend on what's
 # booked get one merchant per booking type.
 - id: amex-travel-hotels
+  kind: booking
   name: Hotel through Amex Travel
   aliases: [amex travel hotel, amex travel hotels, hotel amex travel]
   category: travel
   note: Prepaid hotels only for the Amex bonuses.
 - id: amex-travel-flights
+  kind: booking
   name: Flight through Amex Travel
   aliases: [amex travel flight, amex travel flights, flight amex travel]
   category: travel
 - id: airbnb-amex-travel
+  kind: booking
   name: Airbnb through Amex Travel
   aliases:
     [
@@ -62,18 +69,22 @@
   category: travel
   note: Prepaid Airbnb stays booked in AmexTravel.com or the Amex Travel app, with your Airbnb account linked to Amex.
 - id: amex-travel-car-rentals
+  kind: booking
   name: Car rental through Amex Travel
   aliases: [amex travel car rental, amex travel car]
   category: travel
 - id: amex-travel-cruises
+  kind: booking
   name: Cruise through Amex Travel
   aliases: [amex travel cruise]
   category: travel
 - id: usbank-travel-center
+  kind: portal
   name: U.S. Bank Travel Center
   aliases: [us bank travel center]
   category: travel
 - id: sofi-travel
+  kind: portal
   name: SoFi Travel
   category: travel
 
@@ -177,38 +188,45 @@
 # Card issuers' travel and ticketing sites (see the Amex Travel note above).
 - {
     id: capital-one-travel,
+    kind: portal,
     name: Capital One Travel,
     aliases: [capital one travel],
     category: travel,
   }
 - {
     id: capital-one-travel-hotels,
+    kind: booking,
     name: Hotel through Capital One Travel,
     aliases: [capital one travel hotel],
     category: travel,
   }
 - id: capital-one-travel-vacation-rentals
+  kind: booking
   name: Vacation rental through Capital One Travel
   aliases: [capital one travel vacation rental]
   category: travel
 - {
     id: capital-one-travel-car-rentals,
+    kind: booking,
     name: Car rental through Capital One Travel,
     aliases: [capital one travel car rental],
     category: travel,
   }
 - {
     id: capital-one-travel-flights,
+    kind: booking,
     name: Flight through Capital One Travel,
     aliases: [capital one travel flight],
     category: travel,
   }
 - id: capital-one-entertainment
+  kind: portal
   name: Capital One Entertainment
   aliases: [capital one entertainment tickets]
   category: entertainment
 - {
     id: citi-travel,
+    kind: portal,
     name: Citi Travel,
     aliases: [citi travel],
     domains: [cititravel.com],
@@ -216,42 +234,49 @@
   }
 - {
     id: citi-travel-hotels,
+    kind: booking,
     name: Hotel through Citi Travel,
     aliases: [citi travel hotel],
     category: travel,
   }
 - {
     id: citi-travel-car-rentals,
+    kind: booking,
     name: Car rental through Citi Travel,
     aliases: [citi travel car rental],
     category: travel,
   }
 - {
     id: citi-travel-attractions,
+    kind: booking,
     name: Attraction through Citi Travel,
     aliases: [citi travel attraction],
     category: travel,
   }
 - {
     id: citi-travel-flights,
+    kind: booking,
     name: Flight through Citi Travel,
     aliases: [citi travel flight],
     category: travel,
   }
 - {
     id: bilt-travel,
+    kind: portal,
     name: Bilt Travel,
     aliases: [bilt travel],
     category: travel,
   }
 - {
     id: bilt-travel-hotels,
+    kind: booking,
     name: Hotel through Bilt Travel,
     aliases: [bilt travel hotel],
     category: travel,
   }
 - {
     id: bilt-travel-flights,
+    kind: booking,
     name: Flight through Bilt Travel,
     aliases: [bilt travel flight],
     category: travel,

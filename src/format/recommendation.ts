@@ -5,6 +5,7 @@ import type {
   RankedCard,
   Recommendation,
 } from '../engine/types.ts'
+import { noCardText } from '../engine/recommend.ts'
 
 export type Style = (format: 'bold' | 'dim' | 'yellow', text: string) => string
 
@@ -80,7 +81,7 @@ export function formatRecommendation(
   const lines = [header(rec, purchase), '']
   const top =
     rec.ranked.find((r) => r.cardId === rec.decision?.cardId) ?? rec.ranked[0]
-  const noCard = `None of your cards work at ${rec.merchant.resolvedName}.`
+  const noCard = noCardText(rec.merchant.resolvedName)
 
   if (rec.decision && top) {
     const earned =

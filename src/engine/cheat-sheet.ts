@@ -18,7 +18,9 @@ import type { RankedCard } from './types.ts'
 export type CheatSheetItem =
   { label: string; category: string } | { label: string; merchant: string }
 
-const CHEAT_SHEET_ITEMS: CheatSheetItem[] = [
+// The everyday kinds of purchase: the cheat sheet's rows and the site's
+// quick picks.
+export const EVERYDAY_PURCHASES: CheatSheetItem[] = [
   { label: 'Groceries', category: 'grocery.supermarket' },
   { label: 'Dining', category: 'dining' },
   { label: 'Gas', category: 'gas' },
@@ -53,7 +55,7 @@ export function cheatSheet(
   catalog: Catalog,
   wallet: Wallet,
   date: string,
-  items: CheatSheetItem[] = CHEAT_SHEET_ITEMS,
+  items: CheatSheetItem[] = EVERYDAY_PURCHASES,
 ): CheatSheet {
   const ranked: { label: string; cards: RankedCard[] }[] = []
   const rows = items.map((item): CheatSheetRow => {
@@ -149,7 +151,7 @@ export function catalogCheatSheet(
   catalog: Catalog,
   date: string,
   options: ExploreOptions,
-  items: CheatSheetItem[] = CHEAT_SHEET_ITEMS,
+  items: CheatSheetItem[] = EVERYDAY_PURCHASES,
 ): CheatSheet {
   const rows = items.map((item): CheatSheetRow => {
     const top = exploreCards(
@@ -157,10 +159,7 @@ export function catalogCheatSheet(
       'merchant' in item
         ? {
             merchant:
-              catalog.merchants.seed.find((m) => m.id === item.merchant)
-                ?.name ??
-              catalog.merchants.overrides.find((m) => m.id === item.merchant)
-                ?.name ??
+              resolveMerchantById(catalog, item.merchant, null)?.resolvedName ??
               item.label,
             category: null,
             amount: null,

@@ -7,6 +7,7 @@ last_verified: 2026-10-31
 verified_by: claude
 source_urls:
   - https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+  - https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
 base_rate: 1
 annual_fee: 395
 welcome_offer:
@@ -65,6 +66,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
     quote: '$4,000 or more on purchases within the first 90 days of opening your account'
+  - rule: alaska-and-hawaiian-with-boa-account
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
+    quote: 'open consumer (non-business) checking, savings or CD account with Bank of America N.A. or an investment account with Merrill'
 todo:
   - '3x on "foreign transaction" purchases (anything charged in a foreign currency or processed abroad) is not modeled: rules have no foreign-only geography. It would make this card the pick for most purchases abroad.'
-  - 'The 10% rewards bonus rules use a proposed membership id, bank-of-america-account. Bank of America does not say on this page which accounts are "eligible".'
+  - "BofA's rewards page lists Atmos Rewards cards as not eligible for the BofA Rewards tier bonus (in a popup the source check can't read), so the 10% account bonus stands alone."

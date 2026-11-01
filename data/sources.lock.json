@@ -114,6 +114,19 @@
         "c6fe2093be28c96e"
       ]
     },
+    "https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081060&productoffercode=RS&locale=en_US": {
+      "checked": "2026-11-01",
+      "lines": [
+        "3db0b99019b278ea",
+        "45f48f31c96d2825",
+        "6a4c084df639014b",
+        "97a4bff01830faf1",
+        "9d27bf2189a5932c",
+        "af29bb483066e7d7",
+        "b1931ad65ef5ce62",
+        "e556daaa52d7b0c2"
+      ]
+    },
     "https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/": {
       "checked": "2026-11-01",
       "lines": [
@@ -125,6 +138,16 @@
         "be4fd26772e0f11f"
       ]
     },
+    "https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US": {
+      "checked": "2026-11-01",
+      "lines": [
+        "2e35ef7ea4110317",
+        "6a4c084df639014b",
+        "769021ebabff615c",
+        "9d27bf2189a5932c",
+        "b982517434b78ccf"
+      ]
+    },
     "https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/": {
       "checked": "2026-11-01",
       "lines": [
@@ -133,6 +156,19 @@
         "9928dc90442259b5",
         "a217842915db8c24",
         "ca1d1872aefa57e6"
+      ]
+    },
+    "https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US": {
+      "checked": "2026-11-01",
+      "lines": [
+        "45f48f31c96d2825",
+        "4ab969fb06388416",
+        "6dca056fc9a16c68",
+        "769021ebabff615c",
+        "9d27bf2189a5932c",
+        "af29bb483066e7d7",
+        "b1931ad65ef5ce62",
+        "e556daaa52d7b0c2"
       ]
     },
     "https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/": {
@@ -640,8 +676,7 @@
         "17b073a6a0208338",
         "55c4bd448c2303dd",
         "5d62514e8e7b87fa",
-        "cdbc8fe65042cb5e",
-        "d90926c36a26449b"
+        "cdbc8fe65042cb5e"
       ]
     },
     "https://www.nordstrom.com/browse/nordy-club/faq": {
@@ -656,7 +691,6 @@
       "lines": [
         "217e58b59e4c6717",
         "6ca0c491bfc1a753",
-        "d90926c36a26449b",
         "ee44b052dacfebb3"
       ]
     },

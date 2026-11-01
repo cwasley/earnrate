@@ -87,9 +87,7 @@ type Page = {
 
 // Booking-portal variants ("Hotel through Amex Travel") answer the same
 // question as their portal page, so they don't get pages of their own.
-const skipMerchant = (m: Merchant) => / through |\(.*Travel\)/.test(m.name)
-
-const CATEGORY_SLUGS: Record<string, string> = { other: 'everyday-spending' }
+const skipMerchant = (m: Merchant) => m.kind === 'booking'
 
 function pages(c: Catalog): Page[] {
   const byId = new Map<string, Merchant>()
@@ -114,7 +112,7 @@ function pages(c: Catalog): Page[] {
   }
   for (const cat of c.categories) {
     list.push({
-      slug: CATEGORY_SLUGS[cat.id] ?? slugify(cat.aliases[0] ?? cat.name),
+      slug: cat.slug ?? slugify(cat.aliases[0] ?? cat.name),
       label: categoryPhrase(c, cat.id),
       query: {
         merchant: null,
@@ -388,6 +386,20 @@ const merchantNames = new Map(
     m.name,
   ]),
 )
+const merchantKinds = new Map(
+  [...catalog.merchants.seed, ...catalog.merchants.overrides].map((m) => [
+    m.id,
+    m.kind,
+  ]),
+)
+
+// A category bought as a service reads "on"; its own or a parent's says so.
+const readsOn = (id: string): boolean => {
+  const category = catalog.categories.find((c) => c.id === id)
+  if (category?.preposition === 'on') return true
+  const dot = id.lastIndexOf('.')
+  return dot !== -1 && readsOn(id.slice(0, dot))
+}
 
 const listWords = (items: string[], joiner = 'and') =>
   items.length <= 2
@@ -522,23 +534,7 @@ function placements(
   return found.sort((a, b) => a.rank - b.rank || b.pct - a.pct)
 }
 
-// Categories bought as a service read "on" (3x on flights); places, "at".
-const ON_CATEGORIES = [
-  'travel',
-  'transit',
-  'streaming',
-  'tv_internet',
-  'phone',
-  'utilities',
-  'online_retail',
-  'ev_charging',
-  'shipping',
-  'online_advertising',
-  'entertainment',
-]
-
-const isPortal = (id: string) =>
-  /travel|through|entertainment/i.test(merchantNames.get(id) ?? id)
+const isPortal = (id: string) => merchantKinds.get(id) !== undefined
 
 // The card's best everyday categories, then its best single-store bonus
 // (Prime Visa at Amazon) unless it's an issuer's travel site, which stay in
@@ -557,10 +553,7 @@ function headlineFor(card: Card): string {
   const byRate = new Map<number, string[]>()
   for (const r of everyday) {
     const on =
-      r.match.choice !== undefined ||
-      (r.match.categories ?? []).every((c) =>
-        ON_CATEGORIES.some((o) => c === o || c.startsWith(`${o}.`)),
-      )
+      r.match.choice !== undefined || (r.match.categories ?? []).every(readsOn)
     byRate.set(r.rate, [
       ...(byRate.get(r.rate) ?? []),
       `${on ? 'on' : 'at'} ${ruleWhatRaw(card, r)}`,

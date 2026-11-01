@@ -58,11 +58,13 @@
 - id: gas.superstore
   name: Gas at superstores and warehouse clubs
 - id: ev_charging
+  preposition: on
   name: EV charging
   aliases: [ev, charging]
   mccs: [5552]
 
 - id: transit
+  preposition: on
   name: Transit
   aliases: [public transit, train, trains, bus, commuting]
   mccs: [4111, 4112, 4131, 4784, 7523]
@@ -72,6 +74,7 @@
   mccs: [4121]
 
 - id: travel
+  preposition: on
   name: Travel
   mccs: [4722]
 - id: travel.flights
@@ -92,18 +95,22 @@
   mccs: [4411]
 
 - id: streaming
+  preposition: on
   name: Streaming services
   aliases: [streaming, subscriptions]
   mccs: [4899, 5815]
 - id: tv_internet
+  preposition: on
   name: TV and internet service
   aliases: [internet, cable]
   mccs: [4899]
 - id: phone
+  preposition: on
   name: Cell phone service
   aliases: [phone, cell phone, wireless]
   mccs: [4814]
 - id: utilities
+  preposition: on
   name: Home utilities
   aliases: [utilities, electric, electricity]
   mccs: [4900]
@@ -117,6 +124,7 @@
   aliases: [movies, movie theater]
   mccs: [7832]
 - id: entertainment
+  preposition: on
   name: Live entertainment and events
   aliases: [concerts, events, tickets]
   mccs: [7922, 7941]
@@ -146,15 +154,19 @@
   mccs: [5712]
 
 - id: online_retail
+  preposition: on
   name: Online retail
   aliases: [online shopping, shopping online, online]
 - id: office_supply
   name: Office supply stores
 - id: shipping
+  preposition: on
   name: Shipping and couriers
 - id: online_advertising
+  preposition: on
   name: Social media and search advertising
 
 - id: other
+  slug: everyday-spending
   name: Everything else
   aliases: [everything, everything else, other]

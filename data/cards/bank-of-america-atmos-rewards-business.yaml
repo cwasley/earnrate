@@ -7,6 +7,7 @@ last_verified: 2026-10-26
 verified_by: collin
 source_urls:
   - https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+  - https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
 base_rate: 1
 business: true
 annual_fee: 70
@@ -67,6 +68,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
     quote: 'after you make $4,000 or more in purchases within the first 90 days of opening your account'
+  - rule: alaska-and-hawaiian-with-boa-account
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
+    quote: 'open small business (non-consumer) checking or savings account with Bank of America, N.A.'
 todo:
-  - 'The 10% rewards bonus rules use a proposed membership id, bank-of-america-small-business-account. Bank of America does not say on this page which accounts are "eligible".'
   - 'annual_fee is the $70 per-company fee. Each card also costs $25 a year, which the schema has no field for.'
+  - "BofA's rewards page lists Atmos Rewards cards as not eligible for the BofA Rewards tier bonus (in a popup the source check can't read), so the 10% account bonus stands alone."

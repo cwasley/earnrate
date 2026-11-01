@@ -30,6 +30,9 @@ export const MerchantSchema = z.strictObject({
   // Other ways to buy the same thing, e.g. through a card's travel site, that
   // can earn more. Answers mention them when they would.
   booked_via: z.array(KebabId).default([]),
+  // A card issuer's travel or ticketing site (portal), or a booking made
+  // through one (booking): "Hotel through Amex Travel".
+  kind: z.enum(['portal', 'booking']).optional(),
   note: z.string().optional(),
 })
 

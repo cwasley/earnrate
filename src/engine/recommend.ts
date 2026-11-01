@@ -36,6 +36,10 @@ import type {
 import { cardValuation, type Valuation } from './valuation.ts'
 
 export const STALE_AFTER_DAYS = 180
+
+// The warning when no card works; the CLI shows it as the answer instead.
+export const noCardText = (merchant: string) =>
+  `None of your cards work at ${merchant}.`
 const NEAR_CAP_SHARE = 0.2
 
 type Entry = {
@@ -448,7 +452,7 @@ export function recommend(
   }
 
   if (!winner) {
-    warnings.push(`None of your cards work at ${merchant.resolvedName}.`)
+    warnings.push(noCardText(merchant.resolvedName))
     // Only where the merchant's data says what its website takes: without
     // that, every network is assumed, and a gas pump has no website.
     const record = [

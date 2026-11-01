@@ -20,7 +20,7 @@ import {
   listed,
   words,
 } from './text.ts'
-import { cardValuation } from './valuation.ts'
+import { cardValuation, currencyValuation } from './valuation.ts'
 
 export type CapSummary = {
   key: string // what cap_usage and record_purchase call it
@@ -64,17 +64,23 @@ export type CardSummary = {
 
 export type WalletSummary = {
   memberships: string[]
+  // Point values the user set, in place of earnrate's defaults.
+  pointValues: { currency: string; name: string; centsPerUnit: number }[]
+  started: string | null // YYYY-MM-DD, for a hosted wallet
   cards: CardSummary[]
 }
 
 // Travel-site bookings ("Flight through Amex Travel") read mid-sentence in
-// lower case and plural; brand names keep theirs.
+// lower case and plural; brand names ("Airbnb through Amex Travel") keep theirs.
 const BOOKING = /^(Attraction|Car rental|Cruise|Flight|Hotel|Vacation rental)\b/
 
 function merchantName(catalog: Catalog, id: string): string {
   const all = [...catalog.merchants.overrides, ...catalog.merchants.seed]
-  const name = all.find((m) => m.id === id)?.name ?? words(id)
-  return name.replace(BOOKING, (kind) => `${kind.toLowerCase()}s`)
+  const merchant = all.find((m) => m.id === id)
+  const name = merchant?.name ?? words(id)
+  return merchant?.kind === 'booking'
+    ? name.replace(BOOKING, (kind) => `${kind.toLowerCase()}s`)
+    : name
 }
 
 function optionName(
@@ -306,5 +312,12 @@ export function walletSummary(
       anniversary: held.anniversary ?? null,
     })
   }
-  return { memberships: wallet.memberships, cards }
+  const pointValues = Object.keys(wallet.valuations)
+    .filter((id) => catalog.currencies.some((c) => c.id === id))
+    .map((id) => ({
+      currency: id,
+      name: currencyLabel(catalog, id),
+      centsPerUnit: currencyValuation(catalog, wallet, id).centsPerUnit,
+    }))
+  return { memberships: wallet.memberships, pointValues, started: null, cards }
 }

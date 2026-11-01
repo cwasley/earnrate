@@ -15,6 +15,7 @@ welcome_offer:
   spend: 8000
   months: 6
   varies: true
+  not_with: [amex-platinum]
   note: 'The public offer is "as high as" 100,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. Not available if you have or have had this Card, the Premier Rewards Gold Card, the Platinum Card (including the Schwab and Morgan Stanley versions) or previous versions of these Cards; Amex may also decline based on your card history.'
 rules:
   - id: restaurants
@@ -93,3 +94,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
     quote: 'after you spend $8,000 in purchases on your new Card within the first 6 months'
+  - rule: not_with
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'if you have or have had this Card, the Premier Rewards Gold Card, the Platinum Card'

@@ -21,17 +21,9 @@ import {
 } from './format.ts'
 import { SearchInput } from './SearchInput.tsx'
 import { engineOptions, type Settings } from './settings.ts'
+import { EVERYDAY_PURCHASES } from '../../src/engine/cheat-sheet.ts'
 
-const QUICK = [
-  'Groceries',
-  'Dining',
-  'Gas',
-  'Amazon',
-  'Costco',
-  'Travel',
-  'Streaming',
-  'Everything else',
-]
+const QUICK = EVERYDAY_PURCHASES.map((p) => p.label)
 
 const TOP = 8
 

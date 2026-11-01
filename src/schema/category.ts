@@ -10,6 +10,10 @@ export const CategorySchema = z.strictObject({
   // Everyday words people search by ("groceries"), besides the name.
   aliases: z.array(z.string().min(1)).default([]),
   note: z.string().optional(),
+  // Bought as a service, a category reads "on" (3x on flights); places read
+  // "at". Subcategories inherit it.
+  preposition: z.literal('on').optional(),
+  slug: z.string().optional(), // its search page, when not from its name
 })
 
 export const CategoriesFileSchema = z.array(CategorySchema).min(1)
