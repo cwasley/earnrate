@@ -420,29 +420,142 @@
   margin-top: 10px;
 }
 
-table.cheat {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 15.5px;
+/* My wallet is a stack of panels, one job each. */
+.panels {
+  display: grid;
+  gap: 20px;
 }
 
-table.cheat th,
-table.cheat td {
-  text-align: left;
-  padding: 9px 4px;
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 18px 14px;
+  min-width: 0;
+}
+
+.app .panel > h3:first-child {
+  margin-top: 0;
+}
+
+.panel > :first-child {
+  margin-top: 0;
+}
+
+.panel > :last-child {
+  margin-bottom: 0;
+}
+
+.panel .results h4 {
+  font-size: 17px;
+  margin: 18px 0 8px;
+}
+
+.app .callout {
+  margin: 12px 0;
+}
+
+/* The cheat sheet looks like the image it saves. */
+.sheet {
+  padding: 0;
+  overflow: hidden;
+}
+
+.sheet-head {
+  position: relative;
+  background: var(--accent);
+  color: var(--surface);
+  padding: 20px 20px 18px;
+}
+
+.sheet-brand {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  opacity: 0.9;
+}
+
+.app .sheet-head h3 {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  margin: 6px 0 4px;
+}
+
+.sheet-head p {
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+.sheet-card {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 54px;
+  height: 34px;
+  border: 2px solid currentColor;
+  border-radius: 6px;
+  opacity: 0.85;
+}
+
+.sheet-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 7px;
+  height: 5px;
+  background: currentColor;
+}
+
+.sheet-rows {
+  list-style: none;
+  margin: 0;
+  padding: 4px 20px;
+}
+
+.sheet-rows li {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 12px 0;
   border-bottom: 1px solid var(--line);
-  vertical-align: top;
 }
 
-table.cheat th {
-  font-weight: 500;
+.sheet-rows li:last-child {
+  border-bottom: 0;
+}
+
+.sheet-label {
   color: var(--muted);
-  width: 38%;
+  font-size: 15px;
 }
 
-table.cheat td.rate {
-  font-size: 15.5px;
+.sheet-card-name {
+  font-weight: 650;
+  font-size: 16px;
+  min-width: 0;
+}
+
+.sheet-rate {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 19px;
   text-align: right;
+}
+
+.sheet-foot {
+  padding: 4px 20px 16px;
+}
+
+.sheet-foot button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 15px;
+  cursor: pointer;
 }
 
 .held {
@@ -614,24 +727,24 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .result-list > li,
-.cheat tbody tr {
+.sheet-rows li {
   animation: rise 0.3s ease-out both;
 }
 
 .result-list > li:nth-child(2),
-.cheat tbody tr:nth-child(2) {
+.sheet-rows li:nth-child(2) {
   animation-delay: 40ms;
 }
 .result-list > li:nth-child(3),
-.cheat tbody tr:nth-child(3) {
+.sheet-rows li:nth-child(3) {
   animation-delay: 80ms;
 }
 .result-list > li:nth-child(4),
-.cheat tbody tr:nth-child(4) {
+.sheet-rows li:nth-child(4) {
   animation-delay: 120ms;
 }
 .result-list > li:nth-child(n + 5),
-.cheat tbody tr:nth-child(n + 5) {
+.sheet-rows li:nth-child(n + 5) {
   animation-delay: 160ms;
 }
 
@@ -642,7 +755,7 @@ input[type='number']::-webkit-outer-spin-button {
 @media (prefers-reduced-motion: reduce) {
   .results,
   .result-list > li,
-  .cheat tbody tr,
+  .sheet-rows li,
   .held > li {
     animation: none;
   }

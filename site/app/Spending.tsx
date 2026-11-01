@@ -90,73 +90,75 @@ export function Spending({ settings }: { settings: Settings }) {
 
   return (
     <div>
-      <p class="muted">
-        Roughly what you spend each month. Change the numbers, remove what
-        doesn't apply, or add stores.
-      </p>
-      <ul class="spend">
-        {rows.map((r, i) => (
-          <li key={r.what}>
-            <label for={`spend-${String(i)}`}>{r.what}</label>
-            <span class="dollar">
-              $
-              <input
-                id={`spend-${String(i)}`}
-                type="number"
-                inputMode="numeric"
-                min="0"
-                step="10"
-                value={r.monthly}
-                onInput={(e) =>
-                  update(i, Math.max(0, Number(e.currentTarget.value) || 0))
-                }
-              />
-            </span>
-            <button
-              type="button"
-              class="remove"
-              aria-label={`Remove ${r.what}`}
-              onClick={() => setRows(rows.filter((_, j) => j !== i))}
-            >
-              ×
-            </button>
-          </li>
-        ))}
-      </ul>
-      <form
-        class="ask small"
-        onSubmit={(e) => {
-          e.preventDefault()
-          const what = adding.trim()
-          if (what === '' || rows.some((r) => r.what === what)) return
-          setRows([...rows, { what, monthly: 100 }])
-          setAdding('')
-        }}
-      >
-        <label class="visually-hidden" for="spend-add">
-          Add a store or category
-        </label>
-        <input
-          id="spend-add"
-          type="text"
-          list="suggestions"
-          placeholder="Add a store or category"
-          autocomplete="off"
-          value={adding}
-          onInput={(e) => setAdding(e.currentTarget.value)}
-        />
-        <button type="submit">Add</button>
-      </form>
-      <p class="total">
-        {usd(total)} a month · {usd(total * 12)} a year
-      </p>
-      {unknown.length > 0 ? (
-        <p class="callout">
-          earnrate doesn't know{' '}
-          {unknown.map((l) => `“${l.merchant.input}”`).join(', ')}. Use a
-          category like dining or groceries instead.
+      <div class="panel">
+        <p class="muted">
+          Roughly what you spend each month. Change the numbers, remove what
+          doesn't apply, or add stores.
         </p>
-      ) : null}
+        <ul class="spend">
+          {rows.map((r, i) => (
+            <li key={r.what}>
+              <label for={`spend-${String(i)}`}>{r.what}</label>
+              <span class="dollar">
+                $
+                <input
+                  id={`spend-${String(i)}`}
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  step="10"
+                  value={r.monthly}
+                  onInput={(e) =>
+                    update(i, Math.max(0, Number(e.currentTarget.value) || 0))
+                  }
+                />
+              </span>
+              <button
+                type="button"
+                class="remove"
+                aria-label={`Remove ${r.what}`}
+                onClick={() => setRows(rows.filter((_, j) => j !== i))}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+        <form
+          class="ask small"
+          onSubmit={(e) => {
+            e.preventDefault()
+            const what = adding.trim()
+            if (what === '' || rows.some((r) => r.what === what)) return
+            setRows([...rows, { what, monthly: 100 }])
+            setAdding('')
+          }}
+        >
+          <label class="visually-hidden" for="spend-add">
+            Add a store or category
+          </label>
+          <input
+            id="spend-add"
+            type="text"
+            list="suggestions"
+            placeholder="Add a store or category"
+            autocomplete="off"
+            value={adding}
+            onInput={(e) => setAdding(e.currentTarget.value)}
+          />
+          <button type="submit">Add</button>
+        </form>
+        <p class="total">
+          {usd(total)} a month · {usd(total * 12)} a year
+        </p>
+        {unknown.length > 0 ? (
+          <p class="callout">
+            earnrate doesn't know{' '}
+            {unknown.map((l) => `“${l.merchant.input}”`).join(', ')}. Use a
+            category like dining or groceries instead.
+          </p>
+        ) : null}
+      </div>
 
       <div aria-live="polite">
         {result && single ? (

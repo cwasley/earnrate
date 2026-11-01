@@ -11,7 +11,6 @@ import {
 import { activationGroup } from '../../src/engine/evaluate.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { recommend } from '../../src/engine/recommend.ts'
-import { bookPurchase } from '../../src/engine/record.ts'
 import {
   cardInfo,
   knownMemberships,
@@ -86,28 +85,10 @@ function ask(wallet: Wallet, text: string, amount: number | null) {
   return recommend(catalog, wallet, purchase, merchant)
 }
 
-function Answer({
-  wallet,
-  rec,
-  onRecord,
-}: {
-  wallet: Wallet
-  rec: Recommendation
-  onRecord: (cardId: string, amount: number) => void
-}) {
-  const [paid, setPaid] = useState('')
+function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
   const top = rec.ranked[0]
   const decided = rec.decision
-  const [paidWith, setPaidWith] = useState(decided?.cardId ?? '')
   const held = wallet.cards.find((c) => c.id === decided?.cardId)
-  const tracks = wallet.cards.some((h) => {
-    const card = cards.get(h.id)
-    return (
-      h.bonus !== undefined ||
-      (card?.caps.length ?? 0) > 0 ||
-      card?.rules.some((r) => r.cap)
-    )
-  })
   return (
     <div class="answer">
       {decided && held ? (
@@ -157,48 +138,6 @@ function Answer({
         ))}
       </ol>
       {rec.sensitivity ? <p class="muted">{rec.sensitivity}</p> : null}
-      {decided && tracks ? (
-        <form
-          class="ask small"
-          onSubmit={(e) => {
-            e.preventDefault()
-            const amount = Number(paid)
-            if (amount > 0 && paidWith !== '') {
-              onRecord(paidWith, amount)
-              setPaid('')
-            }
-          }}
-        >
-          <label class="visually-hidden" for="paid-with">
-            Card you paid with
-          </label>
-          <select
-            id="paid-with"
-            value={paidWith}
-            onChange={(e) => setPaidWith(e.currentTarget.value)}
-          >
-            {rec.ranked.map((r) => (
-              <option key={r.cardId} value={r.cardId}>
-                {r.checkoutLabel ?? shortName(r.cardId)}
-              </option>
-            ))}
-          </select>
-          <label class="visually-hidden" for="paid">
-            Amount paid
-          </label>
-          <input
-            id="paid"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="0.01"
-            placeholder="Paid? Amount"
-            value={paid}
-            onInput={(e) => setPaid(e.currentTarget.value)}
-          />
-          <button type="submit">Record</button>
-        </form>
-      ) : null}
       <ul class="assumptions">
         {rec.assumptions.map((a) => (
           <li key={a}>{a}</li>
@@ -214,31 +153,33 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
     [wallet],
   )
   return (
-    <>
-      <h3>Your cheat sheet for {sheet.quarter}</h3>
-      <p class="muted">The card to use for each kind of purchase right now.</p>
-      <table class="cheat">
-        <tbody>
-          {sheet.rows.map((row) => {
-            const held = wallet.cards.find((c) => c.id === row.cardId)
-            return (
-              <tr key={row.label}>
-                <th scope="row">{row.label}</th>
-                <td>
-                  {held ? label(held) : 'None of your cards'}
-                  {row.note ? <span class="row-note">{row.note}</span> : null}
-                </td>
-                <td class="rate">
-                  {row.effectiveReturnPct === null
-                    ? ''
-                    : pct(row.effectiveReturnPct)}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-      <div class="row-buttons">
+    <section class="panel sheet" aria-labelledby="sheet-title">
+      <div class="sheet-head">
+        <span class="sheet-brand">earnrate</span>
+        <h3 id="sheet-title">My card cheat sheet</h3>
+        <p>{sheet.quarter} · the card to use for each purchase</p>
+        <span class="sheet-card" aria-hidden="true" />
+      </div>
+      <ol class="sheet-rows">
+        {sheet.rows.map((row) => {
+          const held = wallet.cards.find((c) => c.id === row.cardId)
+          return (
+            <li key={row.label}>
+              <span class="sheet-label">{row.label}</span>
+              <span class="sheet-card-name">
+                {held ? label(held) : 'None of your cards'}
+                {row.note ? <span class="row-note">{row.note}</span> : null}
+              </span>
+              <span class="sheet-rate">
+                {row.effectiveReturnPct === null
+                  ? ''
+                  : pct(row.effectiveReturnPct)}
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+      <div class="sheet-foot">
         <button
           type="button"
           onClick={() => {
@@ -248,7 +189,7 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
           Save as image
         </button>
       </div>
-    </>
+    </section>
   )
 }
 
@@ -295,10 +236,12 @@ function CardEditor({
   wallet,
   held,
   onChange,
+  onRemove,
 }: {
   wallet: Wallet
   held: WalletCard
   onChange: (change: WalletChange, cardId: string) => void
+  onRemove: (cardId: string) => void
 }) {
   const card = cards.get(held.id)
   const info = card ? cardInfo(card, wallet, localToday()) : null
@@ -457,10 +400,7 @@ function CardEditor({
         <button type="button" class="primary" onClick={save}>
           Save
         </button>
-        <button
-          type="button"
-          onClick={() => onChange(removeFromWallet(wallet, held.id), held.id)}
-        >
+        <button type="button" onClick={() => onRemove(held.id)}>
           Remove card
         </button>
       </div>
@@ -471,9 +411,11 @@ function CardEditor({
 function CardList({
   wallet,
   onChange,
+  onRemove,
 }: {
   wallet: Wallet
   onChange: (change: WalletChange, cardId: string) => void
+  onRemove: (cardId: string) => void
 }) {
   const [open, setOpen] = useState<string | null>(null)
   const today = localToday()
@@ -518,6 +460,10 @@ function CardList({
                   onChange={(change, id) => {
                     if (change.ok) setOpen(null)
                     onChange(change, id)
+                  }}
+                  onRemove={(id) => {
+                    setOpen(null)
+                    onRemove(id)
                   }}
                 />
               ) : null}
@@ -609,7 +555,7 @@ function Memberships({
   const relevant = knownMemberships(catalog).filter((m) => used.has(m))
   if (relevant.length === 0) return null
   return (
-    <section>
+    <section class="panel">
       <h3>Memberships</h3>
       <p class="muted">Some of your cards earn more with these.</p>
       {relevant.map((m) => (
@@ -655,7 +601,7 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
   if (!result) return null
   const gains = result.additions.filter((a) => a.gain > 0).slice(0, 3)
   return (
-    <section>
+    <section class="panel">
       <h3>Would another card help?</h3>
       <p class="muted">
         On your spending from the My spending tab, your cards earn about{' '}
@@ -715,7 +661,7 @@ function Transfer({
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
   return (
-    <section>
+    <section class="panel">
       <h3>Move your wallet</h3>
       <p class="muted">
         Your wallet is saved only in this browser. Export it to keep a copy, or
@@ -836,127 +782,116 @@ export function MyWallet({ initialQuery }: { initialQuery: string }) {
 
   if (!wallet) {
     return (
-      <div>
-        <p>
-          Add the cards you have, and earnrate tells you which one to use
-          anywhere. Your wallet is saved only in this browser: no account, and
-          never a card number.
-        </p>
-        <AddCard wallet={null} onChange={apply} />
-        {message ? (
-          <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
-        ) : null}
+      <div class="panels">
+        <section class="panel first">
+          <p>
+            Add the cards you have, and earnrate tells you which one to use
+            anywhere. Your wallet is saved only in this browser: no account, and
+            never a card number.
+          </p>
+          <AddCard wallet={null} onChange={apply} />
+          {message ? (
+            <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
+          ) : null}
+        </section>
         <Transfer wallet={null} onReplace={replace} />
       </div>
     )
   }
 
+  const remove = (cardId: string) => {
+    if (wallet.cards.length > 1) {
+      apply(removeFromWallet(wallet, cardId), cardId)
+      return
+    }
+    replace(null)
+    setAsked(null)
+    setMessage({
+      text: 'Removed your last card, so your wallet is empty.',
+      error: false,
+    })
+  }
+
   return (
-    <div>
-      <section class="first">
+    <div class="panels">
+      <section class="panel first">
         <h3>Your cards</h3>
-        <CardList wallet={wallet} onChange={apply} />
+        <CardList wallet={wallet} onChange={apply} onRemove={remove} />
         <AddCard wallet={wallet} onChange={apply} />
-      </section>
-
-      <form
-        class="ask"
-        role="search"
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (query.trim() !== '')
-            setAsked({ text: query.trim(), amount: Number(amount) || null })
-        }}
-      >
-        <label class="visually-hidden" for="wallet-ask">
-          Where are you paying?
-        </label>
-        <input
-          id="wallet-ask"
-          type="search"
-          list="suggestions"
-          placeholder="Where are you paying?"
-          autocomplete="off"
-          enterkeyhint="search"
-          value={query}
-          onInput={(e) => setQuery(e.currentTarget.value)}
-        />
-        <input
-          class="amount"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          placeholder="$"
-          aria-label="Amount (optional)"
-          value={amount}
-          onInput={(e) => setAmount(e.currentTarget.value)}
-        />
-        <button type="submit">Ask</button>
-      </form>
-      <div class="chips">
-        {QUICK.map((q) => (
-          <button
-            type="button"
-            class={asked?.text === q ? 'chip on' : 'chip'}
-            key={q}
-            onClick={() => {
-              setQuery(q)
-              setAsked({ text: q, amount: Number(amount) || null })
-            }}
-          >
-            {q}
-          </button>
-        ))}
-      </div>
-      <div aria-live="polite">
-        {rec ? (
-          <section
-            class="results"
-            key={`${asked?.text ?? ''} ${String(asked?.amount ?? '')}`}
-          >
-            <h3>
-              {rec.merchant.source === 'category'
-                ? `For ${categoryPhrase(catalog, rec.merchant.category)}`
-                : `At ${rec.merchant.resolvedName}`}
-            </h3>
-            <Answer
-              wallet={wallet}
-              rec={rec}
-              onRecord={(cardId, paid) => {
-                const booked = bookPurchase(
-                  catalog,
-                  wallet,
-                  {
-                    cardId,
-                    merchant: asked?.text ?? '',
-                    amount: paid,
-                    date: localToday(),
-                    channel: null,
-                  },
-                  rec.merchant,
-                )
-                replace(booked.wallet)
-                const bonus = booked.bonus
-                  ? ` ${usd(booked.bonus.after)} of ${usd(booked.bonus.spend)} toward its welcome bonus.`
-                  : ''
-                setMessage({
-                  text: `Recorded ${usd(paid)} on ${shortName(cardId)}.${bonus} Caps update for your next answer.`,
-                  error: false,
-                })
-              }}
-            />
-          </section>
+        {message ? (
+          <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
         ) : null}
-      </div>
-
-      {message ? (
-        <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
-      ) : null}
-
-      <section>
-        <CheatSheet wallet={wallet} />
       </section>
 
+      <section class="panel" aria-labelledby="wallet-ask-title">
+        <h3 id="wallet-ask-title">Which card here?</h3>
+        <form
+          class="ask"
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (query.trim() !== '')
+              setAsked({ text: query.trim(), amount: Number(amount) || null })
+          }}
+        >
+          <label class="visually-hidden" for="wallet-ask">
+            Where are you paying?
+          </label>
+          <input
+            id="wallet-ask"
+            type="search"
+            list="suggestions"
+            placeholder="Where are you paying?"
+            autocomplete="off"
+            enterkeyhint="search"
+            value={query}
+            onInput={(e) => setQuery(e.currentTarget.value)}
+          />
+          <input
+            class="amount"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            placeholder="$"
+            aria-label="Amount (optional)"
+            value={amount}
+            onInput={(e) => setAmount(e.currentTarget.value)}
+          />
+          <button type="submit">Ask</button>
+        </form>
+        <div class="chips">
+          {QUICK.map((q) => (
+            <button
+              type="button"
+              class={asked?.text === q ? 'chip on' : 'chip'}
+              key={q}
+              onClick={() => {
+                setQuery(q)
+                setAsked({ text: q, amount: Number(amount) || null })
+              }}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+        <div aria-live="polite">
+          {rec ? (
+            <div
+              class="results"
+              key={`${asked?.text ?? ''} ${String(asked?.amount ?? '')}`}
+            >
+              <h4>
+                {rec.merchant.source === 'category'
+                  ? `For ${categoryPhrase(catalog, rec.merchant.category)}`
+                  : `At ${rec.merchant.resolvedName}`}
+              </h4>
+              <Answer wallet={wallet} rec={rec} />
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      <CheatSheet wallet={wallet} />
       <Memberships wallet={wallet} onChange={apply} />
       <WhatIf wallet={wallet} />
       <Transfer wallet={wallet} onReplace={replace} />

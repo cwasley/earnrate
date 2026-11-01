@@ -167,48 +167,52 @@ export function BestFor({
     : []
   return (
     <div>
-      <form
-        class="ask"
-        role="search"
-        onSubmit={(e) => {
-          e.preventDefault()
-          ask(text)
-        }}
-      >
-        <label class="visually-hidden" for="best-for">
-          Store or category
-        </label>
-        <input
-          id="best-for"
-          type="search"
-          list="suggestions"
-          placeholder="Whole Foods, Amazon, gas…"
-          autocomplete="off"
-          enterkeyhint="search"
-          value={text}
-          onInput={(e) => {
-            const value = e.currentTarget.value
-            setText(value)
-            if (
-              SUGGESTIONS.some((s) => s.toLowerCase() === value.toLowerCase())
-            )
-              ask(value)
+      <div class="panel">
+        <form
+          class="ask"
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault()
+            ask(text)
           }}
-        />
-        <button type="submit">Compare</button>
-      </form>
-      <div class="chips" role="list">
-        {QUICK.map((q) => (
-          <button
-            type="button"
-            role="listitem"
-            class={q.toLowerCase() === query.toLowerCase() ? 'chip on' : 'chip'}
-            key={q}
-            onClick={() => ask(q)}
-          >
-            {q}
-          </button>
-        ))}
+        >
+          <label class="visually-hidden" for="best-for">
+            Store or category
+          </label>
+          <input
+            id="best-for"
+            type="search"
+            list="suggestions"
+            placeholder="Whole Foods, Amazon, gas…"
+            autocomplete="off"
+            enterkeyhint="search"
+            value={text}
+            onInput={(e) => {
+              const value = e.currentTarget.value
+              setText(value)
+              if (
+                SUGGESTIONS.some((s) => s.toLowerCase() === value.toLowerCase())
+              )
+                ask(value)
+            }}
+          />
+          <button type="submit">Compare</button>
+        </form>
+        <div class="chips" role="list">
+          {QUICK.map((q) => (
+            <button
+              type="button"
+              role="listitem"
+              class={
+                q.toLowerCase() === query.toLowerCase() ? 'chip on' : 'chip'
+              }
+              key={q}
+              onClick={() => ask(q)}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div aria-live="polite">
