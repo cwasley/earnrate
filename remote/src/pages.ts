@@ -48,9 +48,9 @@ button:disabled { opacity: 0.7; }
 // pressed button as working while the next page loads. Changing a single
 // character changes its hash: update PAGE_SCRIPT_HASH (a test checks).
 export const PAGE_SCRIPT =
-  "for(const b of document.querySelectorAll('.copy')){b.hidden=false;b.onclick=()=>navigator.clipboard.writeText(document.querySelector('.code').textContent).then(()=>{b.textContent='Copied'})}const busy=(b,on)=>{b.classList.toggle('busy',on);if(on)b.setAttribute('aria-busy','true');else b.removeAttribute('aria-busy')}for(const f of document.forms)f.addEventListener('submit',e=>{if(e.submitter)busy(e.submitter,true);setTimeout(()=>{for(const b of document.querySelectorAll('button'))b.disabled=true})})for(const a of document.querySelectorAll('a.button'))a.addEventListener('click',()=>busy(a,true))addEventListener('pageshow',e=>{if(e.persisted)for(const b of document.querySelectorAll('button,a.button')){b.disabled=false;busy(b,false)}})"
+  "for(const b of document.querySelectorAll('.copy')){b.hidden=false;b.onclick=()=>navigator.clipboard.writeText(document.querySelector('.code').textContent).then(()=>{b.textContent='Copied'})};const busy=(b,on)=>{b.classList.toggle('busy',on);if(on)b.setAttribute('aria-busy','true');else b.removeAttribute('aria-busy')};for(const f of document.forms)f.addEventListener('submit',e=>{if(e.submitter)busy(e.submitter,true);setTimeout(()=>{for(const b of document.querySelectorAll('button'))b.disabled=true})});for(const a of document.querySelectorAll('a.button'))a.addEventListener('click',()=>busy(a,true));addEventListener('pageshow',e=>{if(e.persisted)for(const b of document.querySelectorAll('button,a.button')){b.disabled=false;busy(b,false)}})"
 export const PAGE_SCRIPT_HASH =
-  'sha256-3dBXNeurE0y9zdDs2xsit6uxU/O+9JloAJilsiF7M6M='
+  'sha256-2v81anDGp7I8wOwWJiHPqcOOd35a+kxODmP95ueFqVQ='
 
 const PAGE_HEADERS = {
   'Content-Type': 'text/html; charset=utf-8',

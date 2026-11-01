@@ -1,3 +1,4 @@
+import { Script } from 'node:vm'
 import { createHash } from 'node:crypto'
 import {
   Client,
@@ -763,6 +764,7 @@ describe('anonymous saved wallets', () => {
   })
 
   test('sign-in pages allow only their own script', async () => {
+    expect(() => new Script(PAGE_SCRIPT)).not.toThrow()
     expect(PAGE_SCRIPT_HASH).toBe(
       `sha256-${createHash('sha256').update(PAGE_SCRIPT).digest('base64')}`,
     )
