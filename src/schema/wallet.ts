@@ -52,7 +52,12 @@ export const WalletCardSchema = z.strictObject({
     .optional(),
 })
 
+// The wallet file's format. A file without `version` is version 1; bump it
+// when a change would make older earnrate misread newer files.
+export const WALLET_VERSION = 1
+
 export const WalletSchema = z.strictObject({
+  version: z.number().int().positive().optional(),
   valuations: z.record(CurrencyId, Valuation).default({}),
   memberships: z.array(KebabId).default([]),
   cards: z.array(WalletCardSchema).min(1),

@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
-import { membershipsUsed, needsAnniversary } from '../../engine/setup.ts'
+import { membershipsFor, needsAnniversary } from '../../engine/setup.ts'
 import { money, words } from '../../engine/text.ts'
 import { walletSummary } from '../../engine/wallet-summary.ts'
 import { formatBooking, formatWalletSummary } from '../../format/wallet.ts'
@@ -231,7 +231,7 @@ export function registerWalletTools(
     {
       title: 'Set memberships',
       description:
-        "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier. Replaces the whole list, so include the ones to keep.",
+        "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep.",
       inputSchema: z.object({ memberships: inputs.AllMemberships }),
       outputSchema: WalletChangeSchema,
       annotations: { ...WRITE, destructiveHint: true, idempotentHint: true },
@@ -241,7 +241,7 @@ export function registerWalletTools(
       const used = new Set(
         (result.ok ? result.wallet.cards : []).flatMap((held) => {
           const card = catalog.cards.find((c) => c.id === held.id)
-          return card ? membershipsUsed(card) : []
+          return card ? membershipsFor(card) : []
         }),
       )
       const unused = memberships.filter((m) => !used.has(m))

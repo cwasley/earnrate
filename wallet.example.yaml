@@ -1,6 +1,7 @@
 # Copy to ~/.earnrate/wallet.yaml (or point $EARNRATE_WALLET at a copy).
 # Valuations default to data/currencies.yaml; set one here only to override it.
 
+version: 1
 valuations:
   sofi-rewards: { redemption: sofi-account }
 memberships: [amazon-prime]

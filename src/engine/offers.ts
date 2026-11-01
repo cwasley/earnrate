@@ -2,6 +2,7 @@ import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { bonusDollars } from './bonus.ts'
 import { matchesFilters } from './explore.ts'
+import { membershipCosts, paidMemberships } from './memberships.ts'
 import { roundCents } from './text.ts'
 import { cardValuation } from './valuation.ts'
 
@@ -29,7 +30,9 @@ export type OfferSummary = {
   annualFee: number | null
   firstYearFee: number | null // what the first year costs
   bonusValue: number // dollars, at the wallet's point values
-  firstYearValue: number // bonus value minus the first year's fee
+  // A membership the card needs that the wallet doesn't pay for (Costco).
+  membershipFee: number
+  firstYearValue: number // bonus value minus the first year's fee and membership
   held: boolean
   lastVerified: string
   verifiedBy: string
@@ -48,6 +51,10 @@ export function compareOffers(
   today: string,
 ): OfferComparison {
   const held = new Set(wallet.cards.map((c) => c.id))
+  const paid = paidMemberships(catalog, {
+    memberships: wallet.memberships,
+    heldCards: [...held],
+  })
   const offers: OfferSummary[] = []
   const withoutOffer: string[] = []
   for (const card of catalog.cards) {
@@ -68,6 +75,7 @@ export function compareOffers(
       bonusDollars(card, valuation.centsPerUnit, offer.points, offer.dollars) ??
       0
     const firstYearFee = card.first_year_fee ?? card.annual_fee ?? null
+    const membershipFee = membershipCosts([card], paid)[0]?.annualFee ?? 0
     offers.push({
       cardId: card.id,
       cardName: card.name,
@@ -85,7 +93,8 @@ export function compareOffers(
       annualFee: card.annual_fee ?? null,
       firstYearFee,
       bonusValue: roundCents(value),
-      firstYearValue: roundCents(value - (firstYearFee ?? 0)),
+      membershipFee,
+      firstYearValue: roundCents(value - (firstYearFee ?? 0) - membershipFee),
       held: held.has(card.id),
       lastVerified: card.last_verified,
       verifiedBy: card.verified_by,

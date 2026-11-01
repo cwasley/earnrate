@@ -9,7 +9,7 @@ import {
   type CapBooking,
 } from '../engine/record.ts'
 import type { CardFields } from '../engine/wallet-change.ts'
-import { WalletSchema, type Wallet } from '../schema/wallet.ts'
+import { WALLET_VERSION, WalletSchema, type Wallet } from '../schema/wallet.ts'
 
 type CardEntry = CardFields & { id: string }
 
@@ -129,7 +129,7 @@ const column = (text: string, at: number) => at - lineStart(text, at)
 // Appends a card after the last one, matching the list's indentation.
 export function addCardText(text: string | null, entry: CardEntry): string {
   if (text === null || text.trim() === '') {
-    return `${NEW_WALLET}cards:\n${cardLines(entry, '  ')}`
+    return `${NEW_WALLET}version: ${String(WALLET_VERSION)}\ncards:\n${cardLines(entry, '  ')}`
   }
   const { cards } = cardsSeq(text)
   const first = cards.items[0]

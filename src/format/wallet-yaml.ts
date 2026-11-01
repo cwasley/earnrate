@@ -1,13 +1,14 @@
 import { Document, parse, visit } from 'yaml'
 import { walletProblems } from '../data/integrity.ts'
 import type { Catalog } from '../schema/catalog.ts'
-import { WalletSchema, type Wallet } from '../schema/wallet.ts'
+import { WALLET_VERSION, WalletSchema, type Wallet } from '../schema/wallet.ts'
 
 // A wallet as the YAML file the CLI reads, for moving it between the
 // website, the remote server and the command line. Node-free.
 
 function compact(wallet: Wallet) {
   return {
+    version: wallet.version ?? WALLET_VERSION,
     ...(Object.keys(wallet.valuations).length > 0
       ? { valuations: wallet.valuations }
       : {}),

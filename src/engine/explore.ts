@@ -3,6 +3,7 @@ import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
+import { membershipNeeded, paidMemberships } from './memberships.ts'
 import { choicePeriod, periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
@@ -354,6 +355,11 @@ export function exploreCards(
   }
   const ranked: ExploreEntry[] = []
   const excluded: ExcludedCard[] = []
+  // A Costco purchase means a Costco member: no membership to point out.
+  const paid = paidMemberships(catalog, {
+    memberships: options.memberships,
+    merchantIds: [merchant.merchantId],
+  })
 
   for (const card of catalog.cards) {
     if (!matchesFilters(card, options.filters)) continue
@@ -398,7 +404,10 @@ export function exploreCards(
       firstYearFee: card.first_year_fee ?? null,
       picks,
       requirements,
-      conditions: conditionsText(catalog, requirements),
+      conditions: [
+        ...conditionsText(catalog, requirements),
+        ...membershipNeeded(card, paid),
+      ],
       evidence: evidence ? { quote: evidence.quote, url: evidence.url } : null,
       withMembership: membershipUpgrades(
         catalog,

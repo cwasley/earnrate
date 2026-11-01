@@ -1,6 +1,10 @@
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
-import type { Wallet, WalletCard } from '../schema/wallet.ts'
+import {
+  WALLET_VERSION,
+  type Wallet,
+  type WalletCard,
+} from '../schema/wallet.ts'
 import { addMonths } from './bonus.ts'
 import { capByKey } from './evaluate.ts'
 import { choicePeriod, periodKey } from './periods.ts'
@@ -287,7 +291,12 @@ export function addToWallet(
   const held = withFields(newHolding(card.id), fields)
   const next: Wallet = wallet
     ? { ...wallet, cards: [...wallet.cards, held] }
-    : { valuations: {}, memberships: [], cards: [held] }
+    : {
+        version: WALLET_VERSION,
+        valuations: {},
+        memberships: [],
+        cards: [held],
+      }
   return {
     ok: true,
     wallet: next,
@@ -350,7 +359,7 @@ export function withMemberships(
   const unknown = memberships.filter((m) => !known.includes(m))
   if (unknown.length > 0) {
     return failed(
-      `No card rule uses ${unknown.map((m) => `'${m}'`).join(', ')}. Memberships earnrate knows: ${list(known)}.`,
+      `No card uses ${unknown.map((m) => `'${m}'`).join(', ')}. Memberships earnrate knows: ${list(known)}.`,
     )
   }
   return {

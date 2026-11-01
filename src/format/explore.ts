@@ -4,10 +4,18 @@ import type {
   Simulation,
   WalletWhatIf,
 } from '../engine/simulate.ts'
+import { membershipNote, type MembershipCost } from '../engine/memberships.ts'
 import { feeText, money, pct } from '../engine/text.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
 const wholeUsd = (n: number) => money(Math.round(n))
+
+const membershipText = (memberships: MembershipCost[]) =>
+  memberships
+    .map(
+      (m) => ` + ${wholeUsd(m.annualFee)} for ${m.name.replace(/^an? /, '')}`,
+    )
+    .join('')
 
 const TOP_BEST = 10
 
@@ -86,7 +94,7 @@ export function formatCatalogSimulation(
     const card = s.cards[0]
     if (!card) return
     lines.push(
-      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeUsd(s.net)}  (${wholeUsd(s.rewards)} rewards, ${wholeUsd(s.annualFees)} fee)${picksText(card.picks)}`,
+      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeUsd(s.net)}  (${wholeUsd(s.rewards)} rewards, ${wholeUsd(s.annualFees)} fee${membershipText(s.memberships)})${picksText(card.picks)}`,
     )
   })
   const pairs = r.pairs.slice(0, top)
@@ -135,14 +143,24 @@ export function formatAdditions(
   if (gains.length === 0) {
     lines.push('', 'No card would add more than its annual fee costs.')
   } else {
-    lines.push('', 'Cards that would add the most (after their annual fee):')
+    lines.push(
+      '',
+      'Cards that would add the most (after their annual fee and any membership they need):',
+    )
     gains.slice(0, all ? 20 : TOP_SIMULATED).forEach((a, i) => {
       lines.push(
-        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeUsd(a.gain)} a year  (+${wholeUsd(a.extraRewards)} rewards, ${wholeUsd(a.annualFee)} fee)${picksText(a.picks)}`,
+        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeUsd(a.gain)} a year  (+${wholeUsd(a.extraRewards)} rewards, ${wholeUsd(a.annualFee)} fee${membershipText(a.simulation.memberships.filter((m) => m.cardIds.includes(a.cardId)))})${picksText(a.picks)}`,
       )
     })
   }
-  const notes = new Set(r.current.notes)
+  const notes = new Set([
+    ...r.current.notes,
+    ...gains
+      .slice(0, all ? 20 : TOP_SIMULATED)
+      .flatMap((a) =>
+        a.simulation.memberships.map((m) => membershipNote(catalog, m)),
+      ),
+  ])
   if (notes.size > 0) lines.push('', ...notes)
   lines.push(
     '',

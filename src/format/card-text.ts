@@ -26,6 +26,7 @@ export const MEMBERSHIPS: Record<string, string> = {
   'bofa-rewards-preferred-plus': 'BofA Rewards Preferred Plus',
   'bofa-rewards-preferred-honors': 'BofA Rewards Preferred Honors',
   'bofa-rewards-premier': 'BofA Rewards Premier',
+  costco: 'Costco membership',
 }
 
 export const PICK_PERIODS = {
@@ -67,13 +68,15 @@ export function cardText(catalog: Catalog) {
 
   function feeLabel(id: string): string {
     const card = cards.get(id)
+    const m = card?.requires_membership
+    const needs = m ? `; needs ${m.name} (${usd(m.annual_fee)} a year)` : ''
     const fee = card?.annual_fee
     if (fee === undefined) return 'Annual fee not on file'
-    if (fee === 0) return 'No annual fee'
+    if (fee === 0) return `No annual fee${needs}`
     const first = card?.first_year_fee
     if (first !== undefined && first !== fee)
-      return `${usd(fee)} a year (${first === 0 ? 'waived' : usd(first)} the first year)`
-    return `${usd(fee)} a year`
+      return `${usd(fee)} a year (${first === 0 ? 'waived' : usd(first)} the first year)${needs}`
+    return `${usd(fee)} a year${needs}`
   }
 
   // `until` is the last day a time-limited rate applies, already formatted.

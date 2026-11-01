@@ -127,6 +127,14 @@ function Filters({
         <label class="check">
           <input
             type="checkbox"
+            checked={has('costco')}
+            onChange={(e) => toggle('costco', e.currentTarget.checked)}
+          />
+          I have a Costco membership
+        </label>
+        <label class="check">
+          <input
+            type="checkbox"
             checked={has('bank-of-america-account')}
             onChange={(e) =>
               toggle('bank-of-america-account', e.currentTarget.checked)

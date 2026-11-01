@@ -219,7 +219,8 @@ export function Spending({ settings }: { settings: Settings }) {
                               .join(' + ')}
                           </strong>
                           <span class="muted">
-                            {usd(p.rewards)} back · {usd(p.annualFees)} in fees
+                            {usd(p.rewards)} back ·{' '}
+                            {usd(p.annualFees + p.membershipFees)} in fees
                           </span>
                         </div>
                         <span class="rate">

@@ -412,7 +412,7 @@ describe('wallet operations', () => {
     ).toMatch(/last card/)
   })
 
-  test('memberships must be ones a card rule uses', async () => {
+  test('memberships must be ones a card uses', async () => {
     const file = await walletFile(COMMENTED)
     const set = await store(file).setMemberships([
       'amazon-prime',
@@ -423,8 +423,8 @@ describe('wallet operations', () => {
       'amazon-prime',
       'bofa-rewards-premier',
     ])
-    expect(errorOf(await store(file).setMemberships(['costco']))).toMatch(
-      /'costco'.*amazon-prime/s,
+    expect(errorOf(await store(file).setMemberships(['sams-club']))).toMatch(
+      /'sams-club'.*amazon-prime/s,
     )
   })
 

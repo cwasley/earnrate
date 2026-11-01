@@ -179,13 +179,13 @@ export function makeInputs(catalog: Catalog) {
       "Cards the user named in this conversation, to answer for just those cards without saving anything. Leave out to use the user's saved wallet if they have one; with neither, the answer covers every card earnrate knows.",
     )
   const NamedMemberships = Memberships.optional().describe(
-    "Memberships the user has, such as amazon-prime, when they're named in the conversation rather than saved.",
+    "Memberships the user has, such as amazon-prime or costco, when they're named in the conversation rather than saved.",
   )
   const CatalogFilters = {
     ...OfferFilters,
     issuer: z.enum(issuers).optional().describe("Only this issuer's cards."),
     memberships: Memberships.optional().describe(
-      "Memberships the user has, such as amazon-prime. Rates that need one they don't have are listed separately.",
+      "Memberships the user has, such as amazon-prime or costco. Rates that need one they don't have are listed separately; a card that needs one (Costco Anywhere) says so.",
     ),
     valuation: z
       .enum(['flat', 'points-heavy'])

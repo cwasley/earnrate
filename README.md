@@ -65,6 +65,7 @@ Options: `--online` or `--in-store`, `--valuation flat|points-heavy`, `--all`, `
 The wallet is a YAML file (`~/.earnrate/wallet.yaml`) listing your cards by ID, which is each card's file name in [`data/cards/`](data/cards). `earnrate add`, `update`, `remove` and `memberships` write it for you and keep your comments, or you can edit it by hand. Only the cards are required:
 
 ```yaml
+version: 1 # the file's format; earnrate writes it
 valuations:
   UR: 1.5 # cents per point; leave out to use earnrate's defaults
 memberships: [amazon-prime] # unlocks Prime Visa's 5%
@@ -81,7 +82,7 @@ cards:
         two-percent: [gas-ev-charging]
 ```
 
-Rule IDs for `activated`, the choice slots for `chosen` and the membership IDs that unlock bonuses (such as `bofa-rewards-premier` for a BofA Rewards tier) are in each card's file. Currencies and their default values are in [`data/currencies.yaml`](data/currencies.yaml). Spending caps fill up as you record purchases from an AI assistant or import a statement with `--apply`, and reset with each period.
+Rule IDs for `activated`, the choice slots for `chosen` and the membership IDs that unlock bonuses (such as `bofa-rewards-premier` for a BofA Rewards tier) are in each card's file. Add `costco` if you have a Costco membership: Costco Anywhere needs one, and spending answers count its $65 a year unless you have it, hold the card or spend at Costco. Currencies and their default values are in [`data/currencies.yaml`](data/currencies.yaml). Spending caps fill up as you record purchases from an AI assistant or import a statement with `--apply`, and reset with each period.
 
 ### Merchants earnrate doesn't know
 

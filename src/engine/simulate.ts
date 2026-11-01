@@ -11,6 +11,12 @@ import {
   type CardFilters,
   type Picks,
 } from './explore.ts'
+import {
+  membershipCosts,
+  membershipNote,
+  paidMemberships,
+  type MembershipCost,
+} from './memberships.ts'
 import { choicePeriod, periodKey } from './periods.ts'
 import { applyBooking, capBooking } from './record.ts'
 import { rotationGap } from './rotation.ts'
@@ -48,7 +54,11 @@ export type Simulation = {
   spend: number // dollars a year
   rewards: number // dollars a year, at the point values given
   annualFees: number
-  net: number // rewards minus annual fees
+  // Memberships these cards need that the person doesn't already pay for,
+  // counted like annual fees.
+  memberships: MembershipCost[]
+  membershipFees: number
+  net: number // rewards minus annual fees and membership fees
   lines: LineResult[]
   notes: string[]
 }
@@ -58,6 +68,7 @@ export type SimulateOptions = {
   memberships: string[]
   valuations: Wallet['valuations']
   start: string // YYYY-MM-DD; the year simulated starts in this month
+  held?: string[] // cards the person already has
 }
 
 export function resolveSpendLines(
@@ -110,7 +121,9 @@ export function simulateWallet(
   wallet: Wallet,
   lines: ResolvedLine[],
   start: string,
-  held = false, // the user's own cards: their first year is behind them
+  // Cards the person already has: their first year is behind them and any
+  // membership they need is paid for.
+  held: string[] = [],
 ): Simulation {
   const cards = wallet.cards.map((held) => {
     const card = catalog.cards.find((c) => c.id === held.id)
@@ -204,7 +217,18 @@ export function simulateWallet(
   })
   const rewards = roundCents(lineResults.reduce((sum, l) => sum + l.earned, 0))
   const annualFees = cards.reduce((sum, c) => sum + (c.card.annual_fee ?? 0), 0)
+  const paid = paidMemberships(catalog, {
+    memberships: wallet.memberships,
+    heldCards: held,
+    merchantIds: lines.map((l) => l.merchant.merchantId),
+  })
+  const memberships = membershipCosts(
+    cards.map((c) => c.card),
+    paid,
+  )
+  const membershipFees = memberships.reduce((sum, m) => sum + m.annualFee, 0)
   const notes: string[] = []
+  for (const m of memberships) notes.push(membershipNote(catalog, m))
   const dates = monthDates(start)
   for (const { card } of cards) {
     const gaps = [
@@ -221,7 +245,7 @@ export function simulateWallet(
         `${card.name}'s annual fee isn't on file, so none is subtracted.`,
       )
     else if (
-      !held &&
+      !held.includes(card.id) &&
       card.first_year_fee !== undefined &&
       card.first_year_fee !== card.annual_fee
     )
@@ -237,7 +261,9 @@ export function simulateWallet(
     spend: roundCents(lineResults.reduce((sum, l) => sum + l.spend, 0)),
     rewards,
     annualFees,
-    net: roundCents(rewards - annualFees),
+    memberships,
+    membershipFees,
+    net: roundCents(rewards - annualFees - membershipFees),
     lines: lineResults,
     notes,
   }
@@ -323,6 +349,7 @@ function bestSimulation(
       walletWith(base, card, picks, options),
       lines,
       options.start,
+      options.held,
     )
     if (!best || sim.net > best.net + EPSILON) best = sim
   }
@@ -330,8 +357,10 @@ function bestSimulation(
   return best
 }
 
+const costs = (s: Simulation) => s.annualFees + s.membershipFees
+
 const byNet = (a: Simulation, b: Simulation) =>
-  b.net - a.net || a.annualFees - b.annualFees
+  b.net - a.net || costs(a) - costs(b)
 
 export type PairSimulation = Simulation & {
   // Cards that could replace the second card for the same result.
@@ -352,7 +381,7 @@ function foldTies(pairs: Simulation[]): PairSimulation[] {
     const twin = folded.find(
       (f) =>
         Math.abs(f.net - pair.net) < 0.005 &&
-        f.annualFees === pair.annualFees &&
+        costs(f) === costs(pair) &&
         f.cards.some((c) => c.cardId === a?.cardId || c.cardId === b?.cardId),
     )
     if (!twin) {
@@ -414,7 +443,8 @@ export type Addition = {
   picks: Picks
   extraRewards: number // dollars a year over the current wallet
   annualFee: number
-  gain: number // extra rewards minus the annual fee
+  membershipFee: number // a membership it needs that the wallet doesn't pay for
+  gain: number // extra rewards minus the annual fee and membership
   simulation: Simulation
 }
 
@@ -457,8 +487,15 @@ export function simulateAdditions(
   options: SimulateOptions,
 ): WalletWhatIf {
   const projected = projectedWallet(wallet, catalog, options.start)
-  const current = simulateWallet(catalog, projected, lines, options.start, true)
-  const held = new Set(wallet.cards.map((c) => c.id))
+  const heldIds = wallet.cards.map((c) => c.id)
+  const current = simulateWallet(
+    catalog,
+    projected,
+    lines,
+    options.start,
+    heldIds,
+  )
+  const held = new Set(heldIds)
   const additions: Addition[] = []
   for (const card of catalog.cards) {
     if (held.has(card.id) || !matchesFilters(card, options.filters)) continue
@@ -466,19 +503,28 @@ export function simulateAdditions(
       ...options,
       memberships: wallet.memberships,
       valuations: wallet.valuations,
+      held: heldIds,
     })
     const extraRewards = roundCents(simulation.rewards - current.rewards)
     const annualFee = card.annual_fee ?? 0
+    const membershipFee = roundCents(
+      simulation.membershipFees - current.membershipFees,
+    )
     additions.push({
       cardId: card.id,
       picks: simulation.cards.at(-1)?.picks ?? {},
       extraRewards,
       annualFee,
-      gain: roundCents(extraRewards - annualFee),
+      membershipFee,
+      gain: roundCents(extraRewards - annualFee - membershipFee),
       simulation,
     })
   }
-  additions.sort((a, b) => b.gain - a.gain || a.annualFee - b.annualFee)
+  additions.sort(
+    (a, b) =>
+      b.gain - a.gain ||
+      a.annualFee + a.membershipFee - (b.annualFee + b.membershipFee),
+  )
   return { current, additions }
 }
 

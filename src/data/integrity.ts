@@ -1,7 +1,7 @@
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Merchant } from '../schema/merchant.ts'
-import type { Wallet } from '../schema/wallet.ts'
+import { WALLET_VERSION, type Wallet } from '../schema/wallet.ts'
 
 function duplicates(ids: string[]): string[] {
   const seen = new Set<string>()
@@ -75,6 +75,8 @@ function cardProblems(
   if (!currencies.has(card.currency)) {
     problems.push(`${where}: unknown currency '${card.currency}'`)
   }
+  for (const m of card.requires_membership?.members_shop_at ?? [])
+    checkMerchant(m, 'requires_membership')
   if (card.pools_into) {
     if (!currencies.has(card.pools_into.currency)) {
       problems.push(
@@ -100,6 +102,7 @@ function cardProblems(
     ...(card.annual_fee !== undefined ? ['annual_fee'] : []),
     ...(card.first_year_fee !== undefined ? ['first_year_fee'] : []),
     ...(card.welcome_offer ? ['welcome_offer'] : []),
+    ...(card.requires_membership ? ['requires_membership'] : []),
     ...card.rules.map((r) => r.id),
   ])
   const sourcePages = new Set(card.source_urls.map((u) => u.split('#')[0]))
@@ -227,6 +230,11 @@ export function walletProblems(wallet: Wallet, catalog: Catalog): string[] {
   const problems: string[] = []
   const cards = new Map(catalog.cards.map((c) => [c.id, c]))
   const currencies = new Map(catalog.currencies.map((c) => [c.id, c]))
+
+  if ((wallet.version ?? 1) > WALLET_VERSION)
+    problems.push(
+      `wallet: saved by a newer earnrate (format ${String(wallet.version)}); update earnrate to read it`,
+    )
 
   for (const id of duplicates(wallet.cards.map((c) => c.id))) {
     problems.push(`wallet: card '${id}' is listed twice`)

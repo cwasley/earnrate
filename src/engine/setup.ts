@@ -25,6 +25,8 @@ export type CardInfo = {
   held: boolean
   choices: CardChoiceInfo[]
   memberships: string[] // memberships some of its rules need
+  // A paid membership the card itself needs (Costco Anywhere).
+  requiresMembership: { id: string; name: string; annualFee: number } | null
   activation: string[] // rules that need activating, current or starting soon
   needsAnniversary: boolean
 }
@@ -127,8 +129,17 @@ export function membershipsUsed(card: Card): string[] {
   ]
 }
 
+// Memberships that matter to a card: ones its rates need, and one the card
+// itself needs (a Costco membership for Costco Anywhere).
+export function membershipsFor(card: Card): string[] {
+  return [
+    ...membershipsUsed(card),
+    ...(card.requires_membership ? [card.requires_membership.id] : []),
+  ]
+}
+
 export function knownMemberships(catalog: Catalog): string[] {
-  return [...new Set(catalog.cards.flatMap(membershipsUsed))].sort()
+  return [...new Set(catalog.cards.flatMap(membershipsFor))].sort()
 }
 
 export function cardInfo(
@@ -154,6 +165,13 @@ export function cardInfo(
       default: c.default ?? null,
     })),
     memberships: membershipsUsed(card),
+    requiresMembership: card.requires_membership
+      ? {
+          id: card.requires_membership.id,
+          name: card.requires_membership.name,
+          annualFee: card.requires_membership.annual_fee,
+        }
+      : null,
     activation: activationRules(card, today),
     needsAnniversary: needsAnniversary(card),
   }

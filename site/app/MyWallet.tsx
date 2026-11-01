@@ -551,12 +551,29 @@ function Memberships({
       return card ? membershipsUsed(card) : []
     }),
   )
-  const relevant = knownMemberships(catalog).filter((m) => used.has(m))
+  // A membership a card needs (Costco's) counts against adding that card
+  // below, unless the wallet already holds such a card.
+  const needed = new Set(
+    catalog.cards
+      .map((c) => c.requires_membership?.id)
+      .filter((m) => m !== undefined)
+      .filter(
+        (m) =>
+          !wallet.cards.some(
+            (h) => cards.get(h.id)?.requires_membership?.id === m,
+          ),
+      ),
+  )
+  const relevant = knownMemberships(catalog).filter(
+    (m) => used.has(m) || needed.has(m),
+  )
   if (relevant.length === 0) return null
   return (
     <section class="panel">
       <h3>Memberships</h3>
-      <p class="muted">Some of your cards earn more with these.</p>
+      <p class="muted">
+        Some cards earn more with these, and some need one to apply.
+      </p>
       {relevant.map((m) => (
         <label class="check" key={m}>
           <input

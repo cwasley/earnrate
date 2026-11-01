@@ -20,6 +20,11 @@ export function formatCardInfo(card: CardInfo): string {
       (c) =>
         `${c.id}: pick ${String(c.pick)} of ${c.options.join(', ')}${c.default ? ` (default ${c.default.join(', ')})` : ''}`,
     ),
+    ...(card.requiresMembership
+      ? [
+          `needs ${card.requiresMembership.name} ($${String(card.requiresMembership.annualFee)} a year; membership id ${card.requiresMembership.id})`,
+        ]
+      : []),
     ...(card.memberships.length > 0
       ? [`rates that need a membership: ${card.memberships.join(', ')}`]
       : []),

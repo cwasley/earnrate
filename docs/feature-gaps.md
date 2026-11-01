@@ -83,9 +83,6 @@ Merchant types some cards name that have no earnrate category, so they fall to `
 Holding some cards means holding a membership, but the wallet asks for memberships separately, so a rate gated on one stays off until the user adds it.
 
 - `chase-prime-visa`: needs Amazon Prime for its Amazon and Whole Foods rates.
-- `citi-costco-anywhere-visa`, `-business`: need a paid Costco membership.
-
-Every-card answers and the spending what-ifs don't say a membership is needed or count what it costs, so Costco Anywhere can rank as a no-fee card to add for someone without a Costco membership.
 
 ### Credits that offset the annual fee
 
@@ -94,10 +91,6 @@ Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed ye
 ### Welcome-offer end dates
 
 `welcome_offer` has no end date, so answers can't say when a limited-time offer expires. Add one only from the issuer's own page: the IHG pages say "launch offer" with no date.
-
-### Wallet file version
-
-`wallet.yaml` has no version field, so a future format change can't tell old files from new ones.
 
 ## Not planned
 

@@ -185,6 +185,7 @@ export const OfferComparisonSchema = z.object({
       note: z.string().nullable(),
       annualFee: z.number().nullable(),
       firstYearFee: z.number().nullable(),
+      membershipFee: z.number(),
       bonusValue: z.number(),
       firstYearValue: z.number(),
       held: z.boolean(),
@@ -224,6 +225,9 @@ export const CardSearchSchema = z.object({
         }),
       ),
       memberships: z.array(z.string()),
+      requiresMembership: z
+        .object({ id: z.string(), name: z.string(), annualFee: z.number() })
+        .nullable(),
       activation: z.array(z.string()),
       needsAnniversary: z.boolean(),
     }),
@@ -304,6 +308,15 @@ const SimulationSchema = z.object({
   spend: z.number(),
   rewards: z.number(),
   annualFees: z.number(),
+  memberships: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      annualFee: z.number(),
+      cardIds: z.array(z.string()),
+    }),
+  ),
+  membershipFees: z.number(),
   net: z.number(),
   lines: z.array(
     z.object({
@@ -330,6 +343,7 @@ export const SpendingSimulationSchema = z.object({
       picks: Picks,
       extraRewards: z.number(),
       annualFee: z.number(),
+      membershipFee: z.number(),
       gain: z.number(),
     }),
   ),
