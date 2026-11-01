@@ -36,7 +36,7 @@ The maintainer's full spec (data model, golden tests, milestones, competitive la
 
 ## Releasing
 
-1. Bump `version` in `package.json`, both versions in `server.json`, the one in `mcpb/manifest.json` and the plugin's `plugin.json` (tests keep them in step), commit and push. The plugin and the directory pick up the new version from the push.
+1. Bump `version` in `package.json`, both versions in `server.json`, the one in `mcpb/manifest.json` and the plugin's `plugin.json` (tests keep them in step), commit and push. The plugin directory scans each push to `main`; unless auto-publish is on, Collin selects Publish on the new version in the claude.ai portal. The connector listing needs nothing for server changes, except a listing edit (reviewer-approved) when tool names change.
 2. Create a GitHub release tagged `v<version>`. `.github/workflows/release.yml` validates, checks the tag, and runs `npm stage publish --provenance` through npm trusted publishing (no npm token in the repo), then builds `earnrate.mcpb` (the Claude Desktop one-click install, `yarn mcpb:pack`), smoke-tests it and attaches it to the release.
 3. Collin approves the staged version on npmjs.com (Staged Packages) with 2FA. Nothing is live until then.
 4. Once `npm view earnrate version` shows it, `mcp-publisher publish` updates the MCP registry entry, including the hosted server in `remotes`.
