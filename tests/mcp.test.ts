@@ -174,6 +174,16 @@ describe('tools', () => {
     })
     expect(result.isError).toBe(true)
     expect(text(result)).toMatch(/Nothing was recorded\..*again with category/)
+    const other = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'amex-gold',
+        merchant: 'Tacos Por Favor Santa Monica',
+        amount: 20,
+        category: 'other',
+      },
+    })
+    expect(other.isError).toBeFalsy()
   })
 
   test('settings that change nothing say so', async () => {
@@ -678,7 +688,7 @@ describe('wallet setup', () => {
       },
     })
     expect(good.isError).toBeFalsy()
-    expect(text(good)).toMatch(/: two percent picks: restaurants\./)
+    expect(text(good)).toMatch(/: 2% picks: restaurants\./)
     const wallet = await client.callTool({ name: 'list_wallet', arguments: {} })
     const cashPlus = (wallet.structuredContent as WalletSummary).cards.find(
       (c) => c.cardId === 'usbank-cash-plus',

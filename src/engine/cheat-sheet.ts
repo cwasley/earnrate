@@ -6,9 +6,11 @@ import {
   exploreCards,
   type ExploreOptions,
 } from './explore.ts'
+import { bonusStatus } from './bonus.ts'
 import { periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
 import { setupNotes } from './setup.ts'
+import { money, shortDate } from './text.ts'
 
 // `merchant` is a merchant id.
 export type CheatSheetItem =
@@ -72,7 +74,9 @@ export function cheatSheet(
       },
       merchant,
     )
-    const top = rec.ranked.find((r) => r.cardId === rec.decision?.cardId)
+    // The card that earns the most, even when a welcome bonus would take the
+    // pick for one purchase: the sheet is for the whole quarter.
+    const top = rec.decision ? rec.ranked[0] : undefined
     return {
       label: item.label,
       cardId: top?.cardId ?? null,
@@ -82,12 +86,24 @@ export function cheatSheet(
       note: top?.warnings[0] ?? null,
     }
   })
+  const bonuses = wallet.cards.flatMap((held) => {
+    const status = bonusStatus(catalog, wallet, held, date)
+    if (status?.state !== 'open') return []
+    const name =
+      held.checkout_label ??
+      catalog.cards.find((c) => c.id === held.id)?.name ??
+      held.id
+    return [
+      `Working on ${name}'s welcome bonus: ${money(status.remaining ?? 0)} more by ${shortDate(status.deadline ?? date)}. Put it on purchases where it earns about as much as the card this sheet lists.`,
+    ]
+  })
   const notes = [
-    ...new Set(
-      wallet.cards.flatMap((held) =>
+    ...new Set([
+      ...bonuses,
+      ...wallet.cards.flatMap((held) =>
         setupNotes(catalog, wallet, held, date).map((n) => n.text),
       ),
-    ),
+    ]),
   ]
   const [year, q] = (periodKey('quarter', date, null) ?? '').split('-')
   return {

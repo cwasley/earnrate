@@ -2,7 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 import { membershipsFor, needsAnniversary } from '../../engine/setup.ts'
 import { money, words } from '../../engine/text.ts'
-import { walletSummary } from '../../engine/wallet-summary.ts'
+import { choiceName, walletSummary } from '../../engine/wallet-summary.ts'
 import { formatBooking, formatWalletSummary } from '../../format/wallet.ts'
 import { fail, type Context } from '../context.ts'
 import {
@@ -27,7 +27,7 @@ const WRITE = { readOnlyHint: false, openWorldHint: false }
 function changes(args: z.infer<typeof CardChange>): string[] {
   const out: string[] = []
   for (const [choice, options] of Object.entries(args.picks ?? {}))
-    out.push(`${words(choice)} picks: ${options.map(words).join(', ')}`)
+    out.push(`${choiceName(choice)} picks: ${options.map(words).join(', ')}`)
   if (args.checkoutLabel === null) out.push('checkout name cleared')
   else if (args.checkoutLabel !== undefined)
     out.push(`checkout name "${args.checkoutLabel}"`)
@@ -128,7 +128,7 @@ export function registerWalletTools(
       )
       if (resolved.merchant.source === 'none')
         return fail(
-          `earnrate doesn't recognize "${merchant}", so it can't tell which caps this purchase counts toward. Nothing was recorded. Call record_purchase again with category if you can tell what kind of business it is (a restaurant, a grocery store, a gas station); otherwise ask the user.`,
+          `earnrate doesn't recognize "${merchant}", so it can't tell which caps this purchase counts toward. Nothing was recorded. Call record_purchase again with category if you can tell what kind of business it is (a restaurant, a grocery store, a gas station), or ask the user. If nobody knows, category "other" records it toward a welcome bonus without touching any cap.`,
         )
       const result = await store.record(purchase, resolved.merchant)
       if (!result.ok) return fail(`Couldn't record it: ${result.error}`)

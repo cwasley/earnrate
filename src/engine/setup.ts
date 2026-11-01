@@ -119,6 +119,10 @@ export function activationRules(card: Card, today: string): string[] {
     .map((r) => r.id)
 }
 
+// Bank of America Preferred Rewards tiers: a person holds one at a time, so
+// with one saved the others aren't missing.
+const TIER = /^bofa-rewards-/
+
 export function membershipsUsed(card: Card): string[] {
   return [
     ...new Set(
@@ -241,8 +245,9 @@ export function setupNotes(
     })
   }
 
+  const hasTier = wallet.memberships.some((m) => TIER.test(m))
   const missing = membershipsUsed(card).filter(
-    (m) => !wallet.memberships.includes(m),
+    (m) => !wallet.memberships.includes(m) && !(hasTier && TIER.test(m)),
   )
   if (missing.length > 0) {
     notes.push({

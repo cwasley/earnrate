@@ -121,10 +121,10 @@ describe('bonusStatus', () => {
 })
 
 describe('recommendations', () => {
-  test('an open bonus wins over a better earner, and says what it costs', () => {
+  test('a bonus behind pace wins over a better earner, and says what it costs', () => {
     const rec = recommend(
       catalog,
-      wallet({ opened: '2026-10-01', spent: 1000 }),
+      wallet({ opened: '2026-10-01', spent: 500 }),
       purchase('Whole Foods', { amount: 100 }),
     )
     expect(rec.ranked[0]?.cardId).toBe('amex-blue-cash-preferred')
@@ -132,14 +132,27 @@ describe('recommendations', () => {
     expect(rec.bonus).toEqual({
       cardId: 'test-offer',
       checkoutLabel: null,
-      remaining: 3000,
+      remaining: 3500,
       deadline: '2027-01-01',
       daysLeft: 69,
       value: 600,
       costHere: 5,
     })
     expect(rec.notes[0]).toMatch(
-      /\$3,000 more to spend by 2027-01-01 \(about \$304 a week\), worth about \$600\. Using it here earns \$5 less than American Express Blue Cash Preferred Card/,
+      /behind pace on .*\$3,500 more to spend by 2027-01-01 \(about \$355 a week\), worth about \$600\. Using it here earns \$5 less than American Express Blue Cash Preferred Card/,
+    )
+  })
+
+  test('a bonus on pace is mentioned, not picked', () => {
+    const rec = recommend(
+      catalog,
+      wallet({ opened: '2026-10-01', spent: 1000 }),
+      purchase('Whole Foods', { amount: 100 }),
+    )
+    expect(rec.decision?.cardId).toBe('amex-blue-cash-preferred')
+    expect(rec.bonus).toBeNull()
+    expect(rec.notes.join(' ')).toMatch(
+      /on pace for .*welcome bonus \(\$3,000 more by 2027-01-01\), so this purchase goes on the card that earns the most/,
     )
   })
 
@@ -153,15 +166,15 @@ describe('recommendations', () => {
     expect(rec.bonus).toBeNull()
   })
 
-  test('with two open bonuses, the one needing more spend per day wins', () => {
-    const w = wallet({ opened: '2026-10-01', spent: 1000 }, [
+  test('a bonus behind pace beats one ahead; then the one needing more per day wins', () => {
+    const w = wallet({ opened: '2026-10-01', spent: 500 }, [
       { id: 'test-cash-offer', bonus: { opened: '2026-10-20' } },
     ])
     expect(recommend(catalog, w, purchase('Etsy')).bonus?.cardId).toBe(
       'test-offer',
     )
     const later = wallet({ opened: '2026-10-01', spent: 3990 }, [
-      { id: 'test-cash-offer', bonus: { opened: '2026-10-24' } },
+      { id: 'test-cash-offer', bonus: { opened: '2026-10-20' } },
     ])
     expect(recommend(catalog, later, purchase('Etsy')).bonus?.cardId).toBe(
       'test-cash-offer',

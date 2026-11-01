@@ -2,6 +2,14 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.01.1
+
+Freedom Flex's Q4 dining note quotes Chase's "5% total" and says where the 7% figure comes from. No rates changed.
+
+| Card               | Field               | Old → new            | Source                                                                         |
+| ------------------ | ------------------- | -------------------- | ------------------------------------------------------------------------------ |
+| chase-freedom-flex | q4-2026-dining.note | quotes Chase's terms | [card page](https://creditcards.chase.com/cash-back-credit-cards/freedom/flex) |
+
 ## 2026.11.01
 
 Cards can name a paid membership they need (`requires_membership`). Costco Anywhere needs a Costco membership, $65 a year for Gold Star; spending answers count it unless the person has one or shops at Costco. The AAdvantage Globe card page reworded its earning lines; no rates changed.

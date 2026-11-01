@@ -505,7 +505,14 @@ export function recommend(
     }
   }
 
-  const bonus = bonusPick(catalog, wallet, entries, purchase.date)
+  const open = bonusPick(catalog, wallet, entries, purchase.date)
+  const bonus = open?.behind ? open : null
+  if (open && !bonus && open.entry.card.id !== winner?.card.id) {
+    const remaining = open.status.remaining ?? 0
+    notes.push(
+      `You're on pace for ${displayName(open.entry)}'s welcome bonus (${money(remaining)} more by ${open.status.deadline ?? ''}), so this purchase goes on the card that earns the most. Put ${displayName(open.entry)} on purchases where it earns about as much.`,
+    )
+  }
   const chosen = bonus?.entry ?? winner
   // A tie among the top cards doesn't matter when a welcome bonus decides.
   const tie = bonus ? null : tieNote(entries)
@@ -540,7 +547,7 @@ export function recommend(
         ? ''
         : `, worth about ${money(Math.round(status.value))}`
     notes.unshift(
-      `You're working on ${displayName(bonus.entry)}'s welcome bonus: ${money(remaining)} more to spend by ${deadline}${pace}${worth}.${
+      `You're behind pace on ${displayName(bonus.entry)}'s welcome bonus: ${money(remaining)} more to spend by ${deadline}${pace}${worth}.${
         top.cardId === best.cardId
           ? ''
           : costHere === null
@@ -579,20 +586,42 @@ export function recommend(
   }
 }
 
+// Behind a steady pace: less spent than an even share of the spending needed
+// for the days gone by. Ahead of it, the bonus will likely be met anyway, so
+// it doesn't justify a card that earns less.
+function behindPace(status: BonusStatus, date: string): boolean {
+  if (status.spend === null || status.deadline === null) return false
+  const window = Math.max(1, daysBetween(status.opened, status.deadline))
+  const elapsed = Math.min(window, daysBetween(status.opened, date))
+  return status.spent < (status.spend * elapsed) / window
+}
+
 // The open welcome bonus that most needs this purchase: the one with the most
-// spend still needed per day left.
+// spend still needed per day left. Only a bonus behind pace takes the pick
+// (`behind`); one on pace is only mentioned.
 function bonusPick(
   catalog: Catalog,
   wallet: Wallet,
   entries: Entry[],
   date: string,
-): { entry: Entry; status: BonusStatus } | null {
-  let pick: { entry: Entry; status: BonusStatus; pace: number } | null = null
+): { entry: Entry; status: BonusStatus; behind: boolean } | null {
+  let pick: {
+    entry: Entry
+    status: BonusStatus
+    behind: boolean
+    pace: number
+  } | null = null
   for (const entry of entries) {
     const status = bonusStatus(catalog, wallet, entry.held, date)
     if (status?.state !== 'open' || date < status.opened) continue
+    const behind = behindPace(status, date)
     const pace = (status.remaining ?? 0) / Math.max(1, status.daysLeft ?? 1)
-    if (!pick || pace > pick.pace) pick = { entry, status, pace }
+    if (
+      !pick ||
+      (behind && !pick.behind) ||
+      (behind === pick.behind && pace > pick.pace)
+    )
+      pick = { entry, status, behind, pace }
   }
   return pick
 }

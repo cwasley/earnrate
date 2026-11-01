@@ -86,7 +86,7 @@ const listed = (parts: string[]) =>
 
 // Travel-site bookings ("Flight through Amex Travel") read mid-sentence in
 // lower case and plural; brand names keep theirs.
-const BOOKING = /^(Attraction|Car rental|Cruise|Flight|Hotel|Vacation)\b/
+const BOOKING = /^(Attraction|Car rental|Cruise|Flight|Hotel|Vacation rental)\b/
 
 function merchantName(catalog: Catalog, id: string): string {
   const all = [...catalog.merchants.overrides, ...catalog.merchants.seed]
@@ -110,14 +110,19 @@ function optionName(
   return parts.length > 0 ? listed(parts) : words(option)
 }
 
-function ruleWhat(catalog: Catalog, rule: Rule): string {
+// What a rule covers, as a list of phrases.
+function ruleParts(catalog: Catalog, rule: Rule): string[] {
   if (rule.match.choice !== undefined)
-    return `your ${choiceName(rule.match.choice)} picks`
+    return [`your ${choiceName(rule.match.choice)} picks`]
   const parts = [
     ...(rule.match.categories ?? []).map((c) => categoryPhrase(catalog, c)),
     ...(rule.match.merchants ?? []).map((m) => merchantName(catalog, m)),
   ]
-  return parts.length > 0 ? listed(parts) : words(rule.id)
+  return parts.length > 0 ? parts : [words(rule.id)]
+}
+
+function ruleWhat(catalog: Catalog, rule: Rule): string {
+  return listed(ruleParts(catalog, rule))
 }
 
 function periodEnd(period: string): string | null {
@@ -184,8 +189,8 @@ function headlineRates(
     const head = `${earnText(catalog, r.rate, currency)} on`
     const key = pending ? `${head}|activate` : head
     const whats = lines.get(key) ?? []
-    const what = ruleWhat(catalog, r)
-    if (!whats.includes(what)) whats.push(what)
+    for (const part of ruleParts(catalog, r))
+      if (!whats.includes(part)) whats.push(part)
     lines.set(key, whats)
   }
   return [
@@ -278,7 +283,10 @@ export function walletSummary(
       onlyAt: card.only_at ?? null,
       bonus: bonusStatus(catalog, wallet, held, today),
       currency: valuation.currency,
-      currencyName: currencyLabel(catalog, valuation.currency),
+      currencyName:
+        valuation.currency === 'cash'
+          ? 'cash back'
+          : currencyLabel(catalog, valuation.currency),
       centsPerUnit: valuation.centsPerUnit,
       lastVerified: card.last_verified,
       verifiedBy: card.verified_by,

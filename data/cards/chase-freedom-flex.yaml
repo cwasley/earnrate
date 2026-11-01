@@ -66,7 +66,7 @@ rules:
     requires: { activation: true }
     valid_from: 2026-10-01
     valid_to: 2026-12-31
-    note: Chase says activated categories earn 5% total (4% on top of the 1% base) and doesn't say whether that stacks with the 3% dining rate, so earnrate shows 5%, not 7%, until the $1,500 quarterly cap.
+    note: Chase's terms say activated categories earn "5% Cash Back rewards total" (4% on top of the 1% base), so earnrate shows 5% until the $1,500 quarterly cap. Some blogs report 7% for dining (the 3% dining rate plus the 4% bonus); Chase's own terms don't say that.
   - id: q4-2026-american-red-cross
     match: { merchants: [american-red-cross] }
     rate: 5
