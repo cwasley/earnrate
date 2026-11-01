@@ -96,19 +96,29 @@ export function cheatSheet(
       held.checkout_label ??
       catalog.cards.find((c) => c.id === held.id)?.name ??
       held.id
-    // Rows where the bonus card earns within a point of the row's card.
-    const close = ranked
-      .filter(({ cards }) => {
-        const best = cards[0]?.effectiveReturnPct
-        const own = cards.find((c) => c.cardId === held.id)?.effectiveReturnPct
-        return best !== undefined && own !== undefined && best - own <= 1
-      })
-      .map((r) => r.label.toLowerCase())
+    // Rows where the bonus card matches the row's card, or comes within a
+    // point and three quarters of its rate (as single answers mention it).
+    const matches: string[] = []
+    const near: string[] = []
+    for (const { label, cards } of ranked) {
+      const best = cards[0]?.effectiveReturnPct
+      const own = cards.find((c) => c.cardId === held.id)?.effectiveReturnPct
+      if (best === undefined || own === undefined) continue
+      if (best - own < 1e-9) matches.push(label.toLowerCase())
+      else if (best - own <= 1 && own >= best * 0.75)
+        near.push(label.toLowerCase())
+    }
+    const where = [
+      ...(matches.length > 0
+        ? [`matches the listed card on ${listed(matches)}`]
+        : []),
+      ...(near.length > 0 ? [`comes within a point on ${listed(near)}`] : []),
+    ]
     return [
       `Working on ${name}'s welcome bonus: ${money(status.remaining ?? 0)} more by ${shortDate(status.deadline ?? date)}. ${
-        close.length > 0
-          ? `It earns about as much as the cards listed on ${listed(close)}, so those are the places to use it.`
-          : 'It trails the cards listed everywhere, so use it on everyday spending only as needed to reach the bonus.'
+        where.length > 0
+          ? `It ${where.join(' and ')}, so those are the places to use it.`
+          : 'It trails the listed cards everywhere, so use it on everyday spending only as needed to reach the bonus.'
       }`,
     ]
   })

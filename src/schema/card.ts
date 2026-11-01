@@ -98,6 +98,9 @@ export const WelcomeOfferSchema = z
     // the page showed different offers on different visits. The amount
     // above is then the most it shows.
     varies: z.literal(true).optional(),
+    // Other cards whose holders the issuer says can't get this offer
+    // (Southwest's personal cards, Blue Cash Everyday with Preferred).
+    not_with: z.array(KebabId).min(1).optional(),
     note: z.string().optional(),
   })
   .refine(

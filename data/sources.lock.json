@@ -602,11 +602,7 @@
       "lines": [
         "345e2953751d3064",
         "60d4f69954950949",
-        "9c7fa7a71fa95e3b",
-        "bd1370ab97374bc8",
-        "c3b6656197e68ea6",
-        "c70bfa795f7e654a",
-        "cd4d8a1cfba06610"
+        "c3b6656197e68ea6"
       ]
     },
     "https://www.citi.com/credit-cards/citi-strata-premier-credit-card": {
@@ -660,6 +656,7 @@
       "lines": [
         "217e58b59e4c6717",
         "6ca0c491bfc1a753",
+        "d90926c36a26449b",
         "ee44b052dacfebb3"
       ]
     },
@@ -732,9 +729,11 @@
     "https://creditcards.wellsfargo.com/autograph-visa-credit-card/": {
       "checked": "2026-11-01",
       "lines": [
+        "01952d49508a09d0",
         "0def7c696a93398a",
         "d3a593020688c6e9",
-        "d53f1a098df6dd6a"
+        "d53f1a098df6dd6a",
+        "ec4ade0ea696641b"
       ]
     },
     "https://www.wellsfargo.com/credit-cards/autograph-visa/streaming/": {

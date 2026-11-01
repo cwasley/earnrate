@@ -14,6 +14,7 @@ welcome_offer:
   points: 80000
   spend: 1000
   months: 3
+  not_with: [chase-southwest-priority, chase-southwest-premier]
   note: 'Chase labels it a limited-time offer and states no end date. Not available to current cardmembers of any Southwest Rapid Rewards Credit Card, or previous cardmembers of any Southwest Rapid Rewards Credit Card who received a new Cardmember bonus within the last 24 months (this does not apply to business cards).'
 caps:
   - id: gas-and-grocery
@@ -70,3 +71,6 @@ evidence:
   - rule: lyft
     url: https://creditcards.chase.com/travel-credit-cards/southwest/plus
     quote: 'earn 2X Rapid Rewards points on qualifying Lyft products and services purchased through the Lyft mobile application through 12/31/2027'
+  - rule: not_with
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/plus
+    quote: 'not available to either (i) current Cardmembers of any Southwest Rapid Rewards® Credit Card'

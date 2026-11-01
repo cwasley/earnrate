@@ -37,6 +37,7 @@ export function formatOffers(
     lines.push(
       `    ${o.validTo ? `Offer ends ${o.validTo}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ.`,
     )
+    if (o.ineligible) lines.push(`    ${o.ineligible}`)
     if (o.note) lines.push(`    ${o.note}`)
   })
   if (c.offers.length > shown.length)

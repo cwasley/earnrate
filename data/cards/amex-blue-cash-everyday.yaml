@@ -15,7 +15,8 @@ welcome_offer:
   spend: 2000
   months: 6
   varies: true
-  note: 'Paid as Reward Dollars, redeemable for a statement credit or at Amazon.com checkout. The card page says "Earn $200"; the offer terms say "as high as $200", with the exact amount shown before you accept. Not available if you have or have had this Card, the Cash Magnet Card, the Blue Cash Preferred Card (including the Morgan Stanley version) or previous versions of these Cards.'
+  not_with: [amex-blue-cash-preferred]
+  note: 'Paid as Reward Dollars, redeemable for a statement credit or at Amazon.com checkout. The card page and offer terms say "as high as $200", with the exact amount shown before you accept; the card page has also shown "Earn $200". Not available if you have or have had this Card, the Cash Magnet Card, the Blue Cash Preferred Card (including the Morgan Stanley version) or previous versions of these Cards.'
 rules:
   - id: us-supermarkets
     match: { categories: [grocery.supermarket] }
@@ -78,12 +79,12 @@ evidence:
     quote: 'No Annual Fee'
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/
-    quote: 'Earn $200 Cash Back'
-  - rule: welcome_offer
-    url: https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/
     quote: 'after you spend $2,000 in purchases on your new Card in the first 6 months of Card Membership'
   - rule: welcome_offer
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
     quote: 'As High as $200 Cash Back Welcome Offer'
+  - rule: not_with
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: 'if you have or have had this Card, the Cash Magnet® Card, the Blue Cash Preferred® Card'
 todo:
   - 'Amazon is filed as online retail, so it earns 3% here; superstore sites (walmart.com, target.com) and online drugstores may too, but the terms define the category by merchant code and type of goods, so they are not modeled.'

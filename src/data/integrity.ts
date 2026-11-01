@@ -75,6 +75,9 @@ function cardProblems(
   if (!currencies.has(card.currency)) {
     problems.push(`${where}: unknown currency '${card.currency}'`)
   }
+  for (const id of card.welcome_offer?.not_with ?? [])
+    if (!cardIds.has(id))
+      problems.push(`${where} welcome_offer.not_with: unknown card '${id}'`)
   for (const m of card.requires_membership?.members_shop_at ?? [])
     checkMerchant(m, 'requires_membership')
   if (card.pools_into) {
@@ -102,6 +105,7 @@ function cardProblems(
     ...(card.annual_fee !== undefined ? ['annual_fee'] : []),
     ...(card.first_year_fee !== undefined ? ['first_year_fee'] : []),
     ...(card.welcome_offer ? ['welcome_offer'] : []),
+    ...(card.welcome_offer?.not_with ? ['not_with'] : []),
     ...(card.requires_membership ? ['requires_membership'] : []),
     ...card.rules.map((r) => r.id),
   ])

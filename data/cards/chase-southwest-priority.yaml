@@ -13,6 +13,7 @@ welcome_offer:
   points: 90000
   spend: 3000
   months: 3
+  not_with: [chase-southwest-plus, chase-southwest-premier]
   note: 'Chase labels it a limited-time offer and states no end date. Not available to current cardmembers of any Southwest Rapid Rewards Credit Card, or previous cardmembers of any Southwest Rapid Rewards Credit Card who received a new Cardmember bonus within the last 24 months (this does not apply to business cards).'
 rules:
   - id: southwest
@@ -56,3 +57,6 @@ evidence:
   - rule: lyft
     url: https://creditcards.chase.com/travel-credit-cards/southwest/priority
     quote: 'earn 5X Rapid Rewards points on qualifying Lyft products and services purchased through the Lyft mobile application through 12/31/2027'
+  - rule: not_with
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    quote: 'not available to either (i) current Cardmembers of any Southwest Rapid Rewards® Credit Card'

@@ -2,6 +2,16 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.01.3
+
+Welcome offers can name other cards whose holders the issuer rules out (`welcome_offer.not_with`), so offer comparisons mark them and list them last for a wallet holding one. No rates changed.
+
+| Card                                                                    | Field                  | Old → new                                            | Source                                                                                                                                                                                                                                     |
+| ----------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| amex-blue-cash-everyday                                                 | welcome_offer.not_with | amex-blue-cash-preferred                             | [offer terms](https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0)                                                                                                           |
+| chase-southwest-plus, chase-southwest-priority, chase-southwest-premier | welcome_offer.not_with | the other two personal Southwest cards               | [Plus](https://creditcards.chase.com/travel-credit-cards/southwest/plus), [Priority](https://creditcards.chase.com/travel-credit-cards/southwest/priority), [Premier](https://creditcards.chase.com/travel-credit-cards/southwest/premier) |
+| amex-blue-cash-everyday                                                 | welcome_offer evidence | card page headline now "As High As $200"; same offer | [card page](https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/)                                                                                                                                                      |
+
 ## 2026.11.01.2
 
 Chipotle may post as fast food (MCC 5814) instead of a restaurant, so answers there say which card wins either way. No rates changed.

@@ -32,8 +32,10 @@ import type {
 } from './types.ts'
 import { cardValuation, type Valuation } from './valuation.ts'
 
-// Points of return within which an on-pace welcome bonus card is mentioned.
+// An on-pace welcome bonus card is mentioned when it's this close to the
+// best card: within a point, and at least three quarters of its rate.
 const CLOSE_PCT = 1
+const CLOSE_SHARE = 0.75
 const EPSILON = 1e-9
 export const STALE_AFTER_DAYS = 180
 const NEAR_CAP_SHARE = 0.2
@@ -434,13 +436,30 @@ export function recommend(
       `${merchant.resolvedName} may code as ${alternatives.join(' or ')} instead: ${merchant.ambiguity.note}`,
     )
     for (const category of merchant.ambiguity.mayCodeAs) {
-      const alt = rankEntries(catalog, wallet, purchase, merchant, category)
-        .entries[0]
-      if (alt && winner && alt.card.id !== winner.card.id) {
+      const alts = rankEntries(
+        catalog,
+        wallet,
+        purchase,
+        merchant,
+        category,
+      ).entries
+      const alt = alts[0]
+      if (!alt || !winner) continue
+      const as = `If it codes as ${categoryPhrase(catalog, category)}`
+      // The same pick there may share the top with another card.
+      const twin = alts.find(
+        (e) =>
+          e.card.id !== winner.card.id &&
+          alt.effectiveReturnPct - e.effectiveReturnPct <= EPSILON,
+      )
+      if (alt.card.id !== winner.card.id)
         warnings.push(
-          `If it codes as ${categoryPhrase(catalog, category)}, ${displayName(alt)} wins (${num(alt.effectiveReturnPct)}%).`,
+          `${as}, ${displayName(alt)} wins (${num(alt.effectiveReturnPct)}%).`,
         )
-      }
+      else if (twin)
+        warnings.push(
+          `${as}, ${displayName(twin)} earns as much (${num(twin.effectiveReturnPct)}%).`,
+        )
     }
   }
 
@@ -517,9 +536,15 @@ export function recommend(
       : Infinity
   const ties = gap <= EPSILON
   const bonus = open && (open.behind || ties) ? open : null
-  if (open && !bonus && gap <= CLOSE_PCT) {
+  const best = winner?.effectiveReturnPct ?? 0
+  if (
+    open &&
+    !bonus &&
+    gap <= CLOSE_PCT &&
+    open.entry.effectiveReturnPct >= best * CLOSE_SHARE
+  ) {
     notes.push(
-      `${displayName(open.entry)} earns ${num(open.entry.effectiveReturnPct)}% here, close to ${num(winner?.effectiveReturnPct ?? 0)}%, and would help its welcome bonus (${money(open.status.remaining ?? 0)} more by ${open.status.deadline ?? ''}). You're on pace, so either works.`,
+      `${displayName(open.entry)} earns ${num(open.entry.effectiveReturnPct)}% here, ${num(gap)} ${gap === 1 ? 'point' : 'points'} less than ${num(best)}%, and would help its welcome bonus (${money(open.status.remaining ?? 0)} more by ${open.status.deadline ?? ''}). You're on pace, so this uses the higher rate.`,
     )
   }
   const chosen = bonus?.entry ?? winner
@@ -527,17 +552,17 @@ export function recommend(
   const tie = bonus ? null : tieNote(entries)
   if (tie) notes.push(tie)
   const top = ranked.find((r) => r.cardId === chosen?.card.id)
-  const best = ranked[0]
+  const first = ranked[0]
   let bonusResult: Recommendation['bonus'] = null
-  if (bonus && top && best) {
+  if (bonus && top && first) {
     const { status } = bonus
     const remaining = status.remaining ?? 0
     const deadline = status.deadline ?? purchase.date
     const daysLeft = status.daysLeft ?? 0
     const costHere =
-      ties || top.earned === null || best.earned === null
+      ties || top.earned === null || first.earned === null
         ? null
-        : Math.round((best.earned - top.earned) * 100) / 100
+        : Math.round((first.earned - top.earned) * 100) / 100
     bonusResult = {
       cardId: top.cardId,
       checkoutLabel: top.checkoutLabel,
@@ -560,7 +585,7 @@ export function recommend(
         ? `${displayName(bonus.entry)} earns as much here as any of your cards, so it's the pick: it helps its welcome bonus, ${money(remaining)} more to spend by ${deadline}${worth}.`
         : `You're behind pace on ${displayName(bonus.entry)}'s welcome bonus: ${money(remaining)} more to spend by ${deadline}${pace}${worth}.${
             costHere === null
-              ? ` It earns ${num(top.effectiveReturnPct)}% here against ${num(best.effectiveReturnPct)}% on ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
+              ? ` It earns ${num(top.effectiveReturnPct)}% here against ${num(first.effectiveReturnPct)}% on ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
               : ` Using it here earns ${money(costHere)} less than ${displayName(entries[0] ?? bonus.entry)}, which the bonus outweighs.`
           }`,
     )

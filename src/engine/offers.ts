@@ -32,6 +32,8 @@ export type OfferSummary = {
   bonusValue: number // dollars, at the wallet's point values
   // A membership the card needs that the wallet doesn't pay for (Costco).
   membershipFee: number
+  // Why the issuer may not give this offer to this wallet's holder, if so.
+  ineligible: string | null
   firstYearValue: number // bonus value minus the first year's fee and membership
   held: boolean
   lastVerified: string
@@ -42,6 +44,24 @@ export type OfferComparison = {
   offers: OfferSummary[]
   withoutOffer: string[] // card ids that match the filters but publish no offer
   notes: string[]
+}
+
+function ineligibleText(
+  catalog: Catalog,
+  wallet: Wallet,
+  notWith: string[],
+): string | null {
+  const held = wallet.cards
+    .filter((c) => notWith.includes(c.id))
+    .map(
+      (c) =>
+        c.checkout_label ??
+        catalog.cards.find((k) => k.id === c.id)?.name ??
+        c.id,
+    )
+  return held.length === 0
+    ? null
+    : `Likely not eligible: you hold ${held.join(' and ')}, and the issuer's terms rule out its cardholders.`
 }
 
 export function compareOffers(
@@ -94,6 +114,7 @@ export function compareOffers(
       firstYearFee,
       bonusValue: roundCents(value),
       membershipFee,
+      ineligible: ineligibleText(catalog, wallet, offer.not_with ?? []),
       firstYearValue: roundCents(value - (firstYearFee ?? 0) - membershipFee),
       held: held.has(card.id),
       lastVerified: card.last_verified,
@@ -102,7 +123,9 @@ export function compareOffers(
   }
   offers.sort(
     (a, b) =>
-      b.firstYearValue - a.firstYearValue || a.cardId.localeCompare(b.cardId),
+      Number(a.ineligible !== null) - Number(b.ineligible !== null) ||
+      b.firstYearValue - a.firstYearValue ||
+      a.cardId.localeCompare(b.cardId),
   )
 
   const notes = [

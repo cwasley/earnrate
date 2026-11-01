@@ -186,6 +186,7 @@ export const OfferComparisonSchema = z.object({
       annualFee: z.number().nullable(),
       firstYearFee: z.number().nullable(),
       membershipFee: z.number(),
+      ineligible: z.string().nullable(),
       bonusValue: z.number(),
       firstYearValue: z.number(),
       held: z.boolean(),
