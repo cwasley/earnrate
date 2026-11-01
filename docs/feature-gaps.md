@@ -85,6 +85,8 @@ Holding some cards means holding a membership, but the wallet asks for membershi
 - `chase-prime-visa`: needs Amazon Prime for its Amazon and Whole Foods rates.
 - `citi-costco-anywhere-visa`, `-business`: need a paid Costco membership.
 
+Every-card answers and the spending what-ifs don't say a membership is needed or count what it costs, so Costco Anywhere can rank as a no-fee card to add for someone without a Costco membership.
+
 ### Credits that offset the annual fee
 
 Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. It would need a per-card credit value with evidence, kept apart from earn rates (credits as rewards stay out of scope, below).
