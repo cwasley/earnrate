@@ -551,29 +551,12 @@ function Memberships({
       return card ? membershipsUsed(card) : []
     }),
   )
-  // A membership a card needs (Costco's) counts against adding that card
-  // below, unless the wallet already holds such a card.
-  const needed = new Set(
-    catalog.cards
-      .map((c) => c.requires_membership?.id)
-      .filter((m) => m !== undefined)
-      .filter(
-        (m) =>
-          !wallet.cards.some(
-            (h) => cards.get(h.id)?.requires_membership?.id === m,
-          ),
-      ),
-  )
-  const relevant = knownMemberships(catalog).filter(
-    (m) => used.has(m) || needed.has(m),
-  )
+  const relevant = knownMemberships(catalog).filter((m) => used.has(m))
   if (relevant.length === 0) return null
   return (
     <section class="panel">
       <h3>Memberships</h3>
-      <p class="muted">
-        Some cards earn more with these, and some need one to apply.
-      </p>
+      <p class="muted">Some of your cards earn more with these.</p>
       {relevant.map((m) => (
         <label class="check" key={m}>
           <input
@@ -598,7 +581,13 @@ function Memberships({
   )
 }
 
-function WhatIf({ wallet }: { wallet: Wallet }) {
+function WhatIf({
+  wallet,
+  memberships,
+}: {
+  wallet: Wallet
+  memberships: string[]
+}) {
   const result = useMemo(() => {
     const rows = loadList<Row>('spending', TYPICAL_MONTHLY_SPEND)
     const lines = resolveSpendLines(
@@ -606,14 +595,18 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
       rows.map((r) => lineFor(r.what, r.monthly)),
     ).filter((l) => l.merchant.source !== 'none')
     if (lines.length === 0) return null
-    return simulateAdditions(catalog, wallet, lines, {
+    const held = {
+      ...wallet,
+      memberships: [...new Set([...wallet.memberships, ...memberships])],
+    }
+    return simulateAdditions(catalog, held, lines, {
       filters: ALL_PERSONAL_CARDS,
-      memberships: wallet.memberships,
+      memberships: held.memberships,
       valuations: wallet.valuations,
       start: localToday(),
     })
     // The spending rows come from storage and change only on the other tab.
-  }, [wallet])
+  }, [wallet, memberships])
   if (!result) return null
   const gains = result.additions.filter((a) => a.gain > 0).slice(0, 3)
   return (
@@ -738,7 +731,13 @@ function Transfer({
   )
 }
 
-export function MyWallet({ initialQuery }: { initialQuery: string }) {
+export function MyWallet({
+  initialQuery,
+  memberships,
+}: {
+  initialQuery: string
+  memberships: string[] // from Filters and memberships, like Costco's
+}) {
   const [wallet, setWallet] = useState<Wallet | null>(loadWallet)
   const [message, setMessage] = useState<{
     text: string
@@ -837,7 +836,7 @@ export function MyWallet({ initialQuery }: { initialQuery: string }) {
       </section>
 
       <section class="panel" aria-labelledby="wallet-ask-title">
-        <h3 id="wallet-ask-title">Which card here?</h3>
+        <h3 id="wallet-ask-title">Where do you want to make a purchase?</h3>
         <form
           class="ask"
           role="search"
@@ -848,13 +847,13 @@ export function MyWallet({ initialQuery }: { initialQuery: string }) {
           }}
         >
           <label class="visually-hidden" for="wallet-ask">
-            Where are you paying?
+            Store or category
           </label>
           <SearchInput
             id="wallet-ask"
             type="search"
             list="suggestions"
-            placeholder="Where are you paying?"
+            placeholder="Whole Foods, Amazon, gas…"
             autocomplete="off"
             enterkeyhint="search"
             value={query}
@@ -907,7 +906,7 @@ export function MyWallet({ initialQuery }: { initialQuery: string }) {
 
       <CheatSheet wallet={wallet} />
       <Memberships wallet={wallet} onChange={apply} />
-      <WhatIf wallet={wallet} />
+      <WhatIf wallet={wallet} memberships={memberships} />
       <Transfer wallet={wallet} onReplace={replace} />
     </div>
   )

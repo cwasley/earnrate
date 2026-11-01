@@ -161,7 +161,9 @@ describe('rule conditions', () => {
   test('an offer needing activation is skipped, with a nudge', () => {
     const rec = recommend(catalog, wallet(), purchase('Chipotle'))
     expect(testEntry(rec).rate).toBe(3)
-    expect(testEntry(rec).warnings.join(' ')).toMatch(/Activate "activate-me"/)
+    expect(testEntry(rec).warnings.join(' ')).toMatch(
+      /Activate this bonus with the issuer/,
+    )
 
     const activated = recommend(
       catalog,

@@ -20,6 +20,7 @@ import {
   money,
   num,
   pointValuesText,
+  shortDate,
 } from './text.ts'
 import type {
   Confidence,
@@ -245,7 +246,7 @@ function warningsFor(
   }
   for (const rule of evaluation.needsActivation) {
     warnings.push(
-      `Activate "${rule.id}" with the issuer to earn ${earnText(catalog, rule.rate, valuation.currency)} here.`,
+      `Activate this bonus with the issuer (it's free) to earn ${earnText(catalog, rule.rate, valuation.currency)} here${rule.valid_to === undefined ? '' : ` through ${shortDate(rule.valid_to)}`}.`,
     )
   }
   return warnings

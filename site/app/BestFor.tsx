@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact'
 import { useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import {
@@ -141,10 +142,12 @@ function Excluded({ r }: { r: Exploration }) {
 
 export function BestFor({
   settings,
+  filters,
   query,
   onQuery,
 }: {
   settings: Settings
+  filters: ComponentChildren
   query: string
   onQuery: (q: string) => void
 }) {
@@ -216,6 +219,7 @@ export function BestFor({
           ))}
         </div>
       </div>
+      {filters}
 
       <div aria-live="polite">
         {result ? (

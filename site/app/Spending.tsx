@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact'
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import type { Picks } from '../../src/engine/explore.ts'
@@ -47,7 +48,13 @@ function Split({ sim }: { sim: Simulation }) {
   )
 }
 
-export function Spending({ settings }: { settings: Settings }) {
+export function Spending({
+  settings,
+  filters,
+}: {
+  settings: Settings
+  filters: ComponentChildren
+}) {
   const [rows, setRows] = useState<Row[]>(() =>
     loadList<Row>('spending', TYPICAL_MONTHLY_SPEND),
   )
@@ -159,6 +166,7 @@ export function Spending({ settings }: { settings: Settings }) {
           </p>
         ) : null}
       </div>
+      {filters}
 
       <div aria-live="polite">
         {result && single ? (

@@ -220,20 +220,21 @@ export function App() {
           My wallet
         </button>
       </div>
-      {tab === 'wallet' ? null : (
-        <Filters settings={settings} onChange={setSettings} />
-      )}
       <div role="tabpanel">
         {tab === 'best' ? (
           <BestFor
             settings={settings}
+            filters={<Filters settings={settings} onChange={setSettings} />}
             query={query}
             onQuery={(q) => setView({ tab: 'best', query: q })}
           />
         ) : tab === 'spending' ? (
-          <Spending settings={settings} />
+          <Spending
+            settings={settings}
+            filters={<Filters settings={settings} onChange={setSettings} />}
+          />
         ) : (
-          <MyWallet initialQuery={query} />
+          <MyWallet initialQuery={query} memberships={settings.memberships} />
         )}
       </div>
       <datalist id="suggestions">
