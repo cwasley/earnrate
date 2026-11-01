@@ -15,7 +15,7 @@ import {
   type Io,
   NO_WALLET_HINT,
   RUNTIME_ERROR,
-  savedValuations,
+  savedSettings,
   USAGE_ERROR,
 } from './run.ts'
 
@@ -78,7 +78,7 @@ export async function runCheatSheet(argv: string[], io: Io): Promise<number> {
       valuations:
         values.valuation !== undefined && isValuationProfile(values.valuation)
           ? VALUATION_PROFILES[values.valuation]
-          : await savedValuations(io),
+          : (await savedSettings(io)).valuations,
     })
     io.stdout(
       values.json

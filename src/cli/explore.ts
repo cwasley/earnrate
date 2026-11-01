@@ -42,7 +42,7 @@ import {
   cardsToUse,
   type Io,
   RUNTIME_ERROR,
-  savedValuations,
+  savedSettings,
   USAGE_ERROR,
 } from './run.ts'
 
@@ -131,7 +131,7 @@ type Settings = {
 function settingsFrom(
   values: FilterValues,
   catalog: Catalog,
-  saved: Wallet['valuations'],
+  saved: Pick<Wallet, 'valuations' | 'memberships'>,
 ): Settings | string {
   if (values.cash && values.points) return 'Pick --cash or --points, not both.'
   const problem =
@@ -150,11 +150,11 @@ function settingsFrom(
       issuer: values.issuer ?? null,
       includeClosed: values.closed ?? false,
     },
-    memberships: values.member ?? [],
+    memberships: values.member ?? saved.memberships,
     valuations:
       values.valuation !== undefined && isValuationProfile(values.valuation)
         ? VALUATION_PROFILES[values.valuation]
-        : saved,
+        : saved.valuations,
   }
 }
 
@@ -200,7 +200,7 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
     return USAGE_ERROR
   }
   const catalog = await loadCatalog()
-  const settings = settingsFrom(values, catalog, await savedValuations(io))
+  const settings = settingsFrom(values, catalog, await savedSettings(io))
   if (typeof settings === 'string') {
     io.stderr(`${settings}\n`)
     return USAGE_ERROR
@@ -267,7 +267,7 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
     return 0
   }
   const catalog = await loadCatalog()
-  const settings = settingsFrom(values, catalog, await savedValuations(io))
+  const settings = settingsFrom(values, catalog, await savedSettings(io))
   if (typeof settings === 'string') {
     io.stderr(`${settings}\n`)
     return USAGE_ERROR

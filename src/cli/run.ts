@@ -174,14 +174,17 @@ export async function cardsToUse(
 
 export const NO_WALLET_HINT = `These are every card earnrate knows. For the best of your own cards, name them with --cards amex-gold,chase-prime-visa, or save them: ${CLI_NAME} add <card-id> (${CLI_NAME} cards finds ids).`
 
-// The point values saved in the wallet, which every answer uses unless
-// --valuation asks for a profile. No wallet, or one that can't be read, has
-// none.
-export async function savedValuations(io: Io): Promise<Wallet['valuations']> {
+// The point values and memberships saved in the wallet, which every answer
+// uses unless --valuation or --member says otherwise. No wallet, or one that
+// can't be read, has none.
+export async function savedSettings(
+  io: Io,
+): Promise<Pick<Wallet, 'valuations' | 'memberships'>> {
   try {
-    return (await loadWallet(walletPath(io.env))).valuations
+    const { valuations, memberships } = await loadWallet(walletPath(io.env))
+    return { valuations, memberships }
   } catch {
-    return {}
+    return { valuations: {}, memberships: [] }
   }
 }
 
