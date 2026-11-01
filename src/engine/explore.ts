@@ -280,7 +280,7 @@ function conditionsText(
   if (r.activation !== null)
     conditions.push('Needs its bonus activated with the issuer (free).')
   if (r.membership !== null)
-    conditions.push(`Needs ${membershipName(catalog, r.membership)}.`)
+    conditions.push(`With your ${membershipName(catalog, r.membership)}.`)
   if (r.cap) {
     conditions.push(
       `Up to ${money(r.cap.amount)} ${CAP_PERIODS[r.cap.period]} at this rate, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}.`,

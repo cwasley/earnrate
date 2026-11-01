@@ -102,7 +102,7 @@ describe('best cards for a purchase', () => {
     )
     expect(member?.effectiveReturnPct).toBe(5)
     expect(member?.withMembership).toEqual([])
-    expect(member?.conditions).toEqual(['Needs Amazon Prime.'])
+    expect(member?.conditions).toEqual(['With your Amazon Prime.'])
   })
 
   test('filters: no annual fee, issuer, closed cards and business cards', () => {
