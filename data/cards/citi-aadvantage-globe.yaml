@@ -3,8 +3,8 @@ name: Citi / AAdvantage Globe Mastercard
 issuer: citi
 network: mastercard
 currency: aadvantage-miles
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
 base_rate: 1
@@ -35,22 +35,22 @@ rules:
 evidence:
   - rule: base_rate
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
-    quote: 'Earn 1 AAdvantage® mile for every $1 spent on all other purchases.'
+    quote: 'Earn 1 AAdvantage® mile for every $1 spent on all other purchases'
   - rule: aadvantage-hotels
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
-    quote: 'Earn 6 AAdvantage® miles per $1 spent on eligible AAdvantage Hotels™ bookings'
+    quote: 'Earn 6 AAdvantage® miles for every $1 spent on eligible AAdvantage Hotels™ bookings'
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
-    quote: '3 AAdvantage® miles per $1 spent on eligible American Airlines purchases'
+    quote: '3 AAdvantage® miles for every $1 spent on eligible American Airlines purchases'
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
     quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
   - rule: restaurants
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
-    quote: 'Earn 2 AAdvantage® miles for every $1 spent at restaurants, including takeout and delivery.'
+    quote: 'Earn 2 AAdvantage® miles for every $1 spent at restaurants, including takeout and delivery'
   - rule: rides-and-rails
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
-    quote: 'Earn 2 AAdvantage® miles for every $1 spent on eligible Rides and Rails™ purchases, including taxis, rideshares and public transit.'
+    quote: 'Earn 2 AAdvantage® miles for every $1 spent on eligible Rides and Rails™ purchases, including taxis, rideshares and public transit'
   - rule: rides-and-rails
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
     quote: 'passenger railways, bridge and road tolls, parking lots'
