@@ -23,8 +23,8 @@ import { rotationGap } from './rotation.ts'
 import { roundCents } from './text.ts'
 import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
+import { EPSILON } from './compare.ts'
 
-const EPSILON = 1e-9
 const MONTHS = 12
 const SHORTLIST = 8 // best single cards considered for pairs
 const PER_LINE = 2 // plus the best cards for each spending line

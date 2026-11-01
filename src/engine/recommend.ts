@@ -11,7 +11,9 @@ import {
 } from './evaluate.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap } from './rotation.ts'
+import { EPSILON, isClose } from './compare.ts'
 import {
+  CAP_ADJECTIVES,
   categoryPhrase,
   codesAs,
   currencyLabel,
@@ -33,20 +35,8 @@ import type {
 } from './types.ts'
 import { cardValuation, type Valuation } from './valuation.ts'
 
-// An on-pace welcome bonus card is mentioned when it's this close to the
-// best card: within a point, and at least three quarters of its rate.
-const CLOSE_PCT = 1
-const CLOSE_SHARE = 0.75
-const EPSILON = 1e-9
 export const STALE_AFTER_DAYS = 180
 const NEAR_CAP_SHARE = 0.2
-
-const PERIOD_WORDS: Record<string, string> = {
-  month: 'monthly',
-  quarter: 'quarterly',
-  calendar_year: 'calendar-year',
-  cardmember_year: 'cardmember-year',
-}
 
 type Entry = {
   card: Card
@@ -197,7 +187,7 @@ function warningsFor(
   const warnings: string[] = []
   const capLabel = (e: typeof best) =>
     e.cap
-      ? `${money(e.cap.cap.amount)} ${PERIOD_WORDS[e.cap.cap.period] ?? ''} cap`
+      ? `${money(e.cap.cap.amount)} ${CAP_ADJECTIVES[e.cap.cap.period]} cap`
       : ''
 
   if (best.cap && best.rule) {
@@ -533,12 +523,7 @@ export function recommend(
   const ties = !isBest && gap <= EPSILON
   const bonus = open && (open.behind || ties) ? open : null
   const best = winner?.effectiveReturnPct ?? 0
-  if (
-    open &&
-    !bonus &&
-    gap <= CLOSE_PCT &&
-    open.entry.effectiveReturnPct >= best * CLOSE_SHARE
-  ) {
+  if (open && !bonus && isClose(open.entry.effectiveReturnPct, best)) {
     notes.push(
       `${displayName(open.entry)} earns ${num(open.entry.effectiveReturnPct)}% here, ${num(gap)} ${gap === 1 ? 'point' : 'points'} less than ${num(best)}%, and would help its welcome bonus (${money(open.status.remaining ?? 0)} more by ${open.status.deadline ?? ''}). You're on pace, so this uses the higher rate.`,
     )

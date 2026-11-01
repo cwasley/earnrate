@@ -50,6 +50,7 @@ import {
 } from './format.ts'
 import { SearchInput } from './SearchInput.tsx'
 import { loadList, loadWallet, saveWallet } from './settings.ts'
+import { offerTerms } from '../../src/engine/offers.ts'
 
 const QUICK = ['Groceries', 'Dining', 'Gas', 'Amazon', 'Costco', 'Travel']
 
@@ -231,11 +232,7 @@ async function saveSheet(sheet: CheatSheet) {
 function offerText(card: NonNullable<ReturnType<typeof cards.get>>): string {
   const o = card.welcome_offer
   if (!o || (o.valid_to !== undefined && o.valid_to < localToday())) return ''
-  const reward =
-    o.points !== undefined
-      ? `${o.points.toLocaleString('en-US')} ${currencyName(catalog, card.currency)}`
-      : usd(o.dollars ?? 0)
-  return `Published offer${o.varies ? ', up to' : ''}: ${reward} after ${usd(o.spend)} in purchases within ${String(o.months)} month${o.months === 1 ? '' : 's'}.`
+  return `Published offer: ${offerTerms(o, currencyName(catalog, card.currency))}.`
 }
 
 function bonusLine(wallet: Wallet, held: WalletCard): string | null {

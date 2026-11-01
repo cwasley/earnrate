@@ -1,15 +1,7 @@
-import type { OfferComparison, OfferSummary } from '../engine/offers.ts'
+import { offerTerms, type OfferComparison } from '../engine/offers.ts'
 import { feeText, money, shortDate } from '../engine/text.ts'
 
 const TOP = 10
-
-function reward(o: OfferSummary, currencyName: string): string {
-  const amount =
-    o.dollars !== null
-      ? money(o.dollars)
-      : `${(o.points ?? 0).toLocaleString('en-US')} ${currencyName}`
-  return o.varies ? `Up to ${amount}` : amount
-}
 
 export function formatOffers(
   c: OfferComparison,
@@ -26,13 +18,9 @@ export function formatOffers(
     const weeks = (o.months * 52) / 12
     const pace =
       o.spend > 0 ? ` (about ${money(Math.round(o.spend / weeks))} a week)` : ''
-    const spend =
-      o.spend > 0
-        ? `after ${money(o.spend)} in ${String(o.months)} month${o.months === 1 ? '' : 's'}${pace}`
-        : 'with no spending required'
     lines.push(
       `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  about ${money(Math.round(o.firstYearValue))} the first year`,
-      `    ${reward(o, currencyName(o.currency))} ${spend}. ${feeText(o)[0]?.toUpperCase() ?? ''}${feeText(o).slice(1)}.${o.membershipFee > 0 ? ` Needs a ${money(o.membershipFee)} membership, counted in the first year.` : ''}${o.held ? ' In your wallet.' : ''}`,
+      `    ${offerTerms(o, currencyName(o.currency))}${pace}. ${feeText(o)[0]?.toUpperCase() ?? ''}${feeText(o).slice(1)}.${o.membershipFee > 0 ? ` Needs a ${money(o.membershipFee)} membership, counted in the first year.` : ''}${o.held ? ' In your wallet.' : ''}`,
     )
     lines.push(
       `    ${o.validTo ? `Offer ends ${o.validTo}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ.`,

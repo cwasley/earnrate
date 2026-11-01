@@ -3,7 +3,7 @@ import type { Wallet } from '../schema/wallet.ts'
 import { bonusDollars } from './bonus.ts'
 import { matchesFilters } from './explore.ts'
 import { membershipCosts, paidMemberships } from './memberships.ts'
-import { roundCents } from './text.ts'
+import { money, roundCents } from './text.ts'
 import { cardValuation } from './valuation.ts'
 
 export type OfferFilters = {
@@ -62,6 +62,31 @@ function ineligibleText(
   return held.length === 0
     ? null
     : `Likely not eligible: you hold ${held.join(' and ')}, and the issuer's terms rule out its cardholders.`
+}
+
+export const OFFERS_MAY_DIFFER =
+  'Yours may differ: issuers test and target offers, so use the one shown to you when you apply.'
+
+type OfferTerms = {
+  points?: number | null | undefined
+  dollars?: number | null | undefined
+  spend: number
+  months: number
+  varies?: boolean | undefined
+}
+
+// "Up to 60,000 Chase Ultimate Rewards after $4,000 in purchases within 3
+// months": one wording for the site, the search pages and the CLI.
+export function offerTerms(o: OfferTerms, currencyName: string): string {
+  const amount =
+    o.points !== null && o.points !== undefined
+      ? `${o.points.toLocaleString('en-US')} ${currencyName}`
+      : money(o.dollars ?? 0)
+  const spend =
+    o.spend > 0
+      ? `after ${money(o.spend)} in purchases within ${String(o.months)} month${o.months === 1 ? '' : 's'}`
+      : 'with no spending required'
+  return `${o.varies ? 'Up to ' : ''}${amount} ${spend}`
 }
 
 export function compareOffers(
@@ -131,7 +156,7 @@ export function compareOffers(
 
   const notes = [
     `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`,
-    "Each offer is the public one on the issuer's page on the date shown, checked weekly. Yours may differ: issuers test and target offers, so use the one shown to you when you apply. Issuers also limit who can get a bonus; each card's note says how.",
+    `Each offer is the public one on the issuer's page on the date shown, checked weekly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how.`,
     "First-year value is the bonus at your point values minus the first year's annual fee. It leaves out what the card earns on your spending and any credits or perks.",
   ]
   return { offers, withoutOffer, notes }

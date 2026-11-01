@@ -19,23 +19,9 @@ const ISSUERS: Record<string, string> = {
   'wells-fargo': 'Wells Fargo',
 }
 
-export const PICK_PERIODS = {
-  month: 'each month',
-  quarter: 'each quarter',
-  calendar_year: 'each year',
-  until_changed: 'until you change it',
-}
-
-export const CAP_PERIODS: Record<string, string> = {
-  month: 'a month',
-  quarter: 'a quarter',
-  calendar_year: 'a year',
-  cardmember_year: 'a card year',
-}
-
-export { words } from '../engine/text.ts'
+export { CAP_PERIODS, PICK_PERIODS, words } from '../engine/text.ts'
 import { membershipName, membershipText } from '../engine/memberships.ts'
-import { words } from '../engine/text.ts'
+import { CAP_PERIODS, PICK_PERIODS, words } from '../engine/text.ts'
 
 // Whole dollars, for fees and caps.
 export const usd = (n: number) =>
@@ -88,7 +74,7 @@ export function cardText(catalog: Catalog) {
     if (until !== null) lines.push(`This rate runs through ${until}`)
     if (r.cap)
       lines.push(
-        `Up to ${usd(r.cap.amount)} of spending ${CAP_PERIODS[r.cap.period] ?? ''}, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}`,
+        `Up to ${usd(r.cap.amount)} of spending ${CAP_PERIODS[r.cap.period]}, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}`,
       )
     return lines
   }

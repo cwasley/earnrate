@@ -1,3 +1,4 @@
+import type { Cap, Choice } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { singleMcc } from './evaluate.ts'
 import type { MerchantResolution } from './types.ts'
@@ -124,4 +125,27 @@ export function choiceName(id: string): string {
       (_, n: string) => `${NUMBERS[n] ?? n}%`,
     ),
   )
+}
+
+// Period words in one place: a cap of $1,500 "a quarter", a "quarterly" cap,
+// a category picked "each quarter".
+export const CAP_PERIODS: Record<Cap['period'], string> = {
+  month: 'a month',
+  quarter: 'a quarter',
+  calendar_year: 'a calendar year',
+  cardmember_year: 'a cardmember year',
+}
+
+export const CAP_ADJECTIVES: Record<Cap['period'], string> = {
+  month: 'monthly',
+  quarter: 'quarterly',
+  calendar_year: 'calendar-year',
+  cardmember_year: 'cardmember-year',
+}
+
+export const PICK_PERIODS: Record<Choice['period'], string> = {
+  month: 'each month',
+  quarter: 'each quarter',
+  calendar_year: 'each year',
+  until_changed: 'until you change it',
 }

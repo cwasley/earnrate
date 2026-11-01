@@ -11,6 +11,7 @@ import {
   type ExploreEntry,
   type ExploreQuery,
 } from '../src/engine/explore.ts'
+import { EPSILON } from '../src/engine/compare.ts'
 import { localToday } from '../src/engine/periods.ts'
 import { num, pct } from '../src/engine/text.ts'
 import { categoryPhrase, currencyName, earnText } from '../src/engine/text.ts'
@@ -25,6 +26,7 @@ import {
 import type { Card, Rule } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
+import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const OUT = path.join(ROOT, 'site-dist')
@@ -474,7 +476,7 @@ function ruleConditions(card: Card, rule: Rule): string[] {
       : rule.cap
   if (cap)
     lines.push(
-      `Up to ${usd(cap.amount)} of spending ${CAP_PERIODS[cap.period] ?? ''}${typeof rule.cap === 'string' ? ' (shared with its other bonus categories on this cap)' : ''}, then ${earnText(catalog, cap.then_rate, card.currency)}`,
+      `Up to ${usd(cap.amount)} of spending ${CAP_PERIODS[cap.period]}${typeof rule.cap === 'string' ? ' (shared with its other bonus categories on this cap)' : ''}, then ${earnText(catalog, cap.then_rate, card.currency)}`,
     )
   if (rule.unverified !== undefined)
     lines.push("Not yet confirmed against the issuer's terms")
@@ -513,15 +515,7 @@ function choicesText(card: Card): string {
 function offerText(card: Card): string {
   const o = card.welcome_offer
   if (!o || (o.valid_to !== undefined && o.valid_to < today)) return ''
-  const reward =
-    o.points !== undefined
-      ? `${o.points.toLocaleString('en-US')} ${currencyName(catalog, card.currency)}`
-      : usd(o.dollars ?? 0)
-  const spend =
-    o.spend > 0
-      ? `after ${usd(o.spend)} in purchases in ${String(o.months)} month${o.months === 1 ? '' : 's'}`
-      : 'with no spending required'
-  return `<h2>Public welcome offer</h2><p>${o.varies ? 'Up to ' : ''}${esc(reward)} ${esc(spend)}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(card.last_verified))}. Yours may differ: issuers test and target offers, so use the one shown to you when you apply.${o.note ? ` ${esc(o.note)}` : ''}</p>`
+  return `<h2>Public welcome offer</h2><p>${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(card.last_verified))}. ${OFFERS_MAY_DIFFER}${o.note ? ` ${esc(o.note)}` : ''}</p>`
 }
 
 function placements(
@@ -539,7 +533,7 @@ function placements(
     if (
       entry &&
       i < 3 &&
-      entry.effectiveReturnPct > card.base_rate * entry.centsPerUnit + 1e-9
+      entry.effectiveReturnPct > card.base_rate * entry.centsPerUnit + EPSILON
     )
       found.push({ page, rank: i + 1, pct: entry.effectiveReturnPct })
   }

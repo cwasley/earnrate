@@ -7,6 +7,7 @@ import {
   type ExploreOptions,
 } from './explore.ts'
 import { bonusStatus } from './bonus.ts'
+import { EPSILON, isClose } from './compare.ts'
 import { periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
 import { setupNotes } from './setup.ts'
@@ -96,17 +97,16 @@ export function cheatSheet(
       held.checkout_label ??
       catalog.cards.find((c) => c.id === held.id)?.name ??
       held.id
-    // Rows where the bonus card matches the row's card, or comes within a
-    // point and three quarters of its rate (as single answers mention it).
+    // Rows where the bonus card matches the row's card, or is close to it
+    // (as single answers mention it).
     const matches: string[] = []
     const near: string[] = []
     for (const { label, cards } of ranked) {
       const best = cards[0]?.effectiveReturnPct
       const own = cards.find((c) => c.cardId === held.id)?.effectiveReturnPct
       if (best === undefined || own === undefined) continue
-      if (best - own < 1e-9) matches.push(label.toLowerCase())
-      else if (best - own <= 1 && own >= best * 0.75)
-        near.push(label.toLowerCase())
+      if (best - own < EPSILON) matches.push(label.toLowerCase())
+      else if (isClose(own, best)) near.push(label.toLowerCase())
     }
     const where = [
       ...(matches.length > 0

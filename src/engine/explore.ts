@@ -1,5 +1,5 @@
 import { resolveMerchant } from '../merchants/resolve.ts'
-import type { Card } from '../schema/card.ts'
+import type { Cap, Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
@@ -13,11 +13,13 @@ import { recommend } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
 import {
+  CAP_PERIODS,
   categoryPhrase,
   choiceName,
   codesAs,
   earnText,
   money,
+  PICK_PERIODS,
   pointValuesText,
   words,
 } from './text.ts'
@@ -29,8 +31,7 @@ import type {
   RankedCard,
 } from './types.ts'
 import { cardValuation } from './valuation.ts'
-
-const EPSILON = 1e-9
+import { EPSILON } from './compare.ts'
 
 export type CardFilters = {
   kind: 'any' | 'cash' | 'points'
@@ -108,7 +109,7 @@ export type Requirements = {
   membership: string | null
   cap: {
     amount: number
-    period: string
+    period: Cap['period']
     thenRate: number
     currency: string
   } | null
@@ -134,20 +135,6 @@ export type ExploreOptions = {
   filters: CardFilters
   memberships: string[] // the ones the person has; none assumed otherwise
   valuations: Wallet['valuations']
-}
-
-const PICK_PERIODS: Record<Card['choices'][number]['period'], string> = {
-  month: 'set each month',
-  quarter: 'picked each quarter',
-  calendar_year: 'picked each year',
-  until_changed: 'until you change it',
-}
-
-const CAP_PERIODS: Record<string, string> = {
-  month: 'a month',
-  quarter: 'a quarter',
-  calendar_year: 'a calendar year',
-  cardmember_year: 'a cardmember year',
 }
 
 const plainWords = (s: string) =>
@@ -283,7 +270,7 @@ function conditionsText(catalog: Catalog, r: Requirements): string[] {
   const conditions: string[] = []
   if (r.pick) {
     conditions.push(
-      `Needs ${r.pick.options.map(words).join(' or ')} as its ${choiceName(r.pick.choice)} pick (${PICK_PERIODS[r.pick.period]}).`,
+      `Needs ${r.pick.options.map(words).join(' or ')} as its ${choiceName(r.pick.choice)} pick (${r.pick.period === 'until_changed' ? '' : 'picked '}${PICK_PERIODS[r.pick.period]}).`,
     )
   }
   if (r.activation !== null)
@@ -292,7 +279,7 @@ function conditionsText(catalog: Catalog, r: Requirements): string[] {
     conditions.push(`Needs ${membershipName(catalog, r.membership)}.`)
   if (r.cap) {
     conditions.push(
-      `Up to ${money(r.cap.amount)} ${CAP_PERIODS[r.cap.period] ?? ''} at this rate, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}.`,
+      `Up to ${money(r.cap.amount)} ${CAP_PERIODS[r.cap.period]} at this rate, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}.`,
     )
   }
   return conditions
