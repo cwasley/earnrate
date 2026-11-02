@@ -9,6 +9,7 @@ import { bonusStatus } from './bonus.ts'
 import { EPSILON, isClose } from './compare.ts'
 import { periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
+import { checklist } from './checklist.ts'
 import { setupNotes } from './setup.ts'
 import { capitalize, feeText, listed, money, shortDate } from './text.ts'
 import type { RankedCard } from './types.ts'
@@ -123,11 +124,23 @@ export function cheatSheet(
       }`,
     ]
   })
+  // Picks and activations in plain words, as the to-do list says them; the
+  // setup notes name ids for an agent to set.
+  const todo = checklist(catalog, wallet, date).filter(
+    (i) => i.kind === 'pick' || i.kind === 'activate',
+  )
   const notes = [
     ...new Set([
       ...bonuses,
+      ...todo.map((i) => i.text),
       ...wallet.cards.flatMap((held) =>
-        setupNotes(catalog, wallet, held, date).map((n) => n.text),
+        setupNotes(catalog, wallet, held, date)
+          .filter((n) => n.kind !== 'pick' && n.kind !== 'activation')
+          .map((n) =>
+            n.kind === 'membership'
+              ? n.text.replace(/ \([a-z0-9-]+\)/g, '')
+              : n.text,
+          ),
       ),
     ]),
   ]

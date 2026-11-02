@@ -24,9 +24,12 @@ describe('cheat sheet', () => {
       ['Drugstores', 'chase-freedom-flex', 3],
       ['Everything else', 'citi-double-cash', 2],
     ])
-    expect(sheet.notes.some((n) => /Freedom Flex.*activated/.test(n))).toBe(
-      true,
+    expect(sheet.notes).toContainEqual(
+      expect.stringMatching(
+        /^Activate Freedom Flex's bonus on .*by Dec 14, 2026\.$/,
+      ),
     )
+    expect(sheet.notes.join(' ')).not.toMatch(/q4-2026|gas-ev-charging/)
   })
 
   test('activating a rotating category changes the sheet', () => {
