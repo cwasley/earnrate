@@ -6,7 +6,13 @@ import { isValuationProfile, withValuationProfile } from '../engine/profiles.ts'
 import { currencyName } from '../engine/text.ts'
 import { formatOffers } from '../format/offers.ts'
 import { cardList, valuationProblem } from './args.ts'
-import { cardsToUse, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
+import {
+  cardsToUse,
+  RUNTIME_ERROR,
+  savedSettings,
+  USAGE_ERROR,
+  type Io,
+} from './run.ts'
 
 const OFFERS_HELP = `Usage: ${CLI_NAME} offers [--cash | --points] [--no-fee] [--business] [options]
 
@@ -73,7 +79,13 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
   })
   if (found === null) return RUNTIME_ERROR
   const loaded =
-    found === 'none' ? { valuations: {}, memberships: [], cards: [] } : found
+    found === 'none'
+      ? await savedSettings(io).then((saved) => ({
+          valuations: saved.valuations,
+          memberships: values.member ?? saved.memberships,
+          cards: [],
+        }))
+      : found
   const wallet =
     values.valuation && isValuationProfile(values.valuation)
       ? withValuationProfile(loaded, values.valuation)

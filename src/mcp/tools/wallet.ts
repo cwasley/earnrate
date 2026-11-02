@@ -113,7 +113,7 @@ export function registerWalletTools(
         content: [
           {
             type: 'text',
-            text: `${when}${read.start ?? formatWalletSummary(summary)}`,
+            text: `${when}${read.start === null ? '' : `${read.start}\n`}${formatWalletSummary(summary)}`,
           },
         ],
         structuredContent: summary,
@@ -265,7 +265,7 @@ export function registerWalletTools(
     {
       title: 'Remove a card',
       description:
-        "Removes a card from the wallet, with its tracked cap usage and bonus progress. Only when the user says they no longer have it or don't want it considered.",
+        "Removes a card from the wallet, with its tracked cap usage and bonus progress. Memberships and point values stay, even when the last card goes. Only when the user says they no longer have it or don't want it considered.",
       inputSchema: z.object({ cardId: CardId }),
       outputSchema: WalletChangeSchema,
       annotations: {
@@ -288,7 +288,7 @@ export function registerWalletTools(
     {
       title: 'Set memberships',
       description:
-        "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep.",
+        "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep. It saves them even with no cards saved, and every answer then uses them.",
       inputSchema: z.object({ memberships: inputs.AllMemberships }),
       outputSchema: WalletChangeSchema,
       annotations: {
@@ -323,7 +323,7 @@ export function registerWalletTools(
     'set_point_values',
     {
       title: 'Set point values',
-      description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. It needs a saved wallet with a card in it. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies: ${catalog.currencies.map((c) => c.id).join(', ')}.`,
+      description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. No saved cards are needed. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies: ${catalog.currencies.map((c) => c.id).join(', ')}.`,
       inputSchema: z.object({
         values: z
           .record(z.string(), z.number().nullable())

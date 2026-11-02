@@ -19,7 +19,7 @@ import {
   shortName,
 } from './format.ts'
 import { SearchInput } from './SearchInput.tsx'
-import { engineOptions, type Settings } from './settings.ts'
+import { engineOptions, type Saved, type Settings } from './settings.ts'
 import { EVERYDAY_PURCHASES } from '../../src/engine/cheat-sheet.ts'
 
 const QUICK = EVERYDAY_PURCHASES.map((p) => p.label)
@@ -34,7 +34,7 @@ export const SUGGESTIONS = [
   ]),
 ].sort((a, b) => a.localeCompare(b))
 
-function explore(text: string, settings: Settings): Exploration {
+function explore(text: string, settings: Settings, saved: Saved): Exploration {
   return exploreCards(
     catalog,
     {
@@ -44,7 +44,7 @@ function explore(text: string, settings: Settings): Exploration {
       channel: null,
       date: localToday(),
     },
-    engineOptions(settings),
+    engineOptions(settings, saved),
   )
 }
 
@@ -132,11 +132,13 @@ function Excluded({ r }: { r: Exploration }) {
 
 export function BestFor({
   settings,
+  saved,
   filters,
   query,
   onQuery,
 }: {
   settings: Settings
+  saved: Saved
   filters: ComponentChildren
   query: string
   onQuery: (q: string) => void
@@ -144,8 +146,8 @@ export function BestFor({
   const [text, setText] = useState(query)
   const [all, setAll] = useState(false)
   const result = useMemo(
-    () => (query.trim() === '' ? null : explore(query, settings)),
-    [query, settings],
+    () => (query.trim() === '' ? null : explore(query, settings, saved)),
+    [query, settings, saved],
   )
 
   const ask = (q: string) => {

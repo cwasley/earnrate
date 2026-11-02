@@ -123,7 +123,7 @@ export function displayPath(file: string): string {
 }
 
 // The cards to answer for: those named with --cards, else the wallet file.
-// 'none' means no wallet and no --cards, which answers from every card.
+// 'none' means no cards saved or named, which answers from every card.
 // Named cards use the saved memberships (unless --member names some) and the
 // saved point values, as the MCP tools do.
 export async function cardsToUse(
@@ -168,7 +168,7 @@ export async function cardsToUse(
     )
     return null
   }
-  return loaded
+  return loaded.cards.length === 0 ? 'none' : loaded
 }
 
 export const NO_WALLET_HINT = `These are every card earnrate knows. For the best of your own cards, name them with --cards amex-gold,chase-prime-visa, or save them: ${CLI_NAME} add <card-id> (${CLI_NAME} cards finds ids).`
@@ -281,6 +281,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
     notices.push(...resolved.notices)
   }
   if (loaded === 'none') {
+    const saved = await savedSettings(io)
     const explored = exploreCards(
       catalog,
       {
@@ -292,10 +293,11 @@ export async function run(argv: string[], io: Io): Promise<number> {
       },
       {
         filters: ALL_PERSONAL_CARDS,
-        memberships: options.members,
+        memberships:
+          options.members.length > 0 ? options.members : saved.memberships,
         valuations: options.valuation
           ? VALUATION_PROFILES[options.valuation]
-          : {},
+          : saved.valuations,
       },
       merchant,
     )

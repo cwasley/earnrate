@@ -5,13 +5,15 @@ import { MyWallet } from './MyWallet.tsx'
 import { Spending } from './Spending.tsx'
 import { issuerName, issuers } from './format.ts'
 import {
-  DEFAULT_SETTINGS,
-  load,
+  loadState,
   loadWallet,
   save,
+  saveWallet,
   type Settings,
 } from './settings.ts'
 import { profileText } from '../../src/engine/profiles.ts'
+import { EMPTY_WALLET } from '../../src/engine/transient.ts'
+import type { Wallet } from '../../src/schema/wallet.ts'
 
 type Tab = 'best' | 'spending' | 'wallet'
 
@@ -64,27 +66,28 @@ const TIER_GROUPS = [
   }
 })
 
+// Memberships here are the wallet's, the same list My wallet shows.
 function Filters({
   settings,
   onChange,
+  memberships,
+  onMemberships,
 }: {
   settings: Settings
   onChange: (s: Settings) => void
+  memberships: string[]
+  onMemberships: (memberships: string[]) => void
 }) {
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch })
-  const has = (m: string) => settings.memberships.includes(m)
+  const has = (m: string) => memberships.includes(m)
   const toggle = (m: string, on: boolean) =>
-    set({
-      memberships: on
-        ? [...settings.memberships, m]
-        : settings.memberships.filter((x) => x !== m),
-    })
+    onMemberships(on ? [...memberships, m] : memberships.filter((x) => x !== m))
   const active =
     (settings.noFee ? 1 : 0) +
     (settings.kind !== 'any' ? 1 : 0) +
     (settings.issuer !== null ? 1 : 0) +
     (settings.business ? 1 : 0) +
-    settings.memberships.length +
+    memberships.length +
     (settings.pointsHeavy ? 1 : 0)
 
   return (
@@ -153,14 +156,12 @@ function Filters({
             <label key={label}>
               {label}
               <select
-                value={settings.memberships.find((m) => ids.includes(m)) ?? ''}
+                value={memberships.find((m) => ids.includes(m)) ?? ''}
                 onChange={(e) =>
-                  set({
-                    memberships: [
-                      ...settings.memberships.filter((m) => !ids.includes(m)),
-                      ...(e.currentTarget.value ? [e.currentTarget.value] : []),
-                    ],
-                  })
+                  onMemberships([
+                    ...memberships.filter((m) => !ids.includes(m)),
+                    ...(e.currentTarget.value ? [e.currentTarget.value] : []),
+                  ])
                 }
               >
                 <option value="">None</option>
@@ -190,8 +191,21 @@ function Filters({
 
 export function App() {
   const [{ tab, query }, setView] = useState(readHash)
-  const [settings, setSettings] = useState<Settings>(() =>
-    load('settings', DEFAULT_SETTINGS),
+  const [initial] = useState(loadState)
+  const [settings, setSettings] = useState<Settings>(initial.settings)
+  const [wallet, setWallet] = useState<Wallet | null>(initial.wallet)
+  const replaceWallet = (next: Wallet | null) => {
+    setWallet(next)
+    saveWallet(next)
+  }
+  const saved = wallet ?? EMPTY_WALLET
+  const filters = (
+    <Filters
+      settings={settings}
+      onChange={setSettings}
+      memberships={saved.memberships}
+      onMemberships={(memberships) => replaceWallet({ ...saved, memberships })}
+    />
   )
   useEffect(() => save('settings', settings), [settings])
   useEffect(() => writeHash(tab, query), [tab, query])
@@ -233,17 +247,19 @@ export function App() {
         {tab === 'best' ? (
           <BestFor
             settings={settings}
-            filters={<Filters settings={settings} onChange={setSettings} />}
+            saved={saved}
+            filters={filters}
             query={query}
             onQuery={(q) => setView({ tab: 'best', query: q })}
           />
         ) : tab === 'spending' ? (
-          <Spending
-            settings={settings}
-            filters={<Filters settings={settings} onChange={setSettings} />}
-          />
+          <Spending settings={settings} saved={saved} filters={filters} />
         ) : (
-          <MyWallet initialQuery={query} memberships={settings.memberships} />
+          <MyWallet
+            initialQuery={query}
+            wallet={wallet}
+            onReplace={replaceWallet}
+          />
         )}
       </div>
       <datalist id="suggestions">

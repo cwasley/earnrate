@@ -113,6 +113,17 @@ function cardsSeq(text: string) {
   return { doc, cards }
 }
 
+function rootMap(text: string) {
+  const doc = parseDocument(text)
+  if (doc.errors.length > 0) throw new Error(doc.errors[0]?.message)
+  const root = doc.contents
+  if (!isMap(root)) throw new Error(`the wallet isn't a map; ${BY_HAND}`)
+  return root
+}
+
+// A wallet with no cards yet, for memberships or point values saved first.
+export const EMPTY_WALLET_TEXT = `${NEW_WALLET}version: ${String(WALLET_VERSION)}\ncards: []\n`
+
 function findCard(text: string, cardId: string) {
   const { cards } = cardsSeq(text)
   const card = cards.items.find(
@@ -130,6 +141,16 @@ const column = (text: string, at: number) => at - lineStart(text, at)
 export function addCardText(text: string | null, entry: CardEntry): string {
   if (text === null || text.trim() === '') {
     return `${NEW_WALLET}version: ${String(WALLET_VERSION)}\ncards:\n${cardLines(entry, '  ')}`
+  }
+  const pair = rootMap(text).items.find((p) => keyOf(p) === 'cards')
+  const value = pair?.value
+  const none = value === null || (isSeq(value) && value.items.length === 0)
+  if (!pair || none) {
+    const block = `cards:\n${cardLines(entry, '  ')}`
+    if (!pair) return insertLines(text, text.length, block)
+    const start = lineStart(text, range(pair.key)[0])
+    const end = afterLine(text, range(value ?? pair.key)[1] - 1)
+    return text.slice(0, start) + block + text.slice(end)
   }
   const { cards } = cardsSeq(text)
   const first = cards.items[0]
@@ -149,8 +170,13 @@ function cardLines(entry: CardEntry, dashIndent: string): string {
 
 export function removeCardText(text: string, cardId: string): string {
   const card = findCard(text, cardId)
-  const start = lineStart(text, range(card)[0])
   const end = afterLine(text, range(card)[1] - 1)
+  if (cardsSeq(text).cards.items.length === 1) {
+    const pair = rootMap(text).items.find((p) => keyOf(p) === 'cards')
+    const start = lineStart(text, range(pair?.key)[0])
+    return `${text.slice(0, start)}cards: []\n${text.slice(end)}`
+  }
+  const start = lineStart(text, range(card)[0])
   return text.slice(0, start) + text.slice(end)
 }
 
@@ -186,9 +212,7 @@ export function setMembershipsText(
   text: string,
   memberships: string[],
 ): string {
-  const { doc } = cardsSeq(text)
-  const root = doc.contents
-  if (!isMap(root)) throw new Error(`the wallet isn't a map; ${BY_HAND}`)
+  const root = rootMap(text)
   const line = `memberships: ${flowList(memberships)}\n`
   const pair = root.items.find((p) => keyOf(p) === 'memberships')
   if (pair) {
@@ -200,7 +224,9 @@ export function setMembershipsText(
     return text.slice(0, start) + line + text.slice(end)
   }
   const cards = root.items.find((p) => keyOf(p) === 'cards')
-  return insertLines(text, lineStart(text, range(cards?.key)[0]), line)
+  return cards
+    ? insertLines(text, lineStart(text, range(cards.key)[0]), line)
+    : insertLines(text, text.length, line)
 }
 
 // Point values, one currency at a time so the rest of the file, comments
@@ -233,9 +259,7 @@ function setValuationText(
   id: string,
   cents: number | null,
 ): string {
-  const { doc } = cardsSeq(text)
-  const root = doc.contents
-  if (!isMap(root)) throw new Error(`the wallet isn't a map; ${BY_HAND}`)
+  const root = rootMap(text)
   const pair = root.items.find((p) => keyOf(p) === 'valuations')
   const map = pair?.value
   const line = cents === null ? '' : `${id}: ${String(cents)}`
@@ -250,7 +274,9 @@ function setValuationText(
     const before = root.items.find(
       (p) => keyOf(p) === 'memberships' || keyOf(p) === 'cards',
     )
-    return insertLines(text, aboveComments(text, range(before?.key)[0]), block)
+    return before
+      ? insertLines(text, aboveComments(text, range(before.key)[0]), block)
+      : insertLines(text, text.length, block)
   }
   if (!isMap(map)) throw new Error(`"valuations" isn't a map; ${BY_HAND}`)
   if (map.flow) {

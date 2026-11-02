@@ -12,7 +12,13 @@ import {
 } from '../../src/engine/simulate.ts'
 import { categoryPhrase } from '../../src/engine/text.ts'
 import { feeLabel, shortName, usd, words } from './format.ts'
-import { engineOptions, loadList, save, type Settings } from './settings.ts'
+import {
+  engineOptions,
+  loadList,
+  save,
+  type Saved,
+  type Settings,
+} from './settings.ts'
 
 export type Row = { what: string; monthly: number }
 
@@ -50,9 +56,11 @@ function Split({ sim }: { sim: Simulation }) {
 
 export function Spending({
   settings,
+  saved,
   filters,
 }: {
   settings: Settings
+  saved: Saved
   filters: ComponentChildren
 }) {
   const [rows, setRows] = useState<Row[]>(() =>
@@ -75,10 +83,10 @@ export function Spending({
     return known.length === 0
       ? null
       : simulateCatalog(catalog, known, {
-          ...engineOptions(settings),
+          ...engineOptions(settings, saved),
           start: localToday(),
         })
-  }, [lines, settings])
+  }, [lines, settings, saved])
   const total = rows.reduce((sum, r) => sum + r.monthly, 0)
   const single = result?.singles[0]
   const pair = result?.pairs[0]

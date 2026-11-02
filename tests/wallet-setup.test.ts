@@ -400,16 +400,28 @@ describe('wallet operations', () => {
     ).toMatch(/q4-2026-dining/)
   })
 
-  test('removes a card but never the last one', async () => {
+  test('removing the last card keeps the memberships, values and comments', async () => {
     const file = await walletFile(COMMENTED)
     const removed = await store(file).removeCard('amex-gold')
     if (!removed.ok) throw new Error(removed.error)
     expect(removed.wallet.cards.map((c) => c.id)).toEqual([
       'chase-sapphire-preferred',
     ])
-    expect(
-      errorOf(await store(file).removeCard('chase-sapphire-preferred')),
-    ).toMatch(/last card/)
+    const last = await store(file).removeCard('chase-sapphire-preferred')
+    if (!last.ok) throw new Error(last.error)
+    expect(await readFile(file, 'utf8')).toBe(`# my cards
+valuations:
+  UR: 1.5 # transfer partners
+
+memberships: [amazon-prime]
+
+cards: []
+`)
+    const again = await store(file).addCard({ id: 'amex-gold' }, TODAY)
+    if (!again.ok) throw new Error(again.error)
+    expect(await readFile(file, 'utf8')).toMatch(
+      /memberships: \[amazon-prime\]\n\ncards:\n {2}- id: amex-gold\n$/,
+    )
   })
 
   test('memberships must be ones a card uses', async () => {

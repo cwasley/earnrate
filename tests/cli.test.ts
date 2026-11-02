@@ -267,9 +267,9 @@ describe('wallet setup commands', () => {
       'cards:\n  - id: amex-gold\n  - id: citi-double-cash\n',
     )
     expect((await cli(['remove', 'amex-gold'], file)).code).toBe(0)
-    const last = await cli(['remove', 'citi-double-cash'], file)
-    expect(last.code).toBe(1)
-    expect(last.stderr).toMatch(/last card/)
+    expect((await cli(['remove', 'citi-double-cash'], file)).code).toBe(0)
+    expect((await cli(['remove', 'citi-double-cash'], file)).code).toBe(1)
+    expect((await cli(['costco'], file)).stdout).toMatch(/^Best cards for/)
   })
 
   test('bad arguments are usage errors', async () => {

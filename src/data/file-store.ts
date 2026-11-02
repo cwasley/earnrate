@@ -12,10 +12,16 @@ import {
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { loadWallet } from './load.ts'
-import type { RecordResult, SetupResult, WalletStore } from './store.ts'
+import {
+  emptyWallet,
+  type RecordResult,
+  type SetupResult,
+  type WalletStore,
+} from './store.ts'
 import {
   addCardText,
   commitWalletText,
+  EMPTY_WALLET_TEXT,
   readWalletText,
   removeCardText,
   setMembershipsText,
@@ -88,7 +94,7 @@ export class FileWalletStore implements WalletStore {
     })
   }
 
-  // Changes other than adding a card need a wallet file to change.
+  // Changing or removing a card needs a wallet file to change.
   private existing(apply: (wallet: Wallet) => WalletChange) {
     return (wallet: Wallet | null) =>
       wallet === null
@@ -112,29 +118,26 @@ export class FileWalletStore implements WalletStore {
 
   removeCard(cardId: string): Promise<SetupResult> {
     return this.change(
-      this.existing((w) =>
-        w.cards.length === 1 && w.cards[0]?.id === cardId
-          ? failed(
-              `${cardId} is the last card in ${this.where}. To start over, delete that file; to swap cards, add the new one first.`,
-            )
-          : removeFromWallet(w, cardId),
-      ),
+      this.existing((w) => removeFromWallet(w, cardId)),
       (text) => removeCardText(text ?? '', cardId),
     )
   }
 
   setMemberships(memberships: string[]): Promise<SetupResult> {
     return this.change(
-      this.existing((w) => withMemberships(this.catalog, w, memberships)),
+      (w) => withMemberships(this.catalog, w ?? emptyWallet(), memberships),
       (text, change) =>
-        setMembershipsText(text ?? '', change.wallet.memberships),
+        setMembershipsText(
+          text ?? EMPTY_WALLET_TEXT,
+          change.wallet.memberships,
+        ),
     )
   }
 
   setValuations(changes: Record<string, number | null>): Promise<SetupResult> {
     return this.change(
-      this.existing((w) => withValuations(this.catalog, w, changes)),
-      (text) => setValuationsText(text ?? '', changes),
+      (w) => withValuations(this.catalog, w ?? emptyWallet(), changes),
+      (text) => setValuationsText(text ?? EMPTY_WALLET_TEXT, changes),
     )
   }
 

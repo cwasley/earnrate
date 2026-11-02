@@ -26,10 +26,16 @@ export function makeContext(deps: ServerDeps) {
     deps.savedWallets === 'file'
       ? `the wallet at ${deps.store.where}`
       : 'the saved wallet'
+  const startHint =
+    'Answers cover every card, or the cards the user names. If the user wants their cards remembered, find each with search_cards and save it with add_card.'
+  const noCards =
+    deps.savedWallets === 'file'
+      ? `The wallet at ${deps.store.where} has no cards yet. ${startHint}`
+      : `The user's saved wallet has no cards yet. ${startHint}`
   const noWallet =
     deps.savedWallets === 'file'
       ? `There's no saved wallet yet (${deps.store.where}). Answers don't need one: they cover every card, or the cards the user names. If the user wants their cards remembered, find each with search_cards and save it with add_card.`
-      : "The user's saved wallet has no cards yet. Answers cover every card, or the cards the user names. If the user wants their cards remembered, find each with search_cards and save it with add_card."
+      : noCards
 
   // Read on every call, so edits to the wallet apply without a restart.
   async function wallet(): Promise<Wallet | string> {
@@ -47,13 +53,14 @@ export function makeContext(deps: ServerDeps) {
       : loaded
   }
 
-  // No saved wallet is the normal state, not a failure: it reads as an
-  // empty one, with a note on how to start one.
+  // No saved wallet, or one with no cards, is the normal state, not a
+  // failure: it reads as an empty one, with a note on how to add cards.
   async function readableWallet(): Promise<
     { wallet: Wallet; start: string | null } | string
   > {
     const w = await wallet()
-    if (typeof w !== 'string') return { wallet: w, start: null }
+    if (typeof w !== 'string')
+      return { wallet: w, start: w.cards.length === 0 ? noCards : null }
     return w === noWallet ? { wallet: EMPTY_WALLET, start: w } : w
   }
 

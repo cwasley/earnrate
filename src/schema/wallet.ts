@@ -60,7 +60,7 @@ export const WalletSchema = z.strictObject({
   version: z.number().int().positive().optional(),
   valuations: z.record(CurrencyId, Valuation).default({}),
   memberships: z.array(KebabId).default([]),
-  cards: z.array(WalletCardSchema).min(1),
+  cards: z.array(WalletCardSchema).default([]),
 })
 
 export type WalletCard = z.output<typeof WalletCardSchema>

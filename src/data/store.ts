@@ -11,7 +11,7 @@ import {
   type WalletChange,
 } from '../engine/wallet-change.ts'
 import type { Catalog } from '../schema/catalog.ts'
-import { WalletSchema, type Wallet } from '../schema/wallet.ts'
+import { WALLET_VERSION, WalletSchema, type Wallet } from '../schema/wallet.ts'
 
 export type SetupResult =
   | {
@@ -27,7 +27,7 @@ export type RecordResult =
 
 // Every change goes through the pure rules in src/engine/wallet-change.ts
 // and record.ts, so every store behaves the same. A wallet is optional:
-// load() returns null when none is saved.
+// load() returns null when none is saved, and a saved one may have no cards.
 export interface WalletStore {
   readonly where: string // for messages: a file path, or "your saved wallet"
   load(): Promise<Wallet | null> // throws when a saved wallet can't be read
@@ -59,6 +59,10 @@ export type JsonBackend = {
 }
 
 const failed = (error: string) => ({ ok: false as const, error })
+
+// Memberships and point values can be saved before any card.
+export const emptyWallet = (): Wallet =>
+  WalletSchema.parse({ version: WALLET_VERSION })
 
 // A wallet stored as JSON text. Writes are serialized within this instance;
 // a backend shared across processes must serialize them itself (one Durable
@@ -93,9 +97,7 @@ export class JsonWalletStore implements AccountStore {
       const before = await this.load()
       const change = apply(before)
       if (!change.ok) return failed(change.error)
-      // An empty wallet is stored as none: the schema needs a card.
-      if (change.wallet.cards.length === 0) await this.backend.remove()
-      else await this.backend.write(JSON.stringify(change.wallet))
+      await this.backend.write(JSON.stringify(change.wallet))
       return {
         ok: true,
         wallet: change.wallet,
@@ -129,14 +131,14 @@ export class JsonWalletStore implements AccountStore {
   }
 
   setMemberships(memberships: string[]): Promise<SetupResult> {
-    return this.change(
-      this.needsWallet((w) => withMemberships(this.catalog, w, memberships)),
+    return this.change((w) =>
+      withMemberships(this.catalog, w ?? emptyWallet(), memberships),
     )
   }
 
   setValuations(changes: Record<string, number | null>): Promise<SetupResult> {
-    return this.change(
-      this.needsWallet((w) => withValuations(this.catalog, w, changes)),
+    return this.change((w) =>
+      withValuations(this.catalog, w ?? emptyWallet(), changes),
     )
   }
 

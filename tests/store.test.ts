@@ -97,13 +97,32 @@ describe.each(stores)('the %s store', (_name, make) => {
     expect((await store.load())?.cards.map((c) => c.id)).toEqual([
       'amex-blue-cash-preferred',
     ])
-    const last = await store.removeCard('amex-blue-cash-preferred')
-    if (_name === 'file') {
-      expect(!last.ok && last.error).toMatch(/last card in .*delete that file/)
-    } else {
-      expect(last.ok).toBe(true)
-      expect(await store.load()).toBeNull()
-    }
+    expect((await store.removeCard('amex-blue-cash-preferred')).ok).toBe(true)
+    expect(await store.load()).toMatchObject({
+      cards: [],
+      memberships: ['amazon-prime'],
+    })
+    expect((await store.addCard({ id: 'amex-gold' }, TODAY)).ok).toBe(true)
+    expect((await store.load())?.cards.map((c) => c.id)).toEqual(['amex-gold'])
+  })
+
+  test('saves memberships and point values before any card', async () => {
+    const store = await make()
+    const set = await store.setMemberships(['costco'])
+    expect(set.ok && set.created).toBe(true)
+    expect((await store.setValuations({ UR: 1.7 })).ok).toBe(true)
+    expect(await store.load()).toMatchObject({
+      cards: [],
+      memberships: ['costco'],
+      valuations: { UR: 1.7 },
+    })
+    expect((await store.addCard({ id: 'chase-prime-visa' }, TODAY)).ok).toBe(
+      true,
+    )
+    expect(await store.load()).toMatchObject({
+      memberships: ['costco'],
+      cards: [{ id: 'chase-prime-visa' }],
+    })
   })
 
   test('concurrent writes all land', async () => {

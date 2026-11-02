@@ -55,7 +55,7 @@ import {
   words,
 } from './format.ts'
 import { SearchInput } from './SearchInput.tsx'
-import { loadList, loadWallet, saveWallet } from './settings.ts'
+import { loadList } from './settings.ts'
 import { offerTerms } from '../../src/engine/offers.ts'
 import { dollarsAndCents } from '../../src/engine/text.ts'
 
@@ -672,13 +672,7 @@ function PointValues({
   )
 }
 
-function WhatIf({
-  wallet,
-  memberships,
-}: {
-  wallet: Wallet
-  memberships: string[]
-}) {
+function WhatIf({ wallet }: { wallet: Wallet }) {
   const result = useMemo(() => {
     const rows = loadList<Row>('spending', TYPICAL_MONTHLY_SPEND)
     const lines = resolveSpendLines(
@@ -686,18 +680,14 @@ function WhatIf({
       rows.map((r) => lineFor(r.what, r.monthly)),
     ).filter((l) => l.merchant.source !== 'none')
     if (lines.length === 0) return null
-    const held = {
-      ...wallet,
-      memberships: [...new Set([...wallet.memberships, ...memberships])],
-    }
-    return simulateAdditions(catalog, held, lines, {
+    return simulateAdditions(catalog, wallet, lines, {
       filters: ALL_PERSONAL_CARDS,
-      memberships: held.memberships,
+      memberships: wallet.memberships,
       valuations: wallet.valuations,
       start: localToday(),
     })
     // The spending rows come from storage and change only on the other tab.
-  }, [wallet, memberships])
+  }, [wallet])
   if (!result) return null
   const gains = result.additions.filter((a) => a.gain > 0).slice(0, 3)
   return (
@@ -824,12 +814,13 @@ function Transfer({
 
 export function MyWallet({
   initialQuery,
-  memberships,
+  wallet,
+  onReplace: replace,
 }: {
   initialQuery: string
-  memberships: string[] // from Filters and memberships, like Costco's
+  wallet: Wallet | null
+  onReplace: (wallet: Wallet | null) => void
 }) {
-  const [wallet, setWallet] = useState<Wallet | null>(loadWallet)
   const [message, setMessage] = useState<{
     text: string
     error: boolean
@@ -845,10 +836,6 @@ export function MyWallet({
       : { text: initialQuery.trim(), amount: null },
   )
 
-  const replace = (next: Wallet | null) => {
-    setWallet(next)
-    saveWallet(next)
-  }
   const apply = (change: WalletChange, cardId?: string) => {
     if (!change.ok) {
       setMessage({ text: change.error, error: true })
@@ -870,7 +857,7 @@ export function MyWallet({
   const problems = wallet ? walletProblems(wallet, catalog) : []
   const rec = useMemo(
     () =>
-      wallet && asked && problems.length === 0
+      wallet && wallet.cards.length > 0 && asked && problems.length === 0
         ? ask(wallet, asked.text, asked.amount)
         : null,
     [wallet, asked, problems.length],
@@ -887,7 +874,8 @@ export function MyWallet({
     )
   }
 
-  if (!wallet) {
+  // Memberships and point values can be saved before any card.
+  if (!wallet || wallet.cards.length === 0) {
     return (
       <div class="panels">
         <section class="panel first">
@@ -896,23 +884,19 @@ export function MyWallet({
             anywhere. Your wallet is saved only in this browser: no account, and
             never a card number.
           </p>
-          <AddCard wallet={null} onChange={apply} />
+          <AddCard wallet={wallet} onChange={apply} />
           {message ? (
             <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
           ) : null}
         </section>
-        <Transfer wallet={null} onReplace={replace} />
+        <Transfer wallet={wallet} onReplace={replace} />
       </div>
     )
   }
 
   const remove = (cardId: string) => {
-    if (wallet.cards.length > 1) {
-      apply(removeFromWallet(wallet, cardId), cardId)
-      return
-    }
-    replace(null)
-    setAsked(null)
+    apply(removeFromWallet(wallet, cardId), cardId)
+    if (wallet.cards.length === 1) setAsked(null)
   }
 
   return (
@@ -998,7 +982,7 @@ export function MyWallet({
       <CheatSheet wallet={wallet} />
       <Memberships wallet={wallet} onChange={apply} />
       <PointValues wallet={wallet} onChange={apply} />
-      <WhatIf wallet={wallet} memberships={memberships} />
+      <WhatIf wallet={wallet} />
       <Transfer wallet={wallet} onReplace={replace} />
     </div>
   )

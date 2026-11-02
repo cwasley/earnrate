@@ -8,7 +8,6 @@ export type Settings = {
   noFee: boolean
   business: boolean
   issuer: string | null
-  memberships: string[]
   pointsHeavy: boolean
 }
 
@@ -17,11 +16,17 @@ export const DEFAULT_SETTINGS: Settings = {
   noFee: false,
   business: false,
   issuer: null,
-  memberships: [],
   pointsHeavy: false,
 }
 
-export function engineOptions(s: Settings): {
+// The memberships and point values saved in the wallet, which every tab
+// shares.
+export type Saved = Pick<Wallet, 'memberships' | 'valuations'>
+
+export function engineOptions(
+  s: Settings,
+  saved: Saved,
+): {
   filters: CardFilters
   memberships: string[]
   valuations: Wallet['valuations']
@@ -34,8 +39,10 @@ export function engineOptions(s: Settings): {
       business: s.business,
       issuer: s.issuer,
     },
-    memberships: s.memberships,
-    valuations: s.pointsHeavy ? VALUATION_PROFILES['points-heavy'] : {},
+    memberships: saved.memberships,
+    valuations: s.pointsHeavy
+      ? VALUATION_PROFILES['points-heavy']
+      : saved.valuations,
   }
 }
 
@@ -91,4 +98,26 @@ export function saveWallet(wallet: Wallet | null): void {
   } catch {
     // Without storage the wallet lasts until the page closes.
   }
+}
+
+// Memberships used to be saved with the filters. They belong to the wallet
+// now, which every tab reads, so any saved there move over once.
+export function loadState(): { settings: Settings; wallet: Wallet | null } {
+  const { memberships, ...settings } = load<
+    Settings & { memberships?: unknown }
+  >('settings', DEFAULT_SETTINGS)
+  const moved = Array.isArray(memberships)
+    ? memberships.filter((m): m is string => typeof m === 'string')
+    : []
+  let wallet = loadWallet()
+  if (moved.length > 0) {
+    const base = wallet ?? { valuations: {}, memberships: [], cards: [] }
+    wallet = {
+      ...base,
+      memberships: [...new Set([...base.memberships, ...moved])],
+    }
+    saveWallet(wallet)
+    save('settings', settings)
+  }
+  return { settings, wallet }
 }

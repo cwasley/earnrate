@@ -837,16 +837,25 @@ describe('wallet setup', () => {
     expect(text(gas)).toMatch(/2% picks: gas stations and EV charging\./)
   })
 
-  test('remove_card refuses the last card', async () => {
+  test('a wallet can hold memberships with no cards', async () => {
     const client = await connect(
-      await walletCopy('cards:\n  - id: amex-gold\n'),
+      await walletCopy(
+        'memberships: [amazon-prime]\ncards:\n  - id: amex-gold\n',
+      ),
     )
-    const result = await client.callTool({
+    const removed = await client.callTool({
       name: 'remove_card',
       arguments: { cardId: 'amex-gold' },
     })
-    expect(result.isError).toBe(true)
-    expect(text(result)).toMatch(/last card/)
+    expect(text(removed)).toMatch(/no cards now; answers cover every card/)
+    const best = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { merchant: 'Amazon' },
+    })
+    expect(text(best)).toMatch(/With your Amazon Prime/)
+    const listed = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(listed)).toMatch(/has no cards yet/)
+    expect(text(listed)).toMatch(/Memberships: amazon-prime\./)
   })
 })
 
