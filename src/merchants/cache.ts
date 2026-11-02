@@ -1,4 +1,5 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
+import { writeFileAtomic } from '../data/atomic-write.ts'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { z } from 'zod'
@@ -93,13 +94,10 @@ export async function openMerchantCache(
       set: async (key, value) => {
         merchants = { ...merchants, [key]: toEntry(value) }
         if (!writable) return
-        await mkdir(path.dirname(file), { recursive: true })
-        const tmp = `${file}.${String(process.pid)}.tmp`
-        await writeFile(
-          tmp,
+        await writeFileAtomic(
+          file,
           `${JSON.stringify({ version: 1, merchants }, null, 2)}\n`,
         )
-        await rename(tmp, file)
       },
     },
   }
