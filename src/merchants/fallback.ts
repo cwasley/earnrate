@@ -1,5 +1,6 @@
 import { LLM_MAX_CALLS_ENV_VAR } from '../brand.ts'
 import type { Channel, MerchantResolution } from '../engine/types.ts'
+import { hasCardNumber } from '../schema/card-number.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { describeClassifierError } from './anthropic.ts'
 import type { CachedClassification, MerchantCache } from './cache.ts'
@@ -69,6 +70,13 @@ export function createLlmSession(options: {
     resolve: async (catalog, input, channel) => {
       const known = resolveMerchant(catalog, input, channel)
       if (known.source !== 'none') return { merchant: known, notices: [] }
+      if (hasCardNumber(input))
+        return {
+          merchant: known,
+          notices: [
+            'Skipped the Claude lookup: that looks like a card number, and earnrate never sends one anywhere.',
+          ],
+        }
 
       const key = normalizeMerchantName(input)
       const saved = options.cache.get(key)
