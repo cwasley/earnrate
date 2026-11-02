@@ -440,11 +440,27 @@ describe('no wallet needed', () => {
     expect(stdout).not.toMatch(/merchant list/)
   })
 
+  test('cheatsheet --every-card picks from every card with the saved memberships', async () => {
+    const { stdout } = await cli(['cheatsheet', '--every-card'])
+    expect(stdout).toMatch(/^ {2}Amazon +Prime Visa +5%$/m)
+    expect(stdout).toMatch(/With your Amazon Prime\./)
+    expect(stdout).not.toMatch(/name them with --cards/)
+    expect(
+      (await cli(['cheatsheet', '--every-card', '--cards', 'amex-gold'])).code,
+    ).toBe(2)
+  })
+
   test('cheatsheet, offers and simulate work without a wallet', async () => {
     const sheet = await cli(['cheatsheet'], noWallet)
     expect(sheet.code).toBe(0)
     expect(sheet.stdout).toMatch(/^The best card for each kind of purchase/)
     expect((await cli(['offers'], noWallet)).code).toBe(0)
+    const offers = await cli(
+      ['offers', '--cards', 'amex-platinum', '--all'],
+      noWallet,
+    )
+    expect(offers.stdout).not.toMatch(/^ ?\d+\. The Platinum Card/m)
+    expect(offers.stdout).toMatch(/Likely not eligible: you hold The Platinum/)
     const sim = await cli(['simulate'], noWallet)
     expect(sim.code).toBe(0)
     expect(sim.stdout).toMatch(/^No spending was given/)

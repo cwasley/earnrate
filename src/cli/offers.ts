@@ -3,8 +3,9 @@ import { CLI_NAME } from '../brand.ts'
 import { loadCatalog, walletPath } from '../data/load.ts'
 import { compareOffers } from '../engine/offers.ts'
 import { isValuationProfile, withValuationProfile } from '../engine/profiles.ts'
+import { currencyName } from '../engine/text.ts'
 import { formatOffers } from '../format/offers.ts'
-import { valuationProblem } from './args.ts'
+import { cardList, valuationProblem } from './args.ts'
 import { cardsToUse, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
 
 const OFFERS_HELP = `Usage: ${CLI_NAME} offers [--cash | --points] [--no-fee] [--business] [options]
@@ -19,6 +20,8 @@ Options:
   --no-fee               Cards with no annual fee.
   --business             Business cards instead of personal ones.
   --held                 Include cards already in your wallet.
+  --cards <ids>          Cards you have, instead of your wallet, comma separated.
+  --member <name>        A membership you have, in place of the saved ones.
   --valuation <profile>  flat or points-heavy, instead of your wallet's values.
   --all                  List every offer, not just the top 10.
   --json                 Print the full comparison as JSON.
@@ -36,6 +39,8 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
         'no-fee': { type: 'boolean' },
         business: { type: 'boolean' },
         held: { type: 'boolean' },
+        cards: { type: 'string' },
+        member: { type: 'string', multiple: true },
         valuation: { type: 'string' },
         all: { type: 'boolean' },
         json: { type: 'boolean' },
@@ -63,8 +68,8 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
 
   const catalog = await loadCatalog()
   const found = await cardsToUse(catalog, walletPath(io.env), io, {
-    cards: null,
-    members: [],
+    cards: cardList(values.cards),
+    members: values.member ?? [],
   })
   if (found === null) return RUNTIME_ERROR
   const loaded =
@@ -89,8 +94,12 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
     io.stdout(`${JSON.stringify(comparison, null, 2)}\n`)
     return 0
   }
-  const currencyName = (id: string) =>
-    catalog.currencies.find((c) => c.id === id)?.name ?? id
-  io.stdout(formatOffers(comparison, currencyName, values.all ?? false))
+  io.stdout(
+    formatOffers(
+      comparison,
+      (id) => currencyName(catalog, id),
+      values.all ?? false,
+    ),
+  )
   return 0
 }

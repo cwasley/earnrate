@@ -27,6 +27,7 @@ name with --cards, or else from every card earnrate knows.
 
 Options:
   --cards <ids>          Use these cards instead of your wallet, comma separated.
+  --every-card           Pick from every card earnrate knows, even with a wallet.
   --member <name>        A membership you have, like amazon-prime or costco. Repeatable.
   --valuation <profile>  flat or points-heavy, instead of your wallet's values.
   --date <YYYY-MM-DD>    The day to check. Default: today.
@@ -43,6 +44,7 @@ export async function runCheatSheet(argv: string[], io: Io): Promise<number> {
         valuation: { type: 'string' },
         date: { type: 'string' },
         cards: { type: 'string' },
+        'every-card': { type: 'boolean' },
         member: { type: 'string', multiple: true },
         json: { type: 'boolean' },
         help: { type: 'boolean', short: 'h' },
@@ -59,7 +61,10 @@ export async function runCheatSheet(argv: string[], io: Io): Promise<number> {
     io.stdout(CHEATSHEET_HELP)
     return 0
   }
-  const problem = valuationProblem(values.valuation) ?? dateProblem(values.date)
+  const problem =
+    values['every-card'] && values.cards !== undefined
+      ? 'Pick --cards or --every-card, not both.'
+      : (valuationProblem(values.valuation) ?? dateProblem(values.date))
   if (problem !== null) {
     io.stderr(`${problem}\n`)
     return USAGE_ERROR
@@ -71,19 +76,20 @@ export async function runCheatSheet(argv: string[], io: Io): Promise<number> {
   })
   if (loaded === null) return RUNTIME_ERROR
   const date = values.date ?? io.today
-  if (loaded === 'none') {
+  if (loaded === 'none' || values['every-card']) {
+    const saved = await savedSettings(io)
     const sheet = catalogCheatSheet(catalog, date, {
       filters: ALL_PERSONAL_CARDS,
-      memberships: values.member ?? [],
+      memberships: values.member ?? saved.memberships,
       valuations:
         values.valuation !== undefined && isValuationProfile(values.valuation)
           ? VALUATION_PROFILES[values.valuation]
-          : (await savedSettings(io)).valuations,
+          : saved.valuations,
     })
     io.stdout(
       values.json
         ? `${JSON.stringify(sheet, null, 2)}\n`
-        : `${formatCheatSheet(sheet)}\n${NO_WALLET_HINT}\n`,
+        : `${formatCheatSheet(sheet)}${loaded === 'none' ? `\n${NO_WALLET_HINT}\n` : ''}`,
     )
     return 0
   }

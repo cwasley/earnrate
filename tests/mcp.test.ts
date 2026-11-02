@@ -144,6 +144,21 @@ describe('tools', () => {
     )
   })
 
+  test('best_card_for_purchase takes a valuation profile', async () => {
+    const client = await connect(await walletCopy())
+    const ask = async (valuation?: string) =>
+      (
+        (
+          await client.callTool({
+            name: 'best_card_for_purchase',
+            arguments: { merchant: 'restaurants', amount: 100, valuation },
+          })
+        ).structuredContent as Recommendation
+      ).ranked.find((r) => r.cardId === 'amex-gold')?.effectiveReturnPct
+    const usual = await ask()
+    expect(await ask('points-heavy')).toBeGreaterThan(usual ?? Infinity)
+  })
+
   test('bad arguments come back as a tool error', async () => {
     const client = await connect(await walletCopy())
     const result = await client.callTool({

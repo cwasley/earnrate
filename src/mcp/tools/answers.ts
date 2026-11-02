@@ -99,6 +99,7 @@ export function registerAnswerTools(
         category: CategoryInput,
         cards: NamedCards,
         memberships: NamedMemberships,
+        valuation: CatalogFilters.valuation,
       }),
       outputSchema: PurchaseAnswerSchema,
       annotations: {
@@ -115,9 +116,14 @@ export function registerAnswerTools(
       category,
       cards,
       memberships,
+      valuation,
     }) => {
-      const wallet = await ctx.cardsFor(cards, memberships)
-      if (typeof wallet === 'string') return fail(wallet)
+      const held = await ctx.cardsFor(cards, memberships)
+      if (typeof held === 'string') return fail(held)
+      const wallet =
+        held !== null && valuation
+          ? withValuationProfile(held, valuation)
+          : held
       const purchase = {
         merchant,
         amount: amount ?? null,
@@ -144,7 +150,7 @@ export function registerAnswerTools(
             channel: purchase.channel,
             date: purchase.date,
           },
-          settings({ memberships }, await ctx.saved()),
+          settings({ memberships, valuation }, await ctx.saved()),
           resolved.merchant,
         )
         const allCards = { ...explored, ranked: explored.ranked.slice(0, TOP) }
