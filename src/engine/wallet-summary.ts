@@ -15,12 +15,14 @@ import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { activationRules } from './setup.ts'
 import {
+  CAP_PERIODS,
   categoryPhrase,
   choiceName,
   currencyLabel,
   earnText,
   listed,
   shortDate,
+  wholeDollars,
   words,
 } from './text.ts'
 import { cardValuation, currencyValuation } from './valuation.ts'
@@ -146,6 +148,20 @@ const matchKeys = (rule: Rule) =>
 // is a lower tier that an uncapped, always-on higher rate fully covers (Prime
 // Visa's 3% without Prime, once Prime is held). Rules at the same rate share
 // a line.
+// "first $1,500 a quarter, combined": how much of a rate's spending earns it.
+function capLimit(card: Card, shown: Rule[], rule: Rule): string {
+  if (rule.cap === undefined) return ''
+  const cap =
+    typeof rule.cap === 'string'
+      ? card.caps.find((c) => c.id === rule.cap)
+      : rule.cap
+  if (!cap) return ''
+  const shared =
+    typeof rule.cap === 'string' &&
+    shown.filter((r) => r.cap === rule.cap).length > 1
+  return `first ${wholeDollars(cap.amount)} ${CAP_PERIODS[cap.period]}${shared ? ', combined' : ''}`
+}
+
 function headlineRates(
   catalog: Catalog,
   wallet: Wallet,
@@ -176,18 +192,22 @@ function headlineRates(
       .flatMap(matchKeys)
     if (keys.length > 0 && keys.every((k) => higher.includes(k))) continue
     const pending = r.requires?.activation && !isActivated(card, held, r.id)
-    const head = `${earnText(catalog, r.rate, currency)} on`
-    const key = pending ? `${head}|activate` : head
+    const key = [
+      `${earnText(catalog, r.rate, currency)} on`,
+      capLimit(card, shown, r),
+      pending ? ', once activated' : '',
+    ].join('|')
     const whats = lines.get(key) ?? []
     for (const part of ruleParts(catalog, r))
       if (!whats.includes(part)) whats.push(part)
     lines.set(key, whats)
   }
   return [
-    ...[...lines].map(
-      ([key, whats]) =>
-        `${key.replace('|activate', '')} ${listed(whats)}${key.endsWith('|activate') ? ' (once activated)' : ''}`,
-    ),
+    ...[...lines].map(([key, whats]) => {
+      const [head = '', limit = '', activate = ''] = key.split('|')
+      const after = `${limit}${activate}`
+      return `${head} ${listed(whats)}${after === '' ? '' : ` (${after.replace(/^, /, '')})`}`
+    }),
     `${earnText(catalog, card.base_rate, currency)} on everything else`,
   ]
 }

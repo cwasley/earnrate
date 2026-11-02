@@ -38,6 +38,16 @@ test('every bonus rate is listed, and an activated quarter says so', () => {
   expect(flex?.toActivate).toEqual([])
 })
 
+test('a capped rate says how much spending earns it', () => {
+  const wallet = WalletSchema.parse({
+    cards: [{ id: 'chase-freedom-flex', activated: ['q4-2026-dining'] }],
+  })
+  const [flex] = walletSummary(catalog, wallet, '2026-11-01').cards
+  expect(flex?.rates).toContain(
+    '7% cash back on restaurants (first $1,500 a quarter, combined)',
+  )
+})
+
 test('long lists of one kind of store read as a group', () => {
   const wallet = WalletSchema.parse({
     cards: [{ id: 'chase-sapphire-preferred' }],
