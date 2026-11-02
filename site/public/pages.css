@@ -146,6 +146,19 @@ ol.cards ul {
   line-height: 1.9;
 }
 
+.next {
+  margin-top: 40px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+}
+.next h2 {
+  margin-top: 0;
+}
+.next p:last-child {
+  margin-bottom: 0;
+}
+
 footer {
   margin-top: 56px;
   padding-top: 18px;

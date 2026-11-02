@@ -111,6 +111,11 @@
         letter-spacing: -0.02em;
         margin: 60px 0 12px;
       }
+      h3 {
+        font-size: 18px;
+        letter-spacing: -0.01em;
+        margin: 32px 0 8px;
+      }
       p {
         margin: 0 0 14px;
       }
@@ -323,6 +328,12 @@
           <a href="/best/travel">Travel</a> ·
           <a href="/best/">Every store and category</a>
         </p>
+        <p class="popular">
+          Also in Claude:
+          <a href="#claude"
+            >ask from claude.ai, the desktop app, Claude Code or Cowork</a
+          >.
+        </p>
       </header>
 
       <section>
@@ -355,7 +366,14 @@
       </section>
 
       <section>
-        <h2>It remembers what you've spent</h2>
+        <h2>What it does</h2>
+        <p>
+          Ask about a store, or a kind of place like a coffee shop or a gas
+          station. earnrate answers from every card it knows, or from yours, and
+          shows the rule behind the answer.
+        </p>
+
+        <h3>It remembers what you've spent</h3>
         <p>
           Many bonus rates stop at a cap. Blue Cash Preferred pays 6% at
           supermarkets until you've spent $6,000 in a year, then 1%. earnrate
@@ -395,28 +413,88 @@
           quarter, like U.S. Bank Cash+ and Chase Freedom Flex, work the same
           way: earnrate uses the picks you've made.
         </p>
-      </section>
 
-      <section>
-        <h2>It explains itself</h2>
-        <p>Every answer shows the rule behind it. A few things it catches:</p>
+        <h3>It reads the fine print</h3>
+        <p>
+          Marketing pages give the headline rate. The terms say what counts. A
+          few things earnrate catches:
+        </p>
         <ul class="plain">
           <li>
             Costco's registers only take Visa, so it won't suggest your Amex
             there.
           </li>
           <li>
-            If your points are worth more to you than face value, it ranks on
-            your number and says where the answer would flip.
+            Delivery apps aren't dining on Citi Custom Cash: DoorDash earns 1%,
+            not 5%.
+          </li>
+          <li>
+            Sapphire Preferred's 3x streaming covers only the services Chase
+            names. Prime Video isn't one of them.
           </li>
           <li>
             Food at a stadium or inside a hotel may not count as a restaurant.
             It warns you and says which card wins either way.
           </li>
+          <li>
+            If your points are worth more to you than face value, it ranks on
+            your number and says where the answer would flip.
+          </li>
         </ul>
+
+        <h3>It keeps your welcome bonus on track</h3>
+        <p>
+          Opened a card with a sign-up bonus? earnrate counts your spending
+          toward it, shows the weekly pace to finish by the deadline, and moves
+          purchases to that card when you're behind.
+        </p>
+
+        <h3>It finds your next card</h3>
+        <p>
+          It runs a year of your own spending, or typical amounts, through every
+          card and every pair of cards, after annual fees, and shows what each
+          would add to your wallet. Welcome offers are ranked by what they're
+          worth in the first year, with the issuer's eligibility rules.
+        </p>
+
+        <h3>It makes you a cheat sheet</h3>
+        <p>
+          One table of which card to use for groceries, dining, gas, Amazon,
+          travel and everything else this quarter, from your cards and the
+          categories you've picked. Save it as an image for your phone.
+        </p>
       </section>
 
       <section>
+        <h2>Why you can trust it</h2>
+        <ul class="plain">
+          <li>
+            <strong>No affiliate links, ever.</strong> earnrate earns nothing
+            when you apply for a card, so rankings depend only on the issuers'
+            terms and your own cards and settings.
+          </li>
+          <li>
+            <strong>The issuer's own words.</strong> Every rate, cap and
+            exclusion is quoted from the issuer's pages. A check reloads them
+            every week and flags anything that changed.
+          </li>
+          <li>
+            <strong>Private by design.</strong> The comparison above runs in
+            your browser: what you type is never sent anywhere. earnrate never
+            asks for card numbers or bank logins. In Claude, earnrate's server
+            answers each question without keeping it, and a saved wallet is
+            encrypted so only your recovery code or your connected apps can open
+            it. The <a href="/privacy">privacy page</a> has the details.
+          </li>
+          <li>
+            <strong>Open source.</strong> The code is
+            <a href="https://github.com/cwasley/earnrate">on GitHub</a>, MIT
+            licensed.
+          </li>
+        </ul>
+      </section>
+
+      <section id="claude">
         <h2>Use it in Claude</h2>
         <p>
           Add earnrate to Claude and ask in a chat, like the Trader Joe's
@@ -431,10 +509,19 @@
           enter: it answers from every card. Name your cards for answers about
           your own, and save them to track your caps and welcome bonuses.
         </p>
-        <p>In Claude Code:</p>
+        <p>In Claude Code and Cowork, install the plugin:</p>
         <pre
           class="terminal install"
-        ><span class="prompt">$</span> claude mcp add --transport http earnrate https://mcp.earnrate.dev</pre>
+        ><span class="prompt">&gt;</span> /plugin marketplace add cwasley/earnrate
+<span class="prompt">&gt;</span> /plugin install earnrate@earnrate</pre>
+        <p>
+          To keep your wallet on your own computer instead, download
+          <a
+            href="https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb"
+            >earnrate for Claude Desktop</a
+          >
+          and open it. Use one or the other: each keeps its own wallet.
+        </p>
         <p>
           Answers come back with a stable card ID as well as the explanation, so
           an agent that pays for you can use them directly. It never needs or
@@ -445,8 +532,9 @@
       <section>
         <h2>Cards it knows</h2>
         <p>
-          57 cards. Each card's rules come from the issuer's own terms. A weekly
-          check reloads those pages and flags anything that changed.
+          57 cards, each checked against everything its issuer publishes about
+          it: the card page, the rates and fees, and the rewards and offer
+          terms.
         </p>
         <ul class="cards">
           <li>
@@ -495,22 +583,6 @@
       </section>
 
       <section>
-        <h2>Private by design</h2>
-        <p>
-          The comparison above runs in your browser: what you type is never sent
-          anywhere. The command line version runs on your own machine, and your
-          wallet is a file you control. In Claude, earnrate's server answers
-          each question without keeping it, and a saved wallet is encrypted so
-          that only your recovery code or your connected apps can open it.
-          earnrate never asks for card numbers or bank logins, and nothing
-          follows you from one visit to the next. If you ask through an AI
-          assistant, its provider sees that conversation, like anything else you
-          ask it. The
-          <a href="/privacy">privacy page</a> has the details.
-        </p>
-      </section>
-
-      <section>
         <h2>Run it on your computer</h2>
         <p>
           My wallet above keeps your cards in this browser. The command line
@@ -527,12 +599,7 @@
 <span class="prompt">$</span> earnrate whole foods 80</pre>
         <p>
           It also runs as a local MCP server, with your wallet in that same
-          file. In Claude Desktop, download
-          <a
-            href="https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb"
-            >earnrate for Claude Desktop</a
-          >
-          and open it. In Claude Code:
+          file. In Claude Code:
         </p>
         <pre
           class="terminal install"

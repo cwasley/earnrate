@@ -309,6 +309,11 @@ function layout(
     <main>
       <header><a class="wordmark" href="/">earnrate</a></header>
 ${body}
+      <aside class="next">
+        <h2>Use it with your own cards</h2>
+        <p><a href="/#wallet">Add your cards on earnrate.dev</a> and it picks the best one anywhere, tracking your spending caps and quarterly picks. It runs in your browser, with no sign-up.</p>
+        <p>Or <a href="/#claude">use it in Claude</a>: ask on claude.ai, in the desktop app, in Claude Code or in Cowork.</p>
+      </aside>
       <footer>
         <p>earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(dataVersion)}, updated ${esc(todayWords)}. Rates change, so check the issuer's terms before you apply.</p>
         <p><a href="/">earnrate.dev</a> · <a href="/best/">Best card for every store</a> · <a href="/cards/">All cards</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></p>

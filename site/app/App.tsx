@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { catalog, dataVersion } from 'virtual:catalog'
 import { BestFor, SUGGESTIONS } from './BestFor.tsx'
 import { MyWallet } from './MyWallet.tsx'
@@ -29,6 +29,15 @@ function readHash(): { tab: Tab; query: string } {
     return { tab: saved || query === '' ? 'wallet' : 'best', query }
   }
   return { tab: 'best', query: hash.get('best') ?? '' }
+}
+
+// A link to a section of the page below the app (/#claude) keeps its
+// fragment, and scrolls there once the app above it has rendered.
+function linkedSection(): HTMLElement | null {
+  const id = location.hash.slice(1)
+  return /^[a-z-]+$/.test(id) && id !== 'wallet' && id !== 'spending'
+    ? document.getElementById(id)
+    : null
 }
 
 function writeHash(tab: Tab, query: string) {
@@ -233,7 +242,14 @@ export function App() {
     />
   )
   useEffect(() => save('settings', settings), [settings])
-  useEffect(() => writeHash(tab, query), [tab, query])
+  const section = useRef(linkedSection())
+  useEffect(() => {
+    section.current?.scrollIntoView()
+  }, [])
+  useEffect(() => {
+    if (section.current) section.current = null
+    else writeHash(tab, query)
+  }, [tab, query])
   useEffect(() => {
     const onHash = () => setView(readHash())
     addEventListener('hashchange', onHash)
