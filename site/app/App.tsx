@@ -96,94 +96,119 @@ function Filters({
         Filters and memberships
         {active > 0 ? <span class="badge">{active}</span> : null}
       </summary>
-      <div class="filter-grid">
-        <label class="check">
-          <input
-            type="checkbox"
-            checked={settings.noFee}
-            onChange={(e) => set({ noFee: e.currentTarget.checked })}
-          />
-          No annual fee
-        </label>
-        <label>
-          Rewards
-          <select
-            value={settings.kind}
-            onChange={(e) =>
-              set({ kind: e.currentTarget.value as Settings['kind'] })
-            }
-          >
-            <option value="any">Cash back and points</option>
-            <option value="cash">Cash back only</option>
-            <option value="points">Points and miles only</option>
-          </select>
-        </label>
-        <label>
-          Issuer
-          <select
-            value={settings.issuer ?? ''}
-            onChange={(e) => set({ issuer: e.currentTarget.value || null })}
-          >
-            <option value="">Any issuer</option>
-            {issuers.map((i) => (
-              <option value={i} key={i}>
-                {issuerName(i)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label class="check">
-          <input
-            type="checkbox"
-            checked={settings.business}
-            onChange={(e) => set({ business: e.currentTarget.checked })}
-          />
-          Business cards instead
-        </label>
-        {ASKED.map((m) => (
-          <label class="check" key={m.id}>
-            <input
-              type="checkbox"
-              checked={has(m.id)}
-              onChange={(e) => toggle(m.id, e.currentTarget.checked)}
-            />
-            {m.ask}
-          </label>
-        ))}
-        {TIER_GROUPS.map(({ label, tiers }) => {
-          const ids = tiers.map((t) => t.id)
-          return (
-            <label key={label}>
-              {label}
+      <div class="filter-panel">
+        <fieldset class="filter-group">
+          <legend>Which cards</legend>
+          <div class="filter-row">
+            <label>
+              Rewards
               <select
-                value={memberships.find((m) => ids.includes(m)) ?? ''}
+                value={settings.kind}
                 onChange={(e) =>
-                  onMemberships([
-                    ...memberships.filter((m) => !ids.includes(m)),
-                    ...(e.currentTarget.value ? [e.currentTarget.value] : []),
-                  ])
+                  set({ kind: e.currentTarget.value as Settings['kind'] })
                 }
               >
-                <option value="">None</option>
-                {tiers.map((t) => (
-                  <option value={t.id} key={t.id}>
-                    {t.name}
+                <option value="any">Cash back and points</option>
+                <option value="cash">Cash back only</option>
+                <option value="points">Points and miles only</option>
+              </select>
+            </label>
+            <label>
+              Issuer
+              <select
+                value={settings.issuer ?? ''}
+                onChange={(e) => set({ issuer: e.currentTarget.value || null })}
+              >
+                <option value="">Any issuer</option>
+                {issuers.map((i) => (
+                  <option value={i} key={i}>
+                    {issuerName(i)}
                   </option>
                 ))}
               </select>
             </label>
-          )
-        })}
-        <label class="check">
-          <input
-            type="checkbox"
-            checked={settings.pointsHeavy}
-            onChange={(e) => set({ pointsHeavy: e.currentTarget.checked })}
-          />
-          I transfer points to airlines and hotels (
-          {profileText('points-heavy')} instead of{' '}
-          {profileText('flat').replace(/.* at /, '')})
-        </label>
+          </div>
+          <div class="filter-checks">
+            <label class="check">
+              <input
+                type="checkbox"
+                checked={settings.noFee}
+                onChange={(e) => set({ noFee: e.currentTarget.checked })}
+              />
+              No annual fee
+            </label>
+            <label class="check">
+              <input
+                type="checkbox"
+                checked={settings.business}
+                onChange={(e) => set({ business: e.currentTarget.checked })}
+              />
+              Business cards instead
+            </label>
+          </div>
+        </fieldset>
+        <fieldset class="filter-group">
+          <legend>About you</legend>
+          <p class="hint">
+            Saved in this browser with My wallet, and used on every tab.
+          </p>
+          <div class="filter-checks">
+            {ASKED.map((m) => (
+              <label class="check" key={m.id}>
+                <input
+                  type="checkbox"
+                  checked={has(m.id)}
+                  onChange={(e) => toggle(m.id, e.currentTarget.checked)}
+                />
+                {m.ask}
+              </label>
+            ))}
+          </div>
+          {TIER_GROUPS.length > 0 ? (
+            <div class="filter-row">
+              {TIER_GROUPS.map(({ label, tiers }) => {
+                const ids = tiers.map((t) => t.id)
+                return (
+                  <label key={label}>
+                    {label}
+                    <select
+                      value={memberships.find((m) => ids.includes(m)) ?? ''}
+                      onChange={(e) =>
+                        onMemberships([
+                          ...memberships.filter((m) => !ids.includes(m)),
+                          ...(e.currentTarget.value
+                            ? [e.currentTarget.value]
+                            : []),
+                        ])
+                      }
+                    >
+                      <option value="">None</option>
+                      {tiers.map((t) => (
+                        <option value={t.id} key={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )
+              })}
+            </div>
+          ) : null}
+          <label class="check">
+            <input
+              type="checkbox"
+              checked={settings.pointsHeavy}
+              onChange={(e) => set({ pointsHeavy: e.currentTarget.checked })}
+            />
+            <span>
+              I transfer points to airlines and hotels
+              <span class="hint">
+                Values {profileText('points-heavy')} instead of{' '}
+                {profileText('flat').replace(/.* at /, '')}.
+              </span>
+            </span>
+          </label>
+        </fieldset>
       </div>
     </details>
   )

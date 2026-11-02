@@ -72,20 +72,51 @@
   text-align: center;
 }
 
-.filter-grid {
+.filter-panel {
   display: grid;
-  gap: 10px;
+  gap: 14px;
   padding: 10px 0 6px;
 }
 
-.filter-grid label {
+.filter-group {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  min-width: 0;
+}
+
+.filter-group legend {
+  padding: 0 6px;
+  margin-left: -6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.filter-row {
+  display: grid;
+  gap: 10px;
+}
+
+.filter-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+
+.filter-panel label {
   display: grid;
   gap: 4px;
   font-size: 14px;
   color: var(--muted);
 }
 
-.filter-grid label.check {
+.filter-panel label.check {
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -93,12 +124,23 @@
   font-size: 15px;
 }
 
-.filter-grid input[type='checkbox'] {
+.filter-panel .hint {
+  display: block;
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.filter-group > .hint {
+  margin-top: -4px;
+}
+
+.filter-panel input[type='checkbox'] {
   margin-top: 4px;
   accent-color: var(--accent);
 }
 
-.filter-grid select,
+.filter-panel select,
 .ask input,
 .spend input {
   background: var(--surface);
@@ -110,7 +152,7 @@
 }
 
 @media (min-width: 640px) {
-  .filter-grid {
+  .filter-row {
     grid-template-columns: 1fr 1fr;
     column-gap: 20px;
   }
@@ -144,7 +186,7 @@ input::-webkit-list-button {
 
 .ask input:focus,
 .spend input:focus,
-.filter-grid select:focus {
+.filter-panel select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
