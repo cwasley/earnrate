@@ -1,5 +1,5 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
-import path from 'node:path'
+import { readFile } from 'node:fs/promises'
+import { writeFileAtomic } from './atomic-write.ts'
 import { isDeepStrictEqual } from 'node:util'
 import { isMap, isSeq, parseDocument, stringify, type Node } from 'yaml'
 import {
@@ -433,8 +433,5 @@ export async function commitWalletText(
   if (!parsed.success || !isDeepStrictEqual(parsed.data, expected)) {
     throw new Error(`couldn't update ${file} safely; ${fallback}`)
   }
-  await mkdir(path.dirname(file), { recursive: true })
-  const tmp = `${file}.${String(process.pid)}.tmp`
-  await writeFile(tmp, after)
-  await rename(tmp, file)
+  await writeFileAtomic(file, after)
 }

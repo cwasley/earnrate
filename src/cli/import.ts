@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
+import { writeFileAtomic } from '../data/atomic-write.ts'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
 import { z } from 'zod'
@@ -339,13 +340,10 @@ export async function runImport(argv: string[], io: Io): Promise<number> {
   )
   for (const entry of analysis.bookings) recorded.add(fingerprint(entry))
   for (const entry of bonusEntries) recorded.add(fingerprint(entry, 'bonus'))
-  await mkdir(path.dirname(ledgerFile), { recursive: true })
-  const tmp = `${ledgerFile}.${String(process.pid)}.tmp`
-  await writeFile(
-    tmp,
+  await writeFileAtomic(
+    ledgerFile,
     `${JSON.stringify({ version: 1, recorded: [...recorded] }, null, 2)}\n`,
   )
-  await rename(tmp, ledgerFile)
   io.stdout(
     `Recorded ${toRecord.join(' and ')} in ${displayPath(walletFile)}.\n`,
   )
