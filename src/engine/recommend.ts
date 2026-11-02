@@ -13,7 +13,9 @@ import {
   usableAt,
   type CardEvaluation,
 } from './evaluate.ts'
+import { membershipName } from './memberships.ts'
 import { daysBetween } from './periods.ts'
+import { ruleWhat } from './rule-text.ts'
 import { rotationGap } from './rotation.ts'
 import { EPSILON, isClose } from './compare.ts'
 import {
@@ -149,7 +151,7 @@ function reasoningFor(
   if (best.rule) {
     const note = best.rule.note ? ` ${best.rule.note}` : ''
     lines.push(
-      `${earnText(catalog, best.nominalRate, currency)} from its "${best.rule.id}" rule.${note}`,
+      `${earnText(catalog, best.nominalRate, currency)} on ${ruleWhat(catalog, best.rule)}${best.rule.requires?.membership === undefined ? '' : `, with ${membershipName(catalog, best.rule.requires.membership)}`}.${note}`,
     )
   } else {
     lines.push(
@@ -209,11 +211,11 @@ function warningsFor(
       )
     } else if (purchase.amount !== null && purchase.amount > remaining) {
       warnings.push(
-        `This purchase crosses the ${capLabel(best)} on "${best.rule.id}": only ${money(remaining)} is left for ${period}.`,
+        `This purchase crosses the ${capLabel(best)} on ${ruleWhat(catalog, best.rule)}: only ${money(remaining)} is left for ${period}.`,
       )
     } else if (remaining < cap.amount * NEAR_CAP_SHARE) {
       warnings.push(
-        `Only ${money(remaining)} left of the ${capLabel(best)} on "${best.rule.id}" for ${period}.`,
+        `Only ${money(remaining)} left of the ${capLabel(best)} on ${ruleWhat(catalog, best.rule)} for ${period}.`,
       )
     }
   }
@@ -224,7 +226,7 @@ function warningsFor(
     nominal.cap.remaining === 0
   ) {
     warnings.push(
-      `The ${capLabel(nominal)} on "${nominal.rule.id}" is used up for ${nominal.cap.period ?? 'this period'}, so it earns ${earnText(catalog, nominal.afterCap ?? nominal.cap.cap.then_rate, valuation.currency)} until it resets.`,
+      `The ${capLabel(nominal)} on ${ruleWhat(catalog, nominal.rule)} is used up for ${nominal.cap.period ?? 'this period'}, so it earns ${earnText(catalog, nominal.afterCap ?? nominal.cap.cap.then_rate, valuation.currency)} until it resets.`,
     )
   }
   if (best.rule?.unverified !== undefined) {

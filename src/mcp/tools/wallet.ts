@@ -12,7 +12,8 @@ import {
 } from '../../engine/text.ts'
 import { membershipName } from '../../engine/memberships.ts'
 import { profileText, VALUATION_PROFILES } from '../../engine/profiles.ts'
-import { optionName, walletSummary } from '../../engine/wallet-summary.ts'
+import { optionName } from '../../engine/rule-text.ts'
+import { walletSummary } from '../../engine/wallet-summary.ts'
 import { checklist } from '../../engine/checklist.ts'
 import { cardText } from '../../format/card-text.ts'
 import {

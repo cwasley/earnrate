@@ -12,7 +12,7 @@ import { choicePeriod, periodKey } from './periods.ts'
 import { recommend } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
-import { optionName } from './wallet-summary.ts'
+import { optionName } from './rule-text.ts'
 import {
   CAP_PERIODS,
   categoryPhrase,

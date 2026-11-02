@@ -6,7 +6,7 @@ exports[`output > comcast, chosen category 1`] = `
 Use Cash+: 5% back. High confidence.
 
   1. Cash+        5%
-     5% cash back from its "five-percent" rule.
+     5% cash back on your 5% picks.
   2. Double Cash  2%
      2% cash back, its base rate. No bonus category applies here.
   3. SoFi         2%
@@ -47,7 +47,7 @@ exports[`output > dodger stadium, ambiguous venue 1`] = `
 Use Savor: 3% back, about $1.20. Medium confidence.
 
   1. Savor        3%  $1.20
-     3% cash back from its "entertainment" rule. Tickets at movie theaters, professional and semi-professional sports promoters, theatrical and concert promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls, record stores, pool halls and bowling alleys. Golf courses, country clubs, collegiate sporting events, charities that put on live entertainment, cable, streaming and membership services don't count, and neither do tickets bought through a third-party site or packages coded as travel or hotel.
+     3% cash back on movie theaters, live entertainment and events. Tickets at movie theaters, professional and semi-professional sports promoters, theatrical and concert promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls, record stores, pool halls and bowling alleys. Golf courses, country clubs, collegiate sporting events, charities that put on live entertainment, cable, streaming and membership services don't count, and neither do tickets bought through a third-party site or packages coded as travel or hotel.
   2. Double Cash  2%  $0.80
      2% cash back, its base rate. No bonus category applies here.
   3. SoFi         2%  $0.80
@@ -69,19 +69,19 @@ exports[`output > shell, tie with every card listed 1`] = `
 Use Sapphire Preferred: 3% back. High confidence.
 
   1. Sapphire Preferred   3%
-     3x Chase Ultimate Rewards from its "gas-and-ev-charging" rule.
+     3x Chase Ultimate Rewards on gas stations and EV charging.
      Valued at 1¢ per point: 3% back.
   2. Blue Cash Preferred  3%
-     3% cash back from its "us-gas" rule. Superstores, supermarkets and warehouse clubs that sell gas are not gas stations.
+     3% cash back on gas stations. Superstores, supermarkets and warehouse clubs that sell gas are not gas stations.
   3. Prime Visa           2%
-     2% cash back from its "gas" rule.
+     2% cash back on gas stations.
   4. Double Cash          2%
      2% cash back, its base rate. No bonus category applies here.
   5. SoFi                 2%
      2x SoFi Member Rewards, its base rate. No bonus category applies here.
      Valued at 1¢ per point: 2% back.
   6. Cash+                2%
-     2% cash back from its "two-percent" rule.
+     2% cash back on your 2% picks.
   7. Freedom Flex         1%
      1x Chase Ultimate Rewards, its base rate. No bonus category applies here.
      Pools into Chase Ultimate Rewards because you hold Sapphire Preferred.
@@ -132,12 +132,12 @@ exports[`output > whole foods 80, points-heavy 1`] = `
 Use Amex Gold: 6.8% back, about $5.44. High confidence.
 
   1. Amex Gold            6.8%  $5.44
-     4x Amex Membership Rewards from its "us-supermarkets" rule. Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+     4x Amex Membership Rewards on supermarkets. Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
      Valued at 1.7¢ per point: 6.8% back.
   2. Blue Cash Preferred    6%  $4.80
-     6% cash back from its "us-supermarkets" rule. Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+     6% cash back on supermarkets. Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
   3. Prime Visa             5%  $4.00
-     5% cash back from its "whole-foods" rule. Online or in-store in the U.S., but not through Instacart or other third-party sites.
+     5% cash back on Whole Foods Market, with Amazon Prime. Online or in-store in the U.S., but not through Instacart or other third-party sites.
   + 6 more cards (--all lists them)
 
 Blue Cash Preferred beats Amex Gold here if Amex Membership Rewards (MR) points are worth less than 1.5¢ (you value them at 1.7¢).

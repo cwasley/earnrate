@@ -9,9 +9,9 @@ import {
   shortDate,
   wholeDollars,
 } from './text.ts'
+import { optionName } from './rule-text.ts'
 import {
   activationsDue,
-  optionName,
   walletSummary,
   type WalletSummary,
 } from './wallet-summary.ts'
