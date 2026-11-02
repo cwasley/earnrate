@@ -373,7 +373,9 @@ describe('wallet setup', () => {
     expect(rows.find((r) => r.label === 'Groceries')?.cardId).toBe(
       'amex-blue-cash-preferred',
     )
-    expect(text(result)).toMatch(/^Your cheat sheet for Q4 2026/)
+    expect(text(result)).toMatch(
+      /^From the wallet file on this computer.*\nYour cheat sheet for Q4 2026/,
+    )
   })
 
   test('simulate_spending against the wallet ranks additions', async () => {
@@ -395,7 +397,9 @@ describe('wallet setup', () => {
     }
     expect(current.rewards).toBeGreaterThan(0)
     expect(additions.length).toBeGreaterThan(0)
-    expect(text(result)).toMatch(/^Your wallet earns about/)
+    expect(text(result)).toMatch(
+      /^From the wallet file on this computer.*\nYour wallet earns about/,
+    )
   })
 
   test('nothing entered: read tools answer from every card', async () => {

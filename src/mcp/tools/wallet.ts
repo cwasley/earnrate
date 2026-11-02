@@ -9,6 +9,7 @@ import {
   shortDate,
   words,
 } from '../../engine/text.ts'
+import { membershipName } from '../../engine/memberships.ts'
 import { profileText, VALUATION_PROFILES } from '../../engine/profiles.ts'
 import { optionName, walletSummary } from '../../engine/wallet-summary.ts'
 import { formatBooking, formatWalletSummary } from '../../format/wallet.ts'
@@ -307,7 +308,7 @@ export function registerWalletTools(
         result,
         `${
           memberships.length > 0
-            ? `Memberships set to ${memberships.join(', ')}.`
+            ? `Memberships set to ${memberships.map((m) => `${membershipName(catalog, m)} (${m})`).join(', ')}.`
             : 'Memberships cleared.'
         }${unused.length > 0 ? ` ${unused.join(', ')} ${unused.length === 1 ? "doesn't" : "don't"} change any saved card's rates yet; kept for cards that use ${unused.length === 1 ? 'it' : 'them'}.` : ''}`,
         { notes: false },

@@ -19,6 +19,7 @@ import {
   choiceName,
   codesAs,
   earnText,
+  listed,
   money,
   PICK_PERIODS,
   pointValuesText,
@@ -408,7 +409,7 @@ function exploreAssumptions(
   assumptions.push(
     options.memberships.length === 0
       ? 'Assumes no memberships (like Amazon Prime). Rates that need one are listed separately.'
-      : `Assumes these memberships: ${options.memberships.join(', ')}.`,
+      : `Assumes these memberships: ${listed(options.memberships.map((m) => membershipName(catalog, m)))}.`,
   )
   const values = pointValuesText(catalog, ranked.slice(0, 10))
   if (values !== null) assumptions.push(values)

@@ -8,6 +8,7 @@ import {
   profileText,
   VALUATION_PROFILES,
 } from '../engine/profiles.ts'
+import { membershipName } from '../engine/memberships.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
 import type { CardInput } from '../engine/wallet-change.ts'
 import { formatCardInfo, formatNotes } from '../format/cards.ts'
@@ -265,7 +266,7 @@ export async function runWalletCommand(
     return report(
       await store.setMemberships(list),
       list.length > 0
-        ? `Memberships set to ${list.join(', ')} in ${where}.`
+        ? `Memberships set to ${list.map((m) => `${membershipName(catalog, m)} (${m})`).join(', ')} in ${where}.`
         : `Memberships cleared in ${where}.`,
       null,
       io,

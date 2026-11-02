@@ -184,7 +184,7 @@ export function registerAnswerTools(
         content: [
           {
             type: 'text',
-            text: `${retry}${formatRecommendation(output, purchase, { all: true })}`,
+            text: `${retry}${ctx.fromCards(cards)}${formatRecommendation(output, purchase, { all: true })}`,
           },
         ],
         structuredContent: output,
@@ -288,6 +288,7 @@ export function registerAnswerTools(
           {
             type: 'text',
             text:
+              (wallet === null ? '' : ctx.fromCards(args.cards)) +
               formatOffers(trimmed, (id) => currencyName(catalog, id), true) +
               (more > 0
                 ? `\nThe top ${String(TOP)} of ${String(comparison.offers.length)} offers${trimmed.offers.length > TOP ? `, plus ${String(trimmed.offers.length - TOP)} likely not eligible` : ''}. Narrow them with kind, noAnnualFee or business.\n`
@@ -429,7 +430,7 @@ export function registerAnswerTools(
           ? withValuationProfile(wallet, args.valuation)
           : wallet
         const result = simulateAdditions(catalog, valued, lines, options)
-        const text = formatAdditions(result, catalog, false)
+        const text = `${ctx.fromCards(args.cards)}${formatAdditions(result, catalog, false)}`
         return {
           content: [{ type: 'text', text: [...notes, text].join('\n\n') }],
           structuredContent: {
@@ -515,7 +516,12 @@ export function registerAnswerTools(
               date,
             )
       return {
-        content: [{ type: 'text', text: formatCheatSheet(sheet) }],
+        content: [
+          {
+            type: 'text',
+            text: `${wallet === null ? '' : ctx.fromCards(args.cards)}${formatCheatSheet(sheet)}`,
+          },
+        ],
         structuredContent: sheet,
       }
     },

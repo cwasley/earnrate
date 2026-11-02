@@ -149,7 +149,7 @@ export function makeContext(deps: ServerDeps) {
     const text = [
       message,
       output.cardIds.length > 0
-        ? `Saved in ${walletName}: ${output.cardIds.join(', ')}.`
+        ? `Saved in ${walletName} (${String(output.cardIds.length)} ${output.cardIds.length === 1 ? 'card' : 'cards'}).`
         : `Saved in ${walletName}, which has no cards now; answers cover every card.`,
       ...(notes ? [formatNotes(result.notes)] : []),
     ].join('\n')
@@ -162,8 +162,15 @@ export function makeContext(deps: ServerDeps) {
   const cardName = (id: string) =>
     catalog.cards.find((c) => c.id === id)?.name ?? id
 
+  // The first line of an answer from the user's own cards: which ones.
+  const fromCards = (named: unknown[] | undefined) =>
+    named !== undefined && named.length > 0
+      ? 'For the cards named in this conversation.\n'
+      : `From ${walletName}.\n`
+
   return {
     walletName,
+    fromCards,
     walletUse,
     wallet,
     readableWallet,
