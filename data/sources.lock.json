@@ -836,8 +836,10 @@
       "checked": "2026-11-01",
       "lines": [
         "345e2953751d3064",
+        "60d4f69954950949",
         "9c7fa7a71fa95e3b",
         "bd1370ab97374bc8",
+        "c3b6656197e68ea6",
         "c70bfa795f7e654a",
         "cd4d8a1cfba06610"
       ]
@@ -927,7 +929,8 @@
       "lines": [
         "03a23796e6824ffd",
         "c1ce20057db5e752",
-        "d84912ff159713fd"
+        "d84912ff159713fd",
+        "d90926c36a26449b"
       ]
     },
     "https://www.target.com/circlecard": {
@@ -979,12 +982,9 @@
     "https://creditcards.wellsfargo.com/active-cash-credit-card/": {
       "checked": "2026-11-01",
       "lines": [
-        "173b2661f632bfc9",
-        "701afb05e0726114",
-        "91487a34a7e9c0b6",
-        "c10ee79e86c8b607",
-        "c35f2b4b28e4159a",
-        "c3a2e8d46b2de0aa"
+        "2518f48920d4242a",
+        "53f9a1b6c962feb4",
+        "e0aa562f4269e188"
       ]
     },
     "https://www.wellsfargo.com/credit-cards/active-cash/terms/": {
