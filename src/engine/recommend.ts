@@ -1,4 +1,8 @@
-import { resolveMerchant, resolveMerchantById } from '../merchants/resolve.ts'
+import {
+  findMerchant,
+  resolveMerchant,
+  resolveMerchantById,
+} from '../merchants/resolve.ts'
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
@@ -458,10 +462,10 @@ export function recommend(
     warnings.push(noCardText(merchant.resolvedName))
     // Only where the merchant's data says what its website takes: without
     // that, every network is assumed, and a gas pump has no website.
-    const record = [
-      ...catalog.merchants.overrides,
-      ...catalog.merchants.seed,
-    ].find((m) => m.id === merchant.merchantId)
+    const record =
+      merchant.merchantId === null
+        ? undefined
+        : findMerchant(catalog, merchant.merchantId)
     const online =
       merchant.channel === 'in_store' &&
       merchant.merchantId !== null &&

@@ -1,7 +1,7 @@
 import type { Cap, Card, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
-import { periodKey } from './periods.ts'
+import { inEffect, periodKey } from './periods.ts'
 import type { Channel, MerchantResolution, Purchase } from './types.ts'
 
 export type PurchaseContext = {
@@ -203,8 +203,7 @@ function applicability(
 
   if (rule.channel !== 'any' && rule.channel !== ctx.channel) return 'no'
   if (rule.geography === 'us_only' && ctx.country !== 'US') return 'no'
-  if (rule.valid_from !== undefined && ctx.date < rule.valid_from) return 'no'
-  if (rule.valid_to !== undefined && ctx.date > rule.valid_to) return 'no'
+  if (!inEffect(rule, ctx.date)) return 'no'
   const membership = rule.requires?.membership
   if (membership !== undefined && !ctx.memberships.has(membership)) return 'no'
   if (rule.requires?.activation && !isActivated(card, held, rule.id))

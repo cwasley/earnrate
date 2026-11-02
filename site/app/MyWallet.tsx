@@ -9,7 +9,7 @@ import {
 } from '../../src/engine/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
 import { activationGroup } from '../../src/engine/evaluate.ts'
-import { localToday } from '../../src/engine/periods.ts'
+import { inEffect, localToday } from '../../src/engine/periods.ts'
 import { recommend } from '../../src/engine/recommend.ts'
 import {
   cardInfo,
@@ -234,7 +234,7 @@ async function saveSheet(sheet: CheatSheet) {
 
 function offerText(card: NonNullable<ReturnType<typeof cards.get>>): string {
   const o = card.welcome_offer
-  if (!o || (o.valid_to !== undefined && o.valid_to < localToday())) return ''
+  if (!o || !inEffect(o, localToday())) return ''
   return `Published offer: ${offerTerms(o, currencyName(catalog, card.currency))}.`
 }
 

@@ -13,7 +13,8 @@ import {
 } from '../src/engine/explore.ts'
 import { EPSILON } from '../src/engine/compare.ts'
 import { membershipNeeded, paidMemberships } from '../src/engine/memberships.ts'
-import { localToday } from '../src/engine/periods.ts'
+import { findMerchant } from '../src/merchants/resolve.ts'
+import { inEffect, localToday } from '../src/engine/periods.ts'
 import {
   capitalize,
   categoryPhrase,
@@ -211,10 +212,7 @@ function gotchas(r: Exploration): string {
       `${esc(reason)} ${count === 1 ? 'One card is' : `${String(count)} cards are`} left out.`,
     )
   if (r.merchant.merchantId !== null) {
-    const note = [
-      ...catalog.merchants.overrides,
-      ...catalog.merchants.seed,
-    ].find((m) => m.id === r.merchant.merchantId)?.note
+    const note = findMerchant(catalog, r.merchant.merchantId)?.note
     if (note) items.push(esc(note))
   }
   return items.length === 0
@@ -401,18 +399,7 @@ function renderIndex(all: Page[]): string {
   )
 }
 
-const merchantNames = new Map(
-  [...catalog.merchants.seed, ...catalog.merchants.overrides].map((m) => [
-    m.id,
-    m.name,
-  ]),
-)
-const merchantKinds = new Map(
-  [...catalog.merchants.seed, ...catalog.merchants.overrides].map((m) => [
-    m.id,
-    m.kind,
-  ]),
-)
+const merchantName = (id: string) => findMerchant(catalog, id)?.name
 
 // A category bought as a service reads "on"; its own or a parent's says so.
 const readsOn = (id: string): boolean => {
@@ -439,9 +426,7 @@ function ruleWhatRaw(card: Card, rule: Rule): string {
     )
   }
   if (m.merchants?.length)
-    parts.push(
-      listed(m.merchants.map((id) => merchantNames.get(id) ?? words(id))),
-    )
+    parts.push(listed(m.merchants.map((id) => merchantName(id) ?? words(id))))
   if (m.categories?.length) {
     const cats = listed(m.categories.map((id) => categoryPhrase(catalog, id)))
     parts.push(m.merchants?.length ? `when it codes as ${cats}` : cats)
@@ -457,7 +442,7 @@ function ruleConditions(card: Card, rule: Rule): string[] {
   if (ex) {
     const names = [
       ...(ex.categories ?? []).map((id) => categoryPhrase(catalog, id)),
-      ...(ex.merchants ?? []).map((id) => merchantNames.get(id) ?? words(id)),
+      ...(ex.merchants ?? []).map((id) => merchantName(id) ?? words(id)),
     ]
     if (names.length > 0) lines.push(`Not at ${listed(names, 'or')}`)
   }
@@ -520,7 +505,7 @@ function choicesText(card: Card): string {
 
 function offerText(card: Card): string {
   const o = card.welcome_offer
-  if (!o || (o.valid_to !== undefined && o.valid_to < today)) return ''
+  if (!o || !inEffect(o, today)) return ''
   return `<h2>Public welcome offer</h2><p>${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(card.last_verified))}. ${OFFERS_MAY_DIFFER}${o.note ? ` ${esc(o.note)}` : ''}</p>`
 }
 
@@ -546,7 +531,7 @@ function placements(
   return found.sort((a, b) => a.rank - b.rank || b.pct - a.pct)
 }
 
-const isPortal = (id: string) => merchantKinds.get(id) !== undefined
+const isPortal = (id: string) => findMerchant(catalog, id)?.kind !== undefined
 
 // The card's best everyday categories, then its best single-store bonus
 // (Prime Visa at Amazon) unless it's an issuer's travel site, which stay in
@@ -596,7 +581,7 @@ function headlineFor(card: Card): string {
     const names = [
       ...new Set(
         same.flatMap((r) =>
-          (r.match.merchants ?? []).map((id) => merchantNames.get(id) ?? id),
+          (r.match.merchants ?? []).map((id) => merchantName(id) ?? id),
         ),
       ),
     ]
@@ -645,7 +630,7 @@ function renderCard(
   const body = `
       <h1>${esc(card.name)}</h1>
       <p class="updated">${esc(issuer)} · ${esc(card.business ? 'Business card' : 'Personal card')} · Checked against ${esc(issuer)}'s terms ${esc(shortDate(card.last_verified))}</p>
-      <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeLabel(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listed(card.only_at.map((id) => merchantNames.get(id) ?? words(id))))}.` : ''}</p>
+      <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeLabel(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listed(card.only_at.map((id) => merchantName(id) ?? words(id))))}.` : ''}</p>
       <p><a class="button" href="/#wallet">Add it to your wallet</a></p>
       ${
         firsts.length > 0

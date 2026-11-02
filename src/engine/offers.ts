@@ -3,6 +3,7 @@ import type { Wallet } from '../schema/wallet.ts'
 import { bonusDollars } from './bonus.ts'
 import { matchesFilters } from './explore.ts'
 import { membershipCosts, paidMemberships } from './memberships.ts'
+import { inEffect } from './periods.ts'
 import { money, roundCents } from './text.ts'
 import { cardValuation } from './valuation.ts'
 
@@ -111,7 +112,7 @@ export function compareOffers(
       continue
 
     const offer = card.welcome_offer
-    if (!offer || (offer.valid_to !== undefined && offer.valid_to < today)) {
+    if (!offer || !inEffect(offer, today)) {
       withoutOffer.push(card.id)
       continue
     }

@@ -50,3 +50,27 @@ export function choicePeriod(card: Card): Period | null {
   ]
   return periods.length > 1 ? null : (periods[0] ?? 'calendar_year')
 }
+
+// Whether a dated rule or offer is in effect on `date`; an open end has no
+// limit on that side.
+export const inEffect = (
+  window: { valid_from?: string | undefined; valid_to?: string | undefined },
+  date: string,
+) =>
+  (window.valid_from === undefined || window.valid_from <= date) &&
+  (window.valid_to === undefined || window.valid_to >= date)
+
+// The last day of a period key ("2026-Q4", "2026-10", "2026").
+export function periodEnd(period: string): string | null {
+  const quarter = /^(\d{4})-Q([1-4])$/.exec(period)
+  if (quarter) {
+    const end = ['03-31', '06-30', '09-30', '12-31'][Number(quarter[2]) - 1]
+    return `${quarter[1] ?? ''}-${end ?? ''}`
+  }
+  const month = /^(\d{4})-(\d{2})$/.exec(period)
+  if (month) {
+    const last = new Date(Date.UTC(Number(month[1]), Number(month[2]), 0))
+    return last.toISOString().slice(0, 10)
+  }
+  return /^\d{4}$/.test(period) ? `${period}-12-31` : null
+}

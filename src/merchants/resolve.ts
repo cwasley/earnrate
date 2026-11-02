@@ -149,13 +149,24 @@ function fromMerchant(
   }
 }
 
+// A merchant's record by id; an override replaces the seed entry.
+export function findMerchant(
+  catalog: Catalog,
+  id: string,
+): Merchant | undefined {
+  return (
+    catalog.merchants.overrides.find((m) => m.id === id) ??
+    catalog.merchants.seed.find((m) => m.id === id)
+  )
+}
+
 export function resolveMerchantById(
   catalog: Catalog,
   id: string,
   channel: Channel | null,
 ): MerchantResolution | null {
   const override = catalog.merchants.overrides.find((m) => m.id === id)
-  const found = override ?? catalog.merchants.seed.find((m) => m.id === id)
+  const found = findMerchant(catalog, id)
   if (!found) return null
   return fromMerchant(
     found,

@@ -1,3 +1,4 @@
+import { findMerchant } from '../merchants/resolve.ts'
 import type { Card, Cap, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
@@ -8,7 +9,7 @@ import {
   isActivated,
   pickedCategories,
 } from './evaluate.ts'
-import { daysBetween } from './periods.ts'
+import { daysBetween, inEffect, periodEnd } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { activationRules } from './setup.ts'
@@ -83,8 +84,7 @@ export type WalletSummary = {
 const BOOKING = /^(Attraction|Car rental|Cruise|Flight|Hotel|Vacation rental)\b/
 
 function merchantName(catalog: Catalog, id: string): string {
-  const all = [...catalog.merchants.overrides, ...catalog.merchants.seed]
-  const merchant = all.find((m) => m.id === id)
+  const merchant = findMerchant(catalog, id)
   const name = merchant?.name ?? words(id)
   return merchant?.kind === 'booking'
     ? name.replace(BOOKING, (kind) => `${kind.toLowerCase()}s`)
@@ -122,24 +122,6 @@ function ruleWhat(catalog: Catalog, rule: Rule): string {
   return listed(ruleParts(catalog, rule))
 }
 
-function periodEnd(period: string): string | null {
-  const quarter = /^(\d{4})-Q([1-4])$/.exec(period)
-  if (quarter) {
-    const end = ['03-31', '06-30', '09-30', '12-31'][Number(quarter[2]) - 1]
-    return `${quarter[1] ?? ''}-${end ?? ''}`
-  }
-  const month = /^(\d{4})-(\d{2})$/.exec(period)
-  if (month) {
-    const last = new Date(Date.UTC(Number(month[1]), Number(month[2]), 0))
-    return last.toISOString().slice(0, 10)
-  }
-  return /^\d{4}$/.test(period) ? `${period}-12-31` : null
-}
-
-const applies = (rule: Rule, today: string) =>
-  (rule.valid_from === undefined || rule.valid_from <= today) &&
-  (rule.valid_to === undefined || rule.valid_to >= today)
-
 const matchKeys = (rule: Rule) =>
   rule.match.choice !== undefined
     ? []
@@ -164,7 +146,7 @@ function headlineRates(
   const shown = card.rules
     .filter(
       (r) =>
-        applies(r, today) &&
+        inEffect(r, today) &&
         r.rate > card.base_rate &&
         (r.requires?.membership === undefined ||
           wallet.memberships.includes(r.requires.membership)),
