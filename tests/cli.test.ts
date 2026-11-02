@@ -414,6 +414,26 @@ describe('no wallet needed', () => {
     expect((await cli(['costco', '--cards', 'nope'], noWallet)).code).toBe(1)
   })
 
+  test('--cards uses the saved memberships and point values unless --member is given', async () => {
+    const saved = await walletFile(
+      (await readFile(EXAMPLE_WALLET, 'utf8')).replace(
+        'valuations:\n',
+        'valuations:\n  UR: 2\n',
+      ),
+    )
+    const cards = ['--cards', 'chase-prime-visa,chase-sapphire-preferred']
+    expect((await cli(['amazon', '100', ...cards], saved)).stdout).toMatch(
+      /Use Prime Visa: 5% back/,
+    )
+    expect(
+      (await cli(['amazon', '100', ...cards, '--member', 'costco'], saved))
+        .stdout,
+    ).toMatch(/Use Prime Visa: 3% back/)
+    expect((await cli(['dining', '100', ...cards], saved)).stdout).toMatch(
+      /Use Chase Sapphire Preferred Card: 6% back/,
+    )
+  })
+
   test('a category word with a wallet reads as a category, not an unknown store', async () => {
     const { stdout } = await cli(['dining'])
     expect(stdout).toMatch(/^Restaurants/)

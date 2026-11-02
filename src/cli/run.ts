@@ -93,7 +93,7 @@ Options:
   --country <code>       Where you're paying. Default: US.
   --cards <ids>          Answer for these cards instead of your wallet, comma
                          separated: --cards amex-gold,chase-prime-visa.
-  --member <name>        A membership you have, with --cards or no wallet.
+  --member <name>        A membership you have, in place of the saved ones.
   --category <id>        For a merchant earnrate doesn't know: its category,
                          e.g. grocery.supermarket. Ignored for known merchants.
   --llm, --no-llm        Ask Claude to classify merchants earnrate doesn't know.
@@ -124,6 +124,8 @@ export function displayPath(file: string): string {
 
 // The cards to answer for: those named with --cards, else the wallet file.
 // 'none' means no wallet and no --cards, which answers from every card.
+// Named cards use the saved memberships (unless --member names some) and the
+// saved point values, as the MCP tools do.
 export async function cardsToUse(
   catalog: Catalog,
   file: string,
@@ -136,11 +138,13 @@ export async function cardsToUse(
     return null
   }
   if (named.cards !== null) {
+    const saved = await savedSettings(io)
     const wallet = walletFromCards(
       catalog,
       {
         cards: named.cards.map((id) => ({ id })),
-        memberships: named.members,
+        memberships:
+          named.members.length > 0 ? named.members : saved.memberships,
       },
       io.today,
     )
@@ -148,7 +152,7 @@ export async function cardsToUse(
       io.stderr(`${wallet}\n`)
       return null
     }
-    return wallet
+    return { ...wallet, valuations: saved.valuations }
   }
   try {
     await access(file)
