@@ -14,6 +14,7 @@ import {
   setupNotes,
   type SetupNote,
 } from './setup.ts'
+import { idList } from './text.ts'
 
 // Node-free: earnrate.dev runs these on the wallet it keeps in the browser.
 
@@ -64,7 +65,6 @@ export type WalletChange =
   | { ok: false; error: string }
 
 const failed = (error: string) => ({ ok: false as const, error })
-const list = (ids: string[]) => ids.join(', ')
 
 function findCatalogCard(
   catalog: Catalog,
@@ -75,7 +75,7 @@ function findCatalogCard(
   if (card) return card
   const near = searchCards(catalog, id, null, today).cards.map((c) => c.id)
   return near.length > 0
-    ? `No card '${id}' in earnrate. Closest: ${list(near)}.`
+    ? `No card '${id}' in earnrate. Closest: ${idList(near)}.`
     : `No card '${id}' in earnrate. Search the catalog to find its id.`
 }
 
@@ -128,7 +128,7 @@ export function cardFields(
       if (!needing.includes(id)) {
         problems.push(
           needing.length > 0
-            ? `'${id}' isn't a ${card.id} rule that needs activating. Those are: ${list(needing)}.`
+            ? `'${id}' isn't a ${card.id} rule that needs activating. Those are: ${idList(needing)}.`
             : `${card.id} has no rules that need activating.`,
         )
       }
@@ -141,7 +141,7 @@ export function cardFields(
       if (!choice) {
         problems.push(
           card.choices.length > 0
-            ? `${card.id} has no '${choiceId}' pick. Its picks are: ${list(card.choices.map((c) => c.id))}.`
+            ? `${card.id} has no '${choiceId}' pick. Its picks are: ${idList(card.choices.map((c) => c.id))}.`
             : `${card.id} has no categories to pick.`,
         )
         continue
@@ -150,7 +150,7 @@ export function cardFields(
       for (const p of picks) {
         if (!options.includes(p)) {
           problems.push(
-            `'${p}' isn't a ${choiceId} option for ${card.id}. Options: ${list(options)}.`,
+            `'${p}' isn't a ${choiceId} option for ${card.id}. Options: ${idList(options)}.`,
           )
         }
       }
@@ -187,7 +187,7 @@ export function cardFields(
         ]
         problems.push(
           keys.length > 0
-            ? `${card.id} has no cap '${key}'. Its caps are: ${list(keys)}.`
+            ? `${card.id} has no cap '${key}'. Its caps are: ${idList(keys)}.`
             : `${card.id} has no spending caps.`,
         )
         continue
@@ -315,7 +315,7 @@ export function updateInWallet(
   const card = catalog.cards.find((c) => c.id === input.id)
   if (!held || !card) {
     return failed(
-      `${input.id} isn't in the wallet. Cards: ${list(wallet.cards.map((c) => c.id))}.`,
+      `${input.id} isn't in the wallet. Cards: ${idList(wallet.cards.map((c) => c.id))}.`,
     )
   }
   const fields = cardFields(card, held, input, today)
@@ -337,7 +337,7 @@ export function updateInWallet(
 export function removeFromWallet(wallet: Wallet, id: string): WalletChange {
   if (!wallet.cards.some((c) => c.id === id)) {
     return failed(
-      `${id} isn't in the wallet. Cards: ${list(wallet.cards.map((c) => c.id))}.`,
+      `${id} isn't in the wallet. Cards: ${idList(wallet.cards.map((c) => c.id))}.`,
     )
   }
   return {
@@ -357,7 +357,7 @@ export function withMemberships(
   const unknown = memberships.filter((m) => !known.includes(m))
   if (unknown.length > 0) {
     return failed(
-      `No card uses ${unknown.map((m) => `'${m}'`).join(', ')}. Memberships earnrate knows: ${list(known)}.`,
+      `No card uses ${unknown.map((m) => `'${m}'`).join(', ')}. Memberships earnrate knows: ${idList(known)}.`,
     )
   }
   return {
@@ -380,7 +380,7 @@ export function withValuations(
   )
   if (unknown.length > 0)
     return failed(
-      `Unknown currency ${unknown.map((id) => `'${id}'`).join(', ')}. Currencies: ${list(catalog.currencies.map((c) => c.id))}.`,
+      `Unknown currency ${unknown.map((id) => `'${id}'`).join(', ')}. Currencies: ${idList(catalog.currencies.map((c) => c.id))}.`,
     )
   const odd = Object.entries(changes).filter(
     ([, cents]) => cents !== null && !(cents > 0 && cents <= MAX_CENTS),

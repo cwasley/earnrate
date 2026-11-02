@@ -5,7 +5,7 @@ import { isActivated, pickedCategories } from './evaluate.ts'
 import { membership, membershipName, sameGroup } from './memberships.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap } from './rotation.ts'
-import { listed } from './text.ts'
+import { idList, listed } from './text.ts'
 
 export type CardChoiceInfo = {
   id: string
@@ -216,8 +216,6 @@ export function searchCards(
   }
 }
 
-const list = (ids: string[]) => ids.join(', ')
-
 // What a card in the wallet still needs before its answers are right.
 export function setupNotes(
   catalog: Catalog,
@@ -236,12 +234,12 @@ export function setupNotes(
       held.chosen?.picks[choice.id] !== undefined &&
       (staleChoice === null || choice.period === 'until_changed')
     if (current) continue
-    const options = list(Object.keys(choice.options))
+    const options = idList(Object.keys(choice.options))
     notes.push({
       kind: 'pick',
       text:
         choice.default && picked.has(choice.id)
-          ? `${name}'s ${choice.id} pick is assumed to be ${list(choice.default)}, the default. Set it if a different one was picked (${String(choice.pick)} of: ${options}).`
+          ? `${name}'s ${choice.id} pick is assumed to be ${idList(choice.default)}, the default. Set it if a different one was picked (${String(choice.pick)} of: ${options}).`
           : `${name} needs its ${choice.id} pick for this period (${String(choice.pick)} of: ${options}). Until then those categories earn the base rate.`,
     })
   }
@@ -269,7 +267,7 @@ export function setupNotes(
   if (toActivate.length > 0) {
     notes.push({
       kind: 'activation',
-      text: `${name} has rates that apply only once activated with the issuer: ${list(toActivate)}. Mark the ones already activated.`,
+      text: `${name} has rates that apply only once activated with the issuer: ${idList(toActivate)}. Mark the ones already activated.`,
     })
   }
 

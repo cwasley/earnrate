@@ -25,7 +25,7 @@ import { rotationGap } from './rotation.ts'
 import { money, roundCents } from './text.ts'
 import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
-import { EPSILON } from './compare.ts'
+import { EPSILON, HALF_CENT } from './compare.ts'
 
 const MONTHS = 12
 const SHORTLIST = 8 // best single cards considered for pairs
@@ -383,7 +383,7 @@ function foldTies(pairs: Simulation[]): PairSimulation[] {
     const [a, b] = pair.cards
     const twin = folded.find(
       (f) =>
-        Math.abs(f.net - pair.net) < 0.005 &&
+        Math.abs(f.net - pair.net) < HALF_CENT &&
         costs(f) === costs(pair) &&
         f.cards.some((c) => c.cardId === a?.cardId || c.cardId === b?.cardId),
     )

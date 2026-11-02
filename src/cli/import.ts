@@ -25,7 +25,7 @@ import {
   USAGE_ERROR,
   type Io,
 } from './run.ts'
-import { dollarsAndCents } from '../engine/text.ts'
+import { currencyName, dollarsAndCents } from '../engine/text.ts'
 
 const IMPORT_HELP = `Usage: ${CLI_NAME} import <statement.csv> --card <card-id> [--apply]
        ${CLI_NAME} import <statement.csv>:<card-id> [<statement.csv>:<card-id> ...]
@@ -89,8 +89,7 @@ function valuationNote(
   }
   if (values.size === 0) return 'Cash back counted as cash.'
   const parts = [...values].map(
-    ([id, cents]) =>
-      `${String(cents)}¢ for ${catalog.currencies.find((c) => c.id === id)?.name ?? id}`,
+    ([id, cents]) => `${String(cents)}¢ for ${currencyName(catalog, id)}`,
   )
   const list =
     parts.length > 1

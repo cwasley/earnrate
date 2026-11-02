@@ -6,6 +6,18 @@ import type { MerchantResolution } from './types.ts'
 export const num = (n: number) => String(Number(n.toFixed(2)))
 export const pct = (n: number) => `${num(n)}%`
 export const roundCents = (n: number) => Math.round(n * 100) / 100
+// Ids for a message: "amex-gold, citi-double-cash".
+export const idList = (ids: string[]) => ids.join(', ')
+export const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
+
+// "usbank.com" from "https://www.usbank.com/credit-cards/...".
+export function hostname(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url
+  }
+}
 
 // An id in words: "gas-ev-charging" reads "gas ev charging".
 export const words = (id: string) => id.replace(/[-_.]/g, ' ')
@@ -73,7 +85,7 @@ export function earnText(
   currency: string,
 ): string {
   return currency === 'cash'
-    ? `${num(rate)}% cash back`
+    ? `${pct(rate)} cash back`
     : `${num(rate)}x ${currencyName(catalog, currency)}`
 }
 

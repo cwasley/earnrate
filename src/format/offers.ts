@@ -1,5 +1,11 @@
 import { offerTerms, type OfferComparison } from '../engine/offers.ts'
-import { feeText, money, shortDate, wholeDollars } from '../engine/text.ts'
+import {
+  capitalize,
+  feeText,
+  money,
+  shortDate,
+  wholeDollars,
+} from '../engine/text.ts'
 
 const TOP = 10
 
@@ -20,7 +26,7 @@ export function formatOffers(
       o.spend > 0 ? ` (about ${wholeDollars(o.spend / weeks)} a week)` : ''
     lines.push(
       `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  about ${wholeDollars(o.firstYearValue)} the first year`,
-      `    ${offerTerms(o, currencyName(o.currency))}${pace}. ${feeText(o)[0]?.toUpperCase() ?? ''}${feeText(o).slice(1)}.${o.membershipFee > 0 ? ` Needs a ${money(o.membershipFee)} membership, counted in the first year.` : ''}${o.held ? ' In your wallet.' : ''}`,
+      `    ${offerTerms(o, currencyName(o.currency))}${pace}. ${capitalize(feeText(o))}.${o.membershipFee > 0 ? ` Needs a ${money(o.membershipFee)} membership, counted in the first year.` : ''}${o.held ? ' In your wallet.' : ''}`,
     )
     lines.push(
       `    ${o.validTo ? `Offer ends ${shortDate(o.validTo)}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ.`,

@@ -1,4 +1,5 @@
 import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
+import { HALF_CENT } from '../engine/compare.ts'
 import { capByKey, categoryMatches } from '../engine/evaluate.ts'
 import { periodKey } from '../engine/periods.ts'
 import { recommend } from '../engine/recommend.ts'
@@ -252,7 +253,7 @@ export function analyzeStatement(
     if (topBooking) simulated = applyBooking(simulated, topBooking)
 
     const gain = (top.earned ?? 0) - (used.earned ?? 0)
-    if (top.cardId !== cardId && gain > 0.005) {
+    if (top.cardId !== cardId && gain > HALF_CENT) {
       const key = `${name}|${cardId}|${top.cardId}`
       const miss = missed.get(key) ?? {
         merchant: name,

@@ -15,9 +15,11 @@ import { EPSILON } from '../src/engine/compare.ts'
 import { membershipNeeded, paidMemberships } from '../src/engine/memberships.ts'
 import { localToday } from '../src/engine/periods.ts'
 import {
+  capitalize,
   categoryPhrase,
   currencyName,
   earnText,
+  hostname,
   listed,
   longDate,
   monthYear,
@@ -243,7 +245,7 @@ function sources(shown: ExploreEntry[]): string {
       const card = cards.get(e.cardId)
       const ev = e.evidence
       if (!ev || !card) return ''
-      const host = new URL(ev.url).hostname.replace(/^www\./, '')
+      const host = hostname(ev.url)
       return `<li><strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a>:</strong> “${esc(ev.quote)}” <a href="${esc(ev.url)}" rel="nofollow noopener">${esc(host)}</a>, checked ${esc(card.last_verified)}.</li>`
     })
     .join('')
@@ -420,8 +422,6 @@ const readsOn = (id: string): boolean => {
   return dot !== -1 && readsOn(id.slice(0, dot))
 }
 
-const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
-
 function ruleWhat(card: Card, rule: Rule): string {
   return capitalize(ruleWhatRaw(card, rule))
 }
@@ -492,7 +492,7 @@ function ruleConditions(card: Card, rule: Rule): string[] {
 function evidenceFor(card: Card, ruleId: string): string {
   const ev = card.evidence.find((e) => e.rule === ruleId)
   if (!ev) return ''
-  const host = new URL(ev.url).hostname.replace(/^www\./, '')
+  const host = hostname(ev.url)
   return `<p class="muted">“${esc(ev.quote)}” <a href="${esc(ev.url)}" rel="nofollow noopener">${esc(host)}</a></p>`
 }
 
@@ -662,7 +662,7 @@ function renderCard(
       ${choicesText(card)}
       ${offerText(card)}
       <h2>Sources</h2>
-      <ul>${card.source_urls.map((u) => `<li><a href="${esc(u)}" rel="nofollow noopener">${esc(new URL(u).hostname.replace(/^www\./, '') + new URL(u).pathname)}</a></li>`).join('')}</ul>
+      <ul>${card.source_urls.map((u) => `<li><a href="${esc(u)}" rel="nofollow noopener">${esc(hostname(u) + new URL(u).pathname)}</a></li>`).join('')}</ul>
       <p class="muted">Rankings compare ${card.business ? 'business' : 'personal'} cards, each set up at its best for the purchase, with points at earnrate's default value. Rates change; check ${esc(issuer)}'s terms before you apply.</p>`
   const jsonLd = {
     '@context': 'https://schema.org',

@@ -1,4 +1,4 @@
-import { dollarsAndCents, money, pct } from '../engine/text.ts'
+import { capitalize, dollarsAndCents, money, pct } from '../engine/text.ts'
 import type {
   ExcludedCard,
   Purchase,
@@ -89,7 +89,7 @@ export function formatRecommendation(
     const confidence = rec.decision.confidence
     const why = rec.bonus ? ' for its welcome bonus' : ''
     lines.push(
-      `${style('bold', `Use ${label(top)}${why}: ${pct(top.effectiveReturnPct)} back${earned}.`)} ${confidence[0]?.toUpperCase() ?? ''}${confidence.slice(1)} confidence.`,
+      `${style('bold', `Use ${label(top)}${why}: ${pct(top.effectiveReturnPct)} back${earned}.`)} ${capitalize(confidence)} confidence.`,
     )
     if (rec.bonus && rec.notes[0]) lines.push(rec.notes[0])
   } else {

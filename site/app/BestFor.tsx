@@ -7,11 +7,10 @@ import {
   type ExploreEntry,
 } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
-import { categoryPhrase } from '../../src/engine/text.ts'
+import { categoryPhrase, hostname } from '../../src/engine/text.ts'
 import {
   cards,
   feeLabel,
-  hostname,
   issuerName,
   membershipName,
   pct,

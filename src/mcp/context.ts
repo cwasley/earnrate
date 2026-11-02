@@ -2,6 +2,7 @@ import { walletProblems } from '../data/integrity.ts'
 import type { SetupResult } from '../data/store.ts'
 import { EMPTY_WALLET, walletFromCards } from '../engine/transient.ts'
 import type { Channel, MerchantResolution } from '../engine/types.ts'
+import { capitalize } from '../engine/text.ts'
 import { formatNotes } from '../format/cards.ts'
 import { resolvePlace, withCallerCategory } from '../merchants/resolve.ts'
 import type { Wallet } from '../schema/wallet.ts'
@@ -49,7 +50,7 @@ export function makeContext(deps: ServerDeps) {
     }
     const problems = walletProblems(loaded, catalog)
     return problems.length > 0
-      ? `${theWallet[0]?.toUpperCase() ?? ''}${theWallet.slice(1)} has problems:\n${problems.map((p) => `- ${p}`).join('\n')}`
+      ? `${capitalize(theWallet)} has problems:\n${problems.map((p) => `- ${p}`).join('\n')}`
       : loaded
   }
 

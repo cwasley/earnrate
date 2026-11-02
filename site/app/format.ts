@@ -10,11 +10,3 @@ export const { cards, shortName, feeLabel, requirementLines, membershipName } =
 export const issuers = [...new Set(catalog.cards.map((c) => c.issuer))].sort(
   (a, b) => issuerName(a).localeCompare(issuerName(b)),
 )
-
-export function hostname(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '')
-  } catch {
-    return url
-  }
-}
