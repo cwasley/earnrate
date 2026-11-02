@@ -289,7 +289,7 @@ describe('remote connector', () => {
     const listed = await client.callTool({ name: 'list_wallet', arguments: {} })
     expect(text(listed)).toMatch(/saved wallet has no cards yet/)
     expect(text(listed)).toMatch(
-      /^Saved wallet started (just now|\d+ minutes? ago)\./,
+      /^This is your hosted earnrate wallet\. It was started (just now|\d+ minutes? ago)\./,
     )
     const all = await client.callTool({
       name: 'best_card_for_purchase',

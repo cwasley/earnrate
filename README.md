@@ -177,6 +177,8 @@ claude mcp add --transport http earnrate https://mcp.earnrate.dev
 
 Or install it as a Claude Code plugin, which connects Claude Code and Cowork to the same server: `/plugin marketplace add cwasley/earnrate`, then `/plugin install earnrate@earnrate`.
 
+Use the connector (or plugin) or the local extension, not both: each keeps its own wallet, and with both connected Claude may answer from either. Each one says which wallet it used.
+
 **Or run it on your computer:** `earnrate mcp` runs earnrate as a local MCP server over stdio, with 14 tools (the connector has the same ones, plus `export_wallet`, `import_wallet`, `delete_wallet` and `switch_wallet` for its saved wallets):
 
 - `best_card_for_purchase`: which card to use, with reasons

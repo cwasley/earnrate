@@ -44,7 +44,7 @@ function startedText(started: string, now: number): string {
         : minutes < 48 * 60
           ? `${String(Math.floor(minutes / 60))} hour${minutes < 120 ? '' : 's'} ago`
           : `on ${shortDate(started.slice(0, 10))}`
-  return `Saved wallet started ${ago}.`
+  return `It was started ${ago}.`
 }
 
 // What update_card changed, so the reply confirms the values it saved.
@@ -89,8 +89,7 @@ export function registerWalletTools(
     'list_wallet',
     {
       title: 'List wallet',
-      description:
-        "Lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started.",
+      description: `Lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
       outputSchema: WalletSummarySchema,
       annotations: {
         title: 'List wallet',
@@ -108,7 +107,9 @@ export function registerWalletTools(
         started,
       }
       const when =
-        started === null ? '' : `${startedText(started, Date.now())}\n`
+        started === null
+          ? `This is ${ctx.walletName}.\n`
+          : `This is ${ctx.walletName}. ${startedText(started, Date.now())}\n`
       return {
         content: [
           {
@@ -125,8 +126,7 @@ export function registerWalletTools(
     'record_purchase',
     {
       title: 'Record a purchase',
-      description:
-        "Records a purchase the user has already made, so spending caps and welcome-bonus progress stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap and no open welcome bonus are acknowledged and nothing is written. For a merchant earnrate doesn't recognize it asks for category first, so caps aren't missed.",
+      description: `Records a purchase the user has already made, so spending caps and welcome-bonus progress stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap and no open welcome bonus are acknowledged and nothing is written. For a merchant earnrate doesn't recognize it asks for category first, so caps aren't missed. ${ctx.walletUse}`,
       inputSchema: z.object({
         cardId: z
           .string()
@@ -181,7 +181,7 @@ export function registerWalletTools(
               recorded: true,
               booking,
               bonus,
-              message: formatBooking(amount, cardId, booking, bonus),
+              message: `${formatBooking(amount, cardId, booking, bonus)} Saved in ${ctx.walletName}.`,
             }
           : {
               recorded: false,
@@ -205,8 +205,7 @@ export function registerWalletTools(
     'add_card',
     {
       title: 'Add a card',
-      description:
-        "Adds a card the user holds to their wallet by its id from search_cards, creating the wallet if there isn't one. The reply says what the card still needs (category picks, memberships, activations); ask the user about those. Stores only the card's product id and settings, never card numbers.",
+      description: `Adds a card the user holds to their wallet by its id from search_cards, creating the wallet if there isn't one. The reply says what the card still needs (category picks, memberships, activations); ask the user about those. Stores only the card's product id and settings, never card numbers. ${ctx.walletUse}`,
       inputSchema: CardChange,
       outputSchema: WalletChangeSchema,
       annotations: {
@@ -235,8 +234,7 @@ export function registerWalletTools(
     'update_card',
     {
       title: 'Update a card',
-      description:
-        'Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, activated categories, cap spending so far (capSpent) or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+.',
+      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, activated categories, cap spending so far (capSpent) or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
       inputSchema: CardChange,
       outputSchema: WalletChangeSchema,
       annotations: {
@@ -264,8 +262,7 @@ export function registerWalletTools(
     'remove_card',
     {
       title: 'Remove a card',
-      description:
-        "Removes a card from the wallet, with its tracked cap usage and bonus progress. Memberships and point values stay, even when the last card goes. Only when the user says they no longer have it or don't want it considered.",
+      description: `Removes a card from the wallet, with its tracked cap usage and bonus progress. Memberships and point values stay, even when the last card goes. Only when the user says they no longer have it or don't want it considered. ${ctx.walletUse}`,
       inputSchema: z.object({ cardId: CardId }),
       outputSchema: WalletChangeSchema,
       annotations: {
@@ -287,8 +284,7 @@ export function registerWalletTools(
     'set_memberships',
     {
       title: 'Set memberships',
-      description:
-        "Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep. It saves them even with no cards saved, and every answer then uses them.",
+      description: `Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep. It saves them even with no cards saved, and every answer then uses them. ${ctx.walletUse}`,
       inputSchema: z.object({ memberships: inputs.AllMemberships }),
       outputSchema: WalletChangeSchema,
       annotations: {
@@ -323,7 +319,7 @@ export function registerWalletTools(
     'set_point_values',
     {
       title: 'Set point values',
-      description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. No saved cards are needed. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies: ${catalog.currencies.map((c) => c.id).join(', ')}.`,
+      description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. No saved cards are needed. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies: ${catalog.currencies.map((c) => c.id).join(', ')}. ${ctx.walletUse}`,
       inputSchema: z.object({
         values: z
           .record(z.string(), z.number().nullable())

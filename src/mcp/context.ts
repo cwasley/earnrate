@@ -27,6 +27,17 @@ export function makeContext(deps: ServerDeps) {
     deps.savedWallets === 'file'
       ? `the wallet at ${deps.store.where}`
       : 'the saved wallet'
+  // Which wallet this server keeps, for replies and tool descriptions. The
+  // local extension and the hosted connector can both be connected at once,
+  // each with its own wallet, and their tools are otherwise identical.
+  const walletName =
+    deps.savedWallets === 'file'
+      ? `the wallet file on this computer (${deps.store.where})`
+      : 'your hosted earnrate wallet'
+  const walletUse =
+    deps.savedWallets === 'file'
+      ? "It uses the wallet file on this computer, not the hosted earnrate connector's wallet."
+      : "It uses the user's hosted earnrate wallet, not a wallet file on their computer."
   const startHint =
     'Answers cover every card, or the cards the user names. If the user wants their cards remembered, find each with search_cards and save it with add_card.'
   const noCards =
@@ -138,8 +149,8 @@ export function makeContext(deps: ServerDeps) {
     const text = [
       message,
       output.cardIds.length > 0
-        ? `Wallet: ${output.cardIds.join(', ')}.`
-        : 'The wallet has no cards now; answers cover every card.',
+        ? `Saved in ${walletName}: ${output.cardIds.join(', ')}.`
+        : `Saved in ${walletName}, which has no cards now; answers cover every card.`,
       ...(notes ? [formatNotes(result.notes)] : []),
     ].join('\n')
     return {
@@ -152,6 +163,8 @@ export function makeContext(deps: ServerDeps) {
     catalog.cards.find((c) => c.id === id)?.name ?? id
 
   return {
+    walletName,
+    walletUse,
     wallet,
     readableWallet,
     resolve,
