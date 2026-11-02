@@ -440,3 +440,183 @@ describe('#17 every card has a known network', () => {
     expect(CardSchema.safeParse(withoutNetwork).success).toBe(false)
   })
 })
+
+describe('#20 periods roll over', () => {
+  const bcpCapUsed = (period: string) => (w: Wallet) =>
+    updateCard(w, 'amex-blue-cash-preferred', (c) => ({
+      ...c,
+      cap_usage: { 'us-supermarkets': { period, spent: 6000 } },
+    }))
+  const wholeFoodsOn = (date: string) =>
+    purchase('Whole Foods', { channel: 'in_store', date })
+
+  goldenTest("#20a last year's BCP supermarket spending doesn't count", () => {
+    const wallet = withProfile(bcpCapUsed('2025')(baseWallet()), 'flat')
+    const rec = recommend(catalog, wallet, wholeFoodsOn(TODAY))
+    expect(rec.decision?.cardId).toBe('amex-blue-cash-preferred')
+    expect(rec.decision?.effectiveReturnPct).toBeCloseTo(6)
+  })
+
+  goldenTest('#20b a full BCP cap still applies on December 31', () => {
+    const wallet = withProfile(bcpCapUsed('2026')(baseWallet()), 'flat')
+    const rec = recommend(catalog, wallet, wholeFoodsOn('2026-12-31'))
+    expect(rec.decision?.cardId).toBe('chase-prime-visa')
+    expect(entry(rec, 'amex-blue-cash-preferred').effectiveReturnPct).toBe(1)
+  })
+
+  goldenTest('#20c and resets on January 1', () => {
+    const wallet = withProfile(bcpCapUsed('2026')(baseWallet()), 'flat')
+    const rec = recommend(catalog, wallet, wholeFoodsOn('2027-01-01'))
+    expect(rec.decision?.cardId).toBe('amex-blue-cash-preferred')
+    expect(rec.decision?.effectiveReturnPct).toBeCloseTo(6)
+  })
+
+  const withCustomCash =
+    (period: string, spent: number) =>
+    (w: Wallet): Wallet => ({
+      ...w,
+      cards: [
+        ...w.cards,
+        {
+          id: 'citi-custom-cash',
+          activated: [],
+          cap_usage: { 'top-category': { period, spent } },
+          chosen: {
+            period: '2026-10',
+            picks: { 'top-category': ['gas-stations'] },
+          },
+        },
+      ],
+    })
+
+  goldenTest(
+    "#20d Custom Cash's monthly cap: last month's spend doesn't count",
+    () => {
+      const wallet = withProfile(
+        withCustomCash('2026-09', 500)(baseWallet()),
+        'flat',
+      )
+      const rec = recommend(
+        catalog,
+        wallet,
+        purchase('Shell', { channel: 'in_store' }),
+      )
+      expect(rec.decision?.cardId).toBe('citi-custom-cash')
+      expect(rec.decision?.effectiveReturnPct).toBeCloseTo(5)
+    },
+  )
+
+  goldenTest(
+    '#20e a purchase crossing the Custom Cash cap blends 5% and 1%',
+    () => {
+      const wallet = withProfile(
+        withCustomCash('2026-10', 450)(baseWallet()),
+        'flat',
+      )
+      const rec = recommend(
+        catalog,
+        wallet,
+        purchase('Shell', { amount: 100, channel: 'in_store' }),
+      )
+      const customCash = entry(rec, 'citi-custom-cash')
+      expect(customCash.effectiveReturnPct).toBeCloseTo(3)
+      expect(customCash.earned).toBeCloseTo(3)
+      expectSome(customCash.warnings, /only \$50 is left/)
+      expect(rec.decision?.cardId).toBe('chase-sapphire-preferred')
+    },
+  )
+})
+
+describe('#21 Freedom Flex activation', () => {
+  const withFlex =
+    (activated: string[]) =>
+    (w: Wallet): Wallet => ({
+      ...w,
+      cards: [
+        ...w.cards,
+        { id: 'chase-freedom-flex', cap_usage: {}, activated },
+      ],
+    })
+  const krogerOn = (date: string) =>
+    purchase('Kroger', { channel: 'in_store', date })
+
+  goldenTest(
+    '#21a not activated: earns 1x, with the activation deadline',
+    () => {
+      const wallet = withProfile(withFlex([])(baseWallet()), 'pointsHeavy')
+      const rec = recommend(catalog, wallet, krogerOn(TODAY))
+      expect(rec.decision?.cardId).toBe('amex-gold')
+      const flex = entry(rec, 'chase-freedom-flex')
+      expect(flex.matchedRule).toBeNull()
+      expectSome(flex.warnings, /Activate this bonus .* by Dec 14, 2026/)
+    },
+  )
+
+  goldenTest(
+    '#21b activated: 5x UR beats Gold when points are worth more',
+    () => {
+      const wallet = withProfile(
+        withFlex(['q4-2026-grocery'])(baseWallet()),
+        'pointsHeavy',
+      )
+      const rec = recommend(catalog, wallet, krogerOn(TODAY))
+      expect(rec.decision?.cardId).toBe('chase-freedom-flex')
+      expect(rec.decision?.effectiveReturnPct).toBeCloseTo(
+        5 * PROFILES.pointsHeavy.UR,
+      )
+    },
+  )
+
+  goldenTest(
+    '#21c activated: Walmart is excluded from the grocery bonus',
+    () => {
+      const wallet = withProfile(
+        withFlex(['q4-2026-grocery'])(baseWallet()),
+        'pointsHeavy',
+      )
+      const rec = recommend(
+        catalog,
+        wallet,
+        purchase('Walmart', { channel: 'in_store' }),
+      )
+      expect(entry(rec, 'chase-freedom-flex').matchedRule).toBeNull()
+    },
+  )
+
+  goldenTest(
+    '#21d activated before the deadline: earns 5x to the end of the quarter',
+    () => {
+      const wallet = withProfile(
+        withFlex(['q4-2026-grocery'])(baseWallet()),
+        'pointsHeavy',
+      )
+      for (const date of ['2026-12-20', '2026-12-31']) {
+        const rec = recommend(catalog, wallet, krogerOn(date))
+        expect(entry(rec, 'chase-freedom-flex').matchedRule).toBe(
+          'q4-2026-grocery',
+        )
+      }
+    },
+  )
+})
+
+describe('#22 abroad', () => {
+  goldenTest(
+    "#22 U.S.-only supermarket bonuses don't apply at a Whole Foods in London",
+    () => {
+      for (const profile of ['flat', 'pointsHeavy'] as const) {
+        const rec = recommend(
+          catalog,
+          withProfile(baseWallet(), profile),
+          purchase('Whole Foods', { channel: 'in_store', country: 'GB' }),
+        )
+        const bcp = entry(rec, 'amex-blue-cash-preferred')
+        const gold = entry(rec, 'amex-gold')
+        expect(bcp.matchedRule).toBeNull()
+        expect(bcp.effectiveReturnPct).toBeCloseTo(1)
+        expect(gold.matchedRule).toBeNull()
+        expect(gold.effectiveReturnPct).toBeCloseTo(PROFILES[profile].MR)
+      }
+    },
+  )
+})
