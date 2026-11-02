@@ -161,7 +161,7 @@ function reasoningFor(
   if (cap && amount !== null && amount > cap.remaining) {
     const over = amount - cap.remaining
     lines.push(
-      `${money(cap.remaining)} earns ${earnText(catalog, best.nominalRate, currency)} before the cap, then ${money(over)} earns ${earnText(catalog, cap.cap.then_rate, currency)}: ${num(best.rate)} per dollar overall.`,
+      `${money(cap.remaining)} earns ${earnText(catalog, best.nominalRate, currency)} before the cap, then ${money(over)} earns ${earnText(catalog, best.afterCap ?? cap.cap.then_rate, currency)}: ${num(best.rate)} per dollar overall.`,
     )
   }
 
@@ -224,7 +224,7 @@ function warningsFor(
     nominal.cap.remaining === 0
   ) {
     warnings.push(
-      `The ${capLabel(nominal)} on "${nominal.rule.id}" is used up for ${nominal.cap.period ?? 'this period'}, so it earns ${earnText(catalog, nominal.cap.cap.then_rate, valuation.currency)} until it resets.`,
+      `The ${capLabel(nominal)} on "${nominal.rule.id}" is used up for ${nominal.cap.period ?? 'this period'}, so it earns ${earnText(catalog, nominal.afterCap ?? nominal.cap.cap.then_rate, valuation.currency)} until it resets.`,
     )
   }
   if (best.rule?.unverified !== undefined) {

@@ -219,7 +219,7 @@ function requirementsFor(
       ? {
           amount: cap.amount,
           period: cap.period,
-          thenRate: cap.then_rate,
+          thenRate: best.afterCap ?? cap.then_rate,
           currency: cardValuation(catalog, wallet, card).currency,
         }
       : null,

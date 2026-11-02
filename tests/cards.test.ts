@@ -72,6 +72,29 @@ describe('the 16 popular cards', () => {
     expect(rates('Walmart', activated)['chase-freedom-flex']).toBe(1)
   })
 
+  test('Freedom Flex dining past the quarterly cap earns the everyday 3%, not 1%', () => {
+    const flex = (spent: number, amount: number) => {
+      const w = WalletSchema.parse({
+        cards: [
+          {
+            id: 'chase-freedom-flex',
+            activated: ['q4-2026-dining'],
+            cap_usage: {
+              'five-percent-quarterly': { period: '2026-Q4', spent },
+            },
+          },
+        ],
+      })
+      const rec = recommend(catalog, w, purchase('Chipotle', { amount }))
+      return rec.ranked[0]
+    }
+    expect(flex(1500, 50)?.rate).toBe(3)
+    expect(flex(1400, 200)?.rate).toBe(5)
+    expect(flex(1400, 200)?.reasoning.join(' ')).toMatch(
+      /then \$100 earns 3% cash back/,
+    )
+  })
+
   test("Freedom Flex: one activation covers the quarter's categories, not the next", () => {
     const activated = wallet({
       'chase-freedom-flex': { activated: ['q4-2026-grocery'] },

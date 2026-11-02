@@ -187,5 +187,4 @@ evidence:
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'Earn a $250 bonus after you spend $500 on purchases in the first 3 months from account opening'
 todo:
-  - 'q4-2026-dining: a single dining purchase that crosses the $1,500 cap counts the part over the cap at 1%, not the everyday 3%; whole purchases after the cap correctly fall back to the 3% dining rule.'
   - 'Q2 2027 (Apr-Jun) shows "Coming Soon"; add it after Chase posts it (activation opens March 15, 2027).'

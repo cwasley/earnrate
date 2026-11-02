@@ -2,6 +2,14 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.02.3
+
+The engine now prices spending past a cap at the card's best uncapped rate for that purchase when it beats the cap's own rate, so Freedom Flex's todo about crossing its $1,500 quarterly cap is resolved. No rates changed.
+
+| Card               | Field | Old → new                     | Source                                                                                 |
+| ------------------ | ----- | ----------------------------- | -------------------------------------------------------------------------------------- |
+| chase-freedom-flex | todo  | removed the cap-crossing note | [Freedom Flex FAQ](https://www.chase.com/personal/credit-cards/freedom/flex-learnmore) |
+
 ## 2026.11.02.2
 
 Rules can carry `activate_by`, the issuer's activation deadline, so answers mention it only while a bonus isn't activated. No rates changed.

@@ -14,11 +14,9 @@ A rate that applies only for a stretch after account opening. The wallet would n
 
 ### Rate after a shared cap that differs by rule
 
-A shared cap has one `then_rate`. Some cards drop to a different rate depending on which rule was capped or which membership the cardholder has.
+Past a cap, spending earns the higher of the cap's `then_rate` and the card's best uncapped rate for that purchase (so Freedom Flex dining falls back to 3%, and a BofA Rewards tier's boosted base rate applies). What's left is a cap that changes a rule's own rate afterward:
 
-- `bank-of-america-customized-cash-rewards`: with a BofA Rewards tier, the part of a purchase past the $2,500 cap should earn the tier's boosted base rate (1.1%–1.75%), not 1%. Understated only for a purchase that crosses the cap.
 - `chase-ink-business-preferred`: Lyft should drop to 3x once the $150,000 cap is used. Modeled at 5x uncapped.
-- `chase-freedom-flex`: past the $1,500 quarterly cap, Q4 2026 dining should still earn the everyday 3% dining rate, not the cap's 1%. Understated only for a purchase that crosses the cap.
 
 ### Membership tiers as multipliers
 

@@ -77,6 +77,10 @@ export type Earning = {
   nominalRate: number
   rate: number // after the cap, blended across it when the amount is known
   cap: CapState | null
+  // What spending past the cap earns: the cap's own rate, or the card's best
+  // uncapped rate for this purchase if that's higher (Freedom Flex's 3%
+  // dining once its quarterly 5% is used up).
+  afterCap: number | null
 }
 
 export type CardEvaluation = {
@@ -252,14 +256,15 @@ function capState(
 function rateAfterCap(
   rate: number,
   cap: CapState | null,
+  afterCap: number,
   amount: number | null,
 ): number {
   if (!cap) return rate
   if (amount !== null && amount > 0) {
     const inCap = Math.min(amount, cap.remaining)
-    return (inCap * rate + (amount - inCap) * cap.cap.then_rate) / amount
+    return (inCap * rate + (amount - inCap) * afterCap) / amount
   }
-  return cap.remaining > 0 ? rate : cap.cap.then_rate
+  return cap.remaining > 0 ? rate : afterCap
 }
 
 // On equal rates an uncapped rule wins, so spend that can earn the same
@@ -280,24 +285,33 @@ export function evaluateCard(
     nominalRate: card.base_rate,
     rate: card.base_rate,
     cap: null,
+    afterCap: null,
   }
   let best = base
   let nominal = base
   const blocked: Rule[] = []
+  const applying: Rule[] = []
 
   for (const rule of card.rules) {
     const status = applicability(card, rule, ctx, held, picked)
     if (status === 'no') continue
-    if (status === 'needs-activation') {
-      blocked.push(rule)
-      continue
-    }
+    if (status === 'needs-activation') blocked.push(rule)
+    else applying.push(rule)
+  }
+  const uncapped = Math.max(
+    card.base_rate,
+    ...applying.filter((r) => r.cap === undefined).map((r) => r.rate),
+  )
+
+  for (const rule of applying) {
     const cap = capState(rule, card, held, ctx.date)
+    const afterCap = cap ? Math.max(cap.cap.then_rate, uncapped) : null
     const earning: Earning = {
       rule,
       nominalRate: rule.rate,
-      rate: rateAfterCap(rule.rate, cap, ctx.amount),
+      rate: rateAfterCap(rule.rate, cap, afterCap ?? rule.rate, ctx.amount),
       cap,
+      afterCap,
     }
     if (beats(earning, earning.rate, best, best.rate)) best = earning
     if (beats(earning, earning.nominalRate, nominal, nominal.nominalRate))
