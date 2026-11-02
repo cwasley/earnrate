@@ -8,9 +8,8 @@ import {
 } from 'node:fs/promises'
 import path from 'node:path'
 
-// Replaces a file in one step. A symlinked file is written through to its
-// target, so the link survives; the file keeps its permissions, and a new
-// one is readable only by its owner.
+// Writes through a symlink rather than replacing it, and keeps the file's
+// mode: a user's chmod 600 must survive every edit.
 export async function writeFileAtomic(
   file: string,
   text: string,

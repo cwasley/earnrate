@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { parse } from 'yaml'
+import { loadCatalog } from '../src/data/load.ts'
+import { parseWalletYaml } from '../src/format/wallet-yaml.ts'
 import { CardSchema } from '../src/schema/card.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 
@@ -110,5 +112,15 @@ cards: [{ id: amex-gold }]
 `),
     )
     expect(wallet.valuations['MR']).toBe(1.5)
+  })
+
+  test('an imported wallet with a card number says so', async () => {
+    const catalog = await loadCatalog()
+    expect(
+      parseWalletYaml(
+        'valuations:\n  MR: { value: 1.5, redemption: card 4111 1111 1111 1112 }\ncards: [{ id: amex-gold }]\n',
+        catalog,
+      ),
+    ).toMatch(/redemption note looks like it has a card number/)
   })
 })

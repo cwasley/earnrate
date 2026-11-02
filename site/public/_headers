@@ -1,6 +1,5 @@
-# Cloudflare reads this file and serves these headers on every page; it
-# isn't served itself. A script-src policy would also have to allow the
-# Web Analytics beacon Cloudflare injects.
+# A script-src policy would also have to allow the Web Analytics beacon
+# Cloudflare injects.
 /*
   Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; object-src 'none'
   X-Content-Type-Options: nosniff

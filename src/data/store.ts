@@ -10,6 +10,7 @@ import {
   type CardInput,
   type WalletChange,
 } from '../engine/wallet-change.ts'
+import { withoutCardNumbers } from '../schema/card-number.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { WALLET_VERSION, WalletSchema, type Wallet } from '../schema/wallet.ts'
 
@@ -81,7 +82,9 @@ export class JsonWalletStore implements AccountStore {
 
   async load(): Promise<Wallet | null> {
     const text = await this.backend.read()
-    return text === null ? null : WalletSchema.parse(JSON.parse(text))
+    return text === null
+      ? null
+      : WalletSchema.parse(withoutCardNumbers(JSON.parse(text)))
   }
 
   private serialized<T>(task: () => Promise<T>): Promise<T> {

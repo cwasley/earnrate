@@ -6,6 +6,7 @@ import { FileWalletStore } from '../src/data/file-store.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import { JsonWalletStore, type WalletStore } from '../src/data/store.ts'
 import { resolveMerchant } from '../src/merchants/resolve.ts'
+import { WALLET_VERSION } from '../src/schema/wallet.ts'
 import { TODAY } from './golden/fixtures.ts'
 import { memoryBackend } from './helpers.ts'
 
@@ -151,4 +152,22 @@ test('the file store keeps the YAML readable', async () => {
   const store = new FileWalletStore(catalog, file)
   await store.addCard({ id: 'amex-gold' }, TODAY)
   expect(await readFile(file, 'utf8')).toMatch(/^# Your earnrate wallet/)
+})
+
+test('a saved wallet with a card number in it still loads, without the number', async () => {
+  const backend = memoryBackend(
+    JSON.stringify({
+      version: WALLET_VERSION,
+      cards: [{ id: 'amex-gold', checkout_label: '3782 822463 10006' }],
+      valuations: { MR: { value: 1.5, redemption: 'pay 4111111111111112' } },
+    }),
+  )
+  const store = new JsonWalletStore(catalog, backend, 'your saved wallet')
+  const wallet = await store.load()
+  expect(wallet?.cards[0]?.checkout_label).toBeUndefined()
+  expect(wallet?.valuations['MR']).toEqual({ value: 1.5 })
+  expect(
+    (await store.addCard({ id: 'amex-blue-cash-preferred' }, TODAY)).ok,
+  ).toBe(true)
+  expect(await backend.read()).not.toMatch(/3782|4111/)
 })

@@ -8,6 +8,7 @@ import {
 } from './common.ts'
 import {
   CARD_NUMBER_LABEL,
+  CARD_NUMBER_REDEMPTION,
   hasCardNumber,
   labelHasCardNumber,
 } from './card-number.ts'
@@ -19,7 +20,7 @@ const Valuation = z.union([
     range: ValueRange.optional(),
     redemption: z
       .string()
-      .refine((t) => !hasCardNumber(t), 'A card number was refused.')
+      .refine((t) => !hasCardNumber(t), CARD_NUMBER_REDEMPTION)
       .optional(),
   }),
 ])

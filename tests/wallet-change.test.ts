@@ -61,6 +61,13 @@ describe('wallet changes without a file', () => {
       TODAY,
     )
     expect(!numbered.ok && numbered.error).toMatch(/card number/)
+    const dotted = updateInWallet(
+      catalog,
+      wallet,
+      { id: 'amex-gold', checkoutLabel: '3782.822463.10006' },
+      TODAY,
+    )
+    expect(!dotted.ok && dotted.error).toMatch(/card number/)
     expect(addToWallet(catalog, wallet, { id: 'amex-gold' }, TODAY).ok).toBe(
       false,
     )
