@@ -5,6 +5,7 @@ import { isActivated, pickedCategories } from './evaluate.ts'
 import { membership, membershipName, sameGroup } from './memberships.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap } from './rotation.ts'
+import { listed } from './text.ts'
 
 export type CardChoiceInfo = {
   id: string
@@ -255,7 +256,10 @@ export function setupNotes(
   if (missing.length > 0) {
     notes.push({
       kind: 'membership',
-      text: `Some of ${name}'s rates need a membership: ${list(missing)}. Add any that apply to the wallet's memberships.`,
+      text: `Some of ${name}'s rates need ${listed(
+        missing.map((m) => `${membershipName(catalog, m)} (${m})`),
+        'or',
+      )}; they're counted without it.`,
     })
   }
 

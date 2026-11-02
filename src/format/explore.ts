@@ -12,7 +12,7 @@ import {
 import {
   choiceName,
   feeText,
-  money,
+  dollarsAndCents,
   pct,
   wholeDollars,
   words,
@@ -43,7 +43,7 @@ export function formatExploration(
   const width = Math.max(...shown.map((e) => e.cardName.length))
   const lines = [`Best cards for ${title}:`, '']
   shown.forEach((e: ExploreEntry, i) => {
-    const earned = e.earned === null ? '' : `  ${money(e.earned)}`
+    const earned = e.earned === null ? '' : `  ${dollarsAndCents(e.earned)}`
     lines.push(
       `${String(i + 1).padStart(2)}. ${e.cardName.padEnd(width)}  ${pct(e.effectiveReturnPct).padStart(5)}${earned}  ${feeText(e)}`,
     )

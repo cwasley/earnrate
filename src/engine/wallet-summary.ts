@@ -18,6 +18,7 @@ import {
   currencyLabel,
   earnText,
   listed,
+  shortDate,
   words,
 } from './text.ts'
 import { cardValuation, currencyValuation } from './valuation.ts'
@@ -214,7 +215,7 @@ function toActivate(
     const first = rules[0]
     const when =
       first?.valid_from !== undefined && first.valid_to !== undefined
-        ? ` (${first.valid_from} to ${first.valid_to})`
+        ? ` (${shortDate(first.valid_from)} to ${shortDate(first.valid_to)})`
         : ''
     out.push(`${rules.map((r) => ruleWhat(catalog, r)).join(', ')}${when}`)
   }

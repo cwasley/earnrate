@@ -302,7 +302,7 @@ describe('comparing every card', () => {
       ['best', 'amazon', '120', '--member', 'amazon-prime', '--no-fee'],
       noWallet,
     )
-    expect(stdout).toMatch(/^ 1\. Prime Visa +5% +\$6 +no annual fee$/m)
+    expect(stdout).toMatch(/^ 1\. Prime Visa +5% +\$6\.00 +no annual fee$/m)
     expect(stdout).toMatch(/^ {4}With your Amazon Prime\.$/m)
   })
 

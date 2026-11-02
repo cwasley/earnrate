@@ -38,6 +38,12 @@ test('every bonus rate is listed, and an activated quarter says so', () => {
   expect(flex?.toActivate).toEqual([])
 })
 
+test('a quarter not yet activated gives its dates in words', () => {
+  const wallet = WalletSchema.parse({ cards: [{ id: 'chase-freedom-flex' }] })
+  const [flex] = walletSummary(catalog, wallet, '2026-11-01').cards
+  expect(flex?.toActivate.join('; ')).toMatch(/\(Oct 1, 2026 to Dec 31, 2026\)/)
+})
+
 test('a lower tier a held membership replaces is left out', () => {
   const wallet = WalletSchema.parse({
     memberships: ['amazon-prime'],
