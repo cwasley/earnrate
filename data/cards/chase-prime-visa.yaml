@@ -38,9 +38,14 @@ rules:
     rate: 5
     requires: { membership: amazon-prime }
   - id: amazon-without-prime
-    match: { merchants: [amazon, amazon-fresh, whole-foods, audible] }
+    match: { merchants: [amazon, amazon-fresh, audible] }
     rate: 3
     note: Without an eligible Prime membership these earn 3% instead of 5%.
+  - id: whole-foods-without-prime
+    match: { merchants: [whole-foods] }
+    rate: 3
+    geography: us_only
+    note: Without an eligible Prime membership, Whole Foods earns 3% instead of 5%, in the U.S. only.
   - id: chase-travel
     match: { merchants: [chase-travel] }
     rate: 5
@@ -93,6 +98,12 @@ evidence:
   - rule: amazon-without-prime
     url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
     quote: '3% back without an eligible Prime membership for each $1 of eligible purchases'
+  - rule: whole-foods-without-prime
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: '3% back without an eligible Prime membership for each $1 of eligible purchases'
+  - rule: whole-foods-without-prime
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: 'purchases made at international Whole Foods Markets'
   - rule: chase-travel
     url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
     quote: '5% back or 3% back through Chase Travel'

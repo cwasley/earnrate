@@ -614,21 +614,40 @@ describe('#21 Freedom Flex activation', () => {
 
 describe('#22 abroad', () => {
   goldenTest(
-    "#22 U.S.-only supermarket bonuses don't apply at a Whole Foods in London",
+    "#22 U.S.-only Whole Foods and supermarket rates don't apply in London",
     () => {
       for (const profile of ['flat', 'pointsHeavy'] as const) {
-        const rec = recommend(
-          catalog,
-          withProfile(baseWallet(), profile),
-          purchase('Whole Foods', { channel: 'in_store', country: 'GB' }),
-        )
-        const bcp = entry(rec, 'amex-blue-cash-preferred')
-        const gold = entry(rec, 'amex-gold')
-        expect(bcp.matchedRule).toBeNull()
-        expect(bcp.effectiveReturnPct).toBeCloseTo(1)
-        expect(gold.matchedRule).toBeNull()
-        expect(gold.effectiveReturnPct).toBeCloseTo(PROFILES[profile].MR)
+        for (const wallet of [baseWallet(), withoutPrime(baseWallet())]) {
+          const rec = recommend(
+            catalog,
+            withProfile(wallet, profile),
+            purchase('Whole Foods', { channel: 'in_store', country: 'GB' }),
+          )
+          const bcp = entry(rec, 'amex-blue-cash-preferred')
+          const gold = entry(rec, 'amex-gold')
+          const prime = entry(rec, 'chase-prime-visa')
+          expect(bcp.matchedRule).toBeNull()
+          expect(bcp.effectiveReturnPct).toBeCloseTo(1)
+          expect(gold.matchedRule).toBeNull()
+          expect(gold.effectiveReturnPct).toBeCloseTo(PROFILES[profile].MR)
+          expect(prime.matchedRule).toBeNull()
+          expect(prime.effectiveReturnPct).toBeCloseTo(1)
+        }
       }
     },
   )
 })
+
+goldenTest(
+  '#22b Whole Foods in the U.S. without Prime: Prime Visa earns 3%',
+  () => {
+    const rec = recommend(
+      catalog,
+      withProfile(withoutPrime(baseWallet()), 'flat'),
+      purchase('Whole Foods', { channel: 'in_store' }),
+    )
+    const prime = entry(rec, 'chase-prime-visa')
+    expect(prime.matchedRule).toBe('whole-foods-without-prime')
+    expect(prime.effectiveReturnPct).toBeCloseTo(3)
+  },
+)

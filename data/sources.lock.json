@@ -489,7 +489,8 @@
         "31ed9091bc25b31c",
         "688e7d2d1a9370d8",
         "99f426c28bdea280",
-        "a7e9b1401312bc81"
+        "a7e9b1401312bc81",
+        "ac2440db3dbc0430"
       ]
     },
     "https://creditcards.chase.com/business-credit-cards/ink/cash": {
@@ -538,6 +539,7 @@
       "checked": "2026-11-01",
       "lines": [
         "06736d38fa3a3b7c",
+        "2a7a3b33d170db19",
         "75469942f282db3c",
         "7c4233ceff38818d",
         "90a7d73a45f5052c",
@@ -836,10 +838,8 @@
       "checked": "2026-11-01",
       "lines": [
         "345e2953751d3064",
-        "60d4f69954950949",
         "9c7fa7a71fa95e3b",
         "bd1370ab97374bc8",
-        "c3b6656197e68ea6",
         "c70bfa795f7e654a",
         "cd4d8a1cfba06610"
       ]
@@ -903,23 +903,24 @@
       "checked": "2026-11-01",
       "lines": [
         "17b073a6a0208338",
+        "4cc4aa88112e8028",
         "55c4bd448c2303dd",
         "5d62514e8e7b87fa",
-        "cdbc8fe65042cb5e",
-        "d90926c36a26449b"
+        "cdbc8fe65042cb5e"
       ]
     },
     "https://www.nordstrom.com/browse/nordy-club/faq": {
       "checked": "2026-11-01",
       "lines": [
-        "a1ff4527e1b2d393",
-        "d90926c36a26449b"
+        "4cc4aa88112e8028",
+        "a1ff4527e1b2d393"
       ]
     },
     "https://www.nordstrom.com/browse/nordy-club/terms-conditions": {
       "checked": "2026-11-01",
       "lines": [
         "217e58b59e4c6717",
+        "4cc4aa88112e8028",
         "6ca0c491bfc1a753",
         "ee44b052dacfebb3"
       ]
@@ -928,9 +929,9 @@
       "checked": "2026-11-01",
       "lines": [
         "03a23796e6824ffd",
+        "4cc4aa88112e8028",
         "c1ce20057db5e752",
-        "d84912ff159713fd",
-        "d90926c36a26449b"
+        "d84912ff159713fd"
       ]
     },
     "https://www.target.com/circlecard": {
@@ -982,9 +983,12 @@
     "https://creditcards.wellsfargo.com/active-cash-credit-card/": {
       "checked": "2026-11-01",
       "lines": [
-        "2518f48920d4242a",
-        "53f9a1b6c962feb4",
-        "e0aa562f4269e188"
+        "173b2661f632bfc9",
+        "701afb05e0726114",
+        "91487a34a7e9c0b6",
+        "c10ee79e86c8b607",
+        "c35f2b4b28e4159a",
+        "c3a2e8d46b2de0aa"
       ]
     },
     "https://www.wellsfargo.com/credit-cards/active-cash/terms/": {

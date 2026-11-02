@@ -2,6 +2,15 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.02.5
+
+Prime Visa's 3% without-Prime rate no longer applies at Whole Foods stores outside the U.S. Chase's terms exclude "purchases made at international Whole Foods Markets" from both the 5% and the 3% rate; only the 5% rule was U.S.-only.
+
+| Card             | Field                     | Old → new                                                              | Source                                                                                             |
+| ---------------- | ------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| chase-prime-visa | amazon-without-prime      | Whole Foods moved to its own rule                                      | [Chase Prime Visa page](https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards) |
+| chase-prime-visa | whole-foods-without-prime | new rule: 3% at Whole Foods without Prime, U.S. only (abroad: 3% → 1%) | [Chase Prime Visa page](https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards) |
+
 ## 2026.11.02.4
 
 Customized Cash's todo about purchases that cross the $2,500 quarterly cap is resolved: past the cap, a BofA Rewards tier's boosted base rate now applies. No rates changed.
