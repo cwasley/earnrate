@@ -304,7 +304,7 @@ export function registerAnswerTools(
     {
       title: 'Best cards for a purchase',
       description:
-        'Ranks every card earnrate knows, not only the user\'s, for one purchase or category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Use it for questions like "what\'s the best card for groceries?" or "which card should I get for Amazon?". It needs no wallet. For which of the user\'s own cards to use, call best_card_for_purchase instead. Mention the annual fee and any conditions alongside each card.',
+        'Ranks every card earnrate knows that takes new applicants, not only the user\'s, for one purchase or category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Use it for questions like "what\'s the best card for groceries?" or "which card should I get for Amazon?". It needs no wallet. For which of the user\'s own cards to use, call best_card_for_purchase instead. Mention the annual fee and any conditions alongside each card.',
       inputSchema: z.object({
         merchant: Merchant.optional(),
         category: CatalogCategory.optional(),

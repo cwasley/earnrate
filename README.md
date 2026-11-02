@@ -33,7 +33,7 @@ earnrate add amex-gold
 earnrate whole foods 80
 ```
 
-Adding a card tells you anything else it needs to earn correctly, such as the categories you picked on Cash+, Amazon Prime for Prime Visa's 5%, or which rotating categories you've activated. `earnrate update` sets those. Using an AI assistant instead? [Add earnrate to it](#use-it-in-an-ai-assistant-mcp) and ask; name your cards or save them there.
+Adding a card tells you anything else it needs to earn correctly, such as the categories you picked on Cash+, Amazon Prime for Prime Visa's 5%, or which rotating categories you've activated. `earnrate update` and `earnrate memberships` set those. Memberships and point values (`earnrate values`) can be saved without any cards, and every answer uses them. Using an AI assistant instead? [Add earnrate to it](#use-it-in-an-ai-assistant-mcp) and ask; name your cards or save them there.
 
 With the [example wallet](wallet.example.yaml), it prints:
 
@@ -51,14 +51,15 @@ Use Blue Cash Preferred: 6% back, about $4.80. High confidence.
      Valued at 1¢ per point: 4% back.
   + 6 more cards (--all lists them)
 
-Amex Gold beats Blue Cash Preferred here if Amex Membership Rewards (MR) points are worth 1.5¢ or more (you value them at 1¢).
+Amex Gold beats Blue Cash Preferred here if Amex Membership Rewards (MR) points are worth more than 1.5¢ (you value them at 1¢).
 
 Assumes Whole Foods Market codes as supermarkets (MCC 5411).
+Values points at: Amex Membership Rewards (MR) at 1¢, SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢.
 ```
 
 Options: `--online` or `--in-store`, `--valuation flat|points-heavy`, `--all`, `--json`, `--date`, `--country`. Run `earnrate --help` for details. To keep the wallet somewhere else, set `EARNRATE_WALLET` to its path.
 
-`earnrate cheatsheet` prints the card to use for each everyday kind of purchase this quarter (groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores, everything else), with your caps, picks and activations as they are now. It's also in the My wallet tab on [earnrate.dev](https://earnrate.dev).
+`earnrate cheatsheet` prints the card to use for each everyday kind of purchase this quarter (groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores, everything else), with your caps, picks and activations as they are now. `--cards` uses cards you name instead, and `--every-card` picks from every card to show what's worth getting. It's also in the My wallet tab on [earnrate.dev](https://earnrate.dev).
 
 ### Your wallet
 
@@ -114,7 +115,7 @@ While the bonus is open and you're behind an even pace to the deadline, that car
 
 ### Which new card?
 
-These compare every card earnrate knows:
+These compare every card earnrate knows that's open to new applicants:
 
 ```sh
 earnrate best groceries                               # every card, ranked for one purchase
@@ -122,13 +123,13 @@ earnrate simulate groceries=600 dining=300 other=1000 # best cards and pairs for
 earnrate simulate groceries=600 other=1000 --wallet   # what a new card would add to yours
 ```
 
-`best` ranks every card earnrate knows for a merchant or a category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Rates that need a membership like Amazon Prime are listed separately unless you pass `--member amazon-prime`, and a card that needs a membership to get (Costco Anywhere) says so. `simulate` spends your monthly amounts for a year, applying caps as they fill and reset, and ranks single cards and two-card pairs by rewards minus annual fees, counting the cost of a membership a card needs (Costco's, for Costco Anywhere) unless you pass `--member costco` or spend at Costco. Both take `--no-fee`, `--cash` or `--points`, `--issuer`, `--business` and `--valuation`. Welcome bonuses are left out of both; for those:
+`best` ranks every card earnrate knows for a merchant or a category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Rates that need a membership like Amazon Prime are listed separately unless you've saved it (`earnrate memberships amazon-prime`) or pass `--member amazon-prime`, and a card that needs a membership to get (Costco Anywhere) says so. `simulate` spends your monthly amounts for a year, applying caps as they fill and reset, and ranks single cards and two-card pairs by rewards minus annual fees, counting the cost of a membership a card needs (Costco's, for Costco Anywhere) unless you have it or spend at Costco. Both take `--no-fee`, `--cash` or `--points`, `--issuer`, `--business` and `--valuation`. Welcome bonuses are left out of both; for those:
 
 ```sh
 earnrate offers --cash
 ```
 
-Ranks the welcome offers on cards you don't have by first-year value: the bonus at your point values minus the first year's annual fee (and a membership the card needs, if you don't have it). An offer the issuer rules out because of a card in your wallet is marked "likely not eligible" and listed last. `--points`, `--no-fee` and `--business` narrow it down. Each offer is the public one on the issuer's page, checked weekly like the earning rules, with the issuer's eligibility rules in its note. Offers can differ by person and by how you apply, and it covers only the cards earnrate knows. There are no affiliate or apply links.
+Ranks the welcome offers on cards you don't have by first-year value: the bonus at your point values minus the first year's annual fee (and a membership the card needs, if you don't have it). An offer the issuer rules out because of a card in your wallet (or one you name with `--cards`) is marked "likely not eligible" and listed last. `--points`, `--no-fee` and `--business` narrow it down. Each offer is the public one on the issuer's page, checked weekly like the earning rules, with the issuer's eligibility rules in its note. Offers can differ by person and by how you apply, and it covers only the cards earnrate knows. There are no affiliate or apply links.
 
 ### Import a statement
 
@@ -142,9 +143,9 @@ earnrate import gold.csv:amex-gold sapphire.csv:chase-sapphire-preferred
 It totals what each card earned against the best card in your wallet for each purchase, lists the merchants where another card would have earned the most, and flags merchants your issuer codes differently than earnrate assumes. Name several statements, each with its card, to get one report across them. It reads Amex and Chase activity CSVs. Download the CSV rather than a PDF statement: Chase's PDFs print the full card number in the payment coupon, and earnrate never handles card numbers.
 
 - It's a dry run unless you pass `--apply`, which records cap usage for the current period and spending toward an open welcome bonus in your wallet. Refunds lower both.
-- Only the date, description, amount, category and (for Chase) transaction type columns are read. The statements themselves are never stored: `--apply` writes cap and bonus totals plus a hash of each recorded purchase to `~/.earnrate/imported.json`, so importing the same file twice never counts twice.
+- Only the date, description, amount, category and (for Chase) transaction type columns are read. The statements themselves are never stored: `--apply` writes cap and bonus totals to your wallet, and a hash of each recorded purchase to `imported.json` beside it, so importing the same file twice never counts twice.
 - For a merchant earnrate doesn't know, it uses the statement's category and marks the row, since another issuer may code it differently.
-- `--valuation points-heavy` values points at transfer rates instead of your wallet's values, which can change which card wins.
+- `--valuation points-heavy` values Amex and Chase points at transfer rates instead of your wallet's values, which can change which card wins.
 
 ## Supported cards
 
@@ -185,7 +186,7 @@ Or install it as a Claude Code plugin, which connects Claude Code and Cowork to 
 - `cheat_sheet`: the card to use for each everyday kind of purchase this quarter
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have
 - `record_purchase`: books a purchase against its cap and any open welcome bonus in your wallet file, keeping your comments
-- `search_cards`, `add_card`, `update_card`, `remove_card`, `set_memberships` and `set_point_values`: set up the wallet in conversation, including what your points are worth
+- `search_cards`, `add_card`, `update_card`, `remove_card`, `set_memberships` and `set_point_values`: set up the wallet in conversation, including what your points are worth (memberships and point values need no cards)
 
 Saving cards is optional: name them in the conversation for one answer, or ask the assistant to save them, and it finds them, adds them, and asks about anything a card needs, like this quarter's Cash+ picks.
 
@@ -243,9 +244,9 @@ Rotating categories (Freedom Flex) are added each quarter once the issuer posts 
 
 ## Privacy Policy
 
-earnrate needs no account. The local version has no telemetry; the hosted server counts requests by method and tool name only. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
+earnrate needs no account. The local version has no telemetry; the hosted server counts requests and errors by method, tool name or page only, never what was asked. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
 
-- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests by method and tool name only. Connecting it starts an anonymous wallet (a recovery code, no email). It holds cards only if you save some: card IDs and the details you gave, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
+- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests and errors by method, tool name or page only. Connecting it starts an anonymous wallet (a recovery code, no email). It holds only what you save: card IDs and the details you gave, memberships and point values, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
 - **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product ID, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins.
 - **What the local version sends:** nothing, by default. The optional merchant lookup (off unless you turn it on with your own Anthropic API key) sends only the name of a store earnrate doesn't recognize to Anthropic's API, and saves the answer in `~/.earnrate/merchant-cache.json`.
 - **AI assistants:** when you use earnrate through Claude or another assistant, that assistant's provider sees the conversation, including earnrate's answers, under its own privacy policy.

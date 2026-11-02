@@ -80,7 +80,7 @@
     },
     {
       "name": "update_card",
-      "description": "Sets a card's picks, activations, checkout name, cap spending or welcome bonus."
+      "description": "Sets a card's picks, activations, checkout name, anniversary, cap spending or welcome bonus."
     },
     {
       "name": "remove_card",

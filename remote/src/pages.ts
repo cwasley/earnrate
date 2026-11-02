@@ -103,7 +103,7 @@ export function choosePage(
     'Connect your earnrate wallet',
     `<h1>Connect your earnrate wallet</h1>
 ${whoIsAsking(client)}
-<p class="muted">Saved wallets are anonymous: no email, no name. earnrate stores your cards by product name, never card numbers, encrypted so that only your apps and your recovery code can open them. Wallets unused for ${String(RETENTION_MONTHS)} months are deleted, and a new one that's never used is deleted after ${UNUSED_NEW_WALLET.words}.</p>
+<p class="muted">Saved wallets are anonymous: no email, no name. earnrate stores your cards by product, like amex-gold, never card numbers, encrypted so that only your apps and your recovery code can open them. Wallets unused for ${String(RETENTION_MONTHS)} months are deleted, and a new one that's never used is deleted after ${UNUSED_NEW_WALLET.words}.</p>
 <section>
 <h2>New here?</h2>
 <p>Start a wallet. You'll get a recovery code to keep. Reconnecting Claude? Use your recovery code below instead: a new wallet starts empty.</p>

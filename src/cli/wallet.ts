@@ -50,19 +50,21 @@ ${CARD_OPTIONS}
 `,
   update: `Usage: ${CLI_NAME} update <card-id> [options]
 
-Changes a card in your wallet: picks for this period, label, anniversary or
-activations. Picks for the current period are merged with ones already set.
+Changes a card in your wallet: picks for this period, label, anniversary,
+activations or welcome bonus. Picks for the current period are merged with
+ones already set.
 
 ${CARD_OPTIONS}
 `,
   remove: `Usage: ${CLI_NAME} remove <card-id>
 
-Removes a card from your wallet, with its tracked cap usage.
+Removes a card from your wallet, with its tracked cap usage and bonus
+progress. Your memberships and point values stay.
 `,
   memberships: `Usage: ${CLI_NAME} memberships [<membership>...] [--none]
 
 With no arguments, shows your memberships and the ones earnrate knows. With
-names, replaces the list. --none clears it.
+names, replaces the list. --none clears it. No cards need to be saved first.
 `,
   values: `Usage: ${CLI_NAME} values [<currency>=<cents>...] [--profile <name>]
 

@@ -34,7 +34,7 @@ Columns are cash / points for RightCard and flat / points-heavy for earnrate.
 
 **RightCard: 5 right, 7 wrong or unsupported, 3 partial.** Its answers didn't change since the first run. Row 3 moved from wrong to partial when Chase's terms showed the card earns 3% without Prime, so RightCard picks the right card at the wrong rate. The Best Buy row, an open data question then, now counts against it. Row 7's verdict now gives the real cause: the gas miss comes from its 1x Sapphire Preferred data, not from Cash+.
 
-**earnrate: 15 of 15.** Read that with care. The expected answers come from our own golden tests, which were written from the same issuer terms as our card files. When this ran, those files were still `verified_by: claude`, so the score showed the engine does what the spec says, not that a human had checked the data. All cards have since been reviewed by hand (`verified_by: collin`).
+**earnrate: 15 of 15.** Read that with care. The expected answers come from our own golden tests, which were written from the same issuer terms as our card files. When this ran, those files were still `verified_by: claude`, so the score showed the engine does what the spec says, not that a human had checked the data. Most cards have since been reviewed by hand (`verified_by: collin`); each card file says which.
 
 ## What the benchmark changed
 
@@ -53,10 +53,9 @@ Things RightCard did well that earnrate now matches: the next-best card after a 
 
 These are TODOs in the card files. None of them change a benchmark answer.
 
-- Airbnb booked through Amex Travel
 - Prime Visa's 6% with select delivery methods, and the Prime Card Bonus
-- Cash+ "select clothing stores" matches every clothing store
-- Gas bought at supermarkets and superstores: "kroger gas" resolves to Kroger the supermarket, so BCP shows 6% instead of its 1% base
+
+Fixed since this run: Airbnb booked through Amex Travel, Cash+ "select clothing stores" (now U.S. Bank's own store list), and gas bought at supermarkets ("kroger gas" now resolves to gas).
 
 ## Resolved data notes from the RightCard run
 
