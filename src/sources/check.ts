@@ -25,7 +25,7 @@ export type SourcesReport = {
     quote: string
   }[]
   newLines: { url: string; lines: string[] }[]
-  removedLines: { url: string; count: number }[]
+  removedLines: { url: string; keys: string[] }[]
   unreachable: { url: string; reason: string; cards: string[] }[]
   newPages: string[]
   // Offer text on some loads of a page but not others: an A/B test or a
@@ -87,8 +87,8 @@ export function compareSources(
       const before = new Set(previous.lines)
       const added = everyLoad.filter((l) => !before.has(lineKey(l)))
       if (added.length > 0) report.newLines.push({ url, lines: added })
-      const removed = previous.lines.filter((k) => !seen.has(k)).length
-      if (removed > 0) report.removedLines.push({ url, count: removed })
+      const removed = previous.lines.filter((k) => !seen.has(k))
+      if (removed.length > 0) report.removedLines.push({ url, keys: removed })
     }
     nextLock.pages[url] = { checked: today, lines: [...seen].sort() }
   }
@@ -138,7 +138,16 @@ export function hasChanges(report: SourcesReport): boolean {
 const truncate = (s: string, n: number) =>
   s.length > n ? `${s.slice(0, n - 1)}…` : s
 
-export function formatReport(report: SourcesReport, today: string): string {
+// The earning lines each page had at the last `--update`, kept only on the
+// machine that ran it (never committed), so a local report can show the
+// wording that disappeared instead of just a count.
+export type LineCache = Record<string, string[]>
+
+export function formatReport(
+  report: SourcesReport,
+  today: string,
+  previous: LineCache = {},
+): string {
   const out = [`# Card source check, ${today}`, '']
   if (!hasChanges(report) && report.unreachable.length === 0) {
     out.push(
@@ -187,7 +196,17 @@ export function formatReport(report: SourcesReport, today: string): string {
   if (report.removedLines.length > 0) {
     out.push('## Earning lines that disappeared', '')
     for (const r of report.removedLines) {
-      out.push(`- ${r.url}: ${String(r.count)} line(s)`)
+      const gone = (previous[r.url] ?? []).filter((l) =>
+        r.keys.includes(lineKey(l)),
+      )
+      if (gone.length === 0) {
+        out.push(`- ${r.url}: ${String(r.keys.length)} line(s)`)
+        continue
+      }
+      out.push(`- ${r.url}`)
+      for (const l of gone) out.push(`  - ${truncate(l, 220)}`)
+      if (gone.length < r.keys.length)
+        out.push(`  - …and ${String(r.keys.length - gone.length)} more`)
     }
     out.push('')
   }

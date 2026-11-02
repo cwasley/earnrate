@@ -7,12 +7,14 @@ import { localToday } from '../engine/periods.ts'
 import {
   compareSources,
   formatReport,
+  type LineCache,
   hasChanges,
   SourcesLockSchema,
   sourceUrls,
   type SourcesLock,
 } from './check.ts'
 import { fetchSnapshots } from './fetch.ts'
+import { earningLines } from './text.ts'
 
 // Exit codes: 0 nothing changed, 2 only pages that couldn't be reached,
 // 3 something changed. 1 stays free for crashes, so CI can tell them apart.
@@ -25,6 +27,8 @@ const { values } = parseArgs({
 })
 
 const LOCK = path.join(DATA_DIR, 'sources.lock.json')
+// Gitignored: issuer text stays on this machine.
+const CACHE = path.join(DATA_DIR, '..', '.sources-cache.json')
 const today = localToday()
 
 let lock: SourcesLock = { version: 1, pages: {} }
@@ -60,12 +64,26 @@ if (values.dump) {
   }
 }
 
+let previous: LineCache = {}
+try {
+  previous = JSON.parse(await readFile(CACHE, 'utf8')) as LineCache
+} catch {
+  // No local copy yet (or in CI): removed lines are reported as counts.
+}
+
 const { report, nextLock } = compareSources(catalog, snapshots, lock, today)
-const text = formatReport(report, today)
+const text = formatReport(report, today, previous)
 process.stdout.write(text)
 if (values.report) await writeFile(values.report, text)
 if (values.update) {
   await writeFile(LOCK, `${JSON.stringify(nextLock, null, 2)}\n`)
+  const lines: LineCache = { ...previous }
+  for (const s of snapshots.values())
+    if (s.ok)
+      lines[s.url] = [
+        ...new Set(s.loads.flatMap((l) => earningLines(l.innerText))),
+      ]
+  await writeFile(CACHE, `${JSON.stringify(lines)}\n`)
   process.stderr.write(`Updated ${path.relative(process.cwd(), LOCK)}\n`)
 }
 

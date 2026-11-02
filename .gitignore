@@ -11,6 +11,9 @@ dist
 # Personal wallet state and merchant cache, if kept repo-local
 .earnrate/
 
+# Issuer page text from the last source check, kept on this machine only
+.sources-cache.json
+
 # Debug logs
 yarn-debug.log*
 yarn-error.log*

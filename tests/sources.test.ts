@@ -117,7 +117,13 @@ describe('compareSources', () => {
     expect(report.newLines).toEqual([
       { url, lines: ['Earn 3% cash back at restaurants through 12/31/27.'] },
     ])
-    expect(report.removedLines).toEqual([{ url, count: 1 }])
+    const gone =
+      'Earn 2% cash back on every purchase when you redeem into SoFi.'
+    expect(report.removedLines).toEqual([{ url, keys: [lineKey(gone)] }])
+    expect(formatReport(report, '2026-10-31')).toContain(`- ${url}: 1 line(s)`)
+    expect(formatReport(report, '2026-10-31', { [url]: [gone] })).toContain(
+      `  - ${gone}`,
+    )
   })
 
   test('copy that varies between loads is neither new nor removed', () => {
