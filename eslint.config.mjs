@@ -26,6 +26,21 @@ export default defineConfig([
     },
   },
   {
+    // The site's service worker is plain browser JavaScript, served as is.
+    files: ['site/public/sw.js'],
+    extends: [tseslint.configs.disableTypeChecked],
+    languageOptions: {
+      globals: {
+        self: 'readonly',
+        caches: 'readonly',
+        location: 'readonly',
+        fetch: 'readonly',
+        URL: 'readonly',
+        Response: 'readonly',
+      },
+    },
+  },
+  {
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',

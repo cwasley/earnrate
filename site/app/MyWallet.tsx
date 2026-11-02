@@ -55,7 +55,7 @@ import {
   words,
 } from './format.ts'
 import { SearchInput } from './SearchInput.tsx'
-import { loadList } from './settings.ts'
+import { load, loadList, save } from './settings.ts'
 import { offerTerms } from '../../src/engine/offers.ts'
 import { dollarsAndCents } from '../../src/engine/text.ts'
 
@@ -742,6 +742,43 @@ async function importWallet(file: File): Promise<Wallet | string> {
   return parseWalletYaml(await file.text(), catalog)
 }
 
+// On a phone, outside the installed app: how to add earnrate to the Home
+// Screen, where it opens straight to this tab and works with no signal.
+function InstallHint() {
+  const [hidden, setHidden] = useState(() => {
+    const standalone =
+      matchMedia('(display-mode: standalone)').matches ||
+      (navigator as { standalone?: boolean }).standalone === true
+    return (
+      standalone ||
+      !matchMedia('(pointer: coarse)').matches ||
+      load('install-hint', { dismissed: false }).dismissed
+    )
+  })
+  if (hidden) return null
+  const how = /iPhone|iPad|iPod/.test(navigator.userAgent)
+    ? 'tap Share, then Add to Home Screen'
+    : "open your browser's menu and tap Add to Home screen"
+  return (
+    <p class="callout install-hint">
+      <span>
+        Use earnrate at the register: {how}. It opens to your wallet and works
+        offline.
+      </span>
+      <button
+        type="button"
+        class="link"
+        onClick={() => {
+          save('install-hint', { dismissed: true })
+          setHidden(true)
+        }}
+      >
+        Dismiss
+      </button>
+    </p>
+  )
+}
+
 function Transfer({
   wallet,
   onReplace,
@@ -888,6 +925,7 @@ export function MyWallet({
           {message ? (
             <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
           ) : null}
+          <InstallHint />
         </section>
         <Transfer wallet={wallet} onReplace={replace} />
       </div>
@@ -908,6 +946,7 @@ export function MyWallet({
         {message ? (
           <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
         ) : null}
+        <InstallHint />
       </section>
 
       <section class="panel" aria-labelledby="wallet-ask-title">

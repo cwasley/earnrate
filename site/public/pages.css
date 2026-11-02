@@ -70,6 +70,8 @@ h2 {
 
 a {
   color: var(--accent);
+  /* Long source addresses wrap instead of widening the page on a phone. */
+  overflow-wrap: anywhere;
 }
 
 .updated,

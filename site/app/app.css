@@ -272,6 +272,24 @@ input::-webkit-list-button {
   font-size: 15px;
 }
 
+.install-hint {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.install-hint .link {
+  flex: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .result-list {
   list-style: none;
   padding: 0;
@@ -429,6 +447,8 @@ input::-webkit-list-button {
   color: var(--muted);
   font-size: 22px;
   line-height: 1;
+  min-width: 36px;
+  min-height: 36px;
   padding: 4px 6px;
   cursor: pointer;
 }
