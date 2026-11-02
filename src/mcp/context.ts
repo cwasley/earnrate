@@ -3,7 +3,7 @@ import type { SetupResult } from '../data/store.ts'
 import { EMPTY_WALLET, walletFromCards } from '../engine/transient.ts'
 import type { Channel, MerchantResolution } from '../engine/types.ts'
 import { formatNotes } from '../format/cards.ts'
-import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
+import { resolvePlace, withCallerCategory } from '../merchants/resolve.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { defined, type NamedCard } from './inputs.ts'
 import type { ServerDeps } from './server.ts'
@@ -64,7 +64,7 @@ export function makeContext(deps: ServerDeps) {
     channel: Channel | null,
     category: string | null,
   ): Promise<{ merchant: MerchantResolution; notices: string[] }> {
-    const known = resolveMerchant(catalog, merchant, channel)
+    const known = resolvePlace(catalog, merchant, channel)
     if (known.source !== 'none' || category !== null || !deps.llm) {
       return { merchant: withCallerCategory(known, category), notices: [] }
     }

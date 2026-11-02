@@ -1,4 +1,4 @@
-import { resolveMerchant } from '../merchants/resolve.ts'
+import { categoryResolution, resolvePlace } from '../merchants/resolve.ts'
 import type { Cap, Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
@@ -135,47 +135,6 @@ export type ExploreOptions = {
   filters: CardFilters
   memberships: string[] // the ones the person has; none assumed otherwise
   valuations: Wallet['valuations']
-}
-
-const plainWords = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-
-// A category from everyday words: an alias ("groceries") first, then the
-// name, then the id, so "grocery" means supermarkets rather than the parent.
-export function findCategory(catalog: Catalog, text: string): string | null {
-  const wanted = plainWords(text)
-  if (wanted === '') return null
-  const by = (key: (c: Catalog['categories'][number]) => string[]) =>
-    catalog.categories.find((c) => key(c).map(plainWords).includes(wanted))?.id
-  return (
-    by((c) => c.aliases) ?? by((c) => [c.name]) ?? by((c) => [c.id]) ?? null
-  )
-}
-
-export function categoryResolution(
-  catalog: Catalog,
-  category: string,
-  channel: Channel | null,
-): MerchantResolution {
-  const found = catalog.categories.find((c) => c.id === category)
-  if (!found) throw new Error(`unknown category '${category}'`)
-  return {
-    input: found.name,
-    merchantId: null,
-    resolvedName: found.name,
-    category,
-    likelyMcc: null,
-    accepts: null,
-    ambiguity: null,
-    channel,
-    confidence: 'high',
-    source: 'category',
-    bookedVia: [],
-    inference: null,
-  }
 }
 
 function walletOf(
@@ -342,7 +301,7 @@ export function exploreCards(
   const merchant =
     resolved ??
     (query.merchant !== null
-      ? resolveMerchant(catalog, query.merchant, query.channel)
+      ? resolvePlace(catalog, query.merchant, query.channel)
       : categoryResolution(catalog, query.category ?? 'other', query.channel))
   const purchase: Purchase = {
     merchant: merchant.input,

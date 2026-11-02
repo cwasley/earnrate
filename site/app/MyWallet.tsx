@@ -7,11 +7,7 @@ import {
   EVERYDAY_PURCHASES,
   type CheatSheet,
 } from '../../src/engine/cheat-sheet.ts'
-import {
-  ALL_PERSONAL_CARDS,
-  categoryResolution,
-  findCategory,
-} from '../../src/engine/explore.ts'
+import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
 import { activationGroup } from '../../src/engine/evaluate.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { recommend } from '../../src/engine/recommend.ts'
@@ -43,7 +39,7 @@ import {
   type CardInput,
   type WalletChange,
 } from '../../src/engine/wallet-change.ts'
-import { resolveMerchant } from '../../src/merchants/resolve.ts'
+import { resolvePlace } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { Logo } from './Logo.tsx'
 import { cheatSheetImage } from './sheet-image.ts'
@@ -83,7 +79,6 @@ function noteText(note: SetupNote, name: string): string {
 }
 
 function ask(wallet: Wallet, text: string, amount: number | null) {
-  const category = findCategory(catalog, text)
   const purchase = {
     merchant: text,
     amount,
@@ -91,11 +86,7 @@ function ask(wallet: Wallet, text: string, amount: number | null) {
     date: localToday(),
     country: 'US',
   }
-  const merchant =
-    category === null
-      ? resolveMerchant(catalog, text, null)
-      : categoryResolution(catalog, category, null)
-  return recommend(catalog, wallet, purchase, merchant)
+  return recommend(catalog, wallet, purchase, resolvePlace(catalog, text, null))
 }
 
 function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {

@@ -29,6 +29,7 @@ import {
 } from '../../format/explore.ts'
 import { formatOffers } from '../../format/offers.ts'
 import { formatRecommendation } from '../../format/recommendation.ts'
+import { resolvePlace, withCallerCategory } from '../../merchants/resolve.ts'
 import { ALL_CARDS_NOTE, fail, type Context } from '../context.ts'
 import {
   ChannelInput,
@@ -319,17 +320,23 @@ export function registerAnswerTools(
     async (args) => {
       if (args.merchant === undefined && args.category === undefined)
         return fail('Give a merchant or a category.')
+      const channel = args.channel ?? null
       const result = exploreCards(
         catalog,
         {
           merchant: args.merchant ?? null,
-          category:
-            args.merchant === undefined ? (args.category ?? null) : null,
+          category: args.category ?? null,
           amount: args.amount ?? null,
-          channel: args.channel ?? null,
+          channel,
           date: deps.today(),
         },
         settings(args, await ctx.saved()),
+        args.merchant === undefined
+          ? undefined
+          : withCallerCategory(
+              resolvePlace(catalog, args.merchant, channel),
+              args.category ?? null,
+            ),
       )
       const trimmed = { ...result, ranked: result.ranked.slice(0, TOP) }
       return {

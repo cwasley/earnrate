@@ -1,11 +1,13 @@
-import { resolveMerchant } from '../merchants/resolve.ts'
+import {
+  categoryResolution,
+  findCategory,
+  resolvePlace,
+} from '../merchants/resolve.ts'
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { evaluateCard, purchaseContext, usableAt } from './evaluate.ts'
 import {
-  categoryResolution,
-  findCategory,
   idealHolding,
   matchesFilters,
   type CardFilters,
@@ -80,7 +82,7 @@ export function resolveSpendLines(
     .map((l) => {
       const merchant =
         l.merchant !== null
-          ? resolveMerchant(catalog, l.merchant, null)
+          ? resolvePlace(catalog, l.merchant, null)
           : categoryResolution(catalog, l.category ?? 'other', null)
       return { label: merchant.resolvedName, monthly: l.monthly, merchant }
     })

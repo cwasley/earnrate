@@ -4,7 +4,6 @@ import { loadCatalog, walletPath } from '../data/load.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,
-  findCategory,
   type CardFilters,
 } from '../engine/explore.ts'
 import {
@@ -205,12 +204,11 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
     io.stderr(`${settings}\n`)
     return USAGE_ERROR
   }
-  const category = findCategory(catalog, text)
   const result = exploreCards(
     catalog,
     {
-      merchant: category === null ? text : null,
-      category,
+      merchant: text,
+      category: null,
       amount,
       channel: channelOf(values),
       date: values.date ?? io.today,
@@ -231,13 +229,9 @@ function parseSpend(catalog: Catalog, args: string[]): SpendLine[] | string {
     const match = /^(.+)=\$?(\d+(?:\.\d+)?)$/.exec(arg)
     if (!match?.[1] || match[2] === undefined)
       return `"${arg}" isn't <what>=<dollars a month>, e.g. groceries=600.`
-    const what = match[1].replace(/[-_]/g, ' ')
-    const category = findCategory(catalog, what)
-    lines.push({
-      merchant: category === null ? what : null,
-      category,
-      monthly: Number(match[2]),
-    })
+    lines.push(
+      spendLineFor(catalog, match[1].replace(/[-_]/g, ' '), Number(match[2])),
+    )
   }
   if (lines.length === 0)
     return `Give your monthly spending, e.g. ${CLI_NAME} simulate groceries=600 dining=300 other=1000.`

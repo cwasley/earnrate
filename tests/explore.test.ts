@@ -4,12 +4,12 @@ import { catalogCheatSheet } from '../src/engine/cheat-sheet.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,
-  findCategory,
   idealHolding,
   type ExploreOptions,
   type ExploreQuery,
 } from '../src/engine/explore.ts'
 import { VALUATION_PROFILES } from '../src/engine/profiles.ts'
+import { findCategory } from '../src/merchants/resolve.ts'
 import {
   resolveSpendLines,
   simulateAdditions,

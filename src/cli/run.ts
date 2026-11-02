@@ -13,12 +13,7 @@ import {
 } from '../brand.ts'
 import { walletProblems } from '../data/integrity.ts'
 import { loadCatalog, loadWallet, walletPath } from '../data/load.ts'
-import {
-  ALL_PERSONAL_CARDS,
-  categoryResolution,
-  exploreCards,
-  findCategory,
-} from '../engine/explore.ts'
+import { ALL_PERSONAL_CARDS, exploreCards } from '../engine/explore.ts'
 import {
   profileText,
   VALUATION_PROFILES,
@@ -37,7 +32,7 @@ import { DEFAULT_LLM_MODEL } from '../merchants/anthropic.ts'
 import type { Classifier } from '../merchants/classifier.ts'
 import { DEFAULT_MAX_CALLS } from '../merchants/fallback.ts'
 import { llmEnabled, openLlmSession } from '../merchants/from-env.ts'
-import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
+import { resolvePlace, withCallerCategory } from '../merchants/resolve.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { packageVersion } from '../version.ts'
@@ -257,20 +252,10 @@ export async function run(argv: string[], io: Io): Promise<number> {
     return USAGE_ERROR
   }
 
-  // Plain category words ("restaurants", "groceries") work like stores.
-  const resolvedName = resolveMerchant(
-    catalog,
-    purchase.merchant,
-    purchase.channel,
+  let merchant: MerchantResolution = withCallerCategory(
+    resolvePlace(catalog, purchase.merchant, purchase.channel),
+    options.category,
   )
-  const named =
-    resolvedName.source === 'none' && options.category === null
-      ? findCategory(catalog, purchase.merchant)
-      : null
-  let merchant: MerchantResolution =
-    named === null
-      ? withCallerCategory(resolvedName, options.category)
-      : categoryResolution(catalog, named, purchase.channel)
   const notices: string[] = []
   if (llmOn && merchant.source === 'none') {
     const opened = await openLlmSession({

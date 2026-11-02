@@ -3,7 +3,6 @@ import { useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import {
   exploreCards,
-  findCategory,
   type Exploration,
   type ExploreEntry,
 } from '../../src/engine/explore.ts'
@@ -36,12 +35,11 @@ export const SUGGESTIONS = [
 ].sort((a, b) => a.localeCompare(b))
 
 function explore(text: string, settings: Settings): Exploration {
-  const category = findCategory(catalog, text)
   return exploreCards(
     catalog,
     {
-      merchant: category === null ? text : null,
-      category,
+      merchant: text,
+      category: null,
       amount: null,
       channel: null,
       date: localToday(),

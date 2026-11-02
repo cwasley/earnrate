@@ -907,6 +907,63 @@ describe('category from the caller', () => {
   })
 })
 
+describe('category words', () => {
+  test('work like stores in best_card_for_purchase', async () => {
+    const client = await connect(await walletCopy())
+    const result = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'restaurants', amount: 50 },
+    })
+    const rec = result.structuredContent as Recommendation
+    expect(rec.merchant).toMatchObject({
+      source: 'category',
+      category: 'dining',
+    })
+    expect(rec.decision).toMatchObject({
+      cardId: 'amex-gold',
+      confidence: 'high',
+    })
+    expect(text(result)).not.toMatch(/doesn't recognize/)
+  })
+
+  test('work like stores in best_cards_for', async () => {
+    const client = await connect(await walletCopy())
+    const result = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { merchant: 'groceries' },
+    })
+    expect(result.structuredContent).toMatchObject({
+      merchant: { source: 'category', category: 'grocery.supermarket' },
+    })
+  })
+
+  test('give way to a different category from the caller', async () => {
+    const client = await connect(await walletCopy())
+    const result = await client.callTool({
+      name: 'resolve_merchant',
+      arguments: { merchant: 'restaurants', category: 'grocery.supermarket' },
+    })
+    expect(result.structuredContent).toMatchObject({
+      source: 'caller',
+      category: 'grocery.supermarket',
+    })
+  })
+
+  test('best_cards_for uses the caller category for an unknown merchant', async () => {
+    const client = await connect(await walletCopy())
+    const result = await client.callTool({
+      name: 'best_cards_for',
+      arguments: {
+        merchant: "Lucky's Market",
+        category: 'grocery.supermarket',
+      },
+    })
+    expect(result.structuredContent).toMatchObject({
+      merchant: { source: 'caller', category: 'grocery.supermarket' },
+    })
+  })
+})
+
 describe('record_purchase', () => {
   test('golden #16 end to end: recording $6,000 flips the next pick', async () => {
     const file = await walletCopy()

@@ -11,7 +11,7 @@ export const Merchant = z
   .string()
   .min(1)
   .describe(
-    'Merchant name or web address as the user would say it or see it, e.g. "Whole Foods" or "delta.com".',
+    'Merchant name or web address as the user would say it or see it, e.g. "Whole Foods" or "delta.com", or a kind of place, e.g. "restaurants" or "gas station".',
   )
 
 export const ChannelInput = z

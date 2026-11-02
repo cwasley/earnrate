@@ -166,12 +166,72 @@ export function resolveMerchantById(
   )
 }
 
-// Used only when the merchant is unknown: curated data always wins over a
-// category supplied with the request.
+// Curated merchant data always wins over a category supplied with the
+// request; the caller's category wins over an unknown name or a different
+// category word.
 export function withCallerCategory(
   merchant: MerchantResolution,
   category: string | null,
 ): MerchantResolution {
-  if (merchant.source !== 'none' || category === null) return merchant
+  if (category === null) return merchant
+  const otherWord =
+    merchant.source === 'category' && merchant.category !== category
+  if (merchant.source !== 'none' && !otherWord) return merchant
   return { ...merchant, category, confidence: 'medium', source: 'caller' }
+}
+
+const plainWords = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+
+// A category from everyday words: an alias ("groceries") first, then the
+// name, then the id, so "grocery" means supermarkets rather than the parent.
+export function findCategory(catalog: Catalog, text: string): string | null {
+  const wanted = plainWords(text)
+  if (wanted === '') return null
+  const by = (key: (c: Catalog['categories'][number]) => string[]) =>
+    catalog.categories.find((c) => key(c).map(plainWords).includes(wanted))?.id
+  return (
+    by((c) => c.aliases) ?? by((c) => [c.name]) ?? by((c) => [c.id]) ?? null
+  )
+}
+
+export function categoryResolution(
+  catalog: Catalog,
+  category: string,
+  channel: Channel | null,
+): MerchantResolution {
+  const found = catalog.categories.find((c) => c.id === category)
+  if (!found) throw new Error(`unknown category '${category}'`)
+  return {
+    input: found.name,
+    merchantId: null,
+    resolvedName: found.name,
+    category,
+    likelyMcc: null,
+    accepts: null,
+    ambiguity: null,
+    channel,
+    confidence: 'high',
+    source: 'category',
+    bookedVia: [],
+    inference: null,
+  }
+}
+
+// What someone typed: a store earnrate knows, else a category word
+// ("restaurants", "gas"), else unrecognized.
+export function resolvePlace(
+  catalog: Catalog,
+  text: string,
+  channel: Channel | null,
+): MerchantResolution {
+  const known = resolveMerchant(catalog, text, channel)
+  if (known.source !== 'none') return known
+  const category = findCategory(catalog, text)
+  return category === null
+    ? known
+    : categoryResolution(catalog, category, channel)
 }
