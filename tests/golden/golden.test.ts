@@ -598,6 +598,18 @@ describe('#21 Freedom Flex activation', () => {
       }
     },
   )
+
+  goldenTest(
+    '#21e past the deadline: no nudge to activate by a date that has passed',
+    () => {
+      const wallet = withProfile(withFlex([])(baseWallet()), 'pointsHeavy')
+      const rec = recommend(catalog, wallet, krogerOn('2026-12-20'))
+      const flex = entry(rec, 'chase-freedom-flex')
+      expect(flex.matchedRule).toBeNull()
+      expect(flex.warnings.join(' ')).not.toMatch(/Activate this bonus/)
+      expectSome(flex.warnings, /needed activating by Dec 14, 2026/)
+    },
+  )
 })
 
 describe('#22 abroad', () => {

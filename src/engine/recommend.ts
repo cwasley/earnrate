@@ -246,6 +246,12 @@ function warningsFor(
     )
   }
   for (const rule of evaluation.needsActivation) {
+    if (rule.activate_by !== undefined && rule.activate_by < purchase.date) {
+      warnings.push(
+        `The bonus here (${earnText(catalog, rule.rate, valuation.currency)}) needed activating by ${shortDate(rule.activate_by)}.`,
+      )
+      continue
+    }
     warnings.push(
       `Activate this bonus with the issuer (it's free)${rule.activate_by === undefined ? '' : ` by ${shortDate(rule.activate_by)}`} to earn ${earnText(catalog, rule.rate, valuation.currency)} here${rule.valid_to === undefined ? '' : ` through ${shortDate(rule.valid_to)}`}.`,
     )
