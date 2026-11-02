@@ -96,7 +96,7 @@ evidence:
     quote: 'This category includes only the merchants listed below'
   - rule: annual_fee
     url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
-    quote: 'ANNUAL FEE $0 Annual fee'
+    quote: '$0 Annual fee'
   - rule: welcome_offer
     url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
     quote: 'Earn a $200 rewards bonus after you spend $1,000 in eligible purchases within the first 90 days of account opening'
