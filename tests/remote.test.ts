@@ -612,7 +612,9 @@ describe('anonymous saved wallets', () => {
       arguments: { confirm: true, cards: 1 },
     })
     expect(replayed.isError).toBe(true)
-    expect(text(replayed)).toMatch(/holds 0 cards, not 1/)
+    expect(text(replayed)).toMatch(
+      /holds nothing, not what the user confirmed \(1 card\)/,
+    )
     expect(
       (await post(d, '/', callTool('list_wallet'), next.token)).status,
     ).toBe(200)

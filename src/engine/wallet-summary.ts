@@ -9,6 +9,7 @@ import {
   isActivated,
   pickedCategories,
 } from './evaluate.ts'
+import { membershipName } from './memberships.ts'
 import { daysBetween, inEffect, periodEnd } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
@@ -66,6 +67,7 @@ export type CardSummary = {
 
 export type WalletSummary = {
   memberships: string[]
+  membershipNames: string[]
   // Point values the wallet sets: a number, or a way of redeeming (like
   // SoFi points into a SoFi account), which `redemption` names.
   pointValues: {
@@ -314,7 +316,20 @@ export function walletSummary(
       anniversary: held.anniversary ?? null,
     })
   }
-  const pointValues = Object.keys(wallet.valuations)
+  return {
+    memberships: wallet.memberships,
+    membershipNames: wallet.memberships.map((m) => membershipName(catalog, m)),
+    pointValues: pointValues(catalog, wallet),
+    started: null,
+    cards,
+  }
+}
+
+function pointValues(
+  catalog: Catalog,
+  wallet: Wallet,
+): WalletSummary['pointValues'] {
+  return Object.keys(wallet.valuations)
     .filter((id) => catalog.currencies.some((c) => c.id === id))
     .map((id) => ({
       currency: id,
@@ -322,5 +337,17 @@ export function walletSummary(
       centsPerUnit: currencyValuation(catalog, wallet, id).centsPerUnit,
       redemption: redemptionOf(catalog, id, wallet.valuations[id]),
     }))
-  return { memberships: wallet.memberships, pointValues, started: null, cards }
+}
+
+// The memberships and point values a wallet holds besides its cards, in
+// words: what replacing or deleting it would lose.
+export function savedSettingsText(catalog: Catalog, wallet: Wallet): string[] {
+  return [
+    ...wallet.memberships.map((m) => membershipName(catalog, m)),
+    ...pointValues(catalog, wallet).map((v) =>
+      v.redemption === null
+        ? `${v.name} at ${String(v.centsPerUnit)}¢`
+        : `${v.name} redeemed ${v.redemption}`,
+    ),
+  ]
 }

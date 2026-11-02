@@ -1,8 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
-import type { AccountStore } from '../../data/store.ts'
+import { emptyWallet, type AccountStore } from '../../data/store.ts'
 import { parseWalletYaml, walletYaml } from '../../format/wallet-yaml.ts'
+import { listed } from '../../engine/text.ts'
+import { savedSettingsText } from '../../engine/wallet-summary.ts'
 import type { Catalog } from '../../schema/catalog.ts'
+import type { Wallet } from '../../schema/wallet.ts'
 import { fail, type Context } from '../context.ts'
 import { WalletChangeSchema } from '../schemas.ts'
 
@@ -14,6 +17,17 @@ export function registerAccountTools(
   store: AccountStore,
   ctx: Context,
 ) {
+  const cardsText = (n: number) => `${String(n)} ${n === 1 ? 'card' : 'cards'}`
+  // Everything a saved wallet holds, in words; empty when there's nothing.
+  const contents = (w: Wallet) => [
+    ...(w.cards.length > 0
+      ? [
+          `${cardsText(w.cards.length)} (${w.cards.map((c) => c.id).join(', ')})`,
+        ]
+      : []),
+    ...savedSettingsText(catalog, w),
+  ]
+
   server.registerTool(
     'export_wallet',
     {
@@ -44,7 +58,7 @@ export function registerAccountTools(
     {
       title: 'Import a wallet',
       description:
-        'Replaces the saved wallet with a wallet.yaml from the earnrate command line or earnrate.dev, when the user pastes or attaches one. Wallet files only: never statements or card numbers. If cards are already saved, it refuses unless replace is true: confirm with the user first.',
+        'Replaces the saved wallet with a wallet.yaml from the earnrate command line or earnrate.dev, when the user pastes or attaches one. Wallet files only: never statements or card numbers. If anything is already saved (cards, memberships or point values), it refuses unless replace is true: confirm with the user first.',
       inputSchema: z.object({
         yaml: z
           .string()
@@ -55,7 +69,7 @@ export function registerAccountTools(
           .boolean()
           .optional()
           .describe(
-            'true to replace a wallet that already has cards, after the user confirms.',
+            'true to replace what the wallet already holds, after the user confirms.',
           ),
       }),
       outputSchema: WalletChangeSchema,
@@ -80,17 +94,16 @@ export function registerAccountTools(
           )
         current = null
       }
-      if (current !== null && current.cards.length > 0 && replace !== true)
+      const before = current === null ? [] : contents(current)
+      if (before.length > 0 && replace !== true)
         return fail(
-          `This would replace the ${String(current.cards.length)} ${current.cards.length === 1 ? 'card' : 'cards'} already saved (${current.cards.map((c) => c.id).join(', ')}). Ask the user, then call again with replace: true.`,
+          `This would replace what's saved: ${listed(before)}. Ask the user, then call again with replace: true.`,
         )
-      const cards = (n: number) => `${String(n)} ${n === 1 ? 'card' : 'cards'}`
-      const before = current?.cards.length ?? 0
       return ctx.changed(
         await store.replace(parsed),
-        before > 0
-          ? `Replaced the ${cards(before)} that were saved with the ${cards(parsed.cards.length)} imported.`
-          : `Imported a wallet with ${cards(parsed.cards.length)}.`,
+        before.length > 0
+          ? `Replaced what was saved (${listed(before)}) with the imported wallet: ${listed(contents(parsed))}.`
+          : `Imported a wallet with ${listed(contents(parsed)) || 'nothing in it'}.`,
         { notes: false },
       )
     },
@@ -101,7 +114,7 @@ export function registerAccountTools(
     {
       title: 'Delete the wallet',
       description:
-        "Deletes the saved wallet and its recovery code now and for good, and signs out every Claude app connected to it, this one included. earnrate.dev and the earnrate command line keep their own wallets and aren't affected. Only when the user asks to delete it: show it with list_wallet, offer export_wallet, and pass confirm and cards only after the user confirms. It refuses if the wallet no longer holds that many cards, so a retried call can't delete a different wallet.",
+        "Deletes the saved wallet and its recovery code now and for good, and signs out every Claude app connected to it, this one included. earnrate.dev and the earnrate command line keep their own wallets and aren't affected. Only when the user asks to delete it: show it with list_wallet, offer export_wallet, and pass confirm, cards and saved only after the user confirms. It refuses if the wallet no longer holds what list_wallet showed, so a retried call can't delete a different wallet.",
       inputSchema: z.object({
         confirm: z
           .literal(true)
@@ -113,6 +126,14 @@ export function registerAccountTools(
           .describe(
             'How many cards the wallet held when the user confirmed, from list_wallet: 0 for an empty wallet.',
           ),
+        saved: z
+          .number()
+          .int()
+          .nonnegative()
+          .optional()
+          .describe(
+            'How many memberships and point values list_wallet showed, counted together: 0 if none.',
+          ),
       }),
       outputSchema: z.object({ deleted: z.boolean() }),
       annotations: {
@@ -123,14 +144,17 @@ export function registerAccountTools(
         openWorldHint: false,
       },
     },
-    async ({ cards }) => {
+    async ({ cards, saved }) => {
       // An unreadable wallet can still be deleted: the user confirmed it.
-      const current = await store.load().catch(() => undefined)
-      const held = current === undefined ? cards : (current?.cards.length ?? 0)
-      if (held !== cards)
-        return fail(
-          `This saved wallet holds ${String(held)} ${held === 1 ? 'card' : 'cards'}, not ${String(cards)}, so it isn't the wallet the user confirmed (it may have been deleted and a new one connected). Show it with list_wallet and confirm again.`,
-        )
+      const loaded = await store.load().catch(() => undefined)
+      if (loaded !== undefined) {
+        const current = loaded ?? emptyWallet()
+        const settings = savedSettingsText(catalog, current)
+        if (current.cards.length !== cards || settings.length !== (saved ?? 0))
+          return fail(
+            `This saved wallet holds ${listed(contents(current)) || 'nothing'}, not what the user confirmed (${cardsText(cards)}${saved === undefined ? '' : ` and ${String(saved)} memberships and point values`}); it may have changed, or be a different wallet. Show it with list_wallet, confirm again, and pass cards: ${String(current.cards.length)} and saved: ${String(settings.length)}.`,
+          )
+      }
       await store.erase()
       return {
         content: [

@@ -609,7 +609,10 @@ describe('wallet setup', () => {
       ['set_point_values', { values: { UR: 1.5 }, profile: 'points-heavy' }],
       ['remove_card', { cardId: 'chase-freedom-unlimited' }],
       ['export_wallet', {}],
-      ['delete_wallet', { confirm: true, cards: parsed.cards.length }],
+      [
+        'delete_wallet',
+        { confirm: true, cards: parsed.cards.length, saved: 5 },
+      ],
       ['switch_wallet', {}],
     ]
     const called = new Set<string>()
@@ -660,13 +663,15 @@ describe('wallet setup', () => {
       arguments: over,
     })
     expect(refused.isError).toBe(true)
-    expect(text(refused)).toMatch(/replace the 2 cards already saved/)
+    expect(text(refused)).toMatch(
+      /replace what's saved: 2 cards \(chase-prime-visa, amex-gold\) and Amazon Prime\./,
+    )
     const replaced = await client.callTool({
       name: 'import_wallet',
       arguments: { ...over, replace: true },
     })
     expect(text(replaced)).toMatch(
-      /Replaced the 2 cards that were saved with the 1 card imported\./,
+      /Replaced what was saved \(.*\) with the imported wallet: 1 card \(amex-gold\)\./,
     )
 
     const unconfirmed = await client.callTool({
@@ -687,12 +692,45 @@ describe('wallet setup', () => {
       arguments: { confirm: true, cards: 1 },
     })
     expect(stale.isError).toBe(true)
-    expect(text(stale)).toMatch(/holds 0 cards, not 1/)
+    expect(text(stale)).toMatch(/holds nothing, not what the user confirmed/)
     const empty = await client.callTool({
       name: 'delete_wallet',
       arguments: { confirm: true, cards: 0 },
     })
     expect(empty.isError).toBeFalsy()
+  })
+
+  test('import and delete count memberships and point values, not just cards', async () => {
+    const backend = memoryBackend(
+      JSON.stringify({
+        version: 1,
+        memberships: ['amazon-prime'],
+        valuations: { UR: 1.5 },
+        cards: [],
+      }),
+    )
+    const client = await serve({
+      savedWallets: 'account',
+      store: new JsonWalletStore(catalog, backend, 'your saved wallet'),
+    })
+    const imported = await client.callTool({
+      name: 'import_wallet',
+      arguments: { yaml: 'cards:\n  - id: amex-gold\n' },
+    })
+    expect(text(imported)).toMatch(
+      /replace what's saved: Amazon Prime and Chase Ultimate Rewards \(UR\) at 1\.5¢/,
+    )
+    const deleted = await client.callTool({
+      name: 'delete_wallet',
+      arguments: { confirm: true, cards: 0 },
+    })
+    expect(text(deleted)).toMatch(/pass cards: 0 and saved: 2/)
+    expect(await backend.read()).not.toBeNull()
+    await client.callTool({
+      name: 'delete_wallet',
+      arguments: { confirm: true, cards: 0, saved: 2 },
+    })
+    expect(await backend.read()).toBeNull()
   })
 
   test('the tool lists cover every tool, and only hosted wallets add account tools', async () => {
@@ -730,6 +768,7 @@ describe('wallet setup', () => {
     )
     expect(before.structuredContent).toEqual({
       memberships: [],
+      membershipNames: [],
       pointValues: [],
       started: null,
       cards: [],
@@ -853,7 +892,7 @@ describe('wallet setup', () => {
     expect(text(best)).toMatch(/With your Amazon Prime/)
     const listed = await client.callTool({ name: 'list_wallet', arguments: {} })
     expect(text(listed)).toMatch(/has no cards yet/)
-    expect(text(listed)).toMatch(/Memberships: amazon-prime\./)
+    expect(text(listed)).toMatch(/Memberships: Amazon Prime \(amazon-prime\)\./)
   })
 })
 

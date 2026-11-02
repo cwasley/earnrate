@@ -86,6 +86,7 @@ const RecommendationSchema = z.object({
 
 export const WalletSummarySchema = z.object({
   memberships: z.array(z.string()),
+  membershipNames: z.array(z.string()),
   pointValues: z.array(
     z.object({
       currency: z.string(),

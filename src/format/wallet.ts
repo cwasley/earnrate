@@ -52,7 +52,7 @@ export function formatWalletSummary(summary: WalletSummary): string {
   })
   const memberships =
     summary.memberships.length > 0
-      ? `Memberships: ${summary.memberships.join(', ')}.`
+      ? `Memberships: ${summary.memberships.map((id, i) => `${summary.membershipNames[i] ?? id} (${id})`).join(', ')}.`
       : 'Memberships: none saved.'
   const values =
     summary.pointValues.length > 0
