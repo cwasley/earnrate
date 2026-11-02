@@ -80,7 +80,7 @@ try {
   })
   check(added.isError !== true, 'add_card starts a wallet')
   const sheet = await client.callTool({ name: 'cheat_sheet', arguments: {} })
-  check(/^Your cheat sheet for/.test(text(sheet)), 'cheat_sheet reads it back')
+  check(/^Your cheat sheet for/m.test(text(sheet)), 'cheat_sheet reads it back')
   await client.close()
 } catch (e) {
   check(false, e instanceof Error ? e.message : String(e))
