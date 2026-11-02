@@ -212,5 +212,4 @@ evidence:
 todo:
   - New accounts earn 6% in the choice category for the first year (an extra 3%, inside the same $2,500 quarterly cap, with no BofA Rewards bonus on the extra 3%). earnrate can't see when an account was opened, so this isn't modeled.
   - 'The BofA Rewards rules use proposed membership ids: bofa-rewards-member, bofa-rewards-preferred-plus, bofa-rewards-preferred-honors and bofa-rewards-premier. Cardholders who joined Preferred Rewards before May 26, 2026 may have an "extended card benefit" that Bank of America doesn''t define.'
-  - With a BofA Rewards tier, a purchase that crosses the $2,500 cap counts the part past the cap at 1% instead of the tier's boosted base rate, so it's slightly understated.
   - "Online shopping counts any online purchase earnrate can't place in an excluded category, including unknown merchants. Bank of America also excludes doctors, government, insurance, schools and other non-retail services, which earnrate can't tell apart."
