@@ -255,7 +255,7 @@ export async function runWalletCommand(
     if (positionals.length === 0 && !values.none) {
       const held = await heldWallet(io)
       io.stdout(
-        `Yours: ${held && held.memberships.length > 0 ? held.memberships.join(', ') : 'none'}\nKnown: ${knownMemberships(catalog).join(', ')}\n`,
+        `Yours: ${held && held.memberships.length > 0 ? held.memberships.map((m) => `${membershipName(catalog, m)} (${m})`).join(', ') : 'none'}\nKnown: ${knownMemberships(catalog).join(', ')}\n`,
       )
       return 0
     }

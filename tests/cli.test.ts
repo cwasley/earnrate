@@ -258,7 +258,7 @@ describe('wallet setup commands', () => {
     expect((await cli(['add', 'chase-prime-visa'], file)).code).toBe(0)
     expect((await cli(['memberships', 'amazon-prime'], file)).code).toBe(0)
     const shown = await cli(['memberships'], file)
-    expect(shown.stdout).toMatch(/^Yours: amazon-prime$/m)
+    expect(shown.stdout).toMatch(/^Yours: Amazon Prime \(amazon-prime\)$/m)
 
     const best = await cli(['comcast', '100'], file)
     expect(best.stdout).toMatch(/Use Cash\+: 5% back/)
