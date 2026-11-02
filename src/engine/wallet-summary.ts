@@ -66,7 +66,6 @@ export type CardSummary = {
 
 export type WalletSummary = {
   memberships: string[]
-  // Point values the user set, in place of earnrate's defaults.
   // Point values the wallet sets: a number, or a way of redeeming (like
   // SoFi points into a SoFi account), which `redemption` names.
   pointValues: {

@@ -58,17 +58,6 @@ export function merchantCachePath(
   )
 }
 
-export function memoryCache(): MerchantCache {
-  const entries = new Map<string, CachedClassification>()
-  return {
-    get: (key) => entries.get(key),
-    set: (key, value) => {
-      entries.set(key, value)
-      return Promise.resolve()
-    },
-  }
-}
-
 // A cache file that can't be read is left alone rather than overwritten, so a
 // hand edit gone wrong doesn't lose every saved classification.
 export async function openMerchantCache(

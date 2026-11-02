@@ -16,6 +16,7 @@ import { membershipNeeded, paidMemberships } from '../src/engine/memberships.ts'
 import { findMerchant } from '../src/merchants/resolve.ts'
 import { inEffect, localToday } from '../src/engine/periods.ts'
 import {
+  CAP_PERIODS,
   capitalize,
   categoryPhrase,
   currencyName,
@@ -26,16 +27,12 @@ import {
   monthYear,
   num,
   pct,
-  shortDate,
-} from '../src/engine/text.ts'
-import {
-  CAP_PERIODS,
-  cardText,
-  issuerName,
   PICK_PERIODS,
-  usd,
+  shortDate,
+  wholeDollars,
   words,
-} from '../src/format/card-text.ts'
+} from '../src/engine/text.ts'
+import { cardText, issuerName } from '../src/format/card-text.ts'
 import type { Card, Rule } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
@@ -467,7 +464,7 @@ function ruleConditions(card: Card, rule: Rule): string[] {
       : rule.cap
   if (cap)
     lines.push(
-      `Up to ${usd(cap.amount)} of spending ${CAP_PERIODS[cap.period]}${typeof rule.cap === 'string' ? ' (shared with its other bonus categories on this cap)' : ''}, then ${earnText(catalog, cap.then_rate, card.currency)}`,
+      `Up to ${wholeDollars(cap.amount)} of spending ${CAP_PERIODS[cap.period]}${typeof rule.cap === 'string' ? ' (shared with its other bonus categories on this cap)' : ''}, then ${earnText(catalog, cap.then_rate, card.currency)}`,
     )
   if (rule.unverified !== undefined)
     lines.push("Not yet confirmed against the issuer's terms")

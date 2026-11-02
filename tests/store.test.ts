@@ -4,13 +4,10 @@ import path from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { FileWalletStore } from '../src/data/file-store.ts'
 import { loadCatalog } from '../src/data/load.ts'
-import {
-  JsonWalletStore,
-  memoryBackend,
-  type WalletStore,
-} from '../src/data/store.ts'
+import { JsonWalletStore, type WalletStore } from '../src/data/store.ts'
 import { resolveMerchant } from '../src/merchants/resolve.ts'
 import { TODAY } from './golden/fixtures.ts'
+import { memoryBackend } from './helpers.ts'
 
 const catalog = await loadCatalog()
 

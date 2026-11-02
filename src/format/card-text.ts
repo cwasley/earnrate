@@ -19,7 +19,6 @@ const ISSUERS: Record<string, string> = {
   'wells-fargo': 'Wells Fargo',
 }
 
-export { CAP_PERIODS, PICK_PERIODS, words } from '../engine/text.ts'
 import { membershipName, membershipText } from '../engine/memberships.ts'
 import {
   CAP_PERIODS,
@@ -27,9 +26,6 @@ import {
   wholeDollars,
   words,
 } from '../engine/text.ts'
-
-// Whole dollars, for fees and caps.
-export const usd = wholeDollars
 
 export const issuerName = (id: string) => ISSUERS[id] ?? id
 
@@ -54,8 +50,8 @@ export function cardText(catalog: Catalog) {
     if (fee === 0) return `No annual fee${needs}`
     const first = card?.first_year_fee
     if (first !== undefined && first !== fee)
-      return `${usd(fee)} a year (${first === 0 ? 'waived' : usd(first)} the first year)${needs}`
-    return `${usd(fee)} a year${needs}`
+      return `${wholeDollars(fee)} a year (${first === 0 ? 'waived' : wholeDollars(first)} the first year)${needs}`
+    return `${wholeDollars(fee)} a year${needs}`
   }
 
   // `until` is the last day a time-limited rate applies, already formatted.
@@ -78,7 +74,7 @@ export function cardText(catalog: Catalog) {
     if (until !== null) lines.push(`This rate runs through ${until}`)
     if (r.cap)
       lines.push(
-        `Up to ${usd(r.cap.amount)} of spending ${CAP_PERIODS[r.cap.period]}, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}`,
+        `Up to ${wholeDollars(r.cap.amount)} of spending ${CAP_PERIODS[r.cap.period]}, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}`,
       )
     return lines
   }

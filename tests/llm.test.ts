@@ -2,7 +2,6 @@ import type Anthropic from '@anthropic-ai/sdk'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
 import {
   LLM_ENV_VAR,
@@ -18,15 +17,13 @@ import {
   anthropicClassifier,
   systemPrompt,
 } from '../src/merchants/anthropic.ts'
-import { memoryCache, openMerchantCache } from '../src/merchants/cache.ts'
+import { openMerchantCache } from '../src/merchants/cache.ts'
 import type { Classification, Classifier } from '../src/merchants/classifier.ts'
 import { createLlmSession } from '../src/merchants/fallback.ts'
 import { baseWallet, purchase, TODAY, withProfile } from './golden/fixtures.ts'
+import { EXAMPLE_WALLET, memoryCache } from './helpers.ts'
 
 const catalog = await loadCatalog()
-const EXAMPLE_WALLET = fileURLToPath(
-  new URL('../wallet.example.yaml', import.meta.url),
-)
 
 const BESTIA: Omit<Classification, 'model'> = {
   category: 'dining',

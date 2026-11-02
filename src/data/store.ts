@@ -176,18 +176,3 @@ export class JsonWalletStore implements AccountStore {
     })
   }
 }
-
-export function memoryBackend(initial: string | null = null): JsonBackend {
-  let text = initial
-  return {
-    read: () => Promise.resolve(text),
-    write: (next) => {
-      text = next
-      return Promise.resolve()
-    },
-    remove: () => {
-      text = null
-      return Promise.resolve()
-    },
-  }
-}

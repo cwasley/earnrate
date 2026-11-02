@@ -17,7 +17,6 @@ import {
   type ExecutionContextLike,
   type VaultFor,
 } from './auth.ts'
-import { easternDate } from './dates.ts'
 import { errorPage, html } from './pages.ts'
 import { RATE_LIMIT_SECONDS } from './policy.ts'
 import { limitKey, MAX_BODY, readBody } from './requests.ts'
@@ -39,7 +38,11 @@ export type Bundle = { catalog: Catalog; version: string }
 
 // Quarters, caps and rule dates follow the user's calendar; with no user
 // location, U.S. Eastern is the closest single choice.
-const easternToday = () => easternDate()
+// The hosted server's calendar is US Eastern, for "today".
+const easternToday = () =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(
+    new Date(),
+  )
 
 type Call = { method: string; tool: string | null }
 

@@ -26,7 +26,7 @@ import type { VaultApi } from './vault.ts'
 
 export const ORIGIN = 'https://mcp.earnrate.dev'
 export const SCOPE = 'wallet'
-const DAY = 24 * 60 * 60
+const DAY_SECONDS = 24 * 60 * 60
 const NOT_A_CODE =
   "That isn't a recovery code. It's 25 letters and digits, like ABCDE-12345-…"
 const NO_MATCH = 'No saved wallet matches that recovery code.'
@@ -116,8 +116,8 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
       registrationProblem(clientMetadata),
     accessTokenTTL: 60 * 60,
     // Stays signed in while used; 90 idle days ends it.
-    refreshTokenTTL: CONNECTION_IDLE_DAYS * DAY,
-    refreshTokenIdleTTL: CONNECTION_IDLE_DAYS * DAY,
+    refreshTokenTTL: CONNECTION_IDLE_DAYS * DAY_SECONDS,
+    refreshTokenIdleTTL: CONNECTION_IDLE_DAYS * DAY_SECONDS,
   })
 
   // Either address's token works at either address: they reach the same

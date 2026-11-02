@@ -7,17 +7,12 @@ import { createMcpHandler } from '@modelcontextprotocol/server'
 import { copyFile, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, test } from 'vitest'
 import { WALLET_ENV_VAR } from '../src/brand.ts'
 import { parseWalletYaml } from '../src/format/wallet-yaml.ts'
 import { FileWalletStore } from '../src/data/file-store.ts'
 import { loadCatalog } from '../src/data/load.ts'
-import {
-  JsonWalletStore,
-  memoryBackend,
-  type WalletStore,
-} from '../src/data/store.ts'
+import { JsonWalletStore, type WalletStore } from '../src/data/store.ts'
 import type { CheatSheet } from '../src/engine/cheat-sheet.ts'
 import type { Recommendation } from '../src/engine/types.ts'
 import type { WalletSummary } from '../src/engine/wallet-summary.ts'
@@ -27,14 +22,17 @@ import {
   SAVED_WALLET_TOOLS,
   type WalletSaving,
 } from '../src/mcp/server.ts'
-import { memoryCache } from '../src/merchants/cache.ts'
 import type { Classifier } from '../src/merchants/classifier.ts'
 import { createLlmSession, type LlmSession } from '../src/merchants/fallback.ts'
 import { TODAY } from './golden/fixtures.ts'
-import { text } from './helpers.ts'
+import {
+  EXAMPLE_WALLET,
+  memoryBackend,
+  memoryCache,
+  ROOT,
+  text,
+} from './helpers.ts'
 
-const ROOT = fileURLToPath(new URL('..', import.meta.url))
-const EXAMPLE_WALLET = path.join(ROOT, 'wallet.example.yaml')
 const catalog = await loadCatalog()
 
 async function walletCopy(contents?: string): Promise<string> {

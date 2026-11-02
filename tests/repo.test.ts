@@ -1,7 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vitest'
 import {
   CONNECTION_IDLE_DAYS,
@@ -11,8 +10,8 @@ import {
 } from '../remote/src/policy.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import { ANSWER_TOOLS, SAVED_WALLET_TOOLS } from '../src/mcp/server.ts'
+import { ROOT } from './helpers.ts'
 
-const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const BINARY = /\.(png|jpe?g|gif|ico|webp|woff2?)$/i
 
 function luhn(digits: string): boolean {

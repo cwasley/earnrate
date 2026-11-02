@@ -51,7 +51,7 @@ import {
   membershipName,
   pct,
   shortName,
-  usd,
+  wholeDollars,
   words,
 } from './format.ts'
 import { SearchInput } from './SearchInput.tsx'
@@ -246,7 +246,7 @@ function bonusLine(wallet: Wallet, held: WalletCard): string | null {
   if (status.spend === null) return 'Welcome bonus: tracking'
   const days =
     status.daysLeft === null ? '' : ` · ${String(status.daysLeft)} days left`
-  return `Welcome bonus: ${usd(status.spent)} of ${usd(status.spend)}${days}`
+  return `Welcome bonus: ${wholeDollars(status.spent)} of ${wholeDollars(status.spend)}${days}`
 }
 
 function CardEditor({
@@ -695,7 +695,7 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
       <h3>Would another card help?</h3>
       <p class="muted">
         On your spending from the My spending tab, your cards earn about{' '}
-        {usd(result.current.rewards)} a year.
+        {wholeDollars(result.current.rewards)} a year.
       </p>
       {gains.length === 0 ? (
         <p>No card would add more than its annual fee costs.</p>
@@ -708,11 +708,11 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
                 <div class="result-name">
                   <strong>{shortName(a.cardId)}</strong>
                   <span class="muted">
-                    +{usd(a.extraRewards)} back · {feeLabel(a.cardId)}
+                    +{wholeDollars(a.extraRewards)} back · {feeLabel(a.cardId)}
                   </span>
                 </div>
                 <span class="rate">
-                  +{usd(a.gain)}
+                  +{wholeDollars(a.gain)}
                   <small>/yr</small>
                 </span>
               </div>

@@ -2,11 +2,10 @@ import { describe, expect, test } from 'vitest'
 import { loadCatalog, loadWallet } from '../src/data/load.ts'
 import { cheatSheet } from '../src/engine/cheat-sheet.ts'
 import { TODAY } from './golden/fixtures.ts'
+import { EXAMPLE_WALLET } from './helpers.ts'
 
 const catalog = await loadCatalog()
-const example = await loadWallet(
-  new URL('../wallet.example.yaml', import.meta.url).pathname,
-)
+const example = await loadWallet(EXAMPLE_WALLET)
 
 describe('cheat sheet', () => {
   test('the best card for each everyday purchase, with the wallet as it is', () => {

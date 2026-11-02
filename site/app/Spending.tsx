@@ -11,7 +11,7 @@ import {
   type Simulation,
 } from '../../src/engine/simulate.ts'
 import { categoryPhrase } from '../../src/engine/text.ts'
-import { feeLabel, shortName, usd, words } from './format.ts'
+import { feeLabel, shortName, wholeDollars, words } from './format.ts'
 import {
   engineOptions,
   loadList,
@@ -163,7 +163,7 @@ export function Spending({
           <button type="submit">Add</button>
         </form>
         <p class="total">
-          {usd(total)} a month · {usd(total * 12)} a year
+          {wholeDollars(total)} a month · {wholeDollars(total * 12)} a year
         </p>
         {unknown.length > 0 ? (
           <p class="callout">
@@ -192,11 +192,12 @@ export function Spending({
                       <div class="result-name">
                         <strong>{shortName(card.cardId)}</strong>
                         <span class="muted">
-                          {usd(s.rewards)} back · {feeLabel(card.cardId)}
+                          {wholeDollars(s.rewards)} back ·{' '}
+                          {feeLabel(card.cardId)}
                         </span>
                       </div>
                       <span class="rate">
-                        {usd(s.net)}
+                        {wholeDollars(s.net)}
                         <small>/yr</small>
                       </span>
                     </div>
@@ -211,8 +212,8 @@ export function Spending({
                 <h3>Best two-card pairs</h3>
                 {pair.net > single.net ? (
                   <p class="muted">
-                    The best pair earns {usd(pair.net - single.net)} a year more
-                    than the best single card, after fees.
+                    The best pair earns {wholeDollars(pair.net - single.net)} a
+                    year more than the best single card, after fees.
                   </p>
                 ) : (
                   <p class="muted">
@@ -235,12 +236,13 @@ export function Spending({
                               .join(' + ')}
                           </strong>
                           <span class="muted">
-                            {usd(p.rewards)} back ·{' '}
-                            {usd(p.annualFees + p.membershipFees)} in fees
+                            {wholeDollars(p.rewards)} back ·{' '}
+                            {wholeDollars(p.annualFees + p.membershipFees)} in
+                            fees
                           </span>
                         </div>
                         <span class="rate">
-                          {usd(p.net)}
+                          {wholeDollars(p.net)}
                           <small>/yr</small>
                         </span>
                       </div>

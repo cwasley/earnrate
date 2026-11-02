@@ -206,8 +206,6 @@ export const CardSchema = z
   )
 
 export type Cap = z.output<typeof CapSchema>
-export type SharedCap = z.output<typeof SharedCapSchema>
 export type Rule = z.output<typeof RuleSchema>
 export type Choice = z.output<typeof ChoiceSchema>
-export type WelcomeOffer = z.output<typeof WelcomeOfferSchema>
 export type Card = z.output<typeof CardSchema>

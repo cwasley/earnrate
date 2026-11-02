@@ -331,7 +331,7 @@ function flowUsage(booking: CapBooking): string {
   return `{ period: ${period}, spent: ${String(booking.after)} }`
 }
 
-export function capUsageText(text: string, booking: CapBooking): string {
+function capUsageText(text: string, booking: CapBooking): string {
   const card = findCard(text, booking.cardId)
   const value = flowUsage(booking)
   const usage = card.get('cap_usage', true)
@@ -358,11 +358,7 @@ export function capUsageText(text: string, booking: CapBooking): string {
   )
 }
 
-export function bonusSpentText(
-  text: string,
-  cardId: string,
-  spent: number,
-): string {
+function bonusSpentText(text: string, cardId: string, spent: number): string {
   const bonus = findCard(text, cardId).get('bonus', true)
   if (!isMap(bonus)) throw new Error(`card '${cardId}' has no bonus`)
   const value = String(spent)

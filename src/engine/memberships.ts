@@ -22,7 +22,7 @@ export function membershipName(catalog: Catalog, id: string): string {
 }
 
 // "a Costco membership", for a sentence.
-export function withArticle(name: string): string {
+function withArticle(name: string): string {
   return `${/^[aeiou]/i.test(name) ? 'an' : 'a'} ${name}`
 }
 
