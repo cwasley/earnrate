@@ -137,3 +137,24 @@ test('counts in the docs match the catalog and the tool lists', async () => {
     `tools.length === ${String(hosted)}`,
   )
 })
+
+test('the plugin README and README name every hosted tool', async () => {
+  const read = (file: string) => readFile(path.join(ROOT, file), 'utf8')
+  for (const file of ['plugin/README.md', 'README.md']) {
+    const text = await read(file)
+    const missing = [...ANSWER_TOOLS, ...SAVED_WALLET_TOOLS].filter(
+      (name) => !text.includes(`\`${name}\``),
+    )
+    expect(missing, file).toEqual([])
+  }
+})
+
+test('earnrate.dev refuses to be framed and serves no sniffed types', async () => {
+  const headers = await readFile(
+    path.join(ROOT, 'site/public/_headers'),
+    'utf8',
+  )
+  expect(headers).toMatch(/^\/\*\n/m)
+  expect(headers).toMatch(/Content-Security-Policy: .*frame-ancestors 'none'/)
+  expect(headers).toContain('X-Content-Type-Options: nosniff')
+})
