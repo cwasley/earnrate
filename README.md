@@ -61,6 +61,8 @@ Options: `--online` or `--in-store`, `--valuation flat|points-heavy`, `--all`, `
 
 `earnrate cheatsheet` prints the card to use for each everyday kind of purchase this quarter (groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores, everything else), with your caps, picks and activations as they are now. `--cards` uses cards you name instead, and `--every-card` picks from every card to show what's worth getting. It's also in the My wallet tab on [earnrate.dev](https://earnrate.dev).
 
+`earnrate todo` lists what your saved cards need this quarter, soonest first: bonuses to activate (with Chase's deadline), categories to pick, caps running low and welcome bonuses to finish. `--ics earnrate.ics` also writes the dates as a calendar file with reminders. My wallet on earnrate.dev shows the same list, with an "Add the dates to your calendar" button.
+
 ### Your wallet
 
 The wallet is a YAML file (`~/.earnrate/wallet.yaml`) listing your cards by ID, which is each card's file name in [`data/cards/`](data/cards). `earnrate add`, `update`, `remove`, `memberships` and `values` write it for you and keep your comments, or you can edit it by hand. Only the cards are required:
@@ -184,7 +186,7 @@ Use the connector (or plugin) or the local extension, not both: each keeps its o
 - `best_card_for_purchase`: which card to use, with reasons
 - `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
 - `resolve_merchant`: how a merchant was identified
-- `list_wallet`: your cards, caps left this period, chosen categories, welcome-bonus progress and the point values you've set
+- `list_wallet`: what to do this quarter, then your cards, caps left this period, chosen categories, welcome-bonus progress and the point values you've set
 - `cheat_sheet`: the card to use for each everyday kind of purchase this quarter
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have
 - `record_purchase`: books a purchase against its cap and any open welcome bonus in your wallet file, keeping your comments

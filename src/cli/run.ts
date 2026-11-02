@@ -38,6 +38,7 @@ import type { Wallet } from '../schema/wallet.ts'
 import { packageVersion } from '../version.ts'
 import { membershipProblem, parseCliArgs } from './args.ts'
 import { runCheatSheet } from './cheatsheet.ts'
+import { runTodo } from './todo.ts'
 import { runBest, runSimulate } from './explore.ts'
 import { runImport } from './import.ts'
 import { runOffers } from './offers.ts'
@@ -77,6 +78,7 @@ Save your cards (optional):
 
 Other commands:
   ${CLI_NAME} cheatsheet                           The best card for each category this quarter.
+  ${CLI_NAME} todo [--ics file]                    What your cards need this quarter, with dates.
   ${CLI_NAME} import <statement.csv> --card <id>   Replay a statement against your wallet.
   ${CLI_NAME} offers [--cash | --points]           Rank welcome offers on cards you don't have.
   ${CLI_NAME} mcp                                  Run the MCP server over stdio, for AI assistants.
@@ -209,6 +211,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
   if (argv[0] === 'offers') return runOffers(argv.slice(1), io)
   if (argv[0] === 'best') return runBest(argv.slice(1), io)
   if (argv[0] === 'cheatsheet') return runCheatSheet(argv.slice(1), io)
+  if (argv[0] === 'todo') return runTodo(argv.slice(1), io)
   if (argv[0] === 'simulate') return runSimulate(argv.slice(1), io)
   const command = argv[0]
   if (command !== undefined && Object.hasOwn(WALLET_HELP, command)) {

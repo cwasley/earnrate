@@ -272,6 +272,15 @@ input::-webkit-list-button {
   font-size: 15px;
 }
 
+.todo {
+  margin: 0 0 12px;
+  padding-left: 1.2em;
+}
+
+.todo li {
+  margin-bottom: 6px;
+}
+
 .install-hint {
   display: flex;
   gap: 12px;
@@ -672,6 +681,14 @@ input::-webkit-list-button {
 
 .held-row .muted {
   font-size: 14px;
+}
+
+.held-row > span:first-child {
+  min-width: 0;
+}
+
+.held-row > .muted {
+  flex: none;
   white-space: nowrap;
 }
 

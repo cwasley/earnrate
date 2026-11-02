@@ -96,6 +96,16 @@ export const WalletSummarySchema = z.object({
     }),
   ),
   started: z.string().nullable(),
+  checklist: z
+    .array(
+      z.object({
+        kind: z.enum(['activate', 'pick', 'cap', 'bonus', 'rotation']),
+        cardId: z.string(),
+        text: z.string(),
+        due: z.string().nullable(),
+      }),
+    )
+    .optional(),
   cards: z.array(
     z.object({
       cardId: z.string(),

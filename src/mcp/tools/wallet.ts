@@ -13,7 +13,13 @@ import {
 import { membershipName } from '../../engine/memberships.ts'
 import { profileText, VALUATION_PROFILES } from '../../engine/profiles.ts'
 import { optionName, walletSummary } from '../../engine/wallet-summary.ts'
-import { formatBooking, formatWalletSummary } from '../../format/wallet.ts'
+import { checklist } from '../../engine/checklist.ts'
+import { cardText } from '../../format/card-text.ts'
+import {
+  formatBooking,
+  formatChecklist,
+  formatWalletSummary,
+} from '../../format/wallet.ts'
 import { fail, type Context } from '../context.ts'
 import {
   CardChange,
@@ -91,7 +97,7 @@ export function registerWalletTools(
     'list_wallet',
     {
       title: 'List wallet',
-      description: `Lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
+      description: `Lists what the user should do this period (bonuses to activate, categories to pick, caps running low, welcome bonuses to finish), then the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
       outputSchema: WalletSummarySchema,
       annotations: {
         title: 'List wallet',
@@ -104,9 +110,17 @@ export function registerWalletTools(
       if (typeof read === 'string') return fail(read)
       const started =
         deps.savedWallets === 'account' ? await deps.store.started() : null
+      const base = walletSummary(catalog, read.wallet, deps.today())
       const summary = {
-        ...walletSummary(catalog, read.wallet, deps.today()),
+        ...base,
         started,
+        checklist: checklist(
+          catalog,
+          read.wallet,
+          deps.today(),
+          base,
+          cardText(catalog).shortName,
+        ),
       }
       const when =
         started === null
@@ -116,7 +130,7 @@ export function registerWalletTools(
         content: [
           {
             type: 'text',
-            text: `${when}${read.start === null ? '' : `${read.start}\n`}${formatWalletSummary(summary)}`,
+            text: `${when}${read.start === null ? '' : `${read.start}\n`}${formatChecklist(summary.checklist)}${formatWalletSummary(summary)}`,
           },
         ],
         structuredContent: summary,

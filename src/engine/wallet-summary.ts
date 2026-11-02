@@ -212,33 +212,55 @@ function headlineRates(
   ]
 }
 
-function toActivate(
+export type ActivationDue = {
+  what: string // the bonus categories, in words
+  from: string | null
+  to: string | null
+  activateBy: string | null
+}
+
+// Bonuses current or starting soon that the card hasn't activated, one per
+// activation group (one activation covers a quarter's categories).
+export function activationsDue(
   catalog: Catalog,
   card: Card,
   held: WalletCard,
   today: string,
-): string[] {
+): ActivationDue[] {
   const seen = new Set<string>()
-  const out: string[] = []
+  const out: ActivationDue[] = []
   for (const id of activationRules(card, today)) {
     if (seen.has(id) || isActivated(card, held, id)) continue
     const group = activationGroup(card, id)
     for (const g of group) seen.add(g)
     const rules = card.rules.filter((r) => group.includes(r.id))
     const first = rules[0]
-    const deadline =
-      first?.activate_by === undefined
-        ? ''
-        : `, activate by ${shortDate(first.activate_by)}`
-    const when =
-      first?.valid_from !== undefined && first.valid_to !== undefined
-        ? ` (${shortDate(first.valid_from)} to ${shortDate(first.valid_to)}${deadline})`
-        : deadline === ''
-          ? ''
-          : ` (${deadline.slice(2)})`
-    out.push(`${rules.map((r) => ruleWhat(catalog, r)).join(', ')}${when}`)
+    out.push({
+      what: rules.map((r) => ruleWhat(catalog, r)).join(', '),
+      from: first?.valid_from ?? null,
+      to: first?.valid_to ?? null,
+      activateBy: first?.activate_by ?? null,
+    })
   }
   return out
+}
+
+function toActivate(
+  catalog: Catalog,
+  card: Card,
+  held: WalletCard,
+  today: string,
+): string[] {
+  return activationsDue(catalog, card, held, today).map((a) => {
+    const deadline =
+      a.activateBy === null ? '' : `activate by ${shortDate(a.activateBy)}`
+    const dates =
+      a.from !== null && a.to !== null
+        ? `${shortDate(a.from)} to ${shortDate(a.to)}`
+        : ''
+    const when = [dates, deadline].filter((x) => x !== '').join(', ')
+    return `${a.what}${when === '' ? '' : ` (${when})`}`
+  })
 }
 
 function capSummaries(

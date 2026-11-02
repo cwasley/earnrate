@@ -56,6 +56,7 @@ import {
 } from './format.ts'
 import { SearchInput } from './SearchInput.tsx'
 import { load, loadList, save } from './settings.ts'
+import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
 import { offerTerms } from '../../src/engine/offers.ts'
 import { dollarsAndCents } from '../../src/engine/text.ts'
 
@@ -724,6 +725,51 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
   )
 }
 
+// What the cards need this period, with a calendar file of the dates. The
+// file is built here and saved by the browser; nothing is sent anywhere.
+function ThisQuarter({ wallet }: { wallet: Wallet }) {
+  const items = useMemo(
+    () => checklist(catalog, wallet, localToday(), undefined, shortName),
+    [wallet],
+  )
+  if (items.length === 0) return null
+  const dated = items.some(
+    (i) => i.due !== null && i.kind !== 'cap' && i.kind !== 'rotation',
+  )
+  return (
+    <section class="panel">
+      <h3>This quarter</h3>
+      <ul class="todo">
+        {items.map((i) => (
+          <li key={`${i.kind}-${i.cardId}`}>{i.text}</li>
+        ))}
+      </ul>
+      {dated ? (
+        <div class="row-buttons">
+          <button
+            type="button"
+            onClick={() => {
+              const stamp = `${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`
+              const url = URL.createObjectURL(
+                new Blob([checklistCalendar(items, stamp)], {
+                  type: 'text/calendar',
+                }),
+              )
+              const a = document.createElement('a')
+              a.href = url
+              a.download = 'earnrate.ics'
+              a.click()
+              setTimeout(() => URL.revokeObjectURL(url), 10_000)
+            }}
+          >
+            Add the dates to your calendar
+          </button>
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
 async function exportWallet(wallet: Wallet) {
   const { walletYaml } = await import('../../src/format/wallet-yaml.ts')
   const url = URL.createObjectURL(
@@ -1018,6 +1064,7 @@ export function MyWallet({
         </div>
       </section>
 
+      <ThisQuarter wallet={wallet} />
       <CheatSheet wallet={wallet} />
       <Memberships wallet={wallet} onChange={apply} />
       <PointValues wallet={wallet} onChange={apply} />

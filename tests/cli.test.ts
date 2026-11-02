@@ -440,6 +440,23 @@ describe('no wallet needed', () => {
     expect(stdout).not.toMatch(/merchant list/)
   })
 
+  test('todo lists what the cards need and can write a calendar file', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'earnrate-todo-'))
+    const ics = path.join(dir, 'earnrate.ics')
+    const { code, stdout } = await cli([
+      'todo',
+      '--ics',
+      ics,
+      '--date',
+      '2026-11-01',
+    ])
+    expect(code).toBe(0)
+    expect(stdout).toMatch(
+      /^- Activate Freedom Flex's bonus on .*by Dec 14, 2026\.$/m,
+    )
+    expect(await readFile(ics, 'utf8')).toMatch(/^BEGIN:VCALENDAR/)
+  })
+
   test('cheatsheet --every-card picks from every card with the saved memberships', async () => {
     const { stdout } = await cli(['cheatsheet', '--every-card'])
     expect(stdout).toMatch(/^ {2}Amazon +Prime Visa +5%$/m)

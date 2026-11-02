@@ -267,6 +267,9 @@ describe('tools', () => {
       /Cap on your 5% picks: .* \(cap key five-percent-combined\)/,
     )
     expect(text(result)).toMatch(/^Memberships: /m)
+    expect(text(result)).toMatch(
+      /^To do:\n- Activate Freedom Flex's bonus on /m,
+    )
   })
 
   test('category inputs leave out parents no purchase codes as', async () => {
@@ -776,6 +779,7 @@ describe('wallet setup', () => {
       pointValues: [],
       started: null,
       cards: [],
+      checklist: [],
     })
 
     for (const [name, args] of [
