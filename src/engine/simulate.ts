@@ -554,11 +554,11 @@ export function spendLineFor(
   return { merchant: category === null ? what : null, category, monthly }
 }
 
+export const typicalSpend = (catalog: Catalog): SpendLine[] =>
+  TYPICAL_MONTHLY_SPEND.map((t) => spendLineFor(catalog, t.what, t.monthly))
+
 export function typicalSpendLines(catalog: Catalog): ResolvedLine[] {
-  return resolveSpendLines(
-    catalog,
-    TYPICAL_MONTHLY_SPEND.map((t) => spendLineFor(catalog, t.what, t.monthly)),
-  )
+  return resolveSpendLines(catalog, typicalSpend(catalog))
 }
 
 export const TYPICAL_SPEND_NOTE = `No spending was given, so this uses rough typical monthly amounts for a U.S. household: ${TYPICAL_MONTHLY_SPEND.map((t) => `${t.what} ${money(t.monthly)}`).join(', ')}. Give your own amounts for a closer answer.`

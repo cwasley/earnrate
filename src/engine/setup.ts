@@ -57,7 +57,7 @@ const ISSUER_NICKNAMES: Record<string, string> = {
   column: 'bilt',
 }
 
-const words = (s: string) =>
+const searchWords = (s: string) =>
   s
     .toLowerCase()
     .replace(/\+/g, ' plus ')
@@ -85,10 +85,10 @@ function editDistance(a: string, b: string): number {
 
 function matcher(card: Card) {
   const haystack = [
-    ...words(card.id),
-    ...words(card.name),
-    ...words(card.issuer),
-    ...words(ISSUER_NICKNAMES[card.issuer] ?? ''),
+    ...searchWords(card.id),
+    ...searchWords(card.name),
+    ...searchWords(card.issuer),
+    ...searchWords(ISSUER_NICKNAMES[card.issuer] ?? ''),
   ]
   const compact = haystack.join('')
   return (token: string) =>
@@ -191,13 +191,13 @@ export function searchCards(
   wallet: Wallet | null,
   today: string,
 ): CardSearch {
-  const tokens = words(query)
+  const tokens = searchWords(query)
   const scored = catalog.cards.map((card) => {
     const matches = matcher(card)
     return { card, score: tokens.filter((t) => matches(t)).length }
   })
   const byShortestId = (a: { card: Card }, b: { card: Card }) =>
-    words(a.card.id).length - words(b.card.id).length ||
+    searchWords(a.card.id).length - searchWords(b.card.id).length ||
     a.card.id.localeCompare(b.card.id)
   const full = scored.filter((s) => s.score === tokens.length)
   const best = Math.max(0, ...scored.map((s) => s.score))

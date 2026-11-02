@@ -17,7 +17,7 @@ import {
   simulateAdditions,
   simulateCatalog,
   spendLineFor,
-  TYPICAL_MONTHLY_SPEND,
+  typicalSpend,
   TYPICAL_SPEND_NOTE,
   type SpendLine,
 } from '../engine/simulate.ts'
@@ -268,7 +268,7 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
   }
   const typical = positionals.length === 0
   const spend = typical
-    ? TYPICAL_MONTHLY_SPEND.map((t) => spendLineFor(catalog, t.what, t.monthly))
+    ? typicalSpend(catalog)
     : parseSpend(catalog, positionals)
   if (typeof spend === 'string') {
     io.stderr(`${spend}\n`)
