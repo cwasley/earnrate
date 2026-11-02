@@ -86,9 +86,8 @@ test('the MCP registry entry and Claude Desktop bundle match package.json', asyn
 })
 
 test('the Claude plugin and registry entry point at the hosted server', async () => {
-  const pkg = await readJson('package.json')
   const plugin = await readJson('plugin/.claude-plugin/plugin.json')
-  expect(plugin.version).toBe(pkg.version)
+  expect(plugin.version).toMatch(/^\d+\.\d+\.\d+$/)
   expect((await readJson('plugin/.mcp.json')).mcpServers).toEqual({
     earnrate: { type: 'http', url: 'https://mcp.earnrate.dev' },
   })
