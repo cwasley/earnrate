@@ -57,6 +57,40 @@ describe('checklist', () => {
     expect(checklist(catalog, done, TODAY)).toEqual([])
   })
 
+  test('caps with room left, assumed picks and the next period', () => {
+    const w = WalletSchema.parse({
+      memberships: ['bofa-rewards-preferred-plus'],
+      cards: [
+        {
+          id: 'amex-blue-cash-preferred',
+          cap_usage: { 'us-supermarkets': { period: '2026', spent: 1000 } },
+        },
+        { id: 'bank-of-america-customized-cash-rewards' },
+        {
+          id: 'usbank-cash-plus',
+          chosen: {
+            period: '2026-Q4',
+            picks: {
+              'five-percent': ['fast-food', 'ground-transportation'],
+              'two-percent': ['grocery'],
+            },
+          },
+        },
+      ],
+    })
+    const early = checklist(catalog, w, TODAY).map((i) => i.text)
+    expect(early.join(' ')).not.toMatch(/left of \$6,000/)
+    expect(early).toEqual([
+      expect.stringMatching(
+        /3% pick is assumed to be gas stations and EV charging; set it/,
+      ),
+    ])
+    const late = checklist(catalog, w, '2026-12-20').map((i) => i.text)
+    expect(late[0]).toMatch(
+      /categories for next quarter; this one ends Dec 31, 2026\./,
+    )
+  })
+
   test('the calendar has an event for each dated action, not for caps', () => {
     const ics = checklistCalendar(items, '20261101T120000Z')
     expect(ics.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true)

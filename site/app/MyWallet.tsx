@@ -738,7 +738,7 @@ function ThisQuarter({ wallet }: { wallet: Wallet }) {
   )
   return (
     <section class="panel">
-      <h3>This quarter</h3>
+      <h3>To do now</h3>
       <ul class="todo">
         {items.map((i) => (
           <li key={`${i.kind}-${i.cardId}`}>{i.text}</li>

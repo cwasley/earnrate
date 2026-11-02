@@ -1,6 +1,6 @@
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
-import { periodEnd, periodKey } from './periods.ts'
+import { daysBetween, periodEnd, periodKey } from './periods.ts'
 import {
   CAP_PERIODS,
   choiceName,
@@ -11,6 +11,7 @@ import {
 } from './text.ts'
 import {
   activationsDue,
+  optionName,
   walletSummary,
   type WalletSummary,
 } from './wallet-summary.ts'
@@ -56,11 +57,13 @@ export function checklist(
       })
     }
 
+    const picked = (id: string) => s.chosen?.picks[id] !== undefined
+    const current = s.chosen?.current === true
     const unpicked = card.choices.filter(
       (c) =>
-        c.period !== 'until_changed' &&
         !c.default &&
-        !(s.chosen?.current === true && s.chosen.picks[c.id]),
+        !(current && picked(c.id)) &&
+        c.period !== 'until_changed',
     )
     const [first] = unpicked
     if (first) {
@@ -74,10 +77,39 @@ export function checklist(
         text: `Pick ${name}'s ${listed(unpicked.map((c) => choiceName(c.id)))} categories for this ${first.period.replace('_', ' ')}; until then they earn the base rate.`,
         due: period === null ? null : periodEnd(period),
       })
+    } else {
+      // Picks made for this period: near its end, a reminder to make the
+      // next period's (Cash+ asks each quarter).
+      const ending = card.choices.find(
+        (c) => c.period !== 'until_changed' && !c.default && current,
+      )
+      const period =
+        ending === undefined || ending.period === 'until_changed'
+          ? null
+          : periodKey(ending.period, today, null)
+      const end = period === null ? null : periodEnd(period)
+      if (ending && end !== null && daysBetween(today, end) <= 14)
+        items.push({
+          kind: 'pick',
+          cardId: card.id,
+          text: `Pick ${name}'s categories for next ${ending.period.replace('_', ' ')}; this one ends ${shortDate(end)}.`,
+          due: end,
+        })
     }
 
+    // A pick earnrate assumes because none was saved: worth confirming.
+    const assumed = card.choices.filter((c) => c.default && !picked(c.id))
+    if (assumed.length > 0)
+      items.push({
+        kind: 'pick',
+        cardId: card.id,
+        text: `${name}'s ${listed(assumed.map((c) => choiceName(c.id)))} pick is assumed to be ${listed(assumed.flatMap((c) => (c.default ?? []).map((o) => optionName(catalog, card, c.id, o))))}; set it if you picked something else.`,
+        due: null,
+      })
+
     for (const cap of s.caps) {
-      if (cap.spent <= 0 || cap.remaining === null) continue
+      // Only caps nearly used up: the rest aren't something to do.
+      if (cap.remaining === null || cap.remaining > cap.amount * 0.25) continue
       const resets =
         cap.currentPeriod === null ? null : periodEnd(cap.currentPeriod)
       items.push({

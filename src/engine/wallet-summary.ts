@@ -112,6 +112,7 @@ export function optionName(
 
 // What a rule covers, as a list of phrases.
 function ruleParts(catalog: Catalog, rule: Rule): string[] {
+  if (rule.match.any) return ['everything else']
   if (rule.match.choice !== undefined)
     return [`your ${choiceName(rule.match.choice)} picks`]
   const merchants = rule.match.merchants ?? []
@@ -191,6 +192,18 @@ function headlineRates(
       )
       .flatMap(matchKeys)
     if (keys.length > 0 && keys.every((k) => higher.includes(k))) continue
+    // A membership tier's higher rate on the same purchases replaces the
+    // card's own (BofA Rewards tiers), cap or not.
+    const replaced = shown.some(
+      (h) =>
+        h !== r &&
+        h.rate > r.rate &&
+        h.requires?.membership !== undefined &&
+        r.requires?.membership === undefined &&
+        JSON.stringify(h.match) === JSON.stringify(r.match) &&
+        JSON.stringify(h.exclude) === JSON.stringify(r.exclude),
+    )
+    if (replaced) continue
     const pending = r.requires?.activation && !isActivated(card, held, r.id)
     const key = [
       `${earnText(catalog, r.rate, currency)} on`,
@@ -208,7 +221,9 @@ function headlineRates(
       const after = `${limit}${activate}`
       return `${head} ${listed(whats)}${after === '' ? '' : ` (${after.replace(/^, /, '')})`}`
     }),
-    `${earnText(catalog, card.base_rate, currency)} on everything else`,
+    ...(shown.some((r) => r.match.any && r.rate > card.base_rate)
+      ? []
+      : [`${earnText(catalog, card.base_rate, currency)} on everything else`]),
   ]
 }
 

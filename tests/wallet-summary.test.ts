@@ -88,3 +88,16 @@ test('rates share a line, travel bookings read in lower case', () => {
     /\(sofi-unlimited-2\): Mastercard, SoFi Member Rewards at 1¢/,
   )
 })
+
+test('a BofA Rewards tier shows only its own rates', () => {
+  const wallet = WalletSchema.parse({
+    memberships: ['bofa-rewards-preferred-plus'],
+    cards: [{ id: 'bank-of-america-customized-cash-rewards' }],
+  })
+  const [ccr] = walletSummary(catalog, wallet, '2026-11-01').cards
+  expect(ccr?.rates).toEqual([
+    '3.75% cash back on your 3% picks (first $2,500 a quarter, combined)',
+    '2.5% cash back on supermarkets and warehouse clubs (first $2,500 a quarter, combined)',
+    '1.25% cash back on everything else',
+  ])
+})

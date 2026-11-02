@@ -3,11 +3,11 @@ import type { BonusBooking, CapBooking } from '../engine/record.ts'
 import { money, NETWORK_NAMES, shortDate } from '../engine/text.ts'
 import type { WalletSummary } from '../engine/wallet-summary.ts'
 
-// "To do this quarter", above the card details; nothing when all's done.
+// "To do now", above the card details; nothing when all's done.
 export function formatChecklist(items: ChecklistItem[]): string {
   return items.length === 0
     ? ''
-    : `To do:\n${items.map((i) => `- ${i.text}`).join('\n')}\n\n`
+    : `To do now:\n${items.map((i) => `- ${i.text}`).join('\n')}\n\n`
 }
 
 export function formatWalletSummary(summary: WalletSummary): string {

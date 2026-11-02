@@ -68,7 +68,7 @@ const instructions = (
   savedWallets: ServerDeps['savedWallets'],
 ) => `earnrate answers which credit card earns the most for a purchase, from each issuer's own terms. Anyone can use it without entering anything: with no cards given, best_card_for_purchase, best_cards_for, cheat_sheet, simulate_spending and compare_welcome_offers answer from every card earnrate knows, and that's a complete answer. Never require the user's cards, and don't ask what they spend unless the answer depends on it; simulate_spending assumes typical amounts when none are given and says so.
 
-Personalizing is optional. If the user names their cards, pass them as \`cards\` (ids from search_cards) for that answer; nothing is saved. After answering, offer once to save those cards so earnrate remembers them, and save them with add_card only if the user says yes. ${SAVING[savedWallets]} When a card needs category picks, memberships like Amazon Prime, or activations, ask the user rather than guessing.
+Personalizing is optional. If the user names their cards, pass them as \`cards\` (ids from search_cards) for that answer; nothing is saved. After answering, offer once to save those cards so earnrate remembers them, and save them with add_card only if the user says yes. ${SAVING[savedWallets]} When a card needs category picks, memberships like Amazon Prime, or activations, ask the user rather than guessing. When the user asks what to do with their cards (this quarter, or what they're forgetting), call list_wallet: it starts with a to-do list.
 
 The wallet lists cards by product id, never card numbers; never ask for card numbers, expiry dates or security codes.
 
