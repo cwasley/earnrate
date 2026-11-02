@@ -106,6 +106,7 @@ export function activationRules(card: Card, today: string): string[] {
       (r) =>
         r.requires?.activation === true &&
         (r.valid_to === undefined || r.valid_to >= today) &&
+        (r.activate_by === undefined || r.activate_by >= today) &&
         (r.valid_from === undefined ||
           daysBetween(today, r.valid_from) <= ACTIVATION_LOOKAHEAD_DAYS),
     )

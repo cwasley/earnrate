@@ -57,6 +57,14 @@ describe('checklist', () => {
     expect(checklist(catalog, done, TODAY)).toEqual([])
   })
 
+  test('an activation whose deadline has passed drops off', () => {
+    const flex = WalletSchema.parse({ cards: [{ id: 'chase-freedom-flex' }] })
+    const later = checklist(catalog, flex, '2026-12-20')
+    expect(later.map((i) => i.text).join(' ')).not.toMatch(/Dec 14, 2026/)
+    for (const item of later)
+      expect((item.due ?? '9999-12-31') >= '2026-12-20').toBe(true)
+  })
+
   test('caps with room left, assumed picks and the next period', () => {
     const w = WalletSchema.parse({
       memberships: ['bofa-rewards-preferred-plus'],
