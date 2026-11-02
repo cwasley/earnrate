@@ -9,6 +9,7 @@ import { CardSchema, type Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { CategoriesFileSchema } from '../schema/category.ts'
 import { CurrenciesFileSchema } from '../schema/currency.ts'
+import { IssuersFileSchema } from '../schema/issuer.ts'
 import { MembershipsFileSchema } from '../schema/membership.ts'
 import { MerchantsFileSchema } from '../schema/merchant.ts'
 import { WalletSchema, type Wallet } from '../schema/wallet.ts'
@@ -41,10 +42,11 @@ async function loadCards(dir: string): Promise<Card[]> {
 }
 
 export async function loadCatalog(dir = DATA_DIR): Promise<Catalog> {
-  const [categories, currencies, memberships, cards, seed, overrides] =
+  const [categories, currencies, issuers, memberships, cards, seed, overrides] =
     await Promise.all([
       readYaml(path.join(dir, 'categories.yaml'), CategoriesFileSchema),
       readYaml(path.join(dir, 'currencies.yaml'), CurrenciesFileSchema),
+      readYaml(path.join(dir, 'issuers.yaml'), IssuersFileSchema),
       readYaml(path.join(dir, 'memberships.yaml'), MembershipsFileSchema),
       loadCards(path.join(dir, 'cards')),
       readYaml(path.join(dir, 'merchants', 'seed.yaml'), MerchantsFileSchema),
@@ -56,6 +58,7 @@ export async function loadCatalog(dir = DATA_DIR): Promise<Catalog> {
   return {
     categories,
     currencies,
+    issuers,
     memberships,
     cards,
     merchants: { seed, overrides },

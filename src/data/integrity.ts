@@ -220,6 +220,7 @@ export function catalogProblems(catalog: Catalog): string[] {
     ['currency', catalog.currencies.map((c) => c.id)],
     ['card', catalog.cards.map((c) => c.id)],
     ['membership', catalog.memberships.map((m) => m.id)],
+    ['issuer', catalog.issuers.map((i) => i.id)],
   ] as const) {
     for (const id of duplicates(ids))
       problems.push(`duplicate ${kind} id '${id}'`)
@@ -248,8 +249,13 @@ export function catalogProblems(catalog: Catalog): string[] {
         problems.push(
           `membership ${m.id}: members_shop_at '${id}' is not a merchant`,
         )
+  const issuers = new Set(catalog.issuers.map((i) => i.id))
   for (const card of catalog.cards) {
     problems.push(...cardProblems(card, catalog, merchantIds))
+    if (!issuers.has(card.issuer))
+      problems.push(
+        `${card.id}: unknown issuer '${card.issuer}' (data/issuers.yaml)`,
+      )
   }
   return problems
 }

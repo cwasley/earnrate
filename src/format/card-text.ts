@@ -6,19 +6,6 @@ import type { Catalog } from '../schema/catalog.ts'
 // Card names, fees and requirements as earnrate.dev and its static search
 // pages show them. Node-free: the site bundles it.
 
-const ISSUERS: Record<string, string> = {
-  amex: 'American Express',
-  'bank-of-america': 'Bank of America',
-  'capital-one': 'Capital One',
-  chase: 'Chase',
-  citi: 'Citi',
-  column: 'Bilt',
-  sofi: 'SoFi',
-  'td-bank': 'TD Bank',
-  usbank: 'U.S. Bank',
-  'wells-fargo': 'Wells Fargo',
-}
-
 import { membershipName, membershipText } from '../engine/memberships.ts'
 import {
   CAP_PERIODS,
@@ -27,7 +14,9 @@ import {
   words,
 } from '../engine/text.ts'
 
-export const issuerName = (id: string) => ISSUERS[id] ?? id
+// An issuer's name as people know it, from data/issuers.yaml.
+export const issuerName = (catalog: Catalog, id: string) =>
+  catalog.issuers.find((i) => i.id === id)?.name ?? id
 
 export function cardText(catalog: Catalog) {
   const cards = new Map<string, Card>(catalog.cards.map((c) => [c.id, c]))
@@ -67,7 +56,7 @@ export function cardText(catalog: Catalog) {
       )
     if (r.activation !== null)
       lines.push(
-        `Activate the bonus with ${issuerName(cards.get(cardId)?.issuer ?? '')} (free)`,
+        `Activate the bonus with ${issuerName(catalog, cards.get(cardId)?.issuer ?? '')} (free)`,
       )
     if (r.membership !== null)
       lines.push(`With ${membershipName(catalog, r.membership)}`)
@@ -87,5 +76,6 @@ export function cardText(catalog: Catalog) {
     feeLabel,
     requirementLines,
     membershipName: memberName,
+    issuerName: (id: string) => issuerName(catalog, id),
   }
 }

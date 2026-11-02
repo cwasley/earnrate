@@ -8,7 +8,7 @@ The maintainer's full spec (data model, golden tests, milestones, competitive la
 
 - Never store or handle card numbers, CVVs, expiry dates or bank logins. Cards are product IDs only (`amex-gold`).
 - No Plaid, no payments, no checkout automation, no browser extension in v1.
-- Card earn rates live in data files with `last_verified` and `source_urls`. Never hardcode a rate in engine code. Facts shared across cards live in data too: memberships (names, the Costco fee and the stores that imply it, BofA tiers as a group) in `data/memberships.yaml`, travel sites as merchant `kind`, and "on"/"at" wording as category `preposition`.
+- Card earn rates live in data files with `last_verified` and `source_urls`. Never hardcode a rate in engine code. Facts shared across cards live in data too: memberships (names, the Costco fee and the stores that imply it, BofA tiers as a group) in `data/memberships.yaml`, issuer names and search words in `data/issuers.yaml`, travel sites as merchant `kind`, and "on"/"at" wording as category `preposition`.
 - Don't invent rates. If a rule is ambiguous, leave a TODO and ask. Wrong rates are worse than missing ones.
 - Matching and math are pure and deterministic. The LLM is only a cached, labeled fallback for merchant → category.
 - Every recommendation states its matched rule, assumptions and confidence.

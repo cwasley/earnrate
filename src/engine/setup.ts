@@ -46,17 +46,6 @@ export type SetupNote = {
 // Rules that start within this many days are worth activating now.
 const ACTIVATION_LOOKAHEAD_DAYS = 45
 
-const ISSUER_NICKNAMES: Record<string, string> = {
-  amex: 'american express',
-  'bank-of-america': 'bofa boa bankofamerica',
-  'capital-one': 'capitalone',
-  citi: 'citibank',
-  usbank: 'us bank',
-  'wells-fargo': 'wf wellsfargo',
-  'td-bank': 'td',
-  column: 'bilt',
-}
-
 const searchWords = (s: string) =>
   s
     .toLowerCase()
@@ -83,12 +72,14 @@ function editDistance(a: string, b: string): number {
   return row[b.length] ?? 0
 }
 
-function matcher(card: Card) {
+function matcher(catalog: Catalog, card: Card) {
   const haystack = [
     ...searchWords(card.id),
     ...searchWords(card.name),
     ...searchWords(card.issuer),
-    ...searchWords(ISSUER_NICKNAMES[card.issuer] ?? ''),
+    ...(
+      catalog.issuers.find((i) => i.id === card.issuer)?.search ?? []
+    ).flatMap(searchWords),
   ]
   const compact = haystack.join('')
   return (token: string) =>
@@ -193,7 +184,7 @@ export function searchCards(
 ): CardSearch {
   const tokens = searchWords(query)
   const scored = catalog.cards.map((card) => {
-    const matches = matcher(card)
+    const matches = matcher(catalog, card)
     return { card, score: tokens.filter((t) => matches(t)).length }
   })
   const byShortestId = (a: { card: Card }, b: { card: Card }) =>

@@ -2,6 +2,15 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.02
+
+Issuer names and the words people search for them by (`bofa`, `amex`) move from code to `data/issuers.yaml`; every card's issuer must be listed there. Cash+'s annual fee quote now matches both layouts of U.S. Bank's page. No rates changed.
+
+| File or card     | Field               | Old → new                                    | Source                                                                                     |
+| ---------------- | ------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| issuers.yaml     | (new)               | names and search words for the 10 issuers    | n/a                                                                                        |
+| usbank-cash-plus | annual_fee evidence | "ANNUAL FEE $0 Annual fee" → "$0 Annual fee" | [card page](https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html) |
+
 ## 2026.11.01.7
 
 Currencies can name how a redemption reads (`redemption_names`), so a wallet valuing SoFi points by redeeming into a SoFi account says so. No rates changed.

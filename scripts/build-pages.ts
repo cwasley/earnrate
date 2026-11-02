@@ -32,7 +32,7 @@ import {
   wholeDollars,
   words,
 } from '../src/engine/text.ts'
-import { cardText, issuerName } from '../src/format/card-text.ts'
+import { cardText } from '../src/format/card-text.ts'
 import type { Card, Rule } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
@@ -66,8 +66,14 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
 
-const { cards, shortName, feeLabel, requirementLines, membershipName } =
-  cardText(catalog)
+const {
+  cards,
+  shortName,
+  feeLabel,
+  requirementLines,
+  membershipName,
+  issuerName,
+} = cardText(catalog)
 
 // Memberships worth calling out on a search page: the ones most people would
 // know, which the site asks about too.

@@ -59,6 +59,7 @@ function catalog(cardYaml = cashPlusYaml): Catalog {
     currencies: CurrenciesFileSchema.parse([
       { id: 'cash', name: 'Cash', value_cents: 1 },
     ]),
+    issuers: [{ id: 'usbank', name: 'U.S. Bank', search: [] }],
     memberships: [],
     cards: [CardSchema.parse(parse(cardYaml))],
     merchants: {
@@ -75,6 +76,13 @@ const wallet = (yaml: string) => WalletSchema.parse(parse(yaml))
 describe('catalogProblems', () => {
   test('a consistent catalog has no problems', () => {
     expect(catalogProblems(catalog())).toEqual([])
+  })
+
+  test('catches an issuer missing from data/issuers.yaml', () => {
+    const broken = cashPlusYaml.replace('issuer: usbank', 'issuer: us-bank')
+    expect(catalogProblems(catalog(broken))).toEqual([
+      "usbank-cash-plus: unknown issuer 'us-bank' (data/issuers.yaml)",
+    ])
   })
 
   test('catches a dangling shared cap', () => {
