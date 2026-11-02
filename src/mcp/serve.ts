@@ -3,6 +3,7 @@ import { FileWalletStore } from '../data/file-store.ts'
 import { loadCatalog, walletPath } from '../data/load.ts'
 import { localToday as today } from '../engine/periods.ts'
 import { llmEnabled, openLlmSession } from '../merchants/from-env.ts'
+import { missedPath, missLogAt } from '../merchants/missed.ts'
 import { packageVersion } from '../version.ts'
 import { createEarnrateServer } from './server.ts'
 
@@ -10,6 +11,8 @@ import { createEarnrateServer } from './server.ts'
 export async function serveMcp(env: NodeJS.ProcessEnv): Promise<void> {
   const version = await packageVersion()
   const catalog = await loadCatalog()
+  const missedFile = missedPath(env)
+  const missed = missedFile === null ? null : missLogAt(missedFile)
   let llm = null
   if (llmEnabled(env)) {
     const opened = await openLlmSession({ env, today })
@@ -28,6 +31,7 @@ export async function serveMcp(env: NodeJS.ProcessEnv): Promise<void> {
       savedWallets: 'file',
       today,
       llm,
+      missed,
       version,
     }),
   )

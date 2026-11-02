@@ -15,7 +15,7 @@ async function cli(argv: string[], wallet = EXAMPLE_WALLET) {
   let stdout = ''
   let stderr = ''
   const code = await run(argv, {
-    env: { [WALLET_ENV_VAR]: wallet },
+    env: { EARNRATE_MISSED_MERCHANTS: 'off', [WALLET_ENV_VAR]: wallet },
     today: TODAY,
     stdout: (t) => (stdout += t),
     stderr: (t) => (stderr += t),
@@ -200,7 +200,12 @@ test('the bin runs under plain node', async () => {
     process.execPath,
     [path.join(ROOT, 'src/cli/bin.ts'), 'netflix'],
     {
-      env: { ...process.env, [WALLET_ENV_VAR]: EXAMPLE_WALLET, NO_COLOR: '1' },
+      env: {
+        ...process.env,
+        EARNRATE_MISSED_MERCHANTS: 'off',
+        [WALLET_ENV_VAR]: EXAMPLE_WALLET,
+        NO_COLOR: '1',
+      },
     },
   )
   expect(stdout).toMatch(/^Netflix\n\nUse Blue Cash Preferred: 6% back\./)

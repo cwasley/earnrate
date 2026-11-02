@@ -32,12 +32,14 @@ import { DEFAULT_LLM_MODEL } from '../merchants/anthropic.ts'
 import type { Classifier } from '../merchants/classifier.ts'
 import { DEFAULT_MAX_CALLS } from '../merchants/fallback.ts'
 import { llmEnabled, openLlmSession } from '../merchants/from-env.ts'
+import { missedPath, missLogAt } from '../merchants/missed.ts'
 import { resolvePlace, withCallerCategory } from '../merchants/resolve.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { packageVersion } from '../version.ts'
 import { membershipProblem, parseCliArgs } from './args.ts'
 import { runCheatSheet } from './cheatsheet.ts'
+import { runMissed } from './missed.ts'
 import { runTodo } from './todo.ts'
 import { runBest, runSimulate } from './explore.ts'
 import { runImport } from './import.ts'
@@ -79,6 +81,7 @@ Save your cards (optional):
 Other commands:
   ${CLI_NAME} cheatsheet                           The best card for each category this quarter.
   ${CLI_NAME} todo [--ics file]                    What your cards need this quarter, with dates.
+  ${CLI_NAME} missed                               Stores earnrate didn't recognize, kept on this computer.
   ${CLI_NAME} import <statement.csv> --card <id>   Replay a statement against your wallet.
   ${CLI_NAME} offers [--cash | --points]           Rank welcome offers on cards you don't have.
   ${CLI_NAME} mcp                                  Run the MCP server over stdio, for AI assistants.
@@ -212,6 +215,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
   if (argv[0] === 'best') return runBest(argv.slice(1), io)
   if (argv[0] === 'cheatsheet') return runCheatSheet(argv.slice(1), io)
   if (argv[0] === 'todo') return runTodo(argv.slice(1), io)
+  if (argv[0] === 'missed') return runMissed(argv.slice(1), io)
   if (argv[0] === 'simulate') return runSimulate(argv.slice(1), io)
   const command = argv[0]
   if (command !== undefined && Object.hasOwn(WALLET_HELP, command)) {
@@ -283,6 +287,18 @@ export async function run(argv: string[], io: Io): Promise<number> {
     merchant = resolved.merchant
     notices.push(...resolved.notices)
   }
+  const missedFile = missedPath(io.env)
+  if (
+    missedFile !== null &&
+    (merchant.source === 'none' ||
+      merchant.source === 'caller' ||
+      merchant.source === 'llm')
+  )
+    await missLogAt(missedFile).note(
+      purchase.merchant,
+      merchant.source === 'none' ? null : merchant.category,
+      io.today,
+    )
   if (loaded === 'none') {
     const saved = await savedSettings(io)
     const explored = exploreCards(

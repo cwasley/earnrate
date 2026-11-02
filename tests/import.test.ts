@@ -99,7 +99,7 @@ async function cli(argv: string[], wallet: string) {
   let stdout = ''
   let stderr = ''
   const code = await run(['import', ...argv], {
-    env: { [WALLET_ENV_VAR]: wallet },
+    env: { EARNRATE_MISSED_MERCHANTS: 'off', [WALLET_ENV_VAR]: wallet },
     today: TODAY,
     stdout: (t) => (stdout += t),
     stderr: (t) => (stderr += t),

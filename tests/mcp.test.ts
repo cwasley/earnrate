@@ -24,6 +24,7 @@ import {
 } from '../src/mcp/server.ts'
 import type { Classifier } from '../src/merchants/classifier.ts'
 import { createLlmSession, type LlmSession } from '../src/merchants/fallback.ts'
+import type { MissLog } from '../src/merchants/missed.ts'
 import { TODAY } from './golden/fixtures.ts'
 import {
   EXAMPLE_WALLET,
@@ -57,13 +58,18 @@ async function connect(
   return serve({ savedWallets: 'file', store }, llm)
 }
 
-async function serve(saving: WalletSaving, llm: LlmSession | null = null) {
+async function serve(
+  saving: WalletSaving,
+  llm: LlmSession | null = null,
+  missed: MissLog | null = null,
+) {
   const handler = createMcpHandler(() =>
     createEarnrateServer({
       catalog,
       ...saving,
       today: () => TODAY,
       llm,
+      missed,
       version: '0.0.0-test',
     }),
   )
@@ -976,6 +982,30 @@ describe('category from the caller', () => {
   })
 })
 
+test("the local server logs stores it doesn't recognize, and only those", async () => {
+  const notes: string[] = []
+  const client = await serve(
+    {
+      savedWallets: 'file',
+      store: new FileWalletStore(catalog, await walletCopy()),
+    },
+    null,
+    {
+      note: (name, category) => {
+        notes.push(`${name}|${String(category)}`)
+        return Promise.resolve()
+      },
+    },
+  )
+  for (const merchant of ['Tacos El Gordo', 'Costco', 'a restaurant'])
+    await client.callTool({ name: 'resolve_merchant', arguments: { merchant } })
+  await client.callTool({
+    name: 'best_card_for_purchase',
+    arguments: { merchant: "Joe's Diner", category: 'dining' },
+  })
+  expect(notes).toEqual(['Tacos El Gordo|null', "Joe's Diner|dining"])
+})
+
 describe('category words', () => {
   test('ignore leading and trailing filler, and accept singular forms', async () => {
     const client = await connect(await walletCopy())
@@ -1259,7 +1289,11 @@ test('the stdio server answers a real client', async () => {
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [path.join(ROOT, 'src/mcp/bin.ts')],
-    env: { ...process.env, [WALLET_ENV_VAR]: EXAMPLE_WALLET },
+    env: {
+      ...process.env,
+      EARNRATE_MISSED_MERCHANTS: 'off',
+      [WALLET_ENV_VAR]: EXAMPLE_WALLET,
+    },
   })
   const client = new Client({ name: 'earnrate-stdio-test', version: '0.0.0' })
   await client.connect(transport)

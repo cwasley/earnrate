@@ -56,7 +56,7 @@
           only your recovery code or the apps you connect can open it. Here's
           where your data goes, and where it doesn't.
         </p>
-        <p class="updated">Updated November 1, 2026.</p>
+        <p class="updated">Updated November 2, 2026.</p>
       </header>
 
       <section>
@@ -168,6 +168,15 @@
           and keeps only running totals toward caps and welcome bonuses, plus
           one-way fingerprints of the transactions so a second import doesn't
           count them twice. It doesn't keep a copy of the statement.
+        </p>
+        <p>
+          When you ask about a store earnrate doesn't recognize, the command
+          line and the local MCP server add its name to
+          <code>~/.earnrate/missed-merchants.json</code>, with how often you
+          asked and any category given, so you can see which stores earnrate is
+          missing (<code>earnrate missed</code>). It stays on your computer; set
+          <code>EARNRATE_MISSED_MERCHANTS=off</code> to keep no list. The hosted
+          server and earnrate.dev keep no such list.
         </p>
         <p>
           There's no telemetry. earnrate doesn't report usage, errors or

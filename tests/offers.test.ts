@@ -135,7 +135,7 @@ test.each([
 test('earnrate offers explains its usage errors', async () => {
   let stderr = ''
   const code = await run(['offers', '--cash', '--points'], {
-    env: { [WALLET_ENV_VAR]: EXAMPLE_WALLET },
+    env: { EARNRATE_MISSED_MERCHANTS: 'off', [WALLET_ENV_VAR]: EXAMPLE_WALLET },
     today: TODAY,
     stdout: () => undefined,
     stderr: (t) => (stderr += t),

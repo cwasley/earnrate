@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/server'
 import { MCP_SERVER_NAME } from '../brand.ts'
 import type { AccountStore, WalletStore } from '../data/store.ts'
+import type { MissLog } from '../merchants/missed.ts'
 import type { LlmSession } from '../merchants/fallback.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { makeContext } from './context.ts'
@@ -20,6 +21,9 @@ export type ServerDeps = {
   today: () => string // YYYY-MM-DD
   llm: LlmSession | null // shared across connections, so the call limit holds
   version: string
+  // Unrecognized stores, logged on the user's computer; the hosted server
+  // has none.
+  missed?: MissLog | null
 } & WalletSaving
 
 // The tools that answer without a saved wallet.

@@ -340,6 +340,7 @@ describe('CLI', () => {
       env: {
         [WALLET_ENV_VAR]: EXAMPLE_WALLET,
         [MERCHANT_CACHE_ENV_VAR]: path.join(dir, 'cache.json'),
+        EARNRATE_MISSED_MERCHANTS: 'off',
         ...env,
       },
       today: TODAY,

@@ -63,6 +63,8 @@ Options: `--online` or `--in-store`, `--valuation flat|points-heavy`, `--all`, `
 
 `earnrate todo` lists what your saved cards need this quarter, soonest first: bonuses to activate (with Chase's deadline), categories to pick, caps running low and welcome bonuses to finish. `--ics earnrate.ics` also writes the dates as a calendar file with reminders. My wallet on earnrate.dev shows the same list, with an "Add the dates to your calendar" button.
 
+`earnrate missed` lists the stores earnrate didn't recognize when you asked here, most asked about first. They're kept only on your computer; [open an issue](https://github.com/cwasley/earnrate/issues) to suggest one for the data.
+
 ### Your wallet
 
 The wallet is a YAML file (`~/.earnrate/wallet.yaml`) listing your cards by ID, which is each card's file name in [`data/cards/`](data/cards). `earnrate add`, `update`, `remove`, `memberships` and `values` write it for you and keep your comments, or you can edit it by hand. Only the cards are required:
@@ -251,7 +253,7 @@ Rotating categories (Freedom Flex) are added each quarter once the issuer posts 
 earnrate needs no account. The local version has no telemetry; the hosted server counts requests and errors by method, tool name or page only, never what was asked. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
 
 - **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests and errors by method, tool name or page only. Connecting it starts an anonymous wallet (a recovery code, no email). It holds only what you save: card IDs and the details you gave, memberships and point values, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
-- **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product ID, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins.
+- **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product ID, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins. When you ask about a store earnrate doesn't recognize, its name goes in `~/.earnrate/missed-merchants.json` (`earnrate missed` lists them; `EARNRATE_MISSED_MERCHANTS=off` keeps no list).
 - **What the local version sends:** nothing, by default. The optional merchant lookup (off unless you turn it on with your own Anthropic API key) sends only the name of a store earnrate doesn't recognize to Anthropic's API, and saves the answer in `~/.earnrate/merchant-cache.json`.
 - **AI assistants:** when you use earnrate through Claude or another assistant, that assistant's provider sees the conversation, including earnrate's answers, under its own privacy policy.
 - **earnrate.dev:** everything you enter on the site stays in your browser. The site counts visits with Cloudflare Web Analytics, without cookies.

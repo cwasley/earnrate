@@ -84,10 +84,21 @@ export function makeContext(deps: ServerDeps) {
     category: string | null,
   ): Promise<{ merchant: MerchantResolution; notices: string[] }> {
     const known = resolvePlace(catalog, merchant, channel)
-    if (known.source !== 'none' || category !== null || !deps.llm) {
-      return { merchant: withCallerCategory(known, category), notices: [] }
-    }
-    return deps.llm.resolve(catalog, merchant, channel)
+    const resolved =
+      known.source !== 'none' || category !== null || !deps.llm
+        ? { merchant: withCallerCategory(known, category), notices: [] }
+        : await deps.llm.resolve(catalog, merchant, channel)
+    const source = resolved.merchant.source
+    if (
+      deps.missed &&
+      (source === 'none' || source === 'caller' || source === 'llm')
+    )
+      await deps.missed.note(
+        merchant,
+        source === 'none' ? null : resolved.merchant.category,
+        deps.today(),
+      )
+    return resolved
   }
 
   // Cards named in the conversation come first, then the saved wallet; with
