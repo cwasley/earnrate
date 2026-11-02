@@ -4,8 +4,8 @@ issuer: td-bank
 network: store
 only_at: [target]
 currency: cash
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.target.com/circlecard
   - https://www.target.com/c/target-circle-card-program-rules/-/N-4tgj0
@@ -17,12 +17,12 @@ welcome_offer:
   dollars: 50
   spend: 50
   months: 2
-  note: Paid as $50 in Target Circle Rewards, redeemable through Target Circle, not cash. Spend $50 or more on qualifying purchases in-store or at Target.com with the Target Circle Credit Card within 60 days of approval. Not for the Target Circle Debit Card or mail-in applications. Qualifying purchases exclude alcohol and gift cards, among others.
+  note: Paid as $50 in Target Circle Rewards, redeemable through Target Circle, not cash. Spend $50 or more on qualifying purchases in-store or at Target.com with the Target Circle Credit Card within 60 days of approval. Not for the Target Circle Debit Card or mail-in applications. Qualifying purchases exclude alcohol, Target GiftCards, prepaid Visa/Mastercard/Amex cards, CVS pharmacy, clinic and Target Optical.
 rules:
   - id: target
     match: { merchants: [target] }
     rate: 5
-    note: An instant 5% discount at checkout in Target stores and on Target.com, after other discounts, on the part of the purchase paid with the card. Not on prescriptions, pharmacy-counter items or clinic services, Target Optical eye exams and protection plans (glasses and contacts do count), Target GiftCards or prepaid Visa/Mastercard/Amex cards, Starbucks gift cards bought at in-store Starbucks, Shipt or Target Circle 360 fees, taxes, shipping or other fees.
+    note: An instant 5% discount at checkout in Target stores and on Target.com, after other discounts, on the part of the purchase paid with the card. Not on prescriptions, pharmacy-counter items or clinic services, Target Optical eye exams and protection plans (glasses and contacts do count), Target GiftCards, prepaid Visa/Mastercard/Amex cards or sports betting gift cards, Starbucks gift cards bought at in-store Starbucks, Shipt or Target Circle 360 fees, wireless protection plans and carrier deposits, gift wrapping, alcohol in Indiana, taxes, shipping or other fees.
 todo:
   - The debit version (Target Circle Debit Card) gets the same 5% discount but isn't modeled as a separate card.
   - Target considers credit applicants for the Target Mastercard first, which also earns 2% on dining and gas and 1% elsewhere. Not modeled; target.com doesn't say what form those earnings take.
@@ -49,3 +49,12 @@ evidence:
   - rule: welcome_offer
     url: https://www.target.com/circlecard
     quote: 'within 60 days of approval'
+  - rule: target
+    url: https://www.target.com/c/target-circle-card-program-rules/-/N-4tgj0
+    quote: 'Game On, DraftsKings, and other sports betting gift cards'
+  - rule: target
+    url: https://www.target.com/c/target-circle-card-program-rules/-/N-4tgj0
+    quote: 'Wireless protection program purchases and deposits required by mobile carrier'
+  - rule: welcome_offer
+    url: https://www.target.com/circlecard
+    quote: 'Qualifying purchases exclude alcohol, Target GiftCards, Visa, American Express and Mastercard gift cards/prepaid cards'

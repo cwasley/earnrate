@@ -5,10 +5,13 @@ issuer: capital-one
 # data says MasterCard; older Venture accounts may be on Visa.
 network: mastercard
 currency: C1
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.capitalone.com/credit-cards/venture/
+  # The card page's "Important disclosures" (pricing and rewards FAQ); the
+  # number is the page's offer id and changes when Capital One changes it.
+  - https://disclosures.capitalone.com/disclosure.42174.en-US.html
 base_rate: 2
 annual_fee: 95
 welcome_offer:
@@ -28,16 +31,15 @@ rules:
           ],
       }
     rate: 5
-    note: Only when booked through Capital One Travel. Flights booked there earn the base 2X.
+    note: Only when booked through Capital One Travel. Flights and activities booked there, and hotel incidentals or upgrades paid outside Capital One Travel, earn the base 2X.
   - id: capital-one-entertainment
     match: { merchants: [capital-one-entertainment] }
     rate: 5
-    note: Tickets bought on the Capital One Entertainment ticketing platform only. Tickets bought directly from Capital One Hall or Capital One Arena are excluded.
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales and tickets bought directly from Capital One Hall or Capital One Arena are excluded.
 # Not modeled on purpose: the first-year $300 Capital One Travel Stays credit
 # and the $120 Global Entry/TSA PreCheck credit.
 todo:
   - Network isn't shown in the card page's visible text. Set to mastercard from the page's embedded product data (cardNetwork MasterCard); confirm against a current card or the Rates & Fees disclosure.
-  - Capital One's transfer-partners article (capitalone.com/learn-grow/money-management/venture-miles-transfer-partnerships/) says Venture earns 5X on "activities" through Capital One Travel too. The card page doesn't, so activities aren't modeled.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -46,12 +48,24 @@ evidence:
   - rule: capital-one-travel-hotels-vacation-rentals-car-rentals
     url: https://www.capitalone.com/credit-cards/venture/
     quote: 'Earn 5X miles on hotels, vacation rentals and rental cars booked through Capital One Travel.'
+  - rule: capital-one-travel-hotels-vacation-rentals-car-rentals
+    url: https://disclosures.capitalone.com/disclosure.42174.en-US.html
+    quote: '5 miles per dollar for purchases (hotel, car rental, and vacation rental only) made through Capital One Travel'
   - rule: capital-one-entertainment
     url: https://www.capitalone.com/credit-cards/venture/
     quote: 'Eligible cardholders will earn 5 miles per dollar spent on Capital One Entertainment purchases.'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42174.en-US.html
+    quote: 'Tickets purchased through the Capital One cardholder exclusive pre-sales'
   - rule: annual_fee
     url: https://www.capitalone.com/credit-cards/venture/
     quote: 'ANNUAL FEE $95 PURCHASE RATE'
+  - rule: base_rate
+    url: https://disclosures.capitalone.com/disclosure.42174.en-US.html
+    quote: 'You will earn 2 miles per dollar on net purchases'
+  - rule: welcome_offer
+    url: https://disclosures.capitalone.com/disclosure.42174.en-US.html
+    quote: 'new cardmember bonus for the Capital One Venture card or the Capital One Venture X card'
   - rule: welcome_offer
     url: https://www.capitalone.com/credit-cards/venture/
     quote: 'plus earn 75,000 bonus miles once you spend $4,000 on purchases within the first 3 months'

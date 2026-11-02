@@ -3,7 +3,7 @@ name: Atmos Rewards Summit Visa Infinite Credit Card
 issuer: bank-of-america
 network: visa
 currency: atmos-points
-last_verified: 2026-10-31
+last_verified: 2026-11-01
 verified_by: claude
 source_urls:
   - https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
@@ -48,6 +48,9 @@ evidence:
   - rule: dining
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
     quote: 'Earn 3 points for every $1 spent on eligible dining, foreign transaction, Alaska Airlines and Hawaiian Airlines purchases.'
+  - rule: dining
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
+    quote: 'Caterers, Eating Places, Restaurants, Bars, Cocktail Lounges, Discotheques, Nightclubs'
   - rule: alaska-and-hawaiian-with-boa-account
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
     quote: '10% rewards bonus on all points earned from card purchases if you have an eligible Bank of America® account'

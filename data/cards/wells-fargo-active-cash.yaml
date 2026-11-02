@@ -3,10 +3,11 @@ name: Wells Fargo Active Cash Card
 issuer: wells-fargo
 network: visa
 currency: cash
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.wellsfargo.com/active-cash-credit-card/
+  - https://www.wellsfargo.com/credit-cards/active-cash/terms/
 base_rate: 2
 annual_fee: 0
 welcome_offer:
@@ -23,6 +24,9 @@ evidence:
   - rule: base_rate
     url: https://creditcards.wellsfargo.com/active-cash-credit-card/
     quote: '2% cash rewards are earned for every $1 spent in net purchases'
+  - rule: base_rate
+    url: https://www.wellsfargo.com/credit-cards/active-cash/terms/
+    quote: 'For every $1.00 you spend with this Credit Card for net purchases, you earn two cents ($0.02) in Cash Rewards.'
   - rule: annual_fee
     url: https://creditcards.wellsfargo.com/active-cash-credit-card/
     quote: '$0 annual fee'
@@ -32,3 +36,6 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.wellsfargo.com/active-cash-credit-card/
     quote: 'To qualify for the $100 cash rewards bonus, a total of at least $500 in net purchases'
+  - rule: welcome_offer
+    url: https://www.wellsfargo.com/credit-cards/active-cash/terms/
+    quote: 'opened one within the last 48 months from the date of this application'

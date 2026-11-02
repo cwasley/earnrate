@@ -3,11 +3,12 @@ name: Chase Sapphire Reserve
 issuer: chase
 network: visa
 currency: UR
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64842.html
 base_rate: 1
 annual_fee: 795
 welcome_offer:
@@ -70,15 +71,24 @@ evidence:
   - rule: lyft
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: 'earn 5x total points on Lyft rides through 9/30/2027'
+  - rule: lyft
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'Purchase of gift cards, car rentals, vehicle service centers, miscellaneous fees and other Lyft products and services are excluded'
   - rule: peloton
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: 'earn 10x total points on eligible Peloton equipment and accessory purchases over $150 through 12/31/2027'
   - rule: peloton
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: 'on up to $5,000 in total purchases when your card is used for Peloton equipment'
+  - rule: peloton
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'Purchases made outside the U.S. are not eligible. Gift cards and apparel are not eligible.'
   - rule: annual_fee
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: '$795 annual fee'
+  - rule: annual_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64842.html
+    quote: 'Annual Membership Fee $795; each authorized user: $195 per year.'
   - rule: welcome_offer
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: 'Earn 100,000 points after you spend $6,000 in purchases in the first 3 months from account opening'

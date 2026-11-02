@@ -3,10 +3,13 @@ name: Kohl's Rewards Visa
 issuer: capital-one
 network: visa
 currency: kohls-rewards
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.capitalone.com/credit-cards/kohls/
+  # The card page's rate and fee disclosures, shared by both Kohl's cards; the
+  # number is the page's offer id and changes when Capital One changes it.
+  - https://disclosures.capitalone.com/disclosure.41856.en-US.html
 # Units are cents of Kohl's rewards per dollar, so 3 is 3%.
 base_rate: 1
 annual_fee: 0
@@ -46,3 +49,6 @@ evidence:
   - rule: annual_fee
     url: https://www.capitalone.com/credit-cards/kohls/
     quote: "when you open a Kohl's Card. No annual fee."
+  - rule: annual_fee
+    url: https://disclosures.capitalone.com/disclosure.41856.en-US.html
+    quote: 'Annual Fee None. None.'

@@ -3,12 +3,14 @@ name: Chase Freedom Flex
 issuer: chase
 network: mastercard
 currency: cash
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
   - https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65280.html
 base_rate: 1
 annual_fee: 0
 welcome_offer:
@@ -48,8 +50,8 @@ rules:
     rate: 2
     valid_to: 2027-09-30
     note: Limited-time offer, for Lyft products bought in the Lyft app.
-  # Rotating 5% categories. Activation is per quarter; activating after the
-  # quarter starts still applies to the whole quarter.
+  # Rotating 5% categories. Activation is per quarter; activating any time
+  # before the deadline still applies to the whole quarter.
   - id: q4-2026-grocery
     match: { categories: [grocery] }
     exclude: { merchants: [walmart, target] }
@@ -58,15 +60,15 @@ rules:
     requires: { activation: true }
     valid_from: 2026-10-01
     valid_to: 2026-12-31
-    note: Grocery stores excluding Walmart and Target. Chase's grocery category also excludes warehouse clubs, discount stores and gas at grocery stores; delivery services count only if they code as a grocery store.
+    note: Grocery stores excluding Walmart and Target. Chase's grocery category also excludes warehouse clubs, discount stores and gas at grocery stores; delivery services count only if they code as a grocery store. Activate by December 14, 2026.
   - id: q4-2026-dining
     match: { categories: [dining] }
-    rate: 5
+    rate: 7
     cap: five-percent-quarterly
     requires: { activation: true }
     valid_from: 2026-10-01
     valid_to: 2026-12-31
-    note: Chase's terms say activated categories earn "5% Cash Back rewards total" (4% on top of the 1% base), so earnrate counts 5x (5% as cash back) until the $1,500 quarterly cap. Some blogs report 7% for dining (the 3% dining rate plus the 4% bonus); Chase's own terms don't say that.
+    note: The 4% quarterly bonus stacks on the everyday 3% dining rate for 7% total, on the first $1,500 of combined bonus-category spend; then dining is back to 3%. Activate by December 14, 2026.
   - id: q4-2026-american-red-cross
     match: { merchants: [american-red-cross] }
     rate: 5
@@ -74,6 +76,7 @@ rules:
     requires: { activation: true }
     valid_from: 2026-10-01
     valid_to: 2026-12-31
+    note: Donations made directly through the American Red Cross's official channels; gifts to local chapters may not count. Activate by December 14, 2026.
   - id: q1-2027-grocery
     match: { categories: [grocery] }
     exclude: { merchants: [walmart, target] }
@@ -84,7 +87,28 @@ rules:
     valid_to: 2027-03-31
     note: Grocery stores excluding Walmart and Target. Activation opens December 15, 2026.
   - id: q1-2027-streaming
-    match: { categories: [streaming] }
+    match:
+      merchants:
+        [
+          apple-music,
+          apple-tv,
+          disney-plus,
+          espn,
+          fubotv,
+          max,
+          hulu,
+          netflix,
+          pandora,
+          paramount-plus,
+          peacock,
+          showtime,
+          siriusxm,
+          sling-tv,
+          spotify,
+          youtube-premium,
+          youtube-tv,
+          fandango-at-home,
+        ]
     rate: 5
     cap: five-percent-quarterly
     requires: { activation: true }
@@ -117,15 +141,27 @@ evidence:
   - rule: q4-2026-grocery
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Purchases made at gas stations from merchants who also operate grocery stores are not included'
+  - rule: q4-2026-grocery
+    url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
+    quote: 'This quarter, the deadline for activation is December 14, 2026'
   - rule: q4-2026-dining
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'Dining American Red Cross'
   - rule: q4-2026-dining
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: '5% Cash Back rewards total for each $1 spent until $1,500 is spent'
+  - rule: q4-2026-dining
+    url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
+    quote: 'For Dining purchases, you will earn 7% cash back (3% Dining cash back + 4% bonus category cash back)'
   - rule: q4-2026-american-red-cross
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'American Red Cross'
+  - rule: q4-2026-american-red-cross
+    url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
+    quote: 'To ensure your charitable donation is eligible for the 5% total Cash Back reward'
+  - rule: q4-2026-american-red-cross
+    url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
+    quote: 'Local chapters may not be eligible due to transaction processing procedures'
   - rule: q1-2027-grocery
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'NEXT QUARTER Grocery Stores'
@@ -141,11 +177,12 @@ evidence:
   - rule: annual_fee
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'ANNUAL FEE $0'
+  - rule: annual_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65280.html
+    quote: 'Annual Membership Fee None'
   - rule: welcome_offer
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'Earn a $250 bonus after you spend $500 on purchases in the first 3 months from account opening'
 todo:
-  - "Chase's offer-details overlays for the Q4 2026 and Q1 2027 categories (exact grocery exclusions, what counts for American Red Cross) didn't render in the page dump; rules follow the calendar labels and the rewards-category FAQ."
-  - 'q4-2026-american-red-cross: what counts (presumably donations) is unconfirmed.'
-  - 'q4-2026-dining: whether the 4% additional stacks on the 3% dining rate (7% total) is unstated; showing 5% until Chase says.'
+  - 'q4-2026-dining: a single dining purchase that crosses the $1,500 cap counts the part over the cap at 1%, not the everyday 3%; whole purchases after the cap correctly fall back to the 3% dining rule.'
   - 'Q2 2027 (Apr-Jun) shows "Coming Soon"; add it after Chase posts it (activation opens March 15, 2027).'

@@ -3,10 +3,12 @@ name: Prime Visa
 issuer: chase
 network: visa
 currency: cash
-last_verified: 2026-10-24
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC59329.html
 base_rate: 1
 annual_fee: 0
 welcome_offer:
@@ -19,7 +21,7 @@ rules:
     match: { merchants: [amazon] }
     rate: 5
     requires: { membership: amazon-prime }
-    note: Includes Amazon Fresh orders and third-party sellers on Amazon.com. Not on Amazon Pay purchases at other sites, or on Amazon's international sites.
+    note: Includes Amazon Fresh orders and third-party sellers on Amazon.com. Not on Amazon Pay purchases at other sites, Amazon's international sites, or Amazon.com purchases made with Equal Pay financing.
   - id: amazon-fresh
     match: { merchants: [amazon-fresh] }
     rate: 5
@@ -28,8 +30,9 @@ rules:
   - id: whole-foods
     match: { merchants: [whole-foods] }
     rate: 5
+    geography: us_only
     requires: { membership: amazon-prime }
-    note: Online or in-store.
+    note: Online or in-store in the U.S., but not through Instacart or other third-party sites.
   - id: audible
     match: { merchants: [audible] }
     rate: 5
@@ -56,10 +59,11 @@ rules:
   - id: local-transit
     match: { categories: [transit] }
     rate: 2
-    note: Local transit and commuting, including rideshare.
+    note: Local transit and commuting, including rideshare, tolls and parking. Not bike or scooter rentals or car sharing.
 todo:
   - 6% on Amazon.com orders with "select delivery methods" (stated on amazon.com/dp/BT00LN946S, not on Chase's page) isn't modeled. It depends on the shipping option picked at checkout.
   - Prime Card Bonus (10%+ on rotating Amazon items) isn't modeled. It's per item and limited-time.
+  - "Amazon's benefits page (amazon.com/primevisa/benefits, read 2026-11-01; it blocks automated reading) also gives 5% (3% without Prime) at Shopbop, Amazon Pharmacy, One Medical, PillPack, and Twitch and Woot through Amazon Pay. Those aren't modeled; Zappos, Ring, Blink, eero, AbeBooks and Buy with Prime are excluded."
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -68,6 +72,15 @@ evidence:
   - rule: amazon
     url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
     quote: "You'll earn 5% back with an eligible Prime membership or 3% back without an eligible Prime membership"
+  - rule: amazon
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC59329.html
+    quote: 'Purchases made under the Equal Pay promotions do not earn % back rewards'
+  - rule: whole-foods
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: 'purchases of Whole Foods Market products and services through third-party sites such as Eventbrite, Instacart'
+  - rule: whole-foods
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: 'purchases made at international Whole Foods Markets'
   - rule: amazon-fresh
     url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
     quote: 'Amazon.com Gift Cards, Amazon Fresh orders, Amazon Prime subscriptions'
@@ -95,9 +108,15 @@ evidence:
   - rule: local-transit
     url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
     quote: 'local transit and commuting (including rideshare)'
+  - rule: local-transit
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'operators of passenger trains, buses, taxis, limousines, rideshare, ferries, toll bridges and highways'
   - rule: annual_fee
     url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
     quote: 'ANNUAL FEE $0'
+  - rule: annual_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC59329.html
+    quote: 'Annual Membership Fee None'
   - rule: welcome_offer
     url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
     quote: "Prime members, get a $150 Amazon Gift Card instantly loaded into your Amazon account's Gift Card Balance"

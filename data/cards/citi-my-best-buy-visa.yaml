@@ -3,8 +3,8 @@ name: My Best Buy Visa Card
 issuer: citi
 network: visa
 currency: best-buy-rewards
-last_verified: 2026-10-24
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/citi-best-buy-credit-cards
 # Rates are points per dollar. A point is worth 2¢ in Best Buy rewards, so 2.5
@@ -15,7 +15,7 @@ rules:
   - id: best-buy
     match: { merchants: [best-buy, pacific-kitchen-home] }
     rate: 2.5
-    note: Only when paying with Standard Credit, not a financing plan. My Best Buy Plus/Total members also earn the membership's own rewards, counted separately.
+    note: Only when paying with Standard Credit, not a financing plan; tax doesn't earn. My Best Buy Plus/Total members also earn the membership's own rewards, counted separately.
   - id: gas
     match: { categories: [gas] }
     rate: 1.5
@@ -38,6 +38,9 @@ evidence:
   - rule: best-buy
     url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
     quote: 'or Pacific Kitchen & Home'
+  - rule: best-buy
+    url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
+    quote: 'are only awarded when you select Standard Credit'
   - rule: gas
     url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
     quote: 'per $1 spent at gas stations (3% back in rewards)'

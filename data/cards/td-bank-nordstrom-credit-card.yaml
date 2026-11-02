@@ -4,8 +4,8 @@ issuer: td-bank
 network: store
 only_at: [nordstrom, nordstrom-rack]
 currency: nordy-club
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.nordstrom.com/browse/nordy-club
   - https://www.nordstrom.com/browse/nordy-club/faq
@@ -27,7 +27,7 @@ rules:
   - id: nordstrom
     match: { merchants: [nordstrom] }
     rate: 1
-    note: Card's own share only. Cardmembers start at Influencer status and earn 2 points per dollar at Nordstrom and Nordstrom.com, 1 of which any member earns paying any way. Paid through Apple Pay, Google Pay or PayPal it's 1 point per dollar, so nothing extra.
+    note: Card's own share only. Cardmembers start at Influencer status and earn 2 points per dollar at Nordstrom and Nordstrom.com, 1 of which any member earns paying any way. Apple Pay and Google Pay with the card still earn the full rate; through PayPal or another third-party processor, or another contactless method, it's 1 point per dollar, so nothing extra.
   - id: nordstrom-ambassador
     match: { merchants: [nordstrom] }
     rate: 2
@@ -71,3 +71,12 @@ evidence:
   - rule: not_with
     url: https://www.nordstrom.com/becomecardmember
     quote: 'Current and previous Nordstrom credit cardmembers and Nordstrom employees are not eligible for this offer'
+  - rule: nordstrom
+    url: https://www.nordstrom.com/browse/nordy-club/faq
+    quote: "If you use your Nordstrom card via Google Pay or Apple Pay, you'll earn your standard Nordy Club base points"
+  - rule: nordstrom
+    url: https://www.nordstrom.com/browse/nordy-club/terms-conditions
+    quote: 'For purchases made with a third-party payment processor, including those linked to a Nordstrom credit or debit card'
+  - rule: nordstrom-rack
+    url: https://www.nordstrom.com/browse/nordy-club/terms-conditions
+    quote: 'Eligible purchases exclude gift cards, alterations, charitable donations, taxes, shipping fees'

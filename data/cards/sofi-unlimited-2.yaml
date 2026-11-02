@@ -3,17 +3,19 @@ name: SoFi Unlimited 2% Credit Card
 issuer: sofi
 network: mastercard
 currency: sofi-rewards
-last_verified: 2026-10-24
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.sofi.com/credit-card/unlimited/
+  - https://www.sofi.com/card/rewards?cardType=c
+  - https://www.sofi.com/card/terms?cardType=c
 base_rate: 2
 annual_fee: 0
 rules:
   - id: sofi-travel
     match: { merchants: [sofi-travel] }
     rate: 3
-    note: Trips booked through the SoFi Travel portal (run by Expedia).
+    note: Trips booked through the SoFi Travel portal (run by Expedia), reached from SoFi's website or app. Booking on Expedia's own site or app doesn't count.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -22,8 +24,20 @@ evidence:
   - rule: sofi-travel
     url: https://www.sofi.com/credit-card/unlimited/
     quote: 'equal to 3% of the total amount you spend'
+  - rule: base_rate
+    url: https://www.sofi.com/card/rewards?cardType=c
+    quote: 'You will earn 2 SoFi Rewards Point for each dollar ($1.00) you spend on your SoFi Credit Card.'
+  - rule: sofi-travel
+    url: https://www.sofi.com/card/rewards?cardType=c
+    quote: 'You will earn 3% cash back Rewards Points for SoFi Travel purchases.'
+  - rule: sofi-travel
+    url: https://www.sofi.com/credit-card/unlimited/
+    quote: 'Travel booked directly on Expedia’s website or app, or any other site operated or powered by Expedia is not eligible.'
   - rule: annual_fee
     url: https://www.sofi.com/credit-card/unlimited/
     quote: 'you’ll pay no annual fee whatsoever'
+  - rule: annual_fee
+    url: https://www.sofi.com/card/terms?cardType=c
+    quote: 'FEES Annual Fee None Transaction Fees'
 todo:
   - 'No public welcome offer: the page says the card is currently invite only (apply with a mailed reservation code), and shows no bonus.'

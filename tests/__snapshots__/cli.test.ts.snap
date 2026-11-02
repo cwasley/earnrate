@@ -47,7 +47,7 @@ exports[`output > dodger stadium, ambiguous venue 1`] = `
 Use Savor: 3% back, about $1.20. Medium confidence.
 
   1. Savor        3%  $1.20
-     3% cash back from its "entertainment" rule. Tickets at movie theaters, professional and semi-professional sports promoters, theatrical promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls, record stores, pool halls and bowling alleys. Golf courses, collegiate sporting events, cable, streaming and membership services don't count as entertainment.
+     3% cash back from its "entertainment" rule. Tickets at movie theaters, professional and semi-professional sports promoters, theatrical and concert promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls, record stores, pool halls and bowling alleys. Golf courses, country clubs, collegiate sporting events, charities that put on live entertainment, cable, streaming and membership services don't count, and neither do tickets bought through a third-party site or packages coded as travel or hotel.
   2. Double Cash  2%  $0.80
      2% cash back, its base rate. No bonus category applies here.
   3. SoFi         2%  $0.80
@@ -137,7 +137,7 @@ Use Amex Gold: 6.8% back, about $5.44. High confidence.
   2. Blue Cash Preferred    6%  $4.80
      6% cash back from its "us-supermarkets" rule. Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
   3. Prime Visa             5%  $4.00
-     5% cash back from its "whole-foods" rule. Online or in-store.
+     5% cash back from its "whole-foods" rule. Online or in-store in the U.S., but not through Instacart or other third-party sites.
   + 6 more cards (--all lists them)
 
 Blue Cash Preferred beats Amex Gold here if Amex Membership Rewards (MR) points are worth less than 1.5¢ (you value them at 1.7¢).

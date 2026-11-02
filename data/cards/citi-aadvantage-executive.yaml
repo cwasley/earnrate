@@ -3,17 +3,17 @@ name: Citi / AAdvantage Executive World Legend Mastercard
 issuer: citi
 network: mastercard
 currency: aadvantage-miles
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
 base_rate: 1
 annual_fee: 695
 welcome_offer:
-  points: 125000
-  spend: 15000
-  months: 5
-  note: 'Citi labels it a limited time offer but states no end date. Not available if you received a new account bonus for a Citi / AAdvantage Executive account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one.'
+  points: 80000
+  spend: 8000
+  months: 3
+  note: 'Not available if you received a new account bonus for a Citi / AAdvantage Executive account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one.'
 rules:
   - id: aadvantage-hotels
     match: { merchants: [aadvantage-hotels] }
@@ -22,7 +22,7 @@ rules:
   - id: aadvantage-cars
     match: { merchants: [aadvantage-cars] }
     rate: 12
-    note: Car rentals booked on aadvantagecars.com from a U.S., Canada or Mexico point of sale. Payless rentals don't count. Only the part paid with the card earns.
+    note: Car rentals booked on aadvantagecars.com from a U.S., Canada or Mexico point of sale. Payless rentals and rentals booked through American Airlines Vacations don't count. Only the part paid with the card earns.
   - id: american-airlines
     match: { merchants: [american-airlines] }
     rate: 4
@@ -57,7 +57,7 @@ evidence:
     quote: 'Annual fee: $695. Annual fee for Authorized Users: $175'
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
-    quote: 'Earn 125,000 AAdvantage® bonus miles after $15,000 in purchases in the first 5 months'
+    quote: 'Earn 80,000 AAdvantage® bonus miles after $8,000 in purchases in the first 3 months'
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
     quote: 'new account bonus for a Citi® / AAdvantage® Executive account in the past 48 months'

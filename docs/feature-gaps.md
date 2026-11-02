@@ -18,6 +18,7 @@ A shared cap has one `then_rate`. Some cards drop to a different rate depending 
 
 - `bank-of-america-customized-cash-rewards`: with a BofA Rewards tier, the part of a purchase past the $2,500 cap should earn the tier's boosted base rate (1.1%–1.75%), not 1%. Understated only for a purchase that crosses the cap.
 - `chase-ink-business-preferred`: Lyft should drop to 3x once the $150,000 cap is used. Modeled at 5x uncapped.
+- `chase-freedom-flex`: past the $1,500 quarterly cap, Q4 2026 dining should still earn the everyday 3% dining rate, not the cap's 1%. Understated only for a purchase that crosses the cap.
 
 ### Membership tiers as multipliers
 
@@ -47,6 +48,7 @@ Rules can be `us_only` or `worldwide`, not foreign-only.
 A choice option is a list of categories, a list of merchants, or "any online purchase except". Some issuers' options also need MCCs or a mix.
 
 - `citi-custom-cash`: select travel includes travel agencies (MCC 4722).
+- `bilt-obsidian`: the dining pick includes bakeries (MCC 5462), which earnrate's dining category doesn't cover, so bakery purchases earn 1x.
 
 ### Time-of-day rules
 
@@ -55,6 +57,7 @@ A choice option is a list of categories, a list of merchants, or "any online pur
 ### Offer-wide caps and minimum purchases
 
 - `chase-sapphire-reserve`: the Peloton $5,000 limit runs across the whole offer (2025-04-01 to 2027-12-31), and each purchase must be at least $150.
+- `chase-sapphire-preferred`: the same Peloton offer and limits.
 
 ### Payment-method exclusions
 
@@ -88,6 +91,9 @@ Holding some cards means holding a membership, but the wallet asks for membershi
 A bonus for reaching a spend total in a year, paid once rather than per dollar, isn't a rate and has no field.
 
 - `chase-ihg-one-rewards`: 10,000 bonus points after $15,000 in purchases each calendar year.
+- `chase-ihg-one-rewards-premier`: 15,000 bonus points after $15,000 in purchases each calendar year.
+- `chase-ihg-one-rewards-premier-select`: 20,000 bonus points after $15,000 in purchases each calendar year.
+- `chase-ihg-one-rewards-business`: 20,000 bonus points after $25,000 in purchases each calendar year.
 
 ### Credits that offset the annual fee
 

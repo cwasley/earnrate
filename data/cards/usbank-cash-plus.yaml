@@ -3,8 +3,8 @@ name: U.S. Bank Cash+ Visa Signature Card
 issuer: usbank
 network: visa
 currency: cash
-last_verified: 2026-10-24
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
   - https://cashplus.usbank.com/cash-plus/samplemerchants
@@ -64,14 +64,16 @@ choices:
 rules:
   - id: five-percent
     match: { choice: five-percent }
+    # Ground transportation leaves out parking and tolls (also cruises and
+    # tickets bought through travel agencies); no other 5% option covers them.
+    exclude: { mccs: [7523, 4784] }
     rate: 5
     cap: five-percent-combined
   - id: two-percent
     match: { choice: two-percent }
-    # Gas and grocery exclude discount stores/supercenters and wholesale clubs.
-    # Grocery-store gas stations may still count as gas, per U.S. Bank's
-    # sample merchants (Kroger Fuel Center is listed).
-    exclude: { categories: [gas.superstore] }
+    # Fast food is its own 5% option, not part of Restaurants. Gas at grocery
+    # stores is left in until the todo below is settled.
+    exclude: { categories: [gas.superstore, dining.fast_food] }
     rate: 2
   - id: travel-center
     match: { merchants: [usbank-travel-center] }
@@ -94,9 +96,29 @@ evidence:
   - rule: five-percent
     url: https://cashplus.usbank.com/cash-plus/samplemerchants
     quote: 'This category includes only the merchants listed below'
+  - rule: five-percent
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'steam ships, cruise lines, freight trains, parking meters, parking garages and toll stations'
+  - rule: five-percent
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: 'Purchases over $2,000 in the 5% categories will earn 1% cash back.'
+  - rule: two-percent
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: 'Gas station and electric vehicle charging station purchases at discount stores/supercenters, wholesale clubs and grocery stores/supermarkets'
+  - rule: two-percent
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: 'Excludes discount stores/supercenters and wholesale clubs'
+  - rule: two-percent
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Excludes most fast food restaurants like McDonald's"
+  - rule: travel-center
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: 'additional 4% cash back for every $1 in eligible Net Purchases spent on prepaid air, car and hotel reservations'
   - rule: annual_fee
     url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
     quote: '$0 Annual fee'
   - rule: welcome_offer
     url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
     quote: 'Earn a $200 rewards bonus after you spend $1,000 in eligible purchases within the first 90 days of account opening'
+todo:
+  - "Gas at grocery stores (Kroger, Hy-Vee, Meijer) is modeled at 2%, as U.S. Bank's sample merchants page says it may qualify, varying by location; the card page's footnote says 1%, so it may earn 1% at some stations."

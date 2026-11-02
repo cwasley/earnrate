@@ -3,11 +3,12 @@ name: Chase Freedom Unlimited
 issuer: chase
 network: visa
 currency: cash
-last_verified: 2026-10-24
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
   - https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61498.html
 base_rate: 1.5
 annual_fee: 0
 welcome_offer:
@@ -64,6 +65,9 @@ evidence:
   - rule: annual_fee
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
     quote: 'ANNUAL FEE $0'
+  - rule: annual_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61498.html
+    quote: 'Annual Membership Fee None'
   - rule: welcome_offer
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
     quote: 'Earn a $200 bonus after you spend $500 on purchases in the first 3 months from account opening'

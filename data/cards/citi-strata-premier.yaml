@@ -3,10 +3,11 @@ name: Citi Strata Premier Card
 issuer: citi
 network: mastercard
 currency: TYP
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+  - https://www.thankyou.com/terms
 base_rate: 1
 annual_fee: 95
 welcome_offer:
@@ -60,6 +61,9 @@ evidence:
   - rule: citi-travel-hotels-cars-attractions
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: '10 points per dollar spent on Hotels, Car Rentals and Attractions booked on cititravel.com'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.thankyou.com/terms
+    quote: 'you won’t earn points on the portion of the purchase that is offset by the benefit'
   - rule: air-travel-and-other-hotels
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: '3 points per dollar spent on Air Travel and Other Hotel Purchases'
@@ -72,12 +76,30 @@ evidence:
   - rule: restaurants
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: '3 points per dollar spent at Restaurants'
+  - rule: restaurants
+    url: https://www.thankyou.com/terms
+    quote: 'fast-food restaurants, restaurant delivery services, and take out restaurants'
+  - rule: restaurants
+    url: https://www.thankyou.com/terms
+    quote: 'Excludes purchases at bakeries, caterers, and restaurants located inside another business'
   - rule: supermarkets
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: '3 points per dollar spent at Supermarkets'
+  - rule: supermarkets
+    url: https://www.thankyou.com/terms
+    quote: 'Excludes purchases made at general merchandise/discount superstores; freezer/meat locker provisioners'
+  - rule: supermarkets
+    url: https://www.thankyou.com/terms
+    quote: 'drugstores; warehouse/wholesale clubs; specialty food markets; bakeries'
+  - rule: supermarkets
+    url: https://www.thankyou.com/terms
+    quote: 'if the merchant does not classify itself as a supermarket by using the supermarket merchant code'
   - rule: gas-and-ev-charging
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: '3 points per dollar spent on Gas & EV Charging Stations'
+  - rule: gas-and-ev-charging
+    url: https://www.thankyou.com/terms
+    quote: 'Excludes gas and EV charging purchases at warehouse clubs, discount stores, department stores, convenience stores'
   - rule: annual_fee
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: 'Annual fee - $95. Fee for foreign purchases - None.'

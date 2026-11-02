@@ -3,11 +3,12 @@ name: American Express Blue Cash Preferred Card
 issuer: amex
 network: amex
 currency: cash
-last_verified: 2026-10-31
+last_verified: 2026-11-01
 verified_by: claude
 source_urls:
   - https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/
   - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+  - https://www.americanexpress.com/us/content/rewards-info/retail.html
 base_rate: 1
 annual_fee: 95
 first_year_fee: 0
@@ -27,13 +28,14 @@ rules:
     note: Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
   - id: us-streaming
     match: { categories: [streaming] }
+    exclude: { merchants: [fandango-at-home] }
     rate: 6
     geography: us_only
-    note: Select providers only (list at americanexpress.com/rewards-info). Subscriptions bundled with or billed by another company (cable, phone, a car maker) may not count.
+    note: Only providers on Amex's Select U.S. Streaming Subscriptions list (americanexpress.com/rewards-info), such as Netflix, Hulu, Disney+, HBO Max, Spotify, Apple Music, YouTube TV and SiriusXM. Subscriptions bundled with or billed by another company (cable, phone, a car maker) may not count.
   - id: transit
     match: { categories: [transit] }
     rate: 3
-    note: Trains, taxis, rideshare, ferries, tolls, parking, buses and subways. Airfare, car rental and cruises aren't transit.
+    note: Trains, taxis, rideshare, ferries, tolls, parking, buses and subways. Airfare, car rental, cruises and trams aren't transit.
   - id: us-gas
     match: { categories: [gas] }
     exclude: { categories: [gas.grocery_store, gas.superstore] }
@@ -48,15 +50,27 @@ evidence:
   - rule: us-supermarkets
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
     quote: 'at supermarkets located in the U.S. (superstores, convenience stores, warehouse clubs,'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: '6% cash back on the first $6,000 of eligible purchases in a calendar year'
   - rule: us-streaming
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
     quote: '6% cash back on eligible purchases of U.S. streaming subscriptions'
+  - rule: us-streaming
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'must be made from a provider that is included on our list of Select U.S. Streaming Subscriptions'
   - rule: transit
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
     quote: '3% cash back on eligible purchases on transit, including trains,'
+  - rule: transit
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: '(airfare, car rental and cruises are not considered transit)'
   - rule: us-gas
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
     quote: 'purchases of gasoline at gas stations located in the U.S.'
+  - rule: us-gas
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'superstores, supermarkets and warehouse clubs that sell gasoline are not considered gas stations'
   - rule: annual_fee
     url: https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/
     quote: '$0 intro annual fee for the first year, then $95'

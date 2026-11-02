@@ -3,11 +3,12 @@ name: Wells Fargo Autograph Card
 issuer: wells-fargo
 network: visa
 currency: WFR
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.wellsfargo.com/autograph-visa-credit-card/
   - https://www.wellsfargo.com/credit-cards/autograph-visa/streaming/
+  - https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
 base_rate: 1
 annual_fee: 0
 welcome_offer:
@@ -18,8 +19,9 @@ welcome_offer:
 rules:
   - id: dining
     match: { categories: [dining] }
+    exclude: { merchants: [doordash, uber-eats] }
     rate: 3
-    note: Restaurants, bars (drinking places), fast food and caterers, by Visa merchant code.
+    note: Restaurants, bars (drinking places), fast food and caterers, by Visa merchant code. Wells Fargo says bakeries, food at grocery stores and third-party delivery services may not earn 3X.
   - id: travel
     match: { categories: [travel] }
     rate: 3
@@ -31,43 +33,65 @@ rules:
     note: Passenger rail, taxis, limousines, ferries, tolls and parking. Intercity bus lines aren't on Wells Fargo's list.
   - id: gas
     match: { categories: [gas, ev_charging] }
+    exclude: { categories: [gas.superstore, gas.grocery_store] }
     rate: 3
-    note: Gas stations, automated fuel dispensers and EV charging stations, by Visa merchant code.
+    note: Gas stations, automated fuel dispensers and EV charging stations, by Visa merchant code. Fuel or charging at superstores, warehouse clubs, grocery stores, car washes and auto repair shops may not earn 3X.
   - id: streaming
     match: { categories: [streaming, tv_internet] }
     rate: 3
-    note: Cable and pay TV, digital goods (books, movies, music) and subscription services. Subscriptions bundled with another product or billed by a third party (an app store, a car) may not count. An internet-only bill may not code as pay TV.
+    note: Cable and pay TV, digital goods (books, movies, music) and subscription services. Subscriptions bundled with another product or billed by a third party (an app store, a cable, phone or internet provider, an online retailer, a car) may not count. An internet-only bill may not code as pay TV.
   - id: phone
     match: { categories: [phone] }
     rate: 3
-    note: Landline and cell phone providers.
+    note: Landline and cell phone providers. Phones, accessories, add-ons like insurance or extra data, and plans bundled or billed by a third party (an internet provider, a car) may not count.
 # Not modeled: cell phone protection.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
     url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
     quote: '1 rewards point will be earned per $1 spent on other net purchases'
+  - rule: travel
+    url: https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
+    quote: 'Airlines Hotel/motels Campgrounds Timeshares Cruise lines Travel agencies Discount travel sites Vehicle/auto rentals'
   - rule: dining
     url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
     quote: 'Dining: eating places and restaurants, drinking places, fast food restaurants'
+  - rule: dining
+    url: https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
+    quote: 'Grocery stores and other miscellaneous places that serve food or operate restaurants on site Third-party delivery services'
   - rule: travel
     url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
     quote: 'Travel: airline, hotel/motel, timeshare, or vehicle/auto rental, cruise lines'
   - rule: transit
     url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
-    quote: 'Transit: passenger railway, taxis, limousines, ferries, toll bridges and highways'
+    quote: 'Transit: passenger railway, taxis, limousines, ferries, toll bridges and highways, parking lots and garages'
+  - rule: transit
+    url: https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
+    quote: 'Ferries Parking lots and garages Limousines Taxis Passenger railway Toll bridges and highways'
   - rule: gas
     url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
     quote: 'Gas: gas stations, automated fuel dispensers, and electric vehicle charging stations'
+  - rule: gas
+    url: https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
+    quote: 'Gas or electric vehicle charging purchases made at the following locations may not earn bonus Points'
+  - rule: gas
+    url: https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
+    quote: 'Auto repair stores Superstores Car washes Warehouse/membership clubs Grocery stores'
   - rule: streaming
     url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
     quote: 'Popular streaming services: cable and other pay television, digital goods, books'
   - rule: streaming
     url: https://www.wellsfargo.com/credit-cards/autograph-visa/streaming/
     quote: 'You may earn 3X on these streaming services'
+  - rule: streaming
+    url: https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
+    quote: 'Streaming services that a third party bills, such as a digital platform; a cable, telecommunications, or internet provider'
   - rule: phone
     url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
     quote: 'Phone plans: landline and cell phone providers considered telecommunication services'
+  - rule: phone
+    url: https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
+    quote: 'Phone-plan services that a third party bundles or bills, such as an internet provider or in-vehicle service'
   - rule: annual_fee
     url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
     quote: '$0 Annual Fee'

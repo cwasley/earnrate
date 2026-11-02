@@ -5,10 +5,13 @@ issuer: capital-one
 # product data says MasterCard.
 network: mastercard
 currency: cash
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.capitalone.com/credit-cards/savor/
+  # The card page's "Important disclosures" (pricing and rewards FAQ); the
+  # number is the page's offer id and changes when Capital One changes it.
+  - https://disclosures.capitalone.com/disclosure.42167.en-US.html
 base_rate: 1
 annual_fee: 0
 welcome_offer:
@@ -20,7 +23,7 @@ rules:
   - id: capital-one-entertainment
     match: { merchants: [capital-one-entertainment] }
     rate: 8
-    note: Tickets bought on the Capital One Entertainment ticketing platform only. Tickets bought directly from Capital One Hall or Capital One Arena are excluded.
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales and tickets bought directly from Capital One Hall or Capital One Arena are excluded.
   - id: capital-one-travel-hotels-vacation-rentals-car-rentals
     match:
       {
@@ -32,12 +35,16 @@ rules:
           ],
       }
     rate: 5
-    note: Only when booked through Capital One Travel. Flights booked there earn the base 1%.
+    note: Only when booked through Capital One Travel. Flights booked there, and hotel incidentals or upgrades paid outside Capital One Travel, earn the base 1%.
   - id: grocery-stores
     match: { categories: [grocery.supermarket] }
-    exclude: { categories: [superstore], merchants: [walmart, target] }
+    exclude:
+      {
+        categories: [superstore, warehouse_club, convenience_store],
+        merchants: [walmart, target],
+      }
     rate: 3
-    note: Supermarkets, meat lockers, freezers, dairy product stores and specialty markets. Superstores like Walmart and Target are excluded.
+    note: Supermarkets, meat lockers, freezers, dairy product stores and specialty markets. Groceries bought at gas stations, convenience stores, warehouse clubs, discount stores and superstores like Walmart and Target, or at grocery stores tied to them, earn 1%.
   - id: dining
     match: { categories: [dining] }
     rate: 3
@@ -45,14 +52,14 @@ rules:
   - id: entertainment
     match: { categories: [entertainment, movie_theaters] }
     rate: 3
-    note: Tickets at movie theaters, professional and semi-professional sports promoters, theatrical promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls, record stores, pool halls and bowling alleys. Golf courses, collegiate sporting events, cable, streaming and membership services don't count as entertainment.
+    note: Tickets at movie theaters, professional and semi-professional sports promoters, theatrical and concert promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls, record stores, pool halls and bowling alleys. Golf courses, country clubs, collegiate sporting events, charities that put on live entertainment, cable, streaming and membership services don't count, and neither do tickets bought through a third-party site or packages coded as travel or hotel.
   - id: streaming
     match: { categories: [streaming] }
     rate: 3
-    note: Only "popular streaming services"; Capital One doesn't list them on the card page.
+    note: Eligible music and video streaming services. Verizon FIOS On Demand, audiobook subscriptions and fitness programming are excluded; Capital One doesn't list the eligible services.
 todo:
-  - Online grocery and delivery (grocery.online, e.g. Instacart) isn't addressed on the card page. Only grocery.supermarket is modeled.
-  - Which streaming services are "popular" isn't listed on the card page.
+  - Online grocery and delivery (grocery.online, e.g. Instacart) isn't addressed on the card page or in the rewards FAQ. Only grocery.supermarket is modeled.
+  - Which streaming services are eligible isn't listed on the card page or in the rewards FAQ, only some exclusions.
   - Amusement parks, tourist attractions, aquariums, zoos, record stores, pool halls and bowling alleys earn 3% as entertainment but have no earnrate category. Golf courses and collegiate sporting events are excluded but can't be told apart from the entertainment category.
   - Capital One says purchases through third-party payment accounts, mobile card readers or digital wallets may not get the bonus rate. Not modeled.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
@@ -72,18 +79,33 @@ evidence:
   - rule: grocery-stores
     url: https://www.capitalone.com/credit-cards/savor/
     quote: 'Superstores like Walmart and Target are excluded.'
+  - rule: grocery-stores
+    url: https://disclosures.capitalone.com/disclosure.42167.en-US.html
+    quote: 'Grocery purchases made at gas stations, convenience stores, warehouse clubs, discount stores, and super stores'
   - rule: dining
     url: https://www.capitalone.com/credit-cards/savor/
     quote: 'Purchases at restaurants, cafes, bars, lounges, fast-food chains and bakeries count as dining.'
   - rule: entertainment
     url: https://www.capitalone.com/credit-cards/savor/
     quote: 'Ticket purchases made at movie theaters, sports promoters'
+  - rule: entertainment
+    url: https://disclosures.capitalone.com/disclosure.42167.en-US.html
+    quote: 'golf courses, country clubs (including membership fees), collegiate sporting events categorized as “universities”'
   - rule: streaming
     url: https://www.capitalone.com/credit-cards/savor/
     quote: 'on dining, entertainment and popular streaming services, plus 1% cash back'
+  - rule: streaming
+    url: https://disclosures.capitalone.com/disclosure.42167.en-US.html
+    quote: 'Streaming includes purchases made from eligible music and video streaming services.'
+  - rule: capital-one-travel-hotels-vacation-rentals-car-rentals
+    url: https://disclosures.capitalone.com/disclosure.42167.en-US.html
+    quote: '5% cash back on hotels, vacation rentals and rental cars booked through Capital One Travel'
   - rule: annual_fee
     url: https://www.capitalone.com/credit-cards/savor/
     quote: '$0 annual fee Plus, there are no hidden or foreign transaction fees.'
+  - rule: welcome_offer
+    url: https://disclosures.capitalone.com/disclosure.42167.en-US.html
+    quote: 'You will earn a $200 bonus if you spend at least $500 within 3 months'
   - rule: welcome_offer
     url: https://www.capitalone.com/credit-cards/savor/
     quote: 'Earn a one-time $200 cash bonus once you spend $500 on purchases within the first 3 months'

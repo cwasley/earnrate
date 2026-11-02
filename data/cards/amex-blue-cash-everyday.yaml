@@ -3,11 +3,12 @@ name: American Express Blue Cash Everyday Card
 issuer: amex
 network: amex
 currency: cash
-last_verified: 2026-10-31
+last_verified: 2026-11-01
 verified_by: claude
 source_urls:
   - https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/
   - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+  - https://www.americanexpress.com/us/content/rewards-info/retail.html
 base_rate: 1
 annual_fee: 0
 welcome_offer:
@@ -30,6 +31,8 @@ rules:
       categories:
         [
           online_retail,
+          superstore,
+          drugstore,
           department_store,
           clothing,
           electronics,
@@ -41,7 +44,7 @@ rules:
     channel: online
     geography: us_only
     cap: { amount: 6000, period: calendar_year, then_rate: 1 }
-    note: U.S. merchants selling physical goods, paid on their website or app. Not restaurants, supermarkets, gas, car dealers, travel, entertainment or services. Ordered online but paid in store, in-store mobile wallet, phone or mail orders, and buy-now-pay-later don't count.
+    note: U.S. merchants selling physical goods, paid on their website or app, such as Amazon.com, Walmart.com, Chewy.com, Wayfair.com and drugstore sites. Not restaurants, supermarkets, gas, car dealers, travel, entertainment or services, and not online grocery orders, food delivery, rideshare, streaming or wireless bills. Ordered online but paid in store, in-store mobile wallet, phone or mail orders, and buy-now-pay-later don't count.
   - id: us-gas
     match: { categories: [gas] }
     exclude: { categories: [gas.grocery_store, gas.superstore] }
@@ -68,6 +71,12 @@ evidence:
   - rule: us-online-retail
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
     quote: 'from a U.S. retail merchant that sells physical goods or merchandise directly to consumers'
+  - rule: us-online-retail
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'Major retailers (e.g., Amazon.com, Walmart.com)'
+  - rule: us-online-retail
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: 'Basic Card Members will not receive 3% cash back for purchases ordered online but paid for in store'
   - rule: us-gas
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
     quote: '3% cash back on the first $6,000 of purchases of gasoline at gas stations'
@@ -87,4 +96,4 @@ evidence:
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
     quote: 'if you have or have had this Card, the Cash Magnet® Card, the Blue Cash Preferred® Card'
 todo:
-  - 'Amazon is filed as online retail, so it earns 3% here; superstore sites (walmart.com, target.com) and online drugstores may too, but the terms define the category by merchant code and type of goods, so they are not modeled.'
+  - "Amex's online retail examples name Walmart.com and drug stores, so superstore and drugstore sites earn 3% here; online grocery orders don't, but a grocery order on walmart.com or target.com can't be told apart from other purchases there. Warehouse club sites (costco.com, samsclub.com) aren't named, so they aren't modeled."

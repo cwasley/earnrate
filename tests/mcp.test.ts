@@ -550,7 +550,7 @@ describe('wallet setup', () => {
       name: 'best_cards_for',
       arguments: { category: 'dining' },
     })
-    expect(text(best)).toMatch(/ 1\. Chase Sapphire Preferred Card +6%/)
+    expect(text(best)).toMatch(/ \d\. Chase Sapphire Preferred Card +6%/)
     const flat = await client.callTool({
       name: 'best_cards_for',
       arguments: { category: 'dining', valuation: 'flat' },

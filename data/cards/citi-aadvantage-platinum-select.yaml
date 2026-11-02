@@ -3,7 +3,7 @@ name: Citi / AAdvantage Platinum Select World Elite Mastercard
 issuer: citi
 network: mastercard
 currency: aadvantage-miles
-last_verified: 2026-10-31
+last_verified: 2026-11-01
 verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card

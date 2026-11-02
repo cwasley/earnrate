@@ -3,10 +3,11 @@ name: IHG One Rewards Premier Select Credit Card
 issuer: chase
 network: mastercard
 currency: ihg-points
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
 base_rate: 3
 annual_fee: 350
 welcome_offer:
@@ -42,3 +43,14 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
     quote: 'Earn 200,000 Bonus Points after you spend $5,000 on purchases in the first 3 months from account opening'
+  - rule: travel-and-dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Purchases from gift card merchants or merchants that sell points or miles will not qualify in the travel category'
+  - rule: travel-and-dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'discount travel sites, campgrounds and operators of passenger trains, buses, taxis, limousines, ferries'
+  - rule: travel-and-dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'
+todo:
+  - 'Not modeled: 20,000 bonus points (and 5 Elite Night Credits) after $15,000 in purchases each calendar year (a spend milestone, not a rate).'

@@ -3,8 +3,8 @@ name: The Platinum Card from American Express
 issuer: amex
 network: amex
 currency: MR
-last_verified: 2026-10-24
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.americanexpress.com/us/credit-cards/card/platinum/
   - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
@@ -37,10 +37,14 @@ rules:
     match: { merchants: [airbnb-amex-travel] }
     rate: 5
     note: Prepaid Airbnb stays booked through Amex Travel, with your Airbnb account linked to Amex.
+  - id: prepaid-car-rental-amex-travel
+    match: { merchants: [amex-travel-car-rentals] }
+    rate: 2
+    note: Prepaid car rentals only.
   - id: cruises-amex-travel
     match: { merchants: [amex-travel-cruises] }
     rate: 2
-    note: Platinum's only 2x Amex Travel booking type.
+    note: Cruises booked and charged through AmexTravel.com or by phone with Amex Travel. Payments made directly to the cruise line don't count.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -49,6 +53,15 @@ evidence:
   - rule: flights
     url: https://www.americanexpress.com/us/credit-cards/card/platinum/
     quote: '5X POINTS On Flights Booked directly with airlines or through'
+  - rule: flights
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'air tickets on scheduled flights, of up to $500,000 in charges per calendar year'
+  - rule: flights
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'charter flights, private jet flights, flights that are part of tours, cruises, or travel packages'
+  - rule: prepaid-car-rental-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'prepaid car rental bookings through AmexTravel.com or the Amex Travel'
   - rule: prepaid-hotels-amex-travel
     url: https://www.americanexpress.com/us/credit-cards/card/platinum/
     quote: '5X POINTS On Prepaid Hotels Booked through American Express Travel ®'
@@ -58,6 +71,9 @@ evidence:
   - rule: cruises-amex-travel
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
     quote: 'only eligible for 1 additional point on cruise reservations'
+  - rule: cruises-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'prepaid cruise reservations booked through AmexTravel.com or by calling the phone number'
   - rule: flights-amex-travel
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
     quote: 'booked directly with passenger airlines or through American Express Travel'

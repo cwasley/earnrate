@@ -3,7 +3,7 @@ name: Citi / AAdvantage Business World Elite Mastercard
 issuer: citi
 network: mastercard
 currency: aadvantage-miles
-last_verified: 2026-10-31
+last_verified: 2026-11-01
 verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
@@ -17,16 +17,16 @@ welcome_offer:
   points: 75000
   spend: 5000
   months: 5
-  note: "Miles post to the business's AAdvantage Business account. Not available if you received a new account bonus for a Citi / AAdvantage Business account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one."
+  note: "Miles post to the business's AAdvantage Business account. Not available if you received a new account bonus for a Citi / AAdvantage Business account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one. Citi's terms also exclude anyone who got a new account bonus for a CitiBusiness / AAdvantage Platinum Select account in the past 48 months."
 rules:
   - id: american-airlines
     match: { merchants: [american-airlines] }
     rate: 2
-    note: Items billed by American Airlines as the merchant of record. Car rentals, hotel reservations, status boosts or renewals, and AA Cargo don't count.
+    note: Items billed by American Airlines as the merchant of record. Car rentals booked on aadvantagecars.com and hotels booked on aadvantagehotels.com don't count.
   - id: car-rentals
     match: { categories: [travel.car_rental] }
     rate: 2
-    note: Car and truck rental merchants. Not RV or motor home rentals, nor rentals bought through travel agencies, tour operators or third-party travel sites.
+    note: Car, truck and van rental merchants. Not RV or motor home rentals, nor rentals bought through travel agencies, tour operators or third-party travel sites, nor car rental redemptions through Rocketmiles.
   - id: gas-stations
     match: { categories: [gas] }
     exclude: { categories: [gas.superstore] }
@@ -49,6 +49,9 @@ evidence:
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+  - rule: american-airlines
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'Products or services that do not qualify are car rentals booked through aadvantagecars.com'
   - rule: car-rentals
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'Earn 2 AAdvantage® miles for your business on every $1 spent at car rental merchants and gas stations'
@@ -64,6 +67,9 @@ evidence:
   - rule: telecom-cable-satellite
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'Earn 2 AAdvantage® miles for your business on every $1 spent at telecommunications merchants and cable and satellite providers'
+  - rule: telecom-cable-satellite
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'Cable and satellite providers are classified as merchants that provide the connection and ongoing delivery of television'
   - rule: annual_fee
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'The annual fee is $99. However, this fee is waived for the first 12 months.'

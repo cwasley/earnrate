@@ -3,7 +3,7 @@ name: Costco Anywhere Visa Business Card by Citi
 issuer: citi
 network: visa
 currency: cash
-last_verified: 2026-10-31
+last_verified: 2026-11-01
 verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
@@ -32,7 +32,7 @@ rules:
     exclude: { categories: [gas.superstore, gas.grocery_store] }
     rate: 4
     cap: gas-and-ev-combined
-    note: Other eligible gas and EV charging worldwide. Gas or EV charging at some superstores, supermarkets and warehouse clubs other than Costco, and fuel for non-automobile use, earn 1%. Citi keeps a list of excluded merchants at citi.com/Costco_Exclusions.
+    note: Other eligible gas and EV charging worldwide. Gas or EV charging at some superstores, supermarkets and warehouse clubs other than Costco, and fuel for non-automobile use, earn 1%. Citi keeps a list of excluded merchants at citi.com/Costco_Exclusions (a PDF naming Walmart, Sam's Club, BJ's, Target, Meijer, Kroger, Albertsons, Safeway and other grocers).
   - id: restaurants
     match: { categories: [dining] }
     rate: 3
@@ -78,6 +78,9 @@ evidence:
   - rule: costco-travel
     url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
     quote: 'On restaurants and eligible travel, including Costco Travel'
+  - rule: restaurants
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: 'for purchases made at bakeries and certain restaurants'
   - rule: costco
     url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
     quote: '2% cash back on all other purchases from Costco and Costco.com'

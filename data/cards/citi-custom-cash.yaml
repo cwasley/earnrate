@@ -3,8 +3,8 @@ name: Citi Custom Cash Card
 issuer: citi
 network: mastercard
 currency: cash
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 applications_closed: 2026-05-28
 # Existing cardmembers keep the card and its rewards. The card page no longer
 # lists the categories, so the definitions come from the card's current
@@ -61,19 +61,29 @@ choices:
       home-improvement-stores: [home_improvement]
       fitness-clubs: [fitness]
       live-entertainment: [entertainment]
+caps:
+  # Only one category earns 5% each billing cycle, so both 5% rules share it.
+  - id: top-category
+    amount: 500
+    period: month
+    then_rate: 1
 rules:
+  # Restaurant exclusions only apply when restaurants are the top category:
+  # Dodger Stadium tickets still count as live entertainment, and the
+  # Bellagio's rooms as select travel.
+  - id: top-category-restaurants
+    match: { choice: top-category, categories: [dining] }
+    exclude: { merchants: [doordash, uber-eats, dodger-stadium, bellagio] }
+    rate: 5
+    cap: top-category
+    note: When restaurants are the top category. Includes cafes, bars, lounges and fast food. Excludes bakeries, caterers, restaurants inside another business (hotels, stores, stadiums, grocery stores, warehouse clubs) and third-party dining delivery services. The first $500 in the billing cycle, then 1%.
   - id: top-category
     match: { choice: top-category }
-    # Third-party dining delivery doesn't count as restaurants; gas at
-    # warehouse clubs and discount stores doesn't count as gas.
-    exclude:
-      {
-        categories: [gas.superstore],
-        merchants: [doordash, uber-eats, dodger-stadium, bellagio],
-      }
+    # Gas at warehouse clubs and discount stores doesn't count as gas.
+    exclude: { categories: [dining, gas.superstore] }
     rate: 5
-    cap: { amount: 500, period: month, then_rate: 1 }
-    note: Citi applies 5% automatically to your highest-spend eligible category each billing cycle (its decision is final), on the first $500 spent, then 1%. Grocery includes supermarkets, meat/seafood and dairy stores, bakeries and convenience stores, but not superstores or warehouse clubs. Select travel is airlines, hotels, cruise lines and travel agencies. Select transit includes car rentals, rail, subways, taxis and car services, tolls, parking, buses and EV charging. Streaming bundled with another product or billed by a third party doesn't count.
+    cap: top-category
+    note: Citi applies 5% automatically to your highest-spend eligible category each billing cycle (its decision is final), on the first $500 spent, then 1%. Grocery includes supermarkets, meat/seafood and dairy stores, bakeries and convenience stores, but not superstores, warehouse clubs or candy stores; online grocery and grocery delivery count only if the merchant codes as a supermarket. Select travel is airlines, hotels, cruise lines and travel agencies, not timeshares or campgrounds. Select transit includes car rentals, rail, subways, taxis and car services, tolls, parking, buses and EV charging, not bike or scooter rentals. Streaming bundled with another product or billed by a third party doesn't count. Live entertainment excludes movie theaters, museums and tourist attractions.
   - id: citi-travel-hotels-cars-attractions
     match:
       {
@@ -85,7 +95,7 @@ rules:
           ],
       }
     rate: 5
-    note: 4 extra points per $1 on top of the 1% base, for hotels, car rentals and attractions booked with Citi Travel. Citi's terms don't say whether the extra 4 also stacks on the 5% when travel or transit is the top category.
+    note: 4 extra points per $1 on top of the 1% base, for hotels, car rentals and attractions booked with Citi Travel. Only the part paid with the card earns, and canceled bookings don't. Citi's terms don't say whether the extra 4 also stacks on the 5% when travel or transit is the top category.
 todo:
   - Network set to mastercard, but no current Citi page states it (the card page is now a "Not Available" stub). Check your card.
   - Travel agencies (MCC 4722) count toward select travel, but a choice option can only list categories or merchants, so they aren't in the option.
@@ -114,6 +124,27 @@ evidence:
   - rule: top-category
     url: https://www.thankyou.com/ccterms
     quote: 'Citibank shall have the sole right to determine the highest spend category each billing cycle'
+  - rule: top-category-restaurants
+    url: https://www.thankyou.com/ccterms
+    quote: 'Includes purchases at cafes, bars, lounges and fast food restaurants.'
+  - rule: top-category-restaurants
+    url: https://www.thankyou.com/ccterms
+    quote: 'Excludes purchases at bakeries, caterers, restaurants located inside another business'
+  - rule: top-category-restaurants
+    url: https://www.thankyou.com/ccterms
+    quote: 'and third party dining delivery services'
+  - rule: top-category
+    url: https://www.thankyou.com/ccterms
+    quote: 'Excludes gasoline purchases at warehouse clubs, discount stores, convenience stores'
+  - rule: top-category
+    url: https://www.thankyou.com/ccterms
+    quote: 'Excludes purchases at general merchandise/discount superstores; wholesale/warehouse clubs'
+  - rule: top-category
+    url: https://www.thankyou.com/ccterms
+    quote: 'if the charge is bundled with another product, membership, or service'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.thankyou.com/ccterms
+    quote: 'only the portion paid with your card will earn points'
   - rule: citi-travel-hotels-cars-attractions
     url: https://www.citi.com/credit-cards/citi-custom-cash-credit-card
     quote: 'additional 4% cash back on hotels, car rentals, and attractions booked with Citi Travel'

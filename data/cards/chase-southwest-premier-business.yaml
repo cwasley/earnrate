@@ -3,11 +3,13 @@ name: Southwest Rapid Rewards Premier Business Credit Card
 issuer: chase
 network: visa
 currency: southwest-rapid-rewards
-last_verified: 2026-10-31
+last_verified: 2026-11-01
 verified_by: claude
 source_urls:
   - https://creditcards.chase.com/southwest/premier-business-credit-card
   - https://creditcards.chase.com/business-credit-cards/southwest/premier-business
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61808.html
 base_rate: 1
 business: true
 annual_fee: 149
@@ -15,7 +17,7 @@ welcome_offer:
   points: 60000
   spend: 3000
   months: 3
-  note: 'Not available to current cardmembers of this business card, or previous cardmembers who received a new Cardmember bonus for this business card within the last 24 months.'
+  note: 'Chase states no end date and, unlike the personal Southwest cards, no 24-month bonus rule on the page. Its pricing terms say cardmembers who have or have had a card in the same rewards program may not be eligible for a second one.'
 caps:
   - id: gas-and-dining
     amount: 8000
@@ -30,17 +32,17 @@ rules:
     match: { categories: [gas] }
     rate: 2
     cap: gas-and-dining
-    note: Shares an $8,000 per account anniversary year cap with restaurants.
+    note: Shares an $8,000 per account anniversary year cap with restaurants. Not truck stops, marinas, oil and propane distributors or home heating companies.
   - id: dining
     match: { categories: [dining] }
     rate: 2
     cap: gas-and-dining
-    note: Shares an $8,000 per account anniversary year cap with gas stations.
+    note: Shares an $8,000 per account anniversary year cap with gas stations. Bakeries, caterers, meal kit delivery and gift card merchants don't count; delivery and takeout count only if they code as a restaurant.
   - id: lyft
     match: { merchants: [lyft] }
     rate: 3
     valid_to: 2027-12-31
-    note: Limited-time offer on rides, bikes, scooters and Lyft memberships bought in the Lyft app. Gift cards and Lyft car rentals are excluded.
+    note: Limited-time offer on rides, bikes, scooters, Lyft memberships and Lyft Cash bought in the Lyft app. Gift cards, Lyft car rentals, vehicle service centers and miscellaneous fees are excluded.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: annual_fee
@@ -70,3 +72,18 @@ evidence:
   - rule: lyft
     url: https://creditcards.chase.com/southwest/premier-business-credit-card
     quote: 'earn 3X Rapid Rewards points on qualifying Lyft products and services purchased through the Lyft mobile application through 12/31/2027'
+  - rule: annual_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61808.html
+    quote: 'Annual Membership Fee $149'
+  - rule: lyft
+    url: https://creditcards.chase.com/southwest/premier-business-credit-card
+    quote: 'Purchase of gift cards, car rentals, vehicle service centers, miscellaneous fees and other Lyft products and services are excluded'
+  - rule: gas
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'truck stops, boat marinas, oil and propane distributors, and home heating companies'
+  - rule: dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'
+  - rule: welcome_offer
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61808.html
+    quote: 'may not be eligible for a second Chase credit card in the same Rewards Program'

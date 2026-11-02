@@ -3,8 +3,8 @@ name: Atmos Rewards Visa Signature Business Card
 issuer: bank-of-america
 network: visa
 currency: atmos-points
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
   - https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
@@ -23,8 +23,9 @@ rules:
     note: Card points only; points and status from flying aren't card earnings.
   - id: gas-ev-shipping-transit
     match: { categories: [gas, ev_charging, shipping, transit] }
+    exclude: { mccs: [7523] }
     rate: 2
-    note: Local transit includes rideshare.
+    note: Local transit includes rideshare, trains, buses, ferries and tolls; parking isn't on Bank of America's list. Shipping is motor freight carriers and courier services.
   - id: alaska-and-hawaiian-with-boa-account
     match: { merchants: [alaska-airlines, hawaiian-airlines] }
     rate: 3.3
@@ -32,6 +33,7 @@ rules:
     note: 3x plus the 10% rewards bonus when the company has an eligible Bank of America small business account.
   - id: gas-ev-shipping-transit-with-boa-account
     match: { categories: [gas, ev_charging, shipping, transit] }
+    exclude: { mccs: [7523] }
     rate: 2.2
     requires: { membership: bank-of-america-small-business-account }
     note: 2x plus the 10% rewards bonus when the company has an eligible Bank of America small business account.
@@ -50,6 +52,12 @@ evidence:
   - rule: gas-ev-shipping-transit
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
     quote: 'eligible gas, EV charging station, shipping and local transit purchases, including rideshare'
+  - rule: gas-ev-shipping-transit
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
+    quote: 'Motor Freight Carriers, Courier Services; Local and Suburban Commuter Passenger Transportation, Including Ferries'
+  - rule: gas-ev-shipping-transit
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
+    quote: 'Passenger Railways; Taxicabs and Limousines (including rideshare); Bus Lines; Tolls and Bridge Fees'
   - rule: alaska-and-hawaiian-with-boa-account
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
     quote: 'earn a 10% rewards bonus on all points earned from card purchases'
@@ -62,6 +70,9 @@ evidence:
   - rule: annual_fee
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
     quote: 'Plus, a low annual fee of $70 for the company and $25 per card.'
+  - rule: annual_fee
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
+    quote: '$70 for the company and $25 per card.'
   - rule: welcome_offer
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
     quote: 'Limited-time online offer: 70,000 bonus points + $99 Companion Fare'

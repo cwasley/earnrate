@@ -3,8 +3,8 @@ name: Citi Double Cash Card
 issuer: citi
 network: mastercard
 currency: cash
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/citi-double-cash-credit-card
   - https://www.thankyou.com/dcterms
@@ -36,7 +36,7 @@ rules:
           ],
       }
     rate: 5
-    note: 3 extra points per $1 on top of the 1 on purchase and 1 on payment, for hotels, car rentals and attractions booked with Citi Travel. Flights booked through Citi Travel earn the base 2%.
+    note: 3 extra points per $1 on top of the 1 on purchase and 1 on payment, for hotels, car rentals and attractions booked with Citi Travel. Flights booked through Citi Travel earn the base 2%. Only the part paid with the card earns, and canceled bookings don't.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -54,6 +54,12 @@ evidence:
   - rule: citi-travel-hotels-cars-attractions
     url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
     quote: 'this totals 5 ThankYou Points per dollar'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.thankyou.com/dcterms
+    quote: '3 additional ThankYou Points for each $1 spent on hotels, car rentals and attractions booked with Citi Travel'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.thankyou.com/dcterms
+    quote: 'only the portion paid with your card will earn points'
   - rule: pools_into
     url: https://www.thankyou.com/dcterms
     quote: 'You can combine them into one ThankYou Account'

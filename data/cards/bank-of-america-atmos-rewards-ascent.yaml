@@ -3,7 +3,7 @@ name: Atmos Rewards Ascent Visa Signature Credit Card
 issuer: bank-of-america
 network: visa
 currency: atmos-points
-last_verified: 2026-10-31
+last_verified: 2026-11-01
 verified_by: claude
 source_urls:
   - https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
@@ -22,8 +22,9 @@ rules:
     note: Card points only; points and status from flying aren't card earnings.
   - id: gas-ev-cable-streaming-transit
     match: { categories: [gas, ev_charging, tv_internet, streaming, transit] }
+    exclude: { mccs: [7523] }
     rate: 2
-    note: Local transit includes rideshare. Bank of America says "cable"; internet-only or phone bills may not count.
+    note: Local transit includes rideshare, trains, buses, ferries and tolls; parking isn't on Bank of America's list. Cable means cable, satellite and other pay TV or streaming; internet-only or phone bills may not count.
   - id: alaska-and-hawaiian-with-boa-account
     match: { merchants: [alaska-airlines, hawaiian-airlines] }
     rate: 3.3
@@ -31,6 +32,7 @@ rules:
     note: 3x plus the 10% rewards bonus for holding an eligible Bank of America account.
   - id: gas-ev-cable-streaming-transit-with-boa-account
     match: { categories: [gas, ev_charging, tv_internet, streaming, transit] }
+    exclude: { mccs: [7523] }
     rate: 2.2
     requires: { membership: bank-of-america-account }
     note: 2x plus the 10% rewards bonus for holding an eligible Bank of America account.
@@ -49,6 +51,12 @@ evidence:
   - rule: gas-ev-cable-streaming-transit
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
     quote: 'eligible gas, EV charging station, cable, streaming services and local transit purchases, including rideshare'
+  - rule: gas-ev-cable-streaming-transit
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081060&productoffercode=RS&locale=en_US
+    quote: 'Passenger Railways; Taxicabs and Limousines (including rideshare); Bus Lines; Tolls and Bridge Fees'
+  - rule: gas-ev-cable-streaming-transit
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081060&productoffercode=RS&locale=en_US
+    quote: 'Cable, Satellite and Other Pay Television/Radio/Streaming Services'
   - rule: alaska-and-hawaiian-with-boa-account
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
     quote: '10% rewards bonus on all points earned from card purchases if you have an eligible Bank of America® account'

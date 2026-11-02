@@ -6,8 +6,8 @@ name: Bilt Obsidian Card
 issuer: column
 network: mastercard # World Elite Mastercard
 currency: BILT
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.bilt.com/card/obsidian
   - https://www.bilt.com/card
@@ -61,7 +61,8 @@ todo:
   - The Flexible Bilt Cash option earns 4% Bilt Cash on everyday spend on top of points, but drops the housing multiplier (housing points must be bought with Bilt Cash, $3 per 100 points). Bilt Cash is a second currency; not modeled.
   - Point Accelerator (spend $200 Bilt Cash for +1X on the next $5,000, up to five times a year) isn't modeled.
   - Bilt Neighborhood Dining restaurants add a per-restaurant bonus (up to 6X total). It varies by restaurant, so it isn't modeled.
-  - Walgreens in-store (+1X, +2X on Walgreens-brand items, per the Bilt Rewards Points Earning Terms PDF at bilt.com/terms/earn), Metropolis parking, fitness classes and Bilt Home Delivery add Bilt bonuses not stated on an HTML page; not modeled.
+  - Walgreens in-store (+1X, and +2X on Walgreens-brand items until December 11, 2026, per the Bilt Rewards Points Earning Terms PDF at bilt.com/terms/earn), Metropolis parking, fitness classes and Bilt Home Delivery add Bilt bonuses not stated on an HTML page; not modeled.
+  - The Bilt Card Offer Terms PDF counts bakeries (MCC 5462) in the 3X dining pick, but a choice option can only list categories and earnrate's dining category doesn't include bakeries, so bakery purchases get 1X here.
   - 'Welcome offer not modeled: the page offers $200 in Bilt Cash upon approval with no spend required. Bilt Cash is a second currency (not BILT points or cash), and this file already skips it on purpose.'
 # Program text backing each rule; `yarn check-sources` checks it weekly.
 evidence:

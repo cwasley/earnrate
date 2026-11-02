@@ -1,10 +1,12 @@
 id: citi-aadvantage-mileup
 name: American Airlines AAdvantage MileUp Card
 issuer: citi
+# The card page's ID Theft Protection terms have cardholders enroll "with your
+# Citibank Mastercard", and its footer carries the Mastercard trademark notice.
 network: mastercard
 currency: aadvantage-miles
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
 base_rate: 1
@@ -25,8 +27,6 @@ rules:
     rate: 2
     note: Supermarkets, meat and dairy stores, convenience stores, markets, specialty food vendors, bakeries and grocery delivery services. Not superstores, warehouse clubs, candy stores, cafes, bars or fast food.
 # Not modeled: 25% off inflight food and drink. Miles also earn Loyalty Points toward status, which aren't card earnings.
-todo:
-  - Network set to mastercard, but the card page doesn't state it. Check your card.
 evidence:
   - rule: base_rate
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
@@ -46,6 +46,9 @@ evidence:
   - rule: grocery-stores
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'discount superstores, wholesale'
+  - rule: grocery-stores
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'confectionery stores, cafes, bars, lounges, and fast food restaurants'
   - rule: annual_fee
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'Annual Fee - None. Fee for Foreign Purchases - 3%'

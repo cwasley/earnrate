@@ -3,11 +3,12 @@ name: Chase Sapphire Preferred Card
 issuer: chase
 network: visa
 currency: UR
-last_verified: 2026-10-24
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65222.html
 base_rate: 1
 annual_fee: 95
 welcome_offer:
@@ -19,7 +20,7 @@ rules:
   - id: chase-travel
     match: { merchants: [chase-travel] }
     rate: 5
-    note: Bookings through FROSCH or Valerie Wilson Travel by Chase Travel earn 2x instead.
+    note: Bookings through FROSCH or Valerie Wilson Travel by Chase Travel earn 2x instead. The first $100 of Chase Travel hotel purchases each account anniversary year is covered by the hotel credit and earns no points.
   - id: dining
     match: { categories: [dining] }
     rate: 3
@@ -35,15 +36,44 @@ rules:
     match: { merchants: [lyft] }
     rate: 5
     valid_to: 2027-09-30
-    note: Limited-time offer on Lyft rides.
+    note: Limited-time offer on Lyft products bought in the Lyft app (rides, bikes and scooters, memberships). Not gift cards or car rentals.
+  - id: peloton
+    match: { merchants: [peloton] }
+    rate: 5
+    geography: us_only
+    valid_from: 2025-04-01
+    valid_to: 2027-12-31
+    note: Peloton equipment and accessory purchases over $150 bought directly from Peloton, on up to $5,000 in total purchases over the whole offer. Not apparel or gift cards.
   - id: streaming
-    match: { categories: [streaming] }
+    match:
+      merchants:
+        [
+          apple-music,
+          apple-tv,
+          disney-plus,
+          espn,
+          fubotv,
+          max,
+          hulu,
+          netflix,
+          pandora,
+          paramount-plus,
+          peacock,
+          showtime,
+          siriusxm,
+          sling-tv,
+          spotify,
+          youtube-premium,
+          youtube-tv,
+          fandango-at-home,
+        ]
     rate: 3
-    note: Only "top streaming services", listed at chase.com/RewardsCategoryFAQs.
+    note: Only the "top streaming services" Chase lists at chase.com/RewardsCategoryFAQs. Peacock and Showtime are on the list too.
   - id: online-grocery
     match: { categories: [grocery.online] }
     exclude: { categories: [warehouse_club], merchants: [walmart, target] }
     rate: 3
+    note: Online pickup and delivery orders from grocery stores, specialty food stores and grocery delivery services, including meal kits. Not Target, Walmart, wholesale clubs, liquor stores, supermarket pharmacies, memberships or gift cards.
   - id: travel
     match: { categories: [travel] }
     rate: 2
@@ -59,6 +89,9 @@ evidence:
   - rule: chase-travel
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: '5 points (“5X points”) on Chase Travel purchases'
+  - rule: chase-travel
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'Annually, the first $100 in Chase Travel hotel purchases will not earn rewards points'
   - rule: dining
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: '3x points on dining'
@@ -68,9 +101,15 @@ evidence:
   - rule: streaming
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: '3x points on top streaming services and online grocery'
+  - rule: streaming
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Only subscriptions paid for, or purchases made with the following select merchants will qualify'
   - rule: online-grocery
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: 'online grocery (excluding Target ® , Walmart ® and wholesale clubs)'
+  - rule: online-grocery
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'wholesale clubs such as Costco and BJs, liquor stores and merchants that specialize in only a few grocery items'
   - rule: travel
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: 'spent on purchases made in the travel category'
@@ -83,9 +122,23 @@ evidence:
   - rule: lyft
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: 'Earn 5x on Lyft rides through 9/30/27'
+  - rule: lyft
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'Qualifying Lyft products and services include rideshare; bike and scooter rides; and subscription and membership products'
+  - rule: peloton
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'Earn 5x total points on eligible Peloton equipment and accessory purchases over $150 through 12/31/27'
+  - rule: peloton
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'or 5 (Sapphire Preferred) points for each $1 spent on up to $5,000 in total purchases'
   - rule: annual_fee
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: '$95 annual fee'
+  - rule: annual_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65222.html
+    quote: 'Annual Membership Fee $95'
   - rule: welcome_offer
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: 'Earn 75,000 points after you spend $5,000 in purchases in the first 3 months from account opening'
+todo:
+  - "peloton: the $5,000 limit runs across the whole offer (4/1/2025 to 12/31/2027), which no cap period can express, and the $150 minimum per purchase isn't modeled."

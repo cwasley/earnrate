@@ -3,8 +3,8 @@ name: IHG One Rewards Business Credit Card
 issuer: chase
 network: mastercard
 currency: ihg-points
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/business-credit-cards/IHG/business
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
@@ -73,5 +73,21 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
     quote: 'Earn 190,000 Bonus Points after spending $5,000 in the first 3 months from account opening'
+  - rule: flights-direct-and-car-rental
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Only purchases for airline tickets made directly with the airline will qualify'
+  - rule: flights-direct-and-car-rental
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Car rentals not booked directly with the car rental agency will not qualify'
+  - rule: travel-through-2026
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Purchases from gift card merchants or merchants that sell points or miles will not qualify in the travel category'
+  - rule: office-supply-through-2026
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Merchants in this category specialize in selling a variety of office supplies'
+  - rule: dining-gas-advertising
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'
 todo:
   - The $100 airline statement credit and the up to $100 yearly Expensify credit aren't modeled.
+  - 'Not modeled: 20,000 bonus points (and 5 Elite Night Credits) after $25,000 in purchases each calendar year (a spend milestone, not a rate).'

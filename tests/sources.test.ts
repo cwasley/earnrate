@@ -16,8 +16,15 @@ import {
 } from '../src/sources/text.ts'
 
 const realCatalog = await loadCatalog()
-const card = realCatalog.cards.find((c) => c.id === 'sofi-unlimited-2')
-if (!card) throw new Error('sofi card missing')
+const sofi = realCatalog.cards.find((c) => c.id === 'sofi-unlimited-2')
+if (!sofi) throw new Error('sofi card missing')
+const [page] = sofi.source_urls
+if (page === undefined) throw new Error('no source url')
+const card = {
+  ...sofi,
+  source_urls: [page],
+  evidence: sofi.evidence.filter((e) => e.url === page),
+}
 const catalog = { ...realCatalog, cards: [card] }
 const [url] = [...sourceUrls(catalog).keys()]
 if (url === undefined) throw new Error('no source url')

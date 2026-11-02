@@ -5,8 +5,8 @@ issuer: bank-of-america
 # notice, so the network is Visa.
 network: visa
 currency: cash
-last_verified: 2026-10-28
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/
   - https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
@@ -18,7 +18,7 @@ welcome_offer:
   dollars: 200
   spend: 1000
   months: 3
-  note: Online offer; the window is 90 days from account opening, modeled as 3 months. The offer may not be available elsewhere after leaving the page.
+  note: Online offer; the window is 90 days from account opening, modeled as 3 months. The offer may not be available elsewhere after leaving the page. The card may not be available to anyone who has or had it in the past 24 months.
 caps:
   - id: three-and-two-percent-combined
     amount: 2500
@@ -47,7 +47,7 @@ rules:
     match: { choice: three-percent }
     rate: 3
     cap: three-and-two-percent-combined
-    note: Gas and EV charging, online shopping, dining, travel, drug stores, or home improvement and furnishings, whichever you picked. Travel includes parking, transit, rideshare and tolls. Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded. The first $2,500 a calendar quarter across the 3% and 2% categories, then 1%.
+    note: Gas and EV charging, online shopping, dining, travel, drug stores, or home improvement and furnishings, whichever you picked. Gas excludes EV charging billed by parking lots. Travel includes parking, transit, rideshare and tolls. Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded. The first $2,500 a calendar quarter across the 3% and 2% categories, then 1%.
   - id: two-percent
     match: { categories: [grocery.supermarket, warehouse_club] }
     rate: 2
@@ -155,6 +155,9 @@ evidence:
   - rule: three-percent
     url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
     quote: 'parking, public transit, taxis/ride share'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'Excludes EV charging purchases from parking lots billing for vehicle charging'
   - rule: two-percent
     url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/
     quote: 'Automatic 2% cash back at grocery stores and wholesale clubs'
@@ -203,6 +206,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/
     quote: 'Online $200 cash rewards bonus after making at least $1,000 in purchases in the first 90 days'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'This card may not be available to you if you currently have or have had the card'
 todo:
   - New accounts earn 6% in the choice category for the first year (an extra 3%, inside the same $2,500 quarterly cap, with no BofA Rewards bonus on the extra 3%). earnrate can't see when an account was opened, so this isn't modeled.
   - 'The BofA Rewards rules use proposed membership ids: bofa-rewards-member, bofa-rewards-preferred-plus, bofa-rewards-preferred-honors and bofa-rewards-premier. Cardholders who joined Preferred Rewards before May 26, 2026 may have an "extended card benefit" that Bank of America doesn''t define.'

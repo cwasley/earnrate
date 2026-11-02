@@ -104,6 +104,13 @@
     category: streaming,
   }
 - { id: max, name: Max, aliases: [hbo max], category: streaming }
+- { id: peacock, name: Peacock, aliases: [peacock tv], category: streaming }
+- {
+    id: showtime,
+    name: Showtime,
+    aliases: [paramount plus with showtime],
+    category: streaming,
+  }
 - { id: spotify, name: Spotify, category: streaming }
 - {
     id: apple-tv,

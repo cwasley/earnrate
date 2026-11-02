@@ -3,8 +3,8 @@ name: United Business Card
 issuer: chase
 network: visa
 currency: united-miles
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/business-credit-cards/united/united-business-card
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
@@ -80,3 +80,6 @@ evidence:
   - rule: local-transit
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'operators of passenger trains, buses, taxis, limousines, rideshare, ferries, toll bridges and highways'
+  - rule: dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'

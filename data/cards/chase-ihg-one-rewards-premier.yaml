@@ -3,8 +3,8 @@ name: IHG One Rewards Premier Credit Card
 issuer: chase
 network: mastercard
 currency: ihg-points
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
@@ -68,5 +68,18 @@ evidence:
   - rule: not_with
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
     quote: 'not available to either (i) current cardmembers of any personal IHG One Rewards Credit Card'
+  - rule: flights-direct-and-car-rental
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Only purchases for airline tickets made directly with the airline will qualify'
+  - rule: flights-direct-and-car-rental
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Car rentals not booked directly with the car rental agency will not qualify'
+  - rule: travel-through-2026
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Purchases from gift card merchants or merchants that sell points or miles will not qualify in the travel category'
+  - rule: dining-grocery-gas
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'
 todo:
   - The $100 airline statement credit (after $250 on flights bought directly each calendar year, through 12/31/27) isn't modeled.
+  - 'Not modeled: 15,000 bonus points (and Platinum Elite status) after $15,000 in purchases each calendar year (a spend milestone, not a rate).'

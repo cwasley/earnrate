@@ -42,7 +42,7 @@ describe('cheat sheet', () => {
       (r) => r.label === 'Dining',
     )
     expect(dining?.cardId).toBe('chase-freedom-flex')
-    expect(dining?.effectiveReturnPct).toBe(5)
+    expect(dining?.effectiveReturnPct).toBe(7)
   })
 
   test('says so when none of the cards work at a store', () => {

@@ -3,11 +3,12 @@ name: American Express Gold Card
 issuer: amex
 network: amex
 currency: MR
-last_verified: 2026-10-24
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.americanexpress.com/us/credit-cards/card/gold-card/
   - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+  - https://www.americanexpress.com/us/content/rewards-info/retail.html
 base_rate: 1
 annual_fee: 325
 welcome_offer:
@@ -23,7 +24,7 @@ rules:
     rate: 4
     cap: { amount: 50000, period: calendar_year, then_rate: 1 }
     exclude: { merchants: [dodger-stadium, bellagio], mccs: [5813] }
-    note: Worldwide. Not at restaurants inside hotels, casinos or event venues, or at bars, bakeries, cafeterias or caterers. Third-party delivery counts only in the U.S.
+    note: Worldwide, fast food included. Not at restaurants inside hotels, casinos or event venues, at events or for event tickets, or at bars, nightclubs, breweries, bakeries, cafeterias, caterers, theatre clubs or meeting venues. Third-party delivery counts only in the U.S.
   - id: us-supermarkets
     match: { categories: [grocery.supermarket] }
     exclude: { categories: [superstore, warehouse_club, convenience_store] }
@@ -64,12 +65,27 @@ evidence:
   - rule: restaurants
     url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
     quote: '4X POINTS At Restaurants Worldwide, on up to $50K'
+  - rule: restaurants
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'on the first $50,000 of eligible purchases per calendar year at restaurants worldwide'
+  - rule: restaurants
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'purchases at bars, nightclubs, cafeterias, caterers, theatre clubs, breweries, bakeries, and meeting venues'
+  - rule: restaurants
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'fast food restaurants are included in the global restaurants rewards category'
   - rule: us-supermarkets
     url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
     quote: '4X POINTS On Groceries At U.S. supermarkets, on up to $25K'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'warehouse clubs, and meal-kit delivery services are not considered supermarkets'
   - rule: flights
     url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
     quote: '3X POINTS On Flights Booked through AmexTravel.com or Amex Travel App™'
+  - rule: flights
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'charged directly with passenger airlines (charter flights and private jet flights are excluded)'
   - rule: prepaid-hotels-amex-travel
     url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
     quote: '5X Points per dollar spent on Prepaid Hotels booked through AmexTravel.com'

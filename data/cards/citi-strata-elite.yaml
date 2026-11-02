@@ -3,10 +3,11 @@ name: Citi Strata Elite Card
 issuer: citi
 network: mastercard
 currency: TYP
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+  - https://www.thankyou.com/terms
 base_rate: 1.5
 annual_fee: 595
 welcome_offer:
@@ -53,12 +54,21 @@ evidence:
   - rule: citi-travel-air
     url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
     quote: '6 points per dollar spent on Air Travel booked on cititravel.com'
+  - rule: citi-travel-air
+    url: https://www.thankyou.com/terms
+    quote: '6 ThankYou Points for each $1 spent on air travel booked through Citi Travel'
   - rule: restaurants
     url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
     quote: '3 points per dollar spent at Restaurants any other time'
   - rule: restaurants
     url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
     quote: 'Excludes purchases at bakeries, caterers, and restaurants located inside another business'
+  - rule: restaurants
+    url: https://www.thankyou.com/terms
+    quote: '3 ThankYou Points for each $1 spent at restaurants, including restaurant delivery services'
+  - rule: restaurants
+    url: https://www.thankyou.com/terms
+    quote: 'Citi Nights eligibility is based on the day and time your restaurant purchase is authorized'
   - rule: annual_fee
     url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
     quote: 'Minimum interest charge – $0.50. Annual fee - $595.'

@@ -3,8 +3,8 @@ name: United Quest Card
 issuer: chase
 network: visa
 currency: united-miles
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/travel-credit-cards/united/united-quest
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
@@ -27,7 +27,7 @@ rules:
   - id: travel
     match: { categories: [travel] }
     rate: 2
-    note: Includes airfare, trains, cruise lines, hotels, car rentals and resorts.
+    note: Includes airfare, trains, cruise lines, hotels, car rentals and resorts. Chase's travel category leaves out in-flight and on-board cruise purchases, sightseeing and attractions, merchants inside hotels and airports, and sellers of gift cards, points or miles.
   - id: transit-as-travel
     match: { categories: [transit] }
     rate: 2
@@ -83,3 +83,12 @@ evidence:
   - rule: streaming
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Only subscriptions paid for, or purchases made with the following select merchants will qualify for this category'
+  - rule: travel
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Purchases from gift card merchants or merchants that sell points or miles will not qualify in the travel category'
+  - rule: travel
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'in-flight goods and services, on-board cruise line goods and services, sightseeing activities, excursions, tourist attractions'
+  - rule: dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'

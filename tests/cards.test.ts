@@ -77,7 +77,7 @@ describe('the 16 popular cards', () => {
       'chase-freedom-flex': { activated: ['q4-2026-grocery'] },
     })
     expect(rates('Chipotle')['chase-freedom-flex']).toBe(3)
-    expect(rates('Chipotle', activated)['chase-freedom-flex']).toBe(5)
+    expect(rates('Chipotle', activated)['chase-freedom-flex']).toBe(7)
     const nextQuarter = recommend(catalog, activated, {
       ...purchase('Kroger'),
       date: '2027-01-15',

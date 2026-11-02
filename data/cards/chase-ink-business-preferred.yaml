@@ -3,11 +3,12 @@ name: Ink Business Preferred
 issuer: chase
 network: visa
 currency: UR
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/business-credit-cards/ink/business-preferred
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63764.html
 base_rate: 1
 business: true
 annual_fee: 95
@@ -83,9 +84,15 @@ evidence:
   - rule: lyft
     url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
     quote: 'Earn a total of 5x points on Lyft rides through September 30, 2027'
+  - rule: lyft
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'That’s 2 additional points on top of the 3 points earned on travel until the first $150,000 is spent'
   - rule: annual_fee
     url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
     quote: 'ANNUAL FEE $95'
+  - rule: annual_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63764.html
+    quote: 'Annual Membership Fee $95'
   - rule: welcome_offer
     url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
     quote: 'Earn 100,000 bonus points after you spend $8,000 on purchases in the first 3 months after account opening'

@@ -618,7 +618,7 @@ describe('Amex Travel and Airbnb', () => {
     })
     expect(rates('amex travel car rental')).toMatchObject({
       'amex-gold': 2,
-      'amex-platinum': 1,
+      'amex-platinum': 2,
     })
     expect(rates('amex travel cruise')).toMatchObject({
       'amex-gold': 2,

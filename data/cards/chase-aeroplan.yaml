@@ -3,8 +3,8 @@ name: Chase Air Canada Aeroplan Card
 issuer: chase
 network: mastercard
 currency: aeroplan
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
@@ -23,7 +23,7 @@ rules:
   - id: travel
     match: { categories: [travel] }
     rate: 3
-    note: In-flight purchases, merchants inside hotels and airports, and sellers of points or miles are excluded from Chase's travel category.
+    note: In-flight and on-board cruise purchases, sightseeing and attractions, merchants inside hotels and airports, and sellers of gift cards, points or miles are excluded from Chase's travel category.
   - id: transit-as-travel
     match: { categories: [transit] }
     rate: 3
@@ -99,3 +99,15 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
     quote: 'Earn 75,000 bonus points after you spend $4,000 on purchases in the first 3 months your account is open'
+  - rule: travel
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Purchases from gift card merchants or merchants that sell points or miles will not qualify in the travel category'
+  - rule: travel
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'in-flight goods and services, on-board cruise line goods and services, sightseeing activities, excursions, tourist attractions'
+  - rule: dining-2026
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'
+  - rule: dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'

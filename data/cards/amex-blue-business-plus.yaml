@@ -3,10 +3,11 @@ name: American Express Blue Business Plus Credit Card
 issuer: amex
 network: amex
 currency: MR
-last_verified: 2026-10-26
-verified_by: collin
+last_verified: 2026-11-01
+verified_by: claude
 source_urls:
   - https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-blue-business-plus-credit-card-amex/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinessplus-credit-card/45094-9-0
 base_rate: 1
 business: true
 annual_fee: 0
@@ -15,7 +16,7 @@ welcome_offer:
   spend: 5000
   months: 3
   varies: true
-  note: 'The public offer is "as high as" 50,000 points; Amex shows the exact amount after you apply. "Welcome offers vary and you may not be eligible for an offer." The card-specific eligibility rules are in the offer terms, which the headless browser can''t load.'
+  note: 'The public offer is "as high as" 50,000 points; Amex shows the exact amount after you apply and before you accept. Not available if you have or have had this Card or previous versions of it, and Amex may also decline based on your card history. One offer per Card Account.'
 rules:
   - id: amex-travel
     match:
@@ -29,7 +30,7 @@ rules:
           amex-travel-cruises,
         ]
     rate: 2
-    note: Purchases on AmexTravel.com or the Amex Travel app. They don't count toward the $50,000 cap.
+    note: Scheduled flights, prepaid hotels, prepaid car rentals, cruises and prepaid Airbnb stays booked on AmexTravel.com or the Amex Travel app. Non-prepaid hotels and car rentals earn 1X. They don't count toward the $50,000 cap.
   - id: everyday-purchases
     match: { any: true }
     rate: 2
@@ -50,14 +51,21 @@ evidence:
   - rule: amex-travel
     url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-blue-business-plus-credit-card-amex/
     quote: 'Eligible purchases on AmexTravel.com also earn 2X points and will not count toward the first $50,000'
+  - rule: amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinessplus-credit-card/45094-9-0
+    quote: 'Eligible travel bookings do NOT include non-prepaid car rentals, non-prepaid hotels'
+  - rule: everyday-purchases
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinessplus-credit-card/45094-9-0
+    quote: 'For the first $50,000 in eligible purchases in each calendar year you also earn one additional point'
   - rule: annual_fee
     url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-blue-business-plus-credit-card-amex/
     quote: 'Annual Fee: $0'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinessplus-credit-card/45094-9-0
+    quote: 'if you have or have had this Card or previous versions of this Card'
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-blue-business-plus-credit-card-amex/
     quote: 'AS HIGH AS 50,000 Membership Rewards® Points'
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-blue-business-plus-credit-card-amex/
     quote: 'after you spend $5,000 in purchases on your new Card within the first 3 months of Card Membership'
-todo:
-  - 'The offer-terms page (https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinessplus-credit-card/53591-9-0) returned only 735 characters to the headless browser, so it was not checked. Rates come from the card page only; what counts as an eligible purchase is unconfirmed.'
