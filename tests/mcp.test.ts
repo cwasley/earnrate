@@ -670,6 +670,17 @@ describe('wallet setup', () => {
     })
     expect(notWallet.isError).toBe(true)
 
+    const cardNumber = await client.callTool({
+      name: 'import_wallet',
+      arguments: {
+        yaml: 'cards:\n  - id: amex-gold\n    checkout_label: 3782 822463 10006\n',
+        replace: true,
+      },
+    })
+    expect(cardNumber.isError).toBe(true)
+    expect(text(cardNumber)).toMatch(/looks like it has a card number/)
+    expect(await backend.read()).not.toContain('3782')
+
     const over = { yaml: 'cards:\n  - id: amex-gold\n' }
     const refused = await client.callTool({
       name: 'import_wallet',

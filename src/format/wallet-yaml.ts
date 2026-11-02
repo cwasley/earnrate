@@ -1,6 +1,7 @@
 import { Document, parse, visit } from 'yaml'
 import { walletProblems } from '../data/integrity.ts'
 import type { Catalog } from '../schema/catalog.ts'
+import { CARD_NUMBER_LABEL } from '../schema/card-number.ts'
 import { WALLET_VERSION, WalletSchema, type Wallet } from '../schema/wallet.ts'
 
 // A wallet as the YAML file the CLI reads, for moving it between the
@@ -63,7 +64,10 @@ export function parseWalletYaml(
     return "That isn't a wallet: it isn't valid YAML."
   }
   const result = WalletSchema.safeParse(raw)
-  if (!result.success) return "That isn't an earnrate wallet."
+  if (!result.success)
+    return result.error.issues.some((i) => i.message === CARD_NUMBER_LABEL)
+      ? CARD_NUMBER_LABEL
+      : "That isn't an earnrate wallet."
   const problems = walletProblems(result.data, catalog)
   return problems.length > 0 ? problems.join(' ') : result.data
 }

@@ -6,13 +6,21 @@ import {
   PeriodKey,
   ValueRange,
 } from './common.ts'
+import {
+  CARD_NUMBER_LABEL,
+  hasCardNumber,
+  labelHasCardNumber,
+} from './card-number.ts'
 
 const Valuation = z.union([
   z.number().positive(),
   z.strictObject({
     value: z.number().positive().optional(),
     range: ValueRange.optional(),
-    redemption: z.string().optional(),
+    redemption: z
+      .string()
+      .refine((t) => !hasCardNumber(t), 'A card number was refused.')
+      .optional(),
   }),
 ])
 
@@ -23,7 +31,11 @@ const CapUsage = z.strictObject({
 
 export const WalletCardSchema = z.strictObject({
   id: KebabId,
-  checkout_label: z.string().min(1).optional(),
+  checkout_label: z
+    .string()
+    .min(1)
+    .refine((t) => !labelHasCardNumber(t), CARD_NUMBER_LABEL)
+    .optional(),
   // MM-DD, needed only for cardmember_year caps.
   anniversary: z
     .string()

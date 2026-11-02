@@ -1,8 +1,10 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
+import { writeFileAtomic } from '../data/atomic-write.ts'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { z } from 'zod'
 import { CONFIG_DIR, MISSED_ENV_VAR } from '../brand.ts'
+import { hasCardNumber } from '../schema/card-number.ts'
 import { normalizeMerchantName } from './resolve.ts'
 
 // Stores earnrate didn't recognize, kept only on this computer so the user
@@ -59,7 +61,7 @@ export function missLogAt(file: string): MissLog {
   return {
     note(name, category, today) {
       const key = normalizeMerchantName(name)
-      if (key === '') return Promise.resolve()
+      if (key === '' || hasCardNumber(name)) return Promise.resolve()
       const run = queue.then(async () => {
         let merchants: z.output<typeof MissedFileSchema>['merchants'] = {}
         try {
@@ -87,13 +89,10 @@ export function missLogAt(file: string): MissLog {
         const kept = Object.entries(merchants)
           .sort(([, a], [, b]) => b.last_seen.localeCompare(a.last_seen))
           .slice(0, MAX)
-        await mkdir(path.dirname(file), { recursive: true })
-        const tmp = `${file}.${String(process.pid)}.tmp`
-        await writeFile(
-          tmp,
+        await writeFileAtomic(
+          file,
           `${JSON.stringify({ version: 1, merchants: Object.fromEntries(kept) }, null, 2)}\n`,
         )
-        await rename(tmp, file)
       })
       queue = run.catch(() => undefined)
       return run.catch(() => undefined)

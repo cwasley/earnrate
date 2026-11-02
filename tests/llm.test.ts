@@ -158,6 +158,18 @@ describe('session', () => {
     expect(second.merchant.inference?.cached).toBe(true)
   })
 
+  test('a card number never reaches the classifier', async () => {
+    const { classifier, calls } = fakeClassifier()
+    const r = await session(classifier).resolve(
+      catalog,
+      'card 4111 1111 1111 1112',
+      null,
+    )
+    expect(calls).toEqual([])
+    expect(r.merchant.source).toBe('none')
+    expect(r.notices.join(' ')).toMatch(/looks like a card number/)
+  })
+
   test('stops calling after the session limit', async () => {
     const { classifier, calls } = fakeClassifier()
     const s = session(classifier, 1)

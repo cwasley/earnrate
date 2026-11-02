@@ -1,4 +1,5 @@
 import type { Card } from '../schema/card.ts'
+import { CARD_NUMBER_LABEL, labelHasCardNumber } from '../schema/card-number.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import {
   WALLET_VERSION,
@@ -105,11 +106,8 @@ export function cardFields(
   else if (input.checkoutLabel !== undefined) {
     if (input.checkoutLabel.trim() === '')
       problems.push('The checkout label is empty.')
-    // earnrate never stores card numbers; a last four is fine.
-    if (/\d{8,}/.test(input.checkoutLabel.replace(/[\s-]/g, '')))
-      problems.push(
-        'The checkout label looks like it has a card number in it. earnrate never stores card numbers; use a name like "Amex Gold".',
-      )
+    if (labelHasCardNumber(input.checkoutLabel))
+      problems.push(CARD_NUMBER_LABEL)
     fields.checkout_label = input.checkoutLabel.trim()
   }
   if (input.anniversary !== undefined) {

@@ -34,6 +34,17 @@ test('counts each unrecognized store and the categories it was given', async () 
   expect(missed).toHaveLength(2)
 })
 
+test('a card number typed as a store is never logged', async () => {
+  const file = await logFile()
+  const log = missLogAt(file)
+  await log.note('4111 1111 1111 1112', null, TODAY)
+  await log.note('visa4111-1111-1111-1112', 'dining', TODAY)
+  await log.note('Netflix 866-579-7172', null, TODAY)
+  expect((await readMissed(file)).map((m) => m.name)).toEqual([
+    'Netflix 866-579-7172',
+  ])
+})
+
 test('the command line logs unknown stores, not known ones, and lists them', async () => {
   const file = await logFile()
   let stdout = ''
