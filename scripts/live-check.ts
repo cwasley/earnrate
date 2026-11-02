@@ -1,10 +1,13 @@
-// Checks the live site and hosted server end to end: earnrate.dev's pages,
-// then signing in to mcp.earnrate.dev as a new client, asking a question,
-// saving a card and deleting the wallet. It sends no personal data; the
-// wallet it starts is anonymous and deleted at the end. Exits 1 when a
-// check fails, printing a Markdown report either way.
+// Checks the live site and hosted server. Every run: earnrate.dev's pages,
+// its offline files and the server's sign-in gate. The full run (the
+// default) also loads earnrate.dev in a browser and fails on any page error,
+// signs in to mcp.earnrate.dev as a new client, asks a question, saves a
+// card and deletes the wallet, and reads the server's error counts from
+// Cloudflare when CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are set.
+// It sends no personal data; the wallet it starts is anonymous and deleted
+// at the end. Exits 1 when a check fails, printing a Markdown report.
 //
-//   node scripts/live-check.ts [--report report.md]
+//   node scripts/live-check.ts [--quick] [--report report.md]
 
 import { writeFile } from 'node:fs/promises'
 import { parseArgs } from 'node:util'
@@ -14,7 +17,9 @@ const SERVER = 'https://mcp.earnrate.dev'
 // Never opened: the authorization code is read from the page's link.
 const CALLBACK = 'http://127.0.0.1:53682/callback'
 
-const { values } = parseArgs({ options: { report: { type: 'string' } } })
+const { values } = parseArgs({
+  options: { report: { type: 'string' }, quick: { type: 'boolean' } },
+})
 
 type Result = { name: string; ok: boolean; detail: string }
 const results: Result[] = []
@@ -74,10 +79,130 @@ async function tool(
 }
 
 async function site() {
-  for (const path of ['/', '/best/costco', '/cards/amex-gold', '/privacy']) {
+  const pages: [string, string][] = [
+    ['/', 'Which card should I use?'],
+    ['/best/costco', 'Use it with your own cards'],
+    ['/cards/amex-gold', 'American Express Gold Card'],
+    ['/privacy', 'On earnrate.dev'],
+    ['/manifest.webmanifest', '"short_name"'],
+    ['/sw.js', 'earnrate-v1'],
+  ]
+  for (const [path, marker] of pages) {
     const res = await fetch(`${SITE}${path}`)
-    check(`earnrate.dev${path}`, res.ok, String(res.status))
+    const body = res.ok ? await res.text() : ''
+    check(
+      `earnrate.dev${path}`,
+      res.ok && body.includes(marker),
+      res.ok
+        ? body.includes(marker)
+          ? ''
+          : `missing "${marker}"`
+        : String(res.status),
+    )
   }
+}
+
+// The app itself, in a real browser: it renders an answer and logs no errors.
+async function browser() {
+  const { chromium } = await import('playwright')
+  const instance = await chromium.launch()
+  try {
+    const page = await instance.newPage({
+      viewport: { width: 390, height: 844 },
+    })
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    page.on('console', (m) => {
+      if (m.type() === 'error') errors.push(m.text())
+    })
+    await page.goto(`${SITE}/#best=Costco`, { waitUntil: 'load' })
+    const first = await page
+      .locator('ol li')
+      .first()
+      .textContent({ timeout: 15_000 })
+      .catch(() => null)
+    check(
+      'earnrate.dev answers in a browser',
+      /Costco/.test(first ?? ''),
+      (first ?? 'no answer').slice(0, 60),
+    )
+    await page.goto(`${SITE}/#wallet`, { waitUntil: 'load' })
+    await page.waitForTimeout(1000)
+    check(
+      'earnrate.dev logs no errors',
+      errors.length === 0,
+      errors.slice(0, 3).join(' | '),
+    )
+  } finally {
+    await instance.close()
+  }
+}
+
+// What the hosted server counted in the last day: any server error, or
+// refusals well beyond the usual handful, means something is wrong.
+async function serverErrors() {
+  const token = process.env.CLOUDFLARE_API_TOKEN
+  const account = process.env.CLOUDFLARE_ACCOUNT_ID
+  if (!token || !account) {
+    check('server error counts', true, 'skipped: no Cloudflare credentials')
+    return
+  }
+  const res = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${account}/analytics_engine/sql`,
+    {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}` },
+      body: `SELECT blob1 AS label, SUM(_sample_interval) AS count FROM earnrate_mcp_usage WHERE timestamp > NOW() - INTERVAL '1' DAY GROUP BY label FORMAT JSON`,
+    },
+  )
+  if (!res.ok) {
+    check(
+      'server error counts',
+      false,
+      `Cloudflare answered ${String(res.status)}`,
+    )
+    return
+  }
+  const { data } = (await res.json()) as {
+    data: { label: string; count: string | number }[]
+  }
+  const sum = (prefix: string) =>
+    data
+      .filter((r) => r.label.startsWith(prefix))
+      .reduce((n, r) => n + Number(r.count), 0)
+  const errors = data.filter((r) => r.label.startsWith('error:'))
+  check(
+    'no server errors in the last day',
+    errors.length === 0,
+    errors.map((r) => `${r.label} ×${String(r.count)}`).join(', '),
+  )
+  const calls = sum('tool:')
+  const refused = sum('tool-error:')
+  check(
+    'tool refusals in the usual range',
+    refused <= Math.max(10, calls * 0.2),
+    `${String(refused)} of ${String(calls)} tool calls in the last day`,
+  )
+}
+
+// Without signing in, the server must ask for it, and its sign-in metadata
+// must be up.
+async function gate() {
+  const res = await fetch(SERVER, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      accept: 'application/json, text/event-stream',
+    },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+  })
+  check(
+    'mcp.earnrate.dev asks to sign in',
+    res.status === 401,
+    String(res.status),
+  )
+  const meta = await fetch(`${SERVER}/.well-known/oauth-authorization-server`)
+  check('mcp.earnrate.dev sign-in metadata', meta.ok, String(meta.status))
 }
 
 // Signs in the way Claude does: register a client, open the sign-in page,
@@ -225,14 +350,19 @@ async function server() {
 
 try {
   await site()
-  await server()
+  await gate()
+  if (!values.quick) {
+    await browser()
+    await server()
+    await serverErrors()
+  }
 } catch (e) {
   check('ran to the end', false, e instanceof Error ? e.message : String(e))
 }
 
 const failed = results.filter((r) => !r.ok)
 const report = [
-  `# Live check, ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`,
+  `# ${values.quick ? 'Quick check' : 'Live check'}, ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`,
   '',
   failed.length === 0
     ? 'Everything passed.'

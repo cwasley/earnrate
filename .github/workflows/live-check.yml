@@ -1,9 +1,20 @@
 name: Live check
 
+# Hourly: a quick check of earnrate.dev and mcp.earnrate.dev (no wallets).
+# Daily: the full check, with a browser and a sign-in that saves and deletes
+# an anonymous wallet, plus the server's error counts. A failure opens an
+# issue assigned to the repo owner, so GitHub emails them; it closes when the
+# same kind of check passes again.
 on:
   schedule:
+    - cron: '7 * * * *' # every hour
     - cron: '30 14 * * *' # every day, 14:30 UTC
   workflow_dispatch:
+    inputs:
+      quick:
+        description: 'Quick check only'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -12,16 +23,25 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    env:
+      QUICK: ${{ github.event.schedule == '7 * * * *' || inputs.quick == true }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
+      - if: env.QUICK != 'true'
+        run: |
+          yarn install --frozen-lockfile
+          yarn playwright install --with-deps chromium
       - id: check
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set +e
-          node scripts/live-check.ts --report report.md
+          node scripts/live-check.ts --report report.md $([ "$QUICK" = true ] && echo --quick)
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
           cat report.md >> "$GITHUB_STEP_SUMMARY"
@@ -30,14 +50,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           CODE: ${{ steps.check.outputs.code }}
+          OWNER: ${{ github.repository_owner }}
         run: |
-          gh label create live-check --color D93F0B --description "earnrate.dev or mcp.earnrate.dev failed its daily check" 2>/dev/null || true
-          number=$(gh issue list --label live-check --state open --json number --jq '.[0].number')
+          if [ "$QUICK" = true ]; then
+            label=uptime; title='earnrate.dev or mcp.earnrate.dev is down'
+          else
+            label=live-check; title='Live check failing'
+          fi
+          gh label create "$label" --color D93F0B --description "Failed the $label check" 2>/dev/null || true
+          number=$(gh issue list --label "$label" --state open --json number --jq '.[0].number')
           if [ "$CODE" != 0 ]; then
             if [ -n "$number" ]; then
-              gh issue comment "$number" --body-file report.md
+              # Hourly failures don't comment, or an outage would email every hour.
+              [ "$QUICK" = true ] || gh issue comment "$number" --body-file report.md
             else
-              gh issue create --title "Live check failing" --label live-check --body-file report.md
+              gh issue create --title "$title" --label "$label" --assignee "$OWNER" --body-file report.md
             fi
             exit 1
           elif [ -n "$number" ]; then
