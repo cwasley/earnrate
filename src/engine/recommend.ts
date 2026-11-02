@@ -245,7 +245,7 @@ function warningsFor(
   }
   for (const rule of evaluation.needsActivation) {
     warnings.push(
-      `Activate this bonus with the issuer (it's free) to earn ${earnText(catalog, rule.rate, valuation.currency)} here${rule.valid_to === undefined ? '' : ` through ${shortDate(rule.valid_to)}`}.`,
+      `Activate this bonus with the issuer (it's free)${rule.activate_by === undefined ? '' : ` by ${shortDate(rule.activate_by)}`} to earn ${earnText(catalog, rule.rate, valuation.currency)} here${rule.valid_to === undefined ? '' : ` through ${shortDate(rule.valid_to)}`}.`,
     )
   }
   return warnings

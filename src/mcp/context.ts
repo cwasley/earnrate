@@ -149,7 +149,7 @@ export function makeContext(deps: ServerDeps) {
     const text = [
       message,
       output.cardIds.length > 0
-        ? `Saved in ${walletName} (${String(output.cardIds.length)} ${output.cardIds.length === 1 ? 'card' : 'cards'}).`
+        ? `Saved in ${walletName}, which has ${String(output.cardIds.length)} ${output.cardIds.length === 1 ? 'card' : 'cards'}.`
         : `Saved in ${walletName}, which has no cards now; answers cover every card.`,
       ...(notes ? [formatNotes(result.notes)] : []),
     ].join('\n')

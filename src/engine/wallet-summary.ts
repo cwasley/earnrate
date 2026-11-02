@@ -112,9 +112,19 @@ export function optionName(
 function ruleParts(catalog: Catalog, rule: Rule): string[] {
   if (rule.match.choice !== undefined)
     return [`your ${choiceName(rule.match.choice)} picks`]
+  const merchants = rule.match.merchants ?? []
+  // A long list of one kind of store reads as "select streaming services".
+  const kinds = new Set(
+    merchants.map((m) => findMerchant(catalog, m)?.category),
+  )
+  const [kind] = kinds
+  const merchantParts =
+    merchants.length > 4 && kinds.size === 1 && kind !== undefined
+      ? [`select ${categoryPhrase(catalog, kind)}`]
+      : merchants.map((m) => merchantName(catalog, m))
   const parts = [
     ...(rule.match.categories ?? []).map((c) => categoryPhrase(catalog, c)),
-    ...(rule.match.merchants ?? []).map((m) => merchantName(catalog, m)),
+    ...merchantParts,
   ]
   return parts.length > 0 ? parts : [words(rule.id)]
 }
@@ -196,10 +206,16 @@ function toActivate(
     for (const g of group) seen.add(g)
     const rules = card.rules.filter((r) => group.includes(r.id))
     const first = rules[0]
+    const deadline =
+      first?.activate_by === undefined
+        ? ''
+        : `, activate by ${shortDate(first.activate_by)}`
     const when =
       first?.valid_from !== undefined && first.valid_to !== undefined
-        ? ` (${shortDate(first.valid_from)} to ${shortDate(first.valid_to)})`
-        : ''
+        ? ` (${shortDate(first.valid_from)} to ${shortDate(first.valid_to)}${deadline})`
+        : deadline === ''
+          ? ''
+          : ` (${deadline.slice(2)})`
     out.push(`${rules.map((r) => ruleWhat(catalog, r)).join(', ')}${when}`)
   }
   return out

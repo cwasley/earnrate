@@ -220,7 +220,7 @@ describe('tools', () => {
       arguments: { memberships: ['amazon-prime', 'nordy-club-ambassador'] },
     })
     expect(text(memberships)).toMatch(
-      /nordy-club-ambassador doesn't change any saved card's rates yet/,
+      /Nordy Club Ambassador doesn't change any saved card's rates yet/,
     )
   })
 
@@ -973,6 +973,33 @@ describe('category from the caller', () => {
 })
 
 describe('category words', () => {
+  test('ignore leading and trailing filler, and accept singular forms', async () => {
+    const client = await connect(await walletCopy())
+    const category = async (merchant: string) =>
+      (
+        (
+          await client.callTool({
+            name: 'resolve_merchant',
+            arguments: { merchant },
+          })
+        ).structuredContent as { category: string; source: string }
+      ).category
+    expect(await category('a restaurant')).toBe('dining')
+    expect(await category('the grocery store')).toBe('grocery.supermarket')
+    expect(await category('a gas station near me')).toBe('gas')
+    expect(await category('a drugstore')).toBe('drugstore')
+    expect(
+      (
+        (
+          await client.callTool({
+            name: 'resolve_merchant',
+            arguments: { merchant: 'The Home Depot' },
+          })
+        ).structuredContent as { resolvedName: string }
+      ).resolvedName,
+    ).toBe('The Home Depot')
+  })
+
   test('work like stores in best_card_for_purchase', async () => {
     const client = await connect(await walletCopy())
     const result = await client.callTool({

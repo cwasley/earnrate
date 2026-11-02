@@ -38,10 +38,21 @@ test('every bonus rate is listed, and an activated quarter says so', () => {
   expect(flex?.toActivate).toEqual([])
 })
 
+test('long lists of one kind of store read as a group', () => {
+  const wallet = WalletSchema.parse({
+    cards: [{ id: 'chase-sapphire-preferred' }],
+  })
+  const [csp] = walletSummary(catalog, wallet, '2026-11-01').cards
+  expect(csp?.rates.join('; ')).toMatch(/select streaming services/)
+  expect(csp?.rates.join('; ')).not.toMatch(/Netflix/)
+})
+
 test('a quarter not yet activated gives its dates in words', () => {
   const wallet = WalletSchema.parse({ cards: [{ id: 'chase-freedom-flex' }] })
   const [flex] = walletSummary(catalog, wallet, '2026-11-01').cards
-  expect(flex?.toActivate.join('; ')).toMatch(/\(Oct 1, 2026 to Dec 31, 2026\)/)
+  expect(flex?.toActivate.join('; ')).toMatch(
+    /\(Oct 1, 2026 to Dec 31, 2026, activate by Dec 14, 2026\)/,
+  )
 })
 
 test('a lower tier a held membership replaces is left out', () => {

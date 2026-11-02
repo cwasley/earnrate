@@ -60,7 +60,8 @@ rules:
     requires: { activation: true }
     valid_from: 2026-10-01
     valid_to: 2026-12-31
-    note: Grocery stores excluding Walmart and Target. Chase's grocery category also excludes warehouse clubs, discount stores and gas at grocery stores; delivery services count only if they code as a grocery store. Activate by December 14, 2026.
+    activate_by: 2026-12-14
+    note: Grocery stores excluding Walmart and Target. Chase's grocery category also excludes warehouse clubs, discount stores and gas at grocery stores; delivery services count only if they code as a grocery store.
   - id: q4-2026-dining
     match: { categories: [dining] }
     rate: 7
@@ -68,7 +69,8 @@ rules:
     requires: { activation: true }
     valid_from: 2026-10-01
     valid_to: 2026-12-31
-    note: The 4% quarterly bonus stacks on the everyday 3% dining rate for 7% total, on the first $1,500 of combined bonus-category spend; then dining is back to 3%. Activate by December 14, 2026.
+    activate_by: 2026-12-14
+    note: The 4% quarterly bonus stacks on the everyday 3% dining rate for 7% total, on the first $1,500 of combined bonus-category spend; then dining is back to 3%.
   - id: q4-2026-american-red-cross
     match: { merchants: [american-red-cross] }
     rate: 5
@@ -76,7 +78,8 @@ rules:
     requires: { activation: true }
     valid_from: 2026-10-01
     valid_to: 2026-12-31
-    note: Donations made directly through the American Red Cross's official channels; gifts to local chapters may not count. Activate by December 14, 2026.
+    activate_by: 2026-12-14
+    note: Donations made directly through the American Red Cross's official channels; gifts to local chapters may not count.
   - id: q1-2027-grocery
     match: { categories: [grocery] }
     exclude: { merchants: [walmart, target] }

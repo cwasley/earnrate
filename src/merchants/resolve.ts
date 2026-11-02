@@ -202,11 +202,19 @@ const plainWords = (s: string) =>
 export function findCategory(catalog: Catalog, text: string): string | null {
   const wanted = plainWords(text)
   if (wanted === '') return null
-  const by = (key: (c: Catalog['categories'][number]) => string[]) =>
-    catalog.categories.find((c) => key(c).map(plainWords).includes(wanted))?.id
-  return (
-    by((c) => c.aliases) ?? by((c) => [c.name]) ?? by((c) => [c.id]) ?? null
-  )
+  // "grocery store" finds "grocery stores", and "drugstore" "drugstores".
+  const forms = [
+    wanted,
+    wanted.endsWith('s') ? wanted.slice(0, -1) : `${wanted}s`,
+  ]
+  for (const form of forms) {
+    const by = (key: (c: Catalog['categories'][number]) => string[]) =>
+      catalog.categories.find((c) => key(c).map(plainWords).includes(form))?.id
+    const found =
+      by((c) => c.aliases) ?? by((c) => [c.name]) ?? by((c) => [c.id])
+    if (found !== undefined) return found
+  }
+  return null
 }
 
 export function categoryResolution(
@@ -232,17 +240,32 @@ export function categoryResolution(
   }
 }
 
+// Words around a place that don't name it: "a restaurant", "the grocery
+// store", "a gas station near me".
+const LEADING =
+  /^(?:(?:a|an|the|my|any|some|our|your|this|that|local|nearby|nearest)\s+)+/i
+const TRAILING = /\s+(?:near me|nearby|around here|close by)$/i
+
 // What someone typed: a store earnrate knows, else a category word
-// ("restaurants", "gas"), else unrecognized.
+// ("restaurants", "gas"), else unrecognized. Names are tried as given first,
+// so a store like The Home Depot keeps its "The".
 export function resolvePlace(
   catalog: Catalog,
   text: string,
   channel: Channel | null,
 ): MerchantResolution {
-  const known = resolveMerchant(catalog, text, channel)
-  if (known.source !== 'none') return known
-  const category = findCategory(catalog, text)
-  return category === null
-    ? known
-    : categoryResolution(catalog, category, channel)
+  const attempt = (t: string) => {
+    const known = resolveMerchant(catalog, t, channel)
+    if (known.source !== 'none') return known
+    const category = findCategory(catalog, t)
+    return category === null
+      ? known
+      : categoryResolution(catalog, category, channel)
+  }
+  const asGiven = attempt(text)
+  if (asGiven.source !== 'none') return asGiven
+  const bare = text.trim().replace(TRAILING, '').replace(LEADING, '')
+  if (bare === '' || bare === text.trim()) return asGiven
+  const found = attempt(bare)
+  return found.source === 'none' ? asGiven : found
 }

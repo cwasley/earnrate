@@ -2,6 +2,14 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.02.2
+
+Rules can carry `activate_by`, the issuer's activation deadline, so answers mention it only while a bonus isn't activated. No rates changed.
+
+| Card               | Field                 | Old → new                                                                | Source                                                                                                                                                   |
+| ------------------ | --------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| chase-freedom-flex | q4-2026-*.activate_by | "Activate by December 14, 2026" in each note → `activate_by: 2026-12-14` | [Freedom Flex FAQ](https://www.chase.com/personal/credit-cards/freedom/flex-learnmore): "This quarter, the deadline for activation is December 14, 2026" |
+
 ## 2026.11.02.1
 
 A fine-print pass: every card was checked against all of its issuer's pages (card page, rates and fees, rewards and offer terms, FAQ), and the readable ones were added to `source_urls` so the weekly check watches them. All 57 cards are now `verified_by: claude`, last verified 2026-11-01. Most changes add fine-print quotes and exclusions to notes; these change answers:

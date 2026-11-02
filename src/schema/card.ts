@@ -73,6 +73,8 @@ export const RuleSchema = z
       .optional(),
     valid_from: IsoDate.optional(),
     valid_to: IsoDate.optional(),
+    // The issuer's last day to activate a bonus that needs it.
+    activate_by: IsoDate.optional(),
     // Set when a rule isn't confirmed against the issuer's terms. The engine
     // warns when an unverified rule decides the winner.
     unverified: z.string().optional(),
@@ -81,6 +83,10 @@ export const RuleSchema = z
   .refine(
     (r) => !r.valid_from || !r.valid_to || r.valid_from <= r.valid_to,
     'valid_from must not be after valid_to',
+  )
+  .refine(
+    (r) => r.activate_by === undefined || r.requires?.activation === true,
+    'activate_by needs requires.activation',
   )
 
 // The public sign-up bonus on the issuer's page. Offers vary by person and

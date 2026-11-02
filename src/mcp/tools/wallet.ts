@@ -5,6 +5,7 @@ import { membershipsFor, needsAnniversary } from '../../engine/setup.ts'
 import {
   choiceName,
   currencyLabel,
+  listed,
   money,
   shortDate,
   words,
@@ -310,7 +311,7 @@ export function registerWalletTools(
           memberships.length > 0
             ? `Memberships set to ${memberships.map((m) => `${membershipName(catalog, m)} (${m})`).join(', ')}.`
             : 'Memberships cleared.'
-        }${unused.length > 0 ? ` ${unused.join(', ')} ${unused.length === 1 ? "doesn't" : "don't"} change any saved card's rates yet; kept for cards that use ${unused.length === 1 ? 'it' : 'them'}.` : ''}`,
+        }${unused.length > 0 ? ` ${listed(unused.map((m) => membershipName(catalog, m)))} ${unused.length === 1 ? "doesn't" : "don't"} change any saved card's rates yet; kept for cards that use ${unused.length === 1 ? 'it' : 'them'}.` : ''}`,
         { notes: false },
       )
     },
