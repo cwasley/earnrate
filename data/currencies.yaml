@@ -131,6 +131,21 @@
   sources:
     - https://thepointsguy.com/loyalty-programs/monthly-valuations/
 
+- id: delta-skymiles
+  name: Delta SkyMiles
+  value_cents: 1.0
+  note: TODO confirm a published redemption rate. Until then, 1.0¢ is the floor the other airline currencies use.
+
+- id: hilton-honors
+  name: Hilton Honors points
+  value_cents: 0.5
+  note: TODO Hilton publishes no fixed cash value for points. 0.5¢ is the floor the other hotel currency (IHG) uses.
+
+- id: marriott-bonvoy
+  name: Marriott Bonvoy points
+  value_cents: 0.5
+  note: TODO Marriott publishes no fixed cash value for points. 0.5¢ is the floor the other hotel currency (IHG) uses.
+
 - id: kohls-rewards
   name: Kohl's Rewards
   value_cents: 1.0
