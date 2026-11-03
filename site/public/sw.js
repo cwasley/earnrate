@@ -1,7 +1,7 @@
 // Keeps earnrate.dev's main page working offline, for asking at the register
 // with no signal. Everything it stores is the site's own files; nothing the
 // visitor types is sent or cached here.
-const CACHE = 'earnrate-v1'
+const CACHE = 'earnrate-v2'
 const SHELL = ['/', '/manifest.webmanifest', '/favicon.svg', '/icon-192.png']
 
 // The built page names its scripts and styles with content hashes, so the
@@ -75,8 +75,28 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // The manifest and icons keep their names when they change, so they come
+  // from the network first, like the page; the saved copy is for offline.
+  if (SHELL.includes(url.pathname)) {
+    event.respondWith(
+      (async () => {
+        try {
+          const response = await fetch(request)
+          if (response.ok) {
+            const cache = await caches.open(CACHE)
+            await cache.put(url.pathname, response.clone())
+          }
+          return response
+        } catch {
+          return (await caches.match(url.pathname)) ?? Response.error()
+        }
+      })(),
+    )
+    return
+  }
+
   // Hashed files never change, so a saved copy is always right.
-  if (url.pathname.startsWith('/assets/') || SHELL.includes(url.pathname)) {
+  if (url.pathname.startsWith('/assets/')) {
     event.respondWith(
       (async () => {
         const saved = await caches.match(request)

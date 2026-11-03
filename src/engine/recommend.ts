@@ -432,8 +432,20 @@ function assumptionsFor(
       `Ranks purchases that code as ${categoryPhrase(catalog, merchant.category)}.`,
     )
   } else if (merchant.category === 'other') {
+    // A card whose rule names this store by name (Audible on Amex's
+    // streaming list) earns its bonus there anyway.
+    const naming = entries.flatMap((e) => {
+      const rule = e.evaluation.best.rule
+      return rule &&
+        merchant.merchantId !== null &&
+        (rule.match.merchants ?? []).includes(merchant.merchantId)
+        ? [`${displayName(e)} (${ruleWhat(catalog, rule)})`]
+        : []
+    })
     assumptions.push(
-      `Assumes ${merchant.resolvedName} falls outside the usual bonus categories.`,
+      naming.length === 0
+        ? `Assumes ${merchant.resolvedName} falls outside the usual bonus categories.`
+        : `Assumes ${merchant.resolvedName} falls outside the usual bonus categories, except on cards that name it: ${listed(naming)}.`,
     )
   } else {
     assumptions.push(codesAs(catalog, merchant))

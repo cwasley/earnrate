@@ -44,7 +44,7 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const OUT = path.join(ROOT, 'site-dist')
 const SITE = 'https://earnrate.dev'
 const TOP = 10
-const ICON = '/favicon.svg'
+const ICON = '/favicon.svg?v=2'
 const RELATED = 8
 
 const catalog = await loadCatalog()
@@ -302,7 +302,7 @@ function layout(
     <meta property="og:image" content="${SITE}/og.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#9a5020" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
     <link rel="icon" href="${ICON}" />
     <link rel="stylesheet" href="/pages.css" />
     <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>
