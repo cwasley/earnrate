@@ -10,7 +10,7 @@ import {
 } from '../engine/profiles.ts'
 import { membershipName } from '../engine/memberships.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
-import type { CardInput } from '../engine/wallet-change.ts'
+import { currencyChanges, type CardInput } from '../engine/wallet-change.ts'
 import { formatCardInfo, formatNotes } from '../format/cards.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { displayPath, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
@@ -230,6 +230,8 @@ export async function runWalletCommand(
         return usage(`"${arg}" isn't <currency>=<cents>, like UR=1.5.`)
       changes[id] = cents
     }
+    const given = currencyChanges(catalog, changes)
+    if (!given.ok) return usage(given.error)
     if (Object.keys(changes).length === 0) {
       const held = await heldWallet(io)
       const set = Object.entries(held?.valuations ?? {})
@@ -239,8 +241,8 @@ export async function runWalletCommand(
       return 0
     }
     return report(
-      await store.setValuations(changes),
-      `Point values updated in ${where}: ${Object.entries(changes)
+      await store.setValuations(given.changes),
+      `Point values updated in ${where}: ${Object.entries(given.changes)
         .map(
           ([id, c]) =>
             `${id} ${c === null ? 'back to the default' : `${String(c)}¢`}`,

@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
 import { setValuationsText } from '../src/data/wallet-edit.ts'
-import { withValuations } from '../src/engine/wallet-change.ts'
+import { currencyChanges, withValuations } from '../src/engine/wallet-change.ts'
 import { compareOffers } from '../src/engine/offers.ts'
 import { walletSummary } from '../src/engine/wallet-summary.ts'
 import { formatOffers } from '../src/format/offers.ts'
@@ -75,4 +75,23 @@ test('offers ruled out by a held card stay in view past the top ten', () => {
   expect(text).toMatch(
     /more left out as likely not eligible with a card you hold: American Express Gold Card/,
   )
+})
+
+test('point values can be keyed the way people say them', () => {
+  const keys = (changes: Record<string, number | null>) => {
+    const r = currencyChanges(catalog, changes)
+    return r.ok ? Object.keys(r.changes) : r.error
+  }
+  expect(keys({ ur: 1.5 })).toEqual(['UR'])
+  expect(keys({ 'Chase points': 1.5 })).toEqual(['UR'])
+  expect(keys({ 'Ultimate Rewards': 1.5 })).toEqual(['UR'])
+  expect(keys({ 'Amex Membership Rewards': 1.6 })).toEqual(['MR'])
+  expect(keys({ 'ThankYou points': 1.6 })).toEqual(['TYP'])
+  expect(keys({ 'Capital One miles': 1.7 })).toEqual(['C1'])
+  expect(keys({ 'best buy': null })).toEqual(['best-buy-rewards'])
+  expect(keys({ rewards: 1 })).toMatch(/could be .* give the currency id/)
+  expect(keys({ 'Hilton Honors': 0.5 })).toMatch(
+    /Unknown currency 'Hilton Honors'.*UR \(Chase Ultimate Rewards\)/,
+  )
+  expect(keys({ UR: 1.5, 'chase points': 1.6 })).toMatch(/More than one value/)
 })

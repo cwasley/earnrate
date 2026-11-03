@@ -13,6 +13,7 @@ import {
 import { membershipName } from '../../engine/memberships.ts'
 import { profileText, VALUATION_PROFILES } from '../../engine/profiles.ts'
 import { optionName } from '../../engine/rule-text.ts'
+import { currencyChanges } from '../../engine/wallet-change.ts'
 import { walletSummary } from '../../engine/wallet-summary.ts'
 import { checklist } from '../../engine/checklist.ts'
 import { cardText } from '../../format/card-text.ts'
@@ -336,7 +337,7 @@ export function registerWalletTools(
     'set_point_values',
     {
       title: 'Set point values',
-      description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. No saved cards are needed. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies: ${catalog.currencies.map((c) => c.id).join(', ')}. ${ctx.walletUse}`,
+      description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. No saved cards are needed. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies by id: ${catalog.currencies.map((c) => `${c.id} (${c.name})`).join(', ')}. ${ctx.walletUse}`,
       inputSchema: z.object({
         values: z
           .record(z.string(), z.number().nullable())
@@ -360,9 +361,11 @@ export function registerWalletTools(
       },
     },
     async ({ values, profile }) => {
+      const given = currencyChanges(catalog, values ?? {})
+      if (!given.ok) return fail(given.error)
       const changes: Record<string, number | null> = {
         ...(profile ? VALUATION_PROFILES[profile] : {}),
-        ...(values ?? {}),
+        ...given.changes,
       }
       if (Object.keys(changes).length === 0)
         return fail('Give values (cents per point by currency) or a profile.')

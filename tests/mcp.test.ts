@@ -619,7 +619,10 @@ describe('wallet setup', () => {
         { cardId: 'amex-gold', merchant: 'Whole Foods', amount: 20 },
       ],
       ['set_memberships', { memberships: ['amazon-prime', 'costco'] }],
-      ['set_point_values', { values: { UR: 1.5 }, profile: 'points-heavy' }],
+      [
+        'set_point_values',
+        { values: { 'Chase points': 1.5 }, profile: 'points-heavy' },
+      ],
       ['remove_card', { cardId: 'chase-freedom-unlimited' }],
       ['export_wallet', {}],
       [

@@ -396,3 +396,57 @@ export function withValuations(
 
 // Higher than any program's points are worth, even transferred.
 const MAX_CENTS = 5
+
+// Point values keyed the way people say them ("ur", "Ultimate Rewards",
+// "Chase points"), turned into currency ids. A key that could mean more
+// than one currency is refused rather than guessed.
+export function currencyChanges(
+  catalog: Catalog,
+  changes: Record<string, number | null>,
+):
+  | { ok: true; changes: Record<string, number | null> }
+  | { ok: false; error: string } {
+  const out: Record<string, number | null> = {}
+  for (const [key, cents] of Object.entries(changes)) {
+    const matches = currenciesFor(catalog, key)
+    const only = matches[0]
+    if (matches.length > 1)
+      return failed(
+        `'${key}' could be ${matches.map((c) => `${c.id} (${c.name})`).join(' or ')}; give the currency id.`,
+      )
+    if (only === undefined)
+      return failed(
+        `Unknown currency '${key}'. Currencies: ${catalog.currencies.map((c) => `${c.id} (${c.name})`).join(', ')}.`,
+      )
+    if (only.id in out)
+      return failed(`More than one value was given for ${only.name}.`)
+    out[only.id] = cents
+  }
+  return { ok: true, changes: out }
+}
+
+const IGNORED_WORDS = new Set(['points', 'point', 'pts', 'miles', 'mile'])
+
+const words = (text: string) =>
+  text
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w !== '' && !IGNORED_WORDS.has(w))
+
+const sameWords = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((w, i) => w === b[i])
+
+function currenciesFor(catalog: Catalog, key: string) {
+  const exact = catalog.currencies.find((c) => c.id === key)
+  if (exact) return [exact]
+  const k = words(key)
+  if (k.length === 0) return []
+  const byId = catalog.currencies.filter((c) => sameWords(words(c.id), k))
+  if (byId.length > 0) return byId
+  const byName = catalog.currencies.filter((c) => sameWords(words(c.name), k))
+  if (byName.length > 0) return byName
+  return catalog.currencies.filter((c) => {
+    const name = words(c.name)
+    return name.some((_, i) => sameWords(name.slice(i, i + k.length), k))
+  })
+}
