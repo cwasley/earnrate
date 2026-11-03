@@ -38,3 +38,4 @@ site-dist
 earnrate.mcpb
 remote/catalog.gen.json
 remote/dist/
+monitor/dist/

@@ -5,6 +5,9 @@ name: Live check
 # an anonymous wallet, plus the server's error counts. A failure opens an
 # issue assigned to the repo owner, so GitHub emails them; it closes when the
 # same kind of check passes again.
+# The earnrate-monitor Worker (monitor/) dispatches these on time, and a quick
+# check within minutes of an outage; GitHub's own schedule, often hours late,
+# stays as the backup.
 on:
   schedule:
     - cron: '7 * * * *' # every hour
@@ -17,8 +20,14 @@ on:
         default: false
 
 permissions:
+  actions: read
   contents: read
   issues: write
+
+# The monitor and GitHub's schedule can start the same check together; one
+# waits, so they never open two issues.
+concurrency:
+  group: live-check-${{ github.event.schedule == '7 * * * *' || inputs.quick == true }}
 
 jobs:
   check:
@@ -39,10 +48,20 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set +e
           node scripts/live-check.ts --report report.md $([ "$QUICK" = true ] && echo --quick)
           code=$?
+          if [ "$QUICK" != true ]; then
+            last=$(gh run list --workflow live-check.yml --event workflow_dispatch --limit 5 \
+              --json databaseId,createdAt --jq "[.[] | select(.databaseId != $RUN_ID)][0].createdAt // empty")
+            if [ -z "$last" ] || [ $(( $(date +%s) - $(date -d "$last" +%s) )) -gt 10800 ]; then
+              echo "- FAIL the earnrate-monitor Worker hasn't dispatched a check since ${last:-ever}; check its GH_DISPATCH_TOKEN" >> report.md
+              code=1
+            fi
+          fi
           echo "code=$code" >> "$GITHUB_OUTPUT"
           cat report.md >> "$GITHUB_STEP_SUMMARY"
           exit 0

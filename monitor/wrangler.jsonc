@@ -1,0 +1,16 @@
+// Uptime monitor for earnrate.dev and mcp.earnrate.dev. GitHub runs
+// scheduled workflows late or not at all, so this Worker's cron triggers
+// dispatch the live-check workflow on time, and dispatch a quick check as
+// soon as a probe fails. Deploy with `yarn monitor:deploy`; it needs the
+// GH_DISPATCH_TOKEN secret (a fine-grained token for this repo with
+// Actions: read and write).
+{
+  "name": "earnrate-monitor",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": false },
+  // Keep in step with CRONS in src/monitor.ts.
+  "triggers": { "crons": ["*/5 * * * *", "7 * * * *", "30 14 * * *"] },
+}

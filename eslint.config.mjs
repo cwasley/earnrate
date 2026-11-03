@@ -9,6 +9,7 @@ export default defineConfig([
     'coverage/**',
     'dist/**',
     'remote/dist/**',
+    'monitor/dist/**',
     'site-dist/**',
     '.wrangler/**',
     '.mcpb-build/**',
