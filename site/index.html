@@ -116,22 +116,32 @@
         letter-spacing: -0.03em;
         margin: 22px 0 12px;
       }
+      /* The comparison app inside the hero uses these plain rules. */
       h2 {
-        font-size: clamp(24px, 4.6vw, 30px);
-        line-height: 1.2;
+        font-size: 24px;
         letter-spacing: -0.02em;
-        margin: 0 0 12px;
+        margin: 60px 0 12px;
       }
       h3 {
-        font-size: 17px;
+        font-size: 18px;
         letter-spacing: -0.01em;
-        margin: 0 0 4px;
+        margin: 32px 0 8px;
       }
       p {
         margin: 0 0 14px;
       }
-      section {
+      /* The home page's own sections; the app's sections sit inside #app. */
+      main > section {
         margin-top: 76px;
+      }
+      main > section h2 {
+        font-size: clamp(24px, 4.6vw, 30px);
+        line-height: 1.2;
+        margin: 0 0 12px;
+      }
+      main > section h3 {
+        font-size: 17px;
+        margin: 0 0 4px;
       }
       .eyebrow {
         font-size: 12.5px;
@@ -224,10 +234,19 @@
         border: 1px solid var(--line);
         border-radius: 16px;
         padding: 16px;
-        margin: 20px 0 0;
+        max-width: 30rem;
+        margin: 20px auto 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .chat + .caption {
+        max-width: 30rem;
+        margin-left: auto;
+        margin-right: auto;
       }
       .bubble {
-        max-width: 88%;
+        width: fit-content;
+        max-width: 85%;
         padding: 10px 14px;
         border-radius: 16px;
         font-size: 15.5px;
@@ -342,12 +361,12 @@
         font-weight: 600;
         color: var(--accent);
       }
-      .check {
+      .todo-item {
         display: flex;
         gap: 8px;
         align-items: baseline;
       }
-      .check::before {
+      .todo-item::before {
         content: '';
         flex: none;
         width: 12px;
@@ -425,7 +444,7 @@
       .before-after .terminal {
         flex: 1;
       }
-      .label {
+      .kicker {
         font-size: 12.5px;
         font-weight: 700;
         color: var(--muted);
@@ -445,7 +464,7 @@
       .receipt .answer {
         padding: 16px;
       }
-      .receipt .answer .label {
+      .receipt .answer .kicker {
         margin-bottom: 4px;
       }
       .receipt .pick {
@@ -855,10 +874,12 @@
           </li>
           <li class="tile">
             <div class="viz" aria-hidden="true">
-              <span class="check"
+              <span class="todo-item"
                 >Activate Freedom Flex's 5% before the deadline</span
               >
-              <span class="check">Pick next quarter's Cash+ categories</span>
+              <span class="todo-item"
+                >Pick next quarter's Cash+ categories</span
+              >
             </div>
             <h3>It tells you what to do</h3>
             <p>
@@ -884,7 +905,7 @@
         <h3 style="margin-top: 40px">The answer changes when a cap runs out</h3>
         <div class="before-after">
           <div>
-            <p class="label">In January</p>
+            <p class="kicker">In January</p>
             <pre
               class="terminal"
             ><span class="prompt">$</span> earnrate whole foods 80
@@ -897,7 +918,7 @@
   3. Amex Gold            4%</pre>
           </div>
           <div>
-            <p class="label">After $6,000 of groceries</p>
+            <p class="kicker">After $6,000 of groceries</p>
             <pre
               class="terminal"
             ><span class="prompt">$</span> earnrate whole foods 80
@@ -922,7 +943,7 @@
         <h2>Every rate, in the issuer's words</h2>
         <div class="receipt">
           <div class="answer">
-            <p class="label">
+            <p class="kicker">
               Best card at
               <!--earnrate:receipt_store-->
             </p>
