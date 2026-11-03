@@ -80,7 +80,7 @@ async function tool(
 
 async function site() {
   const pages: [string, string][] = [
-    ['/', 'Which card should I use?'],
+    ['/', 'Which credit card should I use?'],
     ['/best/costco', 'Use it with your own cards'],
     ['/cards/amex-gold', 'American Express Gold Card'],
     ['/privacy', 'On earnrate.dev'],
