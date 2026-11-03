@@ -499,6 +499,9 @@
   name: Wayfair
   domains: [wayfair.com]
   category: online_retail
+  ambiguity:
+    may_code_as: [furniture]
+    note: Wayfair sells online, but some issuers code its purchases as a furniture store (MCC 5712). A statement shows which.
 - id: zappos
   name: Zappos
   domains: [zappos.com]
@@ -555,3 +558,10 @@
   online:
     category: online_retail
   note: An auto parts store, with no bonus category in store. Its website counts as online retail.
+
+# Listed here, not in seed.yaml, so "Amazon Music" doesn't match Amazon itself.
+- id: amazon-music
+  name: Amazon Music Unlimited
+  aliases: [amazon music]
+  category: streaming
+  note: On Amex's Select U.S. Streaming Subscriptions list. Charged by Amazon, so other issuers may code it as Amazon.

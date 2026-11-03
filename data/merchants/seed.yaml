@@ -1432,6 +1432,13 @@
   }
 - { id: apple-music, name: Apple Music, category: streaming }
 - {
+    id: discovery-plus,
+    name: Discovery+,
+    aliases: [discovery plus],
+    domains: [discoveryplus.com],
+    category: streaming,
+  }
+- {
     id: directv-stream,
     name: DIRECTV STREAM,
     aliases: [directv stream],
