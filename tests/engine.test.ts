@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
-import { periodKey } from '../src/engine/periods.ts'
+import { periodEnd, periodKey } from '../src/engine/periods.ts'
 import { recommend } from '../src/engine/recommend.ts'
 import type { RankedCard, Recommendation } from '../src/engine/types.ts'
 import {
@@ -154,6 +154,28 @@ describe('periods', () => {
     expect(periodKey('cardmember_year', '2026-10-24', '03-15')).toBe('2026')
     expect(periodKey('cardmember_year', '2026-02-01', '03-15')).toBe('2025')
     expect(periodKey('cardmember_year', '2026-02-01', null)).toBeNull()
+  })
+
+  test('months, quarters and calendar years end where they always did', () => {
+    expect(periodEnd('month', '2026-02', null)).toBe('2026-02-28')
+    expect(periodEnd('month', '2028-02', null)).toBe('2028-02-29')
+    expect(periodEnd('month', '2026-12', null)).toBe('2026-12-31')
+    expect(periodEnd('quarter', '2026-Q1', null)).toBe('2026-03-31')
+    expect(periodEnd('quarter', '2026-Q4', null)).toBe('2026-12-31')
+    expect(periodEnd('calendar_year', '2026', '03-15')).toBe('2026-12-31')
+  })
+
+  test('a cardmember year ends the day before the next anniversary', () => {
+    expect(periodEnd('cardmember_year', '2026', '03-15')).toBe('2027-03-14')
+    expect(periodEnd('cardmember_year', '2026', '01-01')).toBe('2026-12-31')
+    expect(periodEnd('cardmember_year', '2027', '03-01')).toBe('2028-02-29')
+    expect(periodEnd('cardmember_year', '2026', '02-29')).toBe('2027-02-28')
+    expect(periodEnd('cardmember_year', '2026', null)).toBeNull()
+  })
+
+  test("a key that doesn't fit the period has no end", () => {
+    expect(periodEnd('quarter', '2026', null)).toBeNull()
+    expect(periodEnd('calendar_year', '2026-Q4', null)).toBeNull()
   })
 })
 

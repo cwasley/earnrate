@@ -4,7 +4,7 @@ import type {
   CapBooking,
   MilestoneBooking,
 } from '../engine/record.ts'
-import { money, NETWORK_NAMES, shortDate } from '../engine/text.ts'
+import { CAP_PERIODS, money, NETWORK_NAMES, shortDate } from '../engine/text.ts'
 import type { WalletSummary } from '../engine/wallet-summary.ts'
 
 // "To do now", above the card details; nothing when all's done.
@@ -48,10 +48,11 @@ export function formatWalletSummary(summary: WalletSummary): string {
         `  Rotating categories for ${c.rotationGap} aren't in earnrate yet.`,
       )
     for (const cap of c.caps)
-      if (cap.remaining !== null)
-        lines.push(
-          `  Cap on ${cap.label}: ${money(cap.spent)} of ${money(cap.amount)} used for ${cap.currentPeriod ?? ''} (cap key ${cap.key}).`,
-        )
+      lines.push(
+        cap.remaining === null
+          ? `  Cap on ${cap.label}: ${money(cap.amount)} ${CAP_PERIODS[cap.period]}; give the card's anniversary to track it (cap key ${cap.key}).`
+          : `  Cap on ${cap.label}: ${money(cap.spent)} of ${money(cap.amount)} used for ${cap.currentPeriod ?? ''}${cap.until === null ? '' : `, through ${shortDate(cap.until)}`} (cap key ${cap.key}).`,
+      )
     for (const m of c.milestones)
       lines.push(`  Spend bonus (${m.id}): ${m.text}`)
     if (c.anniversary !== null)
