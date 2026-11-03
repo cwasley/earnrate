@@ -310,7 +310,7 @@ async function server() {
     const abroad = await tool(token, 'best_card_for_purchase', {
       merchant: 'Whole Foods',
       country: 'GB',
-      cards: ['chase-freedom-unlimited', 'amex-gold'],
+      cards: [{ cardId: 'chase-freedom-unlimited' }, { cardId: 'amex-gold' }],
     })
     check(
       'answer abroad nets out foreign fees',
