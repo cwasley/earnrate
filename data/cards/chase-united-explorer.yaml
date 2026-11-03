@@ -31,6 +31,19 @@ rules:
     match: { categories: [travel.hotels] }
     rate: 2
     note: Only hotel stays booked directly with the hotel. Not travel agencies, discount travel sites, vacation clubs, tour operators or packages; on-site purchases count only if they code as the hotel.
+milestones:
+  - id: spend-10k
+    spend: 10000
+    period: calendar_year
+    rewards:
+      - '$100 United TravelBank cash'
+    note: 'One a calendar year. It posts to MileagePlus within 6-8 weeks, and the booking must be made within 12 months of issue.'
+  - id: spend-20k
+    spend: 20000
+    period: calendar_year
+    rewards:
+      - a 10,000-mile award flight discount
+    note: "One a calendar year. It posts to MileagePlus within 6-8 weeks and expires 12 months after it's issued."
 todo:
   - United Card Events from Chase also earn 3x; no merchant exists for them, so they aren't modeled.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
@@ -74,3 +87,9 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63218.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: spend-10k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
+    quote: 'Earn $100 in United® TravelBank cash after you spend $10,000 on purchases each calendar year'
+  - rule: spend-20k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
+    quote: 'Earn a 10,000-mile award flight discount after spending $20,000 each calendar year'

@@ -39,6 +39,13 @@ rules:
     match: { categories: [transit] }
     rate: 2
     note: Local transit and commuting, including rideshare, taxis, trains, buses, ferries, tolls and parking. Not airlines, car rentals, bike or scooter rentals or car sharing.
+milestones:
+  - id: spend-25k
+    spend: 25000
+    period: calendar_year
+    rewards:
+      - 2 continental U.S. Economy Plus seat upgrades
+    note: 'For the primary cardmember, on tickets bought with the card. Chase says to allow 6-8 weeks for them to post; use them within 12 months.'
 todo:
   - United Card Events from Chase also earn 2x; no merchant exists for them, so they aren't modeled.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
@@ -88,3 +95,6 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65426.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: spend-25k
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: 'Earn 2 continental U.S. Economy Plus® seat upgrades after spending $25,000 each calendar year.'

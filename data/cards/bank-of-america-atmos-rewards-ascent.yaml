@@ -42,6 +42,13 @@ rules:
     rate: 1.1
     requires: { membership: bank-of-america-account }
     note: The 1x base rate plus the 10% rewards bonus for holding an eligible Bank of America account.
+milestones:
+  - id: spend-6k
+    spend: 6000
+    period: cardmember_year
+    rewards:
+      - a $99 Companion Fare
+    note: 'Spending by the account anniversary counts; the code arrives within 2 billing cycles after it. $99 plus taxes and fees from $23, for a companion on a Saver or Main Cabin fare within North America on Alaska or Hawaiian. Use it within 12 months.'
 evidence:
   - rule: base_rate
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
@@ -82,6 +89,12 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081060&productoffercode=RS&locale=en_US
     quote: 'Foreign Transaction None Penalty Fee'
+  - rule: spend-6k
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+    quote: 'each account anniversary after you spend $6,000 or more on purchases within the prior anniversary year'
+  - rule: spend-6k
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081060&productoffercode=RS&locale=en_US
+    quote: 'each anniversary after spending $6,000 or more on Net Purchases'
 todo:
   - 20% back on Alaska and Hawaiian inflight purchases is a rebate, not points, and isn't modeled.
   - "BofA's rewards page lists Atmos Rewards cards as not eligible for the BofA Rewards tier bonus (in a popup the source check can't read), so the 10% account bonus stands alone."

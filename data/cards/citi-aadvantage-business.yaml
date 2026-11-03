@@ -37,8 +37,16 @@ rules:
     match: { categories: [phone, tv_internet] }
     rate: 2
     note: Telecom merchants (phone service and equipment such as cell phones) and cable and satellite TV, internet, phone and radio providers.
-# Not modeled: free checked bag, companion certificate after $30,000 spend. Loyalty Points toward status aren't card earnings.
+milestones:
+  - id: spend-30k
+    spend: 30000
+    period: cardmember_year
+    rewards:
+      - an American Airlines Companion Certificate
+    note: "Citi's cardmembership year runs from the billing cycle after the anniversary month, so it can be a few weeks off the anniversary date. Issued after the card renews: the companion pays $99 plus taxes and fees on a domestic Main Cabin round trip."
+# Not modeled: free checked bag. Loyalty Points toward status aren't card earnings.
 todo:
+  - Citi counts the $30,000 milestone over a cardmembership year that starts with the billing cycle after the anniversary month; `cardmember_year` uses the anniversary date, so progress can be a few weeks off.
   - Warehouse-club gas earns 2x if the club codes it as a gas station; earnrate's gas.superstore can't tell, so it's excluded. Moot at Costco, which takes only Visa.
 evidence:
   - rule: base_rate
@@ -86,3 +94,6 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'Fee for Foreign Purchases — None'
+  - rule: spend-30k
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'Earn an American Airlines Companion Certificate for qualifying domestic travel after you spend $30,000 in purchases each cardmembership year'
