@@ -13,6 +13,7 @@ base_rate: 1
 business: true
 annual_fee: 99
 first_year_fee: 0
+foreign_transaction_fee: 0
 welcome_offer:
   points: 75000
   spend: 5000
@@ -82,3 +83,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'new account bonus for a Citi® / AAdvantage® Business account in the past 48 months'
+  - rule: foreign_transaction_fee
+    url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    quote: 'Fee for Foreign Purchases — None'

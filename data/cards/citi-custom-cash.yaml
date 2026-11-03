@@ -15,6 +15,7 @@ source_urls:
 # Paid as ThankYou Points, which redeem at 1¢ for cash back on this card, so a
 # point here is 1%.
 base_rate: 1
+foreign_transaction_fee: null
 # Points can be combined into one ThankYou account, which then runs on that
 # account's terms: pooled with a Strata card, they transfer like Strata points.
 pools_into:
@@ -97,6 +98,7 @@ rules:
     rate: 5
     note: 4 extra points per $1 on top of the 1% base, for hotels, car rentals and attractions booked with Citi Travel. Only the part paid with the card earns, and canceled bookings don't. Citi's terms don't say whether the extra 4 also stacks on the 5% when travel or transit is the top category.
 todo:
+  - 'Foreign transaction fee not on file: the card page is a "Not Available" stub since applications closed, and no readable Citi page states the fee.'
   - Network set to mastercard, but no current Citi page states it (the card page is now a "Not Available" stub). Check your card.
   - Travel agencies (MCC 4722) count toward select travel, but a choice option can only list categories or merchants, so they aren't in the option.
   - Citi Travel hotel bookings may also count toward select travel (Citi Travel is a travel agency). Possible 5% + 4% stacking is unconfirmed.

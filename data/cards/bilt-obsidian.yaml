@@ -13,6 +13,7 @@ source_urls:
   - https://www.bilt.com/card
 base_rate: 1
 annual_fee: 95
+foreign_transaction_fee: 0
 choices:
   # Dining is the default. It can be switched once in the first 30 days, then
   # only in January.
@@ -90,3 +91,6 @@ evidence:
   - rule: annual_fee
     url: https://www.bilt.com/card/obsidian
     quote: '$95 annual fee'
+  - rule: foreign_transaction_fee
+    url: https://www.bilt.com/card/obsidian
+    quote: 'Enjoy no foreign transaction fees when traveling internationally'

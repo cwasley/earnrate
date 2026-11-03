@@ -10,6 +10,7 @@ source_urls:
   - https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
 base_rate: 1
 annual_fee: 395
+foreign_transaction_fee: 0
 welcome_offer:
   points: 80000
   spend: 4000
@@ -92,5 +93,8 @@ evidence:
   - rule: alaska-and-hawaiian-with-boa-account
     url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
     quote: 'open consumer (non-business) checking, savings or CD account with Bank of America N.A. or an investment account with Merrill'
+  - rule: foreign_transaction_fee
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
+    quote: 'Foreign Transaction None Penalty Fee'
 todo:
   - "BofA's rewards page lists Atmos Rewards cards as not eligible for the BofA Rewards tier bonus (in a popup the source check can't read), so the 10% account bonus stands alone."

@@ -12,6 +12,7 @@ source_urls:
 base_rate: 1
 business: true
 annual_fee: 95
+foreign_transaction_fee: 0
 welcome_offer:
   points: 100000
   spend: 8000
@@ -96,5 +97,8 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
     quote: 'Earn 100,000 bonus points after you spend $8,000 on purchases in the first 3 months after account opening'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63764.html
+    quote: 'Foreign Transactions None Penalty Fees'
 todo:
   - "lyft: once the $150,000 3x cap is used up, Chase's wording implies Lyft drops to 3x (1 + 2 extra), not 5x; the schema can't share the cap with a different then_rate, so this rule stays at 5x uncapped."

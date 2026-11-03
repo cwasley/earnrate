@@ -13,6 +13,7 @@ source_urls:
 base_rate: 1
 business: true
 annual_fee: 0
+foreign_transaction_fee: 3
 welcome_offer:
   dollars: 750
   spend: 6000
@@ -99,3 +100,6 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/business-credit-cards/ink/cash
     quote: 'Earn $750 cash back after you spend $6,000 on purchases in the first 3 months after account opening'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63827.html
+    quote: 'Foreign Transactions 3% of the amount of each transaction in U.S. dollars'

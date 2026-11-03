@@ -9,6 +9,7 @@ source_urls:
   - https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
 base_rate: 1
 annual_fee: 350
+foreign_transaction_fee: 0
 welcome_offer:
   points: 60000
   spend: 4000
@@ -63,3 +64,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
     quote: 'new account bonus for a Citi® / AAdvantage® Globe™ account in the past 48 months'
+  - rule: foreign_transaction_fee
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'Fee for Foreign Purchases - None'

@@ -8,9 +8,11 @@ verified_by: claude
 source_urls:
   - https://creditcards.chase.com/business-credit-cards/IHG/business
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65355.html
 base_rate: 3
 business: true
 annual_fee: 200
+foreign_transaction_fee: 0
 welcome_offer:
   points: 190000
   spend: 5000
@@ -111,6 +113,9 @@ evidence:
   - rule: spend-60k
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
     quote: 'After spending $60,000 with your IHG One Rewards Business Credit Card in purchases each calendar year'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65355.html
+    quote: 'Foreign Transactions None Penalty Fees'
 todo:
   - "Starting January 1, 2027, $50,000 of purchases in a calendar year earns Diamond Elite status. It isn't listed as a milestone yet, because a milestone has no start date."
   - The $100 airline statement credit and the up to $100 yearly Expensify credit aren't modeled.

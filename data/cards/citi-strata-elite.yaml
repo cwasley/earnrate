@@ -10,6 +10,7 @@ source_urls:
   - https://www.thankyou.com/terms
 base_rate: 1.5
 annual_fee: 595
+foreign_transaction_fee: 0
 welcome_offer:
   points: 75000
   spend: 6000
@@ -78,3 +79,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
     quote: 'New account bonus offer is not available if you currently have or previously had a Citi Strata Elite® account'
+  - rule: foreign_transaction_fee
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: 'Fee for foreign purchases - None'

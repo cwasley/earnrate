@@ -10,6 +10,7 @@ source_urls:
   - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
 base_rate: 1
 annual_fee: 895
+foreign_transaction_fee: 0
 welcome_offer:
   points: 175000
   spend: 12000
@@ -86,3 +87,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/card/platinum/
     quote: 'after you spend $12,000 in purchases on your new Card within the first 6 months'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'

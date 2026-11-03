@@ -11,6 +11,7 @@ source_urls:
   - https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
 base_rate: 1
 annual_fee: 0
+foreign_transaction_fee: 0
 welcome_offer:
   points: 20000
   spend: 1000
@@ -101,6 +102,9 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
     quote: 'To qualify for the 20,000 bonus rewards points, a total of at least $1,000 in net purchases'
+  - rule: foreign_transaction_fee
+    url: https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
+    quote: 'Foreign Currency Conversion/Foreign Transaction None'
 todo:
   - 'Wells Fargo values a point at $0.01 and says points transfer to select travel loyalty programs, but names no partners.'
   - 'The streaming page lists merchant types, not providers; no issuer list of specific streaming services was found.'

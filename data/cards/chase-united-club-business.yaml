@@ -7,9 +7,11 @@ last_verified: 2026-11-01
 verified_by: claude
 source_urls:
   - https://creditcards.chase.com/business-credit-cards/united/united-club-business
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65424.html
 base_rate: 1.5
 business: true
 annual_fee: 695
+foreign_transaction_fee: 0
 welcome_offer:
   points: 90000
   spend: 5000
@@ -52,3 +54,6 @@ evidence:
   - rule: renowned-hotels
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'hotel accommodation purchases made using your card with Renowned Hotels and Resorts for United'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65424.html
+    quote: 'Foreign Transactions None Penalty Fees'

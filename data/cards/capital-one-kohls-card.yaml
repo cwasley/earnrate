@@ -14,12 +14,14 @@ source_urls:
 # Units are cents of Kohl's rewards per dollar, so 2.5 is 2.5%.
 base_rate: 0
 annual_fee: 0
+foreign_transaction_fee: null
 rules:
   - id: kohls
     match: { merchants: [kohls] }
     rate: 2.5
     note: Card's own share only. Kohl's Rewards members earn 5% however they pay, and paying with the card raises that to 7.5% ("Earn 5% any way you pay or 7.5% when you use a Kohl's Card", kohls.com/feature/rewards.jsp, checked by hand because kohls.com blocks the weekly check). Kohl's stores and Kohls.com, excluding gift cards. Rewards turn into Kohl's Cash in $5 steps on the 1st of the next month and expire 30 days later.
 todo:
+  - "Foreign transaction fee not on file: Capital One's rates disclosure has no foreign transaction row and no Kohl's page states one. It works only at Kohl's, so it doesn't matter abroad."
   - Capital One applies everyone for the Kohl's Rewards Visa first; this store-only card is the fallback.
   - Periodic cardholder discounts aren't modeled. These are monthly savings offers, a yearly anniversary offer and a 40% off new-account coupon.
   - MVC status ($600 a year at Kohl's on the card) adds free-shipping offers. Not modeled.

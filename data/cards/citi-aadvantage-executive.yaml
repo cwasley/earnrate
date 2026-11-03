@@ -9,6 +9,7 @@ source_urls:
   - https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
 base_rate: 1
 annual_fee: 695
+foreign_transaction_fee: 0
 welcome_offer:
   points: 80000
   spend: 8000
@@ -61,3 +62,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
     quote: 'new account bonus for a Citi® / AAdvantage® Executive account in the past 48 months'
+  - rule: foreign_transaction_fee
+    url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    quote: 'Fee for Foreign Purchases - None'

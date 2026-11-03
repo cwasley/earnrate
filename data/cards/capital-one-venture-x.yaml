@@ -12,6 +12,7 @@ source_urls:
   - https://disclosures.capitalone.com/disclosure.42201.en-US.html
 base_rate: 2
 annual_fee: 395
+foreign_transaction_fee: 0
 welcome_offer:
   points: 75000
   spend: 4000
@@ -71,3 +72,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.capitalone.com/credit-cards/venture-x/
     quote: 'Earn 75,000 bonus miles once you spend $4,000 on purchases within the first 3 months from account opening'
+  - rule: foreign_transaction_fee
+    url: https://www.capitalone.com/credit-cards/venture-x/
+    quote: 'pay a transaction fee when making purchases outside of the United States'

@@ -13,6 +13,7 @@ source_urls:
 base_rate: 1
 business: true
 annual_fee: 299
+foreign_transaction_fee: 0
 welcome_offer:
   points: 80000
   spend: 5000
@@ -97,3 +98,6 @@ evidence:
   - rule: welcome_offer
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61809.html
     quote: 'may not be eligible for a second Chase credit card in the same Rewards Program'
+  - rule: foreign_transaction_fee
+    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    quote: 'No Foreign Transaction Fees: See Cardmember Agreement for details'

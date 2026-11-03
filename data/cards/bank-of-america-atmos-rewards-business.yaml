@@ -11,6 +11,7 @@ source_urls:
 base_rate: 1
 business: true
 annual_fee: 70
+foreign_transaction_fee: 0
 welcome_offer:
   points: 70000
   spend: 4000
@@ -82,6 +83,9 @@ evidence:
   - rule: alaska-and-hawaiian-with-boa-account
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
     quote: 'open small business (non-consumer) checking or savings account with Bank of America, N.A.'
+  - rule: foreign_transaction_fee
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
+    quote: 'International Transaction None Penalty Fee'
 todo:
   - 'annual_fee is the $70 per-company fee. Each card also costs $25 a year, which the schema has no field for.'
   - "BofA's rewards page lists Atmos Rewards cards as not eligible for the BofA Rewards tier bonus (in a popup the source check can't read), so the 10% account bonus stands alone."

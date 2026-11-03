@@ -14,6 +14,7 @@ source_urls:
 # redeem at 1¢ for cash back (10,000 points = $100), so a point here is 1%.
 base_rate: 2
 annual_fee: 0
+foreign_transaction_fee: 3
 welcome_offer:
   dollars: 200
   spend: 1500
@@ -72,3 +73,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
     quote: 'new account bonus for a Citi Double Cash account in the past 48 months'
+  - rule: foreign_transaction_fee
+    url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
+    quote: 'Fee for foreign purchases – 3% of the U.S. dollar amount of each purchase'

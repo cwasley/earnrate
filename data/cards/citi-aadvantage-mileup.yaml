@@ -11,6 +11,7 @@ source_urls:
   - https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
 base_rate: 1
 annual_fee: 0
+foreign_transaction_fee: 3
 welcome_offer:
   points: 15000
   spend: 500
@@ -58,3 +59,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'new account bonus for an AAdvantage® MileUp® account in the past 48 months'
+  - rule: foreign_transaction_fee
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'Fee for Foreign Purchases - 3% of the U.S. dollar amount of each purchase'
