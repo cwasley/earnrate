@@ -224,22 +224,38 @@ export function makeWorker<E extends Env>(
       if (await limited(env.SIGN_IN_LIMITER, request)) return tooMany()
       return challenge(resource, true)
     }
-    const { grant, clientId } = found
+    const { grant, clientId, grantId } = found
     // Revoking grants goes through KV, which can lag; the wallet's own
-    // storage is consistent, so a deleted wallet signs its apps out here.
+    // storage is consistent, so a deleted wallet or a signed-out grant is
+    // refused here at once.
     const vault = vaultFor(env, grant.walletId)
-    let exists
+    let allowed
     try {
-      exists = await vault.checkIn(calls.some((c) => c.tool !== null))
+      allowed = await vault.checkIn(
+        calls.some((c) => c.tool !== null),
+        grantId,
+      )
     } catch {
       return wantsWallet ? unavailable() : signedOut()
     }
-    if (!exists) return challenge(resource, true)
+    if (!allowed) return challenge(resource, true)
     const store = new VaultWalletStore(
       vault,
       grant.walletKey,
-      () => auth.signOutEverywhere(env, grant.walletId),
-      () => auth.signOutEverywhere(env, grant.walletId, clientId),
+      async () => {
+        await auth.signOutEverywhere(env, grant.walletId)
+      },
+      // This grant first, so it's refused even if revoking in KV fails.
+      async () => {
+        if (grantId !== null)
+          await vault.signOutGrants([{ id: grantId, expiresAt: null }])
+        const revoked = await auth.signOutEverywhere(
+          env,
+          grant.walletId,
+          clientId,
+        )
+        await vault.signOutGrants(revoked)
+      },
     )
     const response = await handler.fetch(forward, {
       ...options,

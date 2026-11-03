@@ -21,8 +21,11 @@ export class WalletObject extends DurableObject<Env> {
   create(walletId: string, wrappedKey: string) {
     return this.vault.create(walletId, wrappedKey)
   }
-  checkIn(used: boolean) {
-    return this.vault.checkIn(used)
+  checkIn(used: boolean, grantId: string | null) {
+    return this.vault.checkIn(used, grantId)
+  }
+  signOutGrants(grants: { id: string; expiresAt: number | null }[]) {
+    return this.vault.signOutGrants(grants)
   }
   wrappedKey() {
     return this.vault.wrappedKey()

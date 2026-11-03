@@ -95,10 +95,6 @@ Spend milestones (`milestones:`) have no start date, so one the issuer announces
 
 Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. It would need a per-card credit value with evidence, kept apart from earn rates (credits as rewards stay out of scope, below).
 
-### Known issue: switch_wallet signs out after a short delay
-
-`switch_wallet` revokes the app's sign-in in Cloudflare KV, which can take up to about a minute to reach every location. Until then the old connection can still reach the old wallet. Deleting a wallet doesn't have this gap: the wallet's own storage refuses at once. A fix would check a per-wallet sign-out list in the vault on each request.
-
 ## Not planned
 
 Out of scope per the project's non-goals, or too variable to model as a rate.

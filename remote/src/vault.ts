@@ -10,7 +10,11 @@ import type {
 import type { CardInput } from '../../src/engine/wallet-change.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
-import { RETENTION_MONTHS, UNUSED_NEW_WALLET } from './policy.ts'
+import {
+  CONNECTION_IDLE_DAYS,
+  RETENTION_MONTHS,
+  UNUSED_NEW_WALLET,
+} from './policy.ts'
 import { decryptWallet, encryptWallet } from './vault-crypto.ts'
 
 export type VaultStorage = {
@@ -36,6 +40,23 @@ const DELETED =
 // it for 13 months from then.
 const DAY_MS = 24 * 60 * 60 * 1000
 const UNUSED_NEW_WALLET_MS = UNUSED_NEW_WALLET.days * DAY_MS
+
+// Signed-out sign-in grants: a SHA-256 hash of each grant id, never a token,
+// with when the grant would have expired anyway (ms since 1970).
+type SignedOut = Record<string, number>
+
+async function grantHash(grantId: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(grantId),
+  )
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+const unexpired = (list: SignedOut, now: number): SignedOut =>
+  Object.fromEntries(Object.entries(list).filter(([, until]) => until > now))
 
 function retentionEnd(lastUsed: number): number {
   const end = new Date(lastUsed)
@@ -123,11 +144,19 @@ export class WalletVault {
 
   // Any tool call counts as use, so a wallet used only for questions isn't
   // deleted; an app's own setup requests don't. Written at most once a day.
-  checkIn(used: boolean): Promise<boolean> {
+  // False when the wallet is gone or the request's grant was signed out.
+  checkIn(used: boolean, grantId: string | null): Promise<boolean> {
     return this.serialized(async () => {
       const meta = await this.storage.get<Meta>('meta')
       if (!meta) return false
       const now = this.now()
+      const signedOut = await this.storage.get<SignedOut>('signed-out')
+      if (signedOut) {
+        const kept = unexpired(signedOut, now)
+        if (Object.keys(kept).length < Object.keys(signedOut).length)
+          await this.storage.put('signed-out', kept)
+        if (grantId !== null && (await grantHash(grantId)) in kept) return false
+      }
       if (
         used &&
         (meta.lastUsed === meta.created || now - meta.lastUsed >= DAY_MS)
@@ -136,6 +165,26 @@ export class WalletVault {
         await this.storage.setAlarm(retentionEnd(now))
       }
       return true
+    })
+  }
+
+  // Revoking a grant in KV takes a while to reach every location; this
+  // refuses it here at once. `expiresAt` (ms) is when the grant would have
+  // expired; null when unknown, so the longest an idle grant lasts.
+  signOutGrants(
+    grants: { id: string; expiresAt: number | null }[],
+  ): Promise<void> {
+    return this.serialized(async () => {
+      if (!(await this.storage.get<Meta>('meta'))) return
+      const now = this.now()
+      const list = unexpired(
+        (await this.storage.get<SignedOut>('signed-out')) ?? {},
+        now,
+      )
+      for (const g of grants)
+        list[await grantHash(g.id)] =
+          g.expiresAt ?? now + CONNECTION_IDLE_DAYS * DAY_MS
+      await this.storage.put('signed-out', list)
     })
   }
 
@@ -220,6 +269,7 @@ export type VaultApi = Pick<
   WalletVault,
   | 'create'
   | 'checkIn'
+  | 'signOutGrants'
   | 'wrappedKey'
   | 'load'
   | 'addCard'
