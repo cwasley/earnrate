@@ -52,27 +52,34 @@ const github = (token: string) => ({
 
 const workflowUrl = `https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}`
 
+// Marks the runs a failed probe starts, so only those hold back the next one.
+export const PROBE_FAILED = 'probe failed'
+
 export async function dispatch(
   fetcher: Fetch,
   token: string,
   quick: boolean,
+  reason = '',
 ): Promise<void> {
   const res = await fetcher(`${workflowUrl}/dispatches`, {
     method: 'POST',
     headers: github(token),
-    body: JSON.stringify({ ref: 'main', inputs: { quick: String(quick) } }),
+    body: JSON.stringify({
+      ref: 'main',
+      inputs: { quick: String(quick), ...(reason ? { reason } : {}) },
+    }),
   })
   if (res.status !== 204)
     throw new Error(`GitHub refused the dispatch: ${String(res.status)}`)
 }
 
-async function dispatchedSince(
+async function probeDispatchedSince(
   fetcher: Fetch,
   token: string,
   since: Date,
 ): Promise<boolean> {
   const res = await fetcher(
-    `${workflowUrl}/runs?event=workflow_dispatch&per_page=1`,
+    `${workflowUrl}/runs?event=workflow_dispatch&per_page=20`,
     { headers: github(token) },
   )
   if (!res.ok) return false
@@ -81,12 +88,18 @@ async function dispatchedSince(
     typeof body === 'object' && body !== null && 'workflow_runs' in body
       ? body.workflow_runs
       : undefined
-  const first: unknown = Array.isArray(runs) ? runs[0] : undefined
-  const last =
-    typeof first === 'object' && first !== null && 'created_at' in first
-      ? first.created_at
-      : undefined
-  return typeof last === 'string' && new Date(last) >= since
+  if (!Array.isArray(runs)) return false
+  return runs.some((run: unknown) => {
+    if (typeof run !== 'object' || run === null) return false
+    const title = 'display_title' in run ? run.display_title : undefined
+    const created = 'created_at' in run ? run.created_at : undefined
+    return (
+      typeof title === 'string' &&
+      title.includes(PROBE_FAILED) &&
+      typeof created === 'string' &&
+      new Date(created) >= since
+    )
+  })
 }
 
 export async function onSchedule(
@@ -107,8 +120,8 @@ export async function onSchedule(
   const failed = await failedProbes(fetcher)
   if (failed.length === 0) return 'all up'
   const since = new Date(now.getTime() - DISPATCH_GAP_MINUTES * 60_000)
-  if (await dispatchedSince(fetcher, token, since))
+  if (await probeDispatchedSince(fetcher, token, since))
     return `down (${failed.join(', ')}); a check ran recently`
-  await dispatch(fetcher, token, true)
+  await dispatch(fetcher, token, true, PROBE_FAILED)
   return `down (${failed.join(', ')}); dispatched the quick check`
 }

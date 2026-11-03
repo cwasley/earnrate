@@ -2,14 +2,13 @@
 // data, so no count, rate or quote on the page is typed by hand.
 import { cheatSheet } from '../src/engine/cheat-sheet.ts'
 import { recommend } from '../src/engine/recommend.ts'
+import { pct } from '../src/engine/text.ts'
 import { cardText } from '../src/format/card-text.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Wallet } from '../src/schema/wallet.ts'
 
 const esc = (text: string) =>
   text.replace(/[&<>"']/g, (c) => `&#${String(c.charCodeAt(0))};`)
-
-const pct = (n: number) => `${String(Math.round(n * 10) / 10)}%`
 
 export type LandingFacts = {
   cards: number

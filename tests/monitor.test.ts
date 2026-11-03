@@ -4,7 +4,10 @@ import { CRONS, onSchedule, PROBES } from '../monitor/src/monitor.ts'
 
 const NOW = new Date('2026-11-03T12:00:00Z')
 
-function fakeFetch(options: { down?: string[]; lastDispatch?: string }) {
+function fakeFetch(options: {
+  down?: string[]
+  lastDispatch?: { at: string; title: string }
+}) {
   const calls: { url: string; method: string; body?: string }[] = []
   const fetcher = ((input: string | URL | Request, init?: RequestInit) => {
     const url = input instanceof Request ? input.url : input.toString()
@@ -17,7 +20,12 @@ function fakeFetch(options: { down?: string[]; lastDispatch?: string }) {
       return Promise.resolve(
         Response.json({
           workflow_runs: options.lastDispatch
-            ? [{ created_at: options.lastDispatch }]
+            ? [
+                {
+                  created_at: options.lastDispatch.at,
+                  display_title: options.lastDispatch.title,
+                },
+              ]
             : [],
         }),
       )
@@ -27,7 +35,12 @@ function fakeFetch(options: { down?: string[]; lastDispatch?: string }) {
   const dispatches = () =>
     calls
       .filter((c) => c.url.endsWith('/dispatches'))
-      .map((c) => JSON.parse(c.body ?? '{}') as { inputs: { quick: string } })
+      .map(
+        (c) =>
+          JSON.parse(c.body ?? '{}') as {
+            inputs: { quick: string; reason?: string }
+          },
+      )
   return { fetcher, calls, dispatches }
 }
 
@@ -48,18 +61,34 @@ describe('the uptime monitor', () => {
     expect(
       f.calls.filter((c) => c.url === 'https://earnrate.dev/'),
     ).toHaveLength(2)
-    expect(f.dispatches()).toEqual([{ ref: 'main', inputs: { quick: 'true' } }])
+    expect(f.dispatches()).toEqual([
+      { ref: 'main', inputs: { quick: 'true', reason: 'probe failed' } },
+    ])
   })
 
   test('a failed probe right after a check does not dispatch again', async () => {
     const f = fakeFetch({
       down: ['https://mcp.earnrate.dev/'],
-      lastDispatch: '2026-11-03T11:45:00Z',
+      lastDispatch: {
+        at: '2026-11-03T11:45:00Z',
+        title: 'Live check (probe failed)',
+      },
     })
     expect(await onSchedule(CRONS.probe, 'token', f.fetcher, NOW)).toMatch(
       /a check ran recently/,
     )
     expect(f.dispatches()).toEqual([])
+  })
+
+  test("the hourly check doesn't hold back a check for an outage", async () => {
+    const f = fakeFetch({
+      down: ['https://earnrate.dev/'],
+      lastDispatch: { at: '2026-11-03T11:55:00Z', title: 'Live check' },
+    })
+    expect(await onSchedule(CRONS.probe, 'token', f.fetcher, NOW)).toMatch(
+      /dispatched the quick check/,
+    )
+    expect(f.dispatches()).toHaveLength(1)
   })
 
   test('the hourly and daily triggers dispatch the quick and full checks', async () => {

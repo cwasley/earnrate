@@ -528,11 +528,22 @@ function milestonesText(card: Card): string {
 
 function foreignFeeSection(card: Card): string {
   const fee = card.foreign_transaction_fee
+  const usOnly = [
+    ...new Set(
+      card.rules
+        .filter((r) => r.geography === 'us_only')
+        .map((r) => ruleWhatRaw(card, r)),
+    ),
+  ]
+  const rates =
+    usOnly.length === 0
+      ? 'Purchases outside the U.S. earn its usual rates.'
+      : `Its ${usOnly.length === 1 ? 'rate' : 'rates'} on ${listed(usOnly)} ${usOnly.length === 1 ? 'counts' : 'count'} only in the U.S.; elsewhere those purchases earn its other rates.`
   const using =
     fee === null
       ? "The issuer's pages earnrate reads don't state it; check before using the card abroad."
       : fee === 0
-        ? 'Purchases outside the U.S. earn its usual rates.'
+        ? rates
         : `Abroad, earnrate subtracts the ${pct(fee)} from what each purchase earns before ranking it.`
   return `<h2>Paying abroad</h2><p>${esc(foreignFeeText(fee))}. ${esc(using)}</p>${evidenceFor(card, 'foreign_transaction_fee')}`
 }

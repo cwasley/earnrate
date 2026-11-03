@@ -244,7 +244,7 @@ function warningsFor(
   const warnings: string[] = []
   if (entry.fee > 0)
     warnings.push(
-      `Charges a ${pct(entry.fee)} foreign transaction fee here, so it nets ${pct(entry.effectiveReturnPct)}.`,
+      `Charges a ${pct(entry.fee)} foreign transaction fee here, so it nets ${pct(entry.rateReturnPct)}.`,
     )
   if (isForeign(purchase) && card.foreign_transaction_fee === null)
     warnings.push(
@@ -367,7 +367,7 @@ function tieNote(entries: Entry[]): string | null {
           tied.some((e) => e.evaluation.best.cap !== null)
         ? 'because its rate has no cap'
         : 'by a fixed order; either works'
-  return `${names} also ${verb} ${pct(winner.effectiveReturnPct)} here. ${displayName(winner)} wins the tie ${why}.`
+  return `${names} also ${verb} ${pct(winner.rateReturnPct)} here. ${displayName(winner)} wins the tie ${why}.`
 }
 
 // Finds the closest point inside a currency's value range where the winner
@@ -549,11 +549,11 @@ export function recommend(
       )
       if (alt.card.id !== winner.card.id)
         warnings.push(
-          `${as}, ${displayName(alt)} wins (${pct(alt.effectiveReturnPct)}).`,
+          `${as}, ${displayName(alt)} wins (${pct(alt.rateReturnPct)}).`,
         )
       else if (twin)
         warnings.push(
-          `${as}, ${displayName(twin)} earns as much (${pct(twin.effectiveReturnPct)}).`,
+          `${as}, ${displayName(twin)} earns as much (${pct(twin.rateReturnPct)}).`,
         )
     }
   }
@@ -583,7 +583,7 @@ export function recommend(
       : undefined
     if (alt)
       warnings.push(
-        `Ordering online instead? ${displayName(alt)} works there (${pct(alt.effectiveReturnPct)}).`,
+        `Ordering online instead? ${displayName(alt)} works there (${pct(alt.rateReturnPct)}).`,
       )
   } else if (
     merchant.accepts === null &&
@@ -616,7 +616,7 @@ export function recommend(
       .entries[0]
     if (alt && alt.effectiveReturnPct > winner.effectiveReturnPct + EPSILON) {
       notes.push(
-        `If you book it as ${via.resolvedName}, ${displayName(alt)} earns ${pct(alt.effectiveReturnPct)}.`,
+        `If you book it as ${via.resolvedName}, ${displayName(alt)} earns ${pct(alt.rateReturnPct)}.`,
       )
     }
   }
@@ -636,7 +636,7 @@ export function recommend(
   const best = winner?.effectiveReturnPct ?? 0
   if (open && !bonus && isClose(open.entry.effectiveReturnPct, best)) {
     notes.push(
-      `${displayName(open.entry)} earns ${pct(open.entry.effectiveReturnPct)} here, ${num(gap)} ${gap === 1 ? 'point' : 'points'} less than ${pct(best)}, and would help its welcome bonus (${money(open.status.remaining ?? 0)} more by ${open.status.deadline ?? ''}). You're on pace, so this uses the higher rate.`,
+      `${displayName(open.entry)} earns ${pct(open.entry.rateReturnPct)} here, ${num(gap)} ${gap === 1 ? 'point' : 'points'} less than ${pct(best)}, and would help its welcome bonus (${money(open.status.remaining ?? 0)} more by ${open.status.deadline ?? ''}). You're on pace, so this uses the higher rate.`,
     )
   }
   const chosen = bonus?.entry ?? winner
@@ -654,7 +654,11 @@ export function recommend(
     const costHere =
       ties || top.earned === null || first.earned === null
         ? null
-        : roundCents(first.earned - top.earned)
+        : roundCents(
+            first.earned +
+              (first.milestoneBonus?.dollars ?? 0) -
+              (top.earned + (top.milestoneBonus?.dollars ?? 0)),
+          )
     bonusResult = {
       cardId: top.cardId,
       checkoutLabel: top.checkoutLabel,

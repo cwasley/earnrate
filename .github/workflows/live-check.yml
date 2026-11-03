@@ -18,6 +18,12 @@ on:
         description: 'Quick check only'
         type: boolean
         default: false
+      reason:
+        description: 'Why it was started (the monitor sets "probe failed")'
+        type: string
+        default: ''
+
+run-name: ${{ inputs.reason != '' && format('Live check ({0})', inputs.reason) || 'Live check' }}
 
 permissions:
   actions: read

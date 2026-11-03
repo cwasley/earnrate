@@ -310,10 +310,12 @@ async function server() {
     const abroad = await tool(token, 'best_card_for_purchase', {
       merchant: 'Whole Foods',
       country: 'GB',
+      cards: ['chase-freedom-unlimited', 'amex-gold'],
     })
     check(
       'answer abroad nets out foreign fees',
-      !abroad.isError && /foreign transaction fee/.test(abroad.text),
+      !abroad.isError &&
+        /foreign transaction fee here, so it nets/.test(abroad.text),
       abroad.text.slice(0, 80),
     )
 

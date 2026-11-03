@@ -5,6 +5,7 @@ import { bonusStatus } from '../../src/engine/bonus.ts'
 import {
   cheatSheet,
   EVERYDAY_PURCHASES,
+  quickPickText,
   type CheatSheet,
 } from '../../src/engine/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
@@ -63,7 +64,7 @@ import { offerTerms } from '../../src/engine/offers.ts'
 import { dollarsAndCents } from '../../src/engine/text.ts'
 
 // The first everyday purchases, as quick picks for one question.
-const QUICK = EVERYDAY_PURCHASES.slice(0, 6).map((p) => p.label)
+const QUICK = EVERYDAY_PURCHASES.slice(0, 6).map(quickPickText)
 
 // Setup notes name what to set in CLI terms; this says where on the page.
 function noteText(note: SetupNote, name: string): string {

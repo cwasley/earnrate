@@ -21,9 +21,12 @@ import {
 import { ABROAD_NOTE, AbroadToggle } from './AbroadToggle.tsx'
 import { SearchInput } from './SearchInput.tsx'
 import { engineOptions, type Saved, type Settings } from './settings.ts'
-import { EVERYDAY_PURCHASES } from '../../src/engine/cheat-sheet.ts'
+import {
+  EVERYDAY_PURCHASES,
+  quickPickText,
+} from '../../src/engine/cheat-sheet.ts'
 
-const QUICK = EVERYDAY_PURCHASES.map((p) => p.label)
+const QUICK = EVERYDAY_PURCHASES.map(quickPickText)
 
 const TOP = 8
 

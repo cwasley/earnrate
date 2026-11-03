@@ -32,6 +32,11 @@ export const EVERYDAY_PURCHASES: CheatSheetItem[] = [
   { label: 'Everything else', category: 'other' },
 ]
 
+// What a quick pick searches for: "Streaming (Netflix)" searches "Netflix",
+// since streaming bonuses follow each issuer's list of services.
+export const quickPickText = (item: CheatSheetItem) =>
+  /\((.+)\)$/.exec(item.label)?.[1] ?? item.label
+
 export type CheatSheetRow = {
   label: string
   cardId: string | null // null when none of the cards work there
