@@ -86,7 +86,7 @@ export function registerAnswerTools(
     {
       title: 'Best card for a purchase',
       description:
-        "Which card earns the most rewards for a purchase, and why. With no cards given and no saved wallet, it ranks every card earnrate knows (in `allCards`): a complete answer for anyone. With cards named in the conversation (`cards`) or a saved wallet, it picks the best of the user's own: `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout, with every usable card ranked with reasons, cards the merchant won't take, assumptions, warnings, and when a different point valuation would change the pick. For a business earnrate may not know, like a local restaurant, pass `category` when you can tell what kind of business it is. Never needs or returns card numbers.",
+        "Which credit card earns the most rewards for a purchase, and why. With no cards given and no saved wallet, it ranks every card earnrate knows (in `allCards`): a complete answer for anyone. With cards named in the conversation (`cards`) or a saved wallet, it picks the best of the user's own: `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout, with every usable card ranked with reasons, cards the merchant won't take, assumptions, warnings, and when a different point valuation would change the pick. For a business earnrate may not know, like a local restaurant, pass `category` when you can tell what kind of business it is. Never needs or returns card numbers.",
       inputSchema: z.object({
         merchant: Merchant,
         amount: z
