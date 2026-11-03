@@ -121,9 +121,18 @@ function cardProblems(
   for (const m of card.milestones)
     if (card.rules.some((r) => r.id === m.id))
       problems.push(`${where}: milestone '${m.id}' has a rule's id`)
+  if (
+    card.foreign_transaction_fee === null &&
+    !card.todo.some((t) => /foreign transaction fee/i.test(t))
+  )
+    problems.push(
+      `${where}: foreign_transaction_fee is null without a todo saying why`,
+    )
   const ruleIds = new Set([
     'base_rate',
-    'foreign_transaction_fee',
+    ...(card.foreign_transaction_fee !== null
+      ? ['foreign_transaction_fee']
+      : []),
     ...(card.pools_into ? ['pools_into'] : []),
     ...(card.annual_fee !== undefined ? ['annual_fee'] : []),
     ...(card.first_year_fee !== undefined ? ['first_year_fee'] : []),

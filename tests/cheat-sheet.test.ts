@@ -23,6 +23,7 @@ describe('cheat sheet', () => {
       ['Streaming', 'amex-blue-cash-preferred', 6],
       ['Drugstores', 'chase-freedom-flex', 3],
       ['Everything else', 'citi-double-cash', 2],
+      ['Abroad', 'sofi-unlimited-2', 2],
     ])
     expect(sheet.notes).toContainEqual(
       expect.stringMatching(

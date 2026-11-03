@@ -23,7 +23,7 @@ export type CardInfo = {
   network: Card['network']
   currency: string
   annualFee: number | null
-  foreignTransactionFee: number // percent; 0 when there's none
+  foreignTransactionFee: number | null // percent; 0 when none, null when unknown
   business: boolean
   onlyAt: string[] | null
   held: boolean

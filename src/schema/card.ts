@@ -199,8 +199,9 @@ export const CardSchema = z
     annual_fee: z.number().nonnegative().optional(), // dollars
     // When the first year differs, usually a waived fee.
     first_year_fee: z.number().nonnegative().optional(),
-    // Percent of each purchase outside the U.S.; 0 when there's none.
-    foreign_transaction_fee: z.number().nonnegative(),
+    // Percent of each purchase outside the U.S.; 0 when there's none. null
+    // only when no issuer page states it, with a todo saying so.
+    foreign_transaction_fee: z.number().nonnegative().nullable(),
     welcome_offer: WelcomeOfferSchema.optional(),
     // A paid membership (data/memberships.yaml) the card can't be had
     // without, Costco's for Costco Anywhere. Its fee counts like an annual

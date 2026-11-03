@@ -154,6 +154,25 @@ describe('catalogProblems', () => {
     )
   })
 
+  test('an unknown foreign transaction fee needs a todo saying so', () => {
+    const yaml = cashPlusYaml
+      .replace('foreign_transaction_fee: 0', 'foreign_transaction_fee: null')
+      .replace(
+        '  - { rule: foreign_transaction_fee, url: https://www.usbank.com/, quote: Foreign transaction fee 3% }\n',
+        '',
+      )
+    expect(catalogProblems(catalog(yaml))).toContain(
+      'card usbank-cash-plus: foreign_transaction_fee is null without a todo saying why',
+    )
+    expect(
+      catalogProblems(
+        catalog(
+          `${yaml}todo: ['Foreign transaction fee not on file: the page is blocked.']\n`,
+        ),
+      ),
+    ).toEqual([])
+  })
+
   test('pooling needs a quote too', () => {
     const yaml = cashPlusYaml.replace(
       'base_rate: 1\n',

@@ -529,9 +529,11 @@ function milestonesText(card: Card): string {
 function foreignFeeSection(card: Card): string {
   const fee = card.foreign_transaction_fee
   const using =
-    fee === 0
-      ? 'Purchases outside the U.S. earn its usual rates.'
-      : `Abroad, earnrate subtracts the ${pct(fee)} from what each purchase earns before ranking it.`
+    fee === null
+      ? "The issuer's pages earnrate reads don't state it; check before using the card abroad."
+      : fee === 0
+        ? 'Purchases outside the U.S. earn its usual rates.'
+        : `Abroad, earnrate subtracts the ${pct(fee)} from what each purchase earns before ranking it.`
   return `<h2>Paying abroad</h2><p>${esc(foreignFeeText(fee))}. ${esc(using)}</p>${evidenceFor(card, 'foreign_transaction_fee')}`
 }
 

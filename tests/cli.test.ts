@@ -491,3 +491,32 @@ describe('no wallet needed', () => {
     )
   })
 })
+
+describe('paying abroad', () => {
+  test('--country ranks after foreign transaction fees and checks the code', async () => {
+    const home = await cli(['etsy', '100', '--online'])
+    const abroad = await cli(['etsy', '100', '--online', '--country', 'gb'])
+    expect(abroad.code).toBe(0)
+    expect(abroad.stdout).toMatch(
+      /Double Cash \(3%\), Blue Cash Preferred \(2\.7%\) and Cash\+ \(3%\) charge foreign transaction fees here/,
+    )
+    expect(abroad.stdout).toMatch(/purchase outside the U\.S\./)
+    expect(home.stdout).not.toMatch(/foreign transaction fee/)
+    expect(abroad.stdout).not.toMatch(/\bGB\b/)
+    const bad = await cli(['etsy', '--country', 'GBR'])
+    expect(bad.code).not.toBe(0)
+    expect(bad.stderr).toMatch(/"GBR" isn't a country code/)
+  })
+
+  test('earnrate best --country and earnrate cards show the fee', async () => {
+    const best = await cli(['best', 'groceries', '--country', 'JP', '--all'])
+    expect(best.code).toBe(0)
+    expect(best.stdout).toMatch(
+      /Charges a 3% foreign transaction fee here, so it nets/,
+    )
+    const cards = await cli(['cards', 'freedom unlimited'])
+    expect(cards.stdout).toMatch(/3% foreign transaction fee/)
+    const gold = await cli(['cards', 'amex gold'])
+    expect(gold.stdout).toMatch(/no foreign transaction fee/)
+  })
+})

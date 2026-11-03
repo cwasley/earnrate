@@ -31,6 +31,7 @@ import {
   currencyLabel,
   currencyName,
   earnText,
+  listed,
   money,
   NETWORK_NAMES,
   num,
@@ -150,7 +151,8 @@ function rankEntries(
     const perDollar =
       evaluation.best.rate +
       (bonusPoints > 0 && purchase.amount ? bonusPoints / purchase.amount : 0)
-    const fee = isForeign(purchase) ? card.foreign_transaction_fee : 0
+    // An unknown fee isn't guessed: it's warned about instead.
+    const fee = isForeign(purchase) ? (card.foreign_transaction_fee ?? 0) : 0
     entries.push({
       card,
       held,
@@ -235,6 +237,10 @@ function warningsFor(
   if (entry.fee > 0)
     warnings.push(
       `Charges a ${pct(entry.fee)} foreign transaction fee here, so it nets ${pct(entry.effectiveReturnPct)}.`,
+    )
+  if (isForeign(purchase) && card.foreign_transaction_fee === null)
+    warnings.push(
+      "Its foreign transaction fee isn't on file, so none is subtracted. Check the issuer's terms before using it abroad.",
     )
   const capLabel = (e: typeof best) =>
     e.cap
@@ -460,6 +466,11 @@ export function recommend(
   const winner = entries[0]
   const warnings: string[] = []
   const notes: string[] = []
+  const charging = entries.filter((e) => e.fee > 0)
+  if (charging.length > 0 && entries.length > 1)
+    notes.push(
+      `${listed(charging.map((e) => `${displayName(e)} (${pct(e.fee)})`))} ${charging.length === 1 ? 'charges a foreign transaction fee' : 'charge foreign transaction fees'} here, already subtracted in the ranking.`,
+    )
 
   if (merchant.source === 'none') {
     warnings.push(

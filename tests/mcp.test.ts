@@ -272,6 +272,36 @@ describe('tools', () => {
     expect(text(wrong)).toMatch(/no spend milestone 'spend-99k'.*spend-15k/)
   })
 
+  test('country: abroad, cards rank after their foreign transaction fees', async () => {
+    const client = await connect(await walletCopy())
+    const abroad = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Etsy', amount: 100, country: 'fr' },
+    })
+    expect(abroad.isError, text(abroad)).toBeFalsy()
+    expect(text(abroad)).toMatch(
+      /charge foreign transaction fees here, already subtracted/,
+    )
+    const bad = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Etsy', country: 'France' },
+    })
+    expect(bad.isError).toBe(true)
+    const every = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { category: 'dining', country: 'JP', issuer: 'wells-fargo' },
+    })
+    const ranked = (
+      every.structuredContent as { ranked: { foreignFee: number | null }[] }
+    ).ranked
+    expect(ranked.some((r) => r.foreignFee === 3)).toBe(true)
+    const found = await client.callTool({
+      name: 'search_cards',
+      arguments: { query: 'double cash' },
+    })
+    expect(text(found)).toMatch(/3% foreign transaction fee/)
+  })
+
   test('settings that change nothing say so', async () => {
     const client = await connect(await walletCopy())
     const anniversary = await client.callTool({
