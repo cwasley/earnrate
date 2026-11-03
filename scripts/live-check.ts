@@ -85,7 +85,7 @@ async function site() {
     ['/cards/amex-gold', 'American Express Gold Card'],
     ['/privacy', 'On earnrate.dev'],
     ['/manifest.webmanifest', '"short_name"'],
-    ['/sw.js', 'earnrate-v1'],
+    ['/sw.js', "const CACHE = 'earnrate-v"],
   ]
   for (const [path, marker] of pages) {
     const res = await fetch(`${SITE}${path}`)
