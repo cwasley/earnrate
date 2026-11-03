@@ -358,6 +358,8 @@
       }
       .viz td:last-child {
         text-align: right;
+        white-space: nowrap;
+        padding-left: 12px;
         font-weight: 600;
         color: var(--accent);
       }
@@ -380,29 +382,13 @@
         align-items: center;
         gap: 10px;
       }
-      .mini-card {
-        width: 44px;
-        height: 28px;
-        border-radius: 5px;
-        background: var(--accent);
-      }
-      .mini-card.alt {
-        background: var(--accent-strong);
-        opacity: 0.55;
-      }
-      .home-icon {
-        width: 40px;
-        height: 40px;
+      .app-icon {
+        flex: none;
         border-radius: 10px;
-        background: var(--accent);
-        display: grid;
-        place-items: center;
       }
-      .home-icon i {
-        width: 20px;
-        height: 13px;
-        border-radius: 3px;
-        background: var(--surface);
+      .viz tr.dim td {
+        color: var(--muted);
+        font-weight: 400;
       }
 
       /* Before and after a cap */
@@ -848,11 +834,19 @@
           </li>
           <li class="tile">
             <div class="viz" aria-hidden="true">
-              <div class="stack">
-                <span class="mini-card"></span><span class="dim">+</span
-                ><span class="mini-card alt"></span
-                ><span class="dim">after annual fees</span>
-              </div>
+              <table>
+                <tr>
+                  <td><!--earnrate:pair_cards--></td>
+                  <td><!--earnrate:pair_net-->/yr</td>
+                </tr>
+                <tr class="dim">
+                  <td>
+                    <!--earnrate:single_cards-->
+                    alone
+                  </td>
+                  <td><!--earnrate:single_net-->/yr</td>
+                </tr>
+              </table>
             </div>
             <h3>It finds your next card</h3>
             <p>
@@ -890,8 +884,18 @@
           <li class="tile">
             <div class="viz" aria-hidden="true">
               <div class="stack">
-                <span class="home-icon"><i></i></span
-                ><span class="dim">Works with no signal</span>
+                <img
+                  class="app-icon"
+                  src="/apple-touch-icon.png?v=2"
+                  alt=""
+                  width="44"
+                  height="44"
+                />
+                <div>
+                  <b>earnrate</b><br /><span class="dim"
+                    >Opens to your wallet, even offline</span
+                  >
+                </div>
               </div>
             </div>
             <h3>It's on your phone</h3>

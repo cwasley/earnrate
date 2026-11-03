@@ -1,8 +1,14 @@
 // Facts on earnrate.dev's home page, rendered at build time from the card
 // data, so no count, rate or quote on the page is typed by hand.
 import { cheatSheet } from '../src/engine/cheat-sheet.ts'
+import { ALL_PERSONAL_CARDS } from '../src/engine/explore.ts'
 import { recommend } from '../src/engine/recommend.ts'
-import { pct } from '../src/engine/text.ts'
+import {
+  simulateCatalog,
+  type Simulation,
+  typicalSpendLines,
+} from '../src/engine/simulate.ts'
+import { pct, wholeDollars } from '../src/engine/text.ts'
 import { cardText } from '../src/format/card-text.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Wallet } from '../src/schema/wallet.ts'
@@ -15,6 +21,9 @@ export type LandingFacts = {
   stores: number
   issuers: { name: string; count: number }[]
   cheat: { label: string; card: string; pct: string }[]
+  // The best two cards and best one card at typical spending, net of fees.
+  pair: { cards: string; net: string }
+  single: { cards: string; net: string }
   receipt: {
     store: string
     card: string
@@ -59,6 +68,20 @@ export function landingFacts(
       pct: pct(r.effectiveReturnPct ?? 0),
     }))
 
+  const sim = simulateCatalog(catalog, typicalSpendLines(catalog), {
+    filters: ALL_PERSONAL_CARDS,
+    memberships: [],
+    valuations: {},
+    start: today,
+  })
+  const [pair] = sim.pairs
+  const [single] = sim.singles
+  if (!pair || !single) throw new Error('landing: no simulated wallet')
+  const wallet = (s: Simulation) => ({
+    cards: s.cards.map((c) => name(c.cardId)).join(' + '),
+    net: wholeDollars(s.net),
+  })
+
   const store = 'Whole Foods'
   const rec = recommend(catalog, sample, {
     merchant: store,
@@ -79,6 +102,8 @@ export function landingFacts(
     stores,
     issuers,
     cheat,
+    pair: wallet(pair),
+    single: wallet(single),
     receipt: {
       store,
       card: name(card.id),
@@ -110,6 +135,10 @@ export function renderLanding(html: string, f: LandingFacts): string {
           `<tr><td>${esc(r.label)}</td><td>${esc(r.card)}</td><td>${esc(r.pct)}</td></tr>`,
       )
       .join(''),
+    pair_cards: esc(f.pair.cards),
+    pair_net: esc(f.pair.net),
+    single_cards: esc(f.single.cards),
+    single_net: esc(f.single.net),
     receipt_store: esc(f.receipt.store),
     receipt_card: esc(f.receipt.card),
     receipt_pct: esc(f.receipt.pct),
