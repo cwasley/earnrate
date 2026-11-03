@@ -28,11 +28,40 @@ rules:
     cap: { amount: 6000, period: calendar_year, then_rate: 1 }
     note: Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
   - id: us-streaming
-    match: { categories: [streaming] }
-    exclude: { merchants: [fandango-at-home] }
+    match:
+      {
+        merchants:
+          [
+            amazon-music,
+            apple-music,
+            apple-tv,
+            audible,
+            directv-stream,
+            discovery-plus,
+            disney-plus,
+            espn,
+            fubotv,
+            max,
+            hulu,
+            mlb-tv,
+            nba-league-pass,
+            netflix,
+            pandora,
+            paramount-plus,
+            peacock,
+            amazon-prime-video,
+            sling-tv,
+            siriusxm,
+            spotify,
+            starz,
+            tidal,
+            youtube-premium,
+            youtube-tv,
+          ],
+      }
     rate: 6
     geography: us_only
-    note: Only providers on Amex's Select U.S. Streaming Subscriptions list (americanexpress.com/rewards-info), such as Netflix, Hulu, Disney+, HBO Max, Spotify, Apple Music, YouTube TV and SiriusXM. Subscriptions bundled with or billed by another company (cable, phone, a car maker) may not count.
+    note: Only providers on Amex's Select U.S. Streaming Subscriptions list (americanexpress.com/rewards-info, read 2026-11-03). The list also names AMC+, Britbox, iHeartRadio, Kindle Unlimited, Luminary and MGM+, which earnrate doesn't know as stores yet. Subscriptions bundled with or billed by another company (cable, phone, a car maker) may not count.
   - id: transit
     match: { categories: [transit] }
     rate: 3

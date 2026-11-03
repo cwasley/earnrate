@@ -40,7 +40,7 @@
   "tools": [
     {
       "name": "best_card_for_purchase",
-      "description": "Which card earns the most at a store, from yours or every card, with reasons."
+      "description": "Which credit card earns the most at a store, from yours or every card, with reasons."
     },
     {
       "name": "resolve_merchant",

@@ -7,7 +7,7 @@
 
 I wanted a ghost card: one card that always charges the best of my cards. The card networks won't allow one, so I built the next best thing.
 
-**earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which card earns the most there, from your own cards or from every card it knows, and why. Save your cards and it tracks your caps and chosen categories. It's valuation-aware and transparent about its assumptions. It never sees a card number.
+**earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which credit card earns the most there, from your own cards or from every card it knows, and why. Save your cards and it tracks your caps and chosen categories. It's valuation-aware and transparent about its assumptions. It never sees a card number.
 
 - Runs on your machine, in your browser at [earnrate.dev](https://earnrate.dev) (which you can add to your phone's Home Screen and use offline), or in Claude as a connector at `https://mcp.earnrate.dev`, with nothing to install. No account and no affiliate links; the hosted server counts requests by tool name, nothing about what you ask. See the [privacy page](https://earnrate.dev/privacy).
 - U.S. cards and U.S. merchants, for now.
@@ -21,7 +21,8 @@ Needs Node 22 or later.
 ```sh
 npm install -g earnrate
 earnrate restaurants               # the best cards earnrate knows, no setup
-earnrate whole foods 80 --cards amex-gold,chase-prime-visa   # just these cards
+earnrate trader joes --cards amex-gold,chase-prime-visa   # just these cards
+earnrate whole foods 80            # add an amount to see the dollars back
 ```
 
 You never have to enter your cards: with none, every answer covers every card earnrate knows. To have earnrate remember yours, track caps and welcome bonuses, and give a cheat sheet for your own wallet, save them:

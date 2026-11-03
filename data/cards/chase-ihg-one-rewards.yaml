@@ -28,11 +28,39 @@ rules:
     match: { categories: [dining, grocery.supermarket, gas] }
     rate: 3
     note: Dining includes takeout and eligible delivery services. Chase's grocery stores exclude warehouse clubs, discount stores, drugstores and gas at grocery-store stations; delivery services count only if they code as a grocery store.
-  - id: bills-and-streaming-through-2026
-    match: { categories: [utilities, tv_internet, phone, streaming] }
+  - id: bills-through-2026
+    match: { categories: [utilities, tv_internet, phone] }
     rate: 3
     valid_to: 2026-12-31
-    note: Utilities; internet, cable and phone; and select streaming services (Chase's list includes Netflix, Hulu, Disney+, Max, Spotify, YouTube TV and others). Purchases posting after Dec 31, 2026 earn the 2x base rate.
+    note: Utilities; internet, cable and phone. Purchases posting after Dec 31, 2026 earn the 2x base rate.
+  - id: streaming-through-2026
+    match:
+      {
+        merchants:
+          [
+            apple-music,
+            apple-tv,
+            disney-plus,
+            espn,
+            fubotv,
+            max,
+            hulu,
+            netflix,
+            pandora,
+            paramount-plus,
+            peacock,
+            showtime,
+            siriusxm,
+            sling-tv,
+            spotify,
+            youtube-premium,
+            youtube-tv,
+            fandango-at-home,
+          ],
+      }
+    rate: 3
+    valid_to: 2026-12-31
+    note: Only Chase's select streaming list (Apple Music, Apple TV, Disney+, ESPN+, Fubo TV, Max, Hulu, Netflix, Pandora, Paramount+, Peacock, Showtime, SiriusXM, Sling, Spotify, YouTube Premium, YouTube TV and Vudu). Purchases posting after Dec 31, 2026 earn the 2x base rate.
 milestones:
   - id: spend-15k
     spend: 15000
@@ -60,10 +88,13 @@ evidence:
   - rule: dining-grocery-gas
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Delivery service merchants will be included if they classify as a grocery store merchant.'
-  - rule: bills-and-streaming-through-2026
+  - rule: bills-through-2026
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards
     quote: 'through December 31, 2026 in the following rewards categories: utilities; internet, cable, and phone services; select streaming services'
-  - rule: bills-and-streaming-through-2026
+  - rule: streaming-through-2026
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards
+    quote: 'through December 31, 2026 in the following rewards categories: utilities; internet, cable, and phone services; select streaming services'
+  - rule: streaming-through-2026
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Only subscriptions paid for, or purchases made with the following select merchants will qualify for this category'
   - rule: annual_fee
@@ -78,7 +109,7 @@ evidence:
   - rule: dining-grocery-gas
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'
-  - rule: bills-and-streaming-through-2026
+  - rule: bills-through-2026
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Purchases in this category include electric, household fuel, water, and sanitation services'
   - rule: spend-15k

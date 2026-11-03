@@ -39,7 +39,30 @@ rules:
     rate: 2
     note: Includes takeout and eligible delivery services.
   - id: streaming
-    match: { categories: [streaming] }
+    match:
+      {
+        merchants:
+          [
+            apple-music,
+            apple-tv,
+            disney-plus,
+            espn,
+            fubotv,
+            max,
+            hulu,
+            netflix,
+            pandora,
+            paramount-plus,
+            peacock,
+            showtime,
+            siriusxm,
+            sling-tv,
+            spotify,
+            youtube-premium,
+            youtube-tv,
+            fandango-at-home,
+          ],
+      }
     rate: 2
     note: Only Chase's select streaming list (Apple Music, Apple TV, Disney+, ESPN+, Fubo TV, Max, Hulu, Netflix, Pandora, Paramount+, Peacock, Showtime, SiriusXM, Sling, Spotify, YouTube Premium, YouTube TV, Vudu).
 todo:

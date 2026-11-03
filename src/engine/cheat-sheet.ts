@@ -27,7 +27,7 @@ export const EVERYDAY_PURCHASES: CheatSheetItem[] = [
   { label: 'Amazon', merchant: 'amazon' },
   { label: 'Costco', merchant: 'costco' },
   { label: 'Travel', category: 'travel' },
-  { label: 'Streaming', category: 'streaming' },
+  { label: 'Streaming (Netflix)', merchant: 'netflix' },
   { label: 'Drugstores', category: 'drugstore' },
   { label: 'Everything else', category: 'other' },
 ]

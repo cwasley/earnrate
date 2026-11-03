@@ -905,3 +905,40 @@ describe('#24 foreign transaction fees', () => {
     )
   })
 })
+
+describe('#25 streaming bonuses follow each issuer’s list', () => {
+  const wallet = WalletSchema.parse({
+    cards: [
+      { id: 'amex-blue-cash-preferred' },
+      { id: 'chase-united-quest' },
+      { id: 'chase-ihg-one-rewards' },
+    ],
+  })
+  const ruleAt = (merchant: string, cardId: string) =>
+    entry(recommend(catalog, wallet, purchase(merchant)), cardId).matchedRule
+
+  goldenTest('#25a Showtime: on Chase’s list, not on Amex’s', () => {
+    expect(ruleAt('Showtime', 'amex-blue-cash-preferred')).toBeNull()
+    expect(ruleAt('Showtime', 'chase-united-quest')).toBe('streaming')
+    expect(ruleAt('Showtime', 'chase-ihg-one-rewards')).toBe(
+      'streaming-through-2026',
+    )
+  })
+
+  goldenTest('#25b Starz and Audible: on Amex’s list, not on Chase’s', () => {
+    for (const merchant of ['Starz', 'Audible']) {
+      expect(ruleAt(merchant, 'amex-blue-cash-preferred')).toBe('us-streaming')
+      expect(ruleAt(merchant, 'chase-united-quest')).toBeNull()
+      expect(ruleAt(merchant, 'chase-ihg-one-rewards')).toBeNull()
+    }
+  })
+
+  goldenTest(
+    '#25c IHG’s bills rate still covers internet and utilities',
+    () => {
+      expect(ruleAt('Comcast', 'chase-ihg-one-rewards')).toBe(
+        'bills-through-2026',
+      )
+    },
+  )
+})
