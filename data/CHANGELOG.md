@@ -2,6 +2,16 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.03.2
+
+Streaming bonuses that only count an issuer's list now match the merchants on that list, not every streaming service. Blue Cash Preferred follows Amex's Select U.S. Streaming Subscriptions list (read 2026-11-03), so Showtime no longer earns 6% and Audible now does. United Quest and IHG One Rewards follow Chase's select streaming list, the one Sapphire Preferred already used, so services off it (Amazon Prime Video, DIRECTV STREAM, MLB.TV, NBA League Pass, STARZ, TIDAL and others) earn their base rates. IHG One Rewards' bills rule is split from its streaming rule; its rates don't change.
+
+| Card                     | Field                            | Old → new                                                                            | Source                                                                                                 |
+| ------------------------ | -------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| amex-blue-cash-preferred | us-streaming                     | the streaming category → the 25 listed services earnrate knows                       | [Amex Select U.S. Streaming list](https://www.americanexpress.com/us/content/rewards-info/retail.html) |
+| chase-united-quest       | streaming                        | the streaming category → Chase's select list                                         | [Chase rewards category FAQ](https://www.chase.com/personal/credit-cards/rewards-category-faq)         |
+| chase-ihg-one-rewards    | bills-and-streaming-through-2026 | split into bills-through-2026 (categories) and streaming-through-2026 (Chase's list) | [Chase rewards category FAQ](https://www.chase.com/personal/credit-cards/rewards-category-faq)         |
+
 ## 2026.11.03.1
 
 The merchant directory grows from 168 to 385 entries (217 added), from a list of about 300 well-known U.S. merchants in `docs/benchmark-merchants.txt` (the largest chains in each category, from public rankings, plus common online services). Marriott, Hilton and IHG also gain their hotel brands as aliases (Courtyard, Sheraton, Hampton Inn, DoubleTree and so on), and IHG answers to "IHG". No card rules or rates changed.

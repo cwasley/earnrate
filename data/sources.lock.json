@@ -451,6 +451,7 @@
     "https://creditcards.chase.com/business-credit-cards/IHG/business": {
       "checked": "2026-11-03",
       "lines": [
+        "12bcf148c4a01c6e",
         "59c29fd1dce3a50a",
         "7e54fb78d4f32dca",
         "84cdd69d82f821c7",
@@ -837,8 +838,10 @@
       "checked": "2026-11-03",
       "lines": [
         "345e2953751d3064",
+        "60d4f69954950949",
         "9c7fa7a71fa95e3b",
         "bd1370ab97374bc8",
+        "c3b6656197e68ea6",
         "c70bfa795f7e654a",
         "cd4d8a1cfba06610"
       ]

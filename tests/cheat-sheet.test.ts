@@ -20,7 +20,7 @@ describe('cheat sheet', () => {
       ['Amazon', 'chase-prime-visa', 5],
       ['Costco', 'chase-sapphire-preferred', 1],
       ['Travel', 'chase-sapphire-preferred', 2],
-      ['Streaming', 'amex-blue-cash-preferred', 6],
+      ['Streaming (Netflix)', 'amex-blue-cash-preferred', 6],
       ['Drugstores', 'chase-freedom-flex', 3],
       ['Everything else', 'citi-double-cash', 2],
     ])
