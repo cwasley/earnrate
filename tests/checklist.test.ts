@@ -31,6 +31,7 @@ describe('checklist', () => {
     ])
     expect(items[0]).toMatchObject({ due: '2026-12-14' })
     expect(items[0]?.text).toMatch(/by Dec 14, 2026\.$/)
+    expect(items[1]).toMatchObject({ due: '2026-12-31' })
     expect(items[1]?.text).toMatch(/\$800 left of \$6,000/)
     expect(items[2]?.text).toMatch(/5% and 2% categories for this quarter/)
     expect(items[3]?.text).toMatch(
@@ -97,6 +98,23 @@ describe('checklist', () => {
     expect(late[0]).toMatch(
       /categories for next quarter; this one ends Dec 31, 2026\./,
     )
+  })
+
+  test('a cardmember-year cap resets the day before the anniversary', () => {
+    const ink = WalletSchema.parse({
+      cards: [
+        {
+          id: 'chase-ink-business-cash',
+          anniversary: '03-15',
+          cap_usage: {
+            'five-percent-combined': { period: '2026', spent: 25000 },
+          },
+        },
+      ],
+    })
+    const [cap] = checklist(catalog, ink, '2027-01-10')
+    expect(cap).toMatchObject({ kind: 'cap', due: '2027-03-14' })
+    expect(cap?.text).toMatch(/cap is used up until Mar 14, 2027;/)
   })
 
   test('the calendar has an event for each dated action, not for caps', () => {

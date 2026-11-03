@@ -8,7 +8,8 @@ import {
   RETENTION_MONTHS,
   UNUSED_NEW_WALLET,
 } from '../remote/src/policy.ts'
-import { loadCatalog } from '../src/data/load.ts'
+import { loadCatalog, loadWallet } from '../src/data/load.ts'
+import { landingFacts, renderLanding } from '../scripts/landing.ts'
 import { ANSWER_TOOLS, SAVED_WALLET_TOOLS } from '../src/mcp/server.ts'
 import { ROOT } from './helpers.ts'
 
@@ -121,7 +122,13 @@ test('counts in the docs match the catalog and the tool lists', async () => {
   const catalog = await loadCatalog()
   const cards = `${String(catalog.cards.length)} cards`
   expect(flat(await read('README.md'))).toContain(cards)
-  expect(flat(await read('site/index.html'))).toContain(cards)
+  const sample = await loadWallet(path.join(ROOT, 'wallet.example.yaml'))
+  const home = renderLanding(
+    await read('site/index.html'),
+    landingFacts(catalog, sample, '2026-11-03'),
+  )
+  expect(flat(home)).toContain(`<b>${String(catalog.cards.length)}</b>cards`)
+  expect(flat(home)).toContain(cards)
 
   const hosted = ANSWER_TOOLS.length + SAVED_WALLET_TOOLS.length
   const manifest = JSON.parse(await read('mcpb/manifest.json')) as {

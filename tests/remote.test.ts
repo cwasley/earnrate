@@ -56,7 +56,9 @@ function memoryStorage(): VaultStorage & {
   return storage
 }
 
-function memoryKv() {
+// `lag` keeps deleted keys readable, like a revocation that hasn't reached
+// every location yet.
+function memoryKv(lag = false) {
   const entries = new Map<string, { value: string; metadata?: unknown }>()
   return {
     get(key: string, options?: { type?: string } | string) {
@@ -73,7 +75,7 @@ function memoryKv() {
       return Promise.resolve()
     },
     delete(key: string) {
-      entries.delete(key)
+      if (!lag) entries.delete(key)
       return Promise.resolve()
     },
     list(options: { prefix?: string } = {}) {
@@ -86,7 +88,7 @@ function memoryKv() {
 }
 
 // One Worker with its own KV and wallet storage, like a fresh deploy.
-function deployment() {
+function deployment({ kvLag = false } = {}) {
   const storages = new Map<string, ReturnType<typeof memoryStorage>>()
   const vaults = new Map<string, WalletVault>()
   const worker = makeWorker<Env>(
@@ -103,7 +105,7 @@ function deployment() {
     },
     () => TODAY,
   )
-  const env: Env = { OAUTH_KV: memoryKv() }
+  const env: Env = { OAUTH_KV: memoryKv(kvLag) }
   const ctx = { waitUntil: () => undefined }
   const fetch = (
     input: string | Request,
@@ -646,6 +648,39 @@ describe('anonymous saved wallets', () => {
     expect(text(listed)).toContain('amex-gold')
   })
 
+  test('right after switch_wallet the same token is refused, while KV still has it', async () => {
+    const d = deployment({ kvLag: true })
+    const { token, code } = await startWallet(d)
+    const other = await signIn(
+      d,
+      async (_page, post) => {
+        const res = await post({ choice: 'recover', code })
+        return res.headers.get('location') ?? ''
+      },
+      'Another app',
+    )
+    const switched = await (
+      await connect(d, token)
+    ).callTool({ name: 'switch_wallet', arguments: {} })
+    expect(switched.isError).toBeFalsy()
+    const kv = d.env.OAUTH_KV as ReturnType<typeof memoryKv>
+    expect((await kv.list({ prefix: 'grant:' })).keys).toHaveLength(2)
+
+    expect((await post(d, '/', callTool('list_wallet'), token)).status).toBe(
+      401,
+    )
+    const question = await post(
+      d,
+      '/',
+      callTool('best_card_for_purchase', { merchant: 'Costco' }),
+      token,
+    )
+    expect(question.status).toBe(401)
+    expect((await post(d, '/', callTool('list_wallet'), other)).status).toBe(
+      200,
+    )
+  })
+
   test('an empty wallet can be deleted when the user confirms it is empty', async () => {
     const d = deployment()
     const { token } = await startWallet(d)
@@ -882,5 +917,33 @@ describe('wallet vault', () => {
       'chase-prime-visa',
     ])
     await expect(vault.load(newWalletKey())).rejects.toThrow()
+  })
+
+  test('signed-out grants are kept as hashes and dropped once they would have expired', async () => {
+    const storage = memoryStorage()
+    let now = Date.UTC(2026, 10, 3)
+    const vault = new WalletVault(storage, catalog, () => now)
+    const keys = await keysFromCode(newRecoveryCode())
+    await vault.create(keys.walletId, await wrapWalletKey(newWalletKey(), keys))
+    await vault.signOutGrants([
+      { id: 'grant-a', expiresAt: now + 60_000 },
+      { id: 'grant-b', expiresAt: null },
+    ])
+    const stored = storage.values.get('signed-out') as Record<string, number>
+    expect(Object.keys(stored)).toHaveLength(2)
+    for (const key of Object.keys(stored)) expect(key).toMatch(/^[0-9a-f]{64}$/)
+    expect(JSON.stringify(stored)).not.toContain('grant-')
+    expect(Object.values(stored)).toContain(now + 90 * 24 * 60 * 60 * 1000)
+
+    expect(await vault.checkIn(false, 'grant-a')).toBe(false)
+    expect(await vault.checkIn(false, 'grant-b')).toBe(false)
+    expect(await vault.checkIn(false, 'grant-c')).toBe(true)
+
+    now += 120_000
+    expect(await vault.checkIn(false, 'grant-a')).toBe(true)
+    expect(await vault.checkIn(false, 'grant-b')).toBe(false)
+    expect(
+      Object.keys(storage.values.get('signed-out') as object),
+    ).toHaveLength(1)
   })
 })

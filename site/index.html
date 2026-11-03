@@ -29,7 +29,7 @@
       content="earnrate: Which credit card should I use? A chat asks which card to use at Trader Joe’s, and earnrate answers Blue Cash Preferred, 6% back at U.S. supermarkets."
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#1f6f54" />
+    <meta name="theme-color" content="#9a5020" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="apple-mobile-web-app-title" content="earnrate" />
@@ -37,32 +37,36 @@
     <link rel="icon" href="/favicon.svg" />
     <style>
       :root {
-        --bg: #fbfaf7;
+        --bg: #fbf9f6;
         --surface: #ffffff;
-        --text: #1c1d1f;
-        --muted: #5f6368;
-        --line: #e6e2da;
-        --accent: #1f6f54;
-        --accent-soft: #e4f1eb;
-        --term-bg: #16191c;
-        --term-text: #e8e6e1;
-        --term-dim: #8d949b;
-        --term-good: #7fd1ad;
+        --text: #1d1b19;
+        --muted: #625d58;
+        --line: #e8e1d9;
+        --accent: #9a5020;
+        --accent-strong: #7f4119;
+        --accent-soft: #f5e9df;
+        --accent-faint: #fbf3ed;
+        --term-bg: #1a1715;
+        --term-text: #ece6df;
+        --term-dim: #958c84;
+        --term-good: #a3d39c;
         --term-warn: #f0c46a;
-        --bubble-me: #1f6f54;
+        --bubble-me: #9a5020;
         --bubble-me-text: #ffffff;
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #121315;
-          --surface: #1a1c1f;
-          --text: #ecebe7;
-          --muted: #a2a6ab;
-          --line: #2b2e32;
-          --accent: #7fd1ad;
-          --accent-soft: #1c2c25;
-          --term-bg: #0c0e10;
-          --bubble-me: #2b6b52;
+          --bg: #141312;
+          --surface: #1c1a18;
+          --text: #eeebe6;
+          --muted: #a8a29c;
+          --line: #2e2a27;
+          --accent: #e8a877;
+          --accent-strong: #f1bd94;
+          --accent-soft: #31251c;
+          --accent-faint: #201a16;
+          --term-bg: #0f0e0d;
+          --bubble-me: #84461d;
         }
       }
       * {
@@ -86,7 +90,7 @@
         padding: 0 16px 72px;
       }
       header.hero {
-        padding: 48px 0 8px;
+        padding: 44px 0 8px;
       }
       .hero-top {
         display: flex;
@@ -101,7 +105,7 @@
         font-size: 18px;
       }
       .ghost {
-        width: 112px;
+        width: 96px;
         height: auto;
         color: var(--accent);
         flex: none;
@@ -110,23 +114,39 @@
         font-size: clamp(34px, 7vw, 50px);
         line-height: 1.08;
         letter-spacing: -0.03em;
-        margin: 22px 0 14px;
+        margin: 22px 0 12px;
       }
       h2 {
-        font-size: 24px;
+        font-size: clamp(24px, 4.6vw, 30px);
+        line-height: 1.2;
         letter-spacing: -0.02em;
-        margin: 60px 0 12px;
+        margin: 0 0 12px;
       }
       h3 {
-        font-size: 18px;
+        font-size: 17px;
         letter-spacing: -0.01em;
-        margin: 32px 0 8px;
+        margin: 0 0 4px;
       }
       p {
         margin: 0 0 14px;
       }
+      section {
+        margin-top: 76px;
+      }
+      .eyebrow {
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 8px;
+      }
       .lede {
         font-size: 19px;
+        color: var(--muted);
+        max-width: 34em;
+      }
+      .intro {
         color: var(--muted);
         max-width: 36em;
       }
@@ -137,40 +157,74 @@
       code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
-      .terminal {
-        background: var(--term-bg);
-        color: var(--term-text);
-        border-radius: 12px;
-        padding: 16px 18px;
-        font-size: 13px;
-        line-height: 1.55;
-        overflow-x: auto;
-        margin: 0;
+
+      /* Stats under the search */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1px;
+        background: var(--line);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        margin: 24px 0 0;
+        padding: 0;
+        list-style: none;
       }
-      .terminal.install {
-        margin: 12px 0 20px;
+      @media (min-width: 640px) {
+        .stats {
+          grid-template-columns: repeat(4, 1fr);
+        }
       }
-      .terminal .prompt {
-        color: var(--term-dim);
-      }
-      .terminal .good {
-        color: var(--term-good);
-        font-weight: 600;
-      }
-      .terminal .warn {
-        color: var(--term-warn);
-      }
-      .caption {
-        color: var(--muted);
+      .stats li {
+        background: var(--surface);
+        padding: 14px 16px;
         font-size: 14px;
-        margin-top: 10px;
+        color: var(--muted);
+        line-height: 1.35;
       }
+      .stats b {
+        display: block;
+        font-size: 24px;
+        color: var(--text);
+        letter-spacing: -0.02em;
+        margin-bottom: 2px;
+      }
+      .popular-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        list-style: none;
+        padding: 0;
+        margin: 18px 0 0;
+      }
+      .popular-links a {
+        display: inline-block;
+        padding: 6px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--text);
+        text-decoration: none;
+        font-size: 14.5px;
+      }
+      .popular-links a:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .aside {
+        font-size: 14.5px;
+        color: var(--muted);
+        margin-top: 14px;
+      }
+
+      /* The example chat */
       .chat {
         background: var(--surface);
         border: 1px solid var(--line);
-        border-radius: 14px;
+        border-radius: 16px;
         padding: 16px;
-        margin: 18px 0 0;
+        margin: 20px 0 0;
       }
       .bubble {
         max-width: 88%;
@@ -190,6 +244,169 @@
         background: var(--accent-soft);
         border-bottom-left-radius: 4px;
       }
+      .caption {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 10px;
+      }
+
+      /* Feature tiles */
+      .tiles {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 22px;
+        padding: 0;
+        list-style: none;
+      }
+      @media (min-width: 640px) {
+        .tiles {
+          grid-template-columns: 1fr 1fr;
+        }
+        .tile:last-child:nth-child(odd) {
+          grid-column: 1 / -1;
+        }
+      }
+      .tile {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .tile p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .viz {
+        background: var(--accent-faint);
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 13.5px;
+        line-height: 1.4;
+        min-height: 64px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+      }
+      .viz .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .viz .dim {
+        color: var(--muted);
+      }
+      .bar {
+        height: 8px;
+        border-radius: 99px;
+        background: var(--accent-soft);
+        overflow: hidden;
+      }
+      .bar span {
+        display: block;
+        height: 100%;
+        border-radius: 99px;
+        background: var(--accent);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        align-self: flex-start;
+        padding: 3px 10px;
+        border-radius: 99px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        font-weight: 600;
+      }
+      .pill.no {
+        color: var(--muted);
+        text-decoration: line-through;
+        font-weight: 500;
+      }
+      .viz table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .viz td {
+        padding: 2px 0;
+      }
+      .viz td:last-child {
+        text-align: right;
+        font-weight: 600;
+        color: var(--accent);
+      }
+      .check {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+      }
+      .check::before {
+        content: '';
+        flex: none;
+        width: 12px;
+        height: 12px;
+        border: 1.5px solid var(--accent);
+        border-radius: 3px;
+        transform: translateY(1px);
+      }
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .mini-card {
+        width: 44px;
+        height: 28px;
+        border-radius: 5px;
+        background: var(--accent);
+      }
+      .mini-card.alt {
+        background: var(--accent-strong);
+        opacity: 0.55;
+      }
+      .home-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--accent);
+        display: grid;
+        place-items: center;
+      }
+      .home-icon i {
+        width: 20px;
+        height: 13px;
+        border-radius: 3px;
+        background: var(--surface);
+      }
+
+      /* Before and after a cap */
+      .terminal {
+        background: var(--term-bg);
+        color: var(--term-text);
+        border-radius: 12px;
+        padding: 16px 18px;
+        font-size: 13px;
+        line-height: 1.55;
+        overflow-x: auto;
+        margin: 0;
+      }
+      .terminal .prompt {
+        color: var(--term-dim);
+      }
+      .terminal .good {
+        color: var(--term-good);
+        font-weight: 600;
+      }
+      .terminal .warn {
+        color: var(--term-warn);
+      }
       .before-after {
         display: grid;
         grid-template-columns: 1fr;
@@ -208,63 +425,246 @@
       .before-after .terminal {
         flex: 1;
       }
-      .before-after .label {
-        font-size: 13px;
-        font-weight: 600;
+      .label {
+        font-size: 12.5px;
+        font-weight: 700;
         color: var(--muted);
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.08em;
         margin: 0 0 6px;
       }
-      ul.plain {
-        padding-left: 1.2em;
-        margin: 8px 0 0;
+
+      /* An answer with its source */
+      .receipt {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-top: 20px;
       }
-      ul.plain li {
-        margin-bottom: 8px;
+      .receipt .answer {
+        padding: 16px;
       }
-      ul.cards {
+      .receipt .answer .label {
+        margin-bottom: 4px;
+      }
+      .receipt .pick {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .receipt .pick em {
+        font-style: normal;
+        color: var(--accent);
+      }
+      .receipt .next {
+        color: var(--muted);
+        font-size: 15px;
+        margin: 2px 0 0;
+      }
+      .receipt blockquote {
+        margin: 0;
+        padding: 14px 16px 16px;
+        border-top: 1px dashed var(--line);
+        background: var(--accent-faint);
+        font-size: 15px;
+      }
+      .receipt blockquote p {
+        margin: 0 0 6px;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 16.5px;
+      }
+      .receipt cite {
+        font-style: normal;
+        font-size: 13.5px;
+        color: var(--muted);
+      }
+      .trust {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 18px;
         list-style: none;
         padding: 0;
-        margin: 16px 0 0;
-      }
-      ul.cards li {
-        padding: 10px 0;
-        border-top: 1px solid var(--line);
-      }
-      ul.cards li:last-child {
-        border-bottom: 1px solid var(--line);
-      }
-      ul.cards strong {
-        display: block;
-      }
-      ul.cards + p {
-        margin-top: 16px;
+        margin: 26px 0 0;
       }
       @media (min-width: 640px) {
-        ul.cards li {
-          display: grid;
-          grid-template-columns: 10em 1fr;
-          gap: 12px;
+        .trust {
+          grid-template-columns: 1fr 1fr;
         }
       }
+      .trust li {
+        display: grid;
+        grid-template-columns: 36px 1fr;
+        gap: 12px;
+        align-items: start;
+      }
+      .trust p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        display: grid;
+        place-items: center;
+      }
+      .icon svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* Where to use it: tabs that work without JavaScript */
+      .where > input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .tablist {
+        display: flex;
+        gap: 4px;
+        padding: 4px;
+        margin: 20px 0 0;
+        border-radius: 12px;
+        background: var(--accent-soft);
+        overflow-x: auto;
+      }
+      .tablist label {
+        flex: 1 1 auto;
+        text-align: center;
+        padding: 8px 6px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .where-panel {
+        display: none;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        margin-top: 10px;
+      }
+      #tab-claude:checked ~ .tablist [for='tab-claude'],
+      #tab-code:checked ~ .tablist [for='tab-code'],
+      #tab-desktop:checked ~ .tablist [for='tab-desktop'],
+      #tab-cli:checked ~ .tablist [for='tab-cli'] {
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+      }
+      #tab-claude:checked ~ .where-claude,
+      #tab-code:checked ~ .where-code,
+      #tab-desktop:checked ~ .where-desktop,
+      #tab-cli:checked ~ .where-cli {
+        display: block;
+      }
+      .where > input:focus-visible ~ .tablist {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .steps {
+        margin: 0;
+        padding-left: 1.3em;
+      }
+      .steps li {
+        margin-bottom: 8px;
+      }
+      .steps li::marker {
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .steps .terminal {
+        margin: 8px 0 4px;
+      }
+      .where-panel .note {
+        color: var(--muted);
+        font-size: 14.5px;
+        margin: 12px 0 0;
+      }
+
+      /* Cards it knows */
+      .issuers {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        list-style: none;
+        padding: 0;
+        margin: 18px 0 0;
+      }
+      .issuers li {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 6px 6px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        font-size: 14.5px;
+      }
+      .issuers b {
+        min-width: 26px;
+        padding: 0 7px;
+        border-radius: 99px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      /* Questions */
+      .faq {
+        margin-top: 18px;
+        border-top: 1px solid var(--line);
+      }
+      .faq details {
+        border-bottom: 1px solid var(--line);
+      }
+      .faq summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 14px 28px 14px 0;
+        font-weight: 600;
+        position: relative;
+      }
+      .faq summary::-webkit-details-marker {
+        display: none;
+      }
+      .faq summary::after {
+        content: '+';
+        position: absolute;
+        right: 4px;
+        top: 12px;
+        color: var(--accent);
+        font-size: 20px;
+        font-weight: 500;
+      }
+      .faq details[open] summary::after {
+        content: '–';
+      }
+      .faq details p {
+        color: var(--muted);
+        margin: 0 0 14px;
+      }
+
       @media (max-width: 639px) {
         .terminal {
           font-size: 11.5px;
           padding: 14px;
         }
         .ghost {
-          width: 84px;
+          width: 76px;
         }
       }
-      .popular {
-        font-size: 14.5px;
-        color: var(--muted);
-        line-height: 1.9;
-        margin-top: 18px;
-      }
       footer {
-        margin-top: 64px;
+        margin-top: 72px;
         padding-top: 20px;
         border-top: 1px solid var(--line);
         color: var(--muted);
@@ -310,8 +710,7 @@
         <h1>Which credit card should I use?</h1>
         <p class="lede">
           Compare every card for any store, or find the cards that fit your
-          spending. Free, with no sign-up and no affiliate links. It runs in
-          your browser, so what you type stays on your device.
+          spending. Free, with no sign-up. What you type stays on your device.
         </p>
         <div id="app">
           <noscript>
@@ -321,20 +720,28 @@
             </p>
           </noscript>
         </div>
-        <p class="popular">
-          Popular comparisons:
-          <a href="/best/whole-foods">Whole Foods</a> ·
-          <a href="/best/costco">Costco</a> ·
-          <a href="/best/amazon">Amazon</a> ·
-          <a href="/best/trader-joes">Trader Joe's</a> ·
-          <a href="/best/target">Target</a> ·
-          <a href="/best/starbucks">Starbucks</a> ·
-          <a href="/best/groceries">Groceries</a> ·
-          <a href="/best/gas">Gas</a> · <a href="/best/dining">Dining</a> ·
-          <a href="/best/travel">Travel</a> ·
-          <a href="/best/">Every store and category</a>
-        </p>
-        <p class="popular">
+        <ul class="stats">
+          <li>
+            <b><!--earnrate:cards--></b>cards, checked weekly
+          </li>
+          <li>
+            <b><!--earnrate:stores--></b>stores it recognizes
+          </li>
+          <li><b>100%</b>of rates quoted from the issuer</li>
+          <li><b>0</b>affiliate links</li>
+        </ul>
+        <ul class="popular-links" aria-label="Popular comparisons">
+          <li><a href="/best/whole-foods">Whole Foods</a></li>
+          <li><a href="/best/costco">Costco</a></li>
+          <li><a href="/best/amazon">Amazon</a></li>
+          <li><a href="/best/trader-joes">Trader Joe's</a></li>
+          <li><a href="/best/target">Target</a></li>
+          <li><a href="/best/groceries">Groceries</a></li>
+          <li><a href="/best/gas">Gas</a></li>
+          <li><a href="/best/dining">Dining</a></li>
+          <li><a href="/best/">Every store and category</a></li>
+        </ul>
+        <p class="aside">
           Also in Claude:
           <a href="#claude"
             >ask from claude.ai, the desktop app, Claude Code or Cowork</a
@@ -343,7 +750,8 @@
       </header>
 
       <section>
-        <h2>Why I built it</h2>
+        <p class="eyebrow">Why I built it</p>
+        <h2>A ghost card, almost</h2>
         <p>
           A few cards into the points hobby, I was standing in Whole Foods
           trying to work out whether my Prime Visa or my Amex Gold earned more
@@ -366,26 +774,114 @@
           </div>
         </div>
         <p class="caption">
-          An example from Claude with earnrate connected. The numbers are
-          earnrate's real answer for a sample wallet. Give an amount and it also
-          says how much you'd get back.
+          A real answer from Claude with earnrate connected, for a sample
+          wallet. Give an amount and it also says how much you'd get back.
         </p>
       </section>
 
       <section>
-        <h2>What it does</h2>
-        <p>
-          Ask about a store, or a kind of place like a coffee shop or a gas
-          station. earnrate answers from every card it knows, or from yours, and
-          shows the rule behind the answer.
+        <p class="eyebrow">What it does</p>
+        <h2>It knows what changes the answer</h2>
+        <p class="intro">
+          Ask about a store, or a kind of place like a coffee shop. earnrate
+          answers from every card it knows, or from yours, and shows the rule
+          behind it.
         </p>
+        <ul class="tiles">
+          <li class="tile">
+            <div class="viz" aria-hidden="true">
+              <div class="row">
+                <span>Supermarket cap</span
+                ><span class="dim">$2,140 of $6,000</span>
+              </div>
+              <div class="bar"><span style="width: 36%"></span></div>
+            </div>
+            <h3>It remembers what you've spent</h3>
+            <p>
+              Many bonus rates stop at a cap. earnrate keeps track, so the
+              answer changes when it should.
+            </p>
+          </li>
+          <li class="tile">
+            <div class="viz" aria-hidden="true">
+              <span class="pill">Costco · Visa only</span>
+              <span class="pill no">Amex Gold</span>
+            </div>
+            <h3>It reads the fine print</h3>
+            <p>
+              Costco takes only Visa. DoorDash isn't dining on Custom Cash.
+              Stadium food may not count as a restaurant.
+            </p>
+          </li>
+          <li class="tile">
+            <div class="viz" aria-hidden="true">
+              <div class="row">
+                <span>Welcome bonus</span
+                ><span class="dim">$1,800 of $4,000</span>
+              </div>
+              <div class="bar"><span style="width: 45%"></span></div>
+            </div>
+            <h3>It keeps your welcome bonus on track</h3>
+            <p>
+              It counts spending toward a sign-up bonus, shows the weekly pace,
+              and sends purchases there when you're behind.
+            </p>
+          </li>
+          <li class="tile">
+            <div class="viz" aria-hidden="true">
+              <div class="stack">
+                <span class="mini-card"></span><span class="dim">+</span
+                ><span class="mini-card alt"></span
+                ><span class="dim">after annual fees</span>
+              </div>
+            </div>
+            <h3>It finds your next card</h3>
+            <p>
+              It runs a year of your spending through every card and every pair,
+              and ranks welcome offers by their first-year value.
+            </p>
+          </li>
+          <li class="tile">
+            <div class="viz" aria-hidden="true">
+              <table>
+                <!--earnrate:cheat-->
+              </table>
+            </div>
+            <h3>It makes you a cheat sheet</h3>
+            <p>
+              Which card for groceries, dining, gas and more this quarter. Save
+              it as an image for your phone.
+            </p>
+          </li>
+          <li class="tile">
+            <div class="viz" aria-hidden="true">
+              <span class="check"
+                >Activate Freedom Flex's 5% before the deadline</span
+              >
+              <span class="check">Pick next quarter's Cash+ categories</span>
+            </div>
+            <h3>It tells you what to do</h3>
+            <p>
+              Bonuses to activate, categories to pick, caps running low. Add the
+              dates to your calendar in one tap.
+            </p>
+          </li>
+          <li class="tile">
+            <div class="viz" aria-hidden="true">
+              <div class="stack">
+                <span class="home-icon"><i></i></span
+                ><span class="dim">Works with no signal</span>
+              </div>
+            </div>
+            <h3>It's on your phone</h3>
+            <p>
+              Add earnrate.dev to your Home Screen. It opens to your wallet and
+              works offline, for the checkout line.
+            </p>
+          </li>
+        </ul>
 
-        <h3>It remembers what you've spent</h3>
-        <p>
-          Many bonus rates stop at a cap. Blue Cash Preferred pays 6% at
-          supermarkets until you've spent $6,000 in a year, then 1%. earnrate
-          keeps track, so the answer changes when it should.
-        </p>
+        <h3 style="margin-top: 40px">The answer changes when a cap runs out</h3>
         <div class="before-after">
           <div>
             <p class="label">In January</p>
@@ -417,221 +913,303 @@
         </div>
         <p class="caption">
           earnrate's real answers, shortened. Cards that pick categories each
-          quarter, like U.S. Bank Cash+ and Chase Freedom Flex, work the same
-          way: earnrate uses the picks you've made.
-        </p>
-
-        <h3>It reads the fine print</h3>
-        <p>
-          Marketing pages give the headline rate. The terms say what counts. A
-          few things earnrate catches:
-        </p>
-        <ul class="plain">
-          <li>
-            Costco's registers only take Visa, so it won't suggest your Amex
-            there.
-          </li>
-          <li>
-            Delivery apps aren't dining on Citi Custom Cash: DoorDash earns 1%,
-            not 5%.
-          </li>
-          <li>
-            Sapphire Preferred's 3x streaming covers only the services Chase
-            names. Prime Video isn't one of them.
-          </li>
-          <li>
-            Food at a stadium or inside a hotel may not count as a restaurant.
-            It warns you and says which card wins either way.
-          </li>
-          <li>
-            If your points are worth more to you than face value, it ranks on
-            your number and says where the answer would flip.
-          </li>
-        </ul>
-
-        <h3>It keeps your welcome bonus on track</h3>
-        <p>
-          Opened a card with a sign-up bonus? earnrate counts your spending
-          toward it, shows the weekly pace to finish by the deadline, and moves
-          purchases to that card when you're behind.
-        </p>
-
-        <h3>It finds your next card</h3>
-        <p>
-          It runs a year of your own spending, or typical amounts, through every
-          card and every pair of cards, after annual fees, and shows what each
-          would add to your wallet. Welcome offers are ranked by what they're
-          worth in the first year, with the issuer's eligibility rules.
-        </p>
-
-        <h3>It makes you a cheat sheet</h3>
-        <p>
-          One table of which card to use for groceries, dining, gas, Amazon,
-          travel and everything else this quarter, from your cards and the
-          categories you've picked. Save it as an image for your phone.
-        </p>
-
-        <h3>It tells you what to do</h3>
-        <p>
-          A short list of what your cards need right now: bonuses to activate
-          before the issuer's deadline, categories to pick each quarter, caps
-          nearly used up, and welcome bonuses still to finish. Add the dates to
-          your calendar in one tap.
-        </p>
-
-        <h3>It's on your phone</h3>
-        <p>
-          Add earnrate.dev to your Home Screen and it opens straight to your
-          wallet, and keeps working with no signal, for the checkout line.
+          quarter, like Cash+ and Freedom Flex, use the picks you've made.
         </p>
       </section>
 
       <section>
-        <h2>Why you can trust it</h2>
-        <ul class="plain">
+        <p class="eyebrow">Why you can trust it</p>
+        <h2>Every rate, in the issuer's words</h2>
+        <div class="receipt">
+          <div class="answer">
+            <p class="label">
+              Best card at
+              <!--earnrate:receipt_store-->
+            </p>
+            <p class="pick">
+              <!--earnrate:receipt_card-->:
+              <em
+                ><!--earnrate:receipt_pct-->
+                back</em
+              >
+            </p>
+            <p class="next"><!--earnrate:receipt_next--></p>
+          </div>
+          <blockquote>
+            <p>“<!--earnrate:receipt_quote-->”</p>
+            <cite
+              >From
+              <a href="<!--earnrate:receipt_url-->"
+                ><!--earnrate:receipt_source-->'s terms</a
+              >. Every issuer page is checked weekly for changes.</cite
+            >
+          </blockquote>
+        </div>
+        <p class="caption">
+          earnrate's answer for a sample wallet, with the line from the issuer's
+          terms that backs it.
+        </p>
+        <ul class="trust">
           <li>
-            <strong>No affiliate links, ever.</strong> earnrate earns nothing
-            when you apply for a card, so rankings depend only on the issuers'
-            terms and your own cards and settings.
+            <span class="icon" aria-hidden="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M7 17 17 7" /></svg
+            ></span>
+            <div>
+              <h3>No affiliate links, ever</h3>
+              <p>
+                earnrate earns nothing when you apply for a card. Rankings
+                depend only on the terms and your cards.
+              </p>
+            </div>
           </li>
           <li>
-            <strong>The issuer's own words.</strong> Every rate, cap and
-            exclusion is quoted from the issuer's pages. A check reloads them
-            every week and flags anything that changed.
+            <span class="icon" aria-hidden="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <path
+                  d="M7 7h4v4H7zM7 11c0 3-1 5-3 6M15 7h4v4h-4zM15 11c0 3-1 5-3 6"
+                /></svg
+            ></span>
+            <div>
+              <h3>The issuer's own words</h3>
+              <p>
+                Every rate, cap and exclusion is quoted from the issuer's pages,
+                and a weekly check flags anything that changes.
+              </p>
+            </div>
           </li>
           <li>
-            <strong>Private by design.</strong> The comparison above runs in
-            your browser: what you type is never sent anywhere. earnrate never
-            asks for card numbers or bank logins. In Claude, earnrate's server
-            answers each question without keeping it, and a saved wallet is
-            encrypted so only your recovery code or your connected apps can open
-            it. The <a href="/privacy">privacy page</a> has the details.
+            <span class="icon" aria-hidden="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <rect x="5" y="11" width="14" height="9" rx="2" />
+                <path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg
+            ></span>
+            <div>
+              <h3>Private by design</h3>
+              <p>
+                No card numbers or bank logins, ever. The comparison runs in
+                your browser. <a href="/privacy">Privacy details</a>.
+              </p>
+            </div>
           </li>
           <li>
-            <strong>Open source.</strong> The code is
-            <a href="https://github.com/cwasley/earnrate">on GitHub</a>, MIT
-            licensed.
+            <span class="icon" aria-hidden="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 5l-4 14" /></svg
+            ></span>
+            <div>
+              <h3>Open source</h3>
+              <p>
+                The code is
+                <a href="https://github.com/cwasley/earnrate">on GitHub</a>, MIT
+                licensed.
+              </p>
+            </div>
           </li>
         </ul>
       </section>
 
       <section id="claude">
-        <h2>Use it in Claude</h2>
-        <p>
-          Add earnrate to Claude and ask in a chat, like the Trader Joe's
-          example above. In Claude on the web or the desktop app, open Settings,
-          then Connectors, add a custom connector, and paste this address:
-        </p>
-        <pre class="terminal install">https://mcp.earnrate.dev</pre>
-        <p>
-          It then works in Claude on your phone too. When you add it, an
-          earnrate page opens once to start an anonymous wallet: a recovery code
-          to keep, and no email or sign-up. Then ask right away, with nothing to
-          enter: it answers from every card. Name your cards for answers about
-          your own, and save them to track your caps and welcome bonuses.
-        </p>
-        <p>In Claude Code and Cowork, install the plugin:</p>
-        <pre
-          class="terminal install"
-        ><span class="prompt">&gt;</span> /plugin marketplace add cwasley/earnrate
+        <p class="eyebrow">Use it anywhere</p>
+        <h2>In your browser, in Claude, or on your computer</h2>
+        <div class="where">
+          <input type="radio" name="where" id="tab-claude" checked />
+          <input type="radio" name="where" id="tab-code" />
+          <input type="radio" name="where" id="tab-desktop" />
+          <input type="radio" name="where" id="tab-cli" />
+          <div class="tablist">
+            <label for="tab-claude">Claude</label>
+            <label for="tab-code">Claude Code</label>
+            <label for="tab-desktop">Desktop app</label>
+            <label for="tab-cli">Terminal</label>
+          </div>
+          <div class="where-panel where-claude">
+            <ol class="steps">
+              <li>
+                In Claude on the web or the desktop app, open Settings, then
+                Connectors, and add a custom connector with this address:
+                <pre class="terminal">https://mcp.earnrate.dev</pre>
+              </li>
+              <li>
+                An earnrate page opens once to start an anonymous wallet: a
+                recovery code to keep, and no email or sign-up.
+              </li>
+              <li>
+                Ask, like the Trader Joe's example above. It works in Claude on
+                your phone too.
+              </li>
+            </ol>
+            <p class="note">
+              Name your cards for answers about your own, and save them to track
+              caps and welcome bonuses.
+            </p>
+          </div>
+          <div class="where-panel where-code">
+            <ol class="steps">
+              <li>
+                In Claude Code or Cowork, install the plugin:
+                <pre
+                  class="terminal"
+                ><span class="prompt">&gt;</span> /plugin marketplace add cwasley/earnrate
 <span class="prompt">&gt;</span> /plugin install earnrate@earnrate</pre>
-        <p>
-          To keep your wallet on your own computer instead, download
-          <a
-            href="https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb"
-            >earnrate for Claude Desktop</a
-          >
-          and open it. Use one or the other: each keeps its own wallet.
-        </p>
-        <p>
-          Answers come back with a stable card ID as well as the explanation, so
-          an agent that pays for you can use them directly. It never needs or
-          returns a card number.
-        </p>
-      </section>
-
-      <section>
-        <h2>Cards it knows</h2>
-        <p>
-          57 cards, each checked against everything its issuer publishes about
-          it: the card page, the rates and fees, and the rewards and offer
-          terms.
-        </p>
-        <ul class="cards">
-          <li>
-            <strong>American Express</strong> Gold, Platinum, Blue Cash
-            Preferred, Blue Cash Everyday, Blue Business Plus
-          </li>
-          <li>
-            <strong>Chase</strong> Sapphire Preferred, Sapphire Reserve, Freedom
-            Unlimited, Freedom Flex, Ink Business Cash, Ink Business Preferred,
-            Prime Visa
-          </li>
-          <li>
-            <strong>Chase airline and hotel</strong> United Gateway, Explorer,
-            Quest, Club, Business, Club Business; Southwest Plus, Premier,
-            Priority, Premier Business, Performance Business; Aeroplan; IHG One
-            Rewards, Premier, Premier Select, Business
-          </li>
-          <li>
-            <strong>Citi</strong> Strata Elite, Strata Premier, Double Cash,
-            Custom Cash, My Best Buy Visa, Costco Anywhere Visa (personal and
-            business); AAdvantage MileUp, Platinum Select, Globe, Executive,
-            Business
-          </li>
-          <li>
-            <strong>Capital One</strong> Venture X, Venture, Savor, Kohl's Card,
-            Kohl's Rewards Visa
-          </li>
-          <li><strong>Wells Fargo</strong> Active Cash, Autograph</li>
-          <li>
-            <strong>Bank of America</strong> Atmos Rewards Ascent, Summit,
-            Business; Customized Cash Rewards
-          </li>
-          <li>
-            <strong>TD Bank</strong> Target Circle Card, Nordstrom card,
-            Nordstrom Visa
-          </li>
-          <li>
-            <strong>Others</strong> U.S. Bank Cash+, Bilt Obsidian, SoFi
-            Unlimited 2%
-          </li>
-        </ul>
-        <p>
-          Store cards only come up at their own stores. Airline and hotel cards
-          count what the card earns, not perks like bags or free nights.
-        </p>
-      </section>
-
-      <section>
-        <h2>Run it on your computer</h2>
-        <p>
-          My wallet above keeps your cards in this browser. The command line
-          version keeps them in a file on your computer and can replay a
-          statement to catch up your caps. Export your wallet above and it works
-          there too. It needs Node 22 or later. Add the cards you hold, then ask
-          about a merchant:
-        </p>
-        <pre
-          class="terminal install"
-        ><span class="prompt">$</span> npm install -g earnrate
-<span class="prompt">$</span> earnrate cards sapphire
+              </li>
+              <li>Ask which card to use, from any project.</li>
+            </ol>
+          </div>
+          <div class="where-panel where-desktop">
+            <ol class="steps">
+              <li>
+                Download
+                <a
+                  href="https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb"
+                  >earnrate for Claude Desktop</a
+                >
+                and open it.
+              </li>
+              <li>
+                Your wallet stays in a file on your computer, not on earnrate's
+                server.
+              </li>
+            </ol>
+            <p class="note">
+              Use this or the connector, not both: each keeps its own wallet.
+            </p>
+          </div>
+          <div class="where-panel where-cli">
+            <ol class="steps">
+              <li>
+                It needs Node 22 or later. Install it and add the cards you
+                hold:
+                <pre
+                  class="terminal"
+                ><span class="prompt">$</span> npm install -g earnrate
 <span class="prompt">$</span> earnrate add chase-sapphire-preferred
-<span class="prompt">$</span> earnrate whole foods 80</pre>
-        <p>
-          It also runs as a local MCP server, with your wallet in that same
-          file. In Claude Code:
+<span class="prompt">$</span> earnrate trader joes</pre>
+              </li>
+              <li>
+                It can replay a statement to catch up your caps, and runs as a
+                local MCP server:
+                <pre
+                  class="terminal"
+                ><span class="prompt">$</span> claude mcp add --scope user earnrate -- npx -y earnrate mcp</pre>
+              </li>
+            </ol>
+            <p class="note">
+              Options are in the
+              <a href="https://github.com/cwasley/earnrate#readme"
+                >README on GitHub</a
+              >. Export your wallet from this page and it works there too.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <p class="eyebrow">Cards it knows</p>
+        <h2>
+          <!--earnrate:cards-->
+          cards from
+          <!--earnrate:issuer_count-->
+          issuers
+        </h2>
+        <p class="intro">
+          Each one is checked against everything its issuer publishes about it:
+          the card page, the rates and fees, and the rewards terms.
         </p>
-        <pre
-          class="terminal install"
-        ><span class="prompt">$</span> claude mcp add --scope user earnrate -- npx -y earnrate mcp</pre>
-        <p>
-          Adding a card tells you anything else it needs, like your Cash+
-          categories this quarter. Options and the full card list are in the
-          <a href="https://github.com/cwasley/earnrate#readme"
-            >README on GitHub</a
-          >.
-        </p>
+        <ul class="issuers">
+          <!--earnrate:issuers-->
+        </ul>
+        <p class="aside"><a href="/cards/">See every card →</a></p>
+      </section>
+
+      <section>
+        <p class="eyebrow">Questions</p>
+        <h2>The short answers</h2>
+        <div class="faq">
+          <details>
+            <summary>Do I have to enter my cards?</summary>
+            <p>
+              No. With no cards, every answer covers every card earnrate knows.
+              Name your cards for one answer, or save them to track caps, picks
+              and welcome bonuses.
+            </p>
+          </details>
+          <details>
+            <summary>Does it ever see my card numbers?</summary>
+            <p>
+              No. Cards are saved by product, like "Amex Gold". earnrate never
+              asks for card numbers, expiry dates, security codes or bank
+              logins, and won't save a name that looks like a card number.
+            </p>
+          </details>
+          <details>
+            <summary>Where does my wallet live?</summary>
+            <p>
+              On this site, in your browser's storage; clearing site data
+              deletes it. In Claude, in an anonymous wallet on earnrate's
+              server, encrypted so only your recovery code or your connected
+              apps can open it. On the command line, in a file on your computer.
+              The <a href="/privacy">privacy page</a> has the details.
+            </p>
+          </details>
+          <details>
+            <summary>How do you check the rates?</summary>
+            <p>
+              Every rule comes from the issuer's own pages and carries a short
+              quote from them. A check reloads those pages every week and flags
+              any change, so the fine print is watched too.
+            </p>
+          </details>
+          <details>
+            <summary>Why don't some perks count?</summary>
+            <p>
+              earnrate compares what a card earns. Store cards only come up at
+              their own stores, and airline and hotel perks like bags or free
+              nights aren't counted.
+            </p>
+          </details>
+          <details>
+            <summary>How does earnrate make money?</summary>
+            <p>
+              It doesn't take referral fees or show ads. The code is free and
+              open source; companies that want to use the card data commercially
+              can license it.
+            </p>
+          </details>
+          <details>
+            <summary>Can an AI agent use it?</summary>
+            <p>
+              Yes. Answers come back with a stable card ID as well as the
+              explanation, so an agent that pays for you can use them directly.
+              It never needs or returns a card number.
+            </p>
+          </details>
+        </div>
       </section>
 
       <footer>
@@ -641,12 +1219,9 @@
           <a href="mailto:licensing@earnrate.dev">licensing@earnrate.dev</a>.
         </p>
         <p>
-          No affiliate links, ever. Rankings depend only on the issuers' terms
-          and your own cards and settings.
-        </p>
-        <p>
           <a href="/best/">Best card for every store</a> ·
-          <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+          <a href="/cards/">All cards</a> · <a href="/privacy">Privacy</a> ·
+          <a href="/terms">Terms</a>
         </p>
       </footer>
     </main>

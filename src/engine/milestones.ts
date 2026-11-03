@@ -1,6 +1,6 @@
 import type { Card, Milestone } from '../schema/card.ts'
 import type { WalletCard } from '../schema/wallet.ts'
-import { periodKey } from './periods.ts'
+import { periodEnd, periodKey } from './periods.ts'
 import {
   listed,
   MILESTONE_PERIODS,
@@ -102,20 +102,6 @@ export function reachedText(card: Card, hit: MilestoneHit): string {
   return `This purchase reaches ${milestoneWhat(m)} (${money(hit.before)} tracked on this card in ${hit.period} before it).`
 }
 
-// The last day of a milestone's current period: December 31, or the day
-// before the next card anniversary.
-export function milestonePeriodEnd(
-  period: Milestone['period'],
-  key: string,
-  anniversary: string | null,
-): string | null {
-  if (period === 'calendar_year') return `${key}-12-31`
-  if (anniversary === null) return null
-  const next = new Date(`${String(Number(key) + 1)}-${anniversary}T00:00:00Z`)
-  next.setUTCDate(next.getUTCDate() - 1)
-  return next.toISOString().slice(0, 10)
-}
-
 const THIS_PERIOD: Record<Milestone['period'], string> = {
   calendar_year: 'this year',
   cardmember_year: 'this cardmember year',
@@ -158,7 +144,7 @@ export function milestoneSummaries(
         until:
           period === null
             ? null
-            : milestonePeriodEnd(m.period, period, held.anniversary ?? null),
+            : periodEnd(m.period, period, held.anniversary ?? null),
         spent,
         tracked,
         points: m.points ?? null,

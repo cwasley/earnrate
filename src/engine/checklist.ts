@@ -1,6 +1,6 @@
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
-import { daysBetween, periodEnd, periodKey } from './periods.ts'
+import { currentPeriodEnd, daysBetween } from './periods.ts'
 import {
   CAP_PERIODS,
   choiceName,
@@ -68,15 +68,15 @@ export function checklist(
     )
     const [first] = unpicked
     if (first) {
-      const period =
+      const due =
         first.period === 'until_changed'
           ? null
-          : periodKey(first.period, today, null)
+          : currentPeriodEnd(first.period, today, null)
       items.push({
         kind: 'pick',
         cardId: card.id,
         text: `Pick ${name}'s ${listed(unpicked.map((c) => choiceName(c.id)))} categories for this ${first.period.replace('_', ' ')}; until then they earn the base rate.`,
-        due: period === null ? null : periodEnd(period),
+        due,
       })
     } else {
       // Picks made for this period: near its end, a reminder to make the
@@ -84,11 +84,10 @@ export function checklist(
       const ending = card.choices.find(
         (c) => c.period !== 'until_changed' && !c.default && current,
       )
-      const period =
+      const end =
         ending === undefined || ending.period === 'until_changed'
           ? null
-          : periodKey(ending.period, today, null)
-      const end = period === null ? null : periodEnd(period)
+          : currentPeriodEnd(ending.period, today, null)
       if (ending && end !== null && daysBetween(today, end) <= 14)
         items.push({
           kind: 'pick',
@@ -111,8 +110,7 @@ export function checklist(
     for (const cap of s.caps) {
       // Only caps nearly used up: the rest aren't something to do.
       if (cap.remaining === null || cap.remaining > cap.amount * 0.25) continue
-      const resets =
-        cap.currentPeriod === null ? null : periodEnd(cap.currentPeriod)
+      const resets = cap.until
       items.push({
         kind: 'cap',
         cardId: card.id,

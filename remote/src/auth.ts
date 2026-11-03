@@ -71,6 +71,15 @@ export type AuthEnv = { OAUTH_KV: unknown }
 
 export type VaultFor<Env> = (env: Env, walletId: string) => VaultApi
 
+// The OAuth library's tokens are "{userId}:{grantId}:{secret}". Only the
+// grant id is read from one, to refuse a signed-out grant in the vault.
+export function grantIdOf(token: string): string | null {
+  const parts = token.split(':')
+  return parts.length === 3 && parts[1] ? parts[1] : null
+}
+
+export type RevokedGrant = { id: string; expiresAt: number | null } // ms
+
 export function protectedResourceMetadata(resource: string): Response {
   return Response.json({
     resource,
@@ -126,12 +135,20 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
     env: Env,
     token: string,
     first: string, // the resource of the address the request came to
-  ): Promise<{ grant: Grant; clientId: string } | null> {
+  ): Promise<{
+    grant: Grant
+    clientId: string
+    grantId: string | null
+  } | null> {
     for (const resource of [first, ...RESOURCES.filter((r) => r !== first)]) {
       const found = await server.validateToken<Grant>(resource, token, env)
       if (found)
         return found.scope.includes(SCOPE)
-          ? { grant: found.props, clientId: found.clientId }
+          ? {
+              grant: found.props,
+              clientId: found.clientId,
+              grantId: grantIdOf(token),
+            }
           : null
     }
     return null
@@ -140,12 +157,14 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
   // `clientId` limits it to one app's connections. A token doesn't say
   // which grant it came from, so every connection that app made to this
   // wallet is signed out (for claude.ai, every account connected to it).
+  // Returns the grants it revoked.
   async function signOutEverywhere(
     env: Env,
     walletId: string,
     clientId: string | null = null,
-  ) {
+  ): Promise<RevokedGrant[]> {
     const oauth = server.getOAuthApi(env)
+    const revoked: RevokedGrant[] = []
     let cursor: string | undefined
     do {
       const page = await oauth.listUserGrants(
@@ -153,10 +172,17 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
         cursor ? { cursor } : {},
       )
       for (const grant of page.items)
-        if (clientId === null || grant.clientId === clientId)
+        if (clientId === null || grant.clientId === clientId) {
           await oauth.revokeGrant(grant.id, walletId)
+          revoked.push({
+            id: grant.id,
+            expiresAt:
+              grant.expiresAt === undefined ? null : grant.expiresAt * 1000,
+          })
+        }
       cursor = page.cursor
     } while (cursor)
+    return revoked
   }
 
   function connect(

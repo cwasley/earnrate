@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises'
 import { defineConfig, type Plugin } from 'vite'
-import { DATA_DIR, loadCatalog } from '../src/data/load.ts'
+import { DATA_DIR, loadCatalog, loadWallet } from '../src/data/load.ts'
+import { localToday } from '../src/engine/periods.ts'
+import { landingFacts, renderLanding } from '../scripts/landing.ts'
 
 const CATALOG = 'virtual:catalog'
 
@@ -24,9 +26,25 @@ function catalogModule(): Plugin {
   }
 }
 
+// The home page's counts, sample cheat sheet and quoted answer come from the
+// card data and the example wallet, filled in when the page is built.
+function landingPage(): Plugin {
+  return {
+    name: 'earnrate-landing',
+    async transformIndexHtml(html, ctx) {
+      if (!ctx.filename.endsWith('/index.html')) return html
+      const [catalog, sample] = await Promise.all([
+        loadCatalog(),
+        loadWallet(`${import.meta.dirname}/../wallet.example.yaml`),
+      ])
+      return renderLanding(html, landingFacts(catalog, sample, localToday()))
+    },
+  }
+}
+
 export default defineConfig({
   root: import.meta.dirname,
-  plugins: [catalogModule()],
+  plugins: [catalogModule(), landingPage()],
   oxc: { jsx: { runtime: 'automatic', importSource: 'preact' } },
   build: {
     outDir: '../site-dist',

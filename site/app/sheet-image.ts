@@ -9,17 +9,17 @@ const H = 1350
 const PAD = 72
 const LIGHT = {
   paper: '#ffffff',
-  ink: '#1c1d1f',
-  muted: '#5f6368',
-  line: '#e6e2da',
-  accent: '#1f6f54',
+  ink: '#1d1b19',
+  muted: '#625d58',
+  line: '#e8e1d9',
+  accent: '#9a5020',
 }
 const DARK = {
-  paper: '#1a1c1f',
-  ink: '#ecebe7',
-  muted: '#a2a6ab',
-  line: '#2b2e32',
-  accent: '#7fd1ad',
+  paper: '#1c1a18',
+  ink: '#eeebe6',
+  muted: '#a8a29c',
+  line: '#2e2a27',
+  accent: '#e8a877',
 }
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
 

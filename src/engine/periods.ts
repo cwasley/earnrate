@@ -60,17 +60,45 @@ export const inEffect = (
   (window.valid_from === undefined || window.valid_from <= date) &&
   (window.valid_to === undefined || window.valid_to >= date)
 
-// The last day of a period key ("2026-Q4", "2026-10", "2026").
-export function periodEnd(period: string): string | null {
-  const quarter = /^(\d{4})-Q([1-4])$/.exec(period)
-  if (quarter) {
-    const end = ['03-31', '06-30', '09-30', '12-31'][Number(quarter[2]) - 1]
-    return `${quarter[1] ?? ''}-${end ?? ''}`
+const utcDay = (year: number, month: number, day: number) =>
+  new Date(Date.UTC(year, month - 1, day)).toISOString().slice(0, 10)
+
+// The last day of the period a key from periodKey names. A calendar year and
+// a cardmember year share the key shape ("2026"), so the kind is needed: a
+// cardmember year ends the day before the next anniversary. null for a
+// cardmember year without an anniversary, or a key that doesn't fit the kind.
+export function periodEnd(
+  period: Period,
+  key: string,
+  anniversary: string | null,
+): string | null {
+  switch (period) {
+    case 'month': {
+      const m = /^(\d{4})-(\d{2})$/.exec(key)
+      return m ? utcDay(Number(m[1]), Number(m[2]) + 1, 0) : null
+    }
+    case 'quarter': {
+      const q = /^(\d{4})-Q([1-4])$/.exec(key)
+      return q ? utcDay(Number(q[1]), Number(q[2]) * 3 + 1, 0) : null
+    }
+    case 'calendar_year':
+      return /^\d{4}$/.test(key) ? `${key}-12-31` : null
+    case 'cardmember_year': {
+      const a =
+        anniversary === null ? null : /^(\d{2})-(\d{2})$/.exec(anniversary)
+      if (!a || !/^\d{4}$/.test(key)) return null
+      // Date.UTC rolls over; a parsed "2027-02-29" would be invalid.
+      return utcDay(Number(key) + 1, Number(a[1]), Number(a[2]) - 1)
+    }
   }
-  const month = /^(\d{4})-(\d{2})$/.exec(period)
-  if (month) {
-    const last = new Date(Date.UTC(Number(month[1]), Number(month[2]), 0))
-    return last.toISOString().slice(0, 10)
-  }
-  return /^\d{4}$/.test(period) ? `${period}-12-31` : null
+}
+
+// The last day of the period `date` falls in.
+export function currentPeriodEnd(
+  period: Period,
+  date: string,
+  anniversary: string | null,
+): string | null {
+  const key = periodKey(period, date, anniversary)
+  return key === null ? null : periodEnd(period, key, anniversary)
 }

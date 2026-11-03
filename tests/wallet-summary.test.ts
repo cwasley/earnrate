@@ -126,3 +126,33 @@ test('spend milestones show their progress, or that they are not tracked', () =>
     "$15,000 this year for 10,000 bonus points and Gold Elite status; spending toward it isn't tracked yet.",
   )
 })
+
+test('a cardmember-year cap ends the day before the anniversary, or asks for it', () => {
+  const ink = (anniversary?: string) =>
+    WalletSchema.parse({
+      cards: [
+        {
+          id: 'chase-ink-business-cash',
+          ...(anniversary === undefined ? {} : { anniversary }),
+          cap_usage: {
+            'five-percent-combined': { period: '2026', spent: 500 },
+          },
+        },
+      ],
+    })
+  const known = walletSummary(catalog, ink('03-15'), '2026-11-01')
+  expect(
+    known.cards[0]?.caps.find((c) => c.key === 'five-percent-combined'),
+  ).toMatchObject({ currentPeriod: '2026', until: '2027-03-14' })
+  expect(formatWalletSummary(known)).toMatch(
+    /\$500 of \$25,000 used for 2026, through Mar 14, 2027/,
+  )
+  const unknown = walletSummary(catalog, ink(), '2026-11-01')
+  expect(unknown.cards[0]?.caps[0]).toMatchObject({
+    currentPeriod: null,
+    until: null,
+  })
+  expect(formatWalletSummary(unknown)).toMatch(
+    /a cardmember year; give the card's anniversary to track it/,
+  )
+})

@@ -301,7 +301,7 @@ function layout(
     <meta property="og:description" content="${esc(description)}" />
     <meta property="og:image" content="${SITE}/og.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#1f6f54" />
+    <meta name="theme-color" content="#9a5020" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" href="${ICON}" />
     <link rel="stylesheet" href="/pages.css" />
