@@ -61,7 +61,7 @@ rules:
       }
     rate: 6
     geography: us_only
-    note: Only providers on Amex's Select U.S. Streaming Subscriptions list (americanexpress.com/rewards-info, read 2026-11-03). The list also names AMC+, Britbox, iHeartRadio, Kindle Unlimited, Luminary and MGM+, which earnrate doesn't know as stores yet. Subscriptions bundled with or billed by another company (cable, phone, a car maker) may not count.
+    note: Only the services on Amex's Select U.S. Streaming list, like Netflix, Hulu, Disney+, Spotify and Audible. Subscriptions bundled with or billed by another company (cable, phone, a car maker) may not count.
   - id: transit
     match: { categories: [transit] }
     rate: 3
@@ -72,6 +72,8 @@ rules:
     rate: 3
     geography: us_only
     note: Superstores, supermarkets and warehouse clubs that sell gas are not gas stations.
+todo:
+  - Amex's Select U.S. Streaming list also names AMC+, Britbox, iHeartRadio, Kindle Unlimited, Luminary and MGM+, which earnrate doesn't know as stores yet.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate

@@ -60,7 +60,7 @@ rules:
       }
     rate: 3
     valid_to: 2026-12-31
-    note: Only Chase's select streaming list (Apple Music, Apple TV, Disney+, ESPN+, Fubo TV, Max, Hulu, Netflix, Pandora, Paramount+, Peacock, Showtime, SiriusXM, Sling, Spotify, YouTube Premium, YouTube TV and Vudu). Purchases posting after Dec 31, 2026 earn the 2x base rate.
+    note: Only the services on Chase's select streaming list, like Netflix, Hulu, Disney+ and Spotify. Purchases posting after Dec 31, 2026 earn the 2x base rate.
 milestones:
   - id: spend-15k
     spend: 15000

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../../src/data/load.ts'
 import { recommend } from '../../src/engine/recommend.ts'
+import { resolveMerchant } from '../../src/merchants/resolve.ts'
 import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
 import { resolveSpendLines, simulateWallet } from '../../src/engine/simulate.ts'
@@ -690,11 +691,13 @@ describe('#23 spend milestones', () => {
       expect(rec.decision?.cardId).toBe(IHG)
       const ihg = entry(rec, IHG)
       expect(ihg.rate).toBe(3)
-      expect(ihg.earned).toBeCloseTo(51.5)
-      expect(ihg.effectiveReturnPct).toBeCloseTo(51.5)
+      expect(ihg.effectiveReturnPct).toBeCloseTo(1.5)
+      expect(ihg.earned).toBeCloseTo(1.5)
+      expect(ihg.milestoneBonus).toEqual({ points: 10000, dollars: 50 })
+      expect(rec.decision?.effectiveReturnPct).toBeCloseTo(1.5)
       expectSome(
         ihg.reasoning,
-        /This purchase reaches the \$15,000 calendar-year spend for 10,000 bonus points/,
+        /This purchase reaches the \$15,000 calendar-year spend: 10,000 bonus points, worth about \$50/,
       )
       expectSome(rec.assumptions, /\$14,950.*2026/)
     },
@@ -704,8 +707,9 @@ describe('#23 spend milestones', () => {
     const wallet = flat(
       withIhg({ 'spend-15k': { period: '2026', spent: 14900 } })(baseWallet()),
     )
-    const ihg = entry(recommend(catalog, wallet, dinner()), IHG)
-    expect(ihg.earned).toBeCloseTo(51.5)
+    const rec = recommend(catalog, wallet, dinner())
+    expect(rec.decision?.cardId).toBe(IHG)
+    expect(entry(rec, IHG).milestoneBonus?.points).toBe(10000)
   })
 
   goldenTest(
@@ -942,3 +946,15 @@ describe('#25 streaming bonuses follow each issuer’s list', () => {
     },
   )
 })
+
+goldenTest(
+  "#26 BJ's alone is the warehouse club; the restaurant keeps its names",
+  () => {
+    const id = (q: string) => resolveMerchant(catalog, q, null).merchantId
+    for (const q of ['BJs', "BJ's", 'BJ’s', 'bjs'])
+      expect(id(q)).toBe('bjs-wholesale-club')
+    expect(id("BJ's Restaurant")).toBe('bjs-restaurant')
+    expect(id('bjs brewhouse')).toBe('bjs-restaurant')
+    expect(id('bjs gas')).toBe('bjs-gas')
+  },
+)

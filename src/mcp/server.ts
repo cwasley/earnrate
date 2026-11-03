@@ -76,7 +76,23 @@ ${WHICH_WALLET[savedWallets]} The earnrate extension on the user's computer and 
 
 export function createEarnrateServer(deps: ServerDeps): McpServer {
   const server = new McpServer(
-    { name: MCP_SERVER_NAME, version: deps.version },
+    {
+      name: MCP_SERVER_NAME,
+      version: deps.version,
+      websiteUrl: 'https://earnrate.dev',
+      icons: [
+        {
+          src: 'https://earnrate.dev/icon-192.png',
+          mimeType: 'image/png',
+          sizes: ['192x192'],
+        },
+        {
+          src: 'https://earnrate.dev/favicon.svg',
+          mimeType: 'image/svg+xml',
+          sizes: ['any'],
+        },
+      ],
+    },
     { instructions: instructions(deps.savedWallets) },
   )
   const ctx = makeContext(deps)

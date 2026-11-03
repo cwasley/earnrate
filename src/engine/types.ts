@@ -49,6 +49,9 @@ export type RankedCard = {
   effectiveReturnPct: number // net of a foreign transaction fee abroad
   earned: number | null // dollars, when the amount is known
   foreignFee: number | null // percent charged on this purchase, when any
+  // Points from a spend milestone this purchase reaches, and their worth.
+  // They count toward the ranking; `effectiveReturnPct` and `earned` don't include them.
+  milestoneBonus: { points: number; dollars: number } | null
   capped: boolean // the winning rule has a cap
   reasoning: string[]
   warnings: string[]

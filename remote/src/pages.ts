@@ -56,7 +56,7 @@ export const PAGE_SCRIPT_HASH =
 
 const PAGE_HEADERS = {
   'Content-Type': 'text/html; charset=utf-8',
-  'Content-Security-Policy': `default-src 'none'; script-src '${PAGE_SCRIPT_HASH}'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'`,
+  'Content-Security-Policy': `default-src 'none'; script-src '${PAGE_SCRIPT_HASH}'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'`,
   'Referrer-Policy': 'no-referrer',
   'X-Content-Type-Options': 'nosniff',
   'Cache-Control': 'no-store, no-transform', // keeps Cloudflare from injecting scripts
@@ -76,6 +76,7 @@ function page(title: string, body: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>${escape(title)}</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>${STYLE}</style>
 </head>
 <body><main>${body}<p class="muted links"><a href="https://earnrate.dev/terms">Terms</a> · <a href="https://earnrate.dev/privacy">Privacy</a></p></main><script>${PAGE_SCRIPT}</script></body>
@@ -176,3 +177,9 @@ ${shownCode(code)}
 <p class="muted">Don't paste it into a chat. Type it only on the earnrate page that opens when you connect an app.</p>`,
   )
 }
+
+// The same mark as earnrate.dev's favicon (site/public/favicon.svg; a test
+// keeps them equal), served here so apps that look up mcp.earnrate.dev's
+// icon find it.
+export const FAVICON_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -20 120 120"><g fill="none" stroke="#9a5020" stroke-width="7"><rect x="24" y="8" width="88" height="56" rx="10" opacity=".35"/><rect x="8" y="22" width="92" height="58" rx="10" fill="#9a5020" stroke="none"/><rect x="20" y="38" width="18" height="13" rx="3" fill="#ffffff" stroke="none"/></g></svg>'

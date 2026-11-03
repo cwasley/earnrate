@@ -64,7 +64,7 @@ rules:
           ],
       }
     rate: 2
-    note: Only Chase's select streaming list (Apple Music, Apple TV, Disney+, ESPN+, Fubo TV, Max, Hulu, Netflix, Pandora, Paramount+, Peacock, Showtime, SiriusXM, Sling, Spotify, YouTube Premium, YouTube TV, Vudu).
+    note: Only the services on Chase's select streaming list, like Netflix, Hulu, Disney+ and Spotify.
 todo:
   - United Card Events from Chase also earn 4x; no merchant exists for them, so they aren't modeled.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.

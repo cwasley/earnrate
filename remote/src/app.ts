@@ -17,7 +17,7 @@ import {
   type ExecutionContextLike,
   type VaultFor,
 } from './auth.ts'
-import { errorPage, html } from './pages.ts'
+import { errorPage, FAVICON_SVG, html } from './pages.ts'
 import { RATE_LIMIT_SECONDS } from './policy.ts'
 import { limitKey, MAX_BODY, readBody } from './requests.ts'
 
@@ -278,6 +278,15 @@ export function makeWorker<E extends Env>(
         (request.headers.get('accept') ?? '').includes('text/html')
       if (pathname === '/' && browsing)
         return Response.redirect('https://earnrate.dev/', 302)
+      if (pathname === '/favicon.svg')
+        return new Response(FAVICON_SVG, {
+          headers: {
+            'content-type': 'image/svg+xml',
+            'cache-control': 'public, max-age=86400',
+          },
+        })
+      if (pathname === '/favicon.ico')
+        return Response.redirect('https://earnrate.dev/favicon.ico', 301)
       if (await limited(env.LIMITER, request)) return tooMany()
       if (pathname === '/.well-known/oauth-protected-resource')
         return protectedResourceMetadata(resourceFor('/'))

@@ -237,7 +237,7 @@ describe('tools', () => {
       arguments: { merchant: 'Chipotle', amount: 100 },
     })
     expect(text(best)).toMatch(
-      /reaches the \$15,000 calendar-year spend for 10,000 bonus points and Gold Elite status/,
+      /reaches the \$15,000 calendar-year spend: 10,000 bonus points, worth about \$50, plus Gold Elite status/,
     )
 
     const recorded = await client.callTool({

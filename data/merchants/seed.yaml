@@ -266,12 +266,6 @@
     aliases: [pf changs, p f changs, p.f. changs],
     category: dining,
   }
-- {
-    id: bjs-restaurant,
-    name: "BJ's Restaurant & Brewhouse",
-    aliases: [bjs restaurant, bjs restaurant and brewhouse, bjs brewhouse],
-    category: dining,
-  }
 - { id: waffle-house, name: Waffle House, category: dining }
 - {
     id: tgi-fridays,

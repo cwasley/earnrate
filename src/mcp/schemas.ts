@@ -45,6 +45,9 @@ const RankedCardSchema = z.object({
   effectiveReturnPct: z.number(),
   earned: z.number().nullable(),
   foreignFee: z.number().nullable(),
+  milestoneBonus: z
+    .object({ points: z.number(), dollars: z.number() })
+    .nullable(),
   capped: z.boolean(),
   reasoning: z.array(z.string()),
   warnings: z.array(z.string()),

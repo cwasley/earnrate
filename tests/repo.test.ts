@@ -165,3 +165,12 @@ test('earnrate.dev refuses to be framed and serves no sniffed types', async () =
   expect(headers).toMatch(/Content-Security-Policy: .*frame-ancestors 'none'/)
   expect(headers).toContain('X-Content-Type-Options: nosniff')
 })
+
+test("the hosted server's favicon is the site's", async () => {
+  const { FAVICON_SVG } = await import('../remote/src/pages.ts')
+  const site = await readFile(
+    path.join(ROOT, 'site/public/favicon.svg'),
+    'utf8',
+  )
+  expect(FAVICON_SVG).toBe(site.trim())
+})

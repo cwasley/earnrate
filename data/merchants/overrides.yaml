@@ -287,10 +287,16 @@
 # drugstores" (chase.com/personal/credit-cards/rewards-category-faq).
 - id: bjs-wholesale-club
   name: "BJ's Wholesale Club"
-  aliases: [bjs wholesale, bjs wholesale club, bjs club]
+  aliases: [bjs, bjs wholesale, bjs wholesale club, bjs club]
   domains: [bjs.com]
   category: warehouse_club
-  note: Codes as a warehouse club, which Amex, Chase and Capital One leave out of their grocery bonuses.
+  note: Codes as a warehouse club, which Amex, Chase and Capital One leave out of their grocery bonuses. For the restaurant chain, ask about BJ's Restaurant & Brewhouse.
+# Listed here, beside BJ's Wholesale Club, so "BJ's" alone means the club
+# and the restaurant still answers to its own names.
+- id: bjs-restaurant
+  name: "BJ's Restaurant & Brewhouse"
+  aliases: [bjs restaurant, bjs restaurant and brewhouse, bjs brewhouse]
+  category: dining
 - id: bjs-gas
   name: "BJ's Gas"
   aliases: [bjs gas, bjs gas station]

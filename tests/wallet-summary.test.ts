@@ -145,7 +145,7 @@ test('a cardmember-year cap ends the day before the anniversary, or asks for it'
     known.cards[0]?.caps.find((c) => c.key === 'five-percent-combined'),
   ).toMatchObject({ currentPeriod: '2026', until: '2027-03-14' })
   expect(formatWalletSummary(known)).toMatch(
-    /\$500 of \$25,000 used for 2026, through Mar 14, 2027/,
+    /\$500 of \$25,000 used this cardmember year, through Mar 14, 2027/,
   )
   const unknown = walletSummary(catalog, ink(), '2026-11-01')
   expect(unknown.cards[0]?.caps[0]).toMatchObject({

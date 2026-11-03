@@ -51,7 +51,7 @@ export function formatWalletSummary(summary: WalletSummary): string {
       lines.push(
         cap.remaining === null
           ? `  Cap on ${cap.label}: ${money(cap.amount)} ${CAP_PERIODS[cap.period]}; give the card's anniversary to track it (cap key ${cap.key}).`
-          : `  Cap on ${cap.label}: ${money(cap.spent)} of ${money(cap.amount)} used for ${cap.currentPeriod ?? ''}${cap.until === null ? '' : `, through ${shortDate(cap.until)}`} (cap key ${cap.key}).`,
+          : `  Cap on ${cap.label}: ${money(cap.spent)} of ${money(cap.amount)} used ${cap.period === 'cardmember_year' ? 'this cardmember year' : `for ${cap.currentPeriod ?? ''}`}${cap.until === null ? '' : `, through ${shortDate(cap.until)}`} (cap key ${cap.key}).`,
       )
     for (const m of c.milestones)
       lines.push(`  Spend bonus (${m.id}): ${m.text}`)
@@ -111,7 +111,11 @@ export function formatBooking(
         ...reached.map(
           (m) => `That reaches its ${money(m.spend)} spend bonus.`,
         ),
-        ...(next ? [`${money(next.spend - next.after)} to its next one.`] : []),
+        ...(next
+          ? [
+              `${money(next.spend - next.after)} to go for the ${money(next.spend)} spend bonus.`,
+            ]
+          : []),
       ].join(' '),
     )
   }

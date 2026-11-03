@@ -47,7 +47,11 @@ function cardLines(
   )
   const lines: string[] = []
   cards.forEach((c) => {
-    const earned = c.earned === null ? '' : `  ${dollarsAndCents(c.earned)}`
+    const earned =
+      (c.earned === null ? '' : `  ${dollarsAndCents(c.earned)}`) +
+      (c.milestoneBonus === null
+        ? ''
+        : ` + ${money(c.milestoneBonus.dollars)} spend bonus`)
     const pick =
       c.cardId === bonusPick ? '  ← the pick, for its welcome bonus' : ''
     lines.push(
@@ -86,10 +90,14 @@ export function formatRecommendation(
   if (rec.decision && top) {
     const earned =
       top.earned === null ? '' : `, about ${dollarsAndCents(top.earned)}`
+    const milestone =
+      top.milestoneBonus === null
+        ? ''
+        : `, plus a spend bonus worth about ${money(top.milestoneBonus.dollars)}`
     const confidence = rec.decision.confidence
     const why = rec.bonus ? ' for its welcome bonus' : ''
     lines.push(
-      `${style('bold', `Use ${label(top)}${why}: ${pct(top.effectiveReturnPct)} back${earned}.`)} ${capitalize(confidence)} confidence.`,
+      `${style('bold', `Use ${label(top)}${why}: ${pct(top.effectiveReturnPct)} back${earned}${milestone}.`)} ${capitalize(confidence)} confidence.`,
     )
     if (rec.bonus && rec.notes[0]) lines.push(rec.notes[0])
   } else {

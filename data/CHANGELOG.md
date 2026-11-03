@@ -2,6 +2,18 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.03.4
+
+Fixes from testing 0.2.9 in Claude. "BJ's" alone now means BJ's Wholesale Club (BJ's Restaurant & Brewhouse keeps its own names), and the streaming rules on Blue Cash Preferred, United Quest and IHG One Rewards read "select streaming services" with a few examples instead of every service. No rates changed.
+
+| Card or merchant         | Field             | Old → new                                                        | Source                                                                                                 |
+| ------------------------ | ----------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| bjs-wholesale-club       | aliases           | adds "BJ's"                                                      | n/a                                                                                                    |
+| bjs-restaurant           | file              | moved to overrides.yaml, so its own names still win over "BJ's"  | n/a                                                                                                    |
+| amex-blue-cash-preferred | us-streaming note | shortened; the services earnrate doesn't know yet move to a todo | [Amex Select U.S. Streaming list](https://www.americanexpress.com/us/content/rewards-info/retail.html) |
+| chase-united-quest       | streaming note    | shortened                                                        | [Chase rewards category FAQ](https://www.chase.com/personal/credit-cards/rewards-category-faq)         |
+| chase-ihg-one-rewards    | streaming note    | shortened                                                        | [Chase rewards category FAQ](https://www.chase.com/personal/credit-cards/rewards-category-faq)         |
+
 ## 2026.11.03.3
 
 Every card has a foreign transaction fee, from its issuer's rates-and-fees table where one is readable. Abroad, answers rank each card after its fee. Atmos Rewards Summit's 3x on foreign purchases is modeled with a new `foreign_only` geography. Six cards have no readable page stating the fee and are left as todos.

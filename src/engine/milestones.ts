@@ -96,10 +96,24 @@ export const milestoneWhat = (
 ) =>
   `the ${wholeDollars(m.spend)} ${MILESTONE_PERIODS[m.period]} spend for ${milestonePays(m)}`
 
-export function reachedText(card: Card, hit: MilestoneHit): string {
+export function reachedText(
+  card: Card,
+  hit: MilestoneHit,
+  centsPerPoint: number,
+): string {
   const m = card.milestones.find((x) => x.id === hit.id)
   if (!m) return ''
-  return `This purchase reaches ${milestoneWhat(m)} (${money(hit.before)} tracked on this card in ${hit.period} before it).`
+  const points =
+    hit.points === null
+      ? null
+      : `${hit.points.toLocaleString('en-US')} bonus points, worth about ${money(roundCents((hit.points * centsPerPoint) / 100))}`
+  const pays =
+    points === null
+      ? listed(hit.rewards)
+      : hit.rewards.length === 0
+        ? points
+        : `${points}, plus ${listed(hit.rewards)}`
+  return `This purchase reaches the ${wholeDollars(m.spend)} ${MILESTONE_PERIODS[m.period]} spend: ${pays} (${money(hit.before)} tracked on this card in ${hit.period} before it).`
 }
 
 const THIS_PERIOD: Record<Milestone['period'], string> = {

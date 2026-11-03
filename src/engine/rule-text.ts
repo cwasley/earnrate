@@ -44,13 +44,18 @@ export function ruleParts(catalog: Catalog, rule: Rule): string[] {
   if (rule.match.choice !== undefined)
     return [`your ${choiceName(rule.match.choice)} picks`]
   const merchants = rule.match.merchants ?? []
-  // A long list of one kind of store reads as "select streaming services".
-  const kinds = new Set(
-    merchants.map((m) => findMerchant(catalog, m)?.category),
-  )
-  const [kind] = kinds
+  // A long list of mostly one kind of store reads as "select streaming
+  // services": Amex's streaming list also names Audible, which isn't one.
+  const counts = new Map<string, number>()
+  for (const m of merchants) {
+    const category = findMerchant(catalog, m)?.category
+    if (category) counts.set(category, (counts.get(category) ?? 0) + 1)
+  }
+  const [kind, count = 0] = [...counts].sort((a, b) => b[1] - a[1])[0] ?? []
   const merchantParts =
-    merchants.length > 4 && kinds.size === 1 && kind !== undefined
+    merchants.length > 4 &&
+    kind !== undefined &&
+    count >= merchants.length * 0.75
       ? [`select ${categoryPhrase(catalog, kind)}`]
       : merchants.map((m) => merchantName(catalog, m))
   const parts = [

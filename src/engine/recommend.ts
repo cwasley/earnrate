@@ -54,6 +54,9 @@ import { cardValuation, type Valuation } from './valuation.ts'
 export const STALE_AFTER_DAYS = 180
 
 // The engine only tells the U.S. from everywhere else.
+export const FOREIGN_ASSUMPTION =
+  'Treats this as a purchase outside the U.S.: each card is ranked after its foreign transaction fee.'
+
 export const isForeign = (purchase: Pick<Purchase, 'country'>) =>
   purchase.country !== 'US'
 
@@ -74,6 +77,9 @@ type Entry = {
   // Spend milestones this purchase reaches, whose points count toward it.
   milestones: MilestoneHit[]
   perDollar: number // currency units per dollar, milestone points included
+  // The card's own rate on this purchase, net of `fee`: what's shown as "% back".
+  // A milestone's points count toward the ranking but are shown on their own.
+  rateReturnPct: number
   fee: number // foreign transaction fee percent on this purchase, else 0
   effectiveReturnPct: number // net of `fee`
   upside: number // return at the top of the currency's value range
@@ -162,6 +168,7 @@ function rankEntries(
       perDollar,
       fee,
       effectiveReturnPct: perDollar * valuation.centsPerUnit - fee,
+      rateReturnPct: evaluation.best.rate * valuation.centsPerUnit - fee,
       upside:
         perDollar * (valuation.range?.[1] ?? valuation.centsPerUnit) - fee,
     })
@@ -201,7 +208,8 @@ function reasoningFor(
     )
   }
 
-  for (const hit of entry.milestones) lines.push(reachedText(card, hit))
+  for (const hit of entry.milestones)
+    lines.push(reachedText(card, hit, valuation.centsPerUnit))
 
   if (valuation.pooledFrom !== null) {
     const partners = card.pools_into?.when_wallet_has ?? []
@@ -220,7 +228,7 @@ function reasoningFor(
 
   if (currency !== 'cash') {
     lines.push(
-      `Valued at ${num(valuation.centsPerUnit)}¢ per point: ${pct(entry.perDollar * valuation.centsPerUnit)} back.`,
+      `Valued at ${num(valuation.centsPerUnit)}¢ per point: ${pct(entry.evaluation.best.rate * valuation.centsPerUnit)} back.`,
     )
   }
   return lines
@@ -318,12 +326,23 @@ function toRanked(
     rate: evaluation.best.rate,
     currency: valuation.currency,
     centsPerUnit: valuation.centsPerUnit,
-    effectiveReturnPct: entry.effectiveReturnPct,
+    effectiveReturnPct: entry.rateReturnPct,
     foreignFee: entry.fee > 0 ? entry.fee : null,
     earned:
       purchase.amount === null
         ? null
-        : Math.round(purchase.amount * entry.effectiveReturnPct) / 100,
+        : Math.round(purchase.amount * entry.rateReturnPct) / 100,
+    milestoneBonus:
+      entry.milestones.length === 0
+        ? null
+        : {
+            points: milestonePoints(entry.milestones),
+            dollars: roundCents(
+              (milestonePoints(entry.milestones) *
+                entry.valuation.centsPerUnit) /
+                100,
+            ),
+          },
     capped: evaluation.best.cap !== null,
     reasoning: reasoningFor(catalog, wallet, entry, purchase.amount),
     warnings: warningsFor(catalog, entry, purchase),
@@ -354,6 +373,10 @@ function tieNote(entries: Entry[]): string | null {
 // Finds the closest point inside a currency's value range where the winner
 // stops winning, varying one currency at a time. Returns are linear in the
 // cents-per-point value, so each pair of cards flips at most once.
+// "Chase Ultimate Rewards points", but not "IHG One Rewards points points".
+const pointsName = (label: string) =>
+  /\b(points|miles)$/i.test(label) ? label : `${label} points`
+
 function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
   const [winner, ...rest] = entries
   if (!winner) return null
@@ -376,7 +399,7 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
       if (threshold < w.centsPerUnit && threshold >= w.range[0]) {
         consider(
           (w.centsPerUnit - threshold) / w.centsPerUnit,
-          `${displayName(other)} beats ${displayName(winner)} here if ${currencyLabel(catalog, w.currency)} points are worth less than ${roundDown(threshold)}¢ (you value them at ${num(w.centsPerUnit)}¢).`,
+          `${displayName(other)} beats ${displayName(winner)} here if ${pointsName(currencyLabel(catalog, w.currency))} are worth less than ${roundDown(threshold)}¢ (you value them at ${num(w.centsPerUnit)}¢).`,
         )
       }
     }
@@ -385,7 +408,7 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
       if (threshold > o.centsPerUnit && threshold <= o.range[1]) {
         consider(
           (threshold - o.centsPerUnit) / o.centsPerUnit,
-          `${displayName(other)} beats ${displayName(winner)} here if ${currencyLabel(catalog, o.currency)} points are worth ${worthAbove(threshold)} (you value them at ${num(o.centsPerUnit)}¢).`,
+          `${displayName(other)} beats ${displayName(winner)} here if ${pointsName(currencyLabel(catalog, o.currency))} are worth ${worthAbove(threshold)} (you value them at ${num(o.centsPerUnit)}¢).`,
         )
       }
     }
@@ -433,10 +456,7 @@ function assumptionsFor(
     entries.map((e) => e.valuation),
   )
   if (values !== null) assumptions.push(values)
-  if (isForeign(purchase))
-    assumptions.push(
-      'Treats this as a purchase outside the U.S.: each card is ranked after its foreign transaction fee.',
-    )
+  if (isForeign(purchase)) assumptions.push(FOREIGN_ASSUMPTION)
   for (const e of entries)
     for (const hit of e.milestones)
       assumptions.push(

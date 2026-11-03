@@ -1,6 +1,7 @@
 // Draws earnrate's icons and social preview image from HTML, so a palette or
 // wording change is one command: node scripts/make-images.ts
 // (The plugin's icon is left alone while the plugin is in directory review.)
+import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { chromium } from 'playwright'
 
@@ -76,6 +77,22 @@ const outputs: {
   { file: 'site/public/og.png', size: [1200, 630], html: og },
 ]
 
+// favicon.ico: a 48px PNG inside an ICO wrapper, which every browser and
+// favicon service reads.
+function ico(png: Buffer): Buffer {
+  const header = Buffer.alloc(22)
+  header.writeUInt16LE(0, 0)
+  header.writeUInt16LE(1, 2)
+  header.writeUInt16LE(1, 4)
+  header.writeUInt8(48, 6)
+  header.writeUInt8(48, 7)
+  header.writeUInt16LE(1, 10)
+  header.writeUInt16LE(32, 12)
+  header.writeUInt32LE(png.length, 14)
+  header.writeUInt32LE(22, 18)
+  return Buffer.concat([header, png])
+}
+
 const browser = await chromium.launch()
 for (const o of outputs) {
   const page = await browser.newPage({
@@ -88,5 +105,13 @@ for (const o of outputs) {
   })
   await page.close()
   console.log(o.file)
+}
+{
+  const page = await browser.newPage({ viewport: { width: 48, height: 48 } })
+  await page.setContent(icon({ inset: 14, radius: 0, outlines: 1 }))
+  const png = await page.screenshot()
+  await writeFile(path.join(ROOT, 'site/public/favicon.ico'), ico(png))
+  await page.close()
+  console.log('site/public/favicon.ico')
 }
 await browser.close()

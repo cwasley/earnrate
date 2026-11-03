@@ -421,3 +421,24 @@ describe('nothing entered, or cards named for one answer', () => {
     expect(TYPICAL_SPEND_NOTE).toMatch(/^No spending was given/)
   })
 })
+
+test('abroad: tier rates are net of the fee, and the answer says it was treated as foreign', () => {
+  const abroad = exploreCards(
+    catalog,
+    query({ category: 'gas', country: 'GB' }),
+    casual,
+  )
+  const cash = abroad.ranked.find(
+    (e) => e.cardId === 'bank-of-america-customized-cash-rewards',
+  )
+  const premier = cash?.withMembership.find(
+    (m) => m.membership === 'bofa-rewards-premier',
+  )
+  expect(premier?.effectiveReturnPct).toBeCloseTo(5.25 - 3)
+  expect(abroad.assumptions.join(' ')).toMatch(/purchase outside the U\.S\./)
+  expect(
+    exploreCards(catalog, query({ category: 'gas' }), casual).assumptions.join(
+      ' ',
+    ),
+  ).not.toMatch(/outside the U\.S\./)
+})

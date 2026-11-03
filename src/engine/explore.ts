@@ -9,7 +9,7 @@ import {
   paidMemberships,
 } from './memberships.ts'
 import { choicePeriod, periodKey } from './periods.ts'
-import { recommend } from './recommend.ts'
+import { FOREIGN_ASSUMPTION, isForeign, recommend } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
 import { optionName } from './rule-text.ts'
@@ -273,9 +273,11 @@ function membershipUpgrades(
       merchant.category,
       purchase,
     )
+    const fee = isForeign(purchase) ? (card.foreign_transaction_fee ?? 0) : 0
     const pct =
       evaluateCard(card, held, ctx).best.rate *
-      cardValuation(catalog, wallet, card).centsPerUnit
+        cardValuation(catalog, wallet, card).centsPerUnit -
+      fee
     if (pct > current + EPSILON)
       upgrades.push({ membership, effectiveReturnPct: pct })
   }
@@ -385,7 +387,13 @@ export function exploreCards(
     merchant,
     ranked,
     excluded,
-    assumptions: exploreAssumptions(catalog, merchant, ranked, options),
+    assumptions: exploreAssumptions(
+      catalog,
+      merchant,
+      ranked,
+      options,
+      purchase,
+    ),
     warnings: exploreWarnings(catalog, merchant),
   }
 }
@@ -395,6 +403,7 @@ function exploreAssumptions(
   merchant: MerchantResolution,
   ranked: ExploreEntry[],
   options: ExploreOptions,
+  purchase: Purchase,
 ): string[] {
   const assumptions: string[] = []
   if (merchant.source === 'category') {
@@ -414,6 +423,7 @@ function exploreAssumptions(
   )
   const values = pointValuesText(catalog, ranked.slice(0, 10))
   if (values !== null) assumptions.push(values)
+  if (isForeign(purchase)) assumptions.push(FOREIGN_ASSUMPTION)
   return assumptions
 }
 
