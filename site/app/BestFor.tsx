@@ -7,6 +7,7 @@ import {
   type ExploreEntry,
 } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
+import { ABROAD } from '../../src/engine/recommend.ts'
 import { categoryPhrase, hostname } from '../../src/engine/text.ts'
 import {
   cards,
@@ -17,6 +18,7 @@ import {
   requirementLines,
   shortName,
 } from './format.ts'
+import { ABROAD_NOTE, AbroadToggle } from './AbroadToggle.tsx'
 import { SearchInput } from './SearchInput.tsx'
 import { engineOptions, type Saved, type Settings } from './settings.ts'
 import { EVERYDAY_PURCHASES } from '../../src/engine/cheat-sheet.ts'
@@ -33,7 +35,12 @@ export const SUGGESTIONS = [
   ]),
 ].sort((a, b) => a.localeCompare(b))
 
-function explore(text: string, settings: Settings, saved: Saved): Exploration {
+function explore(
+  text: string,
+  abroad: boolean,
+  settings: Settings,
+  saved: Saved,
+): Exploration {
   return exploreCards(
     catalog,
     {
@@ -42,6 +49,7 @@ function explore(text: string, settings: Settings, saved: Saved): Exploration {
       amount: null,
       channel: null,
       date: localToday(),
+      country: abroad ? ABROAD : 'US',
     },
     engineOptions(settings, saved),
   )
@@ -144,9 +152,11 @@ export function BestFor({
 }) {
   const [text, setText] = useState(query)
   const [all, setAll] = useState(false)
+  const [abroad, setAbroad] = useState(false)
   const result = useMemo(
-    () => (query.trim() === '' ? null : explore(query, settings, saved)),
-    [query, settings, saved],
+    () =>
+      query.trim() === '' ? null : explore(query, abroad, settings, saved),
+    [query, abroad, settings, saved],
   )
 
   const ask = (q: string) => {
@@ -209,14 +219,16 @@ export function BestFor({
             </button>
           ))}
         </div>
+        <AbroadToggle abroad={abroad} onChange={setAbroad} />
       </div>
       {filters}
 
       <div aria-live="polite">
         {result ? (
-          <section class="results" key={query}>
+          <section class="results" key={`${query} ${String(abroad)}`}>
             <h3>
               Best cards for {title(result)}
+              {abroad ? <span class="muted">{ABROAD_NOTE}</span> : null}
               {result.merchant.source !== 'category' &&
               result.merchant.source !== 'none' ? (
                 <span class="muted">

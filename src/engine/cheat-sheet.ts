@@ -8,7 +8,7 @@ import { exploreCards, type ExploreOptions } from './explore.ts'
 import { bonusStatus } from './bonus.ts'
 import { EPSILON, isClose } from './compare.ts'
 import { periodKey } from './periods.ts'
-import { recommend } from './recommend.ts'
+import { ABROAD, recommend } from './recommend.ts'
 import { checklist } from './checklist.ts'
 import { setupNotes } from './setup.ts'
 import { capitalize, feeText, listed, money, shortDate } from './text.ts'
@@ -92,6 +92,7 @@ export function cheatSheet(
       note: top?.warnings[0] ?? null,
     }
   })
+  rows.push(abroadRow(catalog, wallet, date))
   const bonuses = wallet.cards.flatMap((held) => {
     const status = bonusStatus(catalog, wallet, held, date)
     if (status?.state !== 'open') return []
@@ -154,6 +155,43 @@ export function cheatSheet(
   }
 }
 
+const ABROAD_LABEL = 'Abroad'
+
+// Everyday spending outside the U.S., after each card's foreign transaction
+// fee.
+function abroadRow(
+  catalog: Catalog,
+  wallet: Wallet,
+  date: string,
+): CheatSheetRow {
+  const merchant = categoryResolution(catalog, 'other', null)
+  const rec = recommend(
+    catalog,
+    wallet,
+    {
+      merchant: merchant.input,
+      amount: null,
+      channel: null,
+      date,
+      country: ABROAD,
+    },
+    merchant,
+  )
+  const top = rec.decision ? rec.ranked[0] : undefined
+  const allCharge =
+    rec.ranked.length > 0 && rec.ranked.every((r) => r.foreignFee !== null)
+  return {
+    label: ABROAD_LABEL,
+    cardId: top?.cardId ?? null,
+    cardName: top ? (top.checkoutLabel ?? top.cardName) : null,
+    effectiveReturnPct: top?.effectiveReturnPct ?? null,
+    matchedRule: top?.matchedRule ?? null,
+    note: allCharge
+      ? `Every card here charges a foreign transaction fee abroad; this one costs the least. ${top?.warnings[0] ?? ''}`.trim()
+      : (top?.warnings[0] ?? null),
+  }
+}
+
 // The best card earnrate knows for each everyday kind of purchase, for
 // someone who hasn't named any cards. Each row's note says what the card
 // costs or needs.
@@ -196,6 +234,28 @@ export function catalogCheatSheet(
         ? [fee, ...top.conditions].filter((n) => n !== null).join(' ')
         : null,
     }
+  })
+  const abroad = exploreCards(
+    catalog,
+    {
+      merchant: null,
+      category: 'other',
+      amount: null,
+      channel: null,
+      date,
+      country: ABROAD,
+    },
+    options,
+  ).ranked[0]
+  rows.push({
+    label: ABROAD_LABEL,
+    cardId: abroad?.cardId ?? null,
+    cardName: abroad?.cardName ?? null,
+    effectiveReturnPct: abroad?.effectiveReturnPct ?? null,
+    matchedRule: abroad?.matchedRule ?? null,
+    note: abroad
+      ? [`${capitalize(feeText(abroad))}.`, ...abroad.conditions].join(' ')
+      : null,
   })
   const [year, q] = (periodKey('quarter', date, null) ?? '').split('-')
   return {

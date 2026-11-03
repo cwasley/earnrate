@@ -5,6 +5,7 @@ import { knownMemberships } from '../engine/setup.ts'
 import type { CardInput } from '../engine/wallet-change.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { IsoDate } from '../schema/common.ts'
+import { COUNTRY_CODE } from '../schema/common.ts'
 import type { Wallet } from '../schema/wallet.ts'
 
 export const Merchant = z
@@ -24,6 +25,14 @@ export const ChannelInput = z
 export const DateInput = IsoDate.optional().describe(
   'Purchase date, YYYY-MM-DD. Defaults to today.',
 )
+
+export const CountryInput = z
+  .string()
+  .regex(COUNTRY_CODE, 'Use a two-letter country code, like US or FR.')
+  .optional()
+  .describe(
+    'Where the purchase is made, as a two-letter country code (FR, GB, JP). Pass it when the user is paying abroad or in another currency: abroad, cards are ranked after their foreign transaction fees. Default US.',
+  )
 
 export const CardId = z
   .string()

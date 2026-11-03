@@ -10,6 +10,7 @@ source_urls:
   - https://www.wellsfargo.com/credit-cards/active-cash/terms/
 base_rate: 2
 annual_fee: 0
+foreign_transaction_fee: 3
 welcome_offer:
   dollars: 100
   spend: 500
@@ -39,3 +40,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.wellsfargo.com/credit-cards/active-cash/terms/
     quote: 'opened one within the last 48 months from the date of this application'
+  - rule: foreign_transaction_fee
+    url: https://www.wellsfargo.com/credit-cards/active-cash/terms/
+    quote: 'Foreign Currency Conversion/Foreign Transaction 3% of each transaction converted to U.S. dollars'

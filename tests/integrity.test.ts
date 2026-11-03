@@ -18,6 +18,7 @@ last_verified: 2026-10-24
 verified_by: claude
 source_urls: [https://www.usbank.com/]
 base_rate: 1
+foreign_transaction_fee: 0
 caps:
   - { id: five-percent-combined, amount: 2000, period: quarter, then_rate: 1 }
 choices:
@@ -39,6 +40,7 @@ rules:
     requires: { activation: true }
 evidence:
   - { rule: base_rate, url: https://www.usbank.com/, quote: 1% on everything else }
+  - { rule: foreign_transaction_fee, url: https://www.usbank.com/, quote: Foreign transaction fee 3% }
   - { rule: five-percent, url: https://www.usbank.com/, quote: 5% on two categories }
   - { rule: bonus-at-costco, url: https://www.usbank.com/, quote: 3% at Costco }
 `
@@ -133,9 +135,16 @@ describe('catalogProblems', () => {
         'url: https://example.com/, quote: 5% on two categories',
       )
       .replace('quote: 1% on everything else', 'quote: 1%')
+      .replace(
+        '  - { rule: foreign_transaction_fee, url: https://www.usbank.com/, quote: Foreign transaction fee 3% }\n',
+        '',
+      )
     const problems = catalogProblems(catalog(yaml))
     expect(problems).toContain(
       'card usbank-cash-plus: no evidence for bonus-at-costco',
+    )
+    expect(problems).toContain(
+      'card usbank-cash-plus: no evidence for foreign_transaction_fee',
     )
     expect(problems.join(' ')).toMatch(
       /five-percent: https:\/\/example\.com\/ isn't in source_urls/,
@@ -143,6 +152,25 @@ describe('catalogProblems', () => {
     expect(problems.join(' ')).toMatch(
       /base_rate: quote should be 3-20 words, not 1/,
     )
+  })
+
+  test('an unknown foreign transaction fee needs a todo saying so', () => {
+    const yaml = cashPlusYaml
+      .replace('foreign_transaction_fee: 0', 'foreign_transaction_fee: null')
+      .replace(
+        '  - { rule: foreign_transaction_fee, url: https://www.usbank.com/, quote: Foreign transaction fee 3% }\n',
+        '',
+      )
+    expect(catalogProblems(catalog(yaml))).toContain(
+      'card usbank-cash-plus: foreign_transaction_fee is null without a todo saying why',
+    )
+    expect(
+      catalogProblems(
+        catalog(
+          `${yaml}todo: ['Foreign transaction fee not on file: the page is blocked.']\n`,
+        ),
+      ),
+    ).toEqual([])
   })
 
   test('pooling needs a quote too', () => {

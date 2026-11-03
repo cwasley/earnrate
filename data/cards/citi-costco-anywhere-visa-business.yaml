@@ -13,6 +13,7 @@ source_urls:
 base_rate: 1
 business: true
 annual_fee: 0
+foreign_transaction_fee: 0
 requires_membership: costco # its fee is in data/memberships.yaml
 caps:
   # Costco gas, other gas and EV charging share one $7,000 cap. Rewards run on
@@ -96,3 +97,6 @@ evidence:
   - rule: requires_membership
     url: https://www.costco.com/join-costco.html
     quote: 'Gold Star $65/yr'
+  - rule: foreign_transaction_fee
+    url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
+    quote: 'Fee for foreign purchases — None'

@@ -11,6 +11,7 @@ source_urls:
   - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC59329.html
 base_rate: 1
 annual_fee: 0
+foreign_transaction_fee: 0
 welcome_offer:
   dollars: 150
   spend: 0
@@ -131,3 +132,6 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
     quote: "Prime members, get a $150 Amazon Gift Card instantly loaded into your Amazon account's Gift Card Balance"
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC59329.html
+    quote: 'Foreign Transactions None Penalty Fees'

@@ -16,6 +16,7 @@ source_urls:
 # however they pay.
 base_rate: 0
 annual_fee: 0
+foreign_transaction_fee: null
 welcome_offer:
   dollars: 60
   spend: 0
@@ -38,6 +39,7 @@ rules:
     rate: 5
     note: No points at Nordstrom Rack. Instead an instant 5% discount in Rack stores and on NordstromRack.com, counted here as 5 points per dollar because a point is worth 1¢ in Notes. Not through Apple Pay, PayPal or Afterpay, and not on gift cards.
 todo:
+  - "Foreign transaction fee not on file: Nordstrom's pages block the source check. It works only at Nordstrom, so it doesn't matter abroad."
   - Last Chance clearance stores earn no points, and the 5% discount terms name only Rack stores and NordstromRack.com.
   - Not modeled are bonus points events, Personal Double Points Days and alterations reimbursement Notes.
 evidence:

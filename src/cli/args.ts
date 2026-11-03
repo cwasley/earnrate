@@ -5,6 +5,7 @@ import {
 } from '../engine/profiles.ts'
 import { knownMemberships } from '../engine/setup.ts'
 import type { Channel } from '../engine/types.ts'
+import { COUNTRY_CODE, countryProblem } from '../schema/common.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
 export type CliOptions = {
@@ -151,12 +152,8 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
       : null
 
   const country = values.country ?? 'US'
-  if (!/^[A-Za-z]{2}$/.test(country)) {
-    return {
-      kind: 'error',
-      message: `"${country}" isn't a country code. Use two letters, like US or FR.`,
-    }
-  }
+  if (!COUNTRY_CODE.test(country))
+    return { kind: 'error', message: countryProblem(country) }
 
   return {
     kind: 'run',

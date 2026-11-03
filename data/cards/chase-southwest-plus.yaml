@@ -11,6 +11,7 @@ source_urls:
   - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64433.html
 base_rate: 1
 annual_fee: 99
+foreign_transaction_fee: 0
 welcome_offer:
   points: 80000
   spend: 1000
@@ -84,3 +85,6 @@ evidence:
   - rule: gas
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'truck stops, boat marinas, oil and propane distributors, and home heating companies'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64433.html
+    quote: 'Foreign Transactions None Penalty Fees'

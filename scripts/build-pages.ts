@@ -31,6 +31,7 @@ import {
   shortDate,
   wholeDollars,
   words,
+  foreignFeeText,
 } from '../src/engine/text.ts'
 import { cardText } from '../src/format/card-text.ts'
 import type { Card, Rule } from '../src/schema/card.ts'
@@ -458,6 +459,8 @@ function ruleConditions(card: Card, rule: Rule): string[] {
   if (rule.channel === 'online') lines.push('Online only')
   if (rule.channel === 'in_store') lines.push('In store only')
   if (rule.geography === 'us_only') lines.push('U.S. purchases only')
+  if (rule.geography === 'foreign_only')
+    lines.push('Purchases outside the U.S. only')
   if (rule.requires?.membership !== undefined)
     lines.push(`With ${membershipName(rule.requires.membership)}`)
   if (rule.requires?.activation === true)
@@ -521,6 +524,17 @@ function milestonesText(card: Card): string {
       `<li><strong>${esc(capitalize(milestoneWhat(m).replace(/^the /, '')))}</strong>${m.note ? `<br /><span class="muted">${esc(m.note)}</span>` : ''}${evidenceFor(card, m.id)}</li>`,
   )
   return `<h2>Spend bonuses</h2><p>Every purchase on the card counts. earnrate adds the bonus points to the purchase that reaches the total, once you track your spending on earnrate.dev, in Claude or with the command line; status, night credits and free nights aren't given a value.</p><ul>${items.join('')}</ul>`
+}
+
+function foreignFeeSection(card: Card): string {
+  const fee = card.foreign_transaction_fee
+  const using =
+    fee === null
+      ? "The issuer's pages earnrate reads don't state it; check before using the card abroad."
+      : fee === 0
+        ? 'Purchases outside the U.S. earn its usual rates.'
+        : `Abroad, earnrate subtracts the ${pct(fee)} from what each purchase earns before ranking it.`
+  return `<h2>Paying abroad</h2><p>${esc(foreignFeeText(fee))}. ${esc(using)}</p>${evidenceFor(card, 'foreign_transaction_fee')}`
 }
 
 function offerText(card: Card): string {
@@ -666,6 +680,7 @@ function renderCard(
       ${rulesList(card)}
       ${choicesText(card)}
       ${milestonesText(card)}
+      ${foreignFeeSection(card)}
       ${offerText(card)}
       <h2>Sources</h2>
       <ul>${card.source_urls.map((u) => `<li><a href="${esc(u)}" rel="nofollow noopener">${esc(hostname(u) + new URL(u).pathname)}</a></li>`).join('')}</ul>

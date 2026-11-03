@@ -8,7 +8,7 @@ export type Purchase = {
   amount: number | null // dollars; null when unknown
   channel: Channel | null // null when unknown
   date: string // YYYY-MM-DD, decides cap periods, chosen-category quarters and rule windows
-  country: string // ISO code; us_only rules need 'US'
+  country: string // ISO code; anything but 'US' is a purchase abroad
 }
 
 export type Confidence = 'high' | 'medium' | 'low'
@@ -46,8 +46,9 @@ export type RankedCard = {
   rate: number // currency units per dollar, blended across a cap when an amount is known
   currency: string // after pooling
   centsPerUnit: number
-  effectiveReturnPct: number
+  effectiveReturnPct: number // net of a foreign transaction fee abroad
   earned: number | null // dollars, when the amount is known
+  foreignFee: number | null // percent charged on this purchase, when any
   capped: boolean // the winning rule has a cap
   reasoning: string[]
   warnings: string[]

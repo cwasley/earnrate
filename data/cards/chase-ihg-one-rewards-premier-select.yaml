@@ -8,8 +8,10 @@ verified_by: claude
 source_urls:
   - https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65336.html
 base_rate: 3
 annual_fee: 350
+foreign_transaction_fee: 0
 welcome_offer:
   points: 200000
   spend: 5000
@@ -84,3 +86,6 @@ evidence:
   - rule: spend-40k
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
     quote: 'Earn an additional Anniversary Free Night with a current point redemption cap of 60,000 points after spending $40,000'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65336.html
+    quote: 'Foreign Transactions None Penalty Fees'

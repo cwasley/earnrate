@@ -14,6 +14,7 @@ source_urls:
   - https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
 base_rate: 1
 annual_fee: 0
+foreign_transaction_fee: 3
 welcome_offer:
   dollars: 200
   spend: 1000
@@ -209,6 +210,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
     quote: 'This card may not be available to you if you currently have or have had the card'
+  - rule: foreign_transaction_fee
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'Foreign Transaction 3% of the U.S. dollar amount of each transaction'
 todo:
   - New accounts earn 6% in the choice category for the first year (an extra 3%, inside the same $2,500 quarterly cap, with no BofA Rewards bonus on the extra 3%). earnrate can't see when an account was opened, so this isn't modeled.
   - 'The BofA Rewards rules use proposed membership ids: bofa-rewards-member, bofa-rewards-preferred-plus, bofa-rewards-preferred-honors and bofa-rewards-premier. Cardholders who joined Preferred Rewards before May 26, 2026 may have an "extended card benefit" that Bank of America doesn''t define.'

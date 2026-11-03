@@ -1,4 +1,4 @@
-import { money, NETWORK_NAMES } from '../engine/text.ts'
+import { foreignFeeText, money, NETWORK_NAMES } from '../engine/text.ts'
 import type { CardInfo, SetupNote } from '../engine/setup.ts'
 
 export function formatCardInfo(card: CardInfo): string {
@@ -27,6 +27,7 @@ export function formatCardInfo(card: CardInfo): string {
     ...(card.needsAnniversary ? ['cap resets on the card anniversary'] : []),
     ...card.milestones.map((m) => `spend bonus: ${m.text} (${m.id})`),
     ...(card.onlyAt ? [`works only at ${card.onlyAt.join(', ')}`] : []),
+    foreignFeeText(card.foreignTransactionFee).toLowerCase(),
   ]
   return [
     `${card.id}: ${card.name} (${NETWORK_NAMES[card.network] ?? card.network}${fee})${card.held ? ' [in wallet]' : ''}`,

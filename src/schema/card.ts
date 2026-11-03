@@ -80,7 +80,10 @@ export const RuleSchema = z
     exclude: ExcludeSchema.optional(),
     rate: z.number().nonnegative(), // currency units per dollar
     channel: z.enum(['any', 'online', 'in_store']).default('any'),
-    geography: z.enum(['us_only', 'worldwide']).default('worldwide'),
+    // A purchase is foreign when its country isn't the U.S.
+    geography: z
+      .enum(['us_only', 'foreign_only', 'worldwide'])
+      .default('worldwide'),
     // Inline cap, or the id of a shared cap in the card's `caps`.
     cap: z.union([CapSchema, KebabId]).optional(),
     requires: z
@@ -196,6 +199,9 @@ export const CardSchema = z
     annual_fee: z.number().nonnegative().optional(), // dollars
     // When the first year differs, usually a waived fee.
     first_year_fee: z.number().nonnegative().optional(),
+    // Percent of each purchase outside the U.S.; 0 when there's none. null
+    // only when no issuer page states it, with a todo saying so.
+    foreign_transaction_fee: z.number().nonnegative().nullable(),
     welcome_offer: WelcomeOfferSchema.optional(),
     // A paid membership (data/memberships.yaml) the card can't be had
     // without, Costco's for Costco Anywhere. Its fee counts like an annual

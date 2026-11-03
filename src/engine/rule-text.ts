@@ -35,7 +35,12 @@ export function optionName(
 
 // What a rule covers, as a list of phrases.
 export function ruleParts(catalog: Catalog, rule: Rule): string[] {
-  if (rule.match.any) return ['everything else']
+  if (rule.match.any)
+    return [
+      rule.geography === 'foreign_only'
+        ? 'purchases outside the U.S.'
+        : 'everything else',
+    ]
   if (rule.match.choice !== undefined)
     return [`your ${choiceName(rule.match.choice)} picks`]
   const merchants = rule.match.merchants ?? []

@@ -14,6 +14,7 @@ source_urls:
   - https://disclosures.capitalone.com/disclosure.42167.en-US.html
 base_rate: 1
 annual_fee: 0
+foreign_transaction_fee: 0
 welcome_offer:
   dollars: 200
   spend: 500
@@ -109,3 +110,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.capitalone.com/credit-cards/savor/
     quote: 'Earn a one-time $200 cash bonus once you spend $500 on purchases within the first 3 months'
+  - rule: foreign_transaction_fee
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'Plus, there are no hidden or foreign transaction fees'

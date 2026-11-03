@@ -24,6 +24,7 @@ const testCard = CardSchema.parse({
   verified_by: 'test',
   source_urls: ['https://example.com/terms'],
   base_rate: 3,
+  foreign_transaction_fee: 0,
   rules: [
     {
       id: 'activate-me',
@@ -221,6 +222,26 @@ describe('rule conditions', () => {
     ).toBe(3)
   })
 
+  test('an unknown foreign transaction fee is warned about abroad, not guessed', () => {
+    const unknown: Catalog = {
+      ...realCatalog,
+      cards: [
+        ...realCatalog.cards,
+        { ...testCard, foreign_transaction_fee: null },
+      ],
+    }
+    const abroad = testEntry(
+      recommend(unknown, wallet(), purchase('Shell', { country: 'FR' })),
+    )
+    expect(abroad.effectiveReturnPct).toBeCloseTo(3)
+    expect(abroad.foreignFee).toBeNull()
+    expect(abroad.warnings.join(' ')).toMatch(
+      /foreign transaction fee isn't on file/,
+    )
+    const home = testEntry(recommend(unknown, wallet(), purchase('Shell')))
+    expect(home.warnings.join(' ')).not.toMatch(/foreign transaction fee/)
+  })
+
   test('an online-only rule needs an online purchase', () => {
     expect(
       testEntry(
@@ -304,6 +325,7 @@ function syntheticCard(id: string, rules: unknown[], extra: object = {}) {
     verified_by: 'test',
     source_urls: ['https://example.com/terms'],
     base_rate: 1,
+    foreign_transaction_fee: 0,
     rules,
     ...extra,
   })

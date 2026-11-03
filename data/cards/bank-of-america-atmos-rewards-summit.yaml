@@ -10,6 +10,7 @@ source_urls:
   - https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
 base_rate: 1
 annual_fee: 395
+foreign_transaction_fee: 0
 welcome_offer:
   points: 80000
   spend: 4000
@@ -23,6 +24,11 @@ rules:
   - id: dining
     match: { categories: [dining] }
     rate: 3
+  - id: foreign-purchases
+    match: { any: true }
+    rate: 3
+    geography: foreign_only
+    note: Purchases outside the U.S. and its territories, or in a foreign currency, including one made online from home. earnrate treats a purchase as foreign when it's made outside the U.S.
   - id: alaska-and-hawaiian-with-boa-account
     match: { merchants: [alaska-airlines, hawaiian-airlines] }
     rate: 3.3
@@ -31,6 +37,12 @@ rules:
   - id: dining-with-boa-account
     match: { categories: [dining] }
     rate: 3.3
+    requires: { membership: bank-of-america-account }
+    note: 3x plus the 10% rewards bonus for holding an eligible Bank of America account.
+  - id: foreign-purchases-with-boa-account
+    match: { any: true }
+    rate: 3.3
+    geography: foreign_only
     requires: { membership: bank-of-america-account }
     note: 3x plus the 10% rewards bonus for holding an eligible Bank of America account.
   - id: everything-else-with-boa-account
@@ -60,6 +72,15 @@ evidence:
   - rule: everything-else-with-boa-account
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
     quote: '10% rewards bonus on all points earned from card purchases if you have an eligible Bank of America® account'
+  - rule: foreign-purchases
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
+    quote: 'Earn 3 points for every $1 spent on eligible foreign transaction Net Purchases'
+  - rule: foreign-purchases
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
+    quote: 'made in U.S. dollars if the transaction is made or processed outside of the United States'
+  - rule: foreign-purchases-with-boa-account
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: '10% rewards bonus on all points earned from card purchases if you have an eligible Bank of America® account'
   - rule: annual_fee
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
     quote: '$395 annual fee and no foreign transaction fees'
@@ -72,6 +93,8 @@ evidence:
   - rule: alaska-and-hawaiian-with-boa-account
     url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
     quote: 'open consumer (non-business) checking, savings or CD account with Bank of America N.A. or an investment account with Merrill'
+  - rule: foreign_transaction_fee
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
+    quote: 'Foreign Transaction None Penalty Fee'
 todo:
-  - '3x on "foreign transaction" purchases (anything charged in a foreign currency or processed abroad) is not modeled: rules have no foreign-only geography. It would make this card the pick for most purchases abroad.'
   - "BofA's rewards page lists Atmos Rewards cards as not eligible for the BofA Rewards tier bonus (in a popup the source check can't read), so the 10% account bonus stands alone."

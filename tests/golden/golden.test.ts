@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../../src/data/load.ts'
 import { recommend } from '../../src/engine/recommend.ts'
+import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
 import { resolveSpendLines, simulateWallet } from '../../src/engine/simulate.ts'
 import type {
@@ -628,7 +629,8 @@ describe('#22 abroad', () => {
           const gold = entry(rec, 'amex-gold')
           const prime = entry(rec, 'chase-prime-visa')
           expect(bcp.matchedRule).toBeNull()
-          expect(bcp.effectiveReturnPct).toBeCloseTo(1)
+          // 1% base, less Amex's 2.7% foreign transaction fee.
+          expect(bcp.effectiveReturnPct).toBeCloseTo(1 - 2.7)
           expect(gold.matchedRule).toBeNull()
           expect(gold.effectiveReturnPct).toBeCloseTo(PROFILES[profile].MR)
           expect(prime.matchedRule).toBeNull()
@@ -798,6 +800,110 @@ describe('#23 spend milestones', () => {
       expect(ten.notes.join(' ')).not.toMatch(/bonus points/)
     },
   )
+})
+
+describe('#24 foreign transaction fees', () => {
+  // From the issuers' fee tables: Freedom Unlimited and Double Cash charge
+  // 3% abroad, Blue Cash Preferred 2.7%; SoFi, Sapphire Preferred, Gold,
+  // Platinum and Atmos Summit charge none.
+  const etsy = (country: string) =>
+    purchase('Etsy', { amount: 100, channel: 'online', country })
+
+  goldenTest(
+    '#24a in London, Freedom Unlimited earns the most but loses to its 3% fee',
+    () => {
+      const rec = recommend(
+        catalog,
+        withProfile(baseWallet(), 'pointsHeavy'),
+        etsy('GB'),
+      )
+      expect(rec.decision?.cardId).toBe('sofi-unlimited-2')
+      expect(rec.decision?.effectiveReturnPct).toBeCloseTo(2)
+      const cfu = entry(rec, 'chase-freedom-unlimited')
+      expect(cfu.rate).toBe(1.5)
+      expect(cfu.effectiveReturnPct).toBeCloseTo(1.5 * 1.7 - 3)
+      expect(cfu.foreignFee).toBe(3)
+      expectSome(rec.assumptions, /outside the U\.S\./)
+    },
+  )
+
+  goldenTest(
+    '#24b a card with a fee says what it nets; one without, nothing',
+    () => {
+      const rec = recommend(
+        catalog,
+        withProfile(baseWallet(), 'pointsHeavy'),
+        etsy('GB'),
+      )
+      expect(entry(rec, 'chase-freedom-unlimited').warnings).toContain(
+        'Charges a 3% foreign transaction fee here, so it nets -0.45%.',
+      )
+      expect(entry(rec, 'amex-blue-cash-preferred').warnings.join(' ')).toMatch(
+        /Charges a 2\.7% foreign transaction fee here, so it nets -1\.7%\./,
+      )
+      expect(entry(rec, 'sofi-unlimited-2').warnings.join(' ')).not.toMatch(
+        /foreign transaction/,
+      )
+      expect(entry(rec, 'sofi-unlimited-2').foreignFee).toBeNull()
+    },
+  )
+
+  goldenTest('#24c the same purchase in the U.S. keeps its answer', () => {
+    const rec = recommend(
+      catalog,
+      withProfile(baseWallet(), 'pointsHeavy'),
+      etsy('US'),
+    )
+    expect(rec.decision?.cardId).toBe('chase-freedom-unlimited')
+    expect(rec.decision?.effectiveReturnPct).toBeCloseTo(2.55)
+    expect(rec.ranked.every((r) => r.foreignFee === null)).toBe(true)
+    expect(rec.assumptions.join(' ')).not.toMatch(/outside the U\.S\./)
+  })
+
+  goldenTest(
+    "#24d Atmos Summit's 3x on foreign purchases applies only abroad",
+    () => {
+      const summit = WalletSchema.parse({
+        cards: [{ id: 'bank-of-america-atmos-rewards-summit' }],
+      })
+      const abroad = entry(
+        recommend(catalog, summit, etsy('FR')),
+        'bank-of-america-atmos-rewards-summit',
+      )
+      expect(abroad.matchedRule).toBe('foreign-purchases')
+      expect(abroad.rate).toBe(3)
+      expect(abroad.foreignFee).toBeNull()
+      const home = entry(
+        recommend(catalog, summit, etsy('US')),
+        'bank-of-america-atmos-rewards-summit',
+      )
+      expect(home.matchedRule).toBeNull()
+      expect(home.rate).toBe(1)
+    },
+  )
+
+  goldenTest('#24e the cheat sheet has an Abroad line, net of fees', () => {
+    const sheet = cheatSheet(catalog, withProfile(baseWallet(), 'flat'), TODAY)
+    expect(sheet.rows.find((r) => r.label === 'Abroad')).toMatchObject({
+      cardId: 'sofi-unlimited-2',
+      effectiveReturnPct: 2,
+    })
+
+    const allCharge = WalletSchema.parse({
+      cards: [
+        { id: 'chase-freedom-unlimited' },
+        { id: 'amex-blue-cash-preferred' },
+      ],
+    })
+    const abroad = cheatSheet(catalog, allCharge, TODAY).rows.find(
+      (r) => r.label === 'Abroad',
+    )
+    expect(abroad?.cardId).toBe('chase-freedom-unlimited')
+    expect(abroad?.effectiveReturnPct).toBeCloseTo(1.5 - 3)
+    expect(abroad?.note).toMatch(
+      /^Every card here charges a foreign transaction fee abroad; this one costs the least\./,
+    )
+  })
 })
 
 describe('#25 streaming bonuses follow each issuer’s list', () => {

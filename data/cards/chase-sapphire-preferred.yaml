@@ -11,6 +11,7 @@ source_urls:
   - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65222.html
 base_rate: 1
 annual_fee: 95
+foreign_transaction_fee: 0
 welcome_offer:
   points: 75000
   spend: 5000
@@ -140,5 +141,8 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: 'Earn 75,000 points after you spend $5,000 in purchases in the first 3 months from account opening'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65222.html
+    quote: 'Foreign Transactions None Penalty Fees'
 todo:
   - "peloton: the $5,000 limit runs across the whole offer (4/1/2025 to 12/31/2027), which no cap period can express, and the $150 minimum per purchase isn't modeled."

@@ -11,6 +11,7 @@ source_urls:
   - https://www.americanexpress.com/us/content/rewards-info/retail.html
 base_rate: 1
 annual_fee: 0
+foreign_transaction_fee: 2.7
 welcome_offer:
   dollars: 200
   spend: 2000
@@ -95,5 +96,8 @@ evidence:
   - rule: not_with
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
     quote: 'if you have or have had this Card, the Cash Magnet® Card, the Blue Cash Preferred® Card'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    quote: 'Foreign Transaction 2.7% of each transaction after conversion to US dollars'
 todo:
   - "Amex's online retail examples name Walmart.com and drug stores, so superstore and drugstore sites earn 3% here; online grocery orders don't, but a grocery order on walmart.com or target.com can't be told apart from other purchases there. Warehouse club sites (costco.com, samsclub.com) aren't named, so they aren't modeled."

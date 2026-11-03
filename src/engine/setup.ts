@@ -23,6 +23,7 @@ export type CardInfo = {
   network: Card['network']
   currency: string
   annualFee: number | null
+  foreignTransactionFee: number | null // percent; 0 when none, null when unknown
   business: boolean
   onlyAt: string[] | null
   held: boolean
@@ -160,6 +161,7 @@ export function cardInfo(
     network: card.network,
     currency: card.currency,
     annualFee: card.annual_fee ?? null,
+    foreignTransactionFee: card.foreign_transaction_fee,
     business: card.business,
     onlyAt: card.only_at ?? null,
     held: wallet?.cards.some((c) => c.id === card.id) ?? false,

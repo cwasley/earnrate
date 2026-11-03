@@ -13,6 +13,7 @@ source_urls:
   - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65280.html
 base_rate: 1
 annual_fee: 0
+foreign_transaction_fee: 0
 welcome_offer:
   dollars: 250
   spend: 500
@@ -186,5 +187,8 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'Earn a $250 bonus after you spend $500 on purchases in the first 3 months from account opening'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65280.html
+    quote: 'Foreign Transactions None Penalty Fees'
 todo:
   - 'Q2 2027 (Apr-Jun) shows "Coming Soon"; add it after Chase posts it (activation opens March 15, 2027).'

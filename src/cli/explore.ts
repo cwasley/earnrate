@@ -37,6 +37,7 @@ import {
   splitAmount,
   valuationProblem,
 } from './args.ts'
+import { COUNTRY_CODE, countryProblem } from '../schema/common.ts'
 import {
   cardsToUse,
   type Io,
@@ -69,6 +70,8 @@ Options:
 ${FILTER_OPTIONS}
   --online, --in-store    How you're paying. Default: inferred from the merchant.
   --date <YYYY-MM-DD>     Purchase date. Default: today.
+  --country <code>        Where you're paying. Abroad, cards rank after their
+                          foreign transaction fees. Default: US.
   --all                   List every card, not just the top 10.
   --json                  Print the full result as JSON.
   -h, --help              Show this help.
@@ -168,6 +171,7 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
         online: { type: 'boolean' },
         'in-store': { type: 'boolean' },
         date: { type: 'string' },
+        country: { type: 'string' },
       },
     })
   } catch (e) {
@@ -198,6 +202,11 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
     io.stderr(`${dated}\n`)
     return USAGE_ERROR
   }
+  const country = values.country ?? 'US'
+  if (!COUNTRY_CODE.test(country)) {
+    io.stderr(`${countryProblem(country)}\n`)
+    return USAGE_ERROR
+  }
   const catalog = await loadCatalog()
   const settings = settingsFrom(values, catalog, await savedSettings(io))
   if (typeof settings === 'string') {
@@ -212,6 +221,7 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
       amount,
       channel: channelOf(values),
       date: values.date ?? io.today,
+      country: country.toUpperCase(),
     },
     settings,
   )

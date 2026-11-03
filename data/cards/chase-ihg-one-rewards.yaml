@@ -8,8 +8,10 @@ verified_by: claude
 source_urls:
   - https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards
   - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65295.html
 base_rate: 2
 annual_fee: 0
+foreign_transaction_fee: 0
 welcome_offer:
   points: 125000
   spend: 2000
@@ -116,5 +118,8 @@ evidence:
   - rule: spend-15k
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards
     quote: 'will qualify for Gold Elite Status and 10,000 bonus points after spending $15,000'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65295.html
+    quote: 'Foreign Transactions None Penalty Fees'
 todo:
   - "Starting in 2027, $5,000 of purchases in a calendar year unlocks a 4th Reward Night free on four-night award stays. It isn't listed as a milestone yet, because a milestone has no start date."

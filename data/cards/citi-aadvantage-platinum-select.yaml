@@ -10,6 +10,7 @@ source_urls:
 base_rate: 1
 annual_fee: 99
 first_year_fee: 0
+foreign_transaction_fee: 0
 welcome_offer:
   points: 50000
   spend: 2500
@@ -69,3 +70,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'new account bonus for a Citi® / AAdvantage® Platinum Select® account in the past 48 months'
+  - rule: foreign_transaction_fee
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'there are no foreign transaction fees'

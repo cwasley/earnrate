@@ -35,12 +35,6 @@ The engine picks the single best rule per purchase. Some bonuses add on top of a
 - `chase-aeroplan`: 500 bonus points per $2,000 spent in a calendar month, up to 1,500 a month, through 2026-12-31.
 - `citi-custom-cash`: whether the extra 4% on Citi Travel hotels stacks on the 5% top category is unconfirmed.
 
-### Foreign-transaction geography
-
-Rules can be `us_only` or `worldwide`, not foreign-only.
-
-- `bank-of-america-atmos-rewards-summit`: 3x on purchases in a foreign currency or processed abroad. It would make this card the pick for most purchases abroad.
-
 ### Choice options that mix kinds
 
 A choice option is a list of categories, a list of merchants, or "any online purchase except". Some issuers' options also need MCCs or a mix.

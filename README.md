@@ -118,6 +118,17 @@ While the bonus is open and you're behind an even pace to the deadline, that car
 
 `spend`, `by` and the reward (`points`, or `dollars` for cash back) default to the card's published offer once earnrate has one; set them when your offer was different.
 
+### Paying abroad
+
+Many cards charge a foreign transaction fee, often 3%, on every purchase outside the U.S., which can wipe out what they earn. Give the country with `--country` (two letters, like `FR`) and earnrate ranks each card after its fee, says what a card with a fee nets, and points out cards that earn extra abroad:
+
+```sh
+earnrate restaurants --country GB
+earnrate best groceries --country JP   # every card earnrate knows
+```
+
+Each card's fee comes from its issuer's rates-and-fees table, and `earnrate cards` shows it. The cheat sheet has an "Abroad" line, on earnrate.dev a "Paying outside the U.S." box does the same, and in Claude, mention where you're paying.
+
 ### Spend bonuses
 
 Some cards pay a bonus once a year after you spend a set amount on them, like the IHG One Rewards cards' "10,000 bonus points after you spend $15,000 on purchases each calendar year". `earnrate cards ihg` lists each card's, with what it pays besides points (status, Elite Night Credits, free nights). Only the points are valued.

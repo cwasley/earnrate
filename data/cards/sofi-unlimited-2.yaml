@@ -11,6 +11,7 @@ source_urls:
   - https://www.sofi.com/card/terms?cardType=c
 base_rate: 2
 annual_fee: 0
+foreign_transaction_fee: 0
 rules:
   - id: sofi-travel
     match: { merchants: [sofi-travel] }
@@ -39,5 +40,8 @@ evidence:
   - rule: annual_fee
     url: https://www.sofi.com/card/terms?cardType=c
     quote: 'FEES Annual Fee None Transaction Fees'
+  - rule: foreign_transaction_fee
+    url: https://www.sofi.com/credit-card/unlimited/
+    quote: 'Enjoy globetrotting that much more by skipping foreign transaction fees'
 todo:
   - 'No public welcome offer: the page says the card is currently invite only (apply with a mailed reservation code), and shows no bonus.'

@@ -8,8 +8,10 @@ verified_by: claude
 source_urls:
   - https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
   - https://cashplus.usbank.com/cash-plus/samplemerchants
+  - https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=8069&offerId=WRH8D23H2R&sourceCode=88256&page=terms
 base_rate: 1
 annual_fee: 0
+foreign_transaction_fee: 3
 welcome_offer:
   dollars: 200
   spend: 1000
@@ -120,5 +122,8 @@ evidence:
   - rule: welcome_offer
     url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
     quote: 'Earn a $200 rewards bonus after you spend $1,000 in eligible purchases within the first 90 days of account opening'
+  - rule: foreign_transaction_fee
+    url: https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=8069&offerId=WRH8D23H2R&sourceCode=88256&page=terms
+    quote: 'Foreign Transaction 3% of each foreign transaction'
 todo:
   - "Gas at grocery stores (Kroger, Hy-Vee, Meijer) is modeled at 2%, as U.S. Bank's sample merchants page says it may qualify, varying by location; the card page's footnote says 1%, so it may earn 1% at some stations."

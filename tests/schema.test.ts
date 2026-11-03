@@ -15,6 +15,7 @@ last_verified: 2026-10-24
 verified_by: claude
 source_urls: [https://www.americanexpress.com/]
 base_rate: 1
+foreign_transaction_fee: 0
 rules:
   - id: restaurants
     match: { categories: [dining] }
@@ -38,6 +39,12 @@ describe('CardSchema', () => {
     expect(card.rules[0]?.geography).toBe('worldwide')
     expect(card.rules[1]?.geography).toBe('us_only')
     expect(card.caps).toEqual([])
+  })
+
+  test('requires a foreign transaction fee, 0 when there is none', () => {
+    expect(
+      parseCard(goldYaml.replace('foreign_transaction_fee: 0\n', '')).success,
+    ).toBe(false)
   })
 
   test('rejects a misspelled key', () => {

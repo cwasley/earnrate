@@ -11,6 +11,7 @@ source_urls:
 base_rate: 1
 business: true
 annual_fee: 0
+foreign_transaction_fee: 2.7
 welcome_offer:
   points: 50000
   spend: 5000
@@ -69,3 +70,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-blue-business-plus-credit-card-amex/
     quote: 'after you spend $5,000 in purchases on your new Card within the first 3 months of Card Membership'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinessplus-credit-card/45094-9-0
+    quote: 'Foreign Transaction 2.7% of each transaction after conversion to US dollars'

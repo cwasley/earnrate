@@ -10,6 +10,7 @@ source_urls:
   - https://www.thankyou.com/terms
 base_rate: 1
 annual_fee: 95
+foreign_transaction_fee: 0
 welcome_offer:
   points: 60000
   spend: 4000
@@ -109,3 +110,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: 'not available if you currently have or previously had a Citi Strata Premier® or a Citi Premier® account'
+  - rule: foreign_transaction_fee
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: 'Fee for foreign purchases - None'

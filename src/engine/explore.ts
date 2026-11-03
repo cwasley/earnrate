@@ -130,6 +130,7 @@ export type ExploreQuery = {
   amount: number | null
   channel: Channel | null
   date: string
+  country?: string // where the purchase is made; default US
 }
 
 export type ExploreOptions = {
@@ -309,7 +310,7 @@ export function exploreCards(
     amount: query.amount,
     channel: query.channel,
     date: query.date,
-    country: 'US',
+    country: query.country ?? 'US',
   }
   const ranked: ExploreEntry[] = []
   const excluded: ExcludedCard[] = []

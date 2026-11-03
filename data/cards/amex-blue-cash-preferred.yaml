@@ -12,6 +12,7 @@ source_urls:
 base_rate: 1
 annual_fee: 95
 first_year_fee: 0
+foreign_transaction_fee: 2.7
 welcome_offer:
   dollars: 300
   spend: 3000
@@ -115,3 +116,6 @@ evidence:
   - rule: welcome_offer
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
     quote: 'As High As $300 Cash Back Welcome Offer'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'Foreign Transaction 2.7% of each transaction after conversion to US dollars'
