@@ -220,6 +220,13 @@ Use the connector (or plugin) or the local extension, not both: each keeps its o
 - `record_purchase`: books a purchase against its cap, any open welcome bonus and the card's yearly spend bonuses in your wallet file, keeping your comments
 - `search_cards`, `add_card`, `update_card`, `remove_card`, `set_memberships` and `set_point_values`: set up the wallet in conversation, including what your points are worth (memberships and point values need no cards)
 
+Both servers also offer four prompts, ready-made questions you can pick in Claude instead of typing one. None needs your cards:
+
+- `which-card`: which credit card to use at a store or for a kind of purchase, with an optional amount and country
+- `cheat-sheet`: the card for each everyday kind of purchase
+- `this-quarter`: what to do with your saved cards now (activations, picks, caps, welcome bonuses)
+- `set-up`: save your cards by name, with their picks and memberships
+
 Saving cards is optional: name them in the conversation for one answer, or ask the assistant to save them, and it finds them, adds them, and asks about anything a card needs, like this quarter's Cash+ picks.
 
 For a merchant earnrate doesn't know, the calling model can pass a `category` (e.g. `grocery.supermarket`). It's used only for unknown merchants and is labeled in the answer. The command line takes the same thing as `--category`.

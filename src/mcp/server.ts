@@ -6,6 +6,7 @@ import type { LlmSession } from '../merchants/fallback.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { makeContext } from './context.ts'
 import { makeInputs } from './inputs.ts'
+import { registerPrompts } from './prompts.ts'
 import { registerAccountTools } from './tools/account.ts'
 import { registerAnswerTools } from './tools/answers.ts'
 import { registerWalletTools } from './tools/wallet.ts'
@@ -99,6 +100,7 @@ export function createEarnrateServer(deps: ServerDeps): McpServer {
   const inputs = makeInputs(deps.catalog)
   registerAnswerTools(server, deps, ctx, inputs)
   registerWalletTools(server, deps, ctx, inputs)
+  registerPrompts(server, deps, ctx)
   if (deps.savedWallets === 'account')
     registerAccountTools(server, deps.catalog, deps.store, ctx)
   return server
