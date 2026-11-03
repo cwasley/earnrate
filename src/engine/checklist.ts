@@ -9,6 +9,7 @@ import {
   shortDate,
   wholeDollars,
 } from './text.ts'
+import { milestonePays } from './milestones.ts'
 import { optionName } from './rule-text.ts'
 import {
   activationsDue,
@@ -19,7 +20,7 @@ import {
 // Node-free: earnrate.dev builds the same list from its browser wallet.
 
 export type ChecklistItem = {
-  kind: 'activate' | 'pick' | 'cap' | 'bonus' | 'rotation'
+  kind: 'activate' | 'pick' | 'cap' | 'bonus' | 'milestone' | 'rotation'
   cardId: string
   text: string
   due: string | null // YYYY-MM-DD: the deadline, or when a cap resets
@@ -120,6 +121,17 @@ export function checklist(
             ? `${name}'s ${cap.label} cap is used up${resets === null ? '' : ` until ${shortDate(resets)}`}; another card may earn more there.`
             : `${name}: ${money(cap.remaining)} left of ${money(cap.amount)} ${CAP_PERIODS[cap.period]} at the bonus rate on ${cap.label}.`,
         due: resets,
+      })
+    }
+
+    for (const m of s.milestones) {
+      // Like caps: only once at least 75% of the way there.
+      if (!m.tracked || m.spent < m.spend * 0.75 || m.spent >= m.spend) continue
+      items.push({
+        kind: 'milestone',
+        cardId: card.id,
+        text: `${name}: ${money(m.spent)} of ${wholeDollars(m.spend)} spent toward ${milestonePays(m)}; ${money(m.spend - m.spent)} to go${m.until === null ? '' : ` by ${shortDate(m.until)}`}.`,
+        due: m.until,
       })
     }
 

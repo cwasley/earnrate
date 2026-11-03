@@ -2,6 +2,22 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.03
+
+Spend milestones: bonuses a card pays once a year after a spending total. The four IHG cards list theirs. Only the bonus points are valued, and only when tracked spending shows a purchase reaching the total; status, Elite Night Credits and free nights are shown, not valued.
+
+| Card                                 | Field                | Old → new                                                                                         | Source                                                                                                             |
+| ------------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| chase-ihg-one-rewards                | milestones.spend-15k | new: 10,000 points and Gold Elite status after $15,000 a calendar year                            | [Chase IHG One Rewards page](https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards)       |
+| chase-ihg-one-rewards-premier        | milestones.spend-15k | new: 15,000 points, Platinum Elite status and 5 Elite Night Credits after $15,000 a calendar year | [Chase IHG Premier page](https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier)               |
+| chase-ihg-one-rewards-premier        | milestones.spend-40k | new: Diamond Elite status after $40,000 a calendar year                                           | [Chase IHG Premier page](https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier)               |
+| chase-ihg-one-rewards-premier-select | milestones.spend-15k | new: 20,000 points and 5 Elite Night Credits after $15,000 a calendar year                        | [Chase IHG Premier Select page](https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select) |
+| chase-ihg-one-rewards-premier-select | milestones.spend-25k | new: Diamond Elite status after $25,000 a calendar year                                           | [Chase IHG Premier Select page](https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select) |
+| chase-ihg-one-rewards-premier-select | milestones.spend-40k | new: a free night (up to 60,000 points) after $40,000 a calendar year                             | [Chase IHG Premier Select page](https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select) |
+| chase-ihg-one-rewards-business       | milestones.spend-25k | new: 20,000 points and 5 Elite Night Credits after $25,000 a calendar year                        | [Chase IHG Business page](https://creditcards.chase.com/business-credit-cards/IHG/business)                        |
+| chase-ihg-one-rewards-business       | milestones.spend-60k | new: a free night (up to 50,000 points) after $60,000 a calendar year                             | [Chase IHG Business page](https://creditcards.chase.com/business-credit-cards/IHG/business)                        |
+| all four IHG cards                   | todo                 | removed the "Not modeled" spend-milestone notes; added the 2027 milestones that aren't listed yet | n/a                                                                                                                |
+
 ## 2026.11.02.5
 
 Prime Visa's 3% without-Prime rate no longer applies at Whole Foods stores outside the U.S. Chase's terms exclude "purchases made at international Whole Foods Markets" from both the 5% and the 3% rate; only the 5% rule was U.S.-only.

@@ -9,6 +9,7 @@ import {
   pickedCategories,
 } from './evaluate.ts'
 import { membershipName } from './memberships.ts'
+import { milestoneSummaries, type MilestoneSummary } from './milestones.ts'
 import { optionName, ruleParts, ruleWhat } from './rule-text.ts'
 import { daysBetween, inEffect, periodEnd } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
@@ -53,6 +54,7 @@ export type CardSummary = {
   dataIsStale: boolean
   rotationGap: string | null // a rotating card's current period, when its categories aren't in the data
   caps: CapSummary[]
+  milestones: MilestoneSummary[] // spend milestones and progress toward them
   chosen: {
     period: string
     current: boolean
@@ -304,6 +306,7 @@ export function walletSummary(
       dataIsStale: daysBetween(card.last_verified, today) > STALE_AFTER_DAYS,
       rotationGap: rotationGap(card, today),
       caps: capSummaries(catalog, card, held, today),
+      milestones: milestoneSummaries(card, held, today),
       chosen: held.chosen
         ? {
             period: held.chosen.period,

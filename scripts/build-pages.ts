@@ -37,6 +37,7 @@ import type { Card, Rule } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
+import { milestoneWhat } from '../src/engine/milestones.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const OUT = path.join(ROOT, 'site-dist')
@@ -511,6 +512,17 @@ function choicesText(card: Card): string {
   return `<h2>Categories you choose</h2><ul>${items.join('')}</ul>`
 }
 
+// Bonuses paid once a year after a spending total. Only the points count in
+// rankings, and only once tracked spending reaches the total.
+function milestonesText(card: Card): string {
+  if (card.milestones.length === 0) return ''
+  const items = card.milestones.map(
+    (m) =>
+      `<li><strong>${esc(capitalize(milestoneWhat(m).replace(/^the /, '')))}</strong>${m.note ? `<br /><span class="muted">${esc(m.note)}</span>` : ''}${evidenceFor(card, m.id)}</li>`,
+  )
+  return `<h2>Spend bonuses</h2><p>Every purchase on the card counts. earnrate adds the bonus points to the purchase that reaches the total, once you track your spending on earnrate.dev, in Claude or with the command line; status, night credits and free nights aren't given a value.</p><ul>${items.join('')}</ul>`
+}
+
 function offerText(card: Card): string {
   const o = card.welcome_offer
   if (!o || !inEffect(o, today)) return ''
@@ -653,6 +665,7 @@ function renderCard(
       <h2>Earning rates</h2>
       ${rulesList(card)}
       ${choicesText(card)}
+      ${milestonesText(card)}
       ${offerText(card)}
       <h2>Sources</h2>
       <ul>${card.source_urls.map((u) => `<li><a href="${esc(u)}" rel="nofollow noopener">${esc(hostname(u) + new URL(u).pathname)}</a></li>`).join('')}</ul>

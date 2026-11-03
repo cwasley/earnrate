@@ -1,8 +1,9 @@
-import type { Card } from '../schema/card.ts'
+import type { Card, Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { isActivated, pickedCategories } from './evaluate.ts'
 import { membership, membershipName, sameGroup } from './memberships.ts'
+import { milestoneWhat } from './milestones.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap } from './rotation.ts'
 import { idList, listed } from './text.ts'
@@ -31,6 +32,15 @@ export type CardInfo = {
   requiresMembership: { id: string; name: string; annualFee: number } | null
   activation: string[] // rules that need activating, current or starting soon
   needsAnniversary: boolean
+  // Spend milestones: "$15,000 calendar-year spend for 10,000 bonus points".
+  milestones: {
+    id: string
+    spend: number
+    period: Milestone['period']
+    points: number | null
+    rewards: string[]
+    text: string
+  }[]
 }
 
 export type CardSearch = {
@@ -96,7 +106,8 @@ export function needsAnniversary(card: Card): boolean {
     card.caps.some((c) => c.period === 'cardmember_year') ||
     card.rules.some(
       (r) => typeof r.cap === 'object' && r.cap.period === 'cardmember_year',
-    )
+    ) ||
+    card.milestones.some((m) => m.period === 'cardmember_year')
   )
 }
 
@@ -171,6 +182,14 @@ export function cardInfo(
           },
     activation: activationRules(card, today),
     needsAnniversary: needsAnniversary(card),
+    milestones: card.milestones.map((m) => ({
+      id: m.id,
+      spend: m.spend,
+      period: m.period,
+      points: m.points ?? null,
+      rewards: m.rewards ?? [],
+      text: milestoneWhat(m).replace(/^the /, ''),
+    })),
   }
 }
 
@@ -266,7 +285,7 @@ export function setupNotes(
   if (needsAnniversary(card) && held.anniversary === undefined) {
     notes.push({
       kind: 'anniversary',
-      text: `${name} has a cap that resets on the card's anniversary. Add the anniversary (MM-DD) so it can be tracked.`,
+      text: `${name} has a ${card.milestones.some((m) => m.period === 'cardmember_year') ? 'spend bonus' : 'cap'} that resets on the card's anniversary. Add the anniversary (MM-DD) so it can be tracked.`,
     })
   }
 

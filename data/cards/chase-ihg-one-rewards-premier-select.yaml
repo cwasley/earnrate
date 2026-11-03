@@ -24,6 +24,26 @@ rules:
     match: { categories: [travel, transit, dining] }
     rate: 6
     note: Chase's whole travel category, including rideshare, trains, buses, tolls and parking. Dining includes takeout and eligible delivery services.
+milestones:
+  - id: spend-15k
+    spend: 15000
+    period: calendar_year
+    points: 20000
+    rewards:
+      - 5 Elite Night Credits
+    note: "Every purchase on the card counts, by transaction date; balance transfers, cash advances and cash-like transactions don't. Chase says to allow 6-8 weeks for it to post."
+  - id: spend-25k
+    spend: 25000
+    period: calendar_year
+    rewards:
+      - Diamond Elite status
+    note: Status lasts through the end of the next calendar year.
+  - id: spend-40k
+    spend: 40000
+    period: calendar_year
+    rewards:
+      - a free night at IHG hotels (up to 60,000 points)
+    note: 'A second free night on top of the Anniversary Free Night; use it within 12 months.'
 evidence:
   - rule: base_rate
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
@@ -52,5 +72,15 @@ evidence:
   - rule: travel-and-dining
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'
-todo:
-  - 'Not modeled: 20,000 bonus points (and 5 Elite Night Credits) after $15,000 in purchases each calendar year (a spend milestone, not a rate).'
+  - rule: spend-15k
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'Earn 20,000 bonus points after you spend $15,000 on purchases each calendar year.'
+  - rule: spend-15k
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'will qualify for 5 Elite Night credits and 20,000 bonus points after spending $15,000'
+  - rule: spend-25k
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'After spending $25,000 with your IHG One Rewards Premier Select Credit Card in purchases each calendar year'
+  - rule: spend-40k
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'Earn an additional Anniversary Free Night with a current point redemption cap of 60,000 points after spending $40,000'

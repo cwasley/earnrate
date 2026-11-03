@@ -108,3 +108,39 @@ describe('checklist', () => {
     expect(ics.split('\r\n').every((l) => l.length <= 75)).toBe(true)
   })
 })
+
+describe('spend milestones', () => {
+  const ihg = (usage?: Record<string, { period: string; spent: number }>) =>
+    WalletSchema.parse({
+      cards: [
+        {
+          id: 'chase-ihg-one-rewards-premier',
+          ...(usage ? { milestone_usage: usage } : {}),
+        },
+      ],
+    })
+  const milestones = (w: ReturnType<typeof ihg>) =>
+    checklist(catalog, w, TODAY).filter((i) => i.kind === 'milestone')
+
+  test('show up once at least 75% of the way, with the end of the year', () => {
+    expect(
+      milestones(ihg({ 'spend-15k': { period: '2026', spent: 11249 } })),
+    ).toEqual([])
+    const [item] = milestones(
+      ihg({ 'spend-15k': { period: '2026', spent: 11250 } }),
+    )
+    expect(item).toMatchObject({ due: '2026-12-31' })
+    expect(item?.text).toBe(
+      'IHG One Rewards Premier Credit Card: $11,250 of $15,000 spent toward 15,000 bonus points, Platinum Elite status and 5 Elite Night Credits; $3,750 to go by Dec 31, 2026.',
+    )
+  })
+
+  test("not once reached, when untracked, or for last year's spending", () => {
+    for (const w of [
+      ihg({ 'spend-15k': { period: '2026', spent: 15000 } }),
+      ihg(),
+      ihg({ 'spend-15k': { period: '2025', spent: 14000 } }),
+    ])
+      expect(milestones(w)).toEqual([])
+  })
+})

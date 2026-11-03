@@ -3,6 +3,7 @@ import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { bonusStatus, countsTowardBonus } from './bonus.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
+import { milestoneProgress } from './milestones.ts'
 import { roundCents } from './text.ts'
 import type { MerchantResolution, RecordedPurchase } from './types.ts'
 
@@ -122,10 +123,66 @@ export function applyBonusBooking(
   }
 }
 
+export type MilestoneBooking = {
+  cardId: string
+  milestoneId: string
+  period: string
+  spend: number // the milestone's total
+  before: number // tracked dollars this period before the purchase
+  after: number
+}
+
+// Every purchase on a card counts toward each of its spend milestones. None
+// for a cardmember-year milestone on a card with no anniversary.
+export function milestoneBookings(
+  catalog: Catalog,
+  wallet: Wallet,
+  purchase: RecordedPurchase,
+): MilestoneBooking[] {
+  const held = wallet.cards.find((c) => c.id === purchase.cardId)
+  const card = catalog.cards.find((c) => c.id === purchase.cardId)
+  if (!held || !card) return []
+  return milestoneProgress(card, held, purchase.date).flatMap((p) =>
+    p.period === null
+      ? []
+      : [
+          {
+            cardId: card.id,
+            milestoneId: p.milestone.id,
+            period: p.period,
+            spend: p.milestone.spend,
+            before: p.spent,
+            after: roundCents(Math.max(0, p.spent + purchase.amount)),
+          },
+        ],
+  )
+}
+
+export function applyMilestoneBooking(
+  wallet: Wallet,
+  b: Pick<MilestoneBooking, 'cardId' | 'milestoneId' | 'period' | 'after'>,
+): Wallet {
+  return {
+    ...wallet,
+    cards: wallet.cards.map((c) =>
+      c.id === b.cardId
+        ? {
+            ...c,
+            milestone_usage: {
+              ...c.milestone_usage,
+              [b.milestoneId]: { period: b.period, spent: b.after },
+            },
+          }
+        : c,
+    ),
+  }
+}
+
 export type BookedPurchase = {
   wallet: Wallet
   cap: CapBooking | null
   bonus: BonusBooking | null
+  milestones: MilestoneBooking[]
 }
 
 export function bookPurchase(
@@ -136,7 +193,9 @@ export function bookPurchase(
 ): BookedPurchase {
   const cap = capBooking(catalog, wallet, purchase, merchant)
   const bonus = bonusBooking(catalog, wallet, purchase)
+  const milestones = milestoneBookings(catalog, wallet, purchase)
   let next = cap ? applyBooking(wallet, cap) : wallet
   if (bonus) next = applyBonusBooking(next, bonus)
-  return { wallet: next, cap, bonus }
+  for (const m of milestones) next = applyMilestoneBooking(next, m)
+  return { wallet: next, cap, bonus, milestones }
 }

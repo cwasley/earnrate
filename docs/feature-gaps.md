@@ -84,14 +84,12 @@ Holding some cards means holding a membership, but the wallet asks for membershi
 
 - `chase-prime-visa`: needs Amazon Prime for its Amazon and Whole Foods rates.
 
-### Spend milestones
+### Spend milestones that start later
 
-A bonus for reaching a spend total in a year, paid once rather than per dollar, isn't a rate and has no field.
+Spend milestones (`milestones:`) have no start date, so one the issuer announces ahead of time isn't listed until it begins.
 
-- `chase-ihg-one-rewards`: 10,000 bonus points after $15,000 in purchases each calendar year.
-- `chase-ihg-one-rewards-premier`: 15,000 bonus points after $15,000 in purchases each calendar year.
-- `chase-ihg-one-rewards-premier-select`: 20,000 bonus points after $15,000 in purchases each calendar year.
-- `chase-ihg-one-rewards-business`: 20,000 bonus points after $25,000 in purchases each calendar year.
+- `chase-ihg-one-rewards`: starting in 2027, $5,000 of purchases in a calendar year unlocks the 4th Reward Night free benefit.
+- `chase-ihg-one-rewards-business`: starting January 1, 2027, $50,000 of purchases in a calendar year earns Diamond Elite status.
 
 ### Credits that offset the annual fee
 

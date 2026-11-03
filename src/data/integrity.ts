@@ -112,10 +112,15 @@ function cardProblems(
     ['rule', card.rules.map((r) => r.id)],
     ['cap', card.caps.map((c) => c.id)],
     ['choice', card.choices.map((c) => c.id)],
+    ['milestone', card.milestones.map((m) => m.id)],
   ] as const) {
     for (const id of duplicates(ids))
       problems.push(`${where}: duplicate ${kind} id '${id}'`)
   }
+  // Evidence names rules and milestones alike, so their ids can't overlap.
+  for (const m of card.milestones)
+    if (card.rules.some((r) => r.id === m.id))
+      problems.push(`${where}: milestone '${m.id}' has a rule's id`)
   const ruleIds = new Set([
     'base_rate',
     ...(card.pools_into ? ['pools_into'] : []),
@@ -125,6 +130,7 @@ function cardProblems(
     ...(card.welcome_offer?.not_with ? ['not_with'] : []),
     ...(card.requires_membership ? ['requires_membership'] : []),
     ...card.rules.map((r) => r.id),
+    ...card.milestones.map((m) => m.id),
   ])
   const sourcePages = new Set(card.source_urls.map((u) => u.split('#')[0]))
   const backed = new Set(card.evidence.map((e) => e.rule))
@@ -302,6 +308,13 @@ export function walletProblems(wallet: Wallet, catalog: Catalog): string[] {
     for (const key of Object.keys(held.cap_usage)) {
       if (!capKeys.has(key))
         problems.push(`${where} cap_usage: '${key}' is not a cap on this card`)
+    }
+    const milestoneIds = new Set(card.milestones.map((m) => m.id))
+    for (const key of Object.keys(held.milestone_usage ?? {})) {
+      if (!milestoneIds.has(key))
+        problems.push(
+          `${where} milestone_usage: '${key}' is not a spend milestone on this card`,
+        )
     }
     if (held.chosen) {
       for (const [choiceId, picks] of Object.entries(held.chosen.picks)) {

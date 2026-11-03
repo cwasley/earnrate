@@ -22,6 +22,24 @@ export const CapSchema = z.strictObject({
   then_rate: z.number().nonnegative(),
 })
 
+// A bonus paid once a period after a spending total, rather than per dollar
+// ("10,000 bonus points after you spend $15,000 on purchases each calendar
+// year"). Every purchase on the card counts. Only `points` is valued;
+// `rewards` (status, night credits, free nights) is shown, never valued.
+export const MilestoneSchema = z
+  .strictObject({
+    id: KebabId,
+    spend: z.number().positive(), // dollars of purchases in the period
+    period: z.enum(['calendar_year', 'cardmember_year']),
+    points: z.number().positive().optional(), // in the card's currency
+    rewards: z.array(z.string().min(1)).min(1).optional(),
+    note: z.string().optional(),
+  })
+  .refine(
+    (m) => m.points !== undefined || m.rewards !== undefined,
+    'a milestone needs points, rewards or both',
+  )
+
 export const SharedCapSchema = CapSchema.extend({
   id: KebabId,
   // Rotating categories (Freedom Flex): every rule on this cap covers one
@@ -192,6 +210,7 @@ export const CardSchema = z
     caps: z.array(SharedCapSchema).default([]),
     choices: z.array(ChoiceSchema).default([]),
     rules: z.array(RuleSchema).default([]),
+    milestones: z.array(MilestoneSchema).default([]),
     // A short quote from an issuer page for each rule (or `base_rate`). The
     // weekly source check fails a rule whose quote disappears from its page.
     evidence: z
@@ -215,3 +234,4 @@ export type Cap = z.output<typeof CapSchema>
 export type Rule = z.output<typeof RuleSchema>
 export type Choice = z.output<typeof ChoiceSchema>
 export type Card = z.output<typeof CardSchema>
+export type Milestone = z.output<typeof MilestoneSchema>

@@ -78,6 +78,8 @@ function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
     )
   for (const [key, spent] of Object.entries(args.capSpent ?? {}))
     out.push(`${money(spent)} already spent on ${key} this period`)
+  for (const [id, spent] of Object.entries(args.milestoneSpent ?? {}))
+    out.push(`${money(spent)} spent toward ${id} this year`)
   if (args.bonus === null) out.push('welcome bonus no longer tracked')
   else if (args.bonus !== undefined)
     out.push(
@@ -99,7 +101,7 @@ export function registerWalletTools(
     'list_wallet',
     {
       title: 'List wallet',
-      description: `Starts with a to-do list for the user's cards right now (bonuses to activate and their deadlines, categories to pick or confirm, caps nearly used up, welcome bonuses to finish and the weekly pace); use it when the user asks what to do with their cards this quarter or what they're forgetting. Then lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
+      description: `Starts with a to-do list for the user's cards right now (bonuses to activate and their deadlines, categories to pick or confirm, caps nearly used up, welcome bonuses to finish and the weekly pace, yearly spend bonuses at least 75% of the way); use it when the user asks what to do with their cards this quarter or what they're forgetting. Then lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, progress toward yearly spend bonuses, which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
       outputSchema: WalletSummarySchema,
       annotations: {
         title: 'List wallet',
@@ -144,7 +146,7 @@ export function registerWalletTools(
     'record_purchase',
     {
       title: 'Record a purchase',
-      description: `Records a purchase the user has already made, so spending caps and welcome-bonus progress stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap and no open welcome bonus are acknowledged and nothing is written. For a merchant earnrate doesn't recognize it asks for category first, so caps aren't missed. ${ctx.walletUse}`,
+      description: `Records a purchase the user has already made, so spending caps, welcome-bonus progress and yearly spend milestones stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap, no open welcome bonus and no spend milestone are acknowledged and nothing is written. For a merchant earnrate doesn't recognize it asks for category first, so caps aren't missed. ${ctx.walletUse}`,
       inputSchema: z.object({
         cardId: z
           .string()
@@ -192,20 +194,22 @@ export function registerWalletTools(
         )
       const result = await store.record(purchase, resolved.merchant)
       if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
-      const { cap: booking, bonus } = result
+      const { cap: booking, bonus, milestones } = result
       const output =
-        booking || bonus
+        booking || bonus || milestones.length > 0
           ? {
               recorded: true,
               booking,
               bonus,
-              message: `${formatBooking(amount, cardId, booking, bonus)} Saved in ${ctx.walletName}.`,
+              milestones,
+              message: `${formatBooking(amount, cardId, booking, bonus, milestones)} Saved in ${ctx.walletName}.`,
             }
           : {
               recorded: false,
               booking: null,
               bonus: null,
-              message: `Nothing to track: ${cardId} has no spending cap or open welcome bonus for this purchase, so the wallet wasn't changed.`,
+              milestones: [],
+              message: `Nothing to track: ${cardId} has no spending cap, open welcome bonus or spend milestone for this purchase, so the wallet wasn't changed.`,
             }
       return {
         content: [
@@ -252,7 +256,7 @@ export function registerWalletTools(
     'update_card',
     {
       title: 'Update a card',
-      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, activated categories, cap spending so far (capSpent) or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
+      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, activated categories, cap spending so far (capSpent), spending this year toward its spend milestones (milestoneSpent) or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
       inputSchema: CardChange,
       outputSchema: WalletChangeSchema,
       annotations: {
@@ -280,7 +284,7 @@ export function registerWalletTools(
     'remove_card',
     {
       title: 'Remove a card',
-      description: `Removes a card from the wallet, with its tracked cap usage and bonus progress. Memberships and point values stay, even when the last card goes. Only when the user says they no longer have it or don't want it considered. ${ctx.walletUse}`,
+      description: `Removes a card from the wallet, with its tracked cap usage, bonus progress and yearly spending. Memberships and point values stay, even when the last card goes. Only when the user says they no longer have it or don't want it considered. ${ctx.walletUse}`,
       inputSchema: z.object({ cardId: CardId }),
       outputSchema: WalletChangeSchema,
       annotations: {

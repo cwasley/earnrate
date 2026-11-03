@@ -212,6 +212,66 @@ describe('tools', () => {
     expect(other.isError).toBeFalsy()
   })
 
+  test('spend milestones: set the spending, see it cross, record it', async () => {
+    const file = await walletCopy(
+      '# mine\ncards:\n  - id: chase-ihg-one-rewards # the no-fee one\n',
+    )
+    const client = await connect(file)
+    const set = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'chase-ihg-one-rewards',
+        milestoneSpent: { 'spend-15k': 14950 },
+      },
+    })
+    expect(set.isError, text(set)).toBeFalsy()
+    expect(text(set)).toMatch(/\$14,950 spent toward spend-15k this year/)
+    const saved = await readFile(file, 'utf8')
+    expect(saved).toContain('# the no-fee one')
+    expect(saved).toMatch(
+      /milestone_usage:\n\s+spend-15k: \{ period: "?2026"?, spent: 14950 \}/,
+    )
+
+    const best = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Chipotle', amount: 100 },
+    })
+    expect(text(best)).toMatch(
+      /reaches the \$15,000 calendar-year spend for 10,000 bonus points and Gold Elite status/,
+    )
+
+    const recorded = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'chase-ihg-one-rewards',
+        merchant: 'Chipotle',
+        amount: 100,
+      },
+    })
+    expect(recorded.isError, text(recorded)).toBeFalsy()
+    expect(text(recorded)).toMatch(
+      /Spend on chase-ihg-one-rewards this year: \$15,050\. That reaches its \$15,000 spend bonus\./,
+    )
+    expect(
+      (recorded.structuredContent as { milestones: { after: number }[] })
+        .milestones[0]?.after,
+    ).toBe(15050)
+
+    const listed = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(listed)).toMatch(
+      /Spend bonus \(spend-15k\): \$15,000 reached this year: 10,000 bonus points and Gold Elite status\./,
+    )
+
+    const wrong = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'chase-ihg-one-rewards',
+        milestoneSpent: { 'spend-99k': 1 },
+      },
+    })
+    expect(text(wrong)).toMatch(/no spend milestone 'spend-99k'.*spend-15k/)
+  })
+
   test('settings that change nothing say so', async () => {
     const client = await connect(await walletCopy())
     const anniversary = await client.callTool({

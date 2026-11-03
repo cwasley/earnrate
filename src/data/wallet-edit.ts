@@ -5,8 +5,10 @@ import { isMap, isSeq, parseDocument, stringify, type Node } from 'yaml'
 import {
   applyBonusBooking,
   applyBooking,
+  applyMilestoneBooking,
   type BonusBooking,
   type CapBooking,
+  type MilestoneBooking,
 } from '../engine/record.ts'
 import type { CardFields } from '../engine/wallet-change.ts'
 import { WALLET_VERSION, WalletSchema, type Wallet } from '../schema/wallet.ts'
@@ -67,6 +69,16 @@ function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
         .join('')
       return caps === '' ? '' : `${indent}cap_usage:\n${caps}`
     }
+    case 'milestone_usage': {
+      if (f.milestone_usage === undefined) return ''
+      const entries = Object.entries(f.milestone_usage)
+        .map(
+          ([key, u]) =>
+            `${indent}  ${key}: { period: ${scalar(u.period)}, spent: ${String(u.spent)} }\n`,
+        )
+        .join('')
+      return entries === '' ? '' : `${indent}milestone_usage:\n${entries}`
+    }
     case 'bonus': {
       if (!f.bonus) return ''
       const b = f.bonus
@@ -100,6 +112,7 @@ const FIELDS = [
   'chosen',
   'activated',
   'cap_usage',
+  'milestone_usage',
   'bonus',
 ] as const
 
@@ -324,37 +337,44 @@ function setValuationText(
   )
 }
 
-function flowUsage(booking: CapBooking): string {
-  const period = /^\d+$/.test(booking.period)
-    ? `"${booking.period}"`
-    : booking.period
-  return `{ period: ${period}, spent: ${String(booking.after)} }`
+type UsageField = 'cap_usage' | 'milestone_usage'
+
+function flowUsage(period: string, spent: number): string {
+  const key = /^\d+$/.test(period) ? `"${period}"` : period
+  return `{ period: ${key}, spent: ${String(spent)} }`
 }
 
-function capUsageText(text: string, booking: CapBooking): string {
-  const card = findCard(text, booking.cardId)
-  const value = flowUsage(booking)
-  const usage = card.get('cap_usage', true)
+// Sets one entry of a card's cap_usage or milestone_usage, adding the map
+// when the card has none.
+function usageText(
+  text: string,
+  cardId: string,
+  field: UsageField,
+  key: string,
+  value: string,
+): string {
+  const card = findCard(text, cardId)
+  const usage = card.get(field, true)
   if (isMap(usage) && !usage.flow && usage.items.length > 0) {
-    const existing = usage.items.find((p) => keyOf(p) === booking.capKey)
+    const existing = usage.items.find((p) => keyOf(p) === key)
     if (existing) {
       const [start, end] = range(existing.value)
       return text.slice(0, start) + value + text.slice(end)
     }
     const indent = ' '.repeat(column(text, range(usage.items[0]?.key)[0]))
     const at = afterLine(text, range(usage)[1] - 1)
-    return insertLines(text, at, `${indent}${booking.capKey}: ${value}\n`)
+    return insertLines(text, at, `${indent}${key}: ${value}\n`)
   }
   if (usage !== undefined)
     throw new Error(
-      `card '${booking.cardId}' has a cap_usage that isn't a block map; ${BY_HAND}`,
+      `card '${cardId}' has a ${field} that isn't a block map; ${BY_HAND}`,
     )
   const indent = ' '.repeat(column(text, range(card.items[0]?.key)[0]))
   const at = afterLine(text, range(card)[1] - 1)
   return insertLines(
     text,
     at,
-    `${indent}cap_usage:\n${indent}  ${booking.capKey}: ${value}\n`,
+    `${indent}${field}:\n${indent}  ${key}: ${value}\n`,
   )
 }
 
@@ -376,27 +396,55 @@ function bonusSpentText(text: string, cardId: string, spent: number): string {
   return insertLines(text, at, `${indent}spent: ${value}\n`)
 }
 
-// Writes spending toward caps and welcome bonuses in one checked write.
+// Writes spending toward caps, welcome bonuses and spend milestones in one
+// checked write.
 export async function writeProgress(
   file: string,
   caps: CapBooking[],
   bonuses: Pick<BonusBooking, 'cardId' | 'after'>[],
+  milestones: Pick<
+    MilestoneBooking,
+    'cardId' | 'milestoneId' | 'period' | 'after'
+  >[] = [],
 ): Promise<void> {
   const { text, wallet } = await readWalletText(file)
   if (text === null || wallet === null) throw new Error(`No wallet at ${file}.`)
   let after = text
   let expected = wallet
   for (const b of caps) {
-    after = capUsageText(after, b)
+    after = usageText(
+      after,
+      b.cardId,
+      'cap_usage',
+      b.capKey,
+      flowUsage(b.period, b.after),
+    )
     expected = applyBooking(expected, b)
+  }
+  for (const m of milestones) {
+    after = usageText(
+      after,
+      m.cardId,
+      'milestone_usage',
+      m.milestoneId,
+      flowUsage(m.period, m.after),
+    )
+    expected = applyMilestoneBooking(expected, m)
   }
   for (const b of bonuses) {
     after = bonusSpentText(after, b.cardId, b.after)
     expected = applyBonusBooking(expected, b)
   }
   const byHand = [
-    ...caps.map((b) => `${b.cardId} cap_usage ${b.capKey}: ${flowUsage(b)}`),
+    ...caps.map(
+      (b) =>
+        `${b.cardId} cap_usage ${b.capKey}: ${flowUsage(b.period, b.after)}`,
+    ),
     ...bonuses.map((b) => `${b.cardId} bonus spent: ${String(b.after)}`),
+    ...milestones.map(
+      (m) =>
+        `${m.cardId} milestone_usage ${m.milestoneId}: ${flowUsage(m.period, m.after)}`,
+    ),
   ].join('; ')
   await commitWalletText(file, after, expected, `add it by hand: ${byHand}`)
 }
