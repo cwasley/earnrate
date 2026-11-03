@@ -25,6 +25,7 @@ export function formatCardInfo(card: CardInfo): string {
       ? [`activate with the issuer: ${card.activation.join(', ')}`]
       : []),
     ...(card.needsAnniversary ? ['cap resets on the card anniversary'] : []),
+    ...card.milestones.map((m) => `spend bonus: ${m.text} (${m.id})`),
     ...(card.onlyAt ? [`works only at ${card.onlyAt.join(', ')}`] : []),
   ]
   return [

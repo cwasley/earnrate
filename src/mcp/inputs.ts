@@ -99,6 +99,12 @@ const cardFields = {
     .describe(
       'Dollars already spent this period on a capped bonus, for a card the user starts tracking partway through: cap key (as list_wallet shows it) → dollars, e.g. {"five-percent-quarterly": 400}. Ask; recorded purchases add to it from then on.',
     ),
+  milestoneSpent: z
+    .record(z.string(), z.number().nonnegative())
+    .optional()
+    .describe(
+      'Dollars already spent on the card this year, for its spend milestones (bonuses after a yearly spending total, as search_cards lists them): milestone id → dollars, e.g. {"spend-15k": 9000}. Every purchase on the card counts, so give each milestone the same total. Ask; recorded purchases add to it from then on.',
+    ),
   bonus: z
     .object({
       opened: IsoDate.describe('The day the account opened, YYYY-MM-DD.'),

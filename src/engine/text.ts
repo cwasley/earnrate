@@ -1,4 +1,4 @@
-import type { Cap, Choice } from '../schema/card.ts'
+import type { Cap, Choice, Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { singleMcc } from './evaluate.ts'
 import type { MerchantResolution } from './types.ts'
@@ -164,6 +164,12 @@ export const CAP_PERIODS: Record<Cap['period'], string> = {
 export const CAP_ADJECTIVES: Record<Cap['period'], string> = {
   month: 'monthly',
   quarter: 'quarterly',
+  calendar_year: 'calendar-year',
+  cardmember_year: 'cardmember-year',
+}
+
+// "the $15,000 calendar-year spend", for a spend milestone.
+export const MILESTONE_PERIODS: Record<Milestone['period'], string> = {
   calendar_year: 'calendar-year',
   cardmember_year: 'cardmember-year',
 }

@@ -58,12 +58,12 @@ const LedgerSchema = z.strictObject({
   recorded: z.array(z.string()),
 })
 
-// Caps and welcome bonuses are recorded separately, so a purchase imported
-// for its cap still counts toward a bonus added to the wallet later.
+// Caps, welcome bonuses and spend milestones are recorded separately, so a
+// purchase imported for its cap still counts toward a bonus added later.
 const fingerprint = ({ cardId, line }: CardLine, kind: RecordKind = 'cap') =>
   createHash('sha256')
     .update(
-      `${kind === 'bonus' ? 'bonus|' : ''}${cardId}|${line.date}|${String(line.amount)}|${line.description}`,
+      `${kind === 'cap' ? '' : `${kind}|`}${cardId}|${line.date}|${String(line.amount)}|${line.description}`,
     )
     .digest('hex')
 
@@ -187,6 +187,11 @@ function formatAnalysis(
   for (const b of a.bonuses) {
     out.push(
       `Welcome bonus on ${labelOf(b.cardId)}: ${dollarsAndCents(b.before)} → ${dollarsAndCents(b.after)} of ${dollarsAndCents(b.spend)}${b.deadline ? ` by ${b.deadline}` : ''}.`,
+    )
+  }
+  for (const m of a.milestones) {
+    out.push(
+      `Spend bonus on ${labelOf(m.cardId)}: ${dollarsAndCents(m.before)} → ${dollarsAndCents(m.after)} of ${dollarsAndCents(m.spend)} for ${m.period}${m.before < m.spend && m.after >= m.spend ? ', reached' : ''}.`,
     )
   }
   return `${out.join('\n')}\n`
@@ -317,12 +322,23 @@ export async function runImport(argv: string[], io: Io): Promise<number> {
   io.stdout(formatAnalysis(analysis, labelOf, valuation, categoryName))
 
   const bonusEntries = analysis.bonuses.flatMap((b) => b.entries)
+  // A purchase counts toward each of its card's milestones; record it once.
+  const milestoneEntries = [
+    ...new Map(
+      analysis.milestones
+        .flatMap((m) => m.entries)
+        .map((e) => [fingerprint(e, 'milestone'), e]),
+    ).values(),
+  ]
   const toRecord = [
     ...(analysis.bookings.length > 0
       ? [`${String(analysis.bookings.length)} purchase(s) against your caps`]
       : []),
     ...(bonusEntries.length > 0
       ? [`${String(bonusEntries.length)} toward welcome bonuses`]
+      : []),
+    ...(milestoneEntries.length > 0
+      ? [`${String(milestoneEntries.length)} toward spend bonuses`]
       : []),
   ]
   if (!values.apply || toRecord.length === 0) {
@@ -337,9 +353,12 @@ export async function runImport(argv: string[], io: Io): Promise<number> {
     walletFile,
     analysis.bookings.map((e) => e.booking),
     analysis.bonuses,
+    analysis.milestones,
   )
   for (const entry of analysis.bookings) recorded.add(fingerprint(entry))
   for (const entry of bonusEntries) recorded.add(fingerprint(entry, 'bonus'))
+  for (const entry of milestoneEntries)
+    recorded.add(fingerprint(entry, 'milestone'))
   await writeFileAtomic(
     ledgerFile,
     `${JSON.stringify({ version: 1, recorded: [...recorded] }, null, 2)}\n`,

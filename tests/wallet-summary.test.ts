@@ -101,3 +101,28 @@ test('a BofA Rewards tier shows only its own rates', () => {
     '1.25% cash back on everything else',
   ])
 })
+
+test('spend milestones show their progress, or that they are not tracked', () => {
+  const summary = walletSummary(
+    catalog,
+    WalletSchema.parse({
+      cards: [
+        {
+          id: 'chase-ihg-one-rewards-premier',
+          milestone_usage: { 'spend-15k': { period: '2026', spent: 11200 } },
+        },
+        { id: 'chase-ihg-one-rewards' },
+      ],
+    }),
+    '2026-11-03',
+  )
+  const [premier, plain] = summary.cards
+  expect(premier?.milestones.map((m) => m.text)).toEqual([
+    '$11,200 of $15,000 this year for 15,000 bonus points, Platinum Elite status and 5 Elite Night Credits.',
+    "$40,000 this year for Diamond Elite status; spending toward it isn't tracked yet.",
+  ])
+  expect(premier?.milestones[0]?.until).toBe('2026-12-31')
+  expect(plain?.milestones[0]?.text).toBe(
+    "$15,000 this year for 10,000 bonus points and Gold Elite status; spending toward it isn't tracked yet.",
+  )
+})

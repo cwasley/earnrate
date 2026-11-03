@@ -117,6 +117,20 @@ While the bonus is open and you're behind an even pace to the deadline, that car
 
 `spend`, `by` and the reward (`points`, or `dollars` for cash back) default to the card's published offer once earnrate has one; set them when your offer was different.
 
+### Spend bonuses
+
+Some cards pay a bonus once a year after you spend a set amount on them, like the IHG One Rewards cards' "10,000 bonus points after you spend $15,000 on purchases each calendar year". `earnrate cards ihg` lists each card's, with what it pays besides points (status, Elite Night Credits, free nights). Only the points are valued.
+
+Every purchase on the card counts. Once earnrate knows how much you've spent on the card this year, an answer adds the bonus points to the purchase that reaches the total and says so, and `earnrate todo` lists a bonus once you're at least 75% of the way there. Without that tracking, a spend bonus never changes an answer: earnrate doesn't guess at spending it wasn't told about. Spending counts up as you record purchases from an AI assistant or import a statement with `--apply`. You can also set it in the card's settings on earnrate.dev, or in the wallet file:
+
+```yaml
+- id: chase-ihg-one-rewards-premier
+  milestone_usage:
+    spend-15k: { period: '2026', spent: 11200 } # spend-40k counts the same purchases
+```
+
+`earnrate simulate` adds a bonus's points to a card's yearly rewards when the year's spending on it reaches the total.
+
 ### Which new card?
 
 These compare every card earnrate knows that's open to new applicants:
@@ -147,7 +161,7 @@ earnrate import gold.csv:amex-gold sapphire.csv:chase-sapphire-preferred
 It totals what each card earned against the best card in your wallet for each purchase, lists the merchants where another card would have earned the most, and flags merchants your issuer codes differently than earnrate assumes. Name several statements, each with its card, to get one report across them. It reads Amex and Chase activity CSVs. Download the CSV rather than a PDF statement: Chase's PDFs print the full card number in the payment coupon, and earnrate never handles card numbers.
 
 - It's a dry run unless you pass `--apply`, which records cap usage for the current period and spending toward an open welcome bonus in your wallet. Refunds lower both.
-- Only the date, description, amount, category and (for Chase) transaction type columns are read. The statements themselves are never stored: `--apply` writes cap and bonus totals to your wallet, and a hash of each recorded purchase to `imported.json` beside it, so importing the same file twice never counts twice.
+- Only the date, description, amount, category and (for Chase) transaction type columns are read. The statements themselves are never stored: `--apply` writes cap, welcome-bonus and spend-bonus totals to your wallet, and a hash of each recorded purchase to `imported.json` beside it, so importing the same file twice never counts twice.
 - For a merchant earnrate doesn't know, it uses the statement's category and marks the row, since another issuer may code it differently.
 - `--valuation points-heavy` values Amex and Chase points at transfer rates instead of your wallet's values, which can change which card wins.
 
@@ -188,10 +202,10 @@ Use the connector (or plugin) or the local extension, not both: each keeps its o
 - `best_card_for_purchase`: which card to use, with reasons
 - `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
 - `resolve_merchant`: how a merchant was identified
-- `list_wallet`: a to-do list for your cards right now, then your cards, caps left this period, chosen categories, welcome-bonus progress and the point values you've set
+- `list_wallet`: a to-do list for your cards right now, then your cards, caps left this period, chosen categories, welcome-bonus and spend-bonus progress and the point values you've set
 - `cheat_sheet`: the card to use for each everyday kind of purchase this quarter
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have
-- `record_purchase`: books a purchase against its cap and any open welcome bonus in your wallet file, keeping your comments
+- `record_purchase`: books a purchase against its cap, any open welcome bonus and the card's yearly spend bonuses in your wallet file, keeping your comments
 - `search_cards`, `add_card`, `update_card`, `remove_card`, `set_memberships` and `set_point_values`: set up the wallet in conversation, including what your points are worth (memberships and point values need no cards)
 
 Saving cards is optional: name them in the conversation for one answer, or ask the assistant to save them, and it finds them, adds them, and asks about anything a card needs, like this quarter's Cash+ picks.

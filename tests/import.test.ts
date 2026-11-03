@@ -434,6 +434,32 @@ describe('earnrate import', () => {
     expect(again.stdout).toMatch(/Nothing was written/)
   })
 
+  test('counts every purchase toward a spend milestone once, refunds lowering it', async () => {
+    const { wallet, chase } = await setup()
+    await writeFile(
+      wallet,
+      `${WALLET}  - id: chase-ihg-one-rewards
+    milestone_usage:
+      spend-15k: { period: "2026", spent: 14950 }
+`,
+    )
+    const dry = await cli([chase, '--card', 'chase-ihg-one-rewards'], wallet)
+    expect(dry.stdout).toMatch(
+      /Spend bonus on IHG One Rewards Credit Card: \$14,950\.00 → \$15,040\.00 of \$15,000\.00 for 2026, reached\./,
+    )
+    expect(dry.stdout).toMatch(/4 toward spend bonuses/)
+
+    await cli([chase, '--card', 'chase-ihg-one-rewards', '--apply'], wallet)
+    const after = await readFile(wallet, 'utf8')
+    expect(after).toMatch(/spend-15k: \{ period: "2026", spent: 15040 \}/)
+    const again = await cli(
+      [chase, '--card', 'chase-ihg-one-rewards', '--apply'],
+      wallet,
+    )
+    expect(again.stdout).not.toMatch(/Spend bonus on/)
+    expect(await readFile(wallet, 'utf8')).toBe(after)
+  })
+
   test('says so when the file is missing', async () => {
     const { dir, wallet } = await setup()
     const { code, stderr } = await cli(

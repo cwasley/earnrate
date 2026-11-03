@@ -39,6 +39,20 @@ rules:
     rate: 5
     valid_to: 2026-12-31
     note: Stores that specialize in office supplies. Purchases posting after Dec 31, 2026 earn the 3x base rate.
+milestones:
+  - id: spend-25k
+    spend: 25000
+    period: calendar_year
+    points: 20000
+    rewards:
+      - 5 Elite Night Credits
+    note: "Every purchase on the card counts, by transaction date; balance transfers, cash advances and cash-like transactions don't. Chase says to allow 6-8 weeks for it to post."
+  - id: spend-60k
+    spend: 60000
+    period: calendar_year
+    rewards:
+      - a free night at IHG hotels (up to 50,000 points)
+    note: 'Use it within 12 months.'
 evidence:
   - rule: base_rate
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
@@ -88,6 +102,15 @@ evidence:
   - rule: dining-gas-advertising
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'
+  - rule: spend-25k
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'Earn 20,000 bonus points after you spend $25,000 on purchases each calendar year.'
+  - rule: spend-25k
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'will qualify for 5 Elite Night credits and 20,000 bonus points after spending $25,000'
+  - rule: spend-60k
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'After spending $60,000 with your IHG One Rewards Business Credit Card in purchases each calendar year'
 todo:
+  - "Starting January 1, 2027, $50,000 of purchases in a calendar year earns Diamond Elite status. It isn't listed as a milestone yet, because a milestone has no start date."
   - The $100 airline statement credit and the up to $100 yearly Expensify credit aren't modeled.
-  - 'Not modeled: 20,000 bonus points (and 5 Elite Night Credits) after $25,000 in purchases each calendar year (a spend milestone, not a rate).'

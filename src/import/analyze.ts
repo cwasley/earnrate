@@ -1,6 +1,7 @@
 import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
 import { HALF_CENT } from '../engine/compare.ts'
 import { capByKey, categoryMatches } from '../engine/evaluate.ts'
+import { milestoneProgress } from '../engine/milestones.ts'
 import { periodKey } from '../engine/periods.ts'
 import { recommend } from '../engine/recommend.ts'
 import { applyBooking, capBooking, type CapBooking } from '../engine/record.ts'
@@ -51,7 +52,19 @@ export type BonusProgress = {
   entries: CardLine[] // purchases and refunds counted toward it
 }
 
-export type RecordKind = 'cap' | 'bonus'
+// Every purchase on a card counts toward each of its spend milestones in the
+// current period; refunds lower the total.
+export type MilestoneImport = {
+  cardId: string
+  milestoneId: string
+  period: string
+  spend: number
+  before: number
+  after: number
+  entries: CardLine[]
+}
+
+export type RecordKind = 'cap' | 'bonus' | 'milestone'
 
 export type StatementAnalysis = {
   from: string
@@ -68,6 +81,7 @@ export type StatementAnalysis = {
   outsideCurrentPeriod: number // capped purchases from an earlier period
   alreadyImported: number // capped purchases an earlier import recorded
   bonuses: BonusProgress[]
+  milestones: MilestoneImport[]
 }
 
 function resolveLine(
@@ -121,8 +135,14 @@ export function analyzeStatement(
   const sorted = [...entries].sort((a, b) =>
     a.line.date.localeCompare(b.line.date),
   )
-  let actual = wallet
-  let simulated = wallet
+  // The earned-versus-best replay leaves spend milestones out: they pay once
+  // on the card's total, whichever card is best for each purchase.
+  const replay: Wallet = {
+    ...wallet,
+    cards: wallet.cards.map(({ milestone_usage: _usage, ...c }) => c),
+  }
+  let actual = replay
+  let simulated = replay
   let current = wallet
   const byCard = new Map<string, CardTotals>()
   const missed = new Map<string, MissedRewards>()
@@ -151,8 +171,41 @@ export function analyzeStatement(
       })
   }
 
+  const milestones: MilestoneImport[] = []
+  for (const held of wallet.cards) {
+    const card = catalog.cards.find((c) => c.id === held.id)
+    if (!card) continue
+    for (const p of milestoneProgress(card, held, today))
+      if (p.period !== null)
+        milestones.push({
+          cardId: held.id,
+          milestoneId: p.milestone.id,
+          period: p.period,
+          spend: p.milestone.spend,
+          before: p.spent,
+          after: p.spent,
+          entries: [],
+        })
+  }
+
   for (const entry of sorted) {
     const { cardId, line } = entry
+    if (!alreadyRecorded(entry, 'milestone')) {
+      const held = wallet.cards.find((c) => c.id === cardId)
+      for (const m of milestones) {
+        if (m.cardId !== cardId) continue
+        const card = catalog.cards.find((c) => c.id === cardId)
+        const milestone = card?.milestones.find((x) => x.id === m.milestoneId)
+        if (
+          !milestone ||
+          periodKey(milestone.period, line.date, held?.anniversary ?? null) !==
+            m.period
+        )
+          continue
+        m.after = roundCents(Math.max(0, m.after + line.amount))
+        m.entries.push(entry)
+      }
+    }
     const progress = bonuses.get(cardId)
     if (
       progress &&
@@ -301,5 +354,6 @@ export function analyzeStatement(
     outsideCurrentPeriod,
     alreadyImported,
     bonuses: [...bonuses.values()].filter((b) => b.entries.length > 0),
+    milestones: milestones.filter((m) => m.entries.length > 0),
   }
 }

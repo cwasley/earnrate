@@ -28,6 +28,8 @@ export type CardInput = {
   // Cap key → dollars already spent on it this period, e.g. on a card added
   // partway through a quarter.
   capSpent?: Record<string, number>
+  // Spend milestone id → dollars already spent on the card this period.
+  milestoneSpent?: Record<string, number>
   // A welcome bonus in progress; null stops tracking it. Spend and deadline
   // default to the card's published offer.
   bonus?: {
@@ -53,6 +55,7 @@ export type CardFields = {
   chosen?: { period: string; picks: Record<string, string[]> }
   activated?: string[]
   cap_usage?: Record<string, { period: string; spent: number }>
+  milestone_usage?: Record<string, { period: string; spent: number }>
   bonus?: BonusFields | null // null removes it
 }
 
@@ -202,6 +205,32 @@ export function cardFields(
     }
     fields.cap_usage = usage
   }
+  if (input.milestoneSpent !== undefined) {
+    const usage = { ...held?.milestone_usage }
+    const anniversary = fields.anniversary ?? held?.anniversary ?? null
+    for (const [id, spent] of Object.entries(input.milestoneSpent)) {
+      const milestone = card.milestones.find((m) => m.id === id)
+      if (!milestone) {
+        problems.push(
+          card.milestones.length > 0
+            ? `${card.id} has no spend milestone '${id}'. Its milestones are: ${idList(card.milestones.map((m) => m.id))}.`
+            : `${card.id} has no spend milestones.`,
+        )
+        continue
+      }
+      if (!(spent >= 0))
+        problems.push('Spending toward a milestone must be $0 or more.')
+      const period = periodKey(milestone.period, today, anniversary)
+      if (period === null) {
+        problems.push(
+          `The '${id}' milestone resets on the card's anniversary; give the anniversary (MM-DD) too.`,
+        )
+        continue
+      }
+      usage[id] = { period, spent }
+    }
+    fields.milestone_usage = usage
+  }
   if (input.bonus === null) fields.bonus = null
   else if (input.bonus !== undefined) {
     const b = input.bonus
@@ -269,6 +298,9 @@ const withFields = (
   ...(f.chosen === undefined ? {} : { chosen: f.chosen }),
   ...(f.activated === undefined ? {} : { activated: f.activated }),
   ...(f.cap_usage === undefined ? {} : { cap_usage: f.cap_usage }),
+  ...(f.milestone_usage === undefined
+    ? {}
+    : { milestone_usage: f.milestone_usage }),
   ...(f.bonus ? { bonus: f.bonus } : {}),
 })
 

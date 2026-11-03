@@ -155,6 +155,34 @@ describe('catalogProblems', () => {
     )
   })
 
+  test('a spend milestone needs a quote, and an id no rule has', () => {
+    const yaml = cashPlusYaml.replace(
+      'evidence:\n',
+      'milestones:\n  - { id: spend-10k, spend: 10000, period: calendar_year, points: 5000 }\n  - { id: bonus-at-costco, spend: 20000, period: calendar_year, rewards: [Gold status] }\nevidence:\n',
+    )
+    const problems = catalogProblems(catalog(yaml))
+    expect(problems).toContain(
+      'card usbank-cash-plus: no evidence for spend-10k',
+    )
+    expect(problems).toContain(
+      "card usbank-cash-plus: milestone 'bonus-at-costco' has a rule's id",
+    )
+  })
+
+  test('a spend milestone pays points, rewards or both', () => {
+    const card = parse(cashPlusYaml) as Record<string, unknown>
+    const milestone = { id: 'spend-10k', spend: 10000, period: 'calendar_year' }
+    expect(
+      CardSchema.safeParse({ ...card, milestones: [milestone] }).success,
+    ).toBe(false)
+    expect(
+      CardSchema.safeParse({
+        ...card,
+        milestones: [{ ...milestone, points: 1 }],
+      }).success,
+    ).toBe(true)
+  })
+
   test('catches a child category without its parent', () => {
     const c = catalog()
     c.categories = c.categories.filter((x) => x.id !== 'dining')
@@ -212,6 +240,17 @@ cards:
 `)
     expect(walletProblems(w, catalog())).toEqual([
       "wallet card usbank-cash-plus cap_usage: 'bonus-at-costco' is not a cap on this card",
+    ])
+  })
+
+  test('catches milestone spending recorded against something that is not a milestone', () => {
+    const w = wallet(`
+cards:
+  - id: usbank-cash-plus
+    milestone_usage: { five-percent: { period: 2026, spent: 10 } }
+`)
+    expect(walletProblems(w, catalog())).toEqual([
+      "wallet card usbank-cash-plus milestone_usage: 'five-percent' is not a spend milestone on this card",
     ])
   })
 

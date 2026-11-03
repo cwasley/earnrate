@@ -34,6 +34,21 @@ rules:
     rate: 5
     valid_to: 2026-12-31
     note: All of Chase's travel category (which includes trains, buses, taxis and rideshare, tolls and parking) until purchases post after Dec 31, 2026. After that, other travel earns the 3x base rate.
+milestones:
+  - id: spend-15k
+    spend: 15000
+    period: calendar_year
+    points: 15000
+    rewards:
+      - Platinum Elite status
+      - 5 Elite Night Credits
+    note: "Every purchase on the card counts, by transaction date; balance transfers, cash advances and cash-like transactions don't. Status lasts through the end of the next calendar year. Chase says to allow 6-8 weeks for it to post."
+  - id: spend-40k
+    spend: 40000
+    period: calendar_year
+    rewards:
+      - Diamond Elite status
+    note: Status lasts through the end of the next calendar year.
 evidence:
   - rule: base_rate
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
@@ -80,6 +95,14 @@ evidence:
   - rule: dining-grocery-gas
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'
+  - rule: spend-15k
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
+    quote: 'Earn 15,000 bonus points after you spend $15,000 on purchases each calendar year.'
+  - rule: spend-15k
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
+    quote: 'will qualify for Platinum Elite Status, 5 Elite Night credits and 15,000 bonus points'
+  - rule: spend-40k
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
+    quote: 'After spending $40,000 with your IHG One Rewards Premier Credit Card in purchases each calendar year'
 todo:
   - The $100 airline statement credit (after $250 on flights bought directly each calendar year, through 12/31/27) isn't modeled.
-  - 'Not modeled: 15,000 bonus points (and Platinum Elite status) after $15,000 in purchases each calendar year (a spend milestone, not a rate).'
