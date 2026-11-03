@@ -12,7 +12,7 @@ I wanted a ghost card: one card that always charges the best of my cards. The ca
 - Runs on your machine, in your browser at [earnrate.dev](https://earnrate.dev) (which you can add to your phone's Home Screen and use offline), or in Claude as a connector at `https://mcp.earnrate.dev`, with nothing to install. No account and no affiliate links; the hosted server counts requests by tool name, nothing about what you ask. See the [privacy page](https://earnrate.dev/privacy).
 - U.S. cards and U.S. merchants, for now.
 
-> **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup, MCP server and the hosted Claude connector. See [the benchmark](docs/benchmark.md) (run 2026-10-24) for how it compares to an existing card-picking MCP server.
+> **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup, MCP server and the hosted Claude connector. See [the benchmark](docs/benchmark.md) (run 2026-11-03) for how it compares to an existing card-picking MCP server.
 
 ## Try it
 
