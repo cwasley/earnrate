@@ -68,7 +68,7 @@
     },
     {
       "name": "record_purchase",
-      "description": "Books a purchase against its cap and welcome bonus."
+      "description": "Books a purchase against its cap, welcome bonus and yearly spend bonus."
     },
     {
       "name": "search_cards",
