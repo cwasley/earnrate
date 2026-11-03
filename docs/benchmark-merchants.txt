@@ -1,0 +1,338 @@
+# The merchant coverage list for docs/benchmark.md: one "group|name" per line,
+# the name as it was typed into each tool. Names only, from public rankings of
+# the largest U.S. chains in each category, plus common online services.
+# Supermarkets: Progressive Grocer / NRF largest U.S. grocers and their main banners
+grocery|Kroger
+grocery|Albertsons
+grocery|Safeway
+grocery|Publix
+grocery|H-E-B
+grocery|Food Lion
+grocery|Stop & Shop
+grocery|Giant Food
+grocery|Hannaford
+grocery|Wegmans
+grocery|Aldi
+grocery|Lidl
+grocery|Trader Joe's
+grocery|Whole Foods
+grocery|Sprouts
+grocery|WinCo Foods
+grocery|Hy-Vee
+grocery|Giant Eagle
+grocery|Winn-Dixie
+grocery|ShopRite
+grocery|Price Chopper
+grocery|Raley's
+grocery|Harris Teeter
+grocery|Smith's
+grocery|King Soopers
+grocery|Fry's Food
+grocery|Ralphs
+grocery|Dillons
+grocery|QFC
+grocery|Mariano's
+# Online grocery and delivery
+online_grocery|Instacart
+online_grocery|Amazon Fresh
+online_grocery|Shipt
+online_grocery|FreshDirect
+online_grocery|Thrive Market
+# Superstores, warehouse clubs, discount stores
+superstore|Walmart
+superstore|Target
+warehouse|Costco
+warehouse|Sam's Club
+warehouse|BJ's Wholesale Club
+discount|Dollar General
+discount|Dollar Tree
+discount|Family Dollar
+discount|Five Below
+discount|Ollie's Bargain Outlet
+discount|TJ Maxx
+# Convenience stores and gas (NACS / CSP top convenience chains, largest fuel brands)
+convenience|7-Eleven
+convenience|Wawa
+convenience|Sheetz
+convenience|Circle K
+convenience|Casey's
+convenience|QuikTrip
+convenience|RaceTrac
+convenience|Speedway
+convenience|Cumberland Farms
+convenience|Kwik Trip
+convenience|Maverik
+convenience|Holiday Stationstores
+gas|Shell
+gas|Chevron
+gas|ExxonMobil
+gas|76
+gas|BP
+gas|Marathon
+gas|Sunoco
+gas|Valero
+gas|Citgo
+gas|Phillips 66
+ev|Tesla Supercharger
+ev|Electrify America
+ev|ChargePoint
+ev|EVgo
+ev|Blink Charging
+# Restaurants: QSR 50 and Technomic's largest full-service chains
+dining|Olive Garden
+dining|Applebee's
+dining|Chili's
+dining|Texas Roadhouse
+dining|Outback Steakhouse
+dining|Red Lobster
+dining|Buffalo Wild Wings
+dining|Cracker Barrel
+dining|IHOP
+dining|Denny's
+dining|LongHorn Steakhouse
+dining|Red Robin
+dining|The Cheesecake Factory
+dining|P.F. Chang's
+dining|BJ's Restaurant
+dining|Waffle House
+dining|TGI Fridays
+dining|Ruby Tuesday
+dining|Bob Evans
+dining|Carrabba's
+dining|Hooters
+dining|Twin Peaks
+dining|Yard House
+dining|Maggiano's
+dining|Bonefish Grill
+fast_food|McDonald's
+fast_food|Starbucks
+fast_food|Chick-fil-A
+fast_food|Taco Bell
+fast_food|Wendy's
+fast_food|Dunkin'
+fast_food|Burger King
+fast_food|Subway
+fast_food|Domino's
+fast_food|Sonic
+fast_food|Popeyes
+fast_food|KFC
+fast_food|Dairy Queen
+fast_food|Jersey Mike's
+fast_food|Arby's
+fast_food|Little Caesars
+fast_food|Papa John's
+fast_food|Jack in the Box
+fast_food|Whataburger
+fast_food|Panda Express
+fast_food|Raising Cane's
+fast_food|Wingstop
+fast_food|Culver's
+fast_food|Zaxby's
+fast_food|Five Guys
+fast_food|Jimmy John's
+fast_food|Firehouse Subs
+fast_food|Bojangles
+fast_food|Dutch Bros
+fast_food|Tropical Smoothie Cafe
+fast_food|Shake Shack
+fast_food|Qdoba
+fast_food|Del Taco
+fast_food|El Pollo Loco
+fast_food|Carl's Jr.
+delivery|DoorDash
+delivery|Uber Eats
+delivery|Grubhub
+delivery|Postmates
+# Drugstores
+drugstore|CVS
+drugstore|Walgreens
+drugstore|Duane Reade
+# Department and clothing stores (NRF Top 100, U.S. Bank's sample lists)
+department|Macy's
+department|Nordstrom
+department|Nordstrom Rack
+department|Kohl's
+department|JCPenney
+department|Dillard's
+department|Belk
+department|Bloomingdale's
+department|Saks Fifth Avenue
+department|Saks Off 5th
+clothing|Old Navy
+clothing|Gap
+clothing|Banana Republic
+clothing|H&M
+clothing|Zara
+clothing|Uniqlo
+clothing|American Eagle
+clothing|J.Crew
+clothing|Lululemon
+clothing|Abercrombie & Fitch
+clothing|Hollister
+clothing|Victoria's Secret
+clothing|Urban Outfitters
+clothing|Anthropologie
+clothing|Free People
+# Electronics, sporting goods, home, furniture, office
+electronics|Best Buy
+electronics|Apple Store
+electronics|Micro Center
+electronics|Newegg
+electronics|GameStop
+sporting|REI
+sporting|Dick's Sporting Goods
+sporting|Academy Sports + Outdoors
+sporting|Bass Pro Shops
+sporting|Cabela's
+sporting|Big 5 Sporting Goods
+sporting|Hibbett
+sporting|Scheels
+home|The Home Depot
+home|Lowe's
+home|Menards
+home|Ace Hardware
+home|True Value
+home|Harbor Freight
+furniture|IKEA
+furniture|Ashley Furniture
+furniture|Rooms To Go
+furniture|Bob's Discount Furniture
+furniture|La-Z-Boy
+furniture|Ethan Allen
+furniture|RH
+furniture|Havertys
+office|Staples
+office|Office Depot
+shipping|UPS
+shipping|FedEx
+shipping|USPS
+shipping|DHL
+# Online retail and services
+online|Amazon
+online|eBay
+online|Etsy
+online|Chewy
+online|Wayfair
+online|Temu
+online|Shein
+online|Zappos
+online|Petco
+online|PetSmart
+online|Ulta Beauty
+online|Sephora
+online|Michaels
+online|Hobby Lobby
+online|AutoZone
+# Transit, travel
+transit|Uber
+transit|Lyft
+transit|Amtrak
+transit|Greyhound
+transit|MTA
+transit|BART
+transit|NJ Transit
+transit|SEPTA
+transit|MBTA
+transit|Metra
+transit|ParkMobile
+transit|SpotHero
+airline|Delta
+airline|United
+airline|American Airlines
+airline|Southwest
+airline|Alaska Airlines
+airline|JetBlue
+airline|Spirit Airlines
+airline|Frontier Airlines
+airline|Allegiant
+airline|Sun Country
+hotel|Marriott
+hotel|Hilton
+hotel|Hyatt
+hotel|IHG
+hotel|Holiday Inn
+hotel|Hampton Inn
+hotel|Courtyard by Marriott
+hotel|Wyndham
+hotel|Choice Hotels
+hotel|Best Western
+hotel|Motel 6
+hotel|Red Roof
+car|Hertz
+car|Enterprise
+car|Avis
+car|Budget
+car|National Car Rental
+car|Alamo
+car|Thrifty
+car|Dollar Rent A Car
+ota|Expedia
+ota|Booking.com
+ota|Hotels.com
+ota|Priceline
+ota|Orbitz
+ota|Travelocity
+ota|Hopper
+cruise|Carnival
+cruise|Royal Caribbean
+cruise|Norwegian Cruise Line
+cruise|Princess Cruises
+cruise|Disney Cruise Line
+cruise|Celebrity Cruises
+# Streaming, TV, internet, phone, utilities
+streaming|Netflix
+streaming|Hulu
+streaming|Disney+
+streaming|Max
+streaming|Peacock
+streaming|Paramount+
+streaming|Apple TV
+streaming|YouTube TV
+streaming|YouTube Premium
+streaming|Spotify
+streaming|Apple Music
+streaming|Amazon Music
+streaming|Prime Video
+streaming|Sling TV
+streaming|Fubo
+tv|Comcast
+tv|Xfinity
+tv|Spectrum
+tv|Cox
+tv|Optimum
+tv|DIRECTV
+tv|DISH
+tv|Frontier Internet
+phone|Verizon
+phone|AT&T
+phone|T-Mobile
+phone|Cricket Wireless
+phone|Metro by T-Mobile
+phone|Boost Mobile
+phone|Visible
+phone|Mint Mobile
+utilities|PG&E
+utilities|Con Edison
+utilities|Duke Energy
+utilities|Dominion Energy
+utilities|Georgia Power
+utilities|Florida Power & Light
+# Entertainment and fitness
+movies|AMC
+movies|Regal
+movies|Cinemark
+movies|Marcus Theatres
+movies|Harkins Theatres
+entertainment|Ticketmaster
+entertainment|Live Nation
+entertainment|StubHub
+entertainment|SeatGeek
+entertainment|Vivid Seats
+fitness|Planet Fitness
+fitness|24 Hour Fitness
+fitness|LA Fitness
+fitness|Anytime Fitness
+fitness|Crunch Fitness
+fitness|Orangetheory
+fitness|Equinox
+fitness|Life Time

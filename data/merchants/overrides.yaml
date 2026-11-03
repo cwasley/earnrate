@@ -281,3 +281,287 @@
     aliases: [bilt travel flight],
     category: travel,
   }
+
+# More warehouse clubs and discount stores. Chase's grocery category leaves out
+# "warehouse clubs, discount stores and some smaller merchants such as
+# drugstores" (chase.com/personal/credit-cards/rewards-category-faq).
+- id: bjs-wholesale-club
+  name: "BJ's Wholesale Club"
+  aliases: [bjs wholesale, bjs wholesale club, bjs club]
+  domains: [bjs.com]
+  category: warehouse_club
+  note: Codes as a warehouse club, which Amex, Chase and Capital One leave out of their grocery bonuses.
+- id: bjs-gas
+  name: "BJ's Gas"
+  aliases: [bjs gas, bjs gas station]
+  category: gas.superstore
+  note: Issuers usually exclude warehouse-club gas from gas bonuses.
+- id: dollar-general
+  name: Dollar General
+  domains: [dollargeneral.com]
+  category: other
+  note: Sells groceries but codes as a discount store, which issuers leave out of grocery bonuses.
+- id: dollar-tree
+  name: Dollar Tree
+  domains: [dollartree.com]
+  category: other
+  note: Sells groceries but codes as a discount store, which issuers leave out of grocery bonuses.
+- id: family-dollar
+  name: Family Dollar
+  domains: [familydollar.com]
+  category: other
+  note: Sells groceries but codes as a discount store, which issuers leave out of grocery bonuses.
+
+# Gas stations with convenience stores. Chase's gas category covers gas "paid
+# for either at the pump or inside the station", and U.S. Bank lists several of
+# these chains as gas stations.
+- id: wawa
+  name: Wawa
+  domains: [wawa.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: Wawa is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.
+- id: sheetz
+  name: Sheetz
+  domains: [sheetz.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: Sheetz is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.
+- id: circle-k
+  name: Circle K
+  domains: [circlek.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: Circle K is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.
+- id: caseys
+  name: "Casey's"
+  aliases: [caseys, caseys general store]
+  domains: [caseys.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: "Casey's is a gas station with a convenience store. A location without fuel pumps may code as a convenience store."
+- id: quiktrip
+  name: QuikTrip
+  aliases: [qt, quik trip]
+  domains: [quiktrip.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: QuikTrip is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.
+- id: racetrac
+  name: RaceTrac
+  aliases: [race trac]
+  domains: [racetrac.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: RaceTrac is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.
+- id: speedway
+  name: Speedway
+  domains: [speedway.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: Speedway is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.
+- id: cumberland-farms
+  name: Cumberland Farms
+  aliases: [cumby, cumbys]
+  domains: [cumberlandfarms.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: Cumberland Farms is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.
+- id: kwik-trip
+  name: Kwik Trip
+  aliases: [kwik star]
+  domains: [kwiktrip.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: Kwik Trip is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.
+- id: maverik
+  name: Maverik
+  aliases: [maverik adventures first stop, kum & go, kum and go]
+  domains: [maverik.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: Maverik (which now runs the Kum & Go stores) is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.
+- id: holiday-stationstores
+  name: Holiday Stationstores
+  aliases: [holiday gas, holiday gas station, holiday station]
+  domains: [holidaystationstores.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: Holiday is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.
+
+# Fast-casual chains can post as fast food (MCC 5814) or as restaurants (5812).
+# U.S. Bank's Cash+ sample lists put Smashburger under restaurants but Subway
+# and Qdoba under fast food, so the counter-service burger and smoothie chains
+# below could go either way.
+- id: five-guys
+  name: Five Guys
+  aliases: [five guys burgers and fries]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.
+- id: shake-shack
+  name: Shake Shack
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.
+- id: tropical-smoothie-cafe
+  name: Tropical Smoothie Cafe
+  aliases: [tropical smoothie]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.
+
+# Delivery apps. U.S. Bank lists them under Restaurants and Chase's dining
+# category counts them, but Chase's "dining purchased directly from a
+# restaurant" category leaves out third-party delivery.
+- id: grubhub
+  name: Grubhub
+  aliases: [grub hub, seamless]
+  domains: [grubhub.com, seamless.com]
+  category: dining
+  note: A delivery app that codes as a restaurant for most issuers. Bonuses limited to buying directly from a restaurant don't count it.
+- id: postmates
+  name: Postmates
+  domains: [postmates.com]
+  category: dining
+  note: A delivery app that codes as a restaurant for most issuers. Bonuses limited to buying directly from a restaurant don't count it.
+
+# A dinner theater: food ordered at your seat may land on the same check.
+- id: alamo-drafthouse
+  name: Alamo Drafthouse Cinema
+  aliases: [alamo drafthouse]
+  domains: [drafthouse.com]
+  category: movie_theaters
+  ambiguity:
+    may_code_as: [dining]
+    note: Tickets code as a movie theater. Food and drinks ordered at your seat usually post on the theater's charge too, but a location's kitchen may bill separately as a restaurant.
+
+# Parking codes as MCC 7523, which Amex and Chase count as transit but U.S.
+# Bank's Cash+ ground transportation leaves out.
+- id: parkmobile
+  name: ParkMobile
+  aliases: [park mobile]
+  domains: [parkmobile.io]
+  category: transit
+  likely_mcc: 7523
+  note: Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't.
+- id: spothero
+  name: SpotHero
+  aliases: [spot hero]
+  domains: [spothero.com]
+  category: transit
+  likely_mcc: 7523
+  note: Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't.
+
+# Booking.com charges prepaid stays itself, but "pay at the property" stays are
+# charged by the hotel.
+- id: booking-com
+  name: Booking.com
+  aliases: [booking com]
+  domains: [booking.com]
+  category: travel
+  ambiguity:
+    may_code_as: [travel.hotels]
+    note: Prepaid bookings code as a travel agency. Stays you pay for at the property are charged by the hotel and code as a hotel.
+
+# AT&T bills wireless and home internet separately.
+- id: att
+  name: AT&T
+  aliases: [att, at and t, at&t wireless]
+  domains: [att.com]
+  category: phone
+  ambiguity:
+    may_code_as: [tv_internet]
+    note: AT&T bills wireless and home internet separately. A wireless bill is cell phone service; an AT&T Internet or Fiber bill is TV and internet service.
+
+# Specialty stores with no bonus category in store. Amex counts their websites
+# as U.S. online retail ("U.S. merchants selling physical goods, paid on their
+# website or app").
+- id: chewy
+  name: Chewy
+  domains: [chewy.com]
+  category: online_retail
+- id: wayfair
+  name: Wayfair
+  domains: [wayfair.com]
+  category: online_retail
+  ambiguity:
+    may_code_as: [furniture]
+    note: Wayfair sells online, but some issuers code its purchases as a furniture store (MCC 5712). A statement shows which.
+- id: zappos
+  name: Zappos
+  domains: [zappos.com]
+  category: online_retail
+- id: petco
+  name: Petco
+  domains: [petco.com]
+  category: other
+  online:
+    category: online_retail
+  note: A pet store, with no bonus category in store. Its website counts as online retail.
+- id: petsmart
+  name: PetSmart
+  aliases: [pet smart]
+  domains: [petsmart.com]
+  category: other
+  online:
+    category: online_retail
+  note: A pet store, with no bonus category in store. Its website counts as online retail.
+- id: ulta-beauty
+  name: Ulta Beauty
+  aliases: [ulta]
+  domains: [ulta.com]
+  category: other
+  online:
+    category: online_retail
+  note: A cosmetics store, with no bonus category in store. Its website counts as online retail.
+- id: sephora
+  name: Sephora
+  domains: [sephora.com]
+  category: other
+  online:
+    category: online_retail
+  note: A cosmetics store, with no bonus category in store. Its website counts as online retail.
+- id: michaels
+  name: Michaels
+  domains: [michaels.com]
+  category: other
+  online:
+    category: online_retail
+  note: A craft store, with no bonus category in store. Its website counts as online retail.
+- id: hobby-lobby
+  name: Hobby Lobby
+  domains: [hobbylobby.com]
+  category: other
+  online:
+    category: online_retail
+  note: A craft store, with no bonus category in store. Its website counts as online retail.
+- id: autozone
+  name: AutoZone
+  aliases: [auto zone]
+  domains: [autozone.com]
+  category: other
+  online:
+    category: online_retail
+  note: An auto parts store, with no bonus category in store. Its website counts as online retail.
+
+# Listed here, not in seed.yaml, so "Amazon Music" doesn't match Amazon itself.
+- id: amazon-music
+  name: Amazon Music Unlimited
+  aliases: [amazon music]
+  category: streaming
+  note: On Amex's Select U.S. Streaming Subscriptions list. Charged by Amazon, so other issuers may code it as Amazon.
