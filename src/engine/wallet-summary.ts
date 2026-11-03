@@ -168,7 +168,12 @@ function headlineRates(
       const after = `${limit}${activate}`
       return `${head} ${listed(whats)}${after === '' ? '' : ` (${after.replace(/^, /, '')})`}`
     }),
-    ...(shown.some((r) => r.match.any && r.rate > card.base_rate)
+    ...(shown.some(
+      (r) =>
+        r.match.any &&
+        r.geography !== 'foreign_only' &&
+        r.rate > card.base_rate,
+    )
       ? []
       : [`${earnText(catalog, card.base_rate, currency)} on everything else`]),
   ]

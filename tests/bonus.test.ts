@@ -23,6 +23,7 @@ const offerCard = CardSchema.parse({
   verified_by: 'test',
   source_urls: ['https://example.com/terms'],
   base_rate: 1,
+  foreign_transaction_fee: 0,
   welcome_offer: { points: 60000, spend: 4000, months: 3 },
 })
 

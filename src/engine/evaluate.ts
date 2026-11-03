@@ -207,6 +207,7 @@ function applicability(
 
   if (rule.channel !== 'any' && rule.channel !== ctx.channel) return 'no'
   if (rule.geography === 'us_only' && ctx.country !== 'US') return 'no'
+  if (rule.geography === 'foreign_only' && ctx.country === 'US') return 'no'
   if (!inEffect(rule, ctx.date)) return 'no'
   const membership = rule.requires?.membership
   if (membership !== undefined && !ctx.memberships.has(membership)) return 'no'

@@ -491,6 +491,19 @@ input::-webkit-list-button {
   accent-color: var(--accent);
 }
 
+/* A thumb-sized target at the register. */
+.app label.check.abroad {
+  align-items: center;
+  min-height: 44px;
+  margin-top: 8px;
+}
+
+.app label.check.abroad input {
+  margin-top: 0;
+  width: 20px;
+  height: 20px;
+}
+
 .ask input.amount {
   flex: 0 0 72px;
   padding: 12px 8px;

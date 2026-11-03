@@ -24,6 +24,7 @@ const testCard = CardSchema.parse({
   verified_by: 'test',
   source_urls: ['https://example.com/terms'],
   base_rate: 3,
+  foreign_transaction_fee: 0,
   rules: [
     {
       id: 'activate-me',
@@ -282,6 +283,7 @@ function syntheticCard(id: string, rules: unknown[], extra: object = {}) {
     verified_by: 'test',
     source_urls: ['https://example.com/terms'],
     base_rate: 1,
+    foreign_transaction_fee: 0,
     rules,
     ...extra,
   })

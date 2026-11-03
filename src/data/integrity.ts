@@ -123,6 +123,7 @@ function cardProblems(
       problems.push(`${where}: milestone '${m.id}' has a rule's id`)
   const ruleIds = new Set([
     'base_rate',
+    'foreign_transaction_fee',
     ...(card.pools_into ? ['pools_into'] : []),
     ...(card.annual_fee !== undefined ? ['annual_fee'] : []),
     ...(card.first_year_fee !== undefined ? ['first_year_fee'] : []),

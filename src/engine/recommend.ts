@@ -52,6 +52,14 @@ import { cardValuation, type Valuation } from './valuation.ts'
 
 export const STALE_AFTER_DAYS = 180
 
+// The engine only tells the U.S. from everywhere else.
+export const isForeign = (purchase: Pick<Purchase, 'country'>) =>
+  purchase.country !== 'US'
+
+// Any purchase outside the U.S., when no country is named: ZZ is a code ISO
+// leaves unassigned, and nothing prints it.
+export const ABROAD = 'ZZ'
+
 // The warning when no card works; the CLI shows it as the answer instead.
 export const noCardText = (merchant: string) =>
   `None of your cards work at ${merchant}.`
@@ -65,7 +73,8 @@ type Entry = {
   // Spend milestones this purchase reaches, whose points count toward it.
   milestones: MilestoneHit[]
   perDollar: number // currency units per dollar, milestone points included
-  effectiveReturnPct: number
+  fee: number // foreign transaction fee percent on this purchase, else 0
+  effectiveReturnPct: number // net of `fee`
   upside: number // return at the top of the currency's value range
 }
 
@@ -141,6 +150,7 @@ function rankEntries(
     const perDollar =
       evaluation.best.rate +
       (bonusPoints > 0 && purchase.amount ? bonusPoints / purchase.amount : 0)
+    const fee = isForeign(purchase) ? card.foreign_transaction_fee : 0
     entries.push({
       card,
       held,
@@ -148,8 +158,10 @@ function rankEntries(
       evaluation,
       milestones,
       perDollar,
-      effectiveReturnPct: perDollar * valuation.centsPerUnit,
-      upside: perDollar * (valuation.range?.[1] ?? valuation.centsPerUnit),
+      fee,
+      effectiveReturnPct: perDollar * valuation.centsPerUnit - fee,
+      upside:
+        perDollar * (valuation.range?.[1] ?? valuation.centsPerUnit) - fee,
     })
   }
 
@@ -206,7 +218,7 @@ function reasoningFor(
 
   if (currency !== 'cash') {
     lines.push(
-      `Valued at ${num(valuation.centsPerUnit)}¢ per point: ${pct(entry.effectiveReturnPct)} back.`,
+      `Valued at ${num(valuation.centsPerUnit)}¢ per point: ${pct(entry.perDollar * valuation.centsPerUnit)} back.`,
     )
   }
   return lines
@@ -220,6 +232,10 @@ function warningsFor(
   const { card, valuation, evaluation } = entry
   const { best, nominal } = evaluation
   const warnings: string[] = []
+  if (entry.fee > 0)
+    warnings.push(
+      `Charges a ${pct(entry.fee)} foreign transaction fee here, so it nets ${pct(entry.effectiveReturnPct)}.`,
+    )
   const capLabel = (e: typeof best) =>
     e.cap
       ? `${money(e.cap.cap.amount)} ${CAP_ADJECTIVES[e.cap.cap.period]} cap`
@@ -297,6 +313,7 @@ function toRanked(
     currency: valuation.currency,
     centsPerUnit: valuation.centsPerUnit,
     effectiveReturnPct: entry.effectiveReturnPct,
+    foreignFee: entry.fee > 0 ? entry.fee : null,
     earned:
       purchase.amount === null
         ? null
@@ -347,8 +364,9 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
     const wRate = winner.perDollar
     const oRate = other.perDollar
 
+    // Net return is rate × value − fee, so each flip point adds the fee back.
     if (w.range && wRate > 0) {
-      const threshold = other.effectiveReturnPct / wRate
+      const threshold = (other.effectiveReturnPct + winner.fee) / wRate
       if (threshold < w.centsPerUnit && threshold >= w.range[0]) {
         consider(
           (w.centsPerUnit - threshold) / w.centsPerUnit,
@@ -357,7 +375,7 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
       }
     }
     if (o.range && oRate > 0) {
-      const threshold = winner.effectiveReturnPct / oRate
+      const threshold = (winner.effectiveReturnPct + other.fee) / oRate
       if (threshold > o.centsPerUnit && threshold <= o.range[1]) {
         consider(
           (threshold - o.centsPerUnit) / o.centsPerUnit,
@@ -409,6 +427,10 @@ function assumptionsFor(
     entries.map((e) => e.valuation),
   )
   if (values !== null) assumptions.push(values)
+  if (isForeign(purchase))
+    assumptions.push(
+      'Treats this as a purchase outside the U.S.: each card is ranked after its foreign transaction fee.',
+    )
   for (const e of entries)
     for (const hit of e.milestones)
       assumptions.push(

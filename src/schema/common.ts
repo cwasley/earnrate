@@ -38,3 +38,9 @@ export const PeriodKey = z.preprocess(
 export const ValueRange = z
   .tuple([z.number().positive(), z.number().positive()])
   .refine(([low, high]) => low <= high, 'range must be [low, high]')
+
+// A two-letter country code, like US or FR. Only the U.S. versus everywhere
+// else matters to the engine.
+export const COUNTRY_CODE = /^[A-Za-z]{2}$/
+export const countryProblem = (code: string) =>
+  `"${code}" isn't a country code. Use two letters, like US or FR.`

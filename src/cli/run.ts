@@ -95,7 +95,8 @@ Options:
   --all                  List every card, not just the top three.
   --json                 Print the full recommendation as JSON.
   --date <YYYY-MM-DD>    Purchase date. Default: today.
-  --country <code>       Where you're paying. Default: US.
+  --country <code>       Where you're paying. Abroad, cards rank after their
+                         foreign transaction fees. Default: US.
   --cards <ids>          Answer for these cards instead of your wallet, comma
                          separated: --cards amex-gold,chase-prime-visa.
   --member <name>        A membership you have, in place of the saved ones.
@@ -309,6 +310,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
         amount: purchase.amount,
         channel: purchase.channel,
         date: purchase.date,
+        country: purchase.country,
       },
       {
         filters: ALL_PERSONAL_CARDS,

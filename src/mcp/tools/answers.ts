@@ -33,6 +33,7 @@ import { resolvePlace, withCallerCategory } from '../../merchants/resolve.ts'
 import { ALL_CARDS_NOTE, fail, type Context } from '../context.ts'
 import {
   ChannelInput,
+  CountryInput,
   DateInput,
   Merchant,
   settings,
@@ -86,7 +87,7 @@ export function registerAnswerTools(
     {
       title: 'Best card for a purchase',
       description:
-        "Which card earns the most rewards for a purchase, and why. With no cards given and no saved wallet, it ranks every card earnrate knows (in `allCards`): a complete answer for anyone. With cards named in the conversation (`cards`) or a saved wallet, it picks the best of the user's own: `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout, with every usable card ranked with reasons, cards the merchant won't take, assumptions, warnings, and when a different point valuation would change the pick. For a business earnrate may not know, like a local restaurant, pass `category` when you can tell what kind of business it is. Never needs or returns card numbers.",
+        "Which card earns the most rewards for a purchase, and why. With no cards given and no saved wallet, it ranks every card earnrate knows (in `allCards`): a complete answer for anyone. With cards named in the conversation (`cards`) or a saved wallet, it picks the best of the user's own: `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout, with every usable card ranked with reasons, cards the merchant won't take, assumptions, warnings, and when a different point valuation would change the pick. For a business earnrate may not know, like a local restaurant, pass `category` when you can tell what kind of business it is. When the user is paying outside the U.S. or in another currency, pass `country`: abroad, each card is ranked after its foreign transaction fee. Never needs or returns card numbers.",
       inputSchema: z.object({
         merchant: Merchant,
         amount: z
@@ -96,6 +97,7 @@ export function registerAnswerTools(
           .describe('Purchase amount in US dollars. Improves cap math.'),
         channel: ChannelInput,
         date: DateInput,
+        country: CountryInput,
         category: CategoryInput,
         cards: NamedCards,
         memberships: NamedMemberships,
@@ -113,6 +115,7 @@ export function registerAnswerTools(
       amount,
       channel,
       date,
+      country,
       category,
       cards,
       memberships,
@@ -129,7 +132,7 @@ export function registerAnswerTools(
         amount: amount ?? null,
         channel: channel ?? null,
         date: date ?? deps.today(),
-        country: 'US',
+        country: (country ?? 'US').toUpperCase(),
       }
       const resolved = await ctx.resolve(
         merchant,
@@ -149,6 +152,7 @@ export function registerAnswerTools(
             amount: purchase.amount,
             channel: purchase.channel,
             date: purchase.date,
+            country: purchase.country,
           },
           settings({ memberships, valuation }, await ctx.saved()),
           resolved.merchant,
@@ -315,6 +319,7 @@ export function registerAnswerTools(
           .optional()
           .describe('Purchase amount in US dollars, if known.'),
         channel: ChannelInput,
+        country: CountryInput,
         ...CatalogFilters,
       }),
       outputSchema: ExplorationSchema,
@@ -336,6 +341,7 @@ export function registerAnswerTools(
           amount: args.amount ?? null,
           channel,
           date: deps.today(),
+          country: (args.country ?? 'US').toUpperCase(),
         },
         settings(args, await ctx.saved()),
         args.merchant === undefined

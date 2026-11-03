@@ -49,6 +49,12 @@ export const wholeDollars = (n: number) => money(Math.round(n))
 export const money = (n: number) =>
   `${n < 0 ? '−' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`
 
+// "No foreign transaction fee", "3% foreign transaction fee"
+export const foreignFeeText = (fee: number) =>
+  fee === 0
+    ? 'No foreign transaction fee'
+    : `${pct(fee)} foreign transaction fee`
+
 export function feeText(fees: {
   annualFee: number | null
   firstYearFee: number | null

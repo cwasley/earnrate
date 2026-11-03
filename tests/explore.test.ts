@@ -179,6 +179,7 @@ const card = (id: string, extra: object) =>
     verified_by: 'test',
     source_urls: ['https://example.com/terms'],
     base_rate: 1,
+    foreign_transaction_fee: 0,
     annual_fee: 0,
     ...extra,
   })
