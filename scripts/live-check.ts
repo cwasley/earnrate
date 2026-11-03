@@ -307,6 +307,16 @@ async function server() {
       best.text.slice(0, 80),
     )
 
+    const abroad = await tool(token, 'best_card_for_purchase', {
+      merchant: 'Whole Foods',
+      country: 'GB',
+    })
+    check(
+      'answer abroad nets out foreign fees',
+      !abroad.isError && /foreign transaction fee/.test(abroad.text),
+      abroad.text.slice(0, 80),
+    )
+
     const added = await tool(token, 'add_card', { cardId: 'amex-gold' })
     saved = !added.isError
     check('add_card', saved, added.text.slice(0, 80))
