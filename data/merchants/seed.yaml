@@ -43,6 +43,150 @@
     domains: [instacart.com],
     category: grocery.online,
   }
+- {
+    id: publix,
+    name: Publix,
+    aliases: [publix super markets],
+    domains: [publix.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: h-e-b,
+    name: H-E-B,
+    aliases: [heb],
+    domains: [heb.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: food-lion,
+    name: Food Lion,
+    domains: [foodlion.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: stop-and-shop,
+    name: Stop & Shop,
+    aliases: [stop and shop],
+    domains: [stopandshop.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: giant-food,
+    name: Giant Food,
+    domains: [giantfood.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: hannaford,
+    name: Hannaford,
+    aliases: [hannaford supermarket],
+    domains: [hannaford.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: wegmans,
+    name: Wegmans,
+    aliases: [wegmans food markets],
+    domains: [wegmans.com],
+    category: grocery.supermarket,
+  }
+- { id: lidl, name: Lidl, domains: [lidl.com], category: grocery.supermarket }
+- {
+    id: winco-foods,
+    name: WinCo Foods,
+    aliases: [winco],
+    domains: [wincofoods.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: hy-vee,
+    name: Hy-Vee,
+    aliases: [hyvee],
+    domains: [hy-vee.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: giant-eagle,
+    name: Giant Eagle,
+    domains: [gianteagle.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: winn-dixie,
+    name: Winn-Dixie,
+    aliases: [winn dixie],
+    domains: [winndixie.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: shoprite,
+    name: ShopRite,
+    aliases: [shop rite],
+    domains: [shoprite.com],
+    category: grocery.supermarket,
+  }
+- { id: price-chopper, name: Price Chopper, category: grocery.supermarket }
+- {
+    id: raleys,
+    name: "Raley's",
+    aliases: [raleys],
+    domains: [raleys.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: harris-teeter,
+    name: Harris Teeter,
+    domains: [harristeeter.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: smiths,
+    name: "Smith's Food and Drug",
+    aliases: [smiths, smiths food and drug, smiths food & drug],
+    domains: [smithsfoodanddrug.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: king-soopers,
+    name: King Soopers,
+    domains: [kingsoopers.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: frys-food,
+    name: "Fry's Food Stores",
+    aliases: [frys food, frys food stores, frys marketplace],
+    domains: [frysfood.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: dillons,
+    name: Dillons,
+    aliases: [dillons food stores],
+    domains: [dillons.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: qfc,
+    name: QFC,
+    aliases: [quality food centers],
+    domains: [qfc.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: marianos,
+    name: "Mariano's",
+    aliases: [marianos],
+    domains: [marianos.com],
+    category: grocery.supermarket,
+  }
+- {
+    id: freshdirect,
+    name: FreshDirect,
+    aliases: [fresh direct],
+    domains: [freshdirect.com],
+    category: grocery.online,
+  }
 
 # Restaurants and fast food
 - { id: sweetgreen, name: Sweetgreen, category: dining }
@@ -74,6 +218,207 @@
   }
 - { id: doordash, name: DoorDash, domains: [doordash.com], category: dining }
 - { id: uber-eats, name: Uber Eats, aliases: [ubereats], category: dining }
+- { id: olive-garden, name: Olive Garden, category: dining }
+- { id: applebees, name: "Applebee's", aliases: [applebees], category: dining }
+- {
+    id: chilis,
+    name: "Chili's",
+    aliases: [chilis, chilis grill & bar],
+    category: dining,
+  }
+- { id: texas-roadhouse, name: Texas Roadhouse, category: dining }
+- {
+    id: outback-steakhouse,
+    name: Outback Steakhouse,
+    aliases: [outback],
+    category: dining,
+  }
+- { id: red-lobster, name: Red Lobster, category: dining }
+- {
+    id: buffalo-wild-wings,
+    name: Buffalo Wild Wings,
+    aliases: [bdubs, b dubs, bww],
+    category: dining,
+  }
+- {
+    id: cracker-barrel,
+    name: Cracker Barrel,
+    aliases: [cracker barrel old country store],
+    category: dining,
+  }
+- { id: ihop, name: IHOP, category: dining }
+- { id: dennys, name: "Denny's", aliases: [dennys], category: dining }
+- {
+    id: longhorn-steakhouse,
+    name: LongHorn Steakhouse,
+    aliases: [longhorn],
+    category: dining,
+  }
+- {
+    id: red-robin,
+    name: Red Robin,
+    aliases: [red robin gourmet burgers],
+    category: dining,
+  }
+- {
+    id: pf-changs,
+    name: "P.F. Chang's",
+    aliases: [pf changs, p f changs, p.f. changs],
+    category: dining,
+  }
+- {
+    id: bjs-restaurant,
+    name: "BJ's Restaurant & Brewhouse",
+    aliases: [bjs restaurant, bjs restaurant and brewhouse, bjs brewhouse],
+    category: dining,
+  }
+- { id: waffle-house, name: Waffle House, category: dining }
+- {
+    id: tgi-fridays,
+    name: TGI Fridays,
+    aliases: [tgif, tgi fridays, t.g.i. fridays],
+    category: dining,
+  }
+- { id: ruby-tuesday, name: Ruby Tuesday, category: dining }
+- { id: bob-evans, name: Bob Evans, category: dining }
+- {
+    id: carrabbas,
+    name: "Carrabba's Italian Grill",
+    aliases: [carrabbas],
+    category: dining,
+  }
+- { id: hooters, name: Hooters, category: dining }
+- { id: twin-peaks, name: Twin Peaks, category: dining }
+- { id: yard-house, name: Yard House, category: dining }
+- {
+    id: maggianos,
+    name: "Maggiano's Little Italy",
+    aliases: [maggianos],
+    category: dining,
+  }
+- {
+    id: bonefish-grill,
+    name: Bonefish Grill,
+    aliases: [bonefish],
+    category: dining,
+  }
+- { id: pizza-hut, name: Pizza Hut, domains: [pizzahut.com], category: dining }
+- { id: wendys, name: "Wendy's", aliases: [wendys], category: dining.fast_food }
+- {
+    id: dunkin,
+    name: "Dunkin'",
+    aliases: [dunkin, dunkin donuts],
+    category: dining.fast_food,
+  }
+- {
+    id: burger-king,
+    name: Burger King,
+    aliases: [bk],
+    category: dining.fast_food,
+  }
+- { id: subway, name: Subway, category: dining.fast_food }
+- {
+    id: dominos,
+    name: "Domino's",
+    aliases: [dominos, dominos pizza],
+    domains: [dominos.com],
+    category: dining.fast_food,
+  }
+- {
+    id: sonic,
+    name: Sonic Drive-In,
+    aliases: [sonic],
+    category: dining.fast_food,
+  }
+- {
+    id: popeyes,
+    name: Popeyes,
+    aliases: [popeyes louisiana kitchen],
+    category: dining.fast_food,
+  }
+- {
+    id: kfc,
+    name: KFC,
+    aliases: [kentucky fried chicken],
+    category: dining.fast_food,
+  }
+- {
+    id: dairy-queen,
+    name: Dairy Queen,
+    aliases: [dq],
+    category: dining.fast_food,
+  }
+- {
+    id: jersey-mikes,
+    name: "Jersey Mike's Subs",
+    aliases: [jersey mikes],
+    category: dining.fast_food,
+  }
+- { id: arbys, name: "Arby's", aliases: [arbys], category: dining.fast_food }
+- {
+    id: little-caesars,
+    name: Little Caesars,
+    aliases: [little caesars pizza],
+    domains: [littlecaesars.com],
+    category: dining.fast_food,
+  }
+- {
+    id: papa-johns,
+    name: "Papa John's",
+    aliases: [papa johns],
+    domains: [papajohns.com],
+    category: dining.fast_food,
+  }
+- { id: jack-in-the-box, name: Jack in the Box, category: dining.fast_food }
+- { id: whataburger, name: Whataburger, category: dining.fast_food }
+- { id: panda-express, name: Panda Express, category: dining.fast_food }
+- {
+    id: raising-canes,
+    name: "Raising Cane's",
+    aliases: [raising canes, canes],
+    category: dining.fast_food,
+  }
+- { id: wingstop, name: Wingstop, category: dining.fast_food }
+- {
+    id: culvers,
+    name: "Culver's",
+    aliases: [culvers],
+    category: dining.fast_food,
+  }
+- { id: zaxbys, name: "Zaxby's", aliases: [zaxbys], category: dining.fast_food }
+- {
+    id: jimmy-johns,
+    name: "Jimmy John's",
+    aliases: [jimmy johns],
+    category: dining.fast_food,
+  }
+- { id: firehouse-subs, name: Firehouse Subs, category: dining.fast_food }
+- {
+    id: bojangles,
+    name: Bojangles,
+    aliases: [bojangles famous chicken n biscuits],
+    category: dining.fast_food,
+  }
+- {
+    id: dutch-bros,
+    name: Dutch Bros Coffee,
+    aliases: [dutch bros],
+    category: dining.fast_food,
+  }
+- {
+    id: qdoba,
+    name: Qdoba Mexican Eats,
+    aliases: [qdoba, qdoba mexican grill],
+    category: dining.fast_food,
+  }
+- { id: del-taco, name: Del Taco, category: dining.fast_food }
+- { id: el-pollo-loco, name: El Pollo Loco, category: dining.fast_food }
+- {
+    id: carls-jr,
+    name: "Carl's Jr.",
+    aliases: [carls jr, carls junior],
+    category: dining.fast_food,
+  }
 
 # Gas and EV charging
 - { id: shell, name: Shell, category: gas }
@@ -88,11 +433,58 @@
   }
 - { id: electrify-america, name: Electrify America, category: ev_charging }
 - { id: chargepoint, name: ChargePoint, category: ev_charging }
+- { id: bp, name: BP, aliases: [bp gas], category: gas }
+- { id: marathon, name: Marathon, aliases: [marathon gas], category: gas }
+- { id: sunoco, name: Sunoco, category: gas }
+- { id: valero, name: Valero, category: gas }
+- { id: citgo, name: Citgo, category: gas }
+- { id: phillips-66, name: Phillips 66, category: gas }
+- { id: evgo, name: EVgo, aliases: [evgo fast charging], category: ev_charging }
+- { id: blink-charging, name: Blink Charging, category: ev_charging }
 
 # Transit
 - { id: uber, name: Uber, category: transit.rideshare }
 - { id: uber-one, name: Uber One, category: other }
 - { id: lyft, name: Lyft, category: transit.rideshare }
+- { id: amtrak, name: Amtrak, domains: [amtrak.com], category: transit }
+- {
+    id: greyhound,
+    name: Greyhound,
+    aliases: [greyhound lines],
+    domains: [greyhound.com],
+    category: transit,
+  }
+- {
+    id: mta,
+    name: MTA,
+    aliases:
+      [
+        metropolitan transportation authority,
+        nyc subway,
+        omny,
+        lirr,
+        long island rail road,
+        metro north,
+      ],
+    category: transit,
+  }
+- { id: bart, name: BART, aliases: [bay area rapid transit], category: transit }
+- {
+    id: nj-transit,
+    name: NJ Transit,
+    aliases: [new jersey transit],
+    domains: [njtransit.com],
+    category: transit,
+  }
+- { id: septa, name: SEPTA, domains: [septa.org], category: transit }
+- {
+    id: mbta,
+    name: MBTA,
+    aliases: [massachusetts bay transportation authority],
+    domains: [mbta.com],
+    category: transit,
+  }
+- { id: metra, name: Metra, aliases: [metra rail], category: transit }
 
 # Streaming, TV, internet, phone, utilities
 - { id: netflix, name: Netflix, category: streaming }
@@ -139,10 +531,112 @@
     aliases: [southern california gas],
     category: utilities,
   }
+- {
+    id: cox,
+    name: Cox Communications,
+    aliases: [cox, cox internet],
+    domains: [cox.com],
+    category: tv_internet,
+  }
+- {
+    id: optimum,
+    name: Optimum,
+    aliases: [altice, optimum internet],
+    domains: [optimum.com],
+    category: tv_internet,
+  }
+- { id: directv, name: DIRECTV, domains: [directv.com], category: tv_internet }
+- {
+    id: dish,
+    name: DISH Network,
+    aliases: [dish],
+    domains: [dish.com],
+    category: tv_internet,
+  }
+- {
+    id: frontier-communications,
+    name: Frontier Communications,
+    aliases: [frontier internet, frontier fiber],
+    domains: [frontier.com],
+    category: tv_internet,
+  }
+- {
+    id: cricket-wireless,
+    name: Cricket Wireless,
+    aliases: [cricket],
+    domains: [cricketwireless.com],
+    category: phone,
+  }
+- {
+    id: metro-by-t-mobile,
+    name: Metro by T-Mobile,
+    aliases: [metropcs, metro pcs],
+    domains: [metrobyt-mobile.com],
+    category: phone,
+  }
+- {
+    id: boost-mobile,
+    name: Boost Mobile,
+    domains: [boostmobile.com],
+    category: phone,
+  }
+- {
+    id: visible,
+    name: Visible,
+    aliases: [visible wireless],
+    domains: [visible.com],
+    category: phone,
+  }
+- {
+    id: mint-mobile,
+    name: Mint Mobile,
+    domains: [mintmobile.com],
+    category: phone,
+  }
+- {
+    id: pge,
+    name: PG&E,
+    aliases: [pacific gas and electric, pacific gas & electric, pg and e],
+    domains: [pge.com],
+    category: utilities,
+  }
+- {
+    id: con-edison,
+    name: Con Edison,
+    aliases: [coned, con ed, consolidated edison],
+    domains: [coned.com],
+    category: utilities,
+  }
+- {
+    id: duke-energy,
+    name: Duke Energy,
+    domains: [duke-energy.com],
+    category: utilities,
+  }
+- {
+    id: dominion-energy,
+    name: Dominion Energy,
+    domains: [dominionenergy.com],
+    category: utilities,
+  }
+- {
+    id: georgia-power,
+    name: Georgia Power,
+    domains: [georgiapower.com],
+    category: utilities,
+  }
+- {
+    id: fpl,
+    name: Florida Power & Light,
+    aliases: [fpl, florida power and light],
+    domains: [fpl.com],
+    category: utilities,
+  }
 
 # Drugstores
 - { id: cvs, name: CVS Pharmacy, aliases: [cvs], category: drugstore }
 - { id: walgreens, name: Walgreens, category: drugstore }
+- { id: duane-reade, name: Duane Reade, category: drugstore }
 
 # Entertainment and fitness
 - {
@@ -154,6 +648,73 @@
 - { id: regal, name: Regal Cinemas, aliases: [regal], category: movie_theaters }
 - { id: planet-fitness, name: Planet Fitness, category: fitness }
 - { id: twenty-four-hour-fitness, name: 24 Hour Fitness, category: fitness }
+- {
+    id: cinemark,
+    name: Cinemark,
+    aliases: [cinemark theatres],
+    domains: [cinemark.com],
+    category: movie_theaters,
+  }
+- {
+    id: marcus-theatres,
+    name: Marcus Theatres,
+    aliases: [marcus theaters],
+    domains: [marcustheatres.com],
+    category: movie_theaters,
+  }
+- {
+    id: harkins,
+    name: Harkins Theatres,
+    aliases: [harkins, harkins theaters],
+    domains: [harkins.com],
+    category: movie_theaters,
+  }
+- {
+    id: ticketmaster,
+    name: Ticketmaster,
+    domains: [ticketmaster.com],
+    category: entertainment,
+  }
+- {
+    id: live-nation,
+    name: Live Nation,
+    domains: [livenation.com],
+    category: entertainment,
+  }
+- {
+    id: la-fitness,
+    name: LA Fitness,
+    domains: [lafitness.com],
+    category: fitness,
+  }
+- {
+    id: anytime-fitness,
+    name: Anytime Fitness,
+    domains: [anytimefitness.com],
+    category: fitness,
+  }
+- {
+    id: crunch-fitness,
+    name: Crunch Fitness,
+    aliases: [crunch],
+    domains: [crunch.com],
+    category: fitness,
+  }
+- {
+    id: orangetheory,
+    name: Orangetheory Fitness,
+    aliases: [orangetheory, orange theory],
+    domains: [orangetheory.com],
+    category: fitness,
+  }
+- { id: equinox, name: Equinox, domains: [equinox.com], category: fitness }
+- {
+    id: life-time,
+    name: Life Time,
+    aliases: [lifetime fitness, life time fitness],
+    domains: [lifetime.life],
+    category: fitness,
+  }
 
 # Shopping
 - { id: macys, name: "Macy's", aliases: [macys], category: department_store }
@@ -270,6 +831,208 @@
   }
 - { id: etsy, name: Etsy, domains: [etsy.com], category: other }
 - { id: ebay, name: eBay, domains: [ebay.com], category: other }
+- {
+    id: jcpenney,
+    name: JCPenney,
+    aliases: [jcp, jc penney, j c penney, penneys],
+    domains: [jcpenney.com],
+    category: department_store,
+  }
+- {
+    id: dillards,
+    name: "Dillard's",
+    aliases: [dillards],
+    domains: [dillards.com],
+    category: department_store,
+  }
+- { id: belk, name: Belk, domains: [belk.com], category: department_store }
+- {
+    id: bloomingdales,
+    name: "Bloomingdale's",
+    aliases: [bloomingdales],
+    domains: [bloomingdales.com],
+    category: department_store,
+  }
+- {
+    id: saks-fifth-avenue,
+    name: Saks Fifth Avenue,
+    aliases: [saks],
+    domains: [saksfifthavenue.com],
+    category: department_store,
+  }
+- {
+    id: saks-off-5th,
+    name: Saks Off 5th,
+    aliases: [off 5th, saks off fifth],
+    domains: [saksoff5th.com],
+    category: department_store,
+  }
+- {
+    id: lululemon,
+    name: Lululemon,
+    aliases: [lululemon athletica],
+    domains: [lululemon.com],
+    category: clothing,
+  }
+- {
+    id: abercrombie,
+    name: Abercrombie & Fitch,
+    aliases: [abercrombie, abercrombie and fitch],
+    domains: [abercrombie.com],
+    category: clothing,
+  }
+- {
+    id: hollister,
+    name: Hollister,
+    aliases: [hollister co],
+    domains: [hollisterco.com],
+    category: clothing,
+  }
+- {
+    id: urban-outfitters,
+    name: Urban Outfitters,
+    domains: [urbanoutfitters.com],
+    category: clothing,
+  }
+- {
+    id: anthropologie,
+    name: Anthropologie,
+    domains: [anthropologie.com],
+    category: clothing,
+  }
+- {
+    id: free-people,
+    name: Free People,
+    domains: [freepeople.com],
+    category: clothing,
+  }
+- {
+    id: micro-center,
+    name: Micro Center,
+    aliases: [microcenter],
+    domains: [microcenter.com],
+    category: electronics,
+  }
+- { id: newegg, name: Newegg, domains: [newegg.com], category: electronics }
+- {
+    id: academy-sports,
+    name: Academy Sports + Outdoors,
+    aliases: [academy sports, academy sports and outdoors],
+    domains: [academy.com],
+    category: sporting_goods,
+  }
+- {
+    id: bass-pro-shops,
+    name: Bass Pro Shops,
+    aliases: [bass pro],
+    domains: [basspro.com],
+    category: sporting_goods,
+  }
+- {
+    id: cabelas,
+    name: "Cabela's",
+    aliases: [cabelas],
+    category: sporting_goods,
+    note: "U.S. Bank's sample list says Cabelas.com purchases don't count as sporting goods.",
+  }
+- {
+    id: big-5,
+    name: Big 5 Sporting Goods,
+    aliases: [big 5, big five sporting goods],
+    domains: [big5sportinggoods.com],
+    category: sporting_goods,
+  }
+- {
+    id: hibbett,
+    name: Hibbett,
+    aliases: [hibbett sports],
+    domains: [hibbett.com],
+    category: sporting_goods,
+  }
+- {
+    id: scheels,
+    name: Scheels,
+    domains: [scheels.com],
+    category: sporting_goods,
+  }
+- {
+    id: menards,
+    name: Menards,
+    domains: [menards.com],
+    category: home_improvement,
+  }
+- {
+    id: ace-hardware,
+    name: Ace Hardware,
+    domains: [acehardware.com],
+    category: home_improvement,
+  }
+- {
+    id: true-value,
+    name: True Value,
+    aliases: [true value hardware],
+    domains: [truevalue.com],
+    category: home_improvement,
+  }
+- {
+    id: ashley,
+    name: Ashley,
+    aliases: [ashley furniture, ashley homestore],
+    category: furniture,
+  }
+- {
+    id: rooms-to-go,
+    name: Rooms To Go,
+    domains: [roomstogo.com],
+    category: furniture,
+  }
+- {
+    id: bobs-discount-furniture,
+    name: "Bob's Discount Furniture",
+    aliases: [bobs discount furniture, bobs furniture],
+    domains: [mybobs.com],
+    category: furniture,
+  }
+- {
+    id: la-z-boy,
+    name: La-Z-Boy,
+    aliases: [lazboy, la z boy],
+    domains: [la-z-boy.com],
+    category: furniture,
+  }
+- {
+    id: ethan-allen,
+    name: Ethan Allen,
+    domains: [ethanallen.com],
+    category: furniture,
+  }
+- {
+    id: rh,
+    name: RH,
+    aliases: [restoration hardware],
+    domains: [rh.com],
+    category: furniture,
+  }
+- {
+    id: havertys,
+    name: Havertys,
+    aliases: [havertys furniture],
+    domains: [havertys.com],
+    category: furniture,
+  }
+- {
+    id: five-below,
+    name: Five Below,
+    domains: [fivebelow.com],
+    category: other,
+  }
+- {
+    id: ollies,
+    name: "Ollie's Bargain Outlet",
+    aliases: [ollies],
+    domains: [ollies.us],
+    category: other,
+  }
 
 # Travel
 - {
@@ -318,7 +1081,32 @@
     domains: [hawaiianairlines.com],
     category: travel.flights,
   }
-- { id: marriott, name: Marriott, category: travel.hotels }
+- id: marriott
+  name: Marriott
+  aliases:
+    [
+      marriott bonvoy,
+      courtyard by marriott,
+      residence inn,
+      fairfield inn,
+      springhill suites,
+      towneplace suites,
+      jw marriott,
+      sheraton,
+      westin,
+      w hotels,
+      ritz carlton,
+      st regis,
+      renaissance hotels,
+      le meridien,
+      aloft hotels,
+      element hotels,
+      moxy hotels,
+      ac hotels,
+      four points by sheraton,
+    ]
+  domains: [marriott.com]
+  category: travel.hotels
 - {
     id: ihg,
     name: IHG Hotels & Resorts,
@@ -341,11 +1129,32 @@
         garner hotel,
         ruby hotels,
         hualuxe,
+        ihg,
       ],
     domains: [ihg.com],
     category: travel.hotels,
   }
-- { id: hilton, name: Hilton, category: travel.hotels }
+- id: hilton
+  name: Hilton
+  aliases:
+    [
+      hilton honors,
+      hampton inn,
+      hampton by hilton,
+      hilton garden inn,
+      doubletree,
+      embassy suites,
+      homewood suites,
+      home2 suites,
+      tru by hilton,
+      waldorf astoria,
+      conrad hotels,
+      curio collection,
+      tapestry collection,
+      canopy by hilton,
+    ]
+  domains: [hilton.com]
+  category: travel.hotels
 - { id: hertz, name: Hertz, category: travel.car_rental }
 - {
     id: enterprise,
@@ -383,6 +1192,236 @@
   aliases: [homestay]
   domains: [homestay.com]
   category: travel
+- {
+    id: jetblue,
+    name: JetBlue,
+    aliases: [jetblue airways, jet blue],
+    domains: [jetblue.com],
+    category: travel.flights,
+  }
+- {
+    id: spirit-airlines,
+    name: Spirit Airlines,
+    domains: [spirit.com],
+    category: travel.flights,
+  }
+- {
+    id: frontier-airlines,
+    name: Frontier Airlines,
+    aliases: [fly frontier],
+    domains: [flyfrontier.com],
+    category: travel.flights,
+  }
+- {
+    id: allegiant,
+    name: Allegiant Air,
+    aliases: [allegiant],
+    domains: [allegiantair.com],
+    category: travel.flights,
+  }
+- {
+    id: sun-country,
+    name: Sun Country Airlines,
+    aliases: [sun country],
+    domains: [suncountry.com],
+    category: travel.flights,
+  }
+- {
+    id: hyatt,
+    name: Hyatt,
+    aliases:
+      [
+        world of hyatt,
+        hyatt regency,
+        grand hyatt,
+        park hyatt,
+        hyatt place,
+        hyatt house,
+        andaz,
+        hyatt centric,
+        thompson hotels,
+        alila,
+      ],
+    domains: [hyatt.com],
+    category: travel.hotels,
+  }
+- {
+    id: wyndham,
+    name: Wyndham Hotels & Resorts,
+    aliases:
+      [
+        wyndham,
+        la quinta,
+        days inn,
+        super 8,
+        ramada,
+        microtel,
+        baymont,
+        howard johnson,
+        travelodge,
+        wingate by wyndham,
+      ],
+    domains: [wyndhamhotels.com],
+    category: travel.hotels,
+  }
+- {
+    id: choice-hotels,
+    name: Choice Hotels,
+    aliases:
+      [
+        comfort inn,
+        comfort suites,
+        quality inn,
+        sleep inn,
+        clarion,
+        econo lodge,
+        rodeway inn,
+        cambria hotels,
+        mainstay suites,
+      ],
+    domains: [choicehotels.com],
+    category: travel.hotels,
+  }
+- {
+    id: best-western,
+    name: Best Western,
+    aliases: [best western plus],
+    domains: [bestwestern.com],
+    category: travel.hotels,
+  }
+- {
+    id: motel-6,
+    name: Motel 6,
+    aliases: [studio 6],
+    domains: [motel6.com],
+    category: travel.hotels,
+  }
+- {
+    id: red-roof,
+    name: Red Roof,
+    aliases: [red roof inn],
+    domains: [redroof.com],
+    category: travel.hotels,
+  }
+- {
+    id: avis,
+    name: Avis,
+    aliases: [avis car rental, avis rent a car],
+    domains: [avis.com],
+    category: travel.car_rental,
+  }
+- {
+    id: budget,
+    name: Budget Car Rental,
+    aliases: [budget rent a car],
+    domains: [budget.com],
+    category: travel.car_rental,
+  }
+- {
+    id: national-car-rental,
+    name: National Car Rental,
+    aliases: [national car],
+    domains: [nationalcar.com],
+    category: travel.car_rental,
+  }
+- {
+    id: alamo,
+    name: Alamo,
+    aliases: [alamo rent a car, alamo car rental],
+    domains: [alamo.com],
+    category: travel.car_rental,
+  }
+- {
+    id: thrifty,
+    name: Thrifty,
+    aliases: [thrifty car rental],
+    domains: [thrifty.com],
+    category: travel.car_rental,
+  }
+- {
+    id: dollar-car-rental,
+    name: Dollar Rent A Car,
+    aliases: [dollar car rental],
+    domains: [dollar.com],
+    category: travel.car_rental,
+  }
+- {
+    id: hotels-com,
+    name: Hotels.com,
+    aliases: [hotels com],
+    domains: [hotels.com],
+    category: travel,
+    note: "Codes as a travel agency, so hotel-direct bonuses don't apply.",
+  }
+- {
+    id: priceline,
+    name: Priceline,
+    domains: [priceline.com],
+    category: travel,
+    note: "Codes as a travel agency, so airline- and hotel-direct bonuses don't apply.",
+  }
+- {
+    id: orbitz,
+    name: Orbitz,
+    domains: [orbitz.com],
+    category: travel,
+    note: "Codes as a travel agency, so airline- and hotel-direct bonuses don't apply.",
+  }
+- {
+    id: travelocity,
+    name: Travelocity,
+    domains: [travelocity.com],
+    category: travel,
+    note: "Codes as a travel agency, so airline- and hotel-direct bonuses don't apply.",
+  }
+- {
+    id: hopper,
+    name: Hopper,
+    domains: [hopper.com],
+    category: travel,
+    note: "Codes as a travel agency, so airline- and hotel-direct bonuses don't apply.",
+  }
+- {
+    id: carnival,
+    name: Carnival Cruise Line,
+    aliases: [carnival, carnival cruises],
+    domains: [carnival.com],
+    category: travel.cruise,
+  }
+- {
+    id: royal-caribbean,
+    name: Royal Caribbean,
+    aliases: [royal caribbean international],
+    domains: [royalcaribbean.com],
+    category: travel.cruise,
+  }
+- {
+    id: norwegian-cruise-line,
+    name: Norwegian Cruise Line,
+    aliases: [ncl, norwegian cruise],
+    domains: [ncl.com],
+    category: travel.cruise,
+  }
+- {
+    id: princess-cruises,
+    name: Princess Cruises,
+    aliases: [princess cruise],
+    domains: [princess.com],
+    category: travel.cruise,
+  }
+- {
+    id: disney-cruise-line,
+    name: Disney Cruise Line,
+    aliases: [disney cruise],
+    category: travel.cruise,
+  }
+- {
+    id: celebrity-cruises,
+    name: Celebrity Cruises,
+    aliases: [celebrity cruise],
+    domains: [celebritycruises.com],
+    category: travel.cruise,
+  }
 
 # Streaming services on Citi Custom Cash's list
 - {
@@ -392,6 +1431,13 @@
     category: streaming,
   }
 - { id: apple-music, name: Apple Music, category: streaming }
+- {
+    id: discovery-plus,
+    name: Discovery+,
+    aliases: [discovery plus],
+    domains: [discoveryplus.com],
+    category: streaming,
+  }
 - {
     id: directv-stream,
     name: DIRECTV STREAM,
@@ -476,4 +1522,11 @@
     name: Meta ads,
     aliases: [facebook ads, instagram ads],
     category: online_advertising,
+  }
+- {
+    id: dhl,
+    name: DHL,
+    aliases: [dhl express],
+    domains: [dhl.com],
+    category: shipping,
   }
