@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../../src/data/load.ts'
 import { recommend } from '../../src/engine/recommend.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
+import { resolveSpendLines, simulateWallet } from '../../src/engine/simulate.ts'
 import type {
   Purchase,
   RankedCard,
@@ -9,7 +10,7 @@ import type {
 } from '../../src/engine/types.ts'
 import { CardSchema } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
-import type { Wallet } from '../../src/schema/wallet.ts'
+import { WalletSchema, type Wallet } from '../../src/schema/wallet.ts'
 import {
   PROFILES,
   TODAY,
@@ -651,3 +652,150 @@ goldenTest(
     expect(prime.effectiveReturnPct).toBeCloseTo(3)
   },
 )
+
+describe('#23 spend milestones', () => {
+  // IHG One Rewards: "Earn 10,000 bonus points after you spend $15,000 on
+  // purchases each calendar year." 3x at restaurants, 2x elsewhere, IHG
+  // points at 0.5¢ by default.
+  const IHG = 'chase-ihg-one-rewards'
+  const withIhg =
+    (milestoneUsage?: Record<string, { period: string; spent: number }>) =>
+    (w: Wallet): Wallet => ({
+      ...w,
+      cards: [
+        ...w.cards,
+        {
+          id: IHG,
+          cap_usage: {},
+          activated: [],
+          ...(milestoneUsage ? { milestone_usage: milestoneUsage } : {}),
+        },
+      ],
+    })
+  const dinner = (overrides: Partial<Purchase> = {}) =>
+    purchase('Chipotle', { amount: 100, channel: 'in_store', ...overrides })
+  const flat = (w: Wallet) => withProfile(w, 'flat')
+
+  goldenTest(
+    '#23a a purchase that crosses $15,000 earns the 10,000 points on top of its rate',
+    () => {
+      const wallet = flat(
+        withIhg({ 'spend-15k': { period: '2026', spent: 14950 } })(
+          baseWallet(),
+        ),
+      )
+      const rec = recommend(catalog, wallet, dinner())
+      expect(rec.decision?.cardId).toBe(IHG)
+      const ihg = entry(rec, IHG)
+      expect(ihg.rate).toBe(3)
+      expect(ihg.earned).toBeCloseTo(51.5)
+      expect(ihg.effectiveReturnPct).toBeCloseTo(51.5)
+      expectSome(
+        ihg.reasoning,
+        /This purchase reaches the \$15,000 calendar-year spend for 10,000 bonus points/,
+      )
+      expectSome(rec.assumptions, /\$14,950.*2026/)
+    },
+  )
+
+  goldenTest('#23b reaching the threshold exactly counts', () => {
+    const wallet = flat(
+      withIhg({ 'spend-15k': { period: '2026', spent: 14900 } })(baseWallet()),
+    )
+    const ihg = entry(recommend(catalog, wallet, dinner()), IHG)
+    expect(ihg.earned).toBeCloseTo(51.5)
+  })
+
+  goldenTest(
+    "#23c a purchase that doesn't cross it earns only its rate",
+    () => {
+      for (const spent of [10000, 15000]) {
+        const wallet = flat(
+          withIhg({ 'spend-15k': { period: '2026', spent } })(baseWallet()),
+        )
+        const rec = recommend(catalog, wallet, dinner())
+        expect(rec.decision?.cardId).toBe('amex-gold')
+        const ihg = entry(rec, IHG)
+        expect(ihg.effectiveReturnPct).toBeCloseTo(1.5)
+        expect(ihg.earned).toBeCloseTo(1.5)
+        expect(ihg.reasoning.join(' ')).not.toMatch(/bonus points/)
+      }
+    },
+  )
+
+  goldenTest("#23d last year's tracked spend doesn't count", () => {
+    const wallet = flat(
+      withIhg({ 'spend-15k': { period: '2025', spent: 14950 } })(baseWallet()),
+    )
+    const rec = recommend(catalog, wallet, dinner())
+    expect(rec.decision?.cardId).toBe('amex-gold')
+    expect(entry(rec, IHG).effectiveReturnPct).toBeCloseTo(1.5)
+  })
+
+  goldenTest(
+    '#23e with no tracking, or no amount, the answer is unchanged',
+    () => {
+      const untracked = recommend(
+        catalog,
+        flat(withIhg()(baseWallet())),
+        dinner(),
+      )
+      expect(untracked.decision?.cardId).toBe('amex-gold')
+      expect(entry(untracked, IHG).effectiveReturnPct).toBeCloseTo(1.5)
+
+      const tracked = flat(
+        withIhg({ 'spend-15k': { period: '2026', spent: 14950 } })(
+          baseWallet(),
+        ),
+      )
+      const noAmount = recommend(catalog, tracked, dinner({ amount: null }))
+      expect(noAmount.decision?.cardId).toBe('amex-gold')
+      expect(entry(noAmount, IHG).effectiveReturnPct).toBeCloseTo(1.5)
+    },
+  )
+
+  goldenTest('#23f recording a purchase adds to the milestone spend', () => {
+    const wallet = flat(
+      withIhg({ 'spend-15k': { period: '2026', spent: 14900 } })(baseWallet()),
+    )
+    const booked = bookPurchase(catalog, wallet, {
+      cardId: IHG,
+      merchant: 'Chipotle',
+      amount: 200,
+      date: TODAY,
+      channel: 'in_store',
+    })
+    const held = booked.wallet.cards.find((c) => c.id === IHG)
+    expect(held?.milestone_usage?.['spend-15k']).toEqual({
+      period: '2026',
+      spent: 15100,
+    })
+    const next = recommend(catalog, booked.wallet, dinner())
+    expect(entry(next, IHG).effectiveReturnPct).toBeCloseTo(1.5)
+  })
+
+  goldenTest(
+    '#23g simulate_spending counts the points at $20,000 a year, not at $10,000',
+    () => {
+      const ihgOnly = WalletSchema.parse({ cards: [{ id: IHG }] })
+      const yearOf = (dollars: number) =>
+        simulateWallet(
+          catalog,
+          ihgOnly,
+          resolveSpendLines(catalog, [
+            { merchant: null, category: 'other', monthly: dollars / 12 },
+          ]),
+          '2027-01-01',
+        )
+      const twenty = yearOf(20000)
+      expect(twenty.rewards).toBeCloseTo(250)
+      expectSome(
+        twenty.notes,
+        /\$15,000 calendar-year spend for 10,000 bonus points/,
+      )
+      const ten = yearOf(10000)
+      expect(ten.rewards).toBeCloseTo(100)
+      expect(ten.notes.join(' ')).not.toMatch(/bonus points/)
+    },
+  )
+})

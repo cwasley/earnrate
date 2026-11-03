@@ -21,8 +21,9 @@ import {
 } from './memberships.ts'
 import { choicePeriod, periodKey } from './periods.ts'
 import { applyBooking, capBooking } from './record.ts'
+import { milestoneWhat } from './milestones.ts'
 import { rotationGap } from './rotation.ts'
-import { money, roundCents } from './text.ts'
+import { money, roundCents, wholeDollars } from './text.ts'
 import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
 import { EPSILON, HALF_CENT } from './compare.ts'
@@ -62,7 +63,17 @@ export type Simulation = {
   membershipFees: number
   net: number // rewards minus annual fees and membership fees
   lines: LineResult[]
+  // Spend milestones the year's spending on a card reaches; their points
+  // are in `rewards`.
+  milestones: SimulatedMilestone[]
   notes: string[]
+}
+
+export type SimulatedMilestone = {
+  cardId: string
+  milestoneId: string
+  points: number | null
+  value: number // dollars, at the point values given
 }
 
 export type SimulateOptions = {
@@ -217,7 +228,33 @@ export function simulateWallet(
       cards: [...r.byCard].sort((a, b) => b[1] - a[1]).map(([id]) => id),
     }
   })
-  const rewards = roundCents(lineResults.reduce((sum, l) => sum + l.earned, 0))
+  // A year of these amounts is taken as every year's: a calendar-year or
+  // cardmember-year total is the same twelve months' spending.
+  const milestones: SimulatedMilestone[] = []
+  const milestoneNotes: string[] = []
+  for (const { card, cents } of cards) {
+    const spent = results.reduce(
+      (sum, r) => sum + (r.byCard.get(card.id) ?? 0),
+      0,
+    )
+    for (const m of card.milestones) {
+      if (spent + EPSILON < m.spend) continue
+      const value = roundCents(((m.points ?? 0) * cents) / 100)
+      milestones.push({
+        cardId: card.id,
+        milestoneId: m.id,
+        points: m.points ?? null,
+        value,
+      })
+      milestoneNotes.push(
+        `${card.name}: ${wholeDollars(spent)} a year on it reaches ${milestoneWhat(m)}${m.points === undefined ? '' : ` (about ${money(value)}, counted in its rewards)`}, assuming the same spending each year.`,
+      )
+    }
+  }
+  const rewards = roundCents(
+    lineResults.reduce((sum, l) => sum + l.earned, 0) +
+      milestones.reduce((sum, m) => sum + m.value, 0),
+  )
   const annualFees = cards.reduce((sum, c) => sum + (c.card.annual_fee ?? 0), 0)
   const paid = paidMemberships(catalog, {
     memberships: wallet.memberships,
@@ -230,7 +267,7 @@ export function simulateWallet(
     paid,
   )
   const membershipFees = memberships.reduce((sum, m) => sum + m.annualFee, 0)
-  const notes: string[] = []
+  const notes: string[] = [...milestoneNotes]
   for (const m of memberships) notes.push(membershipNote(catalog, m))
   const dates = monthDates(start)
   for (const { card } of cards) {
@@ -268,6 +305,7 @@ export function simulateWallet(
     membershipFees,
     net: roundCents(rewards - annualFees - membershipFees),
     lines: lineResults,
+    milestones,
     notes,
   }
 }

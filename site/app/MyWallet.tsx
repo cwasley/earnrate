@@ -9,6 +9,7 @@ import {
 } from '../../src/engine/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
 import { activationGroup } from '../../src/engine/evaluate.ts'
+import { milestoneSummaries } from '../../src/engine/milestones.ts'
 import { inEffect, localToday } from '../../src/engine/periods.ts'
 import { recommend } from '../../src/engine/recommend.ts'
 import {
@@ -250,6 +251,19 @@ function bonusLine(wallet: Wallet, held: WalletCard): string | null {
   return `Welcome bonus: ${wholeDollars(status.spent)} of ${wholeDollars(status.spend)}${days}`
 }
 
+// The next spend milestone still ahead this period, or the last one reached.
+function milestoneLine(held: WalletCard): string | null {
+  const card = cards.get(held.id)
+  if (!card) return null
+  const all = milestoneSummaries(card, held, localToday())
+  const tracked = all.filter((m) => m.tracked)
+  const next = tracked.find((m) => m.spent < m.spend) ?? tracked.at(-1)
+  if (!next) return null
+  return next.spent >= next.spend
+    ? `Spend bonus: ${wholeDollars(next.spend)} reached`
+    : `Spend bonus: ${wholeDollars(next.spent)} of ${wholeDollars(next.spend)}`
+}
+
 function CardEditor({
   wallet,
   held,
@@ -271,6 +285,11 @@ function CardEditor({
   const [tracking, setTracking] = useState(held.bonus !== undefined)
   const [opened, setOpened] = useState(held.bonus?.opened ?? '')
   const [spent, setSpent] = useState(held.bonus ? String(held.bonus.spent) : '')
+  const milestones = card ? milestoneSummaries(card, held, localToday()) : []
+  const trackedSpend = milestones.find((m) => m.tracked)
+  const [yearSpent, setYearSpent] = useState(
+    trackedSpend ? String(trackedSpend.spent) : '',
+  )
   if (!info || !card) return null
   const offer = card.welcome_offer
 
@@ -284,6 +303,13 @@ function CardEditor({
     if (tracking && opened !== '')
       input.bonus = { opened, spent: Math.max(0, Number(spent) || 0) }
     else if (!tracking && held.bonus) input.bonus = null
+    // Every purchase counts toward every milestone, so one total sets them all.
+    if (milestones.length > 0 && yearSpent !== '') {
+      const dollars = Math.max(0, Number(yearSpent) || 0)
+      input.milestoneSpent = Object.fromEntries(
+        milestones.map((m) => [m.id, dollars]),
+      )
+    }
     onChange(updateInWallet(catalog, wallet, input, localToday()), held.id)
   }
 
@@ -390,6 +416,27 @@ function CardEditor({
           ) : null}
         </fieldset>
       ) : null}
+      {milestones.length > 0 ? (
+        <fieldset>
+          <legend>Spend bonus</legend>
+          <ul class="muted small">
+            {info.milestones.map((m) => (
+              <li key={m.id}>{m.text}</li>
+            ))}
+          </ul>
+          <label class="field">
+            Spent on this card so far this year
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              placeholder="Not tracked"
+              value={yearSpent}
+              onInput={(e) => setYearSpent(e.currentTarget.value)}
+            />
+          </label>
+        </fieldset>
+      ) : null}
       {info.needsAnniversary ? (
         <label class="field">
           Account anniversary (MM-DD), for its yearly cap
@@ -437,7 +484,7 @@ function CardList({
           const needsPick = info?.choices.some(
             (c) => c.default === null && !held.chosen?.picks[c.id],
           )
-          const note = bonusLine(wallet, held)
+          const note = bonusLine(wallet, held) ?? milestoneLine(held)
           return (
             <li key={held.id}>
               <button

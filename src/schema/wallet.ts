@@ -51,6 +51,8 @@ export const WalletCardSchema = z.strictObject({
     })
     .optional(),
   activated: z.array(KebabId).default([]),
+  // Keyed by milestone id: every purchase on the card this period.
+  milestone_usage: z.record(KebabId, CapUsage).optional(),
   // A welcome bonus in progress. Terms default to the card's published
   // offer; set spend, by, points or dollars when yours was different.
   bonus: z

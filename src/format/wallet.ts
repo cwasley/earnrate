@@ -1,5 +1,9 @@
 import type { ChecklistItem } from '../engine/checklist.ts'
-import type { BonusBooking, CapBooking } from '../engine/record.ts'
+import type {
+  BonusBooking,
+  CapBooking,
+  MilestoneBooking,
+} from '../engine/record.ts'
 import { money, NETWORK_NAMES, shortDate } from '../engine/text.ts'
 import type { WalletSummary } from '../engine/wallet-summary.ts'
 
@@ -48,6 +52,8 @@ export function formatWalletSummary(summary: WalletSummary): string {
         lines.push(
           `  Cap on ${cap.label}: ${money(cap.spent)} of ${money(cap.amount)} used for ${cap.currentPeriod ?? ''} (cap key ${cap.key}).`,
         )
+    for (const m of c.milestones)
+      lines.push(`  Spend bonus (${m.id}): ${m.text}`)
     if (c.anniversary !== null)
       lines.push(`  Account anniversary: ${c.anniversary}.`)
     const b = c.bonus
@@ -74,6 +80,7 @@ export function formatBooking(
   cardId: string,
   cap: CapBooking | null,
   bonus: BonusBooking | null,
+  milestones: MilestoneBooking[] = [],
 ): string {
   const messages: string[] = []
   if (cap) {
@@ -88,6 +95,23 @@ export function formatBooking(
       left === 0
         ? `Welcome bonus spend met on ${cardId}: ${money(bonus.after)} of ${money(bonus.spend)}.`
         : `Welcome bonus on ${cardId}: ${money(bonus.after)} of ${money(bonus.spend)} spent, ${money(left)} to go by ${bonus.deadline ?? 'the deadline'}.`,
+    )
+  }
+  // Every milestone counts the same purchases, so one line covers them.
+  const first = milestones[0]
+  if (first) {
+    const reached = milestones.filter(
+      (m) => m.before < m.spend && m.after >= m.spend,
+    )
+    const next = milestones.find((m) => m.after < m.spend)
+    messages.push(
+      [
+        `Spend on ${cardId} this year: ${money(first.after)}.`,
+        ...reached.map(
+          (m) => `That reaches its ${money(m.spend)} spend bonus.`,
+        ),
+        ...(next ? [`${money(next.spend - next.after)} to its next one.`] : []),
+      ].join(' '),
     )
   }
   return messages.join(' ')

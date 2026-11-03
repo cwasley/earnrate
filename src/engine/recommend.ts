@@ -14,6 +14,12 @@ import {
   type CardEvaluation,
 } from './evaluate.ts'
 import { membershipName } from './memberships.ts'
+import {
+  milestonePoints,
+  milestonesReached,
+  reachedText,
+  type MilestoneHit,
+} from './milestones.ts'
 import { daysBetween } from './periods.ts'
 import { ruleWhat } from './rule-text.ts'
 import { rotationGap } from './rotation.ts'
@@ -56,6 +62,9 @@ type Entry = {
   held: WalletCard
   valuation: Valuation
   evaluation: CardEvaluation
+  // Spend milestones this purchase reaches, whose points count toward it.
+  milestones: MilestoneHit[]
+  perDollar: number // currency units per dollar, milestone points included
   effectiveReturnPct: number
   upside: number // return at the top of the currency's value range
 }
@@ -122,14 +131,25 @@ function rankEntries(
     }
     const valuation = cardValuation(catalog, wallet, card)
     const evaluation = evaluateCard(card, held, ctx)
-    const rate = evaluation.best.rate
+    const milestones = milestonesReached(
+      card,
+      held,
+      purchase.date,
+      purchase.amount,
+    )
+    const bonusPoints = milestonePoints(milestones)
+    const perDollar =
+      evaluation.best.rate +
+      (bonusPoints > 0 && purchase.amount ? bonusPoints / purchase.amount : 0)
     entries.push({
       card,
       held,
       valuation,
       evaluation,
-      effectiveReturnPct: rate * valuation.centsPerUnit,
-      upside: rate * (valuation.range?.[1] ?? valuation.centsPerUnit),
+      milestones,
+      perDollar,
+      effectiveReturnPct: perDollar * valuation.centsPerUnit,
+      upside: perDollar * (valuation.range?.[1] ?? valuation.centsPerUnit),
     })
   }
 
@@ -166,6 +186,8 @@ function reasoningFor(
       `${money(cap.remaining)} earns ${earnText(catalog, best.nominalRate, currency)} before the cap, then ${money(over)} earns ${earnText(catalog, best.afterCap ?? cap.cap.then_rate, currency)}: ${num(best.rate)} per dollar overall.`,
     )
   }
+
+  for (const hit of entry.milestones) lines.push(reachedText(card, hit))
 
   if (valuation.pooledFrom !== null) {
     const partners = card.pools_into?.when_wallet_has ?? []
@@ -322,8 +344,8 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
     const w = winner.valuation
     const o = other.valuation
     if (w.currency === o.currency) continue
-    const wRate = winner.evaluation.best.rate
-    const oRate = other.evaluation.best.rate
+    const wRate = winner.perDollar
+    const oRate = other.perDollar
 
     if (w.range && wRate > 0) {
       const threshold = other.effectiveReturnPct / wRate
@@ -387,6 +409,11 @@ function assumptionsFor(
     entries.map((e) => e.valuation),
   )
   if (values !== null) assumptions.push(values)
+  for (const e of entries)
+    for (const hit of e.milestones)
+      assumptions.push(
+        `Counts the ${money(hit.before)} tracked on ${displayName(e)} in ${hit.period} toward its ${wholeDollars(hit.spend)} spend bonus; spending earnrate wasn't told about isn't counted.`,
+      )
   return assumptions
 }
 

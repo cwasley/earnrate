@@ -1,5 +1,7 @@
 import { z } from 'zod'
-import { CapPeriod } from '../schema/card.ts'
+import { CapPeriod, MilestoneSchema } from '../schema/card.ts'
+
+const MilestonePeriod = MilestoneSchema.shape.period
 import { CardNetwork, Network } from '../schema/common.ts'
 
 // Mirrors the engine's result types. The SDK validates every structured
@@ -99,7 +101,14 @@ export const WalletSummarySchema = z.object({
   checklist: z
     .array(
       z.object({
-        kind: z.enum(['activate', 'pick', 'cap', 'bonus', 'rotation']),
+        kind: z.enum([
+          'activate',
+          'pick',
+          'cap',
+          'bonus',
+          'milestone',
+          'rotation',
+        ]),
         cardId: z.string(),
         text: z.string(),
         due: z.string().nullable(),
@@ -146,6 +155,20 @@ export const WalletSummarySchema = z.object({
           remaining: z.number().nullable(),
         }),
       ),
+      milestones: z.array(
+        z.object({
+          id: z.string(),
+          spend: z.number(),
+          period: MilestonePeriod,
+          currentPeriod: z.string().nullable(),
+          until: z.string().nullable(),
+          spent: z.number(),
+          tracked: z.boolean(),
+          points: z.number().nullable(),
+          rewards: z.array(z.string()),
+          text: z.string(),
+        }),
+      ),
       chosen: z
         .object({
           period: z.string(),
@@ -185,6 +208,16 @@ export const RecordResultSchema = z.object({
       deadline: z.string().nullable(),
     })
     .nullable(),
+  milestones: z.array(
+    z.object({
+      cardId: z.string(),
+      milestoneId: z.string(),
+      period: z.string(),
+      spend: z.number(),
+      before: z.number(),
+      after: z.number(),
+    }),
+  ),
   message: z.string(),
 })
 
@@ -252,6 +285,16 @@ export const CardSearchSchema = z.object({
         .nullable(),
       activation: z.array(z.string()),
       needsAnniversary: z.boolean(),
+      milestones: z.array(
+        z.object({
+          id: z.string(),
+          spend: z.number(),
+          period: MilestonePeriod,
+          points: z.number().nullable(),
+          rewards: z.array(z.string()),
+          text: z.string(),
+        }),
+      ),
     }),
   ),
 })
@@ -347,6 +390,14 @@ const SimulationSchema = z.object({
       earned: z.number(),
       returnPct: z.number(),
       cards: z.array(z.string()),
+    }),
+  ),
+  milestones: z.array(
+    z.object({
+      cardId: z.string(),
+      milestoneId: z.string(),
+      points: z.number().nullable(),
+      value: z.number(),
     }),
   ),
   notes: z.array(z.string()),

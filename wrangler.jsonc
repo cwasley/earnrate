@@ -10,6 +10,8 @@
   },
   "routes": [
     { "pattern": "earnrate.dev", "custom_domain": true },
+    // Kept attached for its DNS record and certificate. The zone's redirect
+    // rule sends www to earnrate.dev with a 308 before the Worker runs.
     { "pattern": "www.earnrate.dev", "custom_domain": true },
   ],
 }
