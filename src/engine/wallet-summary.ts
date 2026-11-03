@@ -11,7 +11,7 @@ import {
 import { membershipName } from './memberships.ts'
 import { milestoneSummaries, type MilestoneSummary } from './milestones.ts'
 import { optionName, ruleParts, ruleWhat } from './rule-text.ts'
-import { daysBetween, inEffect, periodEnd } from './periods.ts'
+import { choicePeriod, daysBetween, inEffect, periodEnd } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { activationRules } from './setup.ts'
@@ -34,6 +34,7 @@ export type CapSummary = {
   amount: number
   period: Cap['period']
   currentPeriod: string | null // null for a cardmember-year cap without an anniversary
+  until: string | null // the period's last day, YYYY-MM-DD
   spent: number
   remaining: number | null
 }
@@ -225,6 +226,13 @@ function toActivate(
   })
 }
 
+// Picks that carry over have no end date.
+function picksUntil(card: Card, key: string): string | null {
+  if (card.choices.every((c) => c.period === 'until_changed')) return null
+  const period = choicePeriod(card)
+  return period === null ? null : periodEnd(period, key, null)
+}
+
 function capSummaries(
   catalog: Catalog,
   card: Card,
@@ -257,6 +265,10 @@ function capSummaries(
       amount: cap.amount,
       period: cap.period,
       currentPeriod,
+      until:
+        currentPeriod === null
+          ? null
+          : periodEnd(cap.period, currentPeriod, held.anniversary ?? null),
       spent,
       remaining:
         currentPeriod === null ? null : Math.max(0, cap.amount - spent),
@@ -312,9 +324,7 @@ export function walletSummary(
             period: held.chosen.period,
             current: pickedCategories(card, held, today).staleChoice === null,
             // Picks that carry over have no end date.
-            until: card.choices.every((c) => c.period === 'until_changed')
-              ? null
-              : periodEnd(held.chosen.period),
+            until: picksUntil(card, held.chosen.period),
             picks: held.chosen.picks,
             pickNames: Object.fromEntries(
               Object.entries(held.chosen.picks).map(([choice, options]) => [

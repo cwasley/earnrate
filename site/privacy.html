@@ -139,7 +139,10 @@
           stores the encrypted wallet. The record that an app is connected,
           which app and when, is kept in Cloudflare's storage until that
           connection is unused for 90 days; its access tokens are stored only in
-          a form that can't be turned back into the token.
+          a form that can't be turned back into the token. When you sign an app
+          out, the wallet keeps a one-way hash of that connection's id, so the
+          app is refused at once, until the connection would have expired
+          anyway.
         </p>
         <p>
           You can export the wallet as a file that works with earnrate.dev and

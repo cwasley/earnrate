@@ -151,6 +151,7 @@ export const WalletSummarySchema = z.object({
           amount: z.number(),
           period: CapPeriod,
           currentPeriod: z.string().nullable(),
+          until: z.string().nullable(),
           spent: z.number(),
           remaining: z.number().nullable(),
         }),
