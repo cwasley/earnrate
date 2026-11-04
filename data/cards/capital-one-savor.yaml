@@ -1,5 +1,6 @@
 id: capital-one-savor
 name: Capital One Savor Rewards Credit Card
+short_name: Capital One Savor
 issuer: capital-one
 # The card page never names the network in visible text; its embedded
 # product data says MasterCard.

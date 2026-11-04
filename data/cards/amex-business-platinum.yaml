@@ -1,5 +1,6 @@
 id: amex-business-platinum
 name: The Business Platinum Card from American Express
+short_name: Amex Business Platinum
 issuer: amex
 network: amex
 currency: MR

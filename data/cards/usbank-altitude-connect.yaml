@@ -1,5 +1,6 @@
 id: usbank-altitude-connect
 name: U.S. Bank Altitude Connect Visa Signature Card
+short_name: Altitude Connect
 issuer: usbank
 network: visa
 currency: usbank-altitude

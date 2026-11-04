@@ -48,8 +48,8 @@ const FRONT = [
 ]
 
 const REFRESH_URL = 'https://earnrate.dev/#wallet'
-// What fits the strip's card column without shrinking (see strip.ts).
-const STRIP_NAME = 21
+// What fits the strip's card column at full size (see strip.ts).
+export const PASS_NAME_MAX = 24
 
 type Field = {
   key: string
@@ -87,22 +87,13 @@ export function passContents(
       c.checkout_label ? [[c.id, c.checkout_label] as const] : [],
     ),
   )
-  const issuerPrefixes = ['Amex ', ...catalog.issuers.map((i) => `${i.name} `)]
-  // The checkout label, or the card's name without its issuer
-  // ("Sapphire Preferred").
-  const compact = (cardId: string) => {
+  // The pass's own name for each card: its checkout label when that fits,
+  // else the card's short name. Every one fits the strip at full size.
+  const passName = (cardId: string) => {
     const label = labels.get(cardId)
-    if (label) return label
-    const name = text.shortName(cardId)
-    const prefix = issuerPrefixes.find(
-      (p) => name.startsWith(p) && name.length > p.length,
-    )
-    return prefix ? name.slice(prefix.length) : name
-  }
-  // The issuer stays when the name still fits ("Amex Gold").
-  const stripName = (cardId: string) => {
-    const name = labels.get(cardId) ?? text.shortName(cardId)
-    return name.length <= STRIP_NAME ? name : compact(cardId)
+    if (label !== undefined && label.length <= PASS_NAME_MAX) return label
+    const card = catalog.cards.find((c) => c.id === cardId)
+    return card?.short_name ?? text.shortName(cardId)
   }
   const key = (label: string) =>
     label
@@ -118,7 +109,7 @@ export function passContents(
       : [
           {
             label,
-            card: stripName(row.cardId),
+            card: passName(row.cardId),
             rate: pct(row.effectiveReturnPct),
           },
         ]
@@ -128,7 +119,7 @@ export function passContents(
   const todo = checklist(catalog, wallet, date)
   const first = todo[0]
   const todoText = (item: ChecklistItem) => {
-    const card = compact(item.cardId)
+    const card = passName(item.cardId)
     const by =
       item.due === null
         ? ''

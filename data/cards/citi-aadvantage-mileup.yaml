@@ -1,5 +1,6 @@
 id: citi-aadvantage-mileup
 name: American Airlines AAdvantage MileUp Card
+short_name: AAdvantage MileUp
 issuer: citi
 # The card page's ID Theft Protection terms have cardholders enroll "with your
 # Citibank Mastercard", and its footer carries the Mastercard trademark notice.

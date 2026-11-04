@@ -1,5 +1,6 @@
 id: bank-of-america-premium-rewards
 name: Bank of America Premium Rewards Credit Card
+short_name: BofA Premium Rewards
 issuer: bank-of-america
 # The page names the Visa Signature Luxury Hotel Collection and concierge as
 # card benefits, and the terms carry the Visa trademark notice.

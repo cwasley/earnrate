@@ -6,7 +6,11 @@ import { unzipSync } from 'fflate'
 import forge from 'node-forge'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { makePassWorker, type PassEnv } from '../pass/src/app.ts'
-import { passContents, type PassWallet } from '../pass/src/pass.ts'
+import {
+  PASS_NAME_MAX,
+  passContents,
+  type PassWallet,
+} from '../pass/src/pass.ts'
 import { makeRenderer } from '../pass/src/render.ts'
 import { cardFit, stripSvg } from '../pass/src/strip.ts'
 import { loadCatalog } from '../src/data/load.ts'
@@ -134,7 +138,7 @@ describe('the cheat-sheet pass', () => {
       rate: pct(groceries?.effectiveReturnPct ?? 0),
     })
     expect(strip.find((r) => r.label === 'Costco')?.card).toBe('Blue card')
-    expect(strip.find((r) => r.label === 'Gas')?.card).not.toMatch(/^Chase /)
+    expect(strip.find((r) => r.label === 'Gas')?.card).toBe('Blue card')
     const card = pass.storeCard as {
       headerFields: { value: string }[]
       secondaryFields: { label: string; value: string }[]
@@ -143,7 +147,7 @@ describe('the cheat-sheet pass', () => {
     }
     expect(card.headerFields[0]?.value).toBe('Q4 2026')
     expect(card.secondaryFields[0]?.value).toBe(
-      'Activate Freedom Flex by Dec 14',
+      'Activate Chase Freedom Flex by Dec 14',
     )
     expect(card.auxiliaryFields[0]?.value).toBe('Dec 31, 2026')
     expect(card.backFields.map((f) => f.label)).toContain('Streaming (Netflix)')
@@ -155,21 +159,48 @@ describe('the cheat-sheet pass', () => {
     expect(pass).not.toHaveProperty('barcodes')
   })
 
-  test('the strip escapes text, shrinks long card names and cuts the longest', () => {
+  test('every card and checkout label fits the strip at full size', () => {
+    for (const card of catalog.cards) {
+      const { strip } = passContents(
+        catalog,
+        { memberships: [], cards: [{ id: card.id }] },
+        '2026-11-03',
+        IDENTITY,
+        'serial',
+      )
+      for (const row of strip)
+        expect(row.card.length, card.id).toBeLessThanOrEqual(PASS_NAME_MAX)
+    }
+    const { strip } = passContents(
+      catalog,
+      {
+        memberships: [],
+        cards: [
+          {
+            id: 'amex-gold',
+            checkout_label: 'My everyday gold card for food and groceries',
+          },
+          { id: 'citi-aadvantage-platinum-select' },
+        ],
+      },
+      '2026-11-03',
+      IDENTITY,
+      'serial',
+    )
+    expect(strip.find((r) => r.label === 'Dining')?.card).toBe('Amex Gold')
+    expect(strip.map((r) => r.card)).not.toContain(
+      'My everyday gold card for food and groceries',
+    )
+  })
+
+  test('the strip escapes text and never lets a name reach the rate', () => {
     const svg = stripSvg([{ label: 'Dining', card: 'A & <B>', rate: '4%' }])
     expect(svg).toContain('A &#38; &#60;B&#62;')
-    expect(cardFit('Sapphire Preferred')).toEqual({
-      text: 'Sapphire Preferred',
-      size: 15,
-    })
-    const shrunk = cardFit('Bank of America Customized Cash')
-    expect(shrunk.text).toBe('Bank of America Customized Cash')
-    expect(shrunk.size).toBeGreaterThanOrEqual(12)
-    expect(shrunk.size).toBeLessThan(15)
-    const cut = cardFit('My everyday gold card for food and groceries')
-    expect(cut.size).toBe(12)
-    expect(cut.text.endsWith('…')).toBe(true)
-    expect(cut.text.length).toBeLessThanOrEqual(32)
+    expect(svg).toMatch(/font-size="15" font-weight="600"[^>]*>A &#38;/)
+    expect(cardFit('Sapphire Preferred')).toBe('Sapphire Preferred')
+    expect(cardFit('An unusually long name that would hit the rate')).toMatch(
+      /^.{25}…$/,
+    )
   })
 
   test('the Worker returns a signed .pkpass whose manifest matches its files', async () => {

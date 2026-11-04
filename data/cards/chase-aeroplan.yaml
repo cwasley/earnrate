@@ -1,5 +1,6 @@
 id: chase-aeroplan
 name: Chase Air Canada Aeroplan Card
+short_name: Chase Aeroplan
 issuer: chase
 network: mastercard
 currency: aeroplan

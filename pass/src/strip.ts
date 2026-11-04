@@ -19,18 +19,12 @@ const esc = (text: string) =>
   text.replace(/[&<>"']/g, (c) => `&#${String(c.charCodeAt(0))};`)
 
 // Inter semibold averages about half an em, so the card column (about 200pt
-// before the rate) holds 26 characters at 15px. Longer names shrink to 12px,
-// and anything that still doesn't fit is cut short.
-const FITS_AT_15 = 26
-const MIN_SIZE = 12
-const MAX_AT_MIN = Math.floor((FITS_AT_15 * 15) / MIN_SIZE)
+// before the rate) holds 26 characters at 15px. Pass names are at most 24
+// (PASS_NAME_MAX); anything longer is cut short rather than overlap the rate.
+const FITS = 26
 
-export function cardFit(name: string): { text: string; size: number } {
-  if (name.length <= FITS_AT_15) return { text: name, size: 15 }
-  if (name.length <= MAX_AT_MIN)
-    return { text: name, size: (15 * FITS_AT_15) / name.length }
-  return { text: `${name.slice(0, MAX_AT_MIN - 1).trimEnd()}…`, size: MIN_SIZE }
-}
+export const cardFit = (name: string) =>
+  name.length <= FITS ? name : `${name.slice(0, FITS - 1).trimEnd()}…`
 
 export function stripSvg(rows: StripRow[]): string {
   const { width, height } = STRIP
@@ -43,14 +37,13 @@ export function stripSvg(rows: StripRow[]): string {
   const lines = rows.map((row, i) => {
     const y = top + rowHeight * i
     const baseline = y + rowHeight / 2 + 5
-    const fit = cardFit(row.card)
     const rule =
       i < rows.length - 1
         ? `<line x1="${String(pad)}" x2="${String(width - pad)}" y1="${String(y + rowHeight)}" y2="${String(y + rowHeight)}" stroke="${COLORS.rule}" stroke-width="1"/>`
         : ''
     return [
       `<text x="${String(labelX)}" y="${String(baseline)}" font-family="Inter" font-size="13" font-weight="400" fill="${COLORS.label}">${esc(row.label)}</text>`,
-      `<text x="${String(cardX)}" y="${String(baseline)}" font-family="Inter" font-size="${fit.size.toFixed(1)}" font-weight="600" fill="${COLORS.card}">${esc(fit.text)}</text>`,
+      `<text x="${String(cardX)}" y="${String(baseline)}" font-family="Inter" font-size="15" font-weight="600" fill="${COLORS.card}">${esc(cardFit(row.card))}</text>`,
       `<text x="${String(rateX)}" y="${String(baseline)}" text-anchor="end" font-family="Inter" font-size="15" font-weight="700" fill="${COLORS.rate}">${esc(row.rate)}</text>`,
       rule,
     ].join('')

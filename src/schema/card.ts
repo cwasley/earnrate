@@ -183,6 +183,9 @@ export const CardSchema = z
   .strictObject({
     id: KebabId,
     name: z.string().min(1),
+    // A name that fits one line of the Wallet pass's strip (24 characters),
+    // for cards whose name is longer: "AAdvantage Platinum".
+    short_name: z.string().min(1).max(24).optional(),
     issuer: z.string().min(1),
     network: CardNetwork,
     // Merchant ids a store card works at. Required for, and only for, `store`.

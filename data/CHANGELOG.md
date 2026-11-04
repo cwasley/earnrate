@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.04.2
+
+Short names (`short_name`, at most 24 characters) for the 35 cards whose names are too long for one line of the Apple Wallet pass, like "AAdvantage Platinum" and "BofA Customized Cash". Display only; no rates changed.
+
 ## 2026.11.04.1
 
 The parent `grocery` category reads "grocery stores" in sentences ("bonus at grocery stores, restaurants and American Red Cross"); its search page stays at /best/grocery. No rates changed.

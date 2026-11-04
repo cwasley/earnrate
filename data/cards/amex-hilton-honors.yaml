@@ -1,5 +1,6 @@
 id: amex-hilton-honors
 name: Hilton Honors American Express Card
+short_name: Amex Hilton Honors
 issuer: amex
 network: amex
 currency: hilton-honors

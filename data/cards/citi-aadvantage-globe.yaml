@@ -1,5 +1,6 @@
 id: citi-aadvantage-globe
 name: Citi / AAdvantage Globe Mastercard
+short_name: AAdvantage Globe
 issuer: citi
 network: mastercard
 currency: aadvantage-miles

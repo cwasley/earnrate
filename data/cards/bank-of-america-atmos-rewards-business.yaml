@@ -1,5 +1,6 @@
 id: bank-of-america-atmos-rewards-business
 name: Atmos Rewards Visa Signature Business Card
+short_name: Atmos Rewards Business
 issuer: bank-of-america
 network: visa
 currency: atmos-points

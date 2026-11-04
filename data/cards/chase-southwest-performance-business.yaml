@@ -1,5 +1,6 @@
 id: chase-southwest-performance-business
 name: Southwest Rapid Rewards Performance Business Credit Card
+short_name: Southwest Performance
 issuer: chase
 network: visa
 currency: southwest-rapid-rewards

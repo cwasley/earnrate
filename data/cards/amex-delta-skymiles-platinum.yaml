@@ -1,5 +1,6 @@
 id: amex-delta-skymiles-platinum
 name: Delta SkyMiles Platinum American Express Card
+short_name: Delta SkyMiles Platinum
 issuer: amex
 network: amex
 currency: delta-skymiles
