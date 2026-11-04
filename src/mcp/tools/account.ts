@@ -39,6 +39,7 @@ export function registerAccountTools(
       annotations: {
         title: 'Export the wallet',
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: false,
       },
     },
@@ -114,7 +115,7 @@ export function registerAccountTools(
     {
       title: 'Delete the wallet',
       description:
-        "Deletes the saved wallet and its recovery code now and for good, and signs out every Claude app connected to it, this one included. earnrate.dev and the earnrate command line keep their own wallets and aren't affected. Only when the user asks to delete it: show it with list_wallet, offer export_wallet, and pass confirm, cards and saved only after the user confirms. It refuses if the wallet no longer holds what list_wallet showed, so a retried call can't delete a different wallet.",
+        "Deletes the saved wallet and its recovery code now and for good, and signs out every app connected to it, this one included. earnrate.dev and the earnrate command line keep their own wallets and aren't affected. Only when the user asks to delete it: show it with list_wallet, offer export_wallet, and pass confirm, cards and saved only after the user confirms. It refuses if the wallet no longer holds what list_wallet showed, so a retried call can't delete a different wallet.",
       inputSchema: z.object({
         confirm: z
           .literal(true)
@@ -160,7 +161,7 @@ export function registerAccountTools(
         content: [
           {
             type: 'text',
-            text: "Deleted the saved wallet and its recovery code, and signed out every Claude app connected to it, this one included. To keep using earnrate here, the user connects again on earnrate's page and starts a new wallet.",
+            text: "Deleted the saved wallet and its recovery code, and signed out every app connected to it, this one included. To keep using earnrate here, the user connects again on earnrate's page and starts a new wallet.",
           },
         ],
         structuredContent: { deleted: true },
@@ -173,7 +174,7 @@ export function registerAccountTools(
     {
       title: 'Switch wallets',
       description:
-        "Disconnects this app from its saved wallet so the user can connect a different one with its recovery code, or start a new one, on earnrate's page. Nothing is deleted. It also signs out anyone else connected to this wallet through the same app (another Claude account the recovery code was shared with): say so before calling it. Use it when the user wants another wallet. Never ask for the recovery code in the conversation.",
+        "Disconnects this app from its saved wallet so the user can connect a different one with its recovery code, or start a new one, on earnrate's page. Nothing is deleted. It also signs out anyone else connected to this wallet through the same app (another account the recovery code was shared with): say so before calling it. Use it when the user wants another wallet. Never ask for the recovery code in the conversation.",
       inputSchema: z.object({}),
       outputSchema: z.object({ disconnected: z.boolean() }),
       annotations: {
@@ -190,7 +191,7 @@ export function registerAccountTools(
         content: [
           {
             type: 'text',
-            text: "Disconnected from this saved wallet; nothing was deleted. earnrate's sign-in page opens on the next earnrate request (or reconnect earnrate in the app's connector settings). There the user chooses \"Already have a wallet?\" and types the other wallet's recovery code, or starts a new wallet. Other Claude accounts connected to this wallet through the same app are signed out too.",
+            text: "Disconnected from this saved wallet; nothing was deleted. earnrate's sign-in page opens on the next earnrate request (or reconnect earnrate in the app's connector settings). There the user chooses \"Already have a wallet?\" and types the other wallet's recovery code, or starts a new wallet. Other accounts connected to this wallet through the same app are signed out too.",
           },
         ],
         structuredContent: { disconnected: true },

@@ -63,6 +63,8 @@ function ipv6Network(ip: string): string {
 }
 
 // What a per-IP rate limit counts against, or null for Anthropic's servers.
+// Apps that call from their own servers share those servers' addresses, so
+// a request that carries a credential is limited by what it names instead.
 export function limitKey(request: Request): string | null {
   const ip = request.headers.get('cf-connecting-ip')
   if (!ip) return 'unknown'
@@ -75,4 +77,31 @@ export function limitKey(request: Request): string | null {
   )
     return null
   return ip
+}
+
+async function hashedKey(prefix: string, id: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(`earnrate-limit:${prefix}:${id}`),
+  )
+  const hex = [...new Uint8Array(digest).slice(0, 16)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+  return `${prefix}:${hex}`
+}
+
+// A signed-in connection's key: a one-way hash of its wallet id, which the
+// limiter holds only for its window and earnrate never stores or logs.
+export const walletLimitKey = (walletId: string) =>
+  hashedKey('wallet', walletId)
+
+// The key for a token, code or refresh token not yet checked: a hash of the
+// wallet and grant it claims to be for ("{userId}:{grantId}:{secret}"), or
+// null when it isn't in that form.
+export async function claimedLimitKey(
+  credential: string | null | undefined,
+): Promise<string | null> {
+  const parts = (credential ?? '').split(':')
+  if (parts.length !== 3 || !parts[0] || !parts[1]) return null
+  return hashedKey('grant', `${parts[0]}:${parts[1]}`)
 }
