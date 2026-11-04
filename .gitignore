@@ -42,5 +42,6 @@ earnrate.mcpb
 .chatgpt-build
 earnrate-chatgpt.zip
 remote/catalog.gen.json
+pass/bundle.gen.json
 remote/dist/
 monitor/dist/

@@ -227,7 +227,37 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
           )
         })}
       </ol>
+      <WalletPass wallet={wallet} />
     </section>
+  )
+}
+
+const PASS_URL = 'https://pass.earnrate.dev/'
+
+// The one thing earnrate.dev sends anywhere: what the pass needs (card ids,
+// picks, activations, checkout labels, memberships), never amounts or
+// searches. The signer keeps nothing.
+function WalletPass({ wallet }: { wallet: Wallet }) {
+  const sent = JSON.stringify({
+    memberships: wallet.memberships,
+    cards: wallet.cards.map((c) => ({
+      id: c.id,
+      checkout_label: c.checkout_label,
+      chosen: c.chosen,
+      activated: c.activated,
+    })),
+  })
+  return (
+    <form class="wallet-pass" method="post" action={PASS_URL}>
+      <input type="hidden" name="wallet" value={sent} />
+      <input type="hidden" name="date" value={localToday()} />
+      <button type="submit">Add to Apple Wallet</button>
+      <p class="muted">
+        For iPhone: this cheat sheet in Apple Wallet, good until the quarter
+        ends. This sends your card names and picks (no amounts) to earnrate's
+        server, which makes the pass and keeps nothing.
+      </p>
+    </form>
   )
 }
 
