@@ -1,0 +1,122 @@
+id: verizon-visa-card
+name: Verizon Visa Card
+color: '#1c1c1c'
+# Issued by Synchrony Bank as a Visa Signature. Rewards are Verizon Dollars,
+# which redeem at $1 for a $1 statement credit on the card, or toward Verizon
+# bills, devices and accessories, so a Verizon Dollar is 1¢ per cent earned
+# here. Earning and redeeming need an active Verizon account.
+issuer: synchrony
+network: visa
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.verizon.com/financial-services/verizon-visa-card/
+  - https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+  - https://www.verizon.com/support/verizon-visa-card-faqs/
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 0
+requires_membership: verizon-account
+welcome_offer:
+  dollars: 150
+  spend: 0
+  months: 3
+  valid_to: 2027-01-13
+  note: 'A $150 statement credit after one purchase within 90 days of opening, for applicants approved 8/12/26 to 1/13/27; spend 0 stands in for "make one purchase". One offer per account; the credit posts 1-2 billing cycles after the purchase.'
+rules:
+  - id: gas-ev-charging
+    match: { categories: [gas, ev_charging] }
+    rate: 4
+    note: Merchants coded as service stations or automated fuel dispensers, and EV charging stations. Not aviation or other non-automotive fuel. EV charging billed by a parking lot or garage can code as parking and earn 1%.
+  - id: grocery-stores
+    match: { categories: [grocery.supermarket] }
+    rate: 4
+    note: Grocery stores and supermarkets, by merchant category code. Groceries at Walmart, Target and other big-box stores may not count.
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 4
+    note: Restaurants, drinking places and fast food, including takeout and delivery. A cafe inside another store can code as that store and earn 1%.
+  - id: caterers
+    match: { mccs: [5811] }
+    rate: 4
+    note: Caterers count as restaurants.
+  - id: verizon-purchases
+    match: { merchants: [verizon-store] }
+    rate: 4
+    note: Devices and accessories bought at a Verizon store, Verizon online, by phone with Verizon or at an exclusive Verizon Authorized Retailer. Not Verizon wireless or Fios bill payments, or items charged to those bills, which earn 1%. Not Verizon services sold at big-box stores like Walmart or Best Buy.
+todo:
+  - "No readable Synchrony rates-and-fees table: the application's pricing terms are only inside the apply flow, and no synchronybankterms.com page for this card was found. The no-fee and no-foreign-fee quotes are from Verizon's own pages."
+  - 'Verizon Dollars are forfeited if the Verizon wireless or Fios account closes, if the cardholder stops being its Account Owner or Manager, after 90 days if the card closes, or after 24 months with no card or rewards activity. Once Verizon service ends, the card earns nothing.'
+  - 'Card benefits not modeled: Auto Pay discounts of up to $10 a month per line when paying the Verizon bill with the card, 2 free TravelPass days a year, and 0% device financing over 36 months.'
+  - "Verizon Loyalty's separate 3% in Verizon Dollars on the Verizon bill comes with being a customer, not with the card, so it isn't counted."
+evidence:
+  - rule: base_rate
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: '1% in Verizon Dollars for all other Net New Purchases made on your Credit Card Account'
+  - rule: base_rate
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'There is no limit on earning Verizon Dollars for any of the Net New Purchases listed above.'
+  - rule: base_rate
+    url: https://www.verizon.com/support/verizon-visa-card-faqs/
+    quote: '$1 Verizon Dollar = $1 Statement Credit'
+  - rule: base_rate
+    url: https://www.verizon.com/support/verizon-visa-card-faqs/
+    quote: 'Cardholders can redeem available Verizon Dollars as a statement credit toward the current balance'
+  - rule: base_rate
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: '1% in Verizon Dollars for every Net New Purchase made for the payment of your Verizon Wireless Account bill'
+  - rule: gas-ev-charging
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: '4% in Verizon Dollars for every Net New Purchase of gas and at electric vehicle'
+  - rule: gas-ev-charging
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'Gas stations do not include merchants of aviation or other non-automotive fuels.'
+  - rule: gas-ev-charging
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'a merchant of parking lots, parking meters or parking garages may have an MCC identification'
+  - rule: grocery-stores
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'Grocery purchases include purchases made at grocery stores and supermarkets.'
+  - rule: grocery-stores
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'grocery purchases at Walmart, Target or other "big box" retailers may not qualify'
+  - rule: restaurants
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: '4% in Verizon Dollars for every Net New Purchase made at restaurants.'
+  - rule: restaurants
+    url: https://www.verizon.com/financial-services/verizon-visa-card/
+    quote: '4% on restaurant purchases, including take-out and delivery'
+  - rule: caterers
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'Restaurants are generally identified as restaurants, drinking places, fast food places and caterers.'
+  - rule: verizon-purchases
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'Net New Purchase made at a Verizon operated store, Verizon online, over the phone with a Verizon representative'
+  - rule: verizon-purchases
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'Verizon purchases include purchases of devices and accessories but do not include the payment'
+  - rule: verizon-purchases
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'including any "big box" retailers such as Walmart or Best Buy that offer Verizon services.'
+  - rule: annual_fee
+    url: https://www.verizon.com/support/verizon-visa-card-faqs/
+    quote: 'No annual fee and foreign transaction fees.'
+  - rule: foreign_transaction_fee
+    url: https://www.verizon.com/support/verizon-visa-card-faqs/
+    quote: 'No annual fee and foreign transaction fees.'
+  - rule: requires_membership
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'In order to apply for a Credit Card Account, you must be either a Verizon Account Owner'
+  - rule: requires_membership
+    url: https://www.verizon.com/support/verizon-visa-card-faqs/
+    quote: 'Verizon wireless Business accounts and Prepaid accounts aren’t eligible to apply for the Verizon Visa Card.'
+  - rule: requires_membership
+    url: https://www.verizon.com/support/verizon-visa-card-faqs/
+    quote: 'you won’t continue to earn rewards, discounts, bonuses or Verizon Dollars'
+  - rule: welcome_offer
+    url: https://www.verizon.com/financial-services/verizon-visa-card/
+    quote: 'This offer is available for applicants who are approved between 8/12/26 and 1/13/27.'
+  - rule: welcome_offer
+    url: https://www.verizon.com/financial-services/verizon-visa-card/
+    quote: 'make one purchase within 90 days to receive the $150 statement credit.'

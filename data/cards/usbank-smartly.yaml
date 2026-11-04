@@ -1,0 +1,104 @@
+id: usbank-smartly
+name: U.S. Bank Smartly Visa Signature Card
+short_name: U.S. Bank Smartly
+color: '#16171b'
+issuer: usbank
+network: visa
+# Earned as points, 1 point per 1% of cash back, worth full value as a
+# deposit to a U.S. Bank account (see todo on statement credits).
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html
+  - https://rewards.usbank.com/benefits/card/SmartlyBenefits/program-rules
+base_rate: 2
+annual_fee: 0
+foreign_transaction_fee: null
+caps:
+  # The Smartly Earning Bonus counts only the first $10,000 of eligible net
+  # purchases a billing cycle; past it every tier earns the base 2%.
+  - id: smartly-earning-bonus
+    amount: 10000
+    period: month
+    then_rate: 2
+rules:
+  # Smartly Earning Bonus tiers, by the 30-day average balance in Bank
+  # Smartly Checking and Safe Debit, with a Bank Smartly Savings account.
+  - id: everything-smartly-25
+    match: { any: true }
+    rate: 2.5
+    cap: smartly-earning-bonus
+    requires: { membership: usbank-smartly-25 }
+    note: 2% plus the 25% Smartly Earning Bonus (a qualifying balance from $10,000 per the card page, $5,000 per the program rules, to $49,999.99), on the first $10,000 of eligible net purchases each billing cycle. Education, gift cards, insurance, tax, business-to-business merchants and third-party bill payment earn 2% and don't count toward the $10,000.
+  - id: everything-smartly-50
+    match: { any: true }
+    rate: 3
+    cap: smartly-earning-bonus
+    requires: { membership: usbank-smartly-50 }
+    note: 2% plus the 50% Smartly Earning Bonus (qualifying balance $50,000 to $99,999.99), on the first $10,000 of eligible net purchases each billing cycle. Education, gift cards, insurance, tax, business-to-business merchants and third-party bill payment earn 2% and don't count toward the $10,000.
+  - id: everything-smartly-100
+    match: { any: true }
+    rate: 4
+    cap: smartly-earning-bonus
+    requires: { membership: usbank-smartly-100 }
+    note: 2% plus the 100% Smartly Earning Bonus (qualifying balance $100,000 or more), on the first $10,000 of eligible net purchases each billing cycle. Education, gift cards, insurance, tax, business-to-business merchants and third-party bill payment earn 2% and don't count toward the $10,000.
+  - id: travel-center-hotels-car-rentals
+    match:
+      {
+        merchants:
+          [usbank-travel-center-hotels, usbank-travel-center-car-rentals],
+      }
+    rate: 6
+    note: Prepaid hotels and car rentals booked in the U.S. Bank Travel Center with this card, 4 extra points on top of the base 2. Air isn't included.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html
+    quote: 'Earn unlimited 2% cash back on every purchase.'
+  - rule: base_rate
+    url: https://rewards.usbank.com/benefits/card/SmartlyBenefits/program-rules
+    quote: 'Maximum Point value applies to Points redeemed for a deposit into an eligible checking, savings or money market account'
+  - rule: everything-smartly-25
+    url: https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html
+    quote: 'Includes a 25% Smartly Earning Bonus with a qualifying balance between $10,000 and $49,999.'
+  - rule: everything-smartly-25
+    url: https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html
+    quote: 'Have or open a U.S. Bank Smartly® Savings account with a minimum opening deposit of $25'
+  - rule: everything-smartly-25
+    url: https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html
+    quote: 'Smartly Earning Bonus applies to a maximum of $10,000 in eligible Net Purchases each Card billing cycle.'
+  - rule: everything-smartly-25
+    url: https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html
+    quote: 'Purchases classified as (1) education/school, gift cards (including discount gift card sites), insurance, or tax'
+  - rule: everything-smartly-25
+    url: https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html
+    quote: 'These Purchases are not calculated as part of the $10,000 cap.'
+  - rule: everything-smartly-50
+    url: https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html
+    quote: 'Includes a 50% Smartly Earning Bonus with a qualifying balance between $50,000 and $99,999.'
+  - rule: everything-smartly-50
+    url: https://rewards.usbank.com/benefits/card/SmartlyBenefits/program-rules
+    quote: 'a base of 2 Points plus the Smartly Earning Bonus of 1 Point'
+  - rule: everything-smartly-100
+    url: https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html
+    quote: 'Includes a 100% Smartly Earning Bonus with a qualifying balance of $100,000 or more.'
+  - rule: everything-smartly-100
+    url: https://rewards.usbank.com/benefits/card/SmartlyBenefits/program-rules
+    quote: 'a base of 2 Points plus the Smartly Earning Bonus of 2 Points'
+  - rule: travel-center-hotels-car-rentals
+    url: https://rewards.usbank.com/benefits/card/SmartlyBenefits/program-rules
+    quote: 'Earn 4 more Points on hotels and car rentals booked directly on the Travel Center website.'
+  - rule: travel-center-hotels-car-rentals
+    url: https://rewards.usbank.com/benefits/card/SmartlyBenefits/program-rules
+    quote: 'spent on prepaid car and hotel reservations made on the Travel Center website'
+  - rule: annual_fee
+    url: https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html
+    quote: 'Enjoy a cash back credit card with no annual fee'
+todo:
+  - "Foreign transaction fee not on file: the card page's rates-and-fees link (https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=8069&offerId=36672BDX52&sourceCode=87869&page=terms) renders only with JavaScript, and no other readable U.S. Bank page states it. Read its Foreign Transaction row in a browser, then add the URL to source_urls with the quote."
+  - 'The card page puts the 2.5% tier at a qualifying balance of $10,000 to $49,999; the program rules page says "Between $5,000 - $49,999.99". The tier memberships (usbank-smartly-25, -50, -100) are named by rate, so a wallet picks its tier either way; which threshold applies is unconfirmed.'
+  - "Bonus exclusions aren't modeled: education, gift cards, insurance, tax, business-to-business merchants and third-party bill payment earn 2% at every tier and don't use the $10,000, but earnrate has no categories for them, so the tier rules apply to them."
+  - 'Points are worth full value only as a deposit to a U.S. Bank checking, savings or money market account. The card page also lists statement credits at that value; the program rules say statement credits may be at a reduced rate, without saying what. Modeled as cash at 1¢.'
+  - 'Whether the Smartly Earning Bonus also applies to Travel Center hotels and car rentals (which would make them 6.5% to 8%) is unstated: the 4 extra points are "in addition to your base earn". Modeled at 6% for every tier.'
+  - 'The tier can change within a billing cycle as the 30-day average balance moves; earnrate takes the tier the wallet says.'
