@@ -1,6 +1,7 @@
 import type { Cap, Card, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
+import { merchantFamily } from '../merchants/resolve.ts'
 import {
   introCovers,
   introWindows,
@@ -12,7 +13,7 @@ import type { Channel, MerchantResolution, Purchase } from './types.ts'
 
 export type PurchaseContext = {
   category: string
-  merchantId: string | null
+  merchantIds: string[] // the merchant and, for a brand, its parent
   mcc: number | null
   channel: Channel | null
   country: string
@@ -30,7 +31,7 @@ export function purchaseContext(
 ): PurchaseContext {
   return {
     category,
-    merchantId: merchant.merchantId,
+    merchantIds: merchantFamily(catalog, merchant.merchantId),
     mcc:
       category === merchant.category && merchant.likelyMcc !== null
         ? merchant.likelyMcc
@@ -176,21 +177,16 @@ function applicability(
   const { match, exclude } = rule
   const inCategory = (cats: string[]) =>
     cats.some((c) => categoryMatches(c, ctx.category))
+  const named = (ids: string[] | undefined) =>
+    ids?.some((id) => ctx.merchantIds.includes(id)) ?? false
 
   if (match.categories?.length && !inCategory(match.categories)) return 'no'
-  if (
-    match.merchants?.length &&
-    !(ctx.merchantId !== null && match.merchants.includes(ctx.merchantId))
-  ) {
-    return 'no'
-  }
+  if (match.merchants?.length && !named(match.merchants)) return 'no'
   if (match.mccs?.length && !(ctx.mcc !== null && match.mccs.includes(ctx.mcc)))
     return 'no'
   if (match.choice !== undefined) {
     const covered = picked.get(match.choice)
-    const merchantPicked =
-      ctx.merchantId !== null &&
-      (covered?.merchants.includes(ctx.merchantId) ?? false)
+    const merchantPicked = named(covered?.merchants)
     const onlinePicked =
       ctx.channel === 'online' &&
       (covered?.online.some((o) => !inCategory(o.exclude)) ?? false)
@@ -203,13 +199,7 @@ function applicability(
   }
 
   if (exclude?.categories && inCategory(exclude.categories)) return 'no'
-  if (
-    exclude?.merchants &&
-    ctx.merchantId !== null &&
-    exclude.merchants.includes(ctx.merchantId)
-  ) {
-    return 'no'
-  }
+  if (named(exclude?.merchants)) return 'no'
   if (exclude?.mccs && ctx.mcc !== null && exclude.mccs.includes(ctx.mcc))
     return 'no'
 

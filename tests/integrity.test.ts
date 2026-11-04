@@ -251,6 +251,27 @@ describe('catalogProblems', () => {
     ])
   })
 
+  test('catches a brand of an unknown merchant, or of another brand', () => {
+    const c = catalog()
+    c.merchants.seed.push(
+      ...MerchantsFileSchema.parse([
+        { id: 'hilton', name: 'Hilton', category: 'other' },
+        {
+          id: 'hampton',
+          name: 'Hampton',
+          category: 'other',
+          brand_of: 'hilton',
+        },
+        { id: 'tiny', name: 'Tiny', category: 'other', brand_of: 'hampton' },
+        { id: 'lost', name: 'Lost', category: 'other', brand_of: 'nowhere' },
+      ]),
+    )
+    expect(catalogProblems(c)).toEqual([
+      "merchant tiny: brand_of 'hampton' is itself a brand of 'hilton'",
+      "merchant lost: brand_of 'nowhere' is not a merchant",
+    ])
+  })
+
   test('catches a merchant named like a category', () => {
     const c = catalog()
     c.categories = CategoriesFileSchema.parse([

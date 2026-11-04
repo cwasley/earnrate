@@ -1689,7 +1689,7 @@
 - {
     id: delta-stays,
     name: Delta Stays,
-    aliases: [delta stays, delta hotels],
+    aliases: [delta stays],
     category: travel.hotels,
   }
 - {
@@ -1736,24 +1736,11 @@
   aliases:
     [
       marriott bonvoy,
-      courtyard by marriott,
-      residence inn,
-      fairfield inn,
-      springhill suites,
       towneplace suites,
-      jw marriott,
-      sheraton,
-      westin,
-      w hotels,
-      ritz carlton,
-      st regis,
       renaissance hotels,
       le meridien,
-      aloft hotels,
       element hotels,
-      moxy hotels,
       ac hotels,
-      four points by sheraton,
     ]
   domains: [marriott.com]
   category: travel.hotels
@@ -1762,13 +1749,7 @@
     name: IHG Hotels & Resorts,
     aliases:
       [
-        holiday inn,
-        holiday inn express,
-        intercontinental,
-        kimpton,
-        crowne plaza,
         hotel indigo,
-        staybridge suites,
         candlewood suites,
         avid hotels,
         even hotels,
@@ -1789,15 +1770,7 @@
   aliases:
     [
       hilton honors,
-      hampton inn,
-      hampton by hilton,
-      hilton garden inn,
-      doubletree,
-      embassy suites,
-      homewood suites,
-      home2 suites,
       tru by hilton,
-      waldorf astoria,
       conrad hotels,
       curio collection,
       tapestry collection,
@@ -1889,11 +1862,7 @@
     aliases:
       [
         world of hyatt,
-        hyatt regency,
-        grand hyatt,
         park hyatt,
-        hyatt place,
-        hyatt house,
         andaz,
         hyatt centric,
         thompson hotels,
@@ -1905,19 +1874,7 @@
 - {
     id: wyndham,
     name: Wyndham Hotels & Resorts,
-    aliases:
-      [
-        wyndham,
-        la quinta,
-        days inn,
-        super 8,
-        ramada,
-        microtel,
-        baymont,
-        howard johnson,
-        travelodge,
-        wingate by wyndham,
-      ],
+    aliases: [wyndham, microtel, baymont, howard johnson, wingate by wyndham],
     domains: [wyndhamhotels.com],
     category: travel.hotels,
   }
@@ -1925,17 +1882,7 @@
     id: choice-hotels,
     name: Choice Hotels,
     aliases:
-      [
-        comfort inn,
-        comfort suites,
-        quality inn,
-        sleep inn,
-        clarion,
-        econo lodge,
-        rodeway inn,
-        cambria hotels,
-        mainstay suites,
-      ],
+      [comfort suites, clarion, rodeway inn, cambria hotels, mainstay suites],
     domains: [choicehotels.com],
     category: travel.hotels,
   }
@@ -2217,7 +2164,6 @@
   aliases:
     [
       all accor,
-      fairmont,
       sofitel,
       novotel,
       raffles hotels,
@@ -2230,14 +2176,7 @@
   category: travel.hotels
 - id: radisson
   name: Radisson
-  aliases:
-    [
-      radisson hotels,
-      radisson blu,
-      radisson red,
-      park inn by radisson,
-      country inn and suites,
-    ]
+  aliases: [radisson hotels, radisson blu, radisson red, park inn by radisson]
   domains: [radissonhotels.com]
   category: travel.hotels
 - id: drury-hotels
@@ -2401,3 +2340,981 @@
     domains: [dhl.com],
     category: shipping,
   }
+
+# Grocery
+- id: lunds-and-byerlys
+  name: Lunds & Byerlys
+  aliases: [lunds and byerlys, lunds byerlys, lunds, byerlys]
+  domains: [lundsandbyerlys.com]
+  category: grocery.supermarket
+- id: woodmans
+  name: "Woodman's Markets"
+  aliases: [woodmans, woodmans markets]
+  domains: [woodmans-food.com]
+  category: grocery.supermarket
+- id: festival-foods
+  name: Festival Foods
+  domains: [festfoods.com]
+  category: grocery.supermarket
+- id: fareway
+  name: Fareway
+  aliases: [fareway stores, fareway meat and grocery]
+  domains: [fareway.com]
+  category: grocery.supermarket
+- id: coborns
+  name: "Coborn's"
+  aliases: [coborns]
+  domains: [coborns.com]
+  category: grocery.supermarket
+- id: sendiks
+  name: "Sendik's Food Market"
+  aliases: [sendiks, sendiks food market]
+  domains: [sendiks.com]
+  category: grocery.supermarket
+- id: metro-market
+  name: Metro Market
+  domains: [metromarket.net]
+  category: grocery.supermarket
+- id: heinens
+  name: "Heinen's"
+  aliases: [heinens, heinens grocery store]
+  domains: [heinens.com]
+  category: grocery.supermarket
+- id: harps
+  name: Harps Food Stores
+  aliases: [harps, harps foods]
+  domains: [harpsfood.com]
+  category: grocery.supermarket
+- id: gerbes
+  name: Gerbes
+  aliases: [gerbes super markets]
+  domains: [gerbes.com]
+  category: grocery.supermarket
+- id: harveys-supermarket
+  name: Harveys Supermarket
+  aliases: [harveys supermarkets]
+  domains: [harveyssupermarkets.com]
+  category: grocery.supermarket
+- id: brookshire-brothers
+  name: Brookshire Brothers
+  domains: [brookshirebrothers.com]
+  category: grocery.supermarket
+- id: super-1-foods
+  name: Super 1 Foods
+  aliases: [super one foods]
+  category: grocery.supermarket
+- id: fiesta-mart
+  name: Fiesta Mart
+  domains: [fiestamart.com]
+  category: grocery.supermarket
+- id: sedanos
+  name: "Sedano's"
+  aliases: [sedanos, sedanos supermarkets]
+  domains: [sedanos.com]
+  category: grocery.supermarket
+- id: united-supermarkets
+  name: United Supermarkets
+  domains: [unitedtexas.com]
+  category: grocery.supermarket
+- id: central-market
+  name: Central Market
+  domains: [centralmarket.com]
+  category: grocery.supermarket
+- id: kings-food-markets
+  name: Kings Food Markets
+  aliases: [kings food market]
+  domains: [kingsfoodmarkets.com]
+  category: grocery.supermarket
+- id: key-food
+  name: Key Food
+  aliases: [key food supermarket]
+  domains: [keyfood.com]
+  category: grocery.supermarket
+- id: foodtown
+  name: Foodtown
+  domains: [foodtown.com]
+  category: grocery.supermarket
+- id: fairway-market
+  name: Fairway Market
+  domains: [fairwaymarket.com]
+  category: grocery.supermarket
+- id: stew-leonards
+  name: "Stew Leonard's"
+  aliases: [stew leonards]
+  domains: [stewleonards.com]
+  category: grocery.supermarket
+- id: price-rite
+  name: Price Rite
+  aliases: [price rite marketplace, pricerite]
+  domains: [priceritemarketplace.com]
+  category: grocery.supermarket
+- id: redners
+  name: "Redner's Markets"
+  aliases: [redners, redners warehouse markets]
+  domains: [rednersmarkets.com]
+  category: grocery.supermarket
+- id: roche-bros
+  name: Roche Bros.
+  aliases: [roche bros, roche brothers]
+  domains: [rochebros.com]
+  category: grocery.supermarket
+- id: cardenas-markets
+  name: Cardenas Markets
+  aliases: [cardenas]
+  domains: [cardenasmarkets.com]
+  category: grocery.supermarket
+- id: northgate-market
+  name: Northgate Market
+  aliases: [northgate gonzalez market, northgate gonzalez]
+  domains: [northgatemarket.com]
+  category: grocery.supermarket
+- id: vallarta
+  name: Vallarta Supermarkets
+  aliases: [vallarta]
+  domains: [vallartasupermarkets.com]
+  category: grocery.supermarket
+- id: nugget-markets
+  name: Nugget Markets
+  aliases: [nugget market]
+  domains: [nuggetmarket.com]
+  category: grocery.supermarket
+- id: bashas
+  name: "Bashas'"
+  aliases: [bashas]
+  domains: [bashas.com]
+  category: grocery.supermarket
+- id: ridleys
+  name: "Ridley's Family Markets"
+  aliases: [ridleys, ridleys family markets]
+  domains: [shopridleys.com]
+  category: grocery.supermarket
+- id: harmons
+  name: Harmons
+  aliases: [harmons grocery]
+  domains: [harmonsgrocery.com]
+  category: grocery.supermarket
+- id: yokes
+  name: "Yoke's Fresh Market"
+  aliases: [yokes, yokes fresh market]
+  domains: [yokesfreshmarkets.com]
+  category: grocery.supermarket
+- id: haggen
+  name: Haggen
+  aliases: [haggen food and pharmacy]
+  domains: [haggen.com]
+  category: grocery.supermarket
+- id: foodland-hawaii
+  name: Foodland
+  aliases: [foodland hawaii, foodland farms]
+  domains: [foodland.com]
+  category: grocery.supermarket
+
+# Drugstores
+- id: kinney-drugs
+  name: Kinney Drugs
+  aliases: [kinney]
+  domains: [kinneydrugs.com]
+  category: drugstore
+- id: discount-drug-mart
+  name: Discount Drug Mart
+  domains: [discount-drugmart.com]
+  category: drugstore
+- id: medicine-shoppe
+  name: Medicine Shoppe
+  aliases: [the medicine shoppe, medicine shoppe pharmacy]
+  category: drugstore
+- id: good-neighbor-pharmacy
+  name: Good Neighbor Pharmacy
+  domains: [mygnp.com]
+  category: drugstore
+- id: fruth-pharmacy
+  name: Fruth Pharmacy
+  aliases: [fruth]
+  domains: [fruthpharmacy.com]
+  category: drugstore
+- id: thrifty-white
+  name: Thrifty White Pharmacy
+  aliases: [thrifty white]
+  domains: [thriftywhite.com]
+  category: drugstore
+
+# Gas and EV charging
+- id: amoco
+  name: Amoco
+  category: gas
+- id: irving-oil
+  name: Irving Oil
+  domains: [irvingoil.com]
+  category: gas
+- id: shell-recharge
+  name: Shell Recharge
+  aliases: [greenlots]
+  category: ev_charging
+- id: ionna
+  name: IONNA
+  aliases: [ionna rechargery]
+  domains: [ionna.com]
+  category: ev_charging
+- id: rivian-adventure-network
+  name: Rivian Adventure Network
+  aliases: [rivian charging]
+  category: ev_charging
+
+# Fast food
+- id: cook-out
+  name: Cook Out
+  aliases: [cookout]
+  domains: [cookout.com]
+  category: dining.fast_food
+- id: steak-n-shake
+  name: "Steak 'n Shake"
+  aliases: [steak n shake, steak and shake]
+  domains: [steaknshake.com]
+  category: dining.fast_food
+- id: taco-cabana
+  name: Taco Cabana
+  domains: [tacocabana.com]
+  category: dining.fast_food
+- id: pollo-tropical
+  name: Pollo Tropical
+  domains: [pollotropical.com]
+  category: dining.fast_food
+- id: fatburger
+  name: Fatburger
+  domains: [fatburger.com]
+  category: dining.fast_food
+- id: a-and-w
+  name: A&W Restaurants
+  aliases: [a&w, a and w, a&w restaurant]
+  domains: [awrestaurants.com]
+  category: dining.fast_food
+- id: good-times
+  name: Good Times Burgers & Frozen Custard
+  aliases: [good times burgers, good times burgers and frozen custard]
+  domains: [goodtimesburgers.com]
+  category: dining.fast_food
+- id: lees-famous-recipe
+  name: "Lee's Famous Recipe Chicken"
+  aliases: [lees famous recipe, lees chicken]
+  domains: [leesfamousrecipe.com]
+  category: dining.fast_food
+- id: slim-chickens
+  name: Slim Chickens
+  domains: [slimchickens.com]
+  category: dining.fast_food
+- id: daves-hot-chicken
+  name: "Dave's Hot Chicken"
+  aliases: [daves hot chicken]
+  domains: [daveshotchicken.com]
+  category: dining.fast_food
+- id: schlotzskys
+  name: "Schlotzsky's"
+  aliases: [schlotzskys]
+  domains: [schlotzskys.com]
+  category: dining.fast_food
+- id: hungry-howies
+  name: "Hungry Howie's"
+  aliases: [hungry howies, hungry howies pizza]
+  domains: [hungryhowies.com]
+  category: dining.fast_food
+- id: round-table-pizza
+  name: Round Table Pizza
+  aliases: [round table]
+  domains: [roundtablepizza.com]
+  category: dining.fast_food
+- id: donatos
+  name: Donatos Pizza
+  aliases: [donatos]
+  domains: [donatos.com]
+  category: dining.fast_food
+- id: scooters-coffee
+  name: "Scooter's Coffee"
+  aliases: [scooters coffee]
+  domains: [scooterscoffee.com]
+  category: dining.fast_food
+- id: biggby-coffee
+  name: Biggby Coffee
+  aliases: [biggby]
+  domains: [biggby.com]
+  category: dining.fast_food
+- id: coffee-bean-and-tea-leaf
+  name: The Coffee Bean & Tea Leaf
+  aliases: [coffee bean and tea leaf, the coffee bean]
+  domains: [coffeebean.com]
+  category: dining.fast_food
+- id: philz-coffee
+  name: Philz Coffee
+  aliases: [philz]
+  domains: [philzcoffee.com]
+  category: dining.fast_food
+- id: seven-brew
+  name: 7 Brew
+  aliases: [7 brew coffee, seven brew]
+  domains: [7brew.com]
+  category: dining.fast_food
+- id: ritas
+  name: "Rita's Italian Ice"
+  aliases: [ritas, ritas italian ice]
+  domains: [ritasice.com]
+  category: dining.fast_food
+- id: andys-frozen-custard
+  name: "Andy's Frozen Custard"
+  aliases: [andys frozen custard]
+  domains: [eatandys.com]
+  category: dining.fast_food
+- id: the-halal-guys
+  name: The Halal Guys
+  aliases: [halal guys]
+  domains: [thehalalguys.com]
+  category: dining.fast_food
+
+# Restaurants
+- id: village-inn
+  name: Village Inn
+  domains: [villageinn.com]
+  category: dining
+- id: famous-daves
+  name: "Famous Dave's"
+  aliases: [famous daves, famous daves bbq]
+  domains: [famousdaves.com]
+  category: dining
+- id: old-chicago
+  name: Old Chicago Pizza & Taproom
+  aliases: [old chicago, old chicago pizza]
+  domains: [oldchicago.com]
+  category: dining
+- id: sizzler
+  name: Sizzler
+  domains: [sizzler.com]
+  category: dining
+- id: skyline-chili
+  name: Skyline Chili
+  domains: [skylinechili.com]
+  category: dining
+- id: frischs-big-boy
+  name: "Frisch's Big Boy"
+  aliases: [frischs, frischs big boy]
+  domains: [frischs.com]
+  category: dining
+- id: friendlys
+  name: "Friendly's"
+  aliases: [friendlys]
+  domains: [friendlysrestaurants.com]
+  category: dining
+- id: original-pancake-house
+  name: The Original Pancake House
+  aliases: [original pancake house]
+  domains: [originalpancakehouse.com]
+  category: dining
+- id: snooze
+  name: Snooze, an A.M. Eatery
+  aliases: [snooze, snooze eatery]
+  domains: [snoozeeatery.com]
+  category: dining
+- id: chuys
+  name: "Chuy's"
+  aliases: [chuys]
+  domains: [chuys.com]
+  category: dining
+- id: on-the-border
+  name: On The Border
+  aliases: [on the border mexican grill]
+  domains: [ontheborder.com]
+  category: dining
+- id: pappadeaux
+  name: Pappadeaux Seafood Kitchen
+  aliases: [pappadeaux]
+  category: dining
+- id: joes-crab-shack
+  name: "Joe's Crab Shack"
+  aliases: [joes crab shack]
+  domains: [joescrabshack.com]
+  category: dining
+- id: millers-ale-house
+  name: "Miller's Ale House"
+  aliases: [millers ale house]
+  domains: [millersalehouse.com]
+  category: dining
+- id: seasons-52
+  name: Seasons 52
+  domains: [seasons52.com]
+  category: dining
+- id: eddie-vs
+  name: "Eddie V's Prime Seafood"
+  aliases: [eddie vs]
+  domains: [eddiev.com]
+  category: dining
+- id: the-melting-pot
+  name: The Melting Pot
+  aliases: [melting pot]
+  domains: [meltingpot.com]
+  category: dining
+- id: cooper-s-hawk
+  name: "Cooper's Hawk Winery & Restaurants"
+  aliases: [coopers hawk]
+  domains: [chwinery.com]
+  category: dining
+- id: mellow-mushroom
+  name: Mellow Mushroom
+  domains: [mellowmushroom.com]
+  category: dining
+- id: uno-pizzeria
+  name: Uno Pizzeria & Grill
+  aliases: [pizzeria uno, uno pizzeria and grill]
+  domains: [unos.com]
+  category: dining
+- id: lazy-dog
+  name: Lazy Dog Restaurant & Bar
+  aliases: [lazy dog, lazy dog restaurant]
+  domains: [lazydogrestaurants.com]
+  category: dining
+- id: lou-malnatis
+  name: "Lou Malnati's Pizzeria"
+  aliases: [lou malnatis]
+  domains: [loumalnatis.com]
+  category: dining
+- id: giordanos
+  name: "Giordano's"
+  aliases: [giordanos]
+  domains: [giordanos.com]
+  category: dining
+- id: pizza-ranch
+  name: Pizza Ranch
+  domains: [pizzaranch.com]
+  category: dining
+
+# Retail
+- id: harbor-freight
+  name: Harbor Freight Tools
+  aliases: [harbor freight]
+  domains: [harborfreight.com]
+  category: home_improvement
+- id: eighty-four-lumber
+  name: 84 Lumber
+  aliases: [84 lumber company]
+  domains: [84lumber.com]
+  category: home_improvement
+- id: bealls
+  name: Bealls
+  aliases: [bealls florida, bealls department store]
+  domains: [beallsflorida.com]
+  category: department_store
+- id: century-21-stores
+  name: Century 21 Department Stores
+  aliases: [century 21 stores, c21 stores]
+  domains: [c21stores.com]
+  category: department_store
+- id: slumberland
+  name: Slumberland Furniture
+  aliases: [slumberland]
+  domains: [slumberland.com]
+  category: furniture
+- id: mor-furniture
+  name: Mor Furniture for Less
+  aliases: [mor furniture]
+  domains: [morfurniture.com]
+  category: furniture
+- id: mattress-warehouse
+  name: Mattress Warehouse
+  category: furniture
+- id: raymour-and-flanigan
+  name: Raymour & Flanigan
+  aliases: [raymour and flanigan, raymour]
+  domains: [raymourflanigan.com]
+  category: furniture
+- id: living-spaces
+  name: Living Spaces
+  domains: [livingspaces.com]
+  category: furniture
+- id: bose
+  name: Bose
+  aliases: [bose store]
+  domains: [bose.com]
+  category: electronics
+- id: backcountry
+  name: Backcountry
+  aliases: [backcountry.com]
+  domains: [backcountry.com]
+  category: sporting_goods
+- id: pga-tour-superstore
+  name: PGA Tour Superstore
+  aliases: [pga superstore]
+  domains: [pgatoursuperstore.com]
+  category: sporting_goods
+- id: field-and-stream
+  name: Field & Stream
+  aliases: [field and stream]
+  domains: [fieldandstreamshop.com]
+  category: sporting_goods
+- id: carters
+  name: "Carter's"
+  aliases: [carters, oshkosh, oshkosh bgosh]
+  domains: [carters.com]
+  category: clothing
+- id: childrens-place
+  name: "The Children's Place"
+  aliases: [childrens place, the childrens place]
+  domains: [childrensplace.com]
+  category: clothing
+- id: thriftbooks
+  name: ThriftBooks
+  aliases: [thrift books]
+  domains: [thriftbooks.com]
+  category: online_retail
+- id: bookshop-org
+  name: Bookshop.org
+  aliases: [bookshop org]
+  domains: [bookshop.org]
+  category: online_retail
+- id: rockauto
+  name: RockAuto
+  aliases: [rock auto]
+  domains: [rockauto.com]
+  category: online_retail
+- id: tire-rack
+  name: Tire Rack
+  aliases: [tirerack]
+  domains: [tirerack.com]
+  category: online_retail
+- id: blue-nile
+  name: Blue Nile
+  domains: [bluenile.com]
+  category: online_retail
+- id: musicians-friend
+  name: "Musician's Friend"
+  aliases: [musicians friend]
+  domains: [musiciansfriend.com]
+  category: online_retail
+- id: sweetwater
+  name: Sweetwater
+  aliases: [sweetwater sound]
+  domains: [sweetwater.com]
+  category: online_retail
+
+# Travel
+- id: porter-airlines
+  name: Porter Airlines
+  domains: [flyporter.com]
+  category: travel.flights
+- id: copa-airlines
+  name: Copa Airlines
+  aliases: [copa]
+  domains: [copaair.com]
+  category: travel.flights
+- id: avianca
+  name: Avianca
+  domains: [avianca.com]
+  category: travel.flights
+- id: latam
+  name: LATAM Airlines
+  aliases: [latam]
+  domains: [latamairlines.com]
+  category: travel.flights
+- id: qantas
+  name: Qantas
+  aliases: [qantas airways]
+  domains: [qantas.com]
+  category: travel.flights
+- id: cathay-pacific
+  name: Cathay Pacific
+  aliases: [cathay]
+  domains: [cathaypacific.com]
+  category: travel.flights
+- id: korean-air
+  name: Korean Air
+  domains: [koreanair.com]
+  category: travel.flights
+- id: etihad
+  name: Etihad Airways
+  aliases: [etihad]
+  domains: [etihad.com]
+  category: travel.flights
+- id: viva-aerobus
+  name: Viva Aerobus
+  aliases: [vivaaerobus]
+  domains: [vivaaerobus.com]
+  category: travel.flights
+- id: oceania-cruises
+  name: Oceania Cruises
+  domains: [oceaniacruises.com]
+  category: travel.cruise
+- id: cunard
+  name: Cunard
+  aliases: [cunard line]
+  domains: [cunard.com]
+  category: travel.cruise
+- id: koa
+  name: KOA
+  aliases: [kampgrounds of america]
+  domains: [koa.com]
+  category: travel
+- id: hipcamp
+  name: Hipcamp
+  domains: [hipcamp.com]
+  category: travel
+- id: evolve-vacation-rental
+  name: Evolve Vacation Rental
+  aliases: [evolve vacation rentals]
+  domains: [evolve.com]
+  category: travel
+
+# Transit
+- id: sound-transit
+  name: Sound Transit
+  aliases: [orca card]
+  domains: [soundtransit.org]
+  category: transit
+- id: king-county-metro
+  name: King County Metro
+  category: transit
+- id: washington-state-ferries
+  name: Washington State Ferries
+  aliases: [wsdot ferries]
+  category: transit
+- id: clipper-card
+  name: Clipper
+  aliases: [clipper card]
+  domains: [clippercard.com]
+  category: transit
+- id: rtd-denver
+  name: RTD Denver
+  aliases: [denver rtd, regional transportation district]
+  domains: [rtd-denver.com]
+  category: transit
+- id: valley-metro
+  name: Valley Metro
+  domains: [valleymetro.org]
+  category: transit
+- id: yellow-cab
+  name: Yellow Cab
+  aliases: [yellow taxi]
+  category: transit.rideshare
+
+# Bills
+- id: nicor-gas
+  name: Nicor Gas
+  aliases: [nicor]
+  domains: [nicorgas.com]
+  category: utilities
+- id: puget-sound-energy
+  name: Puget Sound Energy
+  domains: [pse.com]
+  category: utilities
+- id: republic-services
+  name: Republic Services
+  domains: [republicservices.com]
+  category: utilities
+- id: evergy
+  name: Evergy
+  aliases: [kcp&l, kansas city power and light]
+  domains: [evergy.com]
+  category: utilities
+- id: portland-general-electric
+  name: Portland General Electric
+  aliases: [pge portland, portland general]
+  domains: [portlandgeneral.com]
+  category: utilities
+- id: ladwp
+  name: LADWP
+  aliases: [los angeles department of water and power, la dwp]
+  domains: [ladwp.com]
+  category: utilities
+- id: consumers-energy
+  name: Consumers Energy
+  domains: [consumersenergy.com]
+  category: utilities
+- id: centerpoint-energy
+  name: CenterPoint Energy
+  aliases: [centerpoint]
+  domains: [centerpointenergy.com]
+  category: utilities
+- id: starlink
+  name: Starlink
+  domains: [starlink.com]
+  category: tv_internet
+- id: ziply-fiber
+  name: Ziply Fiber
+  aliases: [ziply]
+  domains: [ziplyfiber.com]
+  category: tv_internet
+- id: wow-internet
+  name: WOW! Internet
+  aliases: [wideopenwest, wide open west]
+  domains: [wowway.com]
+  category: tv_internet
+- id: us-mobile
+  name: US Mobile
+  domains: [usmobile.com]
+  category: phone
+- id: ultra-mobile
+  name: Ultra Mobile
+  domains: [ultramobile.com]
+  category: phone
+
+# Gyms
+- id: pure-barre
+  name: Pure Barre
+  domains: [purebarre.com]
+  category: fitness
+- id: xsport-fitness
+  name: XSport Fitness
+  aliases: [xsport]
+  domains: [xsportfitness.com]
+  category: fitness
+- id: genesis-health-clubs
+  name: Genesis Health Clubs
+  aliases: [genesis health club]
+  domains: [genesishealthclubs.com]
+  category: fitness
+- id: eos-fitness
+  name: EōS Fitness
+  aliases: [eos fitness]
+  domains: [eosfitness.com]
+  category: fitness
+- id: chuze-fitness
+  name: Chuze Fitness
+  aliases: [chuze]
+  domains: [chuzefitness.com]
+  category: fitness
+- id: corepower-yoga
+  name: CorePower Yoga
+  aliases: [core power yoga]
+  domains: [corepoweryoga.com]
+  category: fitness
+- id: barrys
+  name: "Barry's"
+  aliases: [barrys, barrys bootcamp]
+  domains: [barrys.com]
+  category: fitness
+
+# Entertainment and movie theaters
+- id: atom-tickets
+  name: Atom Tickets
+  aliases: [atomtickets]
+  domains: [atomtickets.com]
+  category: movie_theaters
+- id: b-and-b-theatres
+  name: B&B Theatres
+  aliases: [b&b theatres, b and b theatres]
+  domains: [bbtheatres.com]
+  category: movie_theaters
+- id: emagine
+  name: Emagine Entertainment
+  aliases: [emagine theatres, emagine]
+  domains: [emagine-entertainment.com]
+  category: movie_theaters
+- id: seatgeek
+  name: SeatGeek
+  aliases: [seat geek]
+  domains: [seatgeek.com]
+  category: entertainment
+- id: stubhub
+  name: StubHub
+  aliases: [stub hub]
+  domains: [stubhub.com]
+  category: entertainment
+- id: vivid-seats
+  name: Vivid Seats
+  domains: [vividseats.com]
+  category: entertainment
+
+# Hotel brands. Each names its group in brand_of, so card rules for the
+# group (Hilton, Marriott, IHG) match the brand too.
+- id: courtyard
+  name: Courtyard by Marriott
+  aliases: [courtyard marriott, courtyard]
+  category: travel.hotels
+  brand_of: marriott
+- id: residence-inn
+  name: Residence Inn by Marriott
+  aliases: [residence inn]
+  category: travel.hotels
+  brand_of: marriott
+- id: fairfield-inn
+  name: Fairfield by Marriott
+  aliases: [fairfield inn, fairfield inn and suites]
+  category: travel.hotels
+  brand_of: marriott
+- id: springhill-suites
+  name: SpringHill Suites
+  aliases: [springhill suites by marriott, spring hill suites]
+  category: travel.hotels
+  brand_of: marriott
+- id: jw-marriott
+  name: JW Marriott
+  category: travel.hotels
+  brand_of: marriott
+- id: sheraton
+  name: Sheraton
+  aliases: [sheraton hotels]
+  category: travel.hotels
+  brand_of: marriott
+- id: westin
+  name: Westin
+  aliases: [the westin, westin hotels]
+  category: travel.hotels
+  brand_of: marriott
+- id: w-hotels
+  name: W Hotels
+  aliases: [w hotel]
+  category: travel.hotels
+  brand_of: marriott
+- id: ritz-carlton
+  name: The Ritz-Carlton
+  aliases: [ritz carlton]
+  category: travel.hotels
+  brand_of: marriott
+- id: st-regis
+  name: St. Regis
+  aliases: [st regis]
+  category: travel.hotels
+  brand_of: marriott
+- id: aloft
+  name: Aloft Hotels
+  aliases: [aloft]
+  category: travel.hotels
+  brand_of: marriott
+- id: moxy
+  name: Moxy Hotels
+  aliases: [moxy]
+  category: travel.hotels
+  brand_of: marriott
+- id: four-points
+  name: Four Points by Sheraton
+  aliases: [four points]
+  category: travel.hotels
+  brand_of: marriott
+- id: delta-hotels
+  name: Delta Hotels
+  aliases: [delta hotels by marriott]
+  category: travel.hotels
+  brand_of: marriott
+- id: hampton-inn
+  name: Hampton Inn
+  aliases: [hampton by hilton, hampton inn and suites]
+  category: travel.hotels
+  brand_of: hilton
+- id: hilton-garden-inn
+  name: Hilton Garden Inn
+  category: travel.hotels
+  brand_of: hilton
+- id: doubletree
+  name: DoubleTree by Hilton
+  aliases: [doubletree, double tree]
+  category: travel.hotels
+  brand_of: hilton
+- id: embassy-suites
+  name: Embassy Suites by Hilton
+  aliases: [embassy suites]
+  category: travel.hotels
+  brand_of: hilton
+- id: homewood-suites
+  name: Homewood Suites by Hilton
+  aliases: [homewood suites]
+  category: travel.hotels
+  brand_of: hilton
+- id: home2-suites
+  name: Home2 Suites by Hilton
+  aliases: [home2 suites, home 2 suites]
+  category: travel.hotels
+  brand_of: hilton
+- id: waldorf-astoria
+  name: Waldorf Astoria
+  category: travel.hotels
+  brand_of: hilton
+- id: holiday-inn
+  name: Holiday Inn
+  aliases: [holiday inn hotel]
+  category: travel.hotels
+  brand_of: ihg
+- id: holiday-inn-express
+  name: Holiday Inn Express
+  aliases: [holiday inn express and suites]
+  category: travel.hotels
+  brand_of: ihg
+- id: intercontinental
+  name: InterContinental Hotels
+  aliases: [intercontinental]
+  category: travel.hotels
+  brand_of: ihg
+- id: kimpton
+  name: Kimpton Hotels
+  aliases: [kimpton]
+  category: travel.hotels
+  brand_of: ihg
+- id: crowne-plaza
+  name: Crowne Plaza
+  category: travel.hotels
+  brand_of: ihg
+- id: staybridge-suites
+  name: Staybridge Suites
+  category: travel.hotels
+  brand_of: ihg
+- id: hyatt-regency
+  name: Hyatt Regency
+  category: travel.hotels
+  brand_of: hyatt
+- id: hyatt-place
+  name: Hyatt Place
+  category: travel.hotels
+  brand_of: hyatt
+- id: hyatt-house
+  name: Hyatt House
+  category: travel.hotels
+  brand_of: hyatt
+- id: grand-hyatt
+  name: Grand Hyatt
+  category: travel.hotels
+  brand_of: hyatt
+- id: la-quinta
+  name: La Quinta by Wyndham
+  aliases: [la quinta, la quinta inn]
+  category: travel.hotels
+  brand_of: wyndham
+- id: days-inn
+  name: Days Inn by Wyndham
+  aliases: [days inn]
+  category: travel.hotels
+  brand_of: wyndham
+- id: super-8
+  name: Super 8 by Wyndham
+  aliases: [super 8, super 8 motel]
+  category: travel.hotels
+  brand_of: wyndham
+- id: ramada
+  name: Ramada by Wyndham
+  aliases: [ramada]
+  category: travel.hotels
+  brand_of: wyndham
+- id: travelodge
+  name: Travelodge by Wyndham
+  aliases: [travelodge]
+  category: travel.hotels
+  brand_of: wyndham
+- id: comfort-inn
+  name: Comfort Inn
+  aliases: [comfort inn and suites]
+  category: travel.hotels
+  brand_of: choice-hotels
+- id: quality-inn
+  name: Quality Inn
+  category: travel.hotels
+  brand_of: choice-hotels
+- id: sleep-inn
+  name: Sleep Inn
+  category: travel.hotels
+  brand_of: choice-hotels
+- id: econo-lodge
+  name: Econo Lodge
+  category: travel.hotels
+  brand_of: choice-hotels
+- id: country-inn-and-suites
+  name: Country Inn & Suites by Radisson
+  aliases: [country inn and suites, country inn & suites]
+  category: travel.hotels
+  brand_of: radisson
+- id: fairmont
+  name: Fairmont Hotels
+  aliases: [fairmont]
+  category: travel.hotels
+  brand_of: accor

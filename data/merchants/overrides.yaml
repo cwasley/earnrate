@@ -1085,3 +1085,451 @@
   name: Kindle Unlimited
   category: streaming
   note: On Amex's Select U.S. Streaming Subscriptions list. Charged by Amazon, so other issuers may code it as Amazon.
+
+# Fast casual
+- id: habit-burger
+  name: The Habit Burger Grill
+  aliases: [habit burger, the habit]
+  domains: [habitburger.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: wayback-burgers
+  name: Wayback Burgers
+  aliases: [wayback]
+  domains: [waybackburgers.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: burgerfi
+  name: BurgerFi
+  aliases: [burger fi]
+  domains: [burgerfi.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: pei-wei
+  name: Pei Wei
+  aliases: [pei wei asian kitchen]
+  domains: [peiwei.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: chicken-salad-chick
+  name: Chicken Salad Chick
+  domains: [chickensaladchick.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: cafe-rio
+  name: Cafe Rio Mexican Grill
+  aliases: [cafe rio]
+  domains: [caferio.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: cafe-zupas
+  name: Café Zupas
+  aliases: [cafe zupas, zupas]
+  domains: [cafezupas.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: torchys-tacos
+  name: "Torchy's Tacos"
+  aliases: [torchys, torchys tacos]
+  domains: [torchystacos.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: fuzzys-taco-shop
+  name: "Fuzzy's Taco Shop"
+  aliases: [fuzzys, fuzzys taco shop]
+  domains: [fuzzystacoshop.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: mendocino-farms
+  name: Mendocino Farms
+  domains: [mendocinofarms.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: dickeys
+  name: "Dickey's Barbecue Pit"
+  aliases: [dickeys, dickeys bbq]
+  domains: [dickeys.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+- id: jamba
+  name: Jamba
+  aliases: [jamba juice]
+  domains: [jamba.com]
+  category: dining.fast_food
+  ambiguity:
+    may_code_as: [dining]
+    note: 'Fast-casual chains can post as fast food (MCC 5814) or as a restaurant (5812); a statement shows which.'
+
+# Gas stations with convenience stores
+- id: mapco
+  name: MAPCO
+  aliases: [mapco express]
+  domains: [mapco.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: 'MAPCO is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.'
+- id: weigels
+  name: "Weigel's"
+  aliases: [weigels]
+  domains: [weigels.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: "Weigel's is a gas station with a convenience store. A location without fuel pumps may code as a convenience store."
+- id: kwik-fill
+  name: Kwik Fill
+  aliases: [kwik fill red apple]
+  domains: [kwikfill.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: 'Kwik Fill is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.'
+- id: allsups
+  name: "Allsup's"
+  aliases: [allsups]
+  domains: [allsups.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: "Allsup's is a gas station with a convenience store. A location without fuel pumps may code as a convenience store."
+- id: yesway
+  name: Yesway
+  domains: [yesway.com]
+  category: gas
+  ambiguity:
+    may_code_as: [convenience_store]
+    note: 'Yesway is a gas station with a convenience store. A location without fuel pumps may code as a convenience store.'
+
+# Airport parking
+- id: the-parking-spot
+  name: The Parking Spot
+  aliases: [parking spot]
+  domains: [theparkingspot.com]
+  category: transit
+  likely_mcc: 7523
+  note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
+- id: park-n-fly
+  name: "Park 'N Fly"
+  aliases: [park n fly, parknfly]
+  domains: [pnf.com]
+  category: transit
+  likely_mcc: 7523
+  note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
+- id: fast-park-and-relax
+  name: FastPark & Relax
+  aliases: [fastpark, fast park, fast park and relax]
+  domains: [thefastpark.com]
+  category: transit
+  likely_mcc: 7523
+  note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
+- id: sp-plus
+  name: SP+ Parking
+  aliases: [sp plus, sp+]
+  domains: [spplus.com]
+  category: transit
+  likely_mcc: 7523
+  note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
+
+# Tolls
+- id: i-pass
+  name: I-PASS
+  aliases: [ipass, illinois tollway]
+  domains: [getipass.com]
+  category: transit
+  likely_mcc: 4784
+  note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
+- id: peach-pass
+  name: Peach Pass
+  domains: [peachpass.com]
+  category: transit
+  likely_mcc: 4784
+  note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
+- id: nc-quick-pass
+  name: NC Quick Pass
+  aliases: [quick pass]
+  domains: [ncquickpass.com]
+  category: transit
+  likely_mcc: 4784
+  note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
+- id: ez-tag
+  name: EZ TAG
+  aliases: [eztag, hctra]
+  domains: [hctra.org]
+  category: transit
+  likely_mcc: 4784
+  note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
+- id: tolltag
+  name: TollTag
+  aliases: [ntta, ntta tolltag]
+  domains: [ntta.org]
+  category: transit
+  likely_mcc: 4784
+  note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
+- id: e-pass
+  name: E-PASS
+  aliases: [epass, central florida expressway]
+  domains: [cfxway.com]
+  category: transit
+  likely_mcc: 4784
+  note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
+
+# Specialty stores
+- id: books-a-million
+  name: Books-A-Million
+  aliases: [books a million]
+  domains: [booksamillion.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A bookstore, with no bonus category in store. Its website counts as online retail.'
+- id: half-price-books
+  name: Half Price Books
+  aliases: [hpb]
+  domains: [hpb.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A bookstore, with no bonus category in store. Its website counts as online retail.'
+- id: powells-books
+  name: "Powell's Books"
+  aliases: [powells, powells books, powells city of books]
+  domains: [powells.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A bookstore, with no bonus category in store. Its website counts as online retail.'
+- id: build-a-bear
+  name: Build-A-Bear Workshop
+  aliases: [build a bear, build a bear workshop]
+  domains: [buildabear.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A toy store, with no bonus category in store. Its website counts as online retail.'
+- id: lego-store
+  name: LEGO Store
+  aliases: [lego, the lego store]
+  domains: [lego.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A toy store, with no bonus category in store. Its website counts as online retail.'
+- id: sally-beauty
+  name: Sally Beauty
+  aliases: [sally beauty supply]
+  domains: [sallybeauty.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A beauty supply store, with no bonus category in store. Its website counts as online retail.'
+- id: bluemercury
+  name: Bluemercury
+  aliases: [blue mercury]
+  domains: [bluemercury.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A cosmetics store, with no bonus category in store. Its website counts as online retail.'
+- id: kay-jewelers
+  name: Kay Jewelers
+  aliases: [kay jewelers store]
+  domains: [kay.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A jewelry store, with no bonus category in store. Its website counts as online retail.'
+- id: zales
+  name: Zales
+  aliases: [zales jewelers]
+  domains: [zales.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A jewelry store, with no bonus category in store. Its website counts as online retail.'
+- id: jared
+  name: Jared
+  aliases: [jared the galleria of jewelry, jared jewelers]
+  domains: [jared.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A jewelry store, with no bonus category in store. Its website counts as online retail.'
+- id: tiffany
+  name: Tiffany & Co.
+  aliases: [tiffany, tiffany and co, tiffanys]
+  domains: [tiffany.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'A jewelry store, with no bonus category in store. Its website counts as online retail.'
+- id: pep-boys
+  name: Pep Boys
+  aliases: [pepboys]
+  domains: [pepboys.com]
+  category: other
+  online:
+    category: online_retail
+  note: 'An auto parts and service shop, with no bonus category in store. Its website counts as online retail.'
+- id: pandora-jewelry
+  name: Pandora Jewelry
+  aliases: [pandora jewelry store, pandora charms]
+  domains: [pandora.net]
+  category: other
+  online:
+    category: online_retail
+  note: 'A jewelry store, with no bonus category in store. Its website counts as online retail. For the music service, ask about Pandora.'
+
+# Discount stores
+- id: ocean-state-job-lot
+  name: Ocean State Job Lot
+  aliases: [job lot, osjl]
+  domains: [oceanstatejoblot.com]
+  category: other
+  note: 'Codes as a discount store, which issuers leave out of grocery bonuses.'
+- id: bargain-hunt
+  name: Bargain Hunt
+  category: other
+  note: 'Codes as a discount store, which issuers leave out of grocery bonuses.'
+- id: daiso
+  name: Daiso
+  aliases: [daiso japan]
+  domains: [daisous.com]
+  category: other
+  note: 'Codes as a discount store, which issuers leave out of grocery bonuses.'
+
+# Auto service
+- id: jiffy-lube
+  name: Jiffy Lube
+  domains: [jiffylube.com]
+  category: other
+  note: 'Auto service, which no card gives a bonus. It codes as a repair shop or car wash, not as gas.'
+- id: valvoline-instant-oil-change
+  name: Valvoline Instant Oil Change
+  aliases: [valvoline]
+  domains: [vioc.com]
+  category: other
+  note: 'Auto service, which no card gives a bonus. It codes as a repair shop or car wash, not as gas.'
+- id: midas
+  name: Midas
+  domains: [midas.com]
+  category: other
+  note: 'Auto service, which no card gives a bonus. It codes as a repair shop or car wash, not as gas.'
+- id: firestone-complete-auto-care
+  name: Firestone Complete Auto Care
+  aliases: [firestone auto care, firestone]
+  domains: [firestonecompleteautocare.com]
+  category: other
+  note: 'Auto service, which no card gives a bonus. It codes as a repair shop or car wash, not as gas.'
+- id: mister-car-wash
+  name: Mister Car Wash
+  domains: [mistercarwash.com]
+  category: other
+  note: 'Auto service, which no card gives a bonus. It codes as a repair shop or car wash, not as gas.'
+
+# Garden centers
+- id: armstrong-garden-centers
+  name: Armstrong Garden Centers
+  aliases: [armstrong garden]
+  domains: [armstronggarden.com]
+  category: other
+  note: 'A garden center, which Chase leaves out of home improvement ("garden and landscaping supplies").'
+- id: calloways-nursery
+  name: "Calloway's Nursery"
+  aliases: [calloways, calloways nursery]
+  domains: [calloways.com]
+  category: other
+  note: 'A garden center, which Chase leaves out of home improvement ("garden and landscaping supplies").'
+
+# Services that sound like a bonus category
+- id: massage-envy
+  name: Massage Envy
+  domains: [massageenvy.com]
+  category: other
+  note: 'A massage membership, not a gym: Chase''s fitness category leaves out "massage therapy".'
+- id: camping-world
+  name: Camping World
+  domains: [campingworld.com]
+  category: sporting_goods
+  ambiguity:
+    may_code_as: [other]
+    note: 'U.S. Bank lists Camping World as a sporting goods store, so gear and supplies earn there. RV sales and service code as a dealer, which no card gives a bonus.'
+- id: smart-and-final
+  name: Smart & Final
+  aliases: [smart and final, smart final]
+  domains: [smartandfinal.com]
+  category: grocery.supermarket
+  note: 'A warehouse-style grocer with no membership. Amex names it as a U.S. supermarket.'
+
+# Theaters with in-seat dining
+- id: look-cinemas
+  name: LOOK Dine-In Cinemas
+  aliases: [look cinemas, look dine in]
+  domains: [lookcinemas.com]
+  category: movie_theaters
+  ambiguity:
+    may_code_as: [dining]
+    note: "Tickets code as a movie theater. Food and drinks ordered at your seat usually post on the theater's charge too, but a location's kitchen may bill separately as a restaurant."
+- id: flix-brewhouse
+  name: Flix Brewhouse
+  domains: [flixbrewhouse.com]
+  category: movie_theaters
+  ambiguity:
+    may_code_as: [dining]
+    note: "Tickets code as a movie theater. Food and drinks ordered at your seat usually post on the theater's charge too, but a location's kitchen may bill separately as a restaurant."
+
+# Phone and internet
+- id: optimum-mobile
+  name: Optimum Mobile
+  category: phone
+  note: "Altice's cell service, billed apart from Optimum internet."
+- id: cox-mobile
+  name: Cox Mobile
+  category: phone
+  note: "Cox's cell service, billed apart from Cox internet."
+- id: t-mobile-home-internet
+  name: T-Mobile Home Internet
+  aliases: [t mobile home internet, tmobile home internet]
+  category: tv_internet
+  note: "T-Mobile's 5G home internet, billed as internet, not as cell phone service."
+
+# Streaming
+- id: luminary
+  name: Luminary
+  aliases: [luminary podcasts]
+  domains: [luminarypodcasts.com]
+  category: streaming
+  note: "On Amex's Select U.S. Streaming Subscriptions list and U.S. Bank's Altitude streaming list."
+- id: liveone
+  name: LiveOne
+  aliases: [live one, slacker radio]
+  domains: [liveone.com]
+  category: streaming
+  note: "On U.S. Bank's Altitude streaming list (LiveOne) and its Cash+ samples (Slacker Radio)."
+- id: fanduel-sports-network
+  name: FanDuel Sports Network
+  aliases: [fanduel sports, bally sports]
+  category: streaming
+  note: "On U.S. Bank's Altitude streaming list. For sports betting, FanDuel's own charges aren't streaming."
