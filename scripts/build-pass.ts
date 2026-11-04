@@ -9,9 +9,21 @@ const ASSETS = path.join(ROOT, 'pass', 'assets')
 const images: Record<string, string> = {}
 for (const name of (await readdir(ASSETS)).filter((f) => f.endsWith('.png')))
   images[name] = (await readFile(path.join(ASSETS, name))).toString('base64')
+// Inter (SIL Open Font License), the strip's only font.
+const FONT_DIR = path.join(ROOT, 'node_modules/@expo-google-fonts/inter')
+const FONTS = [
+  'Inter_400Regular.ttf',
+  'Inter_600SemiBold.ttf',
+  'Inter_700Bold.ttf',
+]
+const fonts = await Promise.all(
+  FONTS.map(async (f) =>
+    (await readFile(path.join(FONT_DIR, f))).toString('base64'),
+  ),
+)
 await writeFile(
   path.join(ROOT, 'pass', 'bundle.gen.json'),
-  JSON.stringify({ catalog: await loadCatalog(), images }),
+  JSON.stringify({ catalog: await loadCatalog(), images, fonts }),
 )
 console.log(
   `Wrote pass/bundle.gen.json (${String(Object.keys(images).length)} images).`,

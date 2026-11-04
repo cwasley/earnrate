@@ -2,9 +2,10 @@
 // the quarter it was made in. Pure: the Worker signs and zips what this
 // returns. Rates come only from the engine, never from the request.
 import { z } from 'zod'
-import { cheatSheet, type CheatSheetRow } from '../../src/engine/cheat-sheet.ts'
+import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { currentPeriodEnd } from '../../src/engine/periods.ts'
-import { longDate, pct } from '../../src/engine/text.ts'
+import { checklist, type ChecklistItem } from '../../src/engine/checklist.ts'
+import { longDate, pct, shortDate } from '../../src/engine/text.ts'
 import { cardText } from '../../src/format/card-text.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import {
@@ -12,6 +13,7 @@ import {
   WalletSchema,
   type Wallet,
 } from '../../src/schema/wallet.ts'
+import type { StripRow } from './strip.ts'
 
 // Only what the cheat sheet needs: no spending, caps, bonuses or anniversaries.
 export const PassWalletSchema = z.strictObject({
@@ -35,33 +37,44 @@ export type PassIdentity = {
   teamIdentifier: string
 }
 
-// The rows on the pass's face, with shorter labels where a field is narrow;
-// the back has them all.
-const FRONT: [string, string][] = [
-  ['Groceries', 'Groceries'],
-  ['Dining', 'Dining'],
-  ['Gas', 'Gas'],
-  ['Amazon', 'Amazon'],
-  ['Costco', 'Costco'],
-  ['Everything else', 'Other'],
+// The rows drawn on the strip; the back has them all.
+const FRONT = [
+  'Groceries',
+  'Dining',
+  'Gas',
+  'Amazon',
+  'Costco',
+  'Everything else',
 ]
 
 const REFRESH_URL = 'https://earnrate.dev/#wallet'
+// What fits the strip's card column without shrinking (see strip.ts).
+const STRIP_NAME = 21
 
-type Field = { key: string; label: string; value: string }
+type Field = {
+  key: string
+  label: string
+  value: string
+  textAlignment?: string
+}
+
+export type PassContents = {
+  pass: Record<string, unknown> // pass.json
+  strip: StripRow[] // drawn into strip.png
+}
 
 export function unknownCards(catalog: Catalog, input: PassWallet): string[] {
   const known = new Set(catalog.cards.map((c) => c.id))
   return input.cards.map((c) => c.id).filter((id) => !known.has(id))
 }
 
-export function passJson(
+export function passContents(
   catalog: Catalog,
   input: PassWallet,
   date: string,
   identity: PassIdentity,
   serialNumber: string,
-): Record<string, unknown> {
+): PassContents {
   const parsed = PassWalletSchema.parse(input)
   const wallet: Wallet = WalletSchema.parse({
     memberships: parsed.memberships,
@@ -75,8 +88,8 @@ export function passJson(
     ),
   )
   const issuerPrefixes = ['Amex ', ...catalog.issuers.map((i) => `${i.name} `)]
-  // Short enough for a pass field: the checkout label, or the card's name
-  // without its issuer ("Sapphire Preferred").
+  // The checkout label, or the card's name without its issuer
+  // ("Sapphire Preferred").
   const compact = (cardId: string) => {
     const label = labels.get(cardId)
     if (label) return label
@@ -86,36 +99,63 @@ export function passJson(
     )
     return prefix ? name.slice(prefix.length) : name
   }
-  const value = (row: CheatSheetRow, name: (id: string) => string) =>
-    row.cardId === null || row.effectiveReturnPct === null
-      ? 'None of these cards'
-      : `${name(row.cardId)} ${pct(row.effectiveReturnPct)}`
+  // The issuer stays when the name still fits ("Amex Gold").
+  const stripName = (cardId: string) => {
+    const name = labels.get(cardId) ?? text.shortName(cardId)
+    return name.length <= STRIP_NAME ? name : compact(cardId)
+  }
   const key = (label: string) =>
     label
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
 
-  // Three to a row, so a long card name gets cut short: the rate goes in
-  // the label, where it always fits.
-  const front: Field[] = FRONT.flatMap(([rowLabel, label]) => {
-    const row = sheet.rows.find((r) => r.label === rowLabel)
+  const strip: StripRow[] = FRONT.flatMap((label) => {
+    const row = sheet.rows.find((r) => r.label === label)
     if (!row) return []
     return row.cardId === null || row.effectiveReturnPct === null
-      ? [{ key: key(label), label, value: 'None of these' }]
+      ? [{ label, card: 'None of these', rate: '' }]
       : [
           {
-            key: key(label),
-            label: `${label} · ${pct(row.effectiveReturnPct)}`,
-            value: compact(row.cardId),
+            label,
+            card: stripName(row.cardId),
+            rate: pct(row.effectiveReturnPct),
           },
         ]
   })
+
+  // One line on the front; the back has every item in full.
+  const todo = checklist(catalog, wallet, date)
+  const first = todo[0]
+  const todoText = (item: ChecklistItem) => {
+    const card = compact(item.cardId)
+    const by =
+      item.due === null
+        ? ''
+        : ` by ${shortDate(item.due).replace(/, \d{4}$/, '')}`
+    switch (item.kind) {
+      case 'activate':
+        return `Activate ${card}${by}`
+      case 'pick':
+        return `Pick ${card} categories${by}`
+      case 'rotation':
+        return `${card}: next quarter not posted yet`
+      default:
+        return `${card}: see pass details`
+    }
+  }
+
+  const end = currentPeriodEnd('quarter', date, null) ?? date
   const back: Field[] = [
     ...sheet.rows.map((row) => ({
       key: `all-${key(row.label)}`,
       label: row.label,
-      value: [value(row, text.shortName), row.note]
+      value: [
+        row.cardId === null || row.effectiveReturnPct === null
+          ? 'None of these cards'
+          : `${text.shortName(row.cardId)} ${pct(row.effectiveReturnPct)}`,
+        row.note,
+      ]
         .filter((t) => t !== null && t !== '')
         .join('\n'),
     })),
@@ -140,8 +180,7 @@ export function passJson(
     },
   ]
 
-  const end = currentPeriodEnd('quarter', date, null) ?? date
-  return {
+  const pass = {
     formatVersion: 1,
     passTypeIdentifier: identity.passTypeIdentifier,
     teamIdentifier: identity.teamIdentifier,
@@ -155,13 +194,31 @@ export function passJson(
     // The end of the quarter's last day anywhere in the U.S.
     expirationDate: `${end}T23:59:59-10:00`,
     sharingProhibited: true,
-    generic: {
+    storeCard: {
       headerFields: [
         { key: 'quarter', label: 'Cheat sheet', value: sheet.quarter },
       ],
-      secondaryFields: front.slice(0, 3),
-      auxiliaryFields: front.slice(3, 6),
+      secondaryFields: first
+        ? [
+            {
+              key: 'to-do-first',
+              label:
+                todo.length > 1 ? `To do · ${String(todo.length)}` : 'To do',
+              value: todoText(first),
+            },
+          ]
+        : [],
+      auxiliaryFields: [
+        { key: 'through', label: 'Good through', value: shortDate(end) },
+        {
+          key: 'more',
+          label: 'Every category',
+          value: 'In pass details',
+          textAlignment: 'PKTextAlignmentRight',
+        },
+      ],
       backFields: back,
     },
   }
+  return { pass, strip }
 }

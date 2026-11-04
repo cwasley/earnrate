@@ -6,12 +6,16 @@
 import type { Catalog } from '../../src/schema/catalog.ts'
 import { limitKey, readBody } from '../../remote/src/requests.ts'
 import {
-  passJson,
+  passContents,
   PassWalletSchema,
   unknownCards,
   type PassIdentity,
 } from './pass.ts'
 import { packPass, type Signer } from './sign.ts'
+import { STRIP, stripSvg } from './strip.ts'
+
+// SVG in, PNG out at `width` pixels wide.
+export type RenderPng = (svg: string, width: number) => Promise<Uint8Array>
 
 type RateLimit = {
   limit(options: { key: string }): Promise<{ success: boolean }>
@@ -52,6 +56,7 @@ function passDate(sent: string | null, now: Date): string {
 export function makePassWorker(deps: {
   catalog: Catalog
   images: Record<string, Uint8Array>
+  renderPng: RenderPng
   now?: () => Date
 }) {
   const now = deps.now ?? (() => new Date())
@@ -106,14 +111,22 @@ export function makePassWorker(deps: {
         return text(503, "Apple Wallet passes aren't set up yet.")
 
       const date = passDate(form.get('date'), now())
-      const pass = passJson(
+      const { pass, strip } = passContents(
         deps.catalog,
         parsed.data,
         date,
         identity,
         crypto.randomUUID(),
       )
-      const bytes = await packPass(pass, deps.images, signer)
+      const svg = stripSvg(strip)
+      const strips: Record<string, Uint8Array> = {}
+      for (const [scale, name] of [
+        [1, 'strip.png'],
+        [2, 'strip@2x.png'],
+        [3, 'strip@3x.png'],
+      ] as const)
+        strips[name] = await deps.renderPng(svg, STRIP.width * scale)
+      const bytes = await packPass(pass, { ...deps.images, ...strips }, signer)
       return new Response(bytes, {
         headers: {
           'content-type': 'application/vnd.apple.pkpass',

@@ -6,7 +6,9 @@ import { unzipSync } from 'fflate'
 import forge from 'node-forge'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { makePassWorker, type PassEnv } from '../pass/src/app.ts'
-import { passJson, type PassWallet } from '../pass/src/pass.ts'
+import { passContents, type PassWallet } from '../pass/src/pass.ts'
+import { makeRenderer } from '../pass/src/render.ts'
+import { cardFit, stripSvg } from '../pass/src/strip.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import { cheatSheet } from '../src/engine/cheat-sheet.ts'
 import { pct } from '../src/engine/text.ts'
@@ -32,6 +34,7 @@ let catalog: Catalog
 let env: PassEnv
 let images: Record<string, Uint8Array>
 let certPem: string
+let renderPng: ReturnType<typeof makeRenderer>
 
 beforeAll(async () => {
   catalog = await loadCatalog()
@@ -53,6 +56,22 @@ beforeAll(async () => {
     PASS_KEY_PEM: forge.pki.privateKeyToPem(keys.privateKey),
     WWDR_PEM: certPem,
   }
+  const fonts = await Promise.all(
+    ['Inter_400Regular.ttf', 'Inter_600SemiBold.ttf', 'Inter_700Bold.ttf'].map(
+      async (f) =>
+        new Uint8Array(
+          await readFile(
+            path.join(ROOT, 'node_modules/@expo-google-fonts/inter', f),
+          ),
+        ),
+    ),
+  )
+  renderPng = makeRenderer(
+    await readFile(
+      path.join(ROOT, 'node_modules/@resvg/resvg-wasm/index_bg.wasm'),
+    ),
+    fonts,
+  )
   const dir = path.join(ROOT, 'pass/assets')
   images = Object.fromEntries(
     await Promise.all(
@@ -82,49 +101,75 @@ const worker = () =>
   makePassWorker({
     catalog,
     images,
+    renderPng,
     now: () => new Date('2026-11-03T20:00:00Z'),
   })
 
 describe('the cheat-sheet pass', () => {
-  test('its fields come from the cheat sheet for those cards', () => {
-    const pass = passJson(catalog, WALLET, '2026-11-03', IDENTITY, 'serial-1')
+  test('its strip and fields come from the cheat sheet for those cards', () => {
+    const { pass, strip } = passContents(
+      catalog,
+      WALLET,
+      '2026-11-03',
+      IDENTITY,
+      'serial-1',
+    )
     const sheet = cheatSheet(
       catalog,
       WalletSchema.parse({ cards: WALLET.cards }),
       '2026-11-03',
     )
-    const generic = pass.generic as {
-      headerFields: { value: string }[]
-      secondaryFields: { label: string; value: string }[]
-      auxiliaryFields: { label: string; value: string }[]
-      backFields: { key: string; label: string; value: string }[]
-    }
-    expect(generic.headerFields[0]?.value).toBe('Q4 2026')
-    const front = [...generic.secondaryFields, ...generic.auxiliaryFields]
-    expect(front.map((f) => f.label.split(' · ')[0])).toEqual([
+    expect(strip.map((r) => r.label)).toEqual([
       'Groceries',
       'Dining',
       'Gas',
       'Amazon',
       'Costco',
-      'Other',
+      'Everything else',
     ])
     const groceries = sheet.rows.find((r) => r.label === 'Groceries')
-    expect(front[0]).toMatchObject({
-      label: `Groceries · ${pct(groceries?.effectiveReturnPct ?? 0)}`,
-      value: 'Gold',
+    expect(strip[0]).toEqual({
+      label: 'Groceries',
+      card: 'Amex Gold',
+      rate: pct(groceries?.effectiveReturnPct ?? 0),
     })
-    expect(front.find((f) => f.label.startsWith('Costco'))?.value).toBe(
-      'Blue card',
+    expect(strip.find((r) => r.label === 'Costco')?.card).toBe('Blue card')
+    expect(strip.find((r) => r.label === 'Gas')?.card).not.toMatch(/^Chase /)
+    const card = pass.storeCard as {
+      headerFields: { value: string }[]
+      secondaryFields: { label: string; value: string }[]
+      auxiliaryFields: { label: string; value: string }[]
+      backFields: { key: string; label: string; value: string }[]
+    }
+    expect(card.headerFields[0]?.value).toBe('Q4 2026')
+    expect(card.secondaryFields[0]?.value).toBe(
+      'Activate Freedom Flex by Dec 14',
     )
-    expect(generic.backFields.map((f) => f.label)).toContain(
-      'Streaming (Netflix)',
+    expect(card.auxiliaryFields[0]?.value).toBe('Dec 31, 2026')
+    expect(card.backFields.map((f) => f.label)).toContain('Streaming (Netflix)')
+    expect(card.backFields.find((f) => f.key === 'refresh')?.value).toContain(
+      'https://earnrate.dev/#wallet',
     )
-    expect(
-      generic.backFields.find((f) => f.key === 'refresh')?.value,
-    ).toContain('https://earnrate.dev/#wallet')
     expect(pass.expirationDate).toBe('2026-12-31T23:59:59-10:00')
     expect(pass).toMatchObject({ ...IDENTITY, serialNumber: 'serial-1' })
+    expect(pass).not.toHaveProperty('barcodes')
+  })
+
+  test('the strip escapes text, shrinks long card names and cuts the longest', () => {
+    const svg = stripSvg([{ label: 'Dining', card: 'A & <B>', rate: '4%' }])
+    expect(svg).toContain('A &#38; &#60;B&#62;')
+    expect(cardFit('Sapphire Preferred')).toEqual({
+      text: 'Sapphire Preferred',
+      size: 15,
+    })
+    const shrunk = cardFit('Bank of America Customized Cash')
+    expect(shrunk.text).toBe('Bank of America Customized Cash')
+    expect(shrunk.size).toBeGreaterThanOrEqual(12)
+    expect(shrunk.size).toBeLessThan(15)
+    const cut = cardFit('My everyday gold card for food and groceries')
+    expect(cut.size).toBe(12)
+    expect(cut.text.endsWith('…')).toBe(true)
+    expect(cut.text.length).toBeLessThanOrEqual(32)
   })
 
   test('the Worker returns a signed .pkpass whose manifest matches its files', async () => {
@@ -146,6 +191,9 @@ describe('the cheat-sheet pass', () => {
         'manifest.json',
         'pass.json',
         'signature',
+        'strip.png',
+        'strip@2x.png',
+        'strip@3x.png',
       ].sort(),
     )
     const manifest = JSON.parse(
