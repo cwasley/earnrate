@@ -103,7 +103,7 @@ function table(title: string, rows: Row[], kinds: string[]) {
       )
       .reduce((n, r) => n + r.count, 0)
   labels.sort((a, b) => get(b) - get(a))
-  const cell = (s: string) => s.padStart(9)
+  const cell = (s: string) => s.padStart(11)
   console.log(`  ${''.padEnd(36)}${cell('total')}${seen.map(cell).join('')}`)
   for (const label of labels)
     console.log(
