@@ -1,6 +1,6 @@
 // Plain HTML from the same engine as the app, so search engines and AI
 // answer tools can read it without running JavaScript.
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DATA_DIR, loadCatalog } from '../src/data/load.ts'
@@ -39,6 +39,7 @@ import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
 import { milestoneWhat } from '../src/engine/milestones.ts'
+import { changeDates, latest } from './lastmod.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const OUT = path.join(ROOT, 'site-dist')
@@ -317,7 +318,7 @@ ${body}
         <p>Or <a href="/#claude">use it in Claude</a>: ask on claude.ai, in the desktop app, in Claude Code or in Cowork.</p>
       </aside>
       <footer>
-        <p>earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(dataVersion)}, updated ${esc(todayWords)}. Rates change, so check the issuer's terms before you apply.</p>
+        <p>earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(dataVersion)}, updated ${esc(todayWords)}. Rates change, so check the issuer's terms before you apply. Wrong rate? <a href="/support">Tell us</a>.</p>
         <p><a href="/">earnrate.dev</a> · <a href="/best/">Best card for every store</a> · <a href="/cards/">All cards</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/companies">For companies</a> · <a href="/support">Support</a></p>
       </footer>
     </main>
@@ -785,22 +786,38 @@ await writeFile(
   ),
 )
 
-const urls = [
-  `${SITE}/`,
-  `${SITE}/best/`,
-  ...all.map((p) => `${SITE}/best/${p.slug}`),
-  `${SITE}/cards/`,
-  ...catalog.cards.map((c) => `${SITE}/cards/${c.id}`),
-  `${SITE}/privacy`,
-  `${SITE}/terms`,
-  `${SITE}/companies`,
-  `${SITE}/support`,
+// lastmod is when a page's facts last changed, not when it was built: a
+// card page follows its card file, the rankings follow all of data/, and
+// the static pages their own source.
+const changed = changeDates(ROOT, ['data', 'site'], today)
+const dataFiles = (await readdir(DATA_DIR, { recursive: true }))
+  .filter((f) => /\.ya?ml$/.test(f))
+  .map((f) => path.join('data', f))
+const dataDate = latest(dataFiles.map(changed))
+const urls: [string, string][] = [
+  [`${SITE}/`, latest([dataDate, changed('site/index.html')])],
+  [`${SITE}/best/`, dataDate],
+  ...all.map((p): [string, string] => [`${SITE}/best/${p.slug}`, dataDate]),
+  [`${SITE}/cards/`, dataDate],
+  ...catalog.cards.map((c): [string, string] => [
+    `${SITE}/cards/${c.id}`,
+    latest([
+      changed(`data/cards/${c.id}.yaml`),
+      changed('data/currencies.yaml'),
+    ]),
+  ]),
+  ...['privacy', 'terms', 'companies', 'support'].map(
+    (page): [string, string] => [
+      `${SITE}/${page}`,
+      changed(`site/${page}.html`),
+    ],
+  ),
 ]
 await writeFile(
   path.join(OUT, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `  <url><loc>${u}</loc><lastmod>${today}</lastmod></url>`).join('\n')}
+${urls.map(([u, date]) => `  <url><loc>${u}</loc><lastmod>${date}</lastmod></url>`).join('\n')}
 </urlset>
 `,
 )

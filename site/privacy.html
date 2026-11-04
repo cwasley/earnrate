@@ -65,11 +65,12 @@
           Everything on earnrate.dev runs in your browser: the card comparison,
           the spending simulator and your wallet. The card data loads with the
           page, and the stores, amounts, cards and settings you enter are never
-          sent anywhere. Your wallet, your spending amounts and your settings
-          are saved in your browser's storage on that device, so they're there
-          next time. Deleting the wallet on the page, or clearing the site's
-          data in your browser, removes them. An exported wallet file goes only
-          where you save it.
+          sent anywhere, except when you add the cheat sheet to Apple Wallet
+          (below). Your wallet, your spending amounts and your settings are
+          saved in your browser's storage on that device, so they're there next
+          time. Deleting the wallet on the page, or clearing the site's data in
+          your browser, removes them. An exported wallet file goes only where
+          you save it.
         </p>
         <p>
           A store you search for appears in the address after a #. Browsers
@@ -82,6 +83,23 @@
           earnrate.dev's own files (the page, its code and the card data) and
           checks for a newer one when you're online. It holds nothing you typed,
           and clearing the site's data removes it.
+        </p>
+        <h3>The Apple Wallet pass</h3>
+        <p>
+          Only when you press <b>Add to Apple Wallet</b>, your browser sends
+          earnrate's pass server (pass.earnrate.dev) what the cheat sheet needs:
+          your cards by product, like amex-gold, their category picks and
+          activations, any checkout names you gave them, your memberships and
+          today's date. No spending amounts, searches or card numbers. The
+          server works out the cheat sheet, signs the pass so Apple Wallet
+          accepts it, and sends it back. It doesn't keep what you sent or the
+          pass, request logging is turned off, and Cloudflare limits how many
+          passes one IP address can make per minute.
+        </p>
+        <p>
+          The pass then lives in Apple Wallet on your device, under Apple's
+          privacy terms. It doesn't check back with earnrate for updates: when
+          the quarter ends it expires, and you make a new one.
         </p>
       </section>
 
@@ -258,6 +276,8 @@
           wallets. November 3, 2026: a wallet can also hold your spending this
           year on a card with a yearly spend bonus, and once you're signed in,
           the server's rate limit counts per wallet as well as per IP address.
+          Also November 3: earnrate.dev can add your cheat sheet to Apple
+          Wallet, which sends what the pass needs to earnrate's pass server.
         </p>
       </section>
 

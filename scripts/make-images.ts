@@ -24,6 +24,13 @@ const icon = (opts: { inset: number; radius: number; outlines: number }) => `
   <div style="width:${String(100 - opts.inset * 2)}%">${mark(opts.outlines)}</div>
 </div></body></html>`
 
+// The Wallet pass's logo: the mark alone, on the pass's dark background.
+const passLogo = `
+<html><body style="margin:0;background:transparent">
+<div style="width:100vw;height:100vh;display:grid;place-items:center">
+  <div style="width:100%">${mark(1)}</div>
+</div></body></html>`
+
 const og = `
 <html><body style="margin:0;width:1200px;height:630px;background:${PAPER};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1d1b19">
 <div style="display:flex;height:100%;padding:0 80px;align-items:center;gap:56px">
@@ -75,6 +82,23 @@ const outputs: {
     transparent: true,
   },
   { file: 'site/public/og.png', size: [1200, 630], html: og },
+  // Apple Wallet: icon 29pt and logo up to 160x50pt, at 1x, 2x and 3x.
+  ...[1, 2, 3].flatMap((scale) => {
+    const suffix = scale === 1 ? '' : `@${String(scale)}x`
+    return [
+      {
+        file: `pass/assets/icon${suffix}.png`,
+        size: [29 * scale, 29 * scale] as [number, number],
+        html: icon({ inset: 18, radius: 0, outlines: 1 }),
+      },
+      {
+        file: `pass/assets/logo${suffix}.png`,
+        size: [50 * scale, 35 * scale] as [number, number],
+        html: passLogo,
+        transparent: true,
+      },
+    ]
+  }),
 ]
 
 // favicon.ico: a 48px PNG inside an ICO wrapper, which every browser and

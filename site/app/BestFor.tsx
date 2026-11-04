@@ -116,7 +116,8 @@ function CardRow({ entry, rank }: { entry: ExploreEntry; rank: number }) {
         ) : null}
         {card ? (
           <p class="muted">
-            Checked against the issuer's terms {card.last_verified}.
+            Checked against the issuer's terms {card.last_verified}. Wrong rate?{' '}
+            <a href="/support">Tell us</a>.
           </p>
         ) : null}
       </details>

@@ -10,6 +10,7 @@ export default defineConfig([
     'dist/**',
     'remote/dist/**',
     'monitor/dist/**',
+    'pass/dist/**',
     'site-dist/**',
     '.wrangler/**',
     '.mcpb-build/**',
