@@ -2,6 +2,19 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.04.9
+
+Rules can now depend on how a purchase is paid (`requires: { payment: … }`, `exclude: { payment: […] }`), and the answer counts them only when the purchase says so.
+
+Apple Card (`apple-card`, issued by Goldman Sachs, a new issuer): 3% at Apple however it's paid; 3% with Apple Pay at Ace Hardware, ChargePoint, Duane Reade, ExxonMobil, Hertz, Nike, Uber, Uber Eats and Walgreens, in the U.S.; 2% on any purchase with Apple Pay; 1% with the titanium card or the card number. No annual fee and no foreign transaction fee. Booking.com's 3% needs Apple's own booking link, so it's left out. Source: [apple.com/apple-card](https://www.apple.com/apple-card/), read 2026-11-04 with a plain fetch and in headless Chromium. New merchant: Nike (`nike`, clothing).
+
+`paypal-cashback-mastercard` now earns 3% on purchases made through PayPal checkout online (previously a `todo`, modeled at 1.5% everywhere). Sources: [Synchrony's rewards terms](https://www.synchronycredit.com/gecrbterms/html/PayPalCashbackRewardsTerms.htm) ("3%: Each Eligible Purchase made by you through your PayPal account online") and [PayPal's card page](https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard), read 2026-11-04.
+
+| Card                       | Main rates                                                                          | Fees                                      | Sources                                                                                                                                                                     |
+| -------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| apple-card                 | 3% at Apple; 3% with Apple Pay at select U.S. merchants; 2% with Apple Pay; 1% else | $0 annual fee; no foreign transaction fee | [1](https://www.apple.com/apple-card/)                                                                                                                                      |
+| paypal-cashback-mastercard | 3% through PayPal checkout online; 1.5% else                                        | $0 annual fee; 3% foreign transaction fee | [1](https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard) · [2](https://www.synchronycredit.com/gecrbterms/html/PayPalCashbackRewardsTerms.htm) |
+
 ## 2026.11.04.8
 
 Sam's Club Mastercard (`sams-club-mastercard`, Synchrony): 5% on gas and EV charging on the first $6,000 a year, then 1%; 3% on dining and takeout; 3% at Sam's Club for Plus members (1% for Club members); 1% on everything else. No annual fee and no foreign transaction fee; it needs a Sam's Club membership. New memberships: `sams-club` (Club, $60 a year) and `sams-club-plus`. Sources: [Synchrony's Sam's Club page](https://www.synchrony.com/partner/sams-club) and [Sam's Club membership prices](https://www.samsclub.com/join), read 2026-11-04 (synchrony.com refuses the source check's headless browser, so its quotes were read with a plain fetch and in Chrome).

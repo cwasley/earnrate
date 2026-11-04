@@ -59,10 +59,11 @@ A rule that applies only to purchases above an amount. The engine has the purcha
 
 ### Payment-method exclusions
 
-There's no input for how a purchase was paid beyond online or in store.
+A purchase can say how it's paid (`card`, `apple-pay`, `google-pay` or `paypal`), and a rule can require one (`requires: { payment: apple-pay }`) or exclude some (`exclude: { payment: [paypal] }`). Apple Card and PayPal Cashback use it. What's left are exclusions the issuers word too loosely to model, or that the source check can't re-read:
 
-- `capital-one-savor`, `bank-of-america-customized-cash-rewards`: purchases through third-party payment accounts or unsupported digital wallets may not earn the bonus.
-- `paypal-cashback-mastercard`: 3% when the card is paid through the holder's PayPal account online (PayPal checkout or sending money); 1.5% otherwise. Modeled at 1.5% everywhere.
+- `capital-one-savor`, `bank-of-america-customized-cash-rewards`, `bank-of-america-premium-rewards`, `barclays-jetblue-plus`, `discover-it-cash-back`: purchases through third-party payment accounts, mobile card readers or digital wallets "may not" earn the bonus, depending on how the merchant codes them. Not a rule earnrate can apply.
+- `amex-hilton-honors-surpass`: online retail at 4x excludes purchases "through a third-party payment account". PayPal is the usual one, but Amex doesn't name it.
+- `td-bank-nordstrom-credit-card`, `td-bank-nordstrom-visa`: through PayPal or another third-party processor, Nordstrom purchases earn only the member's 1 point, and the Rack discount excludes Apple Pay and PayPal. Nordstrom's pages block the source check, and on the Visa an excluded Nordstrom purchase would fall back to the card's 1x base rate, which the terms don't say it earns.
 
 ### Category taxonomy
 

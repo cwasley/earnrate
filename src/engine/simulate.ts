@@ -23,7 +23,7 @@ import { choicePeriod, periodKey } from './periods.ts'
 import { applyBooking, capBooking } from './record.ts'
 import { milestoneWhat } from './milestones.ts'
 import { rotationGap } from './rotation.ts'
-import { money, roundCents, wholeDollars } from './text.ts'
+import { money, paymentNote, roundCents, wholeDollars } from './text.ts'
 import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
 import { EPSILON, HALF_CENT } from './compare.ts'
@@ -269,6 +269,10 @@ export function simulateWallet(
   const membershipFees = memberships.reduce((sum, m) => sum + m.annualFee, 0)
   const notes: string[] = [...milestoneNotes]
   for (const m of memberships) notes.push(membershipNote(catalog, m))
+  const paying = paymentNote(
+    cards.map(({ card }) => ({ name: card.name, card })),
+  )
+  if (paying !== null) notes.push(paying)
   const dates = monthDates(start)
   for (const { card } of cards) {
     const gaps = [

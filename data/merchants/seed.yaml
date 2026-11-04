@@ -1327,6 +1327,7 @@
     domains: [thelimited.com],
     category: clothing,
   }
+- { id: nike, name: Nike, domains: [nike.com], category: clothing }
 - {
     id: apple-store,
     name: Apple Store,
