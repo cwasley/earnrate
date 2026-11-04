@@ -63,7 +63,16 @@ import { SearchInput } from './SearchInput.tsx'
 import { load, loadList, save } from './settings.ts'
 import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
 import { offerTerms } from '../../src/engine/offers.ts'
-import { capitalize, dollarsAndCents } from '../../src/engine/text.ts'
+import {
+  capitalize,
+  creditBack,
+  creditShort,
+  CREDIT_THIS_PERIOD,
+  dollarsAndCents,
+  money,
+  shortDate,
+} from '../../src/engine/text.ts'
+import { creditStates } from '../../src/engine/credits.ts'
 
 // The first everyday purchases, as quick picks for one question.
 const QUICK = EVERYDAY_PURCHASES.slice(0, 6).map(quickPickText)
@@ -114,6 +123,9 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
           {top?.earned !== null && top?.earned !== undefined
             ? `, about ${dollarsAndCents(top.earned)}`
             : ''}
+          {top?.credit?.dollars
+            ? `, plus ${money(top.credit.dollars)} back from its ${top.credit.name} credit`
+            : ''}
           .
         </p>
       ) : (
@@ -146,6 +158,9 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
                 </div>
                 <span class="rate">{pct(r.effectiveReturnPct)}</span>
               </div>
+              {r.credit ? (
+                <p class="upgrade">{creditShort(r.credit, r.credit.dollars)}</p>
+              ) : null}
               {r.warnings.map((w) => (
                 <p class="warn" key={w}>
                   {w}
@@ -350,6 +365,15 @@ function CardEditor({
   const [yearSpent, setYearSpent] = useState(
     trackedSpend ? String(trackedSpend.spent) : '',
   )
+  const credits = card ? creditStates(catalog, card, held, localToday()) : []
+  const [enrolled, setEnrolled] = useState<string[]>(held.enrolled ?? [])
+  const [creditUsed, setCreditUsed] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      credits
+        .filter((c) => c.used > 0)
+        .map((c) => [c.credit.id, String(c.used)]),
+    ),
+  )
   if (!info || !card) return null
   const offer = card.welcome_offer
 
@@ -374,6 +398,12 @@ function CardEditor({
         milestones.map((m) => [m.id, dollars]),
       )
     }
+    if (credits.some((c) => c.credit.enroll)) input.enrolled = enrolled
+    const used = Object.entries(creditUsed).filter(([, v]) => v !== '')
+    if (used.length > 0)
+      input.creditUsed = Object.fromEntries(
+        used.map(([id, v]) => [id, Math.max(0, Number(v) || 0)]),
+      )
     onChange(updateInWallet(catalog, wallet, input, localToday()), held.id)
   }
 
@@ -522,6 +552,50 @@ function CardEditor({
           </label>
         </fieldset>
       ) : null}
+      {credits.map((c) => (
+        <fieldset key={c.credit.id}>
+          <legend>{c.name} credit</legend>
+          <p class="muted small">
+            {capitalize(creditBack(c))}
+            {c.until === null
+              ? ''
+              : `; this one runs through ${shortDate(c.until)}`}
+            .
+          </p>
+          {c.credit.enroll ? (
+            <label class="check">
+              <input
+                type="checkbox"
+                checked={enrolled.includes(c.credit.id)}
+                onChange={(e) => {
+                  const checked = e.currentTarget.checked
+                  setEnrolled((prev) =>
+                    checked
+                      ? [...prev, c.credit.id]
+                      : prev.filter((id) => id !== c.credit.id),
+                  )
+                }}
+              />
+              I've enrolled with {issuerName(info.issuer)}
+            </label>
+          ) : null}
+          <label class="field">
+            Used so far {CREDIT_THIS_PERIOD[c.period]}
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              max={String(c.amount)}
+              placeholder="0"
+              value={creditUsed[c.credit.id] ?? ''}
+              onInput={(e) => {
+                const value = e.currentTarget.value
+                setCreditUsed((prev) => ({ ...prev, [c.credit.id]: value }))
+              }}
+            />
+          </label>
+        </fieldset>
+      ))}
       {info.needsAnniversary ? (
         <label class="field">
           Account anniversary (MM-DD), for its yearly cap

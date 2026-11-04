@@ -20,11 +20,15 @@ import {
   capitalize,
   categoryPhrase,
   categoryReadsOn,
+  creditBack,
+  CREDIT_GROUP,
   currencyName,
   earnText,
+  ENROLL_FIRST,
   hostname,
   listed,
   longDate,
+  money,
   monthYear,
   num,
   pct,
@@ -41,6 +45,7 @@ import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
 import { milestoneWhat } from '../src/engine/milestones.ts'
+import { creditName } from '../src/engine/rule-text.ts'
 import { changeDates, latest } from './lastmod.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
@@ -168,8 +173,14 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
     page.merchant === null || r.merchant.source === 'none'
       ? ''
       : ` ${esc(page.label)} usually codes as ${esc(categoryPhrase(catalog, r.merchant.category))}${r.merchant.likelyMcc === null ? '' : ` (MCC ${String(r.merchant.likelyMcc)})`}.`
+  const credit = r.credits[0]
   const parts = [
-    `<strong><a href="/cards/${top.cardId}">${esc(shortName(top.cardId))}</a></strong> earns the most ${where}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ` in points at ${num(top.centsPerUnit)}¢ each`}.${codes}`,
+    ...(credit
+      ? [
+          `<strong><a href="/cards/${credit.cardId}">${esc(shortName(credit.cardId))}</a></strong> gives ${esc(credit.back)} ${where} with its store credit${credit.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}.`,
+        ]
+      : []),
+    `<strong><a href="/cards/${top.cardId}">${esc(shortName(top.cardId))}</a></strong> earns the most ${where}${credit ? ' by rate' : ''}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ` in points at ${num(top.centsPerUnit)}¢ each`}.${codes}`,
   ]
   const topCard = cards.get(top.cardId)
   const needs = topCard
@@ -332,6 +343,19 @@ ${body}
 `
 }
 
+// Cards with a statement credit at the store, before the ranking: dollars,
+// never a percentage.
+function creditGroup(r: Exploration): string {
+  if (r.credits.length === 0) return ''
+  const rows = r.credits
+    .map((c) => {
+      const ev = c.evidence
+      return `<li>${art(c.cardId)}<div><span class="row-head"><strong><a href="/cards/${c.cardId}">${esc(shortName(c.cardId))}</a></strong> <span class="rate">${esc(money(c.amount))} back</span></span><span class="muted row-note">${esc(issuerName(c.issuer))} · ${esc(feeLabel(c.cardId))}</span><ul><li>${esc(capitalize(c.text))}${c.enroll ? `. ${esc(capitalize(ENROLL_FIRST))}` : ''}.</li>${c.note ? `<li>${esc(c.note)}</li>` : ''}</ul>${ev ? `<p class="muted">“${esc(ev.quote)}” <a href="${esc(ev.url)}" rel="nofollow noopener">${esc(hostname(ev.url))}</a></p>` : ''}</div></li>`
+    })
+    .join('')
+  return `<h2>${esc(CREDIT_GROUP)}</h2><ol class="cards credits">${rows}</ol>`
+}
+
 const ranked = (r: Exploration) =>
   r.ranked.filter((e) => !isUnverified(e)).slice(0, TOP)
 
@@ -354,7 +378,8 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       <p class="updated">Updated ${esc(todayWords)}</p>
       ${answer(page, r, shown)}
       <p><a class="button" href="${appLink}">Check with your own cards</a></p>
-      <h2>Top ${String(shown.length)} cards ${page.merchant === null ? 'for' : 'at'} ${esc(subject)}</h2>
+      ${creditGroup(r)}
+      <h2>Top ${String(shown.length)} cards${r.credits.length > 0 ? ' by rate' : ''} ${page.merchant === null ? 'for' : 'at'} ${esc(subject)}</h2>
       ${table(shown)}
       ${hidden.length > 0 ? `<p class="muted">Not ranked: ${hidden.map((e) => esc(shortName(e.cardId))).join(', ')}, whose rate here isn't confirmed against the issuer's terms yet.</p>` : ''}
       ${gotchas(r)}
@@ -526,6 +551,15 @@ function milestonesText(card: Card): string {
   return `<h2>Spend bonuses</h2><p>Every purchase on the card counts. earnrate adds the bonus points to the purchase that reaches the total, once you track your spending on earnrate.dev, in Claude or with the command line; status, night credits and free nights aren't given a value.</p><ul>${items.join('')}</ul>`
 }
 
+function creditsText(card: Card): string {
+  if (card.credits.length === 0) return ''
+  const items = card.credits.map((c) => {
+    const name = creditName(catalog, c)
+    return `<li><strong>${esc(capitalize(creditBack(c)))} at ${esc(name)}</strong>${c.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}${c.note ? `<br /><span class="muted">${esc(c.note)}</span>` : ''}${evidenceFor(card, c.id)}</li>`
+  })
+  return `<h2>Store credits</h2><p>Statement credits for spending at these stores, on top of what the purchase earns. earnrate counts one toward a purchase once you mark it enrolled in your wallet, until it's used up for the period.</p><ul>${items.join('')}</ul>`
+}
+
 function foreignFeeSection(card: Card): string {
   const fee = card.foreign_transaction_fee
   const usOnly = [
@@ -691,6 +725,7 @@ function renderCard(
       ${rulesList(card)}
       ${choicesText(card)}
       ${milestonesText(card)}
+      ${creditsText(card)}
       ${foreignFeeSection(card)}
       ${offerText(card)}
       <h2>Sources</h2>

@@ -3,12 +3,21 @@ import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import {
   exploreCards,
+  type CreditPick,
   type Exploration,
   type ExploreEntry,
 } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { ABROAD } from '../../src/engine/recommend.ts'
-import { categoryPhrase, hostname } from '../../src/engine/text.ts'
+import {
+  capitalize,
+  categoryPhrase,
+  CREDIT_GROUP,
+  CREDIT_PERIODS,
+  ENROLL_FIRST,
+  hostname,
+  money,
+} from '../../src/engine/text.ts'
 import {
   cards,
   feeLabel,
@@ -125,6 +134,44 @@ function CardRow({ entry, rank }: { entry: ExploreEntry; rank: number }) {
             Checked against the issuer's terms {card.last_verified}. Wrong rate?{' '}
             <a href="/support">Tell us</a>.
           </p>
+        ) : null}
+      </details>
+    </li>
+  )
+}
+
+// A card with a statement credit at the store: dollars, never a percent.
+function CreditRow({ pick }: { pick: CreditPick }) {
+  return (
+    <li class="result credit-pick">
+      <div class="result-top">
+        <CardArt id={pick.cardId} width={44} />
+        <div class="result-name">
+          <strong>{shortName(pick.cardId)}</strong>
+          <span class="muted">
+            {issuerName(pick.issuer)} · {feeLabel(pick.cardId)}
+          </span>
+        </div>
+        <span class="rate">
+          {money(pick.amount)} <small>back</small>
+        </span>
+      </div>
+      <p>
+        {capitalize(CREDIT_PERIODS[pick.period])}, then {pick.earn}.
+        {pick.enroll ? (
+          <strong class="credit-enroll"> {capitalize(ENROLL_FIRST)}.</strong>
+        ) : null}
+      </p>
+      <details>
+        <summary>Terms</summary>
+        {pick.note ? <p>{pick.note}</p> : null}
+        {pick.evidence ? (
+          <blockquote>
+            “{pick.evidence.quote}”{' '}
+            <a href={pick.evidence.url} rel="noopener" target="_blank">
+              {hostname(pick.evidence.url)}
+            </a>
+          </blockquote>
         ) : null}
       </details>
     </li>
@@ -345,6 +392,17 @@ export function BestFor({
                 earnrate doesn't know that store yet. Try a category above, or
                 the name of a larger chain.
               </p>
+            ) : null}
+            {result.credits.length > 0 ? (
+              <>
+                <h4 class="credit-group">{CREDIT_GROUP}</h4>
+                <ul class="result-list">
+                  {result.credits.map((c) => (
+                    <CreditRow pick={c} key={`${c.cardId} ${c.creditId}`} />
+                  ))}
+                </ul>
+                <h4 class="credit-group">By rate</h4>
+              </>
             ) : null}
             <ol class="result-list">
               {shown.map((e, i) => (
