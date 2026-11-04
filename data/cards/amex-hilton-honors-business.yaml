@@ -1,6 +1,7 @@
 id: amex-hilton-honors-business
 name: Hilton Honors American Express Business Card
 short_name: Hilton Honors Business
+color: '#2b3340'
 issuer: amex
 network: amex
 currency: hilton-honors

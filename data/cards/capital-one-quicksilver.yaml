@@ -1,6 +1,7 @@
 id: capital-one-quicksilver
 name: Capital One Quicksilver Cash Rewards Credit Card
 short_name: Capital One Quicksilver
+color: '#b8bcc2'
 issuer: capital-one
 # The card page never names the network in visible text; its embedded
 # product data says MasterCard.

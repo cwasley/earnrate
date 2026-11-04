@@ -118,6 +118,16 @@ While the bonus is open and you're behind an even pace to the deadline, that car
 
 `spend`, `by` and the reward (`points`, or `dollars` for cash back) default to the card's published offer once earnrate has one; set them when your offer was different.
 
+### First-year rates
+
+Some cards earn more for a stretch after the account opens: Discover it Cash Back's Cashback Match doubles every rate for the first 365 days, and BofA Customized Cash pays 6% in its choice category for the first year. earnrate uses them only for purchases inside that window, so it needs the opening date:
+
+```sh
+earnrate update discover-it-cash-back --opened 2026-03-04
+```
+
+In the wallet file that's `opened: 2026-03-04` on the card; a tracked welcome bonus's `opened` counts too. Without a date, earnrate never assumes the card is new: it ranks it at its standard rates and says when a first-year rate would change the answer. The to-do list says when a first-year rate ends this quarter.
+
 ### Paying abroad
 
 Many cards charge a foreign transaction fee, often 3%, on every purchase outside the U.S., which can wipe out what they earn. Give the country with `--country` (two letters, like `FR`) and earnrate ranks each card after its fee, says what a card with a fee nets, and points out cards that earn extra abroad:

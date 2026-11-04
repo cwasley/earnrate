@@ -1,5 +1,6 @@
 id: capital-one-kohls-rewards-visa
 name: Kohl's Rewards Visa
+color: '#3b4048'
 issuer: capital-one
 network: visa
 currency: kohls-rewards

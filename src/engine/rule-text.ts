@@ -1,7 +1,15 @@
 import { findMerchant } from '../merchants/resolve.ts'
-import type { Card, Rule } from '../schema/card.ts'
+import type { Card, IntroRate, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
-import { categoryPhrase, choiceName, listed, words } from './text.ts'
+import {
+  categoryPhrase,
+  choiceName,
+  earnText,
+  introPeriod,
+  listed,
+  num,
+  words,
+} from './text.ts'
 
 // What a rule or a pick covers, in words, for answers and wallet lists.
 
@@ -67,4 +75,25 @@ export function ruleParts(catalog: Catalog, rule: Rule): string[] {
 
 export function ruleWhat(catalog: Catalog, rule: Rule): string {
   return listed(ruleParts(catalog, rule))
+}
+
+// "double every rate for the first year", "an extra 3% cash back on your 3%
+// picks for the first year".
+export function introWhat(
+  catalog: Catalog,
+  card: Card,
+  intro: IntroRate,
+): string {
+  const covered = card.rules.filter((r) => intro.rules?.includes(r.id))
+  const on =
+    intro.rules === undefined
+      ? 'every rate'
+      : [...new Set(covered.map((r) => ruleWhat(catalog, r)))].join('; ')
+  const change =
+    intro.multiply === undefined
+      ? `an extra ${earnText(catalog, intro.add ?? 0, card.currency)} on ${on}`
+      : intro.multiply === 2
+        ? `double ${on}`
+        : `${num(intro.multiply)} times ${on}`
+  return `${change} for the ${introPeriod(intro.days)}`
 }

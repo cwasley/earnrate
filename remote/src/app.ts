@@ -10,6 +10,7 @@ import { signedOutStore, VaultWalletStore } from './account-store.ts'
 import {
   challenge,
   makeAuth,
+  type AppKind,
   protectedResourceMetadata,
   resourceFor,
   SCOPE,
@@ -37,7 +38,9 @@ type Dataset = {
 export type Env = AuthEnv & {
   LIMITER?: RateLimit // every request: per wallet once signed in, else per IP
   SIGN_IN_LIMITER?: RateLimit // sign-in steps and rejected tokens
-  USAGE?: Dataset // counts only: the method or tool name, never arguments
+  // Counts only: the method or tool name and the kind of app, never
+  // arguments, wallets or people.
+  USAGE?: Dataset
   // OpenAI's plugin portal checks this token to verify the domain; not secret.
   OPENAI_APPS_CHALLENGE?: string
 }
@@ -92,20 +95,27 @@ function usageLabels(calls: Call[]): Set<string> {
   )
 }
 
+// blob1 is the label and blob2 the kind of app ('signed-out' before a
+// token is checked).
+type Kind = AppKind | 'signed-out'
+const count = (env: Env, label: string, kind: Kind) => {
+  env.USAGE?.writeDataPoint({ blobs: [label, kind], indexes: [label] })
+}
+
 // A tool that answered with an error (a refusal, like an unknown merchant)
 // is counted by tool name only, like every other use.
 async function countRefusals(
   env: Env,
   calls: Call[],
   response: Response,
+  kind: Kind,
 ): Promise<void> {
   const tools = calls.flatMap((c) => (c.tool === null ? [] : [c.tool]))
   if (tools.length !== 1 || !env.USAGE || response.status !== 200) return
   const text = await response.clone().text()
   if (!/"isError":\s*true/.test(text)) return
   const tool = tools[0] ?? ''
-  const label = `tool-error:${KNOWN_TOOLS.has(tool) ? tool : 'other'}`
-  env.USAGE.writeDataPoint({ blobs: [label], indexes: [label] })
+  count(env, `tool-error:${KNOWN_TOOLS.has(tool) ? tool : 'other'}`, kind)
 }
 
 const tooMany = () =>
@@ -162,10 +172,7 @@ async function signInStep(
         )
       : unavailable()
   }
-  if (response.status >= 500) {
-    const label = `error:${pathname}`
-    env.USAGE?.writeDataPoint({ blobs: [label], indexes: [label] })
-  }
+  if (response.status >= 500) count(env, `error:${pathname}`, 'signed-out')
   return response
 }
 
@@ -181,7 +188,9 @@ export function makeWorker<E extends Env>(
   vaultFor: VaultFor<E>,
   today = easternToday,
 ) {
-  const auth = makeAuth<E>(vaultFor)
+  const auth = makeAuth<E>(vaultFor, (env, kind) => {
+    count(env, 'wallet-created', kind)
+  })
   const handler = createMcpHandler(
     (ctx) =>
       createEarnrateServer({
@@ -221,9 +230,33 @@ export function makeWorker<E extends Env>(
       }
     }
     const calls = rpcCalls(parsedBody)
-    for (const label of usageLabels(calls))
-      env.USAGE?.writeDataPoint({ blobs: [label], indexes: [label] })
+    const tally = { kind: 'signed-out' as Kind }
+    try {
+      return await answer(
+        request,
+        env,
+        token,
+        resource,
+        calls,
+        forward,
+        parsedBody,
+        tally,
+      )
+    } finally {
+      for (const label of usageLabels(calls)) count(env, label, tally.kind)
+    }
+  }
 
+  async function answer(
+    request: Request,
+    env: E,
+    token: string | null,
+    resource: string,
+    calls: Call[],
+    forward: Request,
+    parsedBody: unknown,
+    tally: { kind: Kind },
+  ): Promise<Response> {
     const options = parsedBody === undefined ? {} : { parsedBody }
     const signedOut = () => handler.fetch(forward, options)
     const wantsWallet = calls.some(
@@ -247,6 +280,7 @@ export function makeWorker<E extends Env>(
       return challenge(resource, true)
     }
     const { grant, clientId, grantId } = found
+    tally.kind = await auth.clientKind(env, clientId)
     if (
       await limited(env.LIMITER, request, await walletLimitKey(grant.walletId))
     )
@@ -255,16 +289,17 @@ export function makeWorker<E extends Env>(
     // storage is consistent, so a deleted wallet or a signed-out grant is
     // refused here at once.
     const vault = vaultFor(env, grant.walletId)
-    let allowed
+    let checked
     try {
-      allowed = await vault.checkIn(
+      checked = await vault.checkIn(
         calls.some((c) => c.tool !== null),
         grantId,
       )
     } catch {
       return wantsWallet ? unavailable() : signedOut()
     }
-    if (!allowed) return challenge(resource, true)
+    if (checked === 'refused') return challenge(resource, true)
+    if (checked === 'first-use-today') count(env, 'wallet-active', tally.kind)
     const store = new VaultWalletStore(
       vault,
       grant.walletKey,
@@ -287,7 +322,7 @@ export function makeWorker<E extends Env>(
       ...options,
       authInfo: { token, clientId: '', scopes: [SCOPE], extra: { store } },
     })
-    await countRefusals(env, calls, response)
+    await countRefusals(env, calls, response, tally.kind)
     return response
   }
 

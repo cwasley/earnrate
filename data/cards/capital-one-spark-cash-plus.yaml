@@ -1,6 +1,7 @@
 id: capital-one-spark-cash-plus
 name: Capital One Spark Cash Plus
 short_name: Spark Cash Plus
+color: '#3a3d42'
 issuer: capital-one
 network: mastercard # World Elite Mastercard for Business (Spark), per capitalone.com/credit-cards/benefits-guide
 currency: cash

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'preact/hooks'
+import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { walletProblems } from '../../src/data/integrity.ts'
 import { bonusStatus } from '../../src/engine/bonus.ts'
@@ -43,7 +43,9 @@ import {
 } from '../../src/engine/wallet-change.ts'
 import { resolvePlace } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
+import { CardArt } from './CardArt.tsx'
 import { Logo } from './Logo.tsx'
+import { track } from './track.ts'
 import { cheatSheetImage } from './sheet-image.ts'
 import { lineFor, type Row } from './Spending.tsx'
 import {
@@ -61,7 +63,7 @@ import { SearchInput } from './SearchInput.tsx'
 import { load, loadList, save } from './settings.ts'
 import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
 import { offerTerms } from '../../src/engine/offers.ts'
-import { dollarsAndCents } from '../../src/engine/text.ts'
+import { capitalize, dollarsAndCents } from '../../src/engine/text.ts'
 
 // The first everyday purchases, as quick picks for one question.
 const QUICK = EVERYDAY_PURCHASES.slice(0, 6).map(quickPickText)
@@ -135,6 +137,7 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
             <li class="result" key={r.cardId}>
               <div class="result-top">
                 <span class="rank">{rank}</span>
+                <CardArt id={r.cardId} />
                 <div class="result-name">
                   <strong>{shortName(r.cardId)}</strong>
                   {r.cardId === rec.bonus?.cardId ? (
@@ -175,8 +178,11 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
     () => cheatSheet(catalog, wallet, localToday()),
     [wallet],
   )
+  useEffect(() => {
+    track('cheat-sheet')
+  }, [])
   return (
-    <section class="panel sheet" aria-labelledby="sheet-title">
+    <section class="panel sheet" id="cheat-sheet" aria-labelledby="sheet-title">
       <div class="sheet-head">
         <div>
           <span class="sheet-brand">earnrate</span>
@@ -190,6 +196,7 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
             aria-label="Download as an image"
             title="Download as an image"
             onClick={() => {
+              track('cheat-sheet-image')
               void saveSheet(sheet)
             }}
           >
@@ -214,9 +221,12 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
           return (
             <li key={row.label}>
               <span class="sheet-label">{row.label}</span>
-              <span class="sheet-card-name">
-                {held ? shortName(held.id) : 'None of your cards'}
-                {row.note ? <span class="row-note">{row.note}</span> : null}
+              <span class="sheet-card">
+                {held ? <CardArt id={held.id} width={30} /> : null}
+                <span class="sheet-card-name">
+                  {held ? shortName(held.id) : 'None of your cards'}
+                  {row.note ? <span class="row-note">{row.note}</span> : null}
+                </span>
               </span>
               <span class="sheet-rate">
                 {row.effectiveReturnPct === null
@@ -248,7 +258,14 @@ function WalletPass({ wallet }: { wallet: Wallet }) {
     })),
   })
   return (
-    <form class="wallet-pass" method="post" action={PASS_URL}>
+    <form
+      class="wallet-pass"
+      method="post"
+      action={PASS_URL}
+      onSubmit={() => {
+        track('apple-wallet')
+      }}
+    >
       <input type="hidden" name="wallet" value={sent} />
       <input type="hidden" name="date" value={localToday()} />
       <button type="submit" aria-label="Add to Apple Wallet">
@@ -325,7 +342,8 @@ function CardEditor({
   const [activated, setActivated] = useState<string[]>(held.activated)
   const [anniversary, setAnniversary] = useState(held.anniversary ?? '')
   const [tracking, setTracking] = useState(held.bonus !== undefined)
-  const [opened, setOpened] = useState(held.bonus?.opened ?? '')
+  // One opening date serves the welcome bonus and any first-year rate.
+  const [opened, setOpened] = useState(held.opened ?? held.bonus?.opened ?? '')
   const [spent, setSpent] = useState(held.bonus ? String(held.bonus.spent) : '')
   const milestones = card ? milestoneSummaries(card, held, localToday()) : []
   const trackedSpend = milestones.find((m) => m.tracked)
@@ -342,6 +360,10 @@ function CardEditor({
     const input: CardInput = { id: held.id, activated }
     if (Object.keys(chosen).length > 0) input.picks = chosen
     if (anniversary !== '') input.anniversary = anniversary
+    if (info.introRates.length > 0) {
+      if (opened !== '') input.opened = opened
+      else if (held.opened !== undefined) input.opened = null
+    }
     if (tracking && opened !== '')
       input.bonus = { opened, spent: Math.max(0, Number(spent) || 0) }
     else if (!tracking && held.bonus) input.bonus = null
@@ -420,6 +442,25 @@ function CardEditor({
           ))}
         </fieldset>
       ) : null}
+      {info.introRates.length > 0 ? (
+        <fieldset>
+          <legend>First-year rate</legend>
+          <ul class="muted small">
+            {info.introRates.map((i) => (
+              <li key={i.id}>{capitalize(i.text)}.</li>
+            ))}
+          </ul>
+          <label class="field">
+            Account opened (leave blank if it's been more than a year)
+            <input
+              type="date"
+              value={opened}
+              max={localToday()}
+              onInput={(e) => setOpened(e.currentTarget.value)}
+            />
+          </label>
+        </fieldset>
+      ) : null}
       {offer || held.bonus ? (
         <fieldset>
           <legend>Welcome bonus</legend>
@@ -434,15 +475,17 @@ function CardEditor({
           </label>
           {tracking ? (
             <>
-              <label class="field">
-                Account opened
-                <input
-                  type="date"
-                  value={opened}
-                  max={localToday()}
-                  onInput={(e) => setOpened(e.currentTarget.value)}
-                />
-              </label>
+              {info.introRates.length === 0 ? (
+                <label class="field">
+                  Account opened
+                  <input
+                    type="date"
+                    value={opened}
+                    max={localToday()}
+                    onInput={(e) => setOpened(e.currentTarget.value)}
+                  />
+                </label>
+              ) : null}
               <label class="field">
                 Spent toward it so far
                 <input
@@ -535,10 +578,13 @@ function CardList({
                 aria-expanded={open === held.id}
                 onClick={() => setOpen(open === held.id ? null : held.id)}
               >
-                <span>
-                  <strong>{shortName(held.id)}</strong>
-                  <span class="muted"> · {feeLabel(held.id)}</span>
-                  {note ? <span class="row-note">{note}</span> : null}
+                <span class="held-name">
+                  <CardArt id={held.id} width={40} />
+                  <span>
+                    <strong>{shortName(held.id)}</strong>
+                    <span class="muted"> · {feeLabel(held.id)}</span>
+                    {note ? <span class="row-note">{note}</span> : null}
+                  </span>
                 </span>
                 <span class="muted">
                   {needsPick
@@ -599,7 +645,7 @@ function AddCard({
         id="card-search"
         class="search"
         type="search"
-        placeholder="Find a card: sapphire, amex gold, double cash…"
+        placeholder="Find a card, like Sapphire"
         autocomplete="off"
         value={query}
         onInput={(e) => setQuery(e.currentTarget.value)}
@@ -608,9 +654,12 @@ function AddCard({
       <ul class="found">
         {found.map((c) => (
           <li key={c.id}>
-            <span>
-              {shortName(c.id)}
-              <span class="muted"> · {issuerName(c.issuer)}</span>
+            <span class="found-name">
+              <CardArt id={c.id} width={32} />
+              <span>
+                {shortName(c.id)}
+                <span class="muted"> · {issuerName(c.issuer)}</span>
+              </span>
             </span>
             {c.held ? (
               <span class="muted">Added</span>
@@ -618,6 +667,11 @@ function AddCard({
               <button
                 type="button"
                 onClick={() => {
+                  track('wallet-card-added')
+                  if (!load<boolean>('counted-first-card', false)) {
+                    track('wallet-first-card')
+                    save('counted-first-card', true)
+                  }
                   onChange(
                     addToWallet(catalog, wallet, { id: c.id }, localToday()),
                     c.id,
@@ -795,6 +849,7 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
             <li class="result" key={a.cardId}>
               <div class="result-top">
                 <span class="rank">{i + 1}</span>
+                <CardArt id={a.cardId} />
                 <div class="result-name">
                   <strong>{shortName(a.cardId)}</strong>
                   <span class="muted">
@@ -860,6 +915,7 @@ function ThisQuarter({ wallet }: { wallet: Wallet }) {
 }
 
 async function exportWallet(wallet: Wallet) {
+  track('wallet-export')
   const { walletYaml } = await import('../../src/format/wallet-yaml.ts')
   const url = URL.createObjectURL(
     new Blob([walletYaml(wallet)], { type: 'text/yaml' }),
@@ -948,6 +1004,7 @@ function Transfer({
               void importWallet(file).then((result) => {
                 if (typeof result === 'string') setError(result)
                 else {
+                  track('wallet-import')
                   setError(null)
                   onReplace(result)
                 }
@@ -1082,6 +1139,22 @@ export function MyWallet({
         {message ? (
           <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
         ) : null}
+        <p class="pass-hint">
+          At the register: your{' '}
+          <button
+            type="button"
+            class="link"
+            onClick={() => {
+              track('cta-pass-hint')
+              document
+                .getElementById('cheat-sheet')
+                ?.scrollIntoView({ behavior: 'smooth' })
+            }}
+          >
+            cheat sheet
+          </button>{' '}
+          shows which card to use for everything, and goes in Apple Wallet.
+        </p>
         <InstallHint />
       </section>
 
@@ -1092,8 +1165,10 @@ export function MyWallet({
           role="search"
           onSubmit={(e) => {
             e.preventDefault()
-            if (query.trim() !== '')
+            if (query.trim() !== '') {
+              track('wallet-which-card')
               setAsked({ text: query.trim(), amount: Number(amount) || null })
+            }
           }}
         >
           <label class="visually-hidden" for="wallet-ask">
@@ -1103,7 +1178,7 @@ export function MyWallet({
             id="wallet-ask"
             type="search"
             list="suggestions"
-            placeholder="Whole Foods, Amazon, gas…"
+            placeholder="Which store?"
             autocomplete="off"
             enterkeyhint="search"
             value={query}
@@ -1129,6 +1204,7 @@ export function MyWallet({
               class={asked?.text === q ? 'chip on' : 'chip'}
               key={q}
               onClick={() => {
+                track('wallet-which-card')
                 setQuery(q)
                 setAsked({ text: q, amount: Number(amount) || null })
               }}

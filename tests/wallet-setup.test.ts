@@ -109,6 +109,28 @@ cards:
     )
   })
 
+  test('an opening date is added, replaced in place and removed', () => {
+    const added = updateCardText(COMMENTED, 'chase-sapphire-preferred', {
+      opened: '2026-03-04',
+    })
+    expect(added).toBe(`${COMMENTED}    opened: 2026-03-04\n`)
+    const moved = updateCardText(added, 'chase-sapphire-preferred', {
+      opened: '2026-03-05',
+    })
+    expect(moved).toBe(`${COMMENTED}    opened: 2026-03-05\n`)
+    expect(
+      updateCardText(moved, 'chase-sapphire-preferred', { opened: null }),
+    ).toBe(COMMENTED)
+    expect(
+      addCardText(COMMENTED, {
+        id: 'discover-it-cash-back',
+        opened: '2026-03-04',
+      }),
+    ).toBe(
+      `${COMMENTED}  - id: discover-it-cash-back\n    opened: 2026-03-04\n`,
+    )
+  })
+
   test('updating replaces a whole chosen block', () => {
     const before =
       'cards:\n  - id: usbank-cash-plus\n    chosen:\n      period: 2026-Q3\n      picks:\n        five-percent: [fast-food]\n    checkout_label: Cash+\n'
@@ -478,4 +500,75 @@ test('a welcome bonus is written into the file and removed again, keeping commen
   const after = await readFile(file, 'utf8')
   expect(after).not.toContain('bonus:')
   expect(after).toContain('# my favorite')
+})
+
+describe('opening dates', () => {
+  test('are saved on add and update, and removed with null, keeping comments', async () => {
+    const file = await walletFile(COMMENTED)
+    const added = await store(file).addCard(
+      { id: 'discover-it-cash-back', opened: '2026-03-04' },
+      TODAY,
+    )
+    if (!added.ok) throw new Error(added.error)
+    expect((await loadWallet(file)).cards.at(-1)?.opened).toBe('2026-03-04')
+
+    const updated = await store(file).updateCard(
+      { id: 'discover-it-cash-back', opened: '2026-02-01' },
+      TODAY,
+    )
+    expect(updated.ok).toBe(true)
+    expect(await readFile(file, 'utf8')).toBe(
+      `${COMMENTED}  - id: discover-it-cash-back\n    opened: 2026-02-01\n`,
+    )
+    const removed = await store(file).updateCard(
+      { id: 'discover-it-cash-back', opened: null },
+      TODAY,
+    )
+    expect(removed.ok).toBe(true)
+    expect(await readFile(file, 'utf8')).toBe(
+      `${COMMENTED}  - id: discover-it-cash-back\n`,
+    )
+  })
+
+  test('search_cards says which cards have a first-year rate', () => {
+    const [card] = searchCards(catalog, 'customized cash', null, TODAY).cards
+    expect(card?.introRates).toEqual([
+      {
+        id: 'first-year-choice-bonus',
+        days: 365,
+        text: 'an extra 3% cash back on your 3% picks for the first year',
+      },
+    ])
+    expect(
+      searchCards(catalog, 'discover it cash back', null, TODAY).cards[0]
+        ?.introRates[0]?.text,
+    ).toBe('double every rate for the first year')
+  })
+
+  test('must be real dates, not in the future, and match the welcome bonus', async () => {
+    const file = await walletFile(COMMENTED)
+    const add = (opened: string, extra: object = {}) =>
+      store(file).addCard(
+        { id: 'discover-it-cash-back', opened, ...extra },
+        TODAY,
+      )
+    expect(errorOf(await add('2026-02-30'))).toMatch(/isn't a date/)
+    expect(errorOf(await add('2026-11-30'))).toMatch(/in the future/)
+    expect(
+      errorOf(await add('2026-03-04', { bonus: { opened: '2026-03-05' } })),
+    ).toMatch(
+      /opening date \(2026-03-04\) and its welcome bonus's \(2026-03-05\) differ/,
+    )
+    expect(
+      (await add('2026-09-04', { bonus: { opened: '2026-09-04' } })).ok,
+    ).toBe(true)
+    expect(
+      errorOf(
+        await store(file).updateCard(
+          { id: 'discover-it-cash-back', opened: '2026-09-05' },
+          TODAY,
+        ),
+      ),
+    ).toMatch(/differ/)
+  })
 })

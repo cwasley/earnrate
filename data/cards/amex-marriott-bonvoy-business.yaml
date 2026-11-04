@@ -1,6 +1,7 @@
 id: amex-marriott-bonvoy-business
 name: Marriott Bonvoy Business American Express Card
 short_name: Marriott Bonvoy Business
+color: '#3a3a3e'
 issuer: amex
 network: amex
 currency: marriott-bonvoy

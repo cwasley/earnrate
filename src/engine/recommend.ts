@@ -13,6 +13,7 @@ import {
   usableAt,
   type CardEvaluation,
 } from './evaluate.ts'
+import { openedOn } from './intro.ts'
 import { membershipName } from './memberships.ts'
 import {
   milestonePoints,
@@ -31,6 +32,8 @@ import {
   currencyLabel,
   currencyName,
   earnText,
+  introRateText,
+  introUnknownText,
   listed,
   money,
   NETWORK_NAMES,
@@ -83,6 +86,9 @@ type Entry = {
   fee: number // foreign transaction fee percent on this purchase, else 0
   effectiveReturnPct: number // net of `fee`
   upside: number // return at the top of the currency's value range
+  // With no opening date on file: what an intro rate would make this
+  // purchase earn on a new account.
+  ifNew: { rate: number; returnPct: number; days: number } | null
 }
 
 const displayName = (e: Entry) => e.held.checkout_label ?? e.card.name
@@ -159,6 +165,21 @@ function rankEntries(
       (bonusPoints > 0 && purchase.amount ? bonusPoints / purchase.amount : 0)
     // An unknown fee isn't guessed: it's warned about instead.
     const fee = isForeign(purchase) ? (card.foreign_transaction_fee ?? 0) : 0
+    const fresh =
+      card.intro_rates.length > 0 && openedOn(held) === null
+        ? evaluateCard(card, { ...held, opened: purchase.date }, ctx).best
+        : null
+    const ifNew =
+      fresh && fresh.rate > evaluation.best.rate + EPSILON
+        ? {
+            rate: fresh.nominalRate,
+            returnPct:
+              (perDollar - evaluation.best.rate + fresh.rate) *
+                valuation.centsPerUnit -
+              fee,
+            days: (fresh.intro[0]?.intro ?? card.intro_rates[0])?.days ?? 365,
+          }
+        : null
     entries.push({
       card,
       held,
@@ -171,6 +192,7 @@ function rankEntries(
       rateReturnPct: evaluation.best.rate * valuation.centsPerUnit - fee,
       upside:
         perDollar * (valuation.range?.[1] ?? valuation.centsPerUnit) - fee,
+      ifNew,
     })
   }
 
@@ -196,7 +218,14 @@ function reasoningFor(
     )
   } else {
     lines.push(
-      `${earnText(catalog, card.base_rate, currency)}, its base rate. No bonus category applies here.`,
+      `${earnText(catalog, best.nominalRate, currency)}, its base rate. No bonus category applies here.`,
+    )
+  }
+  const [intro] = best.intro
+  if (intro) {
+    const note = intro.intro.note ? ` ${intro.intro.note}` : ''
+    lines.push(
+      `${introRateText(earnText(catalog, best.nominalRate, currency), earnText(catalog, best.standardRate, currency), intro.intro.days, intro.until)}${note}`,
     )
   }
 
@@ -469,6 +498,24 @@ function assumptionsFor(
   )
   if (values !== null) assumptions.push(values)
   if (isForeign(purchase)) assumptions.push(FOREIGN_ASSUMPTION)
+  const winner = entries[0]
+  for (const e of entries) {
+    if (!e.ifNew || !winner) continue
+    if (
+      e !== winner &&
+      e.ifNew.returnPct <= winner.effectiveReturnPct + EPSILON
+    )
+      continue
+    const currency = e.valuation.currency
+    assumptions.push(
+      introUnknownText(
+        displayName(e),
+        earnText(catalog, e.ifNew.rate, currency),
+        earnText(catalog, e.evaluation.best.nominalRate, currency),
+        e.ifNew.days,
+      ),
+    )
+  }
   for (const e of entries)
     for (const hit of e.milestones)
       assumptions.push(

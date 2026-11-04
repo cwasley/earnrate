@@ -1,6 +1,7 @@
 id: paypal-cashback-mastercard
 name: PayPal Cashback Mastercard
 short_name: PayPal Cashback
+color: '#1a1f2b'
 # Issued by Synchrony Bank; rewards are paid into the linked PayPal account.
 issuer: synchrony
 network: mastercard

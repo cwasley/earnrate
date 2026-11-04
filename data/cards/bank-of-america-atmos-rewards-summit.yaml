@@ -1,5 +1,6 @@
 id: bank-of-america-atmos-rewards-summit
 name: Atmos Rewards Summit Visa Infinite Credit Card
+color: '#1a1f2b'
 issuer: bank-of-america
 network: visa
 currency: atmos-points

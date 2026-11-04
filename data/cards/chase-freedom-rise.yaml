@@ -1,5 +1,6 @@
 id: chase-freedom-rise
 name: Chase Freedom Rise
+color: '#2f6db5'
 issuer: chase
 network: visa
 currency: cash

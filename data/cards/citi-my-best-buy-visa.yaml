@@ -1,5 +1,6 @@
 id: citi-my-best-buy-visa
 name: My Best Buy Visa Card
+color: '#1d4fa0'
 issuer: citi
 network: visa
 currency: best-buy-rewards

@@ -3,6 +3,7 @@ import { catalog, dataVersion } from 'virtual:catalog'
 import { BestFor, SUGGESTIONS } from './BestFor.tsx'
 import { MyWallet } from './MyWallet.tsx'
 import { Spending } from './Spending.tsx'
+import { track } from './track.ts'
 import { issuerName, issuers } from './format.ts'
 import {
   loadState,
@@ -251,7 +252,14 @@ export function App() {
     else writeHash(tab, query)
   }, [tab, query])
   useEffect(() => {
-    const onHash = () => setView(readHash())
+    track(`tab-${tab}`)
+  }, [tab])
+  useEffect(() => {
+    // A link to a section below (#claude) scrolls there and keeps the app
+    // as it is.
+    const onHash = () => {
+      if (!linkedSection()) setView(readHash())
+    }
     addEventListener('hashchange', onHash)
     return () => removeEventListener('hashchange', onHash)
   }, [])
@@ -292,6 +300,11 @@ export function App() {
             filters={filters}
             query={query}
             onQuery={(q) => setView({ tab: 'best', query: q })}
+            hasCards={(wallet?.cards.length ?? 0) > 0}
+            onWallet={() => {
+              setView({ tab: 'wallet', query: '' })
+              document.querySelector('.tabs')?.scrollIntoView()
+            }}
           />
         ) : tab === 'spending' ? (
           <Spending settings={settings} saved={saved} filters={filters} />
@@ -309,8 +322,8 @@ export function App() {
         ))}
       </datalist>
       <p class="data-version muted">
-        Runs in your browser. Card data {dataVersion}, from each issuer's own
-        terms.
+        Free, with no sign-up. Runs in your browser, so what you type stays on
+        your device. Card data {dataVersion}, from each issuer's own terms.
       </p>
     </div>
   )

@@ -25,6 +25,7 @@ function compact(wallet: Wallet) {
         ? {}
         : { checkout_label: c.checkout_label }),
       ...(c.anniversary === undefined ? {} : { anniversary: c.anniversary }),
+      ...(c.opened === undefined ? {} : { opened: c.opened }),
       ...(Object.keys(c.cap_usage).length > 0
         ? { cap_usage: c.cap_usage }
         : {}),

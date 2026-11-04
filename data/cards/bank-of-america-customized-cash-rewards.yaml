@@ -1,6 +1,7 @@
 id: bank-of-america-customized-cash-rewards
 name: Bank of America Customized Cash Rewards Credit Card
 short_name: BofA Customized Cash
+color: '#c8102e'
 issuer: bank-of-america
 # Bank of America's terms carry only the Visa and Visa Signature trademark
 # notice, so the network is Visa.
@@ -125,6 +126,19 @@ rules:
     rate: 1.75
     requires: { membership: bofa-rewards-premier }
     note: 1% plus the 75% BofA Rewards Premier bonus.
+intro_rates:
+  # An extra 3% on the choice category, inside the same quarterly cap. It's
+  # added to each tier's rate as is: BofA Rewards pays no bonus on it.
+  - id: first-year-choice-bonus
+    days: 365
+    rules:
+      - three-percent
+      - three-percent-bofa-rewards-member
+      - three-percent-bofa-rewards-preferred-plus
+      - three-percent-bofa-rewards-preferred-honors
+      - three-percent-bofa-rewards-premier
+    add: 3
+    note: New accounts opened through this offer only, not converted accounts. Purchases must post within 365 days of opening, and count toward the same $2,500 quarterly cap; past it they earn 1%.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -214,7 +228,25 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
     quote: 'Foreign Transaction 3% of the U.S. dollar amount of each transaction'
+  - rule: first-year-choice-bonus
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'Earn an additional 3% cash rewards bonus'
+  - rule: first-year-choice-bonus
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'post to your account within 365 days of the account open date'
+  - rule: first-year-choice-bonus
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'This offer is subject to the $2,500 quarterly limit for Bonus Categories'
+  - rule: first-year-choice-bonus
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'nor will you receive any BofA Rewards™ bonus on the additional cash rewards earned from this offer'
+  - rule: first-year-choice-bonus
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'will not apply to requests to convert existing accounts'
+  - rule: first-year-choice-bonus
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/
+    quote: 'After the 3% first-year bonus offer ends, you will earn 3% and 2% cash back'
 todo:
-  - New accounts earn 6% in the choice category for the first year (an extra 3%, inside the same $2,500 quarterly cap, with no BofA Rewards bonus on the extra 3%). earnrate can't see when an account was opened, so this isn't modeled.
+  - Bank of America's first-year 3% counts Net Purchases that "post to your account within 365 days of the account open date". earnrate goes by the purchase date and counts the opening day as day 1, so a purchase on the last day or two may be ranked at 3% when it would still earn 6%, or at 6% when it posts too late.
   - 'The BofA Rewards rules use proposed membership ids: bofa-rewards-member, bofa-rewards-preferred-plus, bofa-rewards-preferred-honors and bofa-rewards-premier. Cardholders who joined Preferred Rewards before May 26, 2026 may have an "extended card benefit" that Bank of America doesn''t define.'
   - "Online shopping counts any online purchase earnrate can't place in an excluded category, including unknown merchants. Bank of America also excludes doctors, government, insurance, schools and other non-retail services, which earnrate can't tell apart."

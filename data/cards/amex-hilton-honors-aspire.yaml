@@ -1,6 +1,7 @@
 id: amex-hilton-honors-aspire
 name: Hilton Honors American Express Aspire Card
 short_name: Hilton Honors Aspire
+color: '#22283a'
 issuer: amex
 network: amex
 currency: hilton-honors

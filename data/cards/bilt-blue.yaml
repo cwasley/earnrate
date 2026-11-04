@@ -1,5 +1,6 @@
 id: bilt-blue
 name: Bilt Blue Card
+color: '#2f5fa0'
 # Issued by Column N.A. and serviced by Cardless; Bilt runs the rewards.
 # Full earning terms are in the Bilt Card Offer Terms PDF, which the source
 # checker can't read, so they're not in source_urls.

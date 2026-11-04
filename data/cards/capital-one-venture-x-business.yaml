@@ -1,6 +1,7 @@
 id: capital-one-venture-x-business
 name: Capital One Venture X Business
 short_name: Venture X Business
+color: '#2b2d31'
 issuer: capital-one
 network: mastercard # World Elite Mastercard for Business, per capitalone.com/credit-cards/benefits-guide
 currency: C1

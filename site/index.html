@@ -46,6 +46,8 @@
         --accent-strong: #7f4119;
         --accent-soft: #f5e9df;
         --accent-faint: #fbf3ed;
+        --tab-track: #efe3d8;
+        --placeholder: #9c958f;
         --term-bg: #1a1715;
         --term-text: #ece6df;
         --term-dim: #958c84;
@@ -65,6 +67,8 @@
           --accent-strong: #f1bd94;
           --accent-soft: #31251c;
           --accent-faint: #201a16;
+          --tab-track: #31251c;
+          --placeholder: #77716b;
           --term-bg: #0f0e0d;
           --bubble-me: #84461d;
         }
@@ -90,7 +94,7 @@
         padding: 0 16px 72px;
       }
       header.hero {
-        padding: 44px 0 8px;
+        padding: 20px 0 8px;
       }
       .hero-top {
         display: flex;
@@ -104,17 +108,67 @@
         color: var(--accent);
         font-size: 18px;
       }
-      .ghost {
-        width: 96px;
-        height: auto;
-        color: var(--accent);
+      .header-cta {
         flex: none;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        font-size: 14.5px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .header-cta:hover {
+        background: var(--accent);
+        color: var(--surface);
+      }
+      .copyable {
+        position: relative;
+      }
+      .copyable .terminal {
+        padding-right: 76px;
+      }
+      .copy {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.08);
+        color: #f5f1ec;
+        cursor: pointer;
+      }
+      .closing {
+        text-align: center;
+      }
+      .closing .intro {
+        margin: 0 auto 18px;
+      }
+      .closing-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        justify-content: center;
+        align-items: center;
+      }
+      .closing-links .button {
+        display: inline-block;
+        padding: 12px 20px;
+        border-radius: 12px;
+        background: var(--accent);
+        color: var(--surface);
+        font-weight: 700;
+        text-decoration: none;
       }
       h1 {
         font-size: clamp(34px, 7vw, 50px);
         line-height: 1.08;
         letter-spacing: -0.03em;
-        margin: 22px 0 12px;
+        margin: 26px 0 10px;
       }
       /* The comparison app inside the hero uses these plain rules. */
       h2 {
@@ -660,12 +714,16 @@
       }
 
       @media (max-width: 639px) {
+        h1 {
+          margin-top: 20px;
+        }
+        .lede {
+          font-size: 17px;
+          margin-bottom: 4px;
+        }
         .terminal {
           font-size: 11.5px;
           padding: 14px;
-        }
-        .ghost {
-          width: 76px;
         }
       }
       footer {
@@ -682,40 +740,13 @@
       <header class="hero">
         <div class="hero-top">
           <div class="wordmark">earnrate</div>
-          <svg
-            class="ghost"
-            viewBox="0 0 120 80"
-            aria-hidden="true"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
+          <a class="header-cta" href="#claude" data-count="cta-claude"
+            >Use it in Claude</a
           >
-            <rect x="22" y="6" width="92" height="58" rx="9" opacity="0.3" />
-            <rect x="14" y="12" width="92" height="58" rx="9" opacity="0.55" />
-            <rect
-              x="6"
-              y="18"
-              width="92"
-              height="58"
-              rx="9"
-              fill="currentColor"
-              stroke="none"
-            />
-            <rect
-              x="18"
-              y="34"
-              width="16"
-              height="12"
-              rx="2"
-              fill="var(--bg)"
-              stroke="none"
-            />
-          </svg>
         </div>
         <h1>Which credit card should I use?</h1>
         <p class="lede">
-          Compare every card for any store, or find the cards that fit your
-          spending. Free, with no sign-up. What you type stays on your device.
+          Every card's rate at any store, quoted from the issuer's own terms.
         </p>
         <div id="app">
           <noscript>
@@ -746,12 +777,6 @@
           <li><a href="/best/dining">Dining</a></li>
           <li><a href="/best/">Every store and category</a></li>
         </ul>
-        <p class="aside">
-          Also in Claude:
-          <a href="#claude"
-            >ask from claude.ai, the desktop app, Claude Code or Cowork</a
-          >.
-        </p>
       </header>
 
       <section>
@@ -1069,16 +1094,28 @@
           <input type="radio" name="where" id="tab-cli" />
           <div class="tablist">
             <label for="tab-claude">Claude</label>
-            <label for="tab-code">Claude Code</label>
-            <label for="tab-desktop">Desktop app</label>
-            <label for="tab-cli">Terminal</label>
+            <label for="tab-code" data-count="setup-code">Claude Code</label>
+            <label for="tab-desktop" data-count="setup-desktop"
+              >Desktop app</label
+            >
+            <label for="tab-cli" data-count="setup-cli">Terminal</label>
           </div>
           <div class="where-panel where-claude">
             <ol class="steps">
               <li>
                 In Claude on the web or the desktop app, open Settings, then
                 Connectors, and add a custom connector with this address:
-                <pre class="terminal">https://mcp.earnrate.dev</pre>
+                <div class="copyable">
+                  <pre class="terminal">https://mcp.earnrate.dev</pre>
+                  <button
+                    type="button"
+                    class="copy"
+                    data-copy="https://mcp.earnrate.dev"
+                    data-count="copy-connector"
+                  >
+                    Copy
+                  </button>
+                </div>
               </li>
               <li>
                 An earnrate page opens once to start an anonymous wallet: a
@@ -1098,10 +1135,20 @@
             <ol class="steps">
               <li>
                 In Claude Code or Cowork, install the plugin:
-                <pre
-                  class="terminal"
-                ><span class="prompt">&gt;</span> /plugin marketplace add cwasley/earnrate
+                <div class="copyable">
+                  <pre
+                    class="terminal"
+                  ><span class="prompt">&gt;</span> /plugin marketplace add cwasley/earnrate
 <span class="prompt">&gt;</span> /plugin install earnrate@earnrate</pre>
+                  <button
+                    type="button"
+                    class="copy"
+                    data-copy="/plugin marketplace add cwasley/earnrate&#10;/plugin install earnrate@earnrate"
+                    data-count="copy-plugin"
+                  >
+                    Copy
+                  </button>
+                </div>
               </li>
               <li>Ask which card to use, from any project.</li>
             </ol>
@@ -1112,6 +1159,7 @@
                 Download
                 <a
                   href="https://github.com/cwasley/earnrate/releases/latest/download/earnrate.mcpb"
+                  data-count="desktop-download"
                   >earnrate for Claude Desktop</a
                 >
                 and open it.
@@ -1130,11 +1178,21 @@
               <li>
                 It needs Node 22 or later. Install it and add the cards you
                 hold:
-                <pre
-                  class="terminal"
-                ><span class="prompt">$</span> npm install -g earnrate
+                <div class="copyable">
+                  <pre
+                    class="terminal"
+                  ><span class="prompt">$</span> npm install -g earnrate
 <span class="prompt">$</span> earnrate add chase-sapphire-preferred
 <span class="prompt">$</span> earnrate trader joes</pre>
+                  <button
+                    type="button"
+                    class="copy"
+                    data-copy="npm install -g earnrate"
+                    data-count="copy-cli"
+                  >
+                    Copy
+                  </button>
+                </div>
               </li>
               <li>
                 It can replay a statement to catch up your caps, and runs as a
@@ -1235,6 +1293,19 @@
             </p>
           </details>
         </div>
+      </section>
+
+      <section class="closing">
+        <h2>Which card for your next purchase?</h2>
+        <p class="intro">
+          Ask here, with no sign-up, or from Claude wherever you are.
+        </p>
+        <p class="closing-links">
+          <a class="button" href="#app" data-count="cta-bottom"
+            >Compare cards now</a
+          >
+          <a href="#claude" data-count="cta-claude">Set it up in Claude</a>
+        </p>
       </section>
 
       <footer>

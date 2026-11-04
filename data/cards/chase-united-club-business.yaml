@@ -1,5 +1,6 @@
 id: chase-united-club-business
 name: United Club Business Card
+color: '#1a2130'
 issuer: chase
 network: visa
 currency: united-miles

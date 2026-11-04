@@ -1,6 +1,7 @@
 id: wells-fargo-autograph-journey
 name: Wells Fargo Autograph Journey Card
 short_name: Autograph Journey
+color: '#2b2b2b'
 issuer: wells-fargo
 network: visa
 currency: WFR

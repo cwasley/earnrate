@@ -1,5 +1,6 @@
 id: chase-prime-visa
 name: Prime Visa
+color: '#24384f'
 issuer: chase
 network: visa
 currency: cash

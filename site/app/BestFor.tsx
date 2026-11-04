@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact'
-import { useMemo, useState } from 'preact/hooks'
+import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import {
   exploreCards,
@@ -19,6 +19,8 @@ import {
   shortName,
 } from './format.ts'
 import { ABROAD_NOTE, AbroadToggle } from './AbroadToggle.tsx'
+import { CardArt } from './CardArt.tsx'
+import { track } from './track.ts'
 import { SearchInput } from './SearchInput.tsx'
 import { engineOptions, type Saved, type Settings } from './settings.ts'
 import {
@@ -29,6 +31,9 @@ import {
 const QUICK = EVERYDAY_PURCHASES.map(quickPickText)
 
 const TOP = 8
+// The ranking shown before anyone asks, so the first screen has an answer.
+const EXAMPLE = QUICK[0] ?? 'Groceries'
+const EXAMPLE_ROWS = 3
 
 export const SUGGESTIONS = [
   ...new Set([
@@ -71,6 +76,7 @@ function CardRow({ entry, rank }: { entry: ExploreEntry; rank: number }) {
     <li class="result">
       <div class="result-top">
         <span class="rank">{rank}</span>
+        <CardArt id={entry.cardId} />
         <div class="result-name">
           <strong>{shortName(entry.cardId)}</strong>
           <span class="muted">
@@ -141,18 +147,90 @@ function Excluded({ r }: { r: Exploration }) {
   )
 }
 
+function Example({
+  result,
+  onOpen,
+}: {
+  result: Exploration
+  onOpen: () => void
+}) {
+  return (
+    <section class="example" aria-labelledby="example-title">
+      <h3 id="example-title">
+        For example, {title(result).toLowerCase()}
+        <span class="muted"> · top 3 of every card</span>
+      </h3>
+      <ol class="example-list">
+        {result.ranked.slice(0, EXAMPLE_ROWS).map((e) => (
+          <li key={e.cardId}>
+            <CardArt id={e.cardId} width={44} />
+            <span class="example-name">
+              <strong>{shortName(e.cardId)}</strong>
+              <span class="muted">{feeLabel(e.cardId)}</span>
+            </span>
+            <span class="rate">{pct(e.effectiveReturnPct)}</span>
+          </li>
+        ))}
+      </ol>
+      <button type="button" class="more" onClick={onOpen}>
+        See all {result.ranked.length} cards and why
+      </button>
+    </section>
+  )
+}
+
+function NextSteps({
+  hasCards,
+  onWallet,
+}: {
+  hasCards: boolean
+  onWallet: () => void
+}) {
+  return (
+    <div class="next-steps">
+      {!hasCards ? (
+        <p>
+          Have some of these?{' '}
+          <button
+            type="button"
+            class="link"
+            onClick={() => {
+              track('cta-save-cards')
+              onWallet()
+            }}
+          >
+            Add your cards
+          </button>{' '}
+          to rank just yours. They stay in this browser.
+        </p>
+      ) : null}
+      <p>
+        Ask the same thing from Claude, by name or with your cards:{' '}
+        <a href="#claude" data-count="cta-after-answer">
+          connect earnrate
+        </a>
+        .
+      </p>
+    </div>
+  )
+}
+
 export function BestFor({
   settings,
   saved,
   filters,
   query,
   onQuery,
+  onWallet,
+  hasCards,
 }: {
   settings: Settings
   saved: Saved
   filters: ComponentChildren
   query: string
   onQuery: (q: string) => void
+  onWallet: () => void
+  hasCards: boolean
 }) {
   const [text, setText] = useState(query)
   const [all, setAll] = useState(false)
@@ -162,6 +240,13 @@ export function BestFor({
       query.trim() === '' ? null : explore(query, abroad, settings, saved),
     [query, abroad, settings, saved],
   )
+  const example = useMemo(
+    () => (result ? null : explore(EXAMPLE, false, settings, saved)),
+    [result, settings, saved],
+  )
+  useEffect(() => {
+    if (query.trim() !== '') track('search')
+  }, [query])
 
   const ask = (q: string) => {
     setText(q)
@@ -192,7 +277,7 @@ export function BestFor({
             id="best-for"
             type="search"
             list="suggestions"
-            placeholder="Whole Foods, Amazon, gas…"
+            placeholder="Store or category"
             autocomplete="off"
             enterkeyhint="search"
             value={text}
@@ -225,6 +310,15 @@ export function BestFor({
         </div>
         <AbroadToggle abroad={abroad} onChange={setAbroad} />
       </div>
+      {!result && example ? (
+        <Example
+          result={example}
+          onOpen={() => {
+            track('example-search')
+            ask(EXAMPLE)
+          }}
+        />
+      ) : null}
       {filters}
 
       <div aria-live="polite">
@@ -268,13 +362,9 @@ export function BestFor({
                 <li key={a}>{a}</li>
               ))}
             </ul>
+            <NextSteps hasCards={hasCards} onWallet={onWallet} />
           </section>
-        ) : (
-          <p class="muted hint">
-            Pick a category or type a store to rank every card that fits your
-            filters.
-          </p>
-        )}
+        ) : null}
       </div>
     </div>
   )

@@ -225,6 +225,32 @@ describe('wallet setup commands', () => {
     expect(stdout).toMatch(/\[in wallet\]/)
   })
 
+  test('add and update take an opening date for first-year rates', async () => {
+    const file = await newWalletPath()
+    const added = await cli(['add', 'discover-it-cash-back'], file)
+    expect(added.code).toBe(0)
+    expect((await cli(['chipotle'], file)).stdout).toMatch(
+      /A first-year rate may apply on Discover it/,
+    )
+    const updated = await cli(
+      [
+        'update',
+        'discover-it-cash-back',
+        '--opened',
+        '2026-03-04',
+        '--activated',
+        'q4-2026-restaurants',
+      ],
+      file,
+    )
+    expect(updated.code).toBe(0)
+    expect(await readFile(file, 'utf8')).toContain('    opened: 2026-03-04\n')
+    const answer = await cli(['chipotle'], file)
+    expect(answer.stdout).toMatch(
+      /10% cash back in your first year, through Mar 3, 2027/,
+    )
+  })
+
   test('cards with no match exits 1', async () => {
     const { code, stderr } = await cli(['cards', 'zzzz'])
     expect(code).toBe(1)

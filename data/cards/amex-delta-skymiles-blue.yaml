@@ -1,6 +1,7 @@
 id: amex-delta-skymiles-blue
 name: Delta SkyMiles Blue American Express Card
 short_name: Delta SkyMiles Blue
+color: '#3d6fa8'
 issuer: amex
 network: amex
 currency: delta-skymiles

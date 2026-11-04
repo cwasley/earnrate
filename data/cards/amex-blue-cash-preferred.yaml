@@ -1,5 +1,6 @@
 id: amex-blue-cash-preferred
 name: American Express Blue Cash Preferred Card
+color: '#1d3f7a'
 issuer: amex
 network: amex
 currency: cash
@@ -33,9 +34,11 @@ rules:
         merchants:
           [
             amazon-music,
+            amc-plus,
             apple-music,
             apple-tv,
             audible,
+            britbox,
             directv-stream,
             discovery-plus,
             disney-plus,
@@ -43,6 +46,9 @@ rules:
             fubotv,
             max,
             hulu,
+            iheartradio,
+            kindle-unlimited,
+            mgm-plus,
             mlb-tv,
             nba-league-pass,
             netflix,
@@ -55,6 +61,7 @@ rules:
             spotify,
             starz,
             tidal,
+            youtube-music,
             youtube-premium,
             youtube-tv,
           ],

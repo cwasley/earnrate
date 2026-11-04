@@ -1,5 +1,6 @@
 id: barclays-jetblue-plus
 name: JetBlue Plus Card
+color: '#1e3a6b'
 issuer: barclays
 network: mastercard # World Elite Mastercard
 currency: trueblue-points

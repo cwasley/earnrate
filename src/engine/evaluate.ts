@@ -1,6 +1,12 @@
 import type { Cap, Card, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
+import {
+  introCovers,
+  introWindows,
+  withIntro,
+  type IntroWindow,
+} from './intro.ts'
 import { inEffect, periodKey } from './periods.ts'
 import type { Channel, MerchantResolution, Purchase } from './types.ts'
 
@@ -74,7 +80,9 @@ export type CapState = {
 
 export type Earning = {
   rule: Rule | null // null for the base rate
-  nominalRate: number
+  nominalRate: number // with any intro rate
+  standardRate: number // without it
+  intro: IntroWindow[] // the intro rates that raise nominalRate
   rate: number // after the cap, blended across it when the amount is known
   cap: CapState | null
   // What spending past the cap earns: the cap's own rate, or the card's best
@@ -281,10 +289,17 @@ export function evaluateCard(
   ctx: PurchaseContext,
 ): CardEvaluation {
   const { picked, staleChoice } = pickedCategories(card, held, ctx.date)
+  const windows = introWindows(card, held, ctx.date)
+  const introFor = (ruleId: string | null) =>
+    windows.filter((w) => introCovers(w.intro, ruleId))
+  const rateOf = (rule: Rule) => withIntro(rule.rate, rule.id, windows)
+  const baseRate = withIntro(card.base_rate, null, windows)
   const base: Earning = {
     rule: null,
-    nominalRate: card.base_rate,
-    rate: card.base_rate,
+    nominalRate: baseRate,
+    standardRate: card.base_rate,
+    intro: introFor(null),
+    rate: baseRate,
     cap: null,
     afterCap: null,
   }
@@ -300,17 +315,22 @@ export function evaluateCard(
     else applying.push(rule)
   }
   const uncapped = Math.max(
-    card.base_rate,
-    ...applying.filter((r) => r.cap === undefined).map((r) => r.rate),
+    baseRate,
+    ...applying.filter((r) => r.cap === undefined).map(rateOf),
   )
 
   for (const rule of applying) {
     const cap = capState(rule, card, held, ctx.date)
-    const afterCap = cap ? Math.max(cap.cap.then_rate, uncapped) : null
+    const rate = rateOf(rule)
+    const afterCap = cap
+      ? Math.max(withIntro(cap.cap.then_rate, rule.id, windows, true), uncapped)
+      : null
     const earning: Earning = {
       rule,
-      nominalRate: rule.rate,
-      rate: rateAfterCap(rule.rate, cap, afterCap ?? rule.rate, ctx.amount),
+      nominalRate: rate,
+      standardRate: rule.rate,
+      intro: introFor(rule.id),
+      rate: rateAfterCap(rate, cap, afterCap ?? rate, ctx.amount),
       cap,
       afterCap,
     }
@@ -322,7 +342,7 @@ export function evaluateCard(
   return {
     best,
     nominal,
-    needsActivation: blocked.filter((r) => r.rate > best.rate),
+    needsActivation: blocked.filter((r) => rateOf(r) > best.rate),
     staleChoice,
   }
 }

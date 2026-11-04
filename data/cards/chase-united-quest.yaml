@@ -1,5 +1,6 @@
 id: chase-united-quest
 name: United Quest Card
+color: '#253a5c'
 issuer: chase
 network: visa
 currency: united-miles

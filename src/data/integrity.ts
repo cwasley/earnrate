@@ -1,5 +1,6 @@
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
+import { resolveMerchant } from '../merchants/resolve.ts'
 import type { Merchant } from '../schema/merchant.ts'
 import { WALLET_VERSION, type Wallet } from '../schema/wallet.ts'
 
@@ -47,6 +48,34 @@ function merchantProblems(
       owner.set(name, m.id)
     }
   }
+  return problems
+}
+
+// Overrides are searched before seed, and a known name followed by more words
+// still matches it, so a name can be taken by another merchant without ever
+// being listed twice.
+function lookupProblems(catalog: Catalog): string[] {
+  const problems: string[] = []
+  const { seed, overrides } = catalog.merchants
+  for (const m of [...overrides, ...seed]) {
+    for (const key of [m.name, ...m.aliases, ...m.domains]) {
+      const found = resolveMerchant(catalog, key, null).merchantId
+      if (found !== m.id)
+        problems.push(
+          `merchant ${m.id}: '${key}' resolves to ${found ?? 'no merchant'}`,
+        )
+    }
+  }
+  for (const c of catalog.categories)
+    for (const word of new Set([
+      c.name,
+      ...c.aliases,
+      c.id.replace(/[._]/g, ' '),
+    ])) {
+      const found = resolveMerchant(catalog, word, null).merchantId
+      if (found !== null)
+        problems.push(`category ${c.id}: '${word}' resolves to ${found}`)
+    }
   return problems
 }
 
@@ -113,6 +142,7 @@ function cardProblems(
     ['cap', card.caps.map((c) => c.id)],
     ['choice', card.choices.map((c) => c.id)],
     ['milestone', card.milestones.map((m) => m.id)],
+    ['intro rate', card.intro_rates.map((i) => i.id)],
   ] as const) {
     for (const id of duplicates(ids))
       problems.push(`${where}: duplicate ${kind} id '${id}'`)
@@ -121,6 +151,16 @@ function cardProblems(
   for (const m of card.milestones)
     if (card.rules.some((r) => r.id === m.id))
       problems.push(`${where}: milestone '${m.id}' has a rule's id`)
+  for (const intro of card.intro_rates) {
+    if (
+      card.rules.some((r) => r.id === intro.id) ||
+      card.milestones.some((m) => m.id === intro.id)
+    )
+      problems.push(`${where}: intro rate '${intro.id}' has a rule's id`)
+    for (const id of intro.rules ?? [])
+      if (!card.rules.some((r) => r.id === id))
+        problems.push(`${where} intro rate ${intro.id}: unknown rule '${id}'`)
+  }
   if (
     card.foreign_transaction_fee === null &&
     !card.todo.some((t) => /foreign transaction fee/i.test(t))
@@ -141,6 +181,7 @@ function cardProblems(
     ...(card.requires_membership ? ['requires_membership'] : []),
     ...card.rules.map((r) => r.id),
     ...card.milestones.map((m) => m.id),
+    ...card.intro_rates.map((i) => i.id),
   ])
   const sourcePages = new Set(card.source_urls.map((u) => u.split('#')[0]))
   const backed = new Set(card.evidence.map((e) => e.rule))
@@ -251,6 +292,8 @@ export function catalogProblems(catalog: Catalog): string[] {
   const { seed, overrides } = catalog.merchants
   problems.push(...merchantProblems('seed', seed, categories))
   problems.push(...merchantProblems('overrides', overrides, categories))
+
+  problems.push(...lookupProblems(catalog))
 
   const merchantIds = new Set([...seed, ...overrides].map((m) => m.id))
   for (const m of [...seed, ...overrides]) {

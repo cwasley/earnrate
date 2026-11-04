@@ -42,6 +42,9 @@ export const WalletCardSchema = z.strictObject({
     .string()
     .regex(/^\d{2}-\d{2}$/)
     .optional(),
+  // The day the account opened, for rates that apply only for a stretch
+  // after it (intro_rates). bonus.opened stands in when this isn't set.
+  opened: IsoDate.optional(),
   // Keyed by shared cap id, or by rule id for an inline cap.
   cap_usage: z.record(KebabId, CapUsage).default({}),
   chosen: z
