@@ -35,14 +35,15 @@ export type PassIdentity = {
   teamIdentifier: string
 }
 
-// The rows on the pass's face; the rest are on the back.
-const FRONT = [
-  'Groceries',
-  'Dining',
-  'Gas',
-  'Amazon',
-  'Costco',
-  'Everything else',
+// The rows on the pass's face, with shorter labels where a field is narrow;
+// the back has them all.
+const FRONT: [string, string][] = [
+  ['Groceries', 'Groceries'],
+  ['Dining', 'Dining'],
+  ['Gas', 'Gas'],
+  ['Amazon', 'Amazon'],
+  ['Costco', 'Costco'],
+  ['Everything else', 'Other'],
 ]
 
 const REFRESH_URL = 'https://earnrate.dev/#wallet'
@@ -95,9 +96,20 @@ export function passJson(
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
 
-  const front: Field[] = FRONT.flatMap((label) => {
-    const row = sheet.rows.find((r) => r.label === label)
-    return row ? [{ key: key(label), label, value: value(row, compact) }] : []
+  // Three to a row, so a long card name gets cut short: the rate goes in
+  // the label, where it always fits.
+  const front: Field[] = FRONT.flatMap(([rowLabel, label]) => {
+    const row = sheet.rows.find((r) => r.label === rowLabel)
+    if (!row) return []
+    return row.cardId === null || row.effectiveReturnPct === null
+      ? [{ key: key(label), label, value: 'None of these' }]
+      : [
+          {
+            key: key(label),
+            label: `${label} · ${pct(row.effectiveReturnPct)}`,
+            value: compact(row.cardId),
+          },
+        ]
   })
   const back: Field[] = [
     ...sheet.rows.map((row) => ({

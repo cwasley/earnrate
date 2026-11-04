@@ -101,20 +101,21 @@ describe('the cheat-sheet pass', () => {
     }
     expect(generic.headerFields[0]?.value).toBe('Q4 2026')
     const front = [...generic.secondaryFields, ...generic.auxiliaryFields]
-    expect(front.map((f) => f.label)).toEqual([
+    expect(front.map((f) => f.label.split(' · ')[0])).toEqual([
       'Groceries',
       'Dining',
       'Gas',
       'Amazon',
       'Costco',
-      'Everything else',
+      'Other',
     ])
     const groceries = sheet.rows.find((r) => r.label === 'Groceries')
-    expect(front[0]?.value).toBe(
-      `Gold ${pct(groceries?.effectiveReturnPct ?? 0)}`,
-    )
-    expect(front.find((f) => f.label === 'Costco')?.value).toMatch(
-      /^Blue card /,
+    expect(front[0]).toMatchObject({
+      label: `Groceries · ${pct(groceries?.effectiveReturnPct ?? 0)}`,
+      value: 'Gold',
+    })
+    expect(front.find((f) => f.label.startsWith('Costco'))?.value).toBe(
+      'Blue card',
     )
     expect(generic.backFields.map((f) => f.label)).toContain(
       'Streaming (Netflix)',
