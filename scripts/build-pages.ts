@@ -12,8 +12,12 @@ import {
   type ExploreQuery,
 } from '../src/engine/explore.ts'
 import { EPSILON } from '../src/engine/compare.ts'
-import { membershipNeeded, paidMemberships } from '../src/engine/memberships.ts'
-import { findMerchant } from '../src/merchants/resolve.ts'
+import {
+  membershipNeeded,
+  membershipText,
+  paidMemberships,
+} from '../src/engine/memberships.ts'
+import { findCategory, findMerchant } from '../src/merchants/resolve.ts'
 import { inEffect, localToday } from '../src/engine/periods.ts'
 import {
   capitalize,
@@ -25,8 +29,10 @@ import {
   longDate,
   num,
   pct,
+  PAYMENT_PHRASES,
   PICK_PERIODS,
   shortDate,
+  wholeDollars,
   words,
   foreignFeeText,
 } from '../src/engine/text.ts'
@@ -48,6 +54,18 @@ import { feeWorthKit, feeWorthSection } from './pages/fee-worth.ts'
 import { drawImages, type OgImage } from './pages/og.ts'
 import { quarterlyCardIds, quarterlyPages } from './pages/quarterly.ts'
 import { esc, fitDescription, fitTitle, SITE, slugify } from './pages/site.ts'
+import {
+  comparePairs,
+  comparer,
+  type CompareCell,
+  type ComparePair,
+  type CompareRow,
+  type Comparison,
+} from './compare.ts'
+import {
+  type Simulation,
+  TYPICAL_MONTHLY_SPEND,
+} from '../src/engine/simulate.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 // Tests build into a temporary directory.
@@ -521,7 +539,8 @@ function headlineFor(card: Card): string {
     const same = stores.filter(
       (r) =>
         r.rate === best.rate &&
-        r.requires?.membership === best.requires?.membership,
+        r.requires?.membership === best.requires?.membership &&
+        r.requires?.payment === best.requires?.payment,
     )
     const names = [
       ...new Set(
@@ -531,10 +550,20 @@ function headlineFor(card: Card): string {
       ),
     ]
     const membership = best.requires?.membership
+    const payment = best.requires?.payment
     clauses.unshift(
-      `${earnText(catalog, best.rate, card.currency)} at ${listed(names)}${membership ? ` with ${membershipName(membership)}` : ''}`,
+      `${earnText(catalog, best.rate, card.currency)} at ${listed(names)}${membership ? ` with ${membershipName(membership)}` : ''}${payment ? ` ${PAYMENT_PHRASES[payment]}` : ''}`,
     )
   }
+  for (const r of current)
+    if (
+      r.match.any &&
+      r.requires?.payment !== undefined &&
+      r.rate > card.base_rate
+    )
+      clauses.push(
+        `${earnText(catalog, r.rate, card.currency)} ${PAYMENT_PHRASES[r.requires.payment]}`,
+      )
 
   const rotating = card.caps.find((c) => c.rotating)
   const rotatingRates = rotating
@@ -611,6 +640,7 @@ function renderCard(
       ${worth ? feeWorthSection(ctx, worth) : ''}
       ${foreignFeeSection(card)}
       ${offerText(card)}
+      ${comparedWith(card, comparisons)}
       <h2>Sources</h2>
       <ul>${card.source_urls.map((u) => `<li><a href="${esc(u)}" rel="nofollow noopener">${esc(hostname(u) + new URL(u).pathname)}</a></li>`).join('')}</ul>
       <p class="muted">Rankings compare ${card.business ? 'business' : 'personal'} cards, each set up at its best for the purchase, with points at earnrate's default value. Rates change; check ${esc(issuer)}'s terms before you apply.</p>`
@@ -682,6 +712,338 @@ function renderCardIndex(): string {
 const images: OgImage[] = []
 const { feeWorth } = feeWorthKit(catalog, today)
 const quarterly = new Set(quarterlyCardIds(catalog))
+const sideOf = (c: Comparison, side: 'a' | 'b') => ({
+  card: c[side],
+  sim: c.typical[side],
+  value: c.value[side],
+  cell: (row: CompareRow) => row[side],
+})
+
+// "after its $325 annual fee", "with no annual fee", plus any membership the
+// simulation counted.
+function costText(sim: Simulation): string {
+  const fee =
+    sim.annualFees === 0
+      ? 'with no annual fee'
+      : `after its ${wholeDollars(sim.annualFees)} annual fee`
+  const m = sim.memberships
+    .map((x) => `the ${wholeDollars(x.annualFee)} ${x.name} it needs`)
+    .join(' and ')
+  return m === ''
+    ? fee
+    : sim.annualFees === 0
+      ? `after ${m}`
+      : `${fee} and ${m}`
+}
+
+function valueText(c: Comparison): string {
+  const programs = [
+    ...new Map(
+      (['a', 'b'] as const)
+        .map((s) => c.value[s])
+        .filter((v) => v.currency !== 'cash')
+        .map((v) => [v.currency, v]),
+    ).values(),
+  ]
+  if (programs.length === 0) return 'Both earn cash back.'
+  return `Points are counted at ${listed(programs.map((v) => `${num(v.centsPerUnit)}¢ each for ${currencyName(catalog, v.currency)}`))}, what they're worth as cash or travel credit; transferring them to airlines or hotels can be worth more.`
+}
+
+function compareAnswer(c: Comparison): string {
+  const [x, y] = (['a', 'b'] as const).map((s) => sideOf(c, s)) as [
+    ReturnType<typeof sideOf>,
+    ReturnType<typeof sideOf>,
+  ]
+  const gap = Math.round(x.sim.net) - Math.round(y.sim.net)
+  const [win, lose] = gap >= 0 ? [x, y] : [y, x]
+  const n = (s: typeof x) => esc(shortName(s.card.id))
+  const lead =
+    gap === 0
+      ? `At typical U.S. spending, the ${n(x)} and the ${n(y)} come out even: about ${wholeDollars(x.sim.net)} a year each after fees.`
+      : `At typical U.S. spending, the <strong>${n(win)}</strong> earns more: about ${wholeDollars(win.sim.net)} a year ${esc(costText(win.sim))}, against ${wholeDollars(lose.sim.net)} for the ${n(lose)} ${esc(costText(lose.sim))}. That's ${wholeDollars(Math.abs(gap))} a year more.`
+  const spend = TYPICAL_MONTHLY_SPEND.map(
+    (t) =>
+      `${findCategory(catalog, t.what) === null ? t.what : t.what.toLowerCase()} ${wholeDollars(t.monthly)}`,
+  ).join(', ')
+  return `<p class="answer">${lead} Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks. ${esc(valueText(c))}</p>`
+}
+
+const unverifiedEntry = (e: ExploreEntry | null) =>
+  e !== null && isUnverified(e)
+
+function rateCell(cell: CompareCell, win: boolean): string {
+  const e = cell.entry
+  if (!e)
+    return `<td class="muted">${cell.excluded ? 'Not accepted' : 'Not usable'}</td>`
+  const lines = requirementLines(e.cardId, e.requirements, untilText(e))
+  if (unverifiedEntry(e)) lines.push('Not yet confirmed')
+  return `<td${win ? ' class="win"' : ''}><span class="rate">${pct(e.effectiveReturnPct)}</span>${win ? '<span class="visually-hidden"> (earns more)</span>' : ''}${lines.length > 0 ? `<span class="cell-note">${lines.map(esc).join('. ')}</span>` : ''}</td>`
+}
+
+function compareTable(c: Comparison): string {
+  const head = (card: Card) =>
+    `<th scope="col"><a href="/cards/${card.id}">${esc(shortName(card.id))}</a></th>`
+  const rows = c.rows
+    .map(
+      (r) =>
+        `<tr><th scope="row">${esc(r.label)}</th>${rateCell(r.a, r.winner === 'a')}${rateCell(r.b, r.winner === 'b')}</tr>`,
+    )
+    .join('')
+  const reasons = [
+    ...new Set(
+      c.rows.flatMap((r) =>
+        [r.a.excluded, r.b.excluded].filter((x) => x !== null),
+      ),
+    ),
+  ]
+  return `<div class="table-box"><table class="compare"><thead><tr><th scope="col">Purchase</th>${head(c.a)}${head(c.b)}</tr></thead><tbody>${rows}</tbody></table></div>
+      <p class="muted">What each purchase earns back, with each card set up at its best for it (the right bonus pick, any activation done, no cap used up yet). The higher rate is highlighted.${reasons.length > 0 ? ` ${reasons.map(esc).join(' ')}` : ''}</p>`
+}
+
+function suits(c: Comparison): string {
+  const items: string[] = []
+  for (const side of ['a', 'b'] as const) {
+    const me = c[side]
+    const them = c[side === 'a' ? 'b' : 'a']
+    const wins = c.rows
+      .filter((r) => r.winner === side)
+      .map((r) => {
+        const mine = r[side].entry?.effectiveReturnPct ?? 0
+        const theirs = (side === 'a' ? r.b : r.a).entry?.effectiveReturnPct
+        return { r, mine, theirs, margin: mine - (theirs ?? 0) }
+      })
+      .sort((x, y) => y.margin - x.margin)
+      .slice(0, 3)
+    if (wins.length === 0) continue
+    const where = listed(
+      wins.map((w) => w.r.where),
+      'or',
+    )
+    const mine = listed(wins.map((w) => `${pct(w.mine)} ${w.r.where}`))
+    const theirs = wins.flatMap((w) =>
+      w.theirs === undefined ? [] : [pct(w.theirs)],
+    )
+    const refused = wins.filter((w) => w.theirs === undefined)
+    const other = shortName(them.id)
+    const tail = [
+      ...(theirs.length > 0
+        ? [`against ${listed(theirs)} on the ${other}`]
+        : []),
+      ...(refused.length > 0
+        ? [
+            theirs.length > 0
+              ? `and the ${other} isn't accepted ${listed(refused.map((w) => w.r.where))}`
+              : `where the ${other} isn't accepted`,
+          ]
+        : []),
+    ].join(', ')
+    items.push(
+      `<li>If you spend most ${esc(where)}: the <strong>${esc(shortName(me.id))}</strong> earns ${esc(mine)}, ${esc(tail)}.</li>`,
+    )
+  }
+  const [a, b] = [c.a, c.b]
+  const free = [a, b].find((k) => k.annual_fee === 0)
+  const paid = free === a ? b : a
+  if (free && paid.annual_fee !== undefined && paid.annual_fee > 0)
+    items.push(
+      `<li>If you'd rather not pay an annual fee: the <strong>${esc(shortName(free.id))}</strong> has none; the ${esc(shortName(paid.id))} costs ${wholeDollars(paid.annual_fee)} a year.</li>`,
+    )
+  const fx = (k: Card) => k.foreign_transaction_fee
+  if (fx(a) !== null && fx(b) !== null && fx(a) !== fx(b)) {
+    const [low, high] = (fx(a) ?? 0) < (fx(b) ?? 0) ? [a, b] : [b, a]
+    items.push(
+      `<li>If you buy abroad: the <strong>${esc(shortName(low.id))}</strong> has ${esc(foreignFeeText(fx(low)).replace(/^No/, 'no').replace(/^(\d)/, 'a $1'))}; the ${esc(shortName(high.id))} charges ${esc(pct(fx(high) ?? 0))}.</li>`,
+    )
+  }
+  return items.length === 0
+    ? ''
+    : `<h2>Who each card suits</h2><ul>${items.join('')}</ul>`
+}
+
+function feesTable(c: Comparison): string {
+  const row = (label: string, f: (k: Card) => string) =>
+    `<tr><th scope="row">${label}</th><td>${esc(f(c.a))}</td><td>${esc(f(c.b))}</td></tr>`
+  const head = (k: Card) => `<th scope="col">${esc(shortName(k.id))}</th>`
+  return `<h2>Fees</h2><div class="table-box"><table class="compare"><thead><tr><th scope="col"></th>${head(c.a)}${head(c.b)}</tr></thead><tbody>${row(
+    'Annual fee',
+    (k) => feeLabel(k.id).split('; needs ')[0] ?? '',
+  )}${row('Foreign transaction fee', (k) => {
+    const f = k.foreign_transaction_fee
+    return f === null ? 'Not on file' : f === 0 ? 'None' : pct(f)
+  })}${row('Membership needed', (k) =>
+    k.requires_membership === undefined
+      ? 'None'
+      : capitalize(membershipText(catalog, k.requires_membership)),
+  )}</tbody></table></div>`
+}
+
+function compareOffers(c: Comparison): string {
+  const items = [c.a, c.b].map((card) => {
+    const o = card.welcome_offer
+    const name = `<strong>${esc(shortName(card.id))}:</strong>`
+    if (!o || !inEffect(o, today))
+      return `<li>${name} no public welcome offer on its issuer's page as of ${esc(shortDate(card.last_verified))}.</li>`
+    return `<li>${name} ${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(card.last_verified))}.</li>`
+  })
+  return `<h2>Public welcome offers</h2><ul>${items.join('')}</ul><p class="muted">${esc(OFFERS_MAY_DIFFER)}</p>`
+}
+
+function compareQuotes(c: Comparison): string {
+  const block = (side: 'a' | 'b') => {
+    const card = c[side]
+    const ruleIds = [
+      ...new Set(
+        c.rows
+          .map((r) => r[side].entry?.matchedRule)
+          .filter((id): id is string => typeof id === 'string'),
+      ),
+      'base_rate',
+      'foreign_transaction_fee',
+    ]
+    const quotes = [
+      ...new Map(
+        ruleIds
+          .map((id) => card.evidence.find((e) => e.rule === id))
+          .filter((e) => e !== undefined)
+          .map((e) => [`${e.quote}|${e.url}`, e]),
+      ).values(),
+    ]
+    const issuer = issuerName(card.issuer)
+    return `<h3><a href="/cards/${card.id}">${esc(card.name)}</a></h3><p class="muted">Checked against ${esc(issuer)}'s terms ${esc(shortDate(card.last_verified))}.</p><ul class="quotes">${quotes
+      .map(
+        (e) =>
+          `<li>“${esc(e.quote)}” <a href="${esc(e.url)}" rel="nofollow noopener">${esc(hostname(e.url))}</a></li>`,
+      )
+      .join('')}</ul>`
+  }
+  return `<h2>From the issuers' terms</h2><div class="issuer-quotes">${block('a')}${block('b')}</div>`
+}
+
+function renderCompare(c: Comparison): string {
+  const [na, nb] = [shortName(c.a.id), shortName(c.b.id)]
+  const title = fitTitle([
+    `${na} vs ${nb}: rewards, fees and which earns more (${thisMonth})`,
+    `${na} vs ${nb}: rewards, fees and which earns more`,
+    `${na} vs ${nb}: which earns more`,
+    `${na} vs ${nb}`,
+    `${c.a.short_name ?? na} vs ${c.b.short_name ?? nb}`,
+  ])
+  const winner =
+    Math.round(c.typical.a.net) === Math.round(c.typical.b.net)
+      ? null
+      : c.typical.a.net > c.typical.b.net
+        ? na
+        : nb
+  const verdict = winner
+    ? `the ${winner} earns more at typical U.S. spending after fees`
+    : 'they come out even at typical U.S. spending after fees'
+  const description = fitDescription([
+    `${na} vs ${nb}, rate by rate from the issuers' terms: ${verdict}. Fees, welcome offers and who each card suits. No affiliate links.`,
+    `${na} vs ${nb}, rate by rate from the issuers' terms: ${verdict}.`,
+    `${na} vs ${nb}: ${verdict}.`,
+    `${na} vs ${nb}, rate by rate from the issuers' terms.`,
+  ])
+  const canonical = `${SITE}/compare/${c.pair.slug}`
+  const body = `
+      <div class="vs-head">${art(c.a.id, 96)}<span class="vs">vs</span>${art(c.b.id, 96)}</div>
+      <h1>${esc(na)} vs ${esc(nb)}</h1>
+      <p class="updated">Updated ${esc(todayWords)} · ${esc(issuerName(c.a.issuer))} and ${esc(issuerName(c.b.issuer))} · ${c.a.business ? 'Business cards' : 'Personal cards'}</p>
+      ${compareAnswer(c)}
+      <p><a class="button" href="/#wallet">Check with your own cards</a></p>
+      <h2>Rates by purchase</h2>
+      ${compareTable(c)}
+      ${suits(c)}
+      ${feesTable(c)}
+      ${compareOffers(c)}
+      ${compareQuotes(c)}
+      <h2>Each card in full</h2>
+      <p class="links"><a href="/cards/${c.a.id}">${esc(c.a.name)}</a> · <a href="/cards/${c.b.id}">${esc(c.b.name)}</a> · <a href="/compare/">Every comparison</a></p>
+      <p class="muted">Typical spending, point values and fees come from earnrate's data, and every rate from the issuers' terms. Rates change; check each issuer's terms before you apply.</p>`
+  const cardLd = (k: Card) => ({
+    '@type': 'CreditCard',
+    name: k.name,
+    url: `${SITE}/cards/${k.id}`,
+    provider: { '@type': 'BankOrCreditUnion', name: issuerName(k.issuer) },
+    feesAndCommissionsSpecification: feeLabel(k.id),
+  })
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: title,
+    description,
+    url: canonical,
+    dateModified: today,
+    about: [cardLd(c.a), cardLd(c.b)],
+  }
+  return layout({
+    title,
+    description,
+    path: `/compare/${c.pair.slug}`,
+    body,
+    jsonLd,
+    crumbs: [
+      { name: 'Comparisons', path: '/compare/' },
+      { name: `${na} vs ${nb}`, path: `/compare/${c.pair.slug}` },
+    ],
+  })
+}
+
+function comparedWith(card: Card, pairs: ComparePair[]): string {
+  const mine = pairs.filter((p) => p.a === card.id || p.b === card.id)
+  if (mine.length === 0) return ''
+  return `<h2>Compared with</h2><p class="links">${mine
+    .map((p) => {
+      const other = p.a === card.id ? p.b : p.a
+      return `<a href="/compare/${p.slug}">${esc(shortName(other))}</a>`
+    })
+    .join(' · ')}</p>`
+}
+
+function renderCompareIndex(pairs: ComparePair[]): string {
+  const byIssuer = new Map<string, Card[]>()
+  for (const card of catalog.cards)
+    if (pairs.some((p) => p.a === card.id || p.b === card.id))
+      byIssuer.set(card.issuer, [...(byIssuer.get(card.issuer) ?? []), card])
+  const sections = [...byIssuer]
+    .sort((a, b) => issuerName(a[0]).localeCompare(issuerName(b[0])))
+    .map(
+      ([issuer, list]) =>
+        `<h2>${esc(issuerName(issuer))}</h2><ul class="compare-list">${list
+          .map((card) => {
+            const links = pairs
+              .filter((p) => p.a === card.id || p.b === card.id)
+              .map(
+                (p) =>
+                  `<a href="/compare/${p.slug}">${esc(shortName(p.a === card.id ? p.b : p.a))}</a>`,
+              )
+              .join(' · ')
+            return `<li>${art(card.id, 36)}<div><strong><a href="/cards/${card.id}">${esc(shortName(card.id))}</a></strong> vs <span class="links">${links}</span></div></li>`
+          })
+          .join('')}</ul>`,
+    )
+    .join('')
+  return layout({
+    title: fitTitle(['Credit card comparisons, from issuer terms']),
+    description: fitDescription([
+      `${String(pairs.length)} side-by-side credit card comparisons: rates by purchase, fees, welcome offers and which earns more at typical spending, from the issuers' terms. No affiliate links.`,
+      `${String(pairs.length)} side-by-side credit card comparisons: rates, fees, welcome offers and which earns more, from the issuers' terms.`,
+    ]),
+    path: '/compare/',
+    crumbs: [{ name: 'Comparisons', path: '/compare/' }],
+    body: `
+      <h1>Credit cards compared</h1>
+      <p class="updated">Updated ${esc(todayWords)}</p>
+      <p>${String(pairs.length)} side-by-side comparisons, each from the issuers' own terms. Each pairs cards from different issuers that earn bonuses in at least two of the same everyday categories with similar fees, or two of one issuer's cards that earn the same points. Business cards are compared only with business cards.</p>
+      ${sections}`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      url: `${SITE}/compare/`,
+    },
+  })
+}
+
+const comparisons = comparePairs(catalog, today)
 const all = pages(catalog)
 const results = new Map(
   all.map((p) => [p.slug, exploreCards(catalog, p.query, options)]),
@@ -713,6 +1075,24 @@ for (const card of catalog.cards) {
   )
 }
 await writeFile(path.join(OUT, 'cards', 'index.html'), renderCardIndex())
+await mkdir(path.join(OUT, 'compare'), { recursive: true })
+const compare = comparer(catalog, today)
+for (const pair of comparisons)
+  await writeFile(
+    path.join(OUT, 'compare', `${pair.slug}.html`),
+    renderCompare(compare(pair)),
+  )
+await writeFile(
+  path.join(OUT, 'compare', 'index.html'),
+  renderCompareIndex(comparisons),
+)
+// Either order of the two cards reaches the one page.
+await writeFile(
+  path.join(OUT, '_redirects'),
+  comparisons
+    .map((p) => `/compare/${p.b}-vs-${p.a} /compare/${p.slug} 301\n`)
+    .join(''),
+)
 await writeFile(
   path.join(OUT, '404.html'),
   layout({
@@ -788,6 +1168,15 @@ const urls: [string, string][] = [
     ]),
   ]),
   ...generated.map((g): [string, string] => [`${SITE}${g.path}`, g.lastmod]),
+  [`${SITE}/compare/`, dataDate],
+  ...comparisons.map((p): [string, string] => [
+    `${SITE}/compare/${p.slug}`,
+    latest([
+      changed(`data/cards/${p.a}.yaml`),
+      changed(`data/cards/${p.b}.yaml`),
+      changed('data/currencies.yaml'),
+    ]),
+  ]),
   ...['privacy', 'terms', 'companies', 'support'].map(
     (page): [string, string] => [
       `${SITE}/${page}`,
@@ -815,5 +1204,5 @@ Sitemap: ${SITE}/sitemap.xml
 const drawn =
   process.env.EARNRATE_OG === 'off' ? null : await drawImages(ROOT, OUT, images)
 console.log(
-  `Wrote ${String(all.length)} comparison pages, ${String(catalog.cards.length)} card pages, ${String(generated.length)} other pages, sitemap.xml and robots.txt.${drawn ? ` ${String(images.length)} preview images (${String(drawn.drawn)} redrawn), ${(drawn.bytes / 1e6).toFixed(1)} MB.` : ''}`,
+  `Wrote ${String(all.length)} search pages, ${String(catalog.cards.length)} card pages, ${String(comparisons.length)} card comparisons, ${String(generated.length)} other pages, sitemap.xml, _redirects and robots.txt.${drawn ? ` ${String(images.length)} preview images (${String(drawn.drawn)} redrawn), ${(drawn.bytes / 1e6).toFixed(1)} MB.` : ''}`,
 )

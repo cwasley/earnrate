@@ -19,6 +19,8 @@ import {
   shortName,
 } from './format.ts'
 import { ABROAD_NOTE, AbroadToggle } from './AbroadToggle.tsx'
+import { PayingWith, payingNote } from './PayingWith.tsx'
+import type { PaymentMethod } from '../../src/schema/card.ts'
 import { CardArt } from './CardArt.tsx'
 import { track } from './track.ts'
 import { SearchInput } from './SearchInput.tsx'
@@ -46,6 +48,7 @@ export const SUGGESTIONS = [
 function explore(
   text: string,
   abroad: boolean,
+  payment: PaymentMethod | null,
   settings: Settings,
   saved: Saved,
 ): Exploration {
@@ -58,6 +61,7 @@ function explore(
       channel: null,
       date: localToday(),
       country: abroad ? ABROAD : 'US',
+      payment,
     },
     engineOptions(settings, saved),
   )
@@ -235,13 +239,16 @@ export function BestFor({
   const [text, setText] = useState(query)
   const [all, setAll] = useState(false)
   const [abroad, setAbroad] = useState(false)
+  const [payment, setPayment] = useState<PaymentMethod | null>(null)
   const result = useMemo(
     () =>
-      query.trim() === '' ? null : explore(query, abroad, settings, saved),
-    [query, abroad, settings, saved],
+      query.trim() === ''
+        ? null
+        : explore(query, abroad, payment, settings, saved),
+    [query, abroad, payment, settings, saved],
   )
   const example = useMemo(
-    () => (result ? null : explore(EXAMPLE, false, settings, saved)),
+    () => (result ? null : explore(EXAMPLE, false, null, settings, saved)),
     [result, settings, saved],
   )
   useEffect(() => {
@@ -308,7 +315,14 @@ export function BestFor({
             </button>
           ))}
         </div>
-        <AbroadToggle abroad={abroad} onChange={setAbroad} />
+        <div class="options">
+          <AbroadToggle abroad={abroad} onChange={setAbroad} />
+          <PayingWith
+            name="best-for-paying"
+            payment={payment}
+            onChange={setPayment}
+          />
+        </div>
       </div>
       {!result && example ? (
         <Example
@@ -323,10 +337,16 @@ export function BestFor({
 
       <div aria-live="polite">
         {result ? (
-          <section class="results" key={`${query} ${String(abroad)}`}>
+          <section
+            class="results"
+            key={`${query} ${String(abroad)} ${payment ?? ''}`}
+          >
             <h3>
               Best cards for {title(result)}
               {abroad ? <span class="muted">{ABROAD_NOTE}</span> : null}
+              {payment ? (
+                <span class="muted">{payingNote(payment)}</span>
+              ) : null}
               {result.merchant.source !== 'category' &&
               result.merchant.source !== 'none' ? (
                 <span class="muted">

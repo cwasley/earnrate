@@ -130,7 +130,7 @@ ${page.body}
       </aside>
       <footer>
         <p>earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(context.dataVersion)}, updated ${esc(context.todayWords)}. Rates change, so check the issuer's terms before you apply. Wrong rate? <a href="/support">Tell us</a>.</p>
-        <p><a href="/">earnrate.dev</a> · <a href="/best/">Best card for every store</a> · <a href="/cards/">All cards</a> · <a href="/quarterly/">5% categories this quarter</a> · <a href="/categories/">What each category covers</a> · <a href="/how-stores-code">How stores code</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/companies">For companies</a> · <a href="/support">Support</a></p>
+        <p><a href="/">earnrate.dev</a> · <a href="/best/">Best card for every store</a> · <a href="/cards/">All cards</a> · <a href="/compare/">Card comparisons</a> · <a href="/quarterly/">5% categories this quarter</a> · <a href="/categories/">What each category covers</a> · <a href="/how-stores-code">How stores code</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/companies">For companies</a> · <a href="/support">Support</a></p>
       </footer>
     </main>
   </body>

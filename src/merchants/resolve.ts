@@ -160,6 +160,14 @@ export function findMerchant(
   )
 }
 
+// The ids a card rule can name to match this merchant: its own and, for a
+// brand, its parent's.
+export function merchantFamily(catalog: Catalog, id: string | null): string[] {
+  if (id === null) return []
+  const parent = findMerchant(catalog, id)?.brand_of
+  return parent === undefined ? [id] : [id, parent]
+}
+
 export function resolveMerchantById(
   catalog: Catalog,
   id: string,

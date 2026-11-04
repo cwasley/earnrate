@@ -324,6 +324,48 @@ describe('tools', () => {
     expect(text(found)).toMatch(/3% foreign transaction fee/)
   })
 
+  test('payment: a rate that needs a way of paying counts only when given', async () => {
+    const client = await connect(await walletCopy())
+    const cards = [
+      { cardId: 'paypal-cashback-mastercard' },
+      { cardId: 'citi-double-cash' },
+    ]
+    type Answer = {
+      decision: { cardId: string; effectiveReturnPct: number }
+      assumptions: string[]
+    }
+    const unknown = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'etsy.com', cards },
+    })
+    expect(unknown.isError, text(unknown)).toBeFalsy()
+    const plain = unknown.structuredContent as Answer
+    expect(plain.decision.cardId).toBe('citi-double-cash')
+    expect(plain.assumptions).toContain(
+      "Through PayPal checkout, PayPal Cashback Mastercard would earn 3% cash back here, instead of the 1.5% cash back it's ranked at. Say how you're paying to count it.",
+    )
+    const paid = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'etsy.com', cards, payment: 'paypal' },
+    })
+    expect((paid.structuredContent as Answer).decision).toMatchObject({
+      cardId: 'paypal-cashback-mastercard',
+      effectiveReturnPct: 3,
+    })
+    const bad = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'etsy.com', payment: 'venmo' },
+    })
+    expect(bad.isError).toBe(true)
+    const every = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { merchant: 'Nike', payment: 'apple-pay' },
+    })
+    const top = (every.structuredContent as { ranked: { cardId: string }[] })
+      .ranked
+    expect(top.map((r) => r.cardId)).toContain('apple-card')
+  })
+
   test('settings that change nothing say so', async () => {
     const client = await connect(await walletCopy())
     const anniversary = await client.callTool({
@@ -432,6 +474,7 @@ describe('prompts', () => {
       expect.objectContaining({ name: 'store', required: true }),
       expect.objectContaining({ name: 'amount', required: false }),
       expect.objectContaining({ name: 'country', required: false }),
+      expect.objectContaining({ name: 'paying', required: false }),
     ])
     for (const name of ['cheat-sheet', 'this-quarter', 'set-up'])
       expect(prompts.find((p) => p.name === name)?.arguments ?? []).toEqual([])

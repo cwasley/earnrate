@@ -15,8 +15,13 @@ source_urls:
 base_rate: 1.5
 annual_fee: 0
 foreign_transaction_fee: 3
-todo:
-  - "3% cash back when the card is paid through your PayPal account online (PayPal checkout, or sending money to other PayPal users) isn't modeled: earnrate sees the merchant and channel, not how a purchase is paid, so every purchase gets 1.5% here."
+rules:
+  - id: paypal-checkout
+    match: { any: true }
+    rate: 3
+    channel: online
+    requires: { payment: paypal }
+    note: Paid with the card through your PayPal account online (choosing it at PayPal checkout), or sending money to other PayPal users through PayPal. Authorized users earn 1.5% on everything.
 evidence:
   - rule: base_rate
     url: https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard
@@ -27,6 +32,12 @@ evidence:
   - rule: base_rate
     url: https://www.synchronycredit.com/gecrbterms/html/PayPalCashbackRewardsTerms.htm
     quote: 'there is no maximum amount of Eligible Purchases that may earn Cash Rewards.'
+  - rule: paypal-checkout
+    url: https://www.synchronycredit.com/gecrbterms/html/PayPalCashbackRewardsTerms.htm
+    quote: '3%: Each Eligible Purchase made by you through your PayPal account online'
+  - rule: paypal-checkout
+    url: https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard
+    quote: '3% cash back when you check out with PayPal.'
   - rule: annual_fee
     url: https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard
     quote: 'no rotating categories, and no annual fee.'

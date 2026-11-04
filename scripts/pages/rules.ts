@@ -8,6 +8,7 @@ import {
   earnText,
   hostname,
   listed,
+  PAYMENT_PHRASES,
   PICK_PERIODS,
   shortDate,
   wholeDollars,
@@ -27,6 +28,12 @@ export function ruleKit(catalog: Catalog) {
   const readsOn = (id: string) => categoryReadsOn(catalog, id)
 
   function ruleWhatRaw(card: Card, rule: Rule): string {
+    const payment = rule.requires?.payment
+    const what = ruleScope(card, rule)
+    return payment === undefined ? what : `${what} ${PAYMENT_PHRASES[payment]}`
+  }
+
+  function ruleScope(card: Card, rule: Rule): string {
     const m = rule.match
     if (m.any) return 'every purchase'
     const parts: string[] = []

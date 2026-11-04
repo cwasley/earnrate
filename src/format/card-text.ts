@@ -23,11 +23,17 @@ export function cardText(catalog: Catalog) {
 
   function shortName(id: string): string {
     const name = cards.get(id)?.name ?? id
-    return name
-      .replace(/^American Express /, 'Amex ')
-      .replace(/^The Platinum Card from American Express$/, 'Amex Platinum')
-      .replace(/ (Visa Signature |Visa Infinite )?(Credit )?Card$/, '')
-      .replace(/ Card by /, ' by ')
+    return (
+      name
+        .replace(/^American Express /, 'Amex ')
+        .replace(/^The Platinum Card from American Express$/, 'Amex Platinum')
+        // "Card" is part of Apple Card's name, not a suffix.
+        .replace(
+          / (Visa Signature |Visa Infinite )?(Credit )?(?<!^Apple )Card$/,
+          '',
+        )
+        .replace(/ Card by /, ' by ')
+    )
   }
 
   function feeLabel(id: string): string {
