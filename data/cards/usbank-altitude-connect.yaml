@@ -62,6 +62,7 @@ rules:
         [
           amazon-music,
           amazon-prime-video,
+          amc-plus,
           apple-music,
           apple-tv,
           audible,
@@ -70,9 +71,13 @@ rules:
           disney-plus,
           espn,
           fandango-at-home,
+          fanduel-sports-network,
           fubotv,
-          max,
           hulu,
+          iheartradio,
+          liveone,
+          luminary,
+          max,
           mlb-tv,
           nba-league-pass,
           netflix,
@@ -85,6 +90,7 @@ rules:
           spotify,
           starz,
           tidal,
+          youtube-music,
           youtube-premium,
           youtube-tv,
         ]
@@ -146,5 +152,5 @@ evidence:
     url: https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=8BB5BD89H1&sourceCode=88416&page=terms
     quote: 'Foreign Transaction None'
 todo:
-  - 'AMC+, FanDuel Sports Network, iHeart, LiveOne, Luminary, Stitcher and YouTube Music are qualifying streaming services that earnrate has no merchant for yet.'
+  - 'Stitcher is a qualifying streaming service that earnrate has no merchant for yet.'
   - "Passenger trains are modeled only for Amtrak, since earnrate's transit category also covers buses, tolls and parking, which U.S. Bank doesn't list as travel."

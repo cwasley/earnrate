@@ -1,0 +1,92 @@
+id: navy-federal-more-rewards-amex
+name: Navy Federal More Rewards American Express Card
+short_name: NFCU More Rewards Amex
+color: '#1d3f73'
+# Issued by Navy Federal on the American Express network; not an Amex card,
+# so it earns Navy Federal points, not Membership Rewards.
+issuer: navy-federal
+network: amex
+currency: navy-federal-rewards
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+  - https://www.navyfederal.org/loans-cards/credit-cards/faqs.html
+  - https://www.navyfederal.org/membership/eligibility.html
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 20000
+  spend: 2000
+  months: 3
+  valid_to: 2027-01-03
+  note: The page says within 90 days of account opening, modeled as 3 months. For accounts applied for from 07/01/2026 through 01/03/2027; one promotional offer per account opening.
+requires_membership: navy-federal # eligibility-based, no yearly fee
+rules:
+  - id: restaurants-food-delivery
+    match: { categories: [dining] }
+    rate: 3
+    note: Restaurants and food delivery, by the merchant's code. Restaurants inside another business (a hotel, casino, commissary, grocery store or event venue) may earn 1X.
+  - id: supermarkets
+    match: { categories: [grocery.supermarket] }
+    rate: 3
+    note: Supermarkets, by the merchant's code; superstores and warehouse clubs aren't supermarkets.
+  - id: gas-transit
+    match: { categories: [gas, transit] }
+    exclude: { categories: [gas.grocery_store, gas.superstore] }
+    rate: 3
+    note: Gas stations, and transit including railway, ferries, taxis, limousines, bus lines, charters, tour buses, tolls, road and bridge fees, and parking. Gas at superstores, supermarkets and warehouse clubs may earn 1X.
+evidence:
+  - rule: base_rate
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: '1X points on everything else'
+  - rule: restaurants-food-delivery
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: '3X points at restaurants and on food delivery'
+  - rule: restaurants-food-delivery
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: 'purchases at restaurants located within another establishment (e.g., hotel, casino, commissary, grocery store, event venue)'
+  - rule: supermarkets
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: '3X points at supermarkets'
+  - rule: gas-transit
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: '3X points on gas and transit'
+  - rule: gas-transit
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: 'purchases for transit that are identified as railway, ferries/water trip, taxi, limousines, bus lines, charters, tour buses'
+  - rule: gas-transit
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: 'tolls, road/bridge fees, and parking/lots will receive 3 points for every $1 spent'
+  - rule: gas-transit
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: 'purchases for gas at superstores, supermarkets, and warehouse clubs, may earn 1 point per $1 spent'
+  - rule: annual_fee
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: 'No annual fee'
+  - rule: foreign_transaction_fee
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: 'No balance transfer fees No foreign transaction fees'
+  - rule: foreign_transaction_fee
+    url: https://www.navyfederal.org/loans-cards/credit-cards/faqs.html
+    quote: 'We don’t charge foreign transaction fees on any of our credit cards'
+  - rule: welcome_offer
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: 'Earn 20,000 points when you spend $2,000 within 90 days of account opening'
+  - rule: welcome_offer
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: 'Offer valid for accounts applied for between 07/01/2026 and 01/03/2027.'
+  - rule: requires_membership
+    url: https://www.navyfederal.org/loans-cards/credit-cards/faqs.html
+    quote: 'To apply for a Navy Federal credit card, you’ll need to be a Navy Federal member.'
+  - rule: requires_membership
+    url: https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+    quote: 'you’ll need to be a Navy Federal Credit Union member'
+  - rule: requires_membership
+    url: https://www.navyfederal.org/membership/eligibility.html
+    quote: 'A Membership Savings Account with a $5 minimum balance is required to establish and maintain membership.'
+todo:
+  - 'Membership is by eligibility, not a yearly fee: the armed forces, veterans, DoD civilians and contractors, and their families and household members, with a $5 minimum balance in a Membership Savings Account.'
+  - 'The rates and fees table and the rewards terms are PDFs, read 2026-11-04 (navyfederal.org/content/dam/nfculibs/pdfs/credit-debit-cards/nfcu_573amex.pdf, the "Annual Fees" and "Foreign Transaction" rows and "REWARD PROGRAM DETAILS"; nfcu_829b.pdf, the More Rewards earn table and "Every 1 reward point is worth $0.01 when redeemed for cash"). Re-check them by hand when the source check flags this card.'
+  - 'Navy Federal points pool across its points cards (Flagship Premier, GO REWARDS); none of those is in earnrate yet.'

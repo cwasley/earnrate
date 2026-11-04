@@ -709,6 +709,33 @@
         "ddc47f79cdcbf88a"
       ]
     },
+    "https://www.caltechefcu.org/home/products/lending/mastercard": {
+      "checked": "2026-11-04",
+      "lines": []
+    },
+    "https://www.caltechefcu.org/home/products/lending/mastercard/disclosure": {
+      "checked": "2026-11-04",
+      "lines": []
+    },
+    "https://www.caltechefcu.org/home/products/lending/mastercard/mastercard_faqs": {
+      "checked": "2026-11-04",
+      "lines": []
+    },
+    "https://www.caltechefcu.org/home/products/lending/mastercard/student_mastercard": {
+      "checked": "2026-11-04",
+      "lines": []
+    },
+    "https://www.caltechefcu.org/home/resources/fees": {
+      "checked": "2026-11-04",
+      "lines": [
+        "095b3497e7443632",
+        "8d503fc49604e735"
+      ]
+    },
+    "https://www.caltechefcu.org/home/membership/eligibility": {
+      "checked": "2026-11-04",
+      "lines": []
+    },
     "https://www.capitalone.com/credit-cards/kohls/": {
       "checked": "2026-11-04",
       "lines": [
@@ -747,6 +774,17 @@
         "a9367abd98b0343e",
         "bdc2f6993900453a",
         "ef734273944f45f8"
+      ]
+    },
+    "https://www.capitalone.com/credit-cards/rei/": {
+      "checked": "2026-11-04",
+      "lines": [
+        "0a0ca955982259a8",
+        "12e1bb7baf852590",
+        "42055b4b9dfa94a4",
+        "ab5688de2737f2e4",
+        "d7a2f77e521eef09",
+        "e41e4d82b6d05b65"
       ]
     },
     "https://www.capitalone.com/credit-cards/savor/": {
@@ -1651,6 +1689,50 @@
         "fb94fc040d7281b1"
       ]
     },
+    "https://online1.elancard.com/pdap/terms?locationCode=24193&offerId=5W8QWVRP5M&sourceCode=88155&st=y": {
+      "checked": "2026-11-04",
+      "lines": [
+        "28f3a7958b0f39c6",
+        "2edb34d356e8170c",
+        "cb8ec330be1ecde0",
+        "e325255e59695cca"
+      ]
+    },
+    "https://www.navyfederal.org/loans-cards/credit-cards/cash-rewards.html": {
+      "checked": "2026-11-04",
+      "lines": [
+        "1ab8ea8dfc75a207",
+        "25d6190b792b92b4",
+        "2b3a1fe9322cf2cf",
+        "5ca98443a8110235",
+        "66097919e24872e9",
+        "6cd12d81fbc894ea",
+        "6fbf501f00763dd6",
+        "adf5daef5ecf83d7",
+        "b639c123a6ed3aa4",
+        "cc90247198205aef",
+        "da730880471ead97"
+      ]
+    },
+    "https://www.navyfederal.org/loans-cards/credit-cards/faqs.html": {
+      "checked": "2026-11-04",
+      "lines": []
+    },
+    "https://www.navyfederal.org/membership/eligibility.html": {
+      "checked": "2026-11-04",
+      "lines": []
+    },
+    "https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html": {
+      "checked": "2026-11-04",
+      "lines": [
+        "0ff527829c8b6064",
+        "34cb972413e31759",
+        "3f24de61added35e",
+        "6bc9269ad051f376",
+        "736c4a8e7f4234cb",
+        "c1511f26a7f4a6ff"
+      ]
+    },
     "https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard": {
       "checked": "2026-11-04",
       "lines": [
@@ -1856,6 +1938,96 @@
         "d9c519994d4edffe",
         "e42820a6c68e5130"
       ]
+    },
+    "https://www.usbank.com/credit-cards/bank-smartly-visa-signature-credit-card.html": {
+      "checked": "2026-11-04",
+      "lines": [
+        "00842af7ccbbf061",
+        "0f7cbc7ba4f5f2af",
+        "1333d191f9ea0207",
+        "1f57ae88768db1fd",
+        "21f38e5647b2cfef",
+        "25bd61542eb53776",
+        "403e9aae49d25581",
+        "48d4424c9b258f35",
+        "83a7c4ce3d974b63",
+        "c233c82c632d864b",
+        "c8c409f3393e6def",
+        "da7190508f6cdc6d",
+        "dc0a0b50a5ecbf3e"
+      ]
+    },
+    "https://rewards.usbank.com/benefits/card/SmartlyBenefits/program-rules": {
+      "checked": "2026-11-04",
+      "lines": [
+        "1dcb345b404fb068",
+        "3c7b1a51684b401a",
+        "5a737853042399d7",
+        "6bd02eae0d1f5826",
+        "c20d3805bc30f033",
+        "dc0a0b50a5ecbf3e"
+      ]
+    },
+    "https://venmo.com/about/creditcard/": {
+      "checked": "2026-11-04",
+      "lines": [
+        "329007164aa472eb",
+        "6c7e56161773518c",
+        "817fdada682cc75d",
+        "85b0fdabe4d83e33",
+        "b20fd79537216387",
+        "ba5b1db20a23d78c",
+        "c4d5d2abd3cb43a6",
+        "de6840bd0e7029d8",
+        "ecb8e3c29c02ec41",
+        "ed543a03b58f9831"
+      ]
+    },
+    "https://venmo.com/about/creditcard/rewards": {
+      "checked": "2026-11-04",
+      "lines": [
+        "329007164aa472eb",
+        "6fdeb6d5ae79d556",
+        "6fe8e30ea06cf3a4",
+        "70d522a12f30a1da",
+        "85b0fdabe4d83e33",
+        "b3c45de1b9c8a6bc",
+        "c4d5d2abd3cb43a6",
+        "d131fc8986d4c82a",
+        "d39505d9c39b10dd",
+        "ed543a03b58f9831"
+      ]
+    },
+    "https://www.verizon.com/financial-services/verizon-visa-card/": {
+      "checked": "2026-11-04",
+      "lines": [
+        "084d7276ef3058e9",
+        "1270d68209402fc2",
+        "19d3fda11cab2f94",
+        "1f3ce77abf6b1aca",
+        "293b4eb753a5e2bb",
+        "343d1d11fe1908b3",
+        "57f391f8200ba991",
+        "5fb61e95e3e05620",
+        "c37a63d37a9ab9c7",
+        "c99062e3b949de3e",
+        "e17b486dfd1976e6"
+      ]
+    },
+    "https://www.verizon.com/support/verizon-visa-card-rewards-legal/": {
+      "checked": "2026-11-04",
+      "lines": [
+        "23f73f5afe6ed9c9",
+        "6384afe931594267",
+        "92a36fb9fe0d3f50",
+        "96ab5015d122ec2f",
+        "9d728beda1de4117",
+        "cd09d04ae597d86c"
+      ]
+    },
+    "https://www.verizon.com/support/verizon-visa-card-faqs/": {
+      "checked": "2026-11-04",
+      "lines": []
     },
     "https://creditcards.wellsfargo.com/active-cash-credit-card/": {
       "checked": "2026-11-04",

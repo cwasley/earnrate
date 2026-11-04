@@ -1,0 +1,151 @@
+id: venmo-credit-card
+name: Venmo Credit Card
+color: '#1a7fe0'
+# Issued by Synchrony Bank as a Visa or Visa Signature; cash back lands in the
+# linked Venmo balance daily. The categories have been fixed since the
+# rewards terms' 6/2026 revision (no more automatic top category).
+issuer: synchrony
+network: visa
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://venmo.com/about/creditcard/
+  - https://venmo.com/about/creditcard/rewards
+  - https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+  - https://www.synchronybankterms.com/syfterms/html/VenmoVCCApplyTerms_combo.htm
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 0
+rules:
+  - id: dining-nightlife
+    match: { categories: [dining] }
+    rate: 3
+    note: Restaurants and quick-serve restaurants, for dining in, carryout, drive-through or delivery, plus bars. Set by merchant category code, so a cafe inside a gas station may not count. Venmo's pages also name bakeries and liquor stores, which the Synchrony terms don't.
+  - id: entertainment
+    match:
+      {
+        categories:
+          [entertainment, movie_theaters, streaming, fitness, sporting_goods],
+      }
+    rate: 3
+    note: Movie theaters, concert and theatrical promoters, pro sports, streaming and other subscription TV, radio or streaming, sporting goods stores, and membership sports and recreation clubs (gyms, golf, tennis, swimming).
+  - id: entertainment-other
+    # Visa's codes for the rest of Venmo's "Eligible entertainment
+    # categories" list. Betting (7995) is on the list but Synchrony treats
+    # gambling as a cash advance, which earns nothing.
+    match:
+      {
+        mccs:
+          [
+            5192,
+            5735,
+            5811,
+            5815,
+            5816,
+            5817,
+            5818,
+            5945,
+            5972,
+            5994,
+            5998,
+            7032,
+            7033,
+            7841,
+            7911,
+            7929,
+            7932,
+            7933,
+            7991,
+            7992,
+            7993,
+            7994,
+            7996,
+            7998,
+            7999,
+          ],
+      }
+    rate: 3
+    note: Also entertainment to Venmo, by merchant category code. Books, periodicals and newspapers, record stores, caterers, digital goods (books, movies, music, games and apps), hobby, toy and game stores, stamp and coin stores, newsstands, tent and awning shops, camps and campgrounds, video rental, dance halls and studios, bands, billiards, bowling, tourist attractions, public golf courses, arcades, amusement parks, aquariums and recreation services.
+todo:
+  - "3% when the card is the linked payment method in Venmo (Venmo checkout online, paying a business profile, or a goods-and-services payment) isn't modeled: earnrate sees the merchant and channel, not how a purchase is paid, so those purchases get their category rate here. Venmo personal payments funded by the card earn 1%."
+  - "An extra 1% on dining and entertainment (4% in all) when the purchase is split with another Venmo user in the app and everyone pays within 30 days isn't modeled."
+  - "Cable, satellite and pay TV (MCC 4899, on Venmo's list) earns 3%, but earnrate's TV-and-internet category also covers internet service, which Venmo's page puts at 1% under bills, so only the streaming category is in the rule."
+  - "Purchases through a third-party payment account, card reader or digital wallet that doesn't pass the merchant category code earn 1%."
+  - "The MCC numbers in entertainment-other are Visa's codes for the category names on Venmo's rewards page, which lists names only."
+evidence:
+  - rule: base_rate
+    url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+    quote: '1%: Other. All other Eligible Purchases made where Visa credit cards are accepted will earn 1% Cash Rewards.'
+  - rule: base_rate
+    url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+    quote: 'there is no maximum amount of Eligible Purchases that may earn Cash Rewards.'
+  - rule: base_rate
+    url: https://venmo.com/about/creditcard/
+    quote: 'You’ll earn 1% cash back on all other purchases with your card.'
+  - rule: dining-nightlife
+    url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+    quote: 'All Eligible Purchases made in Dining & Nightlife will earn 3% Cash Rewards.'
+  - rule: dining-nightlife
+    url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+    quote: 'restaurants and quick serve restaurants that sell prepared food and drinks'
+  - rule: dining-nightlife
+    url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+    quote: 'the café of a gas station may have an MCC as a type of merchant other than a restaurant'
+  - rule: dining-nightlife
+    url: https://venmo.com/about/creditcard/
+    quote: 'Earn 3% cash back on dining and entertainment.'
+  - rule: entertainment
+    url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+    quote: 'All Eligible Purchases made in Entertainment will earn 3% Cash Rewards.'
+  - rule: entertainment
+    url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+    quote: 'Entertainment includes movie theaters, theatrical and concert promoters, video game rental stores'
+  - rule: entertainment
+    url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+    quote: 'ongoing delivery of television/radio/streaming content on a subscription or fee basis'
+  - rule: entertainment
+    url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+    quote: 'sports and recreation facilities that require membership such as health clubs'
+  - rule: entertainment
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'Sporting Goods Stores Hobby, Toy & Game Stores'
+  - rule: entertainment-other
+    url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
+    quote: 'digital goods such as books, movies, music and games, books and newsstands, amusement parks'
+  - rule: entertainment-other
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'Books / Periodicals / Newspapers Record Stores'
+  - rule: entertainment-other
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'Stamp & Coin Stores News Dealers / Newsstands Tent And Awning Shops'
+  - rule: entertainment-other
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'Sporting / Recreational Camps Trailer Parks / Campgrounds'
+  - rule: entertainment-other
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'DVD / Video Tape Rental Stores Dance Halls / Studios / Schools'
+  - rule: entertainment-other
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'Bands / Orchestras / Entertain Billiard / Pool Establishment Bowling Alleys'
+  - rule: entertainment-other
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'Tourist Attractions and Exhibits Public Golf Courses Video Amusement Game Supply'
+  - rule: entertainment-other
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'Amusement Parks / Circus Aquariums / Seaquariums Recreation Services Caterers'
+  - rule: entertainment-other
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'Digital Goods: Applications (Excludes Games) Large Digital Goods Merchant'
+  - rule: entertainment-other
+    url: https://www.synchronybankterms.com/syfterms/html/VenmoVCCApplyTerms_combo.htm
+    quote: 'lottery tickets or other legalized gambling transactions'
+  - rule: annual_fee
+    url: https://www.synchronybankterms.com/syfterms/html/VenmoVCCApplyTerms_combo.htm
+    quote: 'Fees Annual Fee None Transaction Fees'
+  - rule: foreign_transaction_fee
+    url: https://www.synchronybankterms.com/syfterms/html/VenmoVCCApplyTerms_combo.htm
+    quote: 'Foreign Transaction Fee We will not charge you a foreign transaction fee.'
+  - rule: foreign_transaction_fee
+    url: https://venmo.com/about/creditcard/
+    quote: 'No foreign transaction fee 2 Spend when you travel.'

@@ -1,0 +1,60 @@
+id: fidelity-rewards-visa-signature
+name: Fidelity Rewards Visa Signature Card
+short_name: Fidelity Rewards Visa
+color: '#2e7d32'
+# Issued by Elan Financial Services; Fidelity only markets it. Rewards are
+# Reward Points, and 2 points per $1 are worth 2% only when deposited into an
+# eligible Fidelity account (brokerage, Cash Management, IRA, HSA, 529,
+# Charitable). Other redemptions are worth less, at rates Elan doesn't publish.
+issuer: elan
+network: visa
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.fidelity.com/spend-save/visa-signature-card
+  - https://www.fidelity.com/spend-save/faqs-rewards-credit-cards
+  # Elan's rates-and-fees and rewards summary, linked from the card page's
+  # "Terms and Conditions". The query string is that link's offer; Elan may
+  # change it.
+  - https://online1.elancard.com/pdap/terms?locationCode=24193&offerId=5W8QWVRP5M&sourceCode=88155&st=y
+# Units are cents per dollar when the points go into a Fidelity account: 2
+# points per $1, each converted to its "equivalent dollar amount" (1¢).
+base_rate: 2
+annual_fee: 0
+foreign_transaction_fee: 0
+todo:
+  - "The 2% needs an open, funded Fidelity account to deposit into (opening one is free, and the card itself doesn't need one). Redeemed for travel, merchandise, gift cards or a statement credit, points are worth less, at values no readable Elan or Fidelity page states, so `cash` at 2% assumes the Fidelity deposit."
+  - "Up to $100 in Reward Points back for a Global Entry or TSA PreCheck application fee paid with the card isn't modeled (a fee credit, not a welcome offer)."
+  - "The full Rewards Program Rules come only with the card (online through the Rewards tab once you log in), so no readable page lists more exclusions than the summary in Elan's terms."
+evidence:
+  - rule: base_rate
+    url: https://www.fidelity.com/spend-save/visa-signature-card
+    quote: 'Earn unlimited 2% cash back 1 when deposited into an eligible, Fidelity account'
+  - rule: base_rate
+    url: https://www.fidelity.com/spend-save/faqs-rewards-credit-cards
+    quote: 'You earn 2 Points for every $1 that you spend on eligible net purchases'
+  - rule: base_rate
+    url: https://www.fidelity.com/spend-save/faqs-rewards-credit-cards
+    quote: 'The 2% cash back value applies only to Points redeemed for a deposit into an eligible Fidelity account.'
+  - rule: base_rate
+    url: https://www.fidelity.com/spend-save/faqs-rewards-credit-cards
+    quote: 'your Points will automatically be converted to the equivalent dollar amount'
+  - rule: base_rate
+    url: https://online1.elancard.com/pdap/terms?locationCode=24193&offerId=5W8QWVRP5M&sourceCode=88155&st=y
+    quote: 'you will receive 2 Reward Points'
+  - rule: base_rate
+    url: https://online1.elancard.com/pdap/terms?locationCode=24193&offerId=5W8QWVRP5M&sourceCode=88155&st=y
+    quote: 'The number of Points that may accumulate in any monthly billing cycle is unlimited.'
+  - rule: annual_fee
+    url: https://www.fidelity.com/spend-save/visa-signature-card
+    quote: 'No annual fee, foreign transaction fee , caps, limits, or expirations'
+  - rule: annual_fee
+    url: https://online1.elancard.com/pdap/terms?locationCode=24193&offerId=5W8QWVRP5M&sourceCode=88155&st=y
+    quote: 'Annual Fee Annual Membership Fee None'
+  - rule: foreign_transaction_fee
+    url: https://online1.elancard.com/pdap/terms?locationCode=24193&offerId=5W8QWVRP5M&sourceCode=88155&st=y
+    quote: 'Foreign Transaction None Penalty Fees'
+  - rule: foreign_transaction_fee
+    url: https://www.fidelity.com/spend-save/visa-signature-card
+    quote: 'Plus no foreign transaction fees.'
