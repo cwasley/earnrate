@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>For companies · earnrate</title>
+    <meta
+      name="description"
+      content="earnrate's card data is free for personal use. Companies building card apps, agent wallets or assistants can license it."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://earnrate.dev/companies" />
+    <meta name="theme-color" content="#9a5020" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+    <link rel="icon" href="/favicon.svg?v=2" />
+    <link rel="stylesheet" href="/pages.css" />
+    <style>
+      header {
+        padding: 48px 0 8px;
+      }
+      h1 {
+        font-size: clamp(34px, 7vw, 50px);
+        line-height: 1.08;
+        margin: 22px 0 14px;
+      }
+      h2 {
+        font-size: 22px;
+        margin: 44px 0 10px;
+      }
+      p {
+        margin: 0 0 14px;
+      }
+      ul {
+        margin: 0 0 14px;
+        padding-left: 1.2em;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+      .lede {
+        font-size: 19px;
+        color: var(--muted);
+        max-width: 36em;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="wordmark" href="/">earnrate</a>
+        <h1>For companies</h1>
+        <p class="lede">
+          earnrate's card data is free for personal use. If you're building a
+          card app, an agent wallet or an assistant and want to use it in your
+          product, you can license it.
+        </p>
+      </header>
+
+      <section>
+        <h2>What it is</h2>
+        <p>
+          Rules for
+          <!--earnrate:cards-->
+          U.S. credit cards from
+          <!--earnrate:issuer_count-->
+          issuers, read from each issuer's own pages. Every rule quotes the page
+          it came from. Every card records when it was last checked
+          (<code>last_verified</code>), who checked it
+          (<code>verified_by</code>) and the pages it was checked against
+          (<code>source_urls</code>).
+        </p>
+        <p>
+          The data is versioned. Each release has an entry in the
+          <a
+            href="https://github.com/cwasley/earnrate/blob/main/data/CHANGELOG.md"
+            >change log</a
+          >, with the old and new value and the issuer page behind each change.
+        </p>
+      </section>
+
+      <section>
+        <h2>What you can license</h2>
+        <ul>
+          <li>
+            <b>Card rules.</b> Earn rates by category, store and how you pay;
+            spending caps and when they reset; rotating quarterly categories
+            with their dates and activation deadlines; bonus categories the
+            cardholder picks; memberships a rate depends on, like Amazon Prime
+            or Costco; annual and foreign transaction fees; spend milestones;
+            and welcome offers with their terms.
+          </li>
+          <li>
+            <b>The merchant directory.</b> About
+            <!--earnrate:stores-->
+            stores, each with its category, other names and web addresses, the
+            merchant category code it usually posts with, which card networks it
+            takes where that's known, and whether buying in store or online
+            changes the category.
+          </li>
+          <li>
+            <b>Updates from the weekly source check.</b> Every Monday, a script
+            loads each issuer page the cards cite, more than once, and checks
+            that every rule's quoted text is still there. It also flags new
+            lines on a page that state an earning rate, and welcome offers that
+            show on some visits but not others. A flagged card is re-read
+            against the issuer's pages before its data changes.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>What's free</h2>
+        <p>
+          The code is
+          <a href="https://github.com/cwasley/earnrate/blob/main/LICENSE"
+            >MIT licensed</a
+          >. Anyone can use, change and ship the engine, including in a
+          commercial product. earnrate.dev, the command line and the Claude
+          connector are free for people to use.
+        </p>
+        <p>
+          The card data under <code>data/</code> is
+          <a href="https://github.com/cwasley/earnrate/blob/main/data/LICENSE"
+            >CC BY-NC 4.0</a
+          >: free for personal, noncommercial use. Commercial use needs a
+          license.
+        </p>
+      </section>
+
+      <section>
+        <h2>Why you can trust it</h2>
+        <p>
+          Card rules come only from the issuer's own pages, never from
+          third-party datasets, review sites or blogs. Every rule carries a
+          short quote from the page it came from, and the tests fail if one is
+          missing.
+        </p>
+        <p>
+          There are no affiliate links, apply links or sponsored placements, and
+          there never will be. A ranking depends only on the issuer's terms and
+          the user's own cards and settings. A license doesn't change that:
+          nobody can pay to move a card up.
+        </p>
+      </section>
+
+      <section>
+        <h2>Get in touch</h2>
+        <p>
+          There's no hosted API for companies yet. If one would help, say so;
+          it's something we'd talk about. Tell us what you need at
+          <a href="mailto:licensing@earnrate.dev">licensing@earnrate.dev</a>,
+          with:
+        </p>
+        <ul>
+          <li>what you're building,</li>
+          <li>
+            which data you need: card rules, the merchant directory or both, and
+            which cards or issuers,
+          </li>
+          <li>how often you need updates.</li>
+        </ul>
+      </section>
+
+      <footer>
+        <p>
+          Licensing:
+          <a href="mailto:licensing@earnrate.dev">licensing@earnrate.dev</a>.
+          <a href="/privacy">Privacy</a>. <a href="/terms">Terms</a>.
+          <a href="/">Back to earnrate</a>.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

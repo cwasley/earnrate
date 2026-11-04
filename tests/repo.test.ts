@@ -145,6 +145,22 @@ test('counts in the docs match the catalog and the tool lists', async () => {
   )
 })
 
+test('the companies page states the catalog’s counts and promises no hosted plan', async () => {
+  const catalog = await loadCatalog()
+  const sample = await loadWallet(path.join(ROOT, 'wallet.example.yaml'))
+  const facts = landingFacts(catalog, sample, '2026-11-03')
+  const page = renderLanding(
+    await readFile(path.join(ROOT, 'site/companies.html'), 'utf8'),
+    facts,
+  ).replace(/\s+/g, ' ')
+  expect(page).toContain(
+    `Rules for ${String(catalog.cards.length)} U.S. credit cards from ${String(facts.issuers.length)} issuers`,
+  )
+  expect(page).toContain(`About ${String(facts.stores)} stores`)
+  expect(page).toContain('licensing@earnrate.dev')
+  expect(page).not.toMatch(/API key|pricing|\$/i)
+})
+
 test('the plugin README and README name every hosted tool', async () => {
   const read = (file: string) => readFile(path.join(ROOT, file), 'utf8')
   for (const file of ['plugin/README.md', 'README.md']) {

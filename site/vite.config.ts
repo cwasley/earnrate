@@ -26,13 +26,16 @@ function catalogModule(): Plugin {
   }
 }
 
-// The home page's counts, sample cheat sheet and quoted answer come from the
-// card data and the example wallet, filled in when the page is built.
+const FILLED = ['/index.html', '/companies.html']
+
+// The home page's counts, sample cheat sheet and quoted answer, and the
+// companies page's counts, come from the card data and the example wallet,
+// filled in when the page is built.
 function landingPage(): Plugin {
   return {
     name: 'earnrate-landing',
     async transformIndexHtml(html, ctx) {
-      if (!ctx.filename.endsWith('/index.html')) return html
+      if (!FILLED.some((f) => ctx.filename.endsWith(f))) return html
       const [catalog, sample] = await Promise.all([
         loadCatalog(),
         loadWallet(`${import.meta.dirname}/../wallet.example.yaml`),
@@ -54,6 +57,7 @@ export default defineConfig({
         index: `${import.meta.dirname}/index.html`,
         privacy: `${import.meta.dirname}/privacy.html`,
         terms: `${import.meta.dirname}/terms.html`,
+        companies: `${import.meta.dirname}/companies.html`,
       },
     },
   },
