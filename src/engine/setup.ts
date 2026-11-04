@@ -6,7 +6,7 @@ import { membership, membershipName, sameGroup } from './memberships.ts'
 import { milestoneWhat } from './milestones.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap, rotationGapText } from './rotation.ts'
-import { creditName, introWhat } from './rule-text.ts'
+import { creditName, creditWhere, introWhat } from './rule-text.ts'
 import { creditBack, ENROLL_FIRST, idList, listed } from './text.ts'
 
 export type CardChoiceInfo = {
@@ -217,7 +217,7 @@ export function cardInfo(
         amount: c.amount,
         period: c.period,
         enroll: c.enroll === true,
-        text: `${creditBack(c)} at ${name}${c.enroll ? `, ${ENROLL_FIRST}` : ''}`,
+        text: `${creditBack(c)} ${creditWhere(catalog, c)}${c.enroll ? `, ${ENROLL_FIRST}` : ''}`,
       }
     }),
   }

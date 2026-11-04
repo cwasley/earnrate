@@ -12,7 +12,7 @@ import { introUntil, introWindows, openedOn } from './intro.ts'
 import { membershipName } from './memberships.ts'
 import { milestoneSummaries, type MilestoneSummary } from './milestones.ts'
 import { creditStates } from './credits.ts'
-import { optionName, ruleParts } from './rule-text.ts'
+import { creditWhere, optionName, ruleParts } from './rule-text.ts'
 import { choicePeriod, daysBetween, inEffect, periodEnd } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
@@ -57,6 +57,7 @@ export type CreditSummary = {
   until: string | null // the period's last day, YYYY-MM-DD
   used: number
   left: number | null
+  tracked: boolean // the wallet has recorded use of it
   text: string // "$75 back each quarter at Lululemon: $35 left this quarter."
 }
 
@@ -427,7 +428,8 @@ function creditSummaries(
       until: s.until,
       used: s.used,
       left: s.left,
-      text: `${creditBack(s)} at ${s.name}: ${status}.`,
+      tracked: held.credit_usage?.[s.credit.id] !== undefined,
+      text: `${creditBack(s)} ${creditWhere(catalog, s.credit)}: ${status}.`,
     }
   })
 }

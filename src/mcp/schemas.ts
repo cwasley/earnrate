@@ -202,6 +202,7 @@ export const WalletSummarySchema = z.object({
           until: z.string().nullable(),
           used: z.number(),
           left: z.number().nullable(),
+          tracked: z.boolean(),
           text: z.string(),
         }),
       ),

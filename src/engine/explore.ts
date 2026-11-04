@@ -458,32 +458,39 @@ function creditPicks(
 ): CreditPick[] {
   const picks = ranked.flatMap((entry) => {
     const card = catalog.cards.find((c) => c.id === entry.cardId)
-    return (card?.credits ?? [])
-      .filter((c) => creditCovers(c, merchant))
-      .map((credit): CreditPick => {
-        const earn = earnText(catalog, entry.rate, entry.currency)
-        const evidence = card?.evidence.find((e) => e.rule === credit.id)
-        return {
-          cardId: entry.cardId,
-          cardName: entry.cardName,
-          issuer: entry.issuer,
-          network: entry.network,
-          annualFee: entry.annualFee,
-          firstYearFee: entry.firstYearFee,
-          creditId: credit.id,
-          name: creditName(catalog, credit),
-          amount: credit.amount,
-          period: credit.period,
-          enroll: credit.enroll === true,
-          note: credit.note ?? null,
-          back: creditBack(credit),
-          earn,
-          text: creditThen(credit, earn),
-          evidence: evidence
-            ? { quote: evidence.quote, url: evidence.url }
-            : null,
-        }
-      })
+    return (
+      (card?.credits ?? [])
+        // A credit for a whole category (every restaurant) isn't a store's.
+        .filter(
+          (c) =>
+            c.match.merchants !== undefined &&
+            creditCovers(catalog, c, merchant),
+        )
+        .map((credit): CreditPick => {
+          const earn = earnText(catalog, entry.rate, entry.currency)
+          const evidence = card?.evidence.find((e) => e.rule === credit.id)
+          return {
+            cardId: entry.cardId,
+            cardName: entry.cardName,
+            issuer: entry.issuer,
+            network: entry.network,
+            annualFee: entry.annualFee,
+            firstYearFee: entry.firstYearFee,
+            creditId: credit.id,
+            name: creditName(catalog, credit),
+            amount: credit.amount,
+            period: credit.period,
+            enroll: credit.enroll === true,
+            note: credit.note ?? null,
+            back: creditBack(credit),
+            earn,
+            text: creditThen(credit, earn),
+            evidence: evidence
+              ? { quote: evidence.quote, url: evidence.url }
+              : null,
+          }
+        })
+    )
   })
   return picks.sort(
     (a, b) =>

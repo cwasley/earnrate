@@ -46,7 +46,7 @@ import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
 import { milestoneWhat } from '../src/engine/milestones.ts'
-import { creditName } from '../src/engine/rule-text.ts'
+import { creditWhere } from '../src/engine/rule-text.ts'
 import { changeDates, latest } from './lastmod.ts'
 import { pageContext, type GeneratedPage } from './pages/context.ts'
 import { categoryPageFor, categoryPages } from './pages/categories.ts'
@@ -473,10 +473,9 @@ function milestonesText(card: Card): string {
 function creditsText(card: Card): string {
   if (card.credits.length === 0) return ''
   const items = card.credits.map((c) => {
-    const name = creditName(catalog, c)
-    return `<li><strong>${esc(capitalize(creditBack(c)))} at ${esc(name)}</strong>${c.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}${c.note ? `<br /><span class="muted">${esc(c.note)}</span>` : ''}${evidenceFor(card, c.id)}</li>`
+    return `<li><strong>${esc(capitalize(`${creditBack(c)} ${creditWhere(catalog, c)}`))}</strong>${c.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}${c.note ? `<br /><span class="muted">${esc(c.note)}</span>` : ''}${evidenceFor(card, c.id)}</li>`
   })
-  return `<h2>Store credits</h2><p>Statement credits for spending at these stores, on top of what the purchase earns. earnrate counts one toward a purchase once you mark it enrolled in your wallet, until it's used up for the period.</p><ul>${items.join('')}</ul>`
+  return `<h2>Store credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that.</p><ul>${items.join('')}</ul>`
 }
 
 function foreignFeeSection(card: Card): string {
