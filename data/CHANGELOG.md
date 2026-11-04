@@ -2,6 +2,15 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.04.12
+
+Streaming rules for merchants that joined the directory in 2026.11.04.10:
+
+- `amex-blue-cash-preferred`'s 6% now covers Luminary, which is on Amex's [Select U.S. Streaming Subscriptions list](https://www.americanexpress.com/us/content/rewards-info/retail.html).
+- `usbank-altitude-go` and `usbank-altitude-connect` now earn their streaming rate at AMC+, FanDuel Sports Network, iHeartRadio, LiveOne, Luminary and YouTube Music, all named in their program rules ([Go](https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules), [Connect](https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules)).
+
+All read 2026-11-04. "Delta Hotels" now means Marriott's brand (2026.11.04.10); Delta's own booking site is "Delta Stays".
+
 ## 2026.11.04.11
 
 Nine credit union and fintech cards, each from the issuer's own pages, with a `color` for earnrate's drawing. New issuers: Caltech Employees Federal Credit Union (`caltech-efcu`), Navy Federal Credit Union (`navy-federal`) and Elan Financial Services (`elan`). New memberships: `caltech-efcu`, `navy-federal`, `verizon-account` and `rei-co-op` (each `annual_fee: 0`: credit union membership is by eligibility, Verizon's is the service account, and REI's price isn't on a readable page), and the U.S. Bank Smartly Earning Bonus tiers `usbank-smartly-25`, `usbank-smartly-50` and `usbank-smartly-100`. New currencies: Navy Federal Rewards points (1¢, Navy Federal's cash value) and REI Co-op Mastercard rewards (1¢, spendable only at REI). New merchant: `verizon-store` (Verizon devices and accessories, apart from the `verizon` bill). Not added: PenFed Power Cash Rewards and Pathfinder Rewards (penfed.org refuses plain fetches, so no PenFed text could be read) and the Kroger Rewards World Elite Mastercard (kroger.com and krogermastercard.com refuse plain fetches, and no readable U.S. Bank page states its terms). `data/sources.lock.json` isn't refreshed for these pages yet.
