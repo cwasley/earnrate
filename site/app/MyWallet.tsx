@@ -153,6 +153,9 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
                 {r.reasoning.map((line) => (
                   <p key={line}>{line}</p>
                 ))}
+                <p class="muted">
+                  Wrong rate? <a href="/support">Tell us</a>.
+                </p>
               </details>
             </li>
           ))}

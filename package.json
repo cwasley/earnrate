@@ -51,7 +51,7 @@
     "monitor:deploy": "WRANGLER_SEND_METRICS=false wrangler deploy --config monitor/wrangler.jsonc",
     "site:build": "vite build site && node scripts/build-pages.ts",
     "site:dev": "vite site",
-    "site:deploy": "yarn site:build && WRANGLER_SEND_METRICS=false wrangler deploy",
+    "site:deploy": "yarn site:build && WRANGLER_SEND_METRICS=false wrangler deploy && node scripts/indexnow.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage --coverage.include=src/**",

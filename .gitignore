@@ -14,6 +14,9 @@ dist
 # Issuer page text from the last source check, kept on this machine only
 .sources-cache.json
 
+# Pages last sent to IndexNow from this machine
+.indexnow-sent.json
+
 # Debug logs
 yarn-debug.log*
 yarn-error.log*
