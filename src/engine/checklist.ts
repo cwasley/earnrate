@@ -157,7 +157,9 @@ export function checklist(
           text: enrollCreditText(name, c.name),
           due: null,
         })
-      else if (c.left !== null && c.left > 0)
+      // One that needs no enrolling shows once the cardholder uses it, so a
+      // card's every credit isn't a to-do for someone who never shops there.
+      else if (c.left !== null && c.left > 0 && (c.enroll || c.tracked))
         items.push({
           kind: 'credit',
           cardId: card.id,

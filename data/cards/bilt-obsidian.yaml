@@ -56,8 +56,7 @@ rules:
       }
     rate: 2
     note: Booked directly with airlines, hotels, motels, resorts, cruise lines and car rental agencies, by Mastercard merchant code. Travel agencies and transit don't count.
-# Not modeled on purpose: the $100 Bilt Travel Hotel credit and the $200 Bilt
-# Cash welcome bonus.
+# Not modeled on purpose: the $200 Bilt Cash welcome bonus.
 todo:
   - Rent and mortgage paid through Bilt earn 0X-1.25X depending on the cycle's everyday spend as a share of the housing payment (25%/50%/75%/100% tiers give 0.5X/0.75X/1X/1.25X; below 25% a flat 250 points). earnrate has no housing category or spend-ratio rule.
   - The Flexible Bilt Cash option earns 4% Bilt Cash on everyday spend on top of points, but drops the housing multiplier (housing points must be bought with Bilt Cash, $3 per 100 points). Bilt Cash is a second currency; not modeled.
@@ -66,6 +65,14 @@ todo:
   - Walgreens in-store (+1X, and +2X on Walgreens-brand items until December 11, 2026, per the Bilt Rewards Points Earning Terms PDF at bilt.com/terms/earn), Metropolis parking, fitness classes and Bilt Home Delivery add Bilt bonuses not stated on an HTML page; not modeled.
   - The Bilt Card Offer Terms PDF counts bakeries (MCC 5462) in the 3X dining pick, but a choice option can only list categories and earnrate's dining category doesn't include bakeries, so bakery purchases get 1X here.
   - 'Welcome offer not modeled: the page offers $200 in Bilt Cash upon approval with no spend required. Bilt Cash is a second currency (not BILT points or cash), and this file already skips it on purpose.'
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: hotel-credit
+    match: { merchants: [bilt-travel-hotels] }
+    amount: 50
+    period: half_year
+    note: 'Hotel stays of 2 nights or more booked through Bilt Travel: $50 from January through June and $50 from July through December, no rollover.'
 # Program text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -95,3 +102,6 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.bilt.com/card/obsidian
     quote: 'Enjoy no foreign transaction fees when traveling internationally'
+  - rule: hotel-credit
+    url: https://www.bilt.com/card/obsidian
+    quote: '$100 Bilt Travel Hotel credit distributed as $50 semi-annually (2-night minimum stay at Bilt Travel Portal properties)'

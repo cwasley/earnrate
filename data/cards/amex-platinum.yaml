@@ -63,8 +63,66 @@ credits:
     period: quarter
     enroll: true
     note: U.S. lululemon stores, lululemon.com and the lululemon app. Not outlets, lululemon Studio, Like New, warehouse or event sales, gift cards, or orders shipped outside the U.S.
+  - id: uber-cash
+    match: { merchants: [uber, uber-eats] }
+    amount: 15
+    period: month
+    note: 'Uber Cash, added to your Uber account each month once the card is in it, plus an extra $20 in December (modeled at $15). Only on U.S. rides and orders paid with an Amex card; not for a card added through Apple Pay or PayPal.'
+  - id: uber-one
+    match: { merchants: [uber-one] }
+    amount: 120
+    period: calendar_year
+    note: 'Uber One membership fees, monthly or annual, charged to the card with Uber Cash turned off for them. Not free trials.'
+  - id: resy
+    match: { merchants: [resy] }
+    amount: 100
+    period: quarter
+    enroll: true
+    note: 'U.S. restaurants that take Resy reservations, and purchases on Resy.com, in the Resy app or through Resy Pay. Not gift cards, delivery or catering.'
+  - id: digital-entertainment
+    match:
+      {
+        merchants:
+          [
+            disney-plus,
+            espn,
+            hulu,
+            new-york-times,
+            paramount-plus,
+            peacock,
+            wall-street-journal,
+            youtube-premium,
+            youtube-tv,
+          ],
+      }
+    amount: 25
+    period: month
+    enroll: true
+    note: "Bought directly from Disney+, ESPN streaming, Hulu, The New York Times, Paramount+, Peacock, The Wall Street Journal, YouTube Premium or YouTube TV. Not through a cable bundle or another company's app store."
+  - id: equinox
+    match: { merchants: [equinox] }
+    amount: 300
+    period: calendar_year
+    enroll: true
+    note: 'U.S. Equinox club memberships or an Equinox+ subscription.'
+  - id: oura
+    match: { merchants: [oura] }
+    amount: 200
+    period: calendar_year
+    enroll: true
+    note: 'An Oura Ring bought at ouraring.com and shipped in the U.S. Not Oura memberships, chargers or other add-ons.'
+  - id: walmart-plus
+    match: { merchants: [walmart-plus] }
+    amount: 12.95
+    period: month
+    note: 'One Walmart+ monthly membership fee a month, plus its tax. Not annual memberships or Plus Ups.'
+  - id: clear-plus
+    match: { merchants: [clear] }
+    amount: 219
+    period: calendar_year
+    note: 'An annual CLEAR+ membership.'
 todo:
-  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits", which may or may not take out benefit statement credits; it doesn''t say. The lululemon credit is modeled as earning the card''s rate on the whole purchase, with the credit on top.'
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -124,3 +182,36 @@ evidence:
   - rule: lululemon
     url: https://www.americanexpress.com/us/credit-cards/card/platinum/
     quote: 'U.S. lululemon retail stores (excluding outlets) and lululemon.com. Enrollment required.'
+  - rule: uber-cash
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'eligible for $15 Uber Cash each month plus an additional $20 Uber Cash in December'
+  - rule: uber-one
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'eligible to receive up to $120 in statement credits per calendar year on Uber One membership fees'
+  - rule: resy
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'Enrolled Basic Card Members can earn up to $100 in statement credits each quarter'
+  - rule: digital-entertainment
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'Enrolled Basic Card Members can receive up to $25 in statement credits each month on eligible purchases'
+  - rule: digital-entertainment
+    url: https://www.americanexpress.com/us/credit-cards/card/platinum/
+    quote: 'Disney+, a Disney+ bundle, ESPN streaming services, Hulu, The New York Times, Paramount+, Peacock'
+  - rule: digital-entertainment
+    url: https://www.americanexpress.com/us/credit-cards/card/platinum/
+    quote: 'The Wall Street Journal, YouTube Premium, and YouTube TV.'
+  - rule: equinox
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'up to a total of $300 in statement credits each calendar year across all Cards on the Platinum Account'
+  - rule: oura
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'Enrolled Basic Card Members can receive up to $200 in statement credits each calendar year'
+  - rule: oura
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'Oura Ring purchases made online at U.S. website ouraring.com'
+  - rule: walmart-plus
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'statement credit for one Walmart+ monthly membership fee (up to $12.95 plus applicable taxes)'
+  - rule: clear-plus
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'earn up to $219 in statement credits per calendar year when their Platinum Card®'

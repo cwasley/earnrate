@@ -38,6 +38,13 @@ milestones:
     rewards:
       - 'Brilliant Earned Choice Award: pick five Nightly Upgrade Awards, a Free Night Award (up to 85,000 points) or 50,000 Bonvoy points'
     note: One a calendar year, picked at choice-benefit.marriott.com/brilliant by February 1 of the next year, or it defaults to the Nightly Upgrade Awards. Basic Card Member only.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: dining
+    match: { categories: [dining] }
+    amount: 25
+    period: month
+    note: 'Restaurants worldwide. Not bars, nightclubs, cafeterias, caterers, bakeries, gift cards or merchandise.'
 evidence:
   - rule: base_rate
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
@@ -87,7 +94,14 @@ evidence:
   - rule: welcome_offer
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
     quote: 'eligible purchases on your Marriott Bonvoy Brilliant® American Express® Card within your first 6 months of Card Membership'
+  - rule: dining
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'can receive up to $25 in statement credits per month, for up to $300 back annually'
+  - rule: dining
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'for eligible purchases made at restaurants worldwide on the Card Account'
 todo:
   - The Brilliant Earned Choice Award can be 50,000 points, but it's a pick among non-point awards too, so the milestone carries no points value.
-  - The $300 Brilliant Dining Credit (up to $25 a month at restaurants worldwide), the $100 property credit on two-night Ritz-Carlton or St. Regis stays, and the yearly Free Night Award (up to 85,000 points) after each renewal month aren't modeled.
+  - The $100 property credit on two-night Ritz-Carlton or St. Regis stays, and the yearly Free Night Award (up to 85,000 points) after each renewal month aren't modeled.
   - Complimentary Platinum Elite status and 25 Elite Night Credits each year aren't modeled; they don't depend on spending.
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'

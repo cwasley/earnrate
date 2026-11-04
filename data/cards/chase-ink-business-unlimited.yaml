@@ -36,8 +36,16 @@ rules:
     rate: 5
     valid_to: 2027-09-30
     note: Limited-time offer, a total of 5% on Lyft rides through September 30, 2027.
-# Not modeled: the complimentary three-month Instacart+ membership and its
-# monthly Instacart credit, which are benefits rather than earning rates.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: instacart
+    match: { merchants: [instacart] }
+    amount: 20
+    period: month
+    enroll: true
+    note: "Instacart credits in an Instacart Business account, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Through December 31, 2027."
+todo:
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -67,3 +75,6 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63749.html
     quote: 'Foreign Transactions 3% of the amount of each transaction in U.S. dollars'
+  - rule: instacart
+    url: https://creditcards.chase.com/business-credit-cards/ink/unlimited
+    quote: 'Instacart+ members get a $20 Instacart credit each month automatically loaded into their Instacart Business Account'

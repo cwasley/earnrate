@@ -1,3 +1,4 @@
+import { merchantFamily } from '../merchants/resolve.ts'
 import type { Card, Credit } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { WalletCard } from '../schema/wallet.ts'
@@ -17,15 +18,17 @@ export type CreditState = CreditWords & {
 
 // Only a store itself has a credit: a search for a kind of purchase
 // ("clothing") never does.
+// A credit naming a merchant also covers its brands (Hilton's covers Hampton).
 export function creditCovers(
+  catalog: Catalog,
   credit: Credit,
   merchant: Pick<MerchantResolution, 'merchantId' | 'category' | 'source'>,
 ): boolean {
   if (merchant.source === 'category' || merchant.source === 'none') return false
-  if (credit.match.merchants)
-    return (
-      merchant.merchantId !== null &&
-      credit.match.merchants.includes(merchant.merchantId)
+  const named = credit.match.merchants
+  if (named)
+    return merchantFamily(catalog, merchant.merchantId).some((id) =>
+      named.includes(id),
     )
   return (credit.match.categories ?? []).some((c) =>
     categoryMatches(c, merchant.category),
@@ -84,7 +87,7 @@ export function creditAt(
   date: string,
 ): CreditState | null {
   const here = card.credits
-    .filter((c) => creditCovers(c, merchant))
+    .filter((c) => creditCovers(catalog, c, merchant))
     .map((c) => creditState(catalog, c, held, date))
     .sort(
       (a, b) =>

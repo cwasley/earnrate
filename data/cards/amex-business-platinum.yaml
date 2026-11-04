@@ -56,9 +56,47 @@ rules:
     geography: us_only
     cap: key-business-categories
     note: U.S. shipping providers. Shares the $2 million yearly cap.
-# Not modeled: the hotel, Hilton, airline fee, CLEAR, Dell, ChatGPT, Adobe,
-# Indeed and wireless credits, the 35% Pay with Points airline bonus and
-# lounge access, which are credits or benefits rather than points earned.
+# Not modeled: the hotel and Airbnb credits (only some Amex Travel bookings),
+# the airline fee credit (an airline you pick), Adobe and the extra Dell
+# credit (after a spending total), the 35% Pay with Points airline bonus and
+# lounge access.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: hilton
+    match: { merchants: [hilton] }
+    amount: 50
+    period: quarter
+    enroll: true
+    note: 'Bookings and incidental charges directly with a property in the Hilton portfolio. Enrolling signs you up for Hilton for Business, which needs a Hilton Honors account.'
+  - id: clear-plus
+    match: { merchants: [clear] }
+    amount: 219
+    period: calendar_year
+    note: 'An annual CLEAR+ membership.'
+  - id: chatgpt-business
+    match: { merchants: [chatgpt] }
+    amount: 300
+    period: calendar_year
+    enroll: true
+    note: 'ChatGPT Business bought directly from OpenAI in the U.S.'
+  - id: wireless
+    match: { categories: [phone] }
+    amount: 10
+    period: month
+    enroll: true
+    note: 'Monthly wireless phone service bought directly from a U.S. provider, not hardware. From February 17, 2027, only Verizon, AT&T, T-Mobile, Frontier, Comcast, Charter, Spectrum Mobile, UScellular, Optimum, Ultra Mobile and Mint Mobile.'
+  - id: indeed
+    match: { merchants: [indeed] }
+    amount: 90
+    period: quarter
+    enroll: true
+    note: 'Bought directly on Indeed.com in the U.S.'
+  - id: dell
+    match: { merchants: [dell] }
+    amount: 150
+    period: calendar_year
+    enroll: true
+    note: "Bought directly from Dell Technologies in the U.S. The extra $1,000 after $5,000 of Dell purchases in a year isn't modeled."
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -109,7 +147,38 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'
+  - rule: hilton
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'each Card Account is only eligible for up to $50 in statement credits per quarter'
+  - rule: hilton
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'must be charged directly with a property within the Hilton portfolio'
+  - rule: clear-plus
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'earn up to $219 in statement credits per calendar year when their Business Platinum Card®'
+  - rule: chatgpt-business
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Each Card Account is eligible for up to $300 in statement credits per calendar year.'
+  - rule: chatgpt-business
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Valid only on purchases of ChatGPT Business made directly with OpenAI'
+  - rule: wireless
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'each Card Account is only eligible for up to $10 in statement credits per month'
+  - rule: wireless
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'monthly wireless telephone service charges made directly from a wireless telephone service provider in the United States'
+  - rule: indeed
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'eligible for up to $90 USD in statement credits per quarter'
+  - rule: indeed
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Valid only on purchases made directly with Indeed.com'
+  - rule: dell
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Each Card Account can receive up to $150 in statement credits for eligible purchases with Dell Technologies'
 todo:
   - "Any eligible purchase of $5,000 or more earns 2X (inside the same $2 million yearly cap). earnrate has no rule condition on purchase size, so this isn't modeled."
   - "Software and cloud system providers count toward the electronics category, but earnrate has no software or cloud category, so only electronics stores are modeled. Construction material and hardware suppliers are modeled as earnrate's home improvement category."
   - 'From February 17, 2027, U.S. shipping providers count only when bought directly from UPS, FedEx, USPS, Auctane, DHL, Worldwide Express and Old Dominion Freight Line. Not modeled yet.'
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'

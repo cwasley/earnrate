@@ -83,6 +83,13 @@ rules:
     match: { categories: [transit] }
     rate: 2
     note: Chase's travel category includes passenger trains, buses, taxis, ferries, tolls and parking. Rideshare codes as a taxi.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: chase-travel-hotels
+    match: { merchants: [chase-travel] }
+    amount: 100
+    period: cardmember_year
+    note: 'Hotel stays bought through Chase Travel only, applied automatically.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -145,5 +152,9 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65222.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: chase-travel-hotels
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'Earn up to $100 in statement credits each account anniversary year for hotel stays purchased through Chase Travel'
 todo:
   - "peloton: the $5,000 limit runs across the whole offer (4/1/2025 to 12/31/2027), which no cap period can express, and the $150 minimum per purchase isn't modeled."
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

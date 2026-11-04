@@ -34,12 +34,19 @@ rules:
     rate: 4
     requires: { activation: true }
     note: 2X card earn plus 2X Bilt bonus on eligible rides after linking Bilt and Lyft accounts in the Bilt app. Uncapped.
-# Not modeled on purpose: the $400 Bilt Travel Hotel credit, $200 annual Bilt
-# Cash and Priority Pass.
+# Not modeled on purpose: $200 annual Bilt Cash and Priority Pass.
 todo:
   - Rent and mortgage paid through Bilt earn 0.5X-1.25X depending on the cycle's everyday spend as a share of the housing payment (25%/50%/75%/100% give 0.5X/0.75X/1X/1.25X; below 25% a flat 250 points). earnrate has no housing category or spend-ratio rule.
   - Bilt Neighborhood Dining restaurants add a per-restaurant bonus (usually +2-3X, up to 5X total). It varies by restaurant, so it isn't modeled.
   - Point Accelerator (spend $200 Bilt Cash for +1X on the next $5,000, up to five times a year) isn't modeled.
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: hotel-credit
+    match: { merchants: [bilt-travel-hotels] }
+    amount: 200
+    period: half_year
+    note: 'Hotel stays of 2 nights or more booked through Bilt Travel: $200 from January through June and $200 from July through December.'
 evidence:
   - rule: base_rate
     url: https://www.bilt.com/card/palladium
@@ -74,3 +81,6 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.bilt.com/card/palladium
     quote: 'No foreign transaction fees'
+  - rule: hotel-credit
+    url: https://www.bilt.com/card/palladium
+    quote: '$400 Bilt Travel Hotel credit distributed as $200 semi-annually (applicable to 2-night minimum stay'

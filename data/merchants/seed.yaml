@@ -3324,3 +3324,97 @@
   aliases: [fairmont]
   category: travel.hotels
   brand_of: accor
+# Merchants named in cards' statement credits
+- id: resy
+  name: Resy
+  aliases: [resy restaurant, resy restaurants, resy pay]
+  domains: [resy.com]
+  category: dining
+  note: A restaurant that takes reservations on Resy, or a purchase on Resy.com or in the Resy app. Amex's Resy credits count both.
+- id: viagogo
+  name: viagogo
+  domains: [viagogo.com]
+  category: entertainment
+- id: jsx
+  name: JSX
+  aliases: [jsx air, jsx airline]
+  domains: [jsx.com]
+  category: travel.flights
+- id: blacklane
+  name: Blacklane
+  aliases: [blacklane chauffeur]
+  domains: [blacklane.com]
+  category: transit
+- id: alto
+  name: Alto
+  aliases: [alto rideshare, ride alto]
+  domains: [ridealto.com]
+  category: transit.rideshare
+- id: clear
+  name: CLEAR
+  aliases: [clear plus, clear+, clear membership]
+  domains: [clearme.com]
+  category: other
+- id: walmart-plus
+  name: Walmart+ membership
+  aliases: [walmart+, walmart+ membership fee]
+  category: other
+  note: The Walmart+ membership fee, not shopping at Walmart.
+- id: peloton-membership
+  name: Peloton membership
+  aliases: [peloton all-access, peloton app, peloton app one, peloton strength+]
+  category: other
+  note: A Peloton membership or app subscription, not equipment.
+- id: chatgpt
+  name: ChatGPT
+  aliases: [openai, chatgpt business, chatgpt plus, chatgpt pro]
+  domains: [chatgpt.com, openai.com]
+  category: other
+- id: squarespace
+  name: Squarespace
+  aliases: [acuity scheduling]
+  domains: [squarespace.com, acuityscheduling.com]
+  category: other
+- id: indeed
+  name: Indeed
+  domains: [indeed.com]
+  category: other
+- id: dell
+  name: Dell Technologies
+  aliases: [dell]
+  domains: [dell.com]
+  category: electronics
+- id: home-chef
+  name: Home Chef
+  aliases: [homechef]
+  domains: [homechef.com]
+  category: other
+- id: wonder
+  name: Wonder
+  aliases: [wonder restaurant, wonder food hall]
+  domains: [wonder.com]
+  category: dining
+- id: oura
+  name: Oura
+  aliases: [oura ring]
+  domains: [ouraring.com]
+  category: electronics
+- id: new-york-times
+  name: The New York Times
+  aliases: [new york times, nytimes, nyt]
+  domains: [nytimes.com]
+  category: other
+- id: wall-street-journal
+  name: The Wall Street Journal
+  aliases: [wall street journal, wsj]
+  domains: [wsj.com]
+  category: other
+- id: expensify
+  name: Expensify
+  domains: [expensify.com]
+  category: other
+- id: american-airlines-vacations
+  name: American Airlines Vacations
+  aliases: [aa vacations, american vacations]
+  domains: [aavacations.com]
+  category: travel

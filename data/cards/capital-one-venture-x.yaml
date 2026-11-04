@@ -38,10 +38,29 @@ rules:
     match: { merchants: [capital-one-entertainment] }
     rate: 5
     note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales and tickets bought directly from Capital One Hall or Capital One Arena are excluded.
-# Not modeled on purpose: the $300 annual Capital One Travel credit, the
-# 10,000-mile anniversary bonus and the $120 Global Entry/TSA PreCheck credit.
+# Not modeled on purpose: the 10,000-mile anniversary bonus and the $120
+# Global Entry/TSA PreCheck credit.
 todo:
   - Neither the card page nor the rewards FAQ says whether Premier Collection and Lifestyle Collection hotel bookings earn the 10X Capital One Travel rate. Modeled as regular Capital One Travel hotels.
+  - "Capital One's terms say rewards aren't earned on the part of a purchase the travel credit pays for, but earnrate counts the card's rate on the whole purchase with the credit on top (an engine gap)."
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: capital-one-travel
+    match:
+      {
+        merchants:
+          [
+            capital-one-travel,
+            capital-one-travel-hotels,
+            capital-one-travel-vacation-rentals,
+            capital-one-travel-car-rentals,
+            capital-one-travel-activities,
+            capital-one-travel-flights,
+          ],
+      }
+    amount: 300
+    period: cardmember_year
+    note: 'A credit in Capital One Travel, used at checkout and good until the next account anniversary. The part it pays for earns no miles.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -77,3 +96,12 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.capitalone.com/credit-cards/venture-x/
     quote: 'No Foreign Transaction Fees'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42201.en-US.html
+    quote: 'will receive a $300 Capital One Travel credit'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42201.en-US.html
+    quote: 'Each annual Credit will expire on the next account open date anniversary.'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42201.en-US.html
+    quote: 'Rewards will not be earned on the Credit.'

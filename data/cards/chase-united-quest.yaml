@@ -81,6 +81,31 @@ milestones:
     note: 'For the primary cardmember, on tickets bought with the card. Chase says to allow 6-8 weeks for them to post; use them within 12 months.'
 todo:
   - United Card Events from Chase also earn 4x; no merchant exists for them, so they aren't modeled.
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: instacart
+    match: { merchants: [instacart] }
+    amount: 15
+    period: month
+    enroll: true
+    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Through December 31, 2027. Each credit applies to one order."
+  - id: rideshare
+    match: { categories: [transit.rideshare] }
+    amount: 8
+    period: month
+    enroll: true
+    note: 'Rideshare rides. Opt in each year. December allows $12 (modeled at $8).'
+  - id: jsx
+    match: { merchants: [jsx] }
+    amount: 150
+    period: cardmember_year
+    note: 'Flights booked directly with JSX.'
+  - id: renowned-hotels-credit
+    match: { merchants: [renowned-hotels-chase-travel] }
+    amount: 150
+    period: cardmember_year
+    note: 'Hotel stays prepaid through Renowned Hotels and Resorts for United cardmembers.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: annual_fee
@@ -140,3 +165,18 @@ evidence:
   - rule: spend-40k
     url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
     quote: 'Earn 2 global Economy Plus® seat upgrades after spending $40,000 each calendar year.'
+  - rule: instacart
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'you can receive one $10 credit and one $5 credit in your Instacart account each month'
+  - rule: rideshare
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'up to $8 back as a statement credit each month from January through November'
+  - rule: rideshare
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'Yearly opt-in is required.'
+  - rule: jsx
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'Get up to $150 back as a statement credit each anniversary year when you book flights directly with JSX'
+  - rule: renowned-hotels-credit
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'Receive up to $150 back in statement credits each anniversary year on hotel accommodations'
