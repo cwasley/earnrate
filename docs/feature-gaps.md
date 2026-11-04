@@ -121,6 +121,6 @@ Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed ye
 
 Out of scope per the project's non-goals, or too variable to model as a rate.
 
-- Statement credits (IHG Premier and Business airline and Expensify credits).
+- Statement credits other than merchant credits (airline fee credits you choose an airline for, Global Entry and TSA PreCheck, free nights). Merchant credits (dollars back at a named merchant up to a limit per period, like Amex Platinum's Lululemon credit) are planned (Collin's call, 2026-11-04).
 - Store discounts and coupons (Kohl's, Target, Nordstrom cardholder offers).
 - Per-item and limited-time promotions (Prime Card Bonus, Prime Visa's 6% with select delivery, Nordstrom bonus points events, Bilt Neighborhood Dining).

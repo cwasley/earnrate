@@ -264,3 +264,124 @@ ol.cards > li > .card-art {
 .card-grid a:hover {
   border-color: var(--accent);
 }
+
+/* Card-vs-card pages */
+.vs-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.vs-head .card-art svg {
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.vs {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.vs-head + h1 {
+  margin-top: 12px;
+}
+
+/* A wide table scrolls inside its own box, never the page. */
+.table-box {
+  overflow-x: auto;
+  margin: 0 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+table.compare {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+table.compare th,
+table.compare td {
+  padding: 9px 10px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+table.compare tr:last-child > * {
+  border-bottom: 0;
+}
+
+table.compare thead th {
+  font-size: 14px;
+  width: 36%;
+}
+
+table.compare thead th:first-child {
+  width: 28%;
+}
+
+table.compare tbody th {
+  font-weight: 600;
+}
+
+table.compare td.win {
+  background: var(--accent-soft);
+}
+
+table.compare .rate {
+  display: block;
+}
+
+table.compare td:not(.win) .rate {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.cell-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.issuer-quotes h3 {
+  font-size: 17px;
+  margin: 20px 0 2px;
+}
+
+.issuer-quotes h3 + .muted {
+  margin-top: 0;
+}
+
+ul.compare-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+ul.compare-list > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+ul.compare-list > li > .card-art {
+  margin-top: 3px;
+}
