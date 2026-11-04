@@ -62,6 +62,7 @@ A rule that applies only to purchases above an amount. The engine has the purcha
 There's no input for how a purchase was paid beyond online or in store.
 
 - `capital-one-savor`, `bank-of-america-customized-cash-rewards`: purchases through third-party payment accounts or unsupported digital wallets may not earn the bonus.
+- `paypal-cashback-mastercard`: 3% when the card is paid through the holder's PayPal account online (PayPal checkout or sending money); 1.5% otherwise. Modeled at 1.5% everywhere.
 
 ### Category taxonomy
 
@@ -75,7 +76,14 @@ Merchant types some cards name that have no earnrate category, so they fall to `
 
 ### Housing payments and second currencies
 
-- `bilt-obsidian`: rent and mortgage points depend on the cycle's everyday spend as a share of the housing payment. Bilt Cash is a second currency (the Flexible option, Point Accelerator and the welcome offer all use it).
+- `bilt-obsidian`, `bilt-blue`, `bilt-palladium`: rent and mortgage points depend on the cycle's everyday spend as a share of the housing payment. Bilt Cash is a second currency (the Flexible option, Point Accelerator and the welcome offer all use it).
+
+### Tiered and repeating sign-up bonuses
+
+A welcome offer has one spend threshold and one bonus.
+
+- `capital-one-venture-x-business`: a second 150,000 miles (and a $1,000 travel credit) at $120,000 in the same first 4 months. Only the first tier is modeled.
+- `capital-one-spark-cash-plus`: $2,000 for every $500,000 spent in the first 12 months, on top of the $2,000 welcome offer.
 
 ### Per-card fees
 

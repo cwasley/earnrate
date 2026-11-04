@@ -148,6 +148,15 @@
   sources:
     - https://thepointsguy.com/loyalty-programs/monthly-valuations/
 
+- id: trueblue-points
+  name: JetBlue TrueBlue points
+  value_cents: 1.0
+  range: [1.0, 1.35]
+  note: JetBlue publishes no fixed cash value; award prices track the published base fare, and the Barclays Points Payback rate is shown only at redemption. 1.0¢ is a conservative default. 1.35¢ is TPG's November 2026 valuation.
+  sources:
+    - https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
 - id: ihg-points
   name: IHG One Rewards points
   value_cents: 0.5

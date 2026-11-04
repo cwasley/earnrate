@@ -1,0 +1,97 @@
+id: capital-one-venture-x-business
+name: Capital One Venture X Business
+short_name: Venture X Business
+color: '#2b2d31'
+issuer: capital-one
+network: mastercard # World Elite Mastercard for Business, per capitalone.com/credit-cards/benefits-guide
+currency: C1
+business: true
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.capitalone.com/small-business/credit-cards/venture-x-business/
+  # The card page's "View important rates and disclosures" (pricing and
+  # rewards FAQ); the number is the page's offer id and changes with it.
+  - https://disclosures.capitalone.com/disclosure.42243.en-US.html
+base_rate: 2
+annual_fee: 395
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 150000
+  spend: 40000
+  months: 4
+  note: 'The first tier of a limited-time two-tier offer: 150,000 miles after $40,000 in the first 4 months, plus another 150,000 miles and a $1,000 Capital One Business Travel credit after $120,000 in the same 4 months. Only through the card page; it may not be available to existing or previous Capital One Business cardholders.'
+rules:
+  - id: business-travel-hotels-and-car-rentals
+    match:
+      {
+        merchants:
+          [
+            capital-one-business-travel-hotels,
+            capital-one-business-travel-car-rentals,
+          ],
+      }
+    rate: 10
+    note: Only when booked through Capital One Business Travel. Purchases paid with the travel credits earn no miles, and hotel incidentals or upgrades paid outside Capital One Business Travel earn the base 2X.
+  - id: business-travel-flights-and-vacation-rentals
+    match:
+      {
+        merchants:
+          [
+            capital-one-business-travel-flights,
+            capital-one-business-travel-vacation-rentals,
+          ],
+      }
+    rate: 5
+    note: Only when booked through Capital One Business Travel.
+  - id: capital-one-entertainment
+    match: { merchants: [capital-one-entertainment] }
+    rate: 5
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales and tickets bought directly from Capital One Hall or Capital One Arena are excluded.
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
+    quote: 'Earn unlimited 2X miles on every purchase, everywhere, no limits or category restrictions.'
+  - rule: base_rate
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: 'and 2 miles per dollar on all other purchases'
+  - rule: business-travel-hotels-and-car-rentals
+    url: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
+    quote: 'Book through Capital One Business Travel to earn 10X miles on hotels and rental cars'
+  - rule: business-travel-hotels-and-car-rentals
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: 'You will earn 10 miles per dollar on hotels and rental cars'
+  - rule: business-travel-hotels-and-car-rentals
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: 'such as hotel incidentals, upgrades or other expenses, will not earn the enhanced earn rate'
+  - rule: business-travel-flights-and-vacation-rentals
+    url: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
+    quote: 'and 5X miles on flights and vacation rentals.'
+  - rule: business-travel-flights-and-vacation-rentals
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: '5 miles per dollar on flights and vacation rentals booked through Capital One Business Travel'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: 'You will earn 5 miles per dollar spent on Capital One Entertainment purchases.'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: 'Tickets purchased through the Capital One cardholder exclusive pre-sales'
+  - rule: annual_fee
+    url: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
+    quote: '$395 annual fee'
+  - rule: annual_fee
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: 'Annual Fee $395.'
+  - rule: welcome_offer
+    url: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
+    quote: 'Spend $40,000 in the first four months and earn 150,000 miles.'
+  - rule: welcome_offer
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: 'You will earn 150,000 bonus miles when you spend $40,000'
+  - rule: foreign_transaction_fee
+    url: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
+    quote: 'Pay zero foreign transaction fees on purchases made outside of the United States'
+todo:
+  - "The welcome offer's second tier (another 150,000 miles and a $1,000 Capital One Business Travel credit after $120,000 in the first 4 months) isn't modeled: a welcome offer has one spend threshold."
+  - Not modeled (credits and perks, not miles per dollar) the $300 annual Capital One Business Travel credit, the 10,000-mile anniversary bonus, the $120 Global Entry/TSA PreCheck credit and lounge access.
+  - The rates disclosure lists no foreign transaction fee in its fee table; the 0 comes from the card page's "Pay zero foreign transaction fees".

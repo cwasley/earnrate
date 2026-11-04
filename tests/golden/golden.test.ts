@@ -1349,3 +1349,124 @@ describe('#28 first-year rates', () => {
     },
   )
 })
+
+describe('#29 new cards', () => {
+  const wallet = (cards: object[]) =>
+    withProfile(WalletSchema.parse({ cards }), 'flat')
+
+  goldenTest(
+    '#29a Hilton Honors Business: 12x at Hilton, 5x elsewhere to $100,000 a year, then 3x',
+    () => {
+      const hilton = entry(
+        recommend(
+          catalog,
+          wallet([{ id: 'amex-hilton-honors-business' }]),
+          purchase('Hilton', { amount: 300, channel: 'in_store' }),
+        ),
+        'amex-hilton-honors-business',
+      )
+      expect(hilton.rate).toBe(12)
+      expect(hilton.effectiveReturnPct).toBeCloseTo(4.8)
+      const hardware = purchase("Joe's Hardware Santa Monica", {
+        amount: 100,
+        channel: 'in_store',
+      })
+      const fresh = entry(
+        recommend(
+          catalog,
+          wallet([{ id: 'amex-hilton-honors-business' }]),
+          hardware,
+        ),
+        'amex-hilton-honors-business',
+      )
+      expect(fresh.rate).toBe(5)
+      expect(fresh.effectiveReturnPct).toBeCloseTo(2)
+      const straddling = entry(
+        recommend(
+          catalog,
+          wallet([
+            {
+              id: 'amex-hilton-honors-business',
+              cap_usage: {
+                'everyday-purchases': { period: '2026', spent: 99950 },
+              },
+            },
+          ]),
+          hardware,
+        ),
+        'amex-hilton-honors-business',
+      )
+      expect(straddling.effectiveReturnPct).toBeCloseTo(1.6)
+    },
+  )
+
+  goldenTest(
+    '#29b JetBlue Plus: 6x at JetBlue, 2x at supermarkets, 1x at Walmart',
+    () => {
+      const card = (merchant: string) =>
+        entry(
+          recommend(
+            catalog,
+            wallet([{ id: 'barclays-jetblue-plus' }]),
+            purchase(merchant, { amount: 100, channel: 'in_store' }),
+          ),
+          'barclays-jetblue-plus',
+        )
+      expect(card('JetBlue').rate).toBe(6)
+      expect(card('Safeway').rate).toBe(2)
+      expect(card('Walmart').rate).toBe(1)
+    },
+  )
+
+  goldenTest(
+    '#29c Spark Cash Plus: 5% on hotels through Capital One Business Travel, 2% elsewhere',
+    () => {
+      const card = (merchant: string) =>
+        entry(
+          recommend(
+            catalog,
+            wallet([{ id: 'capital-one-spark-cash-plus' }]),
+            purchase(merchant, { amount: 500, channel: 'online' }),
+          ),
+          'capital-one-spark-cash-plus',
+        ).effectiveReturnPct
+      expect(card('Capital One Business Travel hotel')).toBeCloseTo(5)
+      expect(card('Hilton')).toBeCloseTo(2)
+    },
+  )
+
+  goldenTest(
+    '#29d Delta SkyMiles Blue: 2x at restaurants, 1x at supermarkets',
+    () => {
+      const card = (merchant: string) =>
+        entry(
+          recommend(
+            catalog,
+            wallet([{ id: 'amex-delta-skymiles-blue' }]),
+            purchase(merchant, { amount: 50, channel: 'in_store' }),
+          ),
+          'amex-delta-skymiles-blue',
+        ).rate
+      expect(card('Chipotle')).toBe(2)
+      expect(card('Delta')).toBe(2)
+      expect(card('Safeway')).toBe(1)
+    },
+  )
+
+  goldenTest(
+    '#29e Bilt Palladium earns 2x everywhere, 4x on Bilt Travel hotels',
+    () => {
+      const card = (merchant: string) =>
+        entry(
+          recommend(
+            catalog,
+            wallet([{ id: 'bilt-palladium' }]),
+            purchase(merchant, { amount: 200, channel: 'online' }),
+          ),
+          'bilt-palladium',
+        ).rate
+      expect(card('Hotel through Bilt Travel')).toBe(4)
+      expect(card("Joe's Hardware Santa Monica")).toBe(2)
+    },
+  )
+})

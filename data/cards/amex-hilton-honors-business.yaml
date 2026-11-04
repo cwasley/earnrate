@@ -1,0 +1,93 @@
+id: amex-hilton-honors-business
+name: Hilton Honors American Express Business Card
+short_name: Hilton Honors Business
+color: '#2b3340'
+issuer: amex
+network: amex
+currency: hilton-honors
+business: true
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/hilton-honors/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+base_rate: 3
+annual_fee: 195
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 150000
+  spend: 8000
+  months: 6
+  valid_to: 2027-01-13
+  note: 'Plus one Free Night Reward, which earnrate does not value. Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card or previous versions of this Card," and may also decline based on your history with balance transfers, as a Card Member, and the number of cards you have opened and closed. Offers may vary between advertisements.'
+rules:
+  - id: hilton-purchases
+    match: { merchants: [hilton] }
+    rate: 12
+    note: Lodging booked directly through a Hilton-operated reservation channel, and purchases at a Hilton hotel (its restaurants, spas and other on-site places) charged to the room and paid with the card at checkout. Not bookings through online travel sites or other third parties.
+  - id: everyday-purchases
+    match: { any: true }
+    exclude: { merchants: [hilton] }
+    rate: 5
+    cap: { amount: 100000, period: calendar_year, then_rate: 3 }
+    note: Every eligible purchase that isn't a Hilton purchase, on the first $100,000 a calendar year; 3x after that.
+milestones:
+  - id: spend-40k
+    spend: 40000
+    period: calendar_year
+    rewards:
+      - Hilton Honors Diamond status
+    note: Basic Card Member only, though Additional Card purchases count. Calendar year regardless of when the account opened. Diamond lasts through the end of the next calendar year.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'You will receive 3 Hilton Honors Bonus Points for each dollar of eligible purchases'
+  - rule: hilton-purchases
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/hilton-honors/
+    quote: 'per dollar for eligible purchases made directly with hotels and resorts within the Hilton portfolio.'
+  - rule: hilton-purchases
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'You will receive 9 additional Hilton Honors Bonus Points (for a total of 12)'
+  - rule: hilton-purchases
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'lodging bookings made directly through a reservation channel operated by Hilton'
+  - rule: hilton-purchases
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'such as an online travel website, will not be eligible for Points.'
+  - rule: everyday-purchases
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/hilton-honors/
+    quote: 'on the first $100K in eligible purchases per calendar year, 3X Points thereafter.'
+  - rule: everyday-purchases
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'You will receive 2 additional Hilton Honors Bonus Points (for a total of 5 points)'
+  - rule: everyday-purchases
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'Business Card that are not Hilton Purchases.'
+  - rule: spend-40k
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'You may receive an upgrade to Hilton Honors Diamond status if the total eligible purchases'
+  - rule: spend-40k
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/hilton-honors/
+    quote: 'Spend $40,000 on eligible purchases on your Card in a calendar year'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/hilton-honors/
+    quote: 'Annual Fee: $195'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'Annual Fee $195 Transaction Fees'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/hilton-honors/
+    quote: 'Earn 150,000 Hilton Honors Bonus Points and a Free Night Reward'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'after you spend $8,000 (the "Threshold Amount") on eligible purchases on your Card in your first 6 months'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0#offer-terms
+    quote: 'Offer ends 01/13/2027 at 11:59 PM MST.'
+todo:
+  - The $240 Hilton credit (up to $60 in statement credits each calendar quarter on purchases made directly with a Hilton property) isn't modeled.
+  - Complimentary Hilton Honors Gold status and National Car Rental Emerald Club Executive status (with enrollment) aren't modeled.
+  - The welcome offer's Free Night Reward isn't valued; a welcome offer holds only points.

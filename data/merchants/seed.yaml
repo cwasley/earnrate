@@ -1850,6 +1850,13 @@
     category: travel.flights,
   }
 - {
+    id: jetblue-vacations,
+    name: JetBlue Vacations,
+    aliases: [jetblue vacations, jet blue vacations],
+    domains: [jetbluevacations.com],
+    category: travel,
+  }
+- {
     id: spirit-airlines,
     name: Spirit Airlines,
     domains: [spirit.com],

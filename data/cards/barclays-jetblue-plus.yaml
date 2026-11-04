@@ -1,0 +1,86 @@
+id: barclays-jetblue-plus
+name: JetBlue Plus Card
+color: '#1e3a6b'
+issuer: barclays
+network: mastercard # World Elite Mastercard
+currency: trueblue-points
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+  # The card page's "Terms and Conditions" link (rates, fees and Reward Rules).
+  - https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+base_rate: 1
+annual_fee: 99
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 60000
+  spend: 1000
+  months: 3
+  note: 'Within 90 days of account opening, and the $99 annual fee must also be paid in full within those 90 days (paying only the minimum each month may not cover it). Not for current or previous JetBlue Plus cardmembers; Barclays may also decline for suspected abusive or gaming activity.'
+rules:
+  - id: jetblue
+    match: { merchants: [jetblue, jetblue-vacations, trueblue-travel] }
+    rate: 6
+    note: Billed by JetBlue or JetBlue Vacations as merchant of record through their own channels (jetblue.com, reservations, airport counters, jetbluevacations.com), and travel booked at truebluetravel.com. Not buying TrueBlue points, hotels or cars outside a JetBlue Vacations package, or TrueBlue Travel pay-later hotels, international car rentals, insurance and fees.
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 2
+    note: Restaurants, bars and fast food, by merchant category code. Paying with a mobile wallet, a third-party payment account or a merchant's mobile card reader may not earn the bonus.
+  - id: grocery
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club] }
+    rate: 2
+    note: Grocery stores and supermarkets, by merchant category code. Warehouse-type stores like Target and Walmart generally don't count.
+evidence:
+  - rule: base_rate
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'You earn 1 TrueBlue point for every $1 spent on all other Net Purchases'
+  - rule: base_rate
+    url: https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+    quote: '1X points on all other purchases'
+  - rule: jetblue
+    url: https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+    quote: '6X points on eligible JetBlue purchases'
+  - rule: jetblue
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'made with your Card Account on TrueBlue Travel purchases.'
+  - rule: jetblue
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'You earn 6 TrueBlue points for every $1 spent on eligible Net Purchases'
+  - rule: jetblue
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'Purchasing TrueBlue points does not qualify as JetBlue Purchases.'
+  - rule: jetblue
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'Eligible TrueBlue Travel purchases must be booked directly through truebluetravel.com.'
+  - rule: restaurants
+    url: https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+    quote: '2X points at restaurants and eligible grocery stores'
+  - rule: restaurants
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'Qualifying restaurant purchases are defined as: Restaurants, Bars and Fast-Food Restaurants.'
+  - rule: grocery
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'Qualifying grocery store purchases are categorized as Grocery Stores and Supermarkets.'
+  - rule: grocery
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'large warehouse-type stores, such as Target® and Walmart® are generally not classified as grocery stores'
+  - rule: annual_fee
+    url: https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+    quote: 'Annual Fee is $99.'
+  - rule: annual_fee
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'Annual Fee $99 Transaction Fees'
+  - rule: welcome_offer
+    url: https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+    quote: 'after spending $1,000 on purchases and paying the annual fee in full, both within the first 90 days'
+  - rule: welcome_offer
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'Earn 60,000 bonus TrueBlue points after spending $1,000 on purchases'
+  - rule: foreign_transaction_fee
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'Foreign Transaction 0% of each transaction in U.S. dollars.'
+todo:
+  - Not modeled (perks, not points per dollar) the 5,000-point anniversary bonus, 10% of points back on JetBlue Award Flights, 50% off inflight food and drink, the free first checked bag and the yearly $100 JetBlue Vacations statement credit.
+  - Card spending earns Mosaic tiles toward JetBlue elite status, which isn't modeled.

@@ -10,6 +10,10 @@
   name: Bank of America
   color: '#b5122b'
   search: [bofa, boa, bankofamerica]
+- id: barclays
+  name: Barclays
+  color: '#00395d'
+  search: [barclaycard, barclays us]
 - id: capital-one
   name: Capital One
   color: '#1d3c6e'
@@ -33,6 +37,11 @@
 - id: sofi
   name: SoFi
   color: '#2d2f36'
+- id: synchrony
+  # Synchrony Bank issues the PayPal Cashback Mastercard.
+  name: Synchrony
+  color: '#3b3f46'
+  search: [syf, synchrony bank]
 - id: td-bank
   name: TD Bank
   color: '#2f6b3a'

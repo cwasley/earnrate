@@ -184,6 +184,7 @@ describe('searchCards', () => {
     expect(ids('capital one venture')).toEqual([
       'capital-one-venture',
       'capital-one-venture-x',
+      'capital-one-venture-x-business',
     ])
     expect(ids('cash+')).toContain('usbank-cash-plus')
   })

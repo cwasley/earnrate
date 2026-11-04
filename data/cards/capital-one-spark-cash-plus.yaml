@@ -1,0 +1,80 @@
+id: capital-one-spark-cash-plus
+name: Capital One Spark Cash Plus
+short_name: Spark Cash Plus
+color: '#3a3d42'
+issuer: capital-one
+network: mastercard # World Elite Mastercard for Business (Spark), per capitalone.com/credit-cards/benefits-guide
+currency: cash
+business: true
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.capitalone.com/small-business/credit-cards/spark-cash-plus/
+  # The card page's "View important rates and disclosures" (pricing and
+  # rewards FAQ); the number is the page's offer id and changes with it.
+  - https://disclosures.capitalone.com/disclosure.41737.en-US.html
+base_rate: 2
+annual_fee: 150
+foreign_transaction_fee: 0
+welcome_offer:
+  dollars: 2000
+  spend: 30000
+  months: 3
+  note: Only through the card page; existing or previous account holders may not be eligible. A separate first-year bonus pays another $2,000 for every $500,000 spent in the first 12 months, which isn't counted here.
+rules:
+  - id: business-travel
+    match:
+      {
+        merchants:
+          [
+            capital-one-business-travel-hotels,
+            capital-one-business-travel-vacation-rentals,
+            capital-one-business-travel-car-rentals,
+          ],
+      }
+    rate: 5
+    note: Only when booked through Capital One Business Travel. Hotel incidentals, upgrades and other purchases outside Capital One Business Travel earn the base 2%.
+milestones:
+  - id: fee-refund-150k
+    spend: 150000
+    period: cardmember_year
+    rewards:
+      - $150 annual fee refunded as a statement credit
+    note: Net purchases by the membership anniversary date; the credit posts within two billing cycles after it.
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash-plus/
+    quote: 'Earn unlimited 2% cash back for your business on every purchase, everywhere'
+  - rule: base_rate
+    url: https://disclosures.capitalone.com/disclosure.41737.en-US.html
+    quote: 'and 2% cash back on all other purchases'
+  - rule: business-travel
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash-plus/
+    quote: 'Earn unlimited 5% cash back on hotels, vacation rentals and rental cars booked through Capital One Business Travel.'
+  - rule: business-travel
+    url: https://disclosures.capitalone.com/disclosure.41737.en-US.html
+    quote: 'You will earn 5% cash back on hotels, vacation rentals and rental cars'
+  - rule: business-travel
+    url: https://disclosures.capitalone.com/disclosure.41737.en-US.html
+    quote: 'such as hotel incidentals, upgrades or other expenses, will not earn the enhanced earn rate'
+  - rule: fee-refund-150k
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash-plus/
+    quote: 'Get your $150 annual fee refunded every year you spend at least $150,000.'
+  - rule: fee-refund-150k
+    url: https://disclosures.capitalone.com/disclosure.41737.en-US.html
+    quote: 'when you spend at least $150,000 in net purchases by your membership anniversary date'
+  - rule: annual_fee
+    url: https://disclosures.capitalone.com/disclosure.41737.en-US.html
+    quote: 'Annual Fee $150.'
+  - rule: welcome_offer
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash-plus/
+    quote: 'Earn a $2,000 cash bonus when you spend $30,000 in the first 3 months.'
+  - rule: welcome_offer
+    url: https://disclosures.capitalone.com/disclosure.41737.en-US.html
+    quote: 'You will earn a $2,000 bonus if you spend at least $30,000 within 3 months'
+  - rule: foreign_transaction_fee
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash-plus/
+    quote: 'Pay zero foreign transaction fees on purchases made outside of the United States'
+todo:
+  - "The first-year bonus of $2,000 for every $500,000 spent within 12 months of enrollment isn't modeled: a milestone pays once a period, not once per multiple of a spend total."
+  - The rates disclosure lists no foreign transaction fee in its fee table; the 0 comes from the card page's "Pay zero foreign transaction fees".

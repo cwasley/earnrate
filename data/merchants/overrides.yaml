@@ -315,6 +315,38 @@
     aliases: [capital one travel flight],
     category: travel,
   }
+- id: capital-one-business-travel
+  kind: portal
+  name: Capital One Business Travel
+  aliases: [capital one business travel]
+  domains: [businesstravel.capitalone.com]
+  category: travel
+- id: capital-one-business-travel-hotels
+  kind: booking
+  name: Hotel through Capital One Business Travel
+  aliases: [capital one business travel hotel]
+  category: travel
+- id: capital-one-business-travel-vacation-rentals
+  kind: booking
+  name: Vacation rental through Capital One Business Travel
+  aliases: [capital one business travel vacation rental]
+  category: travel
+- id: capital-one-business-travel-car-rentals
+  kind: booking
+  name: Car rental through Capital One Business Travel
+  aliases: [capital one business travel car rental]
+  category: travel
+- id: capital-one-business-travel-flights
+  kind: booking
+  name: Flight through Capital One Business Travel
+  aliases: [capital one business travel flight]
+  category: travel
+- id: trueblue-travel
+  kind: portal
+  name: TrueBlue Travel
+  aliases: [trueblue travel, true blue travel]
+  domains: [truebluetravel.com]
+  category: travel
 - id: capital-one-entertainment
   kind: portal
   name: Capital One Entertainment
