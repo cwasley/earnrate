@@ -26,7 +26,7 @@ import {
   USAGE_ERROR,
   type Io,
 } from './run.ts'
-import { currencyName, dollarsAndCents } from '../engine/text.ts'
+import { currencyName, dollarsAndCents, periodPhrase } from '../engine/text.ts'
 
 const IMPORT_HELP = `Usage: ${CLI_NAME} import <statement.csv> --card <card-id> [--apply]
        ${CLI_NAME} import <statement.csv>:<card-id> [<statement.csv>:<card-id> ...]
@@ -191,7 +191,7 @@ function formatAnalysis(
   }
   for (const m of a.milestones) {
     out.push(
-      `Spend bonus on ${labelOf(m.cardId)}: ${dollarsAndCents(m.before)} → ${dollarsAndCents(m.after)} of ${dollarsAndCents(m.spend)} for ${m.period}${m.before < m.spend && m.after >= m.spend ? ', reached' : ''}.`,
+      `Spend bonus on ${labelOf(m.cardId)}: ${dollarsAndCents(m.before)} → ${dollarsAndCents(m.after)} of ${dollarsAndCents(m.spend)} ${periodPhrase(m.periodKind, m.period)}${m.before < m.spend && m.after >= m.spend ? ', reached' : ''}.`,
     )
   }
   return `${out.join('\n')}\n`

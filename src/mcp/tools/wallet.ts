@@ -79,7 +79,9 @@ function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
   for (const [key, spent] of Object.entries(args.capSpent ?? {}))
     out.push(`${money(spent)} already spent on ${key} this period`)
   for (const [id, spent] of Object.entries(args.milestoneSpent ?? {}))
-    out.push(`${money(spent)} spent toward ${id} this year`)
+    out.push(
+      `${money(spent)} spent toward ${id} this ${card?.milestones.find((m) => m.id === id)?.period === 'cardmember_year' ? 'cardmember year' : 'year'}`,
+    )
   if (args.bonus === null) out.push('welcome bonus no longer tracked')
   else if (args.bonus !== undefined)
     out.push(

@@ -4,7 +4,13 @@ import type {
   CapBooking,
   MilestoneBooking,
 } from '../engine/record.ts'
-import { CAP_PERIODS, money, NETWORK_NAMES, shortDate } from '../engine/text.ts'
+import {
+  CAP_PERIODS,
+  money,
+  NETWORK_NAMES,
+  periodPhrase,
+  shortDate,
+} from '../engine/text.ts'
 import type { WalletSummary } from '../engine/wallet-summary.ts'
 
 // "To do now", above the card details; nothing when all's done.
@@ -51,7 +57,7 @@ export function formatWalletSummary(summary: WalletSummary): string {
       lines.push(
         cap.remaining === null
           ? `  Cap on ${cap.label}: ${money(cap.amount)} ${CAP_PERIODS[cap.period]}; give the card's anniversary to track it (cap key ${cap.key}).`
-          : `  Cap on ${cap.label}: ${money(cap.spent)} of ${money(cap.amount)} used ${cap.period === 'cardmember_year' ? 'this cardmember year' : `for ${cap.currentPeriod ?? ''}`}${cap.until === null ? '' : `, through ${shortDate(cap.until)}`} (cap key ${cap.key}).`,
+          : `  Cap on ${cap.label}: ${money(cap.spent)} of ${money(cap.amount)} used ${periodPhrase(cap.period, cap.currentPeriod ?? '')}${cap.until === null ? '' : `, through ${shortDate(cap.until)}`} (cap key ${cap.key}).`,
       )
     for (const m of c.milestones)
       lines.push(`  Spend bonus (${m.id}): ${m.text}`)
@@ -87,7 +93,7 @@ export function formatBooking(
   if (cap) {
     const left = Math.max(0, cap.capAmount - cap.after)
     messages.push(
-      `Recorded ${money(amount)} on ${cardId} against "${cap.capKey}": ${money(cap.before)} → ${money(cap.after)} of ${money(cap.capAmount)} for ${cap.period}, ${money(left)} left.`,
+      `Recorded ${money(amount)} on ${cardId} against "${cap.capKey}": ${money(cap.before)} → ${money(cap.after)} of ${money(cap.capAmount)} ${periodPhrase(cap.periodKind, cap.period)}, ${money(left)} left.`,
     )
   }
   if (bonus) {
@@ -107,7 +113,7 @@ export function formatBooking(
     const next = milestones.find((m) => m.after < m.spend)
     messages.push(
       [
-        `Spend on ${cardId} this year: ${money(first.after)}.`,
+        `Spend on ${cardId} this ${first.periodKind === 'cardmember_year' ? 'cardmember year' : 'year'}: ${money(first.after)}.`,
         ...reached.map(
           (m) => `That reaches its ${money(m.spend)} spend bonus.`,
         ),

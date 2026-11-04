@@ -10,6 +10,7 @@ const booking: CapBooking = {
   capKey: 'us-supermarkets',
   ruleId: 'us-supermarkets',
   period: '2026',
+  periodKind: 'calendar_year',
   capAmount: 6000,
   before: 0,
   after: 80,

@@ -213,6 +213,27 @@ describe('tools', () => {
     expect(other.isError).toBeFalsy()
   })
 
+  test('a cardmember-year cap is recorded for this cardmember year', async () => {
+    const client = await connect(
+      await walletCopy(
+        'cards:\n  - id: chase-ink-business-cash\n    anniversary: "03-15"\n',
+      ),
+    )
+    const recorded = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'chase-ink-business-cash',
+        merchant: 'Staples',
+        amount: 200,
+      },
+    })
+    expect(recorded.isError, text(recorded)).toBeFalsy()
+    expect(text(recorded)).toMatch(
+      /\$0 → \$200 of \$25,000 this cardmember year, \$24,800 left\./,
+    )
+    expect(text(recorded)).not.toMatch(/for 20\d\d/)
+  })
+
   test('spend milestones: set the spending, see it cross, record it', async () => {
     const file = await walletCopy(
       '# mine\ncards:\n  - id: chase-ihg-one-rewards # the no-fee one\n',

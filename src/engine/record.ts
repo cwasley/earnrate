@@ -1,4 +1,5 @@
 import { resolveMerchant } from '../merchants/resolve.ts'
+import type { Cap, Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { bonusStatus, countsTowardBonus } from './bonus.ts'
@@ -12,6 +13,7 @@ export type CapBooking = {
   capKey: string // shared cap id, or the rule id for an inline cap
   ruleId: string
   period: string
+  periodKind: Cap['period']
   capAmount: number
   before: number // dollars spent this period before the purchase
   after: number
@@ -51,6 +53,7 @@ export function capBooking(
     capKey: cap.key,
     ruleId: rule.id,
     period: cap.period,
+    periodKind: cap.cap.period,
     capAmount: cap.cap.amount,
     before,
     after: roundCents(before + purchase.amount),
@@ -127,6 +130,7 @@ export type MilestoneBooking = {
   cardId: string
   milestoneId: string
   period: string
+  periodKind: Milestone['period']
   spend: number // the milestone's total
   before: number // tracked dollars this period before the purchase
   after: number
@@ -150,6 +154,7 @@ export function milestoneBookings(
             cardId: card.id,
             milestoneId: p.milestone.id,
             period: p.period,
+            periodKind: p.milestone.period,
             spend: p.milestone.spend,
             before: p.spent,
             after: roundCents(Math.max(0, p.spent + purchase.amount)),

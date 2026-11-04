@@ -8,6 +8,7 @@ import { applyBooking, capBooking, type CapBooking } from '../engine/record.ts'
 import { roundCents } from '../engine/text.ts'
 import type { MerchantResolution, Purchase } from '../engine/types.ts'
 import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
+import type { Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { cleanDescriptor, type StatementLine } from './statement.ts'
@@ -58,6 +59,7 @@ export type MilestoneImport = {
   cardId: string
   milestoneId: string
   period: string
+  periodKind: Milestone['period']
   spend: number
   before: number
   after: number
@@ -181,6 +183,7 @@ export function analyzeStatement(
           cardId: held.id,
           milestoneId: p.milestone.id,
           period: p.period,
+          periodKind: p.milestone.period,
           spend: p.milestone.spend,
           before: p.spent,
           after: p.spent,
