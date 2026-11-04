@@ -1,0 +1,117 @@
+id: usbank-altitude-go
+name: U.S. Bank Altitude Go Visa Signature Card
+issuer: usbank
+network: visa
+currency: usbank-altitude
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
+  - https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=HQWRM3D57Q&sourceCode=88268&page=terms
+  - https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 3
+welcome_offer:
+  points: 20000
+  spend: 1000
+  months: 3
+  note: The window is 90 days from account opening, modeled as 3 months. Not available to existing or previous Altitude Go cardmembers who received a new account bonus for it in the last five years.
+rules:
+  - id: dining
+    match: { categories: [dining] }
+    rate: 4
+    cap: { amount: 2000, period: quarter, then_rate: 1 }
+    note: Restaurants, fast food, bars, takeout and restaurant delivery. The first $2,000 each quarter, then 1X.
+  - id: grocery
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club] }
+    rate: 2
+    note: Grocery stores and supermarkets. Discount stores and supercenters such as Target and Walmart, and wholesale clubs, earn 1X.
+  - id: gas-ev-charging
+    match: { categories: [gas, ev_charging] }
+    exclude: { categories: [gas.grocery_store, gas.superstore] }
+    rate: 2
+    note: Gas stations and EV charging stations. Gas at discount stores, supercenters, wholesale clubs and grocery stores earns 1X.
+  - id: streaming
+    match:
+      merchants:
+        [
+          amazon-music,
+          amazon-prime-video,
+          apple-music,
+          apple-tv,
+          audible,
+          directv-stream,
+          discovery-plus,
+          disney-plus,
+          espn,
+          fandango-at-home,
+          fubotv,
+          max,
+          hulu,
+          mlb-tv,
+          nba-league-pass,
+          netflix,
+          pandora,
+          paramount-plus,
+          peacock,
+          showtime,
+          siriusxm,
+          sling-tv,
+          spotify,
+          starz,
+          tidal,
+          youtube-premium,
+          youtube-tv,
+        ]
+    rate: 2
+    note: 'Qualifying streaming subscriptions: Amazon Music Unlimited, Amazon Prime Video, AMC+, Apple Music, Apple TV+, Audible, DirecTV Stream, Discovery+, Disney+, ESPN+, Fandango at Home, FanDuel Sports Network, Fubo TV, Max, Hulu, iHeart, LiveOne, Luminary, MLB TV, NBA League Pass, Netflix, Pandora, Paramount+, Peacock, Showtime, SiriusXM, Sling TV, Spotify, Starz, Stitcher, Tidal, YouTube Music, YouTube Premium and YouTube TV.'
+# Not modeled: the $15 streaming credit after 11 consecutive months of
+# streaming purchases.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
+    quote: 'You will earn 1 Point for every $1 in eligible Net Purchases'
+  - rule: dining
+    url: https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
+    quote: 'on dining, takeout and restaurant delivery on your first $2,000 each quarter'
+  - rule: dining
+    url: https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
+    quote: 'for every $1 on restaurant, fast-food restaurant and bar purchases on your first $2,000 each quarter'
+  - rule: grocery
+    url: https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
+    quote: 'Purchases at discount stores/supercenters such as Target and Walmart and wholesale clubs will earn only 1 point.'
+  - rule: grocery
+    url: https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
+    quote: 'for every $1 in grocery store and supermarket purchases'
+  - rule: gas-ev-charging
+    url: https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
+    quote: 'for every $1 on gas station and EV charging station purchases'
+  - rule: gas-ev-charging
+    url: https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
+    quote: 'discount stores/supercenters, wholesale clubs and grocery stores/supermarkets will earn only 1 Point'
+  - rule: streaming
+    url: https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
+    quote: 'for every $1 on qualifying streaming subscription service purchases'
+  - rule: streaming
+    url: https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
+    quote: 'Qualifying streaming subscription services are: Amazon Music Unlimited, Amazon Prime Video, AMC+'
+  - rule: annual_fee
+    url: https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=HQWRM3D57Q&sourceCode=88268&page=terms
+    quote: 'Annual Membership Fee None'
+  - rule: welcome_offer
+    url: https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
+    quote: 'Just spend $1,000 in Net Purchases in the first 90 days.'
+  - rule: welcome_offer
+    url: https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
+    quote: 'Earn 20,000 bonus points.'
+  - rule: welcome_offer
+    url: https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
+    quote: 'if you have received a new account bonus for this product in the last five years'
+  - rule: foreign_transaction_fee
+    url: https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=HQWRM3D57Q&sourceCode=88268&page=terms
+    quote: 'Foreign Transaction 3% of each foreign transaction'
+todo:
+  - 'AMC+, FanDuel Sports Network, iHeart, LiveOne, Luminary, Stitcher and YouTube Music are qualifying streaming services that earnrate has no merchant for yet.'

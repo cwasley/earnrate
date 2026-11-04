@@ -1,0 +1,148 @@
+id: usbank-altitude-connect
+name: U.S. Bank Altitude Connect Visa Signature Card
+issuer: usbank
+network: visa
+currency: usbank-altitude
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+  - https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=8BB5BD89H1&sourceCode=88416&page=terms
+  - https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 20000
+  spend: 1000
+  months: 3
+  note: The window is 90 days from account opening, modeled as 3 months. Not available to existing or previous Altitude Connect cardmembers who received a new account bonus for it in the last five years.
+rules:
+  - id: travel-center-hotels-car-rentals
+    match:
+      {
+        merchants:
+          [usbank-travel-center-hotels, usbank-travel-center-car-rentals],
+      }
+    rate: 5
+    note: Prepaid hotels and car rentals booked in the U.S. Bank Travel Center with this card. They don't also count as travel.
+  - id: travel
+    match: { categories: [travel, transit.rideshare] }
+    exclude:
+      {
+        merchants:
+          [usbank-travel-center-hotels, usbank-travel-center-car-rentals],
+      }
+    rate: 4
+    note: Purchases made directly with airlines, hotels, car rental companies, taxis, limousines, passenger trains and cruise lines.
+  - id: passenger-trains
+    match: { merchants: [amtrak] }
+    rate: 4
+    note: Passenger trains count as travel.
+  - id: gas-ev-charging
+    match: { categories: [gas, ev_charging] }
+    exclude: { categories: [gas.grocery_store, gas.superstore] }
+    rate: 4
+    cap: { amount: 1000, period: quarter, then_rate: 1 }
+    note: Gas stations and EV charging stations, the first $1,000 each quarter. Gas at discount stores, supercenters, wholesale clubs and grocery stores earns 1X.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 2
+    note: Restaurants, fast food and bars.
+  - id: grocery
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club] }
+    rate: 2
+    note: Grocery stores and supermarkets. Discount stores and supercenters such as Target and Walmart, and wholesale clubs, earn 1X.
+  - id: streaming
+    match:
+      merchants:
+        [
+          amazon-music,
+          amazon-prime-video,
+          apple-music,
+          apple-tv,
+          audible,
+          directv-stream,
+          discovery-plus,
+          disney-plus,
+          espn,
+          fandango-at-home,
+          fubotv,
+          max,
+          hulu,
+          mlb-tv,
+          nba-league-pass,
+          netflix,
+          pandora,
+          paramount-plus,
+          peacock,
+          showtime,
+          siriusxm,
+          sling-tv,
+          spotify,
+          starz,
+          tidal,
+          youtube-premium,
+          youtube-tv,
+        ]
+    rate: 2
+    note: 'Qualifying streaming subscriptions: Amazon Music Unlimited, Amazon Prime Video, AMC+, Apple Music, Apple TV+, Audible, DirecTV Stream, Discovery+, Disney+, ESPN+, Fandango at Home, FanDuel Sports Network, Fubo TV, Max, Hulu, iHeart, LiveOne, Luminary, MLB TV, NBA League Pass, Netflix, Pandora, Paramount+, Peacock, Showtime, SiriusXM, Sling TV, Spotify, Starz, Stitcher, Tidal, YouTube Music, YouTube Premium and YouTube TV.'
+# Not modeled: Priority Pass lounge visits, the TSA PreCheck or Global Entry
+# credit and travel protections, which are benefits rather than points.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules
+    quote: 'You will earn 1 Point for every $1 in eligible Net Purchases'
+  - rule: travel-center-hotels-car-rentals
+    url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    quote: 'on prepaid hotels and car rentals booked directly in the Travel Center when you use this card.'
+  - rule: travel-center-hotels-car-rentals
+    url: https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules
+    quote: 'are not classified as a travel category merchant transaction'
+  - rule: travel
+    url: https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules
+    quote: 'for every $1 on travel category purchases'
+  - rule: travel
+    url: https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules
+    quote: 'airlines, hotels, car rentals, taxicabs, limousines, passenger trains and cruise line companies'
+  - rule: passenger-trains
+    url: https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules
+    quote: 'airlines, hotels, car rentals, taxicabs, limousines, passenger trains and cruise line companies'
+  - rule: gas-ev-charging
+    url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    quote: 'And 4X points at gas stations/EV charging stations* on your first $1,000 each quarter.'
+  - rule: gas-ev-charging
+    url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    quote: 'discount stores/supercenters, wholesale clubs and grocery stores/supermarkets will earn only 1 Point'
+  - rule: dining
+    url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    quote: '2X points on dining, streaming services and at grocery stores.'
+  - rule: dining
+    url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    quote: 'restaurant, fast-food restaurant and bar'
+  - rule: grocery
+    url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    quote: 'wholesale clubs and discount stores/supercenters such as Target and Walmart will earn only 1 Point'
+  - rule: streaming
+    url: https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules
+    quote: 'Qualifying streaming subscription services are: Amazon Music Unlimited, Amazon Prime Video, AMC+'
+  - rule: annual_fee
+    url: https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=8BB5BD89H1&sourceCode=88416&page=terms
+    quote: 'Annual Membership Fee None'
+  - rule: welcome_offer
+    url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    quote: 'Just spend $1,000 in Net Purchases in the first 90 days.'
+  - rule: welcome_offer
+    url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    quote: 'Earn 20,000 bonus points.'
+  - rule: welcome_offer
+    url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    quote: 'if you have received a new account bonus for this product in the last five years'
+  - rule: foreign_transaction_fee
+    url: https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=8BB5BD89H1&sourceCode=88416&page=terms
+    quote: 'Foreign Transaction None'
+todo:
+  - 'AMC+, FanDuel Sports Network, iHeart, LiveOne, Luminary, Stitcher and YouTube Music are qualifying streaming services that earnrate has no merchant for yet.'
+  - "Passenger trains are modeled only for Amtrak, since earnrate's transit category also covers buses, tolls and parking, which U.S. Bank doesn't list as travel."

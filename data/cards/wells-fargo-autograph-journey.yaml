@@ -1,0 +1,71 @@
+id: wells-fargo-autograph-journey
+name: Wells Fargo Autograph Journey Card
+issuer: wells-fargo
+network: visa
+currency: WFR
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+  - https://www.wellsfargo.com/credit-cards/autograph-journey-visa/terms/
+base_rate: 1
+annual_fee: 95
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 60000
+  spend: 4000
+  months: 3
+  note: Offers may differ by marketing channel. Not available if you have the card or opened one in the last 48 months, even if it's closed.
+rules:
+  - id: hotels
+    match: { categories: [travel.hotels] }
+    rate: 5
+    note: Merchants coded as hotels and motels.
+  - id: airlines
+    match: { categories: [travel.flights] }
+    rate: 4
+    note: Merchants coded as airlines and air carriers.
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 3
+    note: Restaurants, bars, fast food and caterers.
+  - id: other-travel
+    match: { categories: [travel] }
+    rate: 3
+    note: Car rentals, cruise lines, travel agencies, discount travel sites, timeshares and campgrounds.
+# Not modeled: the $50 yearly statement credit after a $50 airline purchase.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: '1 rewards point will be earned per $1 spent on other net purchases'
+  - rule: hotels
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'Five rewards points (1 base point plus 4 bonus points) are earned per $1 spent'
+  - rule: hotels
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'with retailers whose merchant category code is classified as hotel/motel'
+  - rule: airlines
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'Airlines: 4 points (1 base point plus 3 bonus points) for every $1 spent'
+  - rule: restaurants
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'eating places and restaurants, drinking places, fast food restaurants, and caterers'
+  - rule: other-travel
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'timeshare, or vehicle/auto rental, cruise lines, travel agencies, discount travel sites, campgrounds'
+  - rule: annual_fee
+    url: https://www.wellsfargo.com/credit-cards/autograph-journey-visa/terms/
+    quote: 'Annual Fee $95'
+  - rule: welcome_offer
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'when you spend $4,000 in purchases in the first 3 months'
+  - rule: welcome_offer
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'Earn 60,000 bonus points'
+  - rule: welcome_offer
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'or opened one within the last 48 months from the date of the application'
+  - rule: foreign_transaction_fee
+    url: https://www.wellsfargo.com/credit-cards/autograph-journey-visa/terms/
+    quote: 'Foreign Transaction None'

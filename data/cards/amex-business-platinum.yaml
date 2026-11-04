@@ -1,0 +1,113 @@
+id: amex-business-platinum
+name: The Business Platinum Card from American Express
+issuer: amex
+network: amex
+currency: MR
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+base_rate: 1
+business: true
+annual_fee: 895
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 300000
+  spend: 20000
+  months: 3
+  varies: true
+  note: 'The public offer is "as high as" 300,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. Not available if you have or have had this Card or previous versions of it, and Amex may also decline based on your card history.'
+caps:
+  - id: key-business-categories
+    amount: 2000000
+    period: calendar_year
+    then_rate: 1
+rules:
+  - id: flights-prepaid-hotels-amex-travel
+    match:
+      {
+        merchants:
+          [amex-travel-flights, amex-travel-hotels, airbnb-amex-travel],
+      }
+    rate: 5
+    note: Scheduled flights booked through AmexTravel.com or the Amex Travel app (not by phone), prepaid hotels booked through American Express Travel, and prepaid Airbnb stays booked through AmexTravel.com. Not charter or private flights, or flights in tours, cruises or packages.
+  - id: other-amex-travel
+    match: { merchants: [amex-travel-car-rentals, amex-travel-cruises] }
+    rate: 2
+    note: Prepaid car rentals and cruises booked through AmexTravel.com or the Amex Travel app.
+  - id: us-hardware-suppliers
+    match: { categories: [home_improvement] }
+    rate: 2
+    geography: us_only
+    cap: key-business-categories
+    note: U.S. construction material and hardware suppliers. The first $2 million a calendar year across the 2X categories, then 1X.
+  - id: us-electronics-software-cloud
+    match: { categories: [electronics] }
+    rate: 2
+    geography: us_only
+    cap: key-business-categories
+    note: U.S. electronic goods retailers and software and cloud system providers. Shares the $2 million yearly cap.
+  - id: us-shipping
+    match: { categories: [shipping] }
+    rate: 2
+    geography: us_only
+    cap: key-business-categories
+    note: U.S. shipping providers. Shares the $2 million yearly cap.
+# Not modeled: the hotel, Hilton, airline fee, CLEAR, Dell, ChatGPT, Adobe,
+# Indeed and wireless credits, the 35% Pay with Points airline bonus and
+# lounge access, which are credits or benefits rather than points earned.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Basic Card Members will get 1 Membership Rewards® point for each dollar charged for eligible purchases'
+  - rule: flights-prepaid-hotels-amex-travel
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/
+    quote: 'Earn 5X Membership Rewards® points on flights and prepaid hotels booked on AmexTravel.com.'
+  - rule: flights-prepaid-hotels-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Basic Card Members will earn 4 additional points (for a total of 5 Membership Rewards points or 5x points)'
+  - rule: flights-prepaid-hotels-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'prepaid short-term rental reservations booked with Airbnb through AmexTravel.com'
+  - rule: flights-prepaid-hotels-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Eligible air and lodging bookings do not include: charter flights, private jet flights'
+  - rule: other-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'prepaid car rental reservations booked through AmexTravel.com or the Amex Travel App'
+  - rule: other-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'will receive one (1) additional Membership Rewards® point per dollar spent on eligible cruise bookings'
+  - rule: us-hardware-suppliers
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'You get 2X Membership Rewards® points per dollar on up to two million dollars'
+  - rule: us-hardware-suppliers
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'U.S. construction material and hardware suppliers'
+  - rule: us-electronics-software-cloud
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'U.S. electronic goods retailers and software & cloud system providers'
+  - rule: us-shipping
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'at U.S. shipping providers, or (4) eligible purchases of $5,000 or more'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'The annual fee for the Business Platinum Card® is $895.'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/
+    quote: 'AS HIGH AS 300,000 Membership Rewards® Points'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/
+    quote: 'after you spend $20,000 in purchases on your new Card within the first 3 months of Card Membership'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'if you have or have had this Card or previous versions of this Card'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'
+todo:
+  - "Any eligible purchase of $5,000 or more earns 2X (inside the same $2 million yearly cap). earnrate has no rule condition on purchase size, so this isn't modeled."
+  - "Software and cloud system providers count toward the electronics category, but earnrate has no software or cloud category, so only electronics stores are modeled. Construction material and hardware suppliers are modeled as earnrate's home improvement category."
+  - 'From February 17, 2027, U.S. shipping providers count only when bought directly from UPS, FedEx, USPS, Auctane, DHL, Worldwide Express and Old Dominion Freight Line. Not modeled yet.'

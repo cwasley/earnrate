@@ -1,0 +1,121 @@
+id: bank-of-america-travel-rewards
+name: Bank of America Travel Rewards Credit Card
+issuer: bank-of-america
+# Bank of America's terms carry only the Visa and Visa Signature trademark
+# notice, so the network is Visa.
+network: visa
+currency: bofa-travel-rewards
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.bankofamerica.com/credit-cards/products/travel-rewards-credit-card/
+  - https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US
+  - https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+base_rate: 1.5
+annual_fee: 0
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 25000
+  spend: 1000
+  months: 3
+  note: Online offer; the window is 90 days from account opening, modeled as 3 months. The offer may not be available elsewhere after leaving the page. The card may not be available to anyone who has or had it in the past 24 months.
+rules:
+  - id: travel-center
+    match: { merchants: [bofa-travel-center] }
+    rate: 3
+    note: Purchases made through Bank of America's Travel Center, with no limit.
+  # BofA Rewards members earn a tier bonus on all points: 10% for Member,
+  # 25% Preferred Plus, 50% Preferred Honors, 75% Premier.
+  - id: travel-center-bofa-rewards-member
+    match: { merchants: [bofa-travel-center] }
+    rate: 3.3
+    requires: { membership: bofa-rewards-member }
+    note: 3x plus the 10% BofA Rewards Member bonus.
+  - id: everything-bofa-rewards-member
+    match: { any: true }
+    rate: 1.65
+    requires: { membership: bofa-rewards-member }
+    note: 1.5x plus the 10% BofA Rewards Member bonus.
+  - id: travel-center-bofa-rewards-preferred-plus
+    match: { merchants: [bofa-travel-center] }
+    rate: 3.75
+    requires: { membership: bofa-rewards-preferred-plus }
+    note: 3x plus the 25% BofA Rewards Preferred Plus bonus.
+  - id: everything-bofa-rewards-preferred-plus
+    match: { any: true }
+    rate: 1.875
+    requires: { membership: bofa-rewards-preferred-plus }
+    note: 1.5x plus the 25% BofA Rewards Preferred Plus bonus.
+  - id: travel-center-bofa-rewards-preferred-honors
+    match: { merchants: [bofa-travel-center] }
+    rate: 4.5
+    requires: { membership: bofa-rewards-preferred-honors }
+    note: 3x plus the 50% BofA Rewards Preferred Honors bonus.
+  - id: everything-bofa-rewards-preferred-honors
+    match: { any: true }
+    rate: 2.25
+    requires: { membership: bofa-rewards-preferred-honors }
+    note: 1.5x plus the 50% BofA Rewards Preferred Honors bonus.
+  - id: travel-center-bofa-rewards-premier
+    match: { merchants: [bofa-travel-center] }
+    rate: 5.25
+    requires: { membership: bofa-rewards-premier }
+    note: 3x plus the 75% BofA Rewards Premier bonus.
+  - id: everything-bofa-rewards-premier
+    match: { any: true }
+    rate: 2.625
+    requires: { membership: bofa-rewards-premier }
+    note: 1.5x plus the 75% BofA Rewards Premier bonus.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.bankofamerica.com/credit-cards/products/travel-rewards-credit-card/
+    quote: 'Earn unlimited 1.5 points for every $1 you spend on everyday purchases'
+  - rule: travel-center
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US
+    quote: 'Earn 3 points (consisting of 1.5 bonus points and 1.5 base points)'
+  - rule: travel-center
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US
+    quote: 'for every $1 in Net Purchases, made through the Travel Center'
+  - rule: travel-center-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'bonus of 10% for the Member tier'
+  - rule: everything-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'bonus of 10% for the Member tier'
+  - rule: travel-center-bofa-rewards-preferred-plus
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '25% for the Preferred Plus tier'
+  - rule: everything-bofa-rewards-preferred-plus
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '25% for the Preferred Plus tier'
+  - rule: travel-center-bofa-rewards-preferred-honors
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '50% for the Preferred Honors tier'
+  - rule: everything-bofa-rewards-preferred-honors
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '50% for the Preferred Honors tier'
+  - rule: travel-center-bofa-rewards-premier
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'or 75% for the Premier tier'
+  - rule: everything-bofa-rewards-premier
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'or 75% for the Premier tier'
+  - rule: travel-center-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'a purchase that earns 100 base points will actually earn 110, 125, 150, or 175 points'
+  - rule: annual_fee
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US
+    quote: 'Annual Fee None'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/products/travel-rewards-credit-card/
+    quote: '25,000 online bonus points if you make at least $1,000 in purchases in the first 90 days'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US
+    quote: 'This card may not be available to you if you currently have or have had the card'
+  - rule: foreign_transaction_fee
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US
+    quote: 'Foreign Transaction None'
+todo:
+  - 'The BofA Rewards rules use proposed membership ids: bofa-rewards-member, bofa-rewards-preferred-plus, bofa-rewards-preferred-honors and bofa-rewards-premier. Cardholders who joined Preferred Rewards before May 26, 2026 may have an "extended card benefit" that Bank of America doesn''t define.'
+  - 'Bank of America says the BofA Rewards bonus doesn''t apply to "the bonus earn for certain programs" without naming them, so whether it applies to the Travel Center''s extra 1.5 points is unclear. The tier rules apply it to all 3 points, as Bank of America''s own BofA Rewards table does (3.3% to 5.25% on Travel Center purchases).'

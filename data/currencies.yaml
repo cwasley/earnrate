@@ -33,6 +33,31 @@
     - https://www.sofi.com/credit-card/unlimited/
     - https://www.sofi.com/card/rewards?cardtype=c
 
+- id: bofa-travel-rewards
+  name: Bank of America Travel Rewards points
+  value_cents: 1.0
+  redemptions:
+    cash: 0.6
+  redemption_names:
+    cash: as cash
+  note: Each point is worth 1¢ as a statement credit against travel and dining purchases from the past 12 months, or 0.6¢ redeemed for cash.
+  sources:
+    - https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US
+
+- id: bofa-premium-rewards
+  name: Bank of America Premium Rewards points
+  value_cents: 1.0
+  note: Each point is worth 1¢ redeemed for cash, a statement credit or travel at the Travel Center.
+  sources:
+    - https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+
+- id: usbank-altitude
+  name: U.S. Bank Altitude points
+  value_cents: 1.0
+  note: U.S. Bank values 20,000 Altitude Go points at $200 as a deposit to a U.S. Bank account (1¢ a point). Points also redeem as a statement credit, or for travel, gift cards and merchandise.
+  sources:
+    - https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
+
 - id: best-buy-rewards
   name: My Best Buy rewards
   value_cents: 2.0

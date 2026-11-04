@@ -83,6 +83,25 @@
   name: U.S. Bank Travel Center
   aliases: [us bank travel center]
   category: travel
+  booked_via: [usbank-travel-center-hotels, usbank-travel-center-car-rentals]
+- id: usbank-travel-center-hotels
+  kind: booking
+  name: Hotel through U.S. Bank Travel Center
+  aliases: [us bank travel center hotel, us bank travel center hotels]
+  category: travel
+  note: Prepaid hotels only for the Altitude Connect bonus.
+- id: usbank-travel-center-car-rentals
+  kind: booking
+  name: Car rental through U.S. Bank Travel Center
+  aliases: [us bank travel center car rental, us bank travel center car]
+  category: travel
+  note: Prepaid car rentals only for the Altitude Connect bonus.
+- id: bofa-travel-center
+  kind: portal
+  name: Bank of America Travel Center
+  aliases:
+    [bank of america travel center, bofa travel center, boa travel center]
+  category: travel
 - id: sofi-travel
   kind: portal
   name: SoFi Travel
