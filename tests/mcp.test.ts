@@ -1199,6 +1199,70 @@ describe('wallet setup', () => {
     ).toBeCloseTo(6)
   })
 
+  test('merchant credits: enrolled and used through update_card, listed with what is left, used up by record_purchase', async () => {
+    const file = await walletCopy('cards:\n  - id: citi-double-cash # mine\n')
+    const client = await connect(file)
+    const added = await client.callTool({
+      name: 'add_card',
+      arguments: { cardId: 'amex-platinum', enrolled: ['lululemon'] },
+    })
+    expect(added.isError).toBeFalsy()
+    const set = await client.callTool({
+      name: 'update_card',
+      arguments: { cardId: 'amex-platinum', creditUsed: { lululemon: 40 } },
+    })
+    expect(text(set)).toMatch(/\$40 of the lululemon credit used this period/)
+    const wallet = await client.callTool({ name: 'list_wallet', arguments: {} })
+    const platinum = (wallet.structuredContent as WalletSummary).cards.find(
+      (c) => c.cardId === 'amex-platinum',
+    )
+    expect(platinum?.credits).toEqual([
+      expect.objectContaining({ id: 'lululemon', enrolled: true, left: 35 }),
+    ])
+    expect(text(wallet)).toMatch(
+      /Credit \(lululemon\): \$75 back each quarter at Lululemon: \$35 left this quarter/,
+    )
+    expect(text(wallet)).toMatch(/Use your \$75 Lululemon credit on/)
+    const best = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Lululemon', amount: 100, channel: 'in_store' },
+    })
+    const rec = best.structuredContent as Recommendation
+    expect(rec.decision?.cardId).toBe('amex-platinum')
+    expect(rec.ranked[0]?.credit).toMatchObject({ dollars: 35 })
+    expect(text(best)).toMatch(/plus \$35 back from its Lululemon credit/)
+    const recorded = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'amex-platinum',
+        merchant: 'Lululemon',
+        amount: 100,
+        channel: 'in_store',
+      },
+    })
+    expect(text(recorded)).toMatch(
+      /Used \$35 of amex-platinum's Lululemon credit/,
+    )
+    expect(await readFile(file, 'utf8')).toContain(
+      '    credit_usage:\n      lululemon: { period: 2026-Q4, used: 75 }\n',
+    )
+    expect(await readFile(file, 'utf8')).toContain('# mine')
+  })
+
+  test('best_cards_for puts cards with a store credit first', async () => {
+    const client = await connect(await walletCopy())
+    const result = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { merchant: 'Lululemon' },
+    })
+    expect(
+      (result.structuredContent as { credits: { cardId: string }[] }).credits,
+    ).toEqual([expect.objectContaining({ cardId: 'amex-platinum' })])
+    expect(text(result)).toMatch(
+      /^With a store credit at Lululemon:\n\n- The Platinum Card from American Express: \$75 back each quarter, then 1x Amex Membership Rewards \(enroll first\)/,
+    )
+  })
+
   test('a wallet can hold memberships with no cards', async () => {
     const client = await connect(
       await walletCopy(

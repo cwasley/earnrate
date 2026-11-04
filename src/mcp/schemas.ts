@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CapPeriod, MilestoneSchema } from '../schema/card.ts'
+import { CapPeriod, CreditPeriod, MilestoneSchema } from '../schema/card.ts'
 
 const MilestonePeriod = MilestoneSchema.shape.period
 import { CardNetwork, Network } from '../schema/common.ts'
@@ -47,6 +47,18 @@ const RankedCardSchema = z.object({
   foreignFee: z.number().nullable(),
   milestoneBonus: z
     .object({ points: z.number(), dollars: z.number() })
+    .nullable(),
+  credit: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      amount: z.number(),
+      period: CreditPeriod,
+      enrolled: z.boolean(),
+      left: z.number().nullable(),
+      until: z.string().nullable(),
+      dollars: z.number().nullable(),
+    })
     .nullable(),
   capped: z.boolean(),
   reasoning: z.array(z.string()),
@@ -113,8 +125,11 @@ export const WalletSummarySchema = z.object({
           'milestone',
           'rotation',
           'intro',
+          'credit',
+          'enroll',
         ]),
         cardId: z.string(),
+        ref: z.string().optional(),
         text: z.string(),
         due: z.string().nullable(),
       }),
@@ -172,6 +187,21 @@ export const WalletSummarySchema = z.object({
           tracked: z.boolean(),
           points: z.number().nullable(),
           rewards: z.array(z.string()),
+          text: z.string(),
+        }),
+      ),
+      credits: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          amount: z.number(),
+          period: CreditPeriod,
+          enroll: z.boolean(),
+          enrolled: z.boolean(),
+          currentPeriod: z.string().nullable(),
+          until: z.string().nullable(),
+          used: z.number(),
+          left: z.number().nullable(),
           text: z.string(),
         }),
       ),
@@ -239,6 +269,18 @@ export const RecordResultSchema = z.object({
       after: z.number(),
     }),
   ),
+  credit: z
+    .object({
+      cardId: z.string(),
+      creditId: z.string(),
+      name: z.string(),
+      period: z.string(),
+      periodKind: CreditPeriod,
+      amount: z.number(),
+      before: z.number(),
+      after: z.number(),
+    })
+    .nullable(),
   message: z.string(),
 })
 
@@ -320,6 +362,16 @@ export const CardSearchSchema = z.object({
       introRates: z.array(
         z.object({ id: z.string(), days: z.number(), text: z.string() }),
       ),
+      credits: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          amount: z.number(),
+          period: CreditPeriod,
+          enroll: z.boolean(),
+          text: z.string(),
+        }),
+      ),
     }),
   ),
 })
@@ -355,6 +407,27 @@ const Picks = z.record(z.string(), z.array(z.string()))
 
 export const ExplorationSchema = z.object({
   merchant: MerchantResolutionSchema,
+  // Cards with a statement credit at this store, shown before the ranking.
+  credits: z.array(
+    z.object({
+      cardId: z.string(),
+      cardName: z.string(),
+      issuer: z.string(),
+      network: CardNetwork,
+      annualFee: z.number().nullable(),
+      firstYearFee: z.number().nullable(),
+      creditId: z.string(),
+      name: z.string(),
+      amount: z.number(),
+      period: CreditPeriod,
+      enroll: z.boolean(),
+      note: z.string().nullable(),
+      back: z.string(),
+      earn: z.string(),
+      text: z.string(),
+      evidence: z.object({ quote: z.string(), url: z.string() }).nullable(),
+    }),
+  ),
   ranked: z.array(
     RankedCardSchema.extend({
       issuer: z.string(),
@@ -462,6 +535,7 @@ export const CheatSheetSchema = z.object({
     }),
   ),
   notes: z.array(z.string()),
+  assumptions: z.array(z.string()),
 })
 
 export const PurchaseAnswerSchema = RecommendationSchema.extend({

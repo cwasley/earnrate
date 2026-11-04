@@ -1,4 +1,5 @@
 import type { z } from 'zod'
+import type { Credit } from '../schema/card.ts'
 import type { Network } from '../schema/common.ts'
 
 export type Channel = 'online' | 'in_store'
@@ -52,6 +53,20 @@ export type RankedCard = {
   // Points from a spend milestone this purchase reaches, and their worth.
   // They count toward the ranking; `effectiveReturnPct` and `earned` don't include them.
   milestoneBonus: { points: number; dollars: number } | null
+  // A merchant statement credit the card has here. With `dollars` above 0 it
+  // counts toward the ranking, like `milestoneBonus`; `effectiveReturnPct` and
+  // `earned` stay the card's own rate. `dollars` is null without an amount and
+  // 0 when the credit doesn't count (not enrolled, or used up).
+  credit: {
+    id: string
+    name: string
+    amount: number
+    period: Credit['period']
+    enrolled: boolean
+    left: number | null // this period, before this purchase
+    until: string | null
+    dollars: number | null
+  } | null
   capped: boolean // the winning rule has a cap
   reasoning: string[]
   warnings: string[]

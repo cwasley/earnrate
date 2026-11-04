@@ -1,4 +1,4 @@
-import type { Cap, Choice, Milestone } from '../schema/card.ts'
+import type { Cap, Choice, Credit, Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { singleMcc } from './evaluate.ts'
 import type { MerchantResolution } from './types.ts'
@@ -180,7 +180,7 @@ export const CAP_PERIODS: Record<Cap['period'], string> = {
 
 // "for 2026-Q4", or "this cardmember year": a cardmember year's key is the
 // year it started, which reads as the calendar year.
-export const periodPhrase = (kind: Cap['period'], key: string) =>
+export const periodPhrase = (kind: Credit['period'], key: string) =>
   kind === 'cardmember_year' ? 'this cardmember year' : `for ${key}`
 
 export const CAP_ADJECTIVES: Record<Cap['period'], string> = {
@@ -233,3 +233,88 @@ export const introUnknownText = (
 
 export const introEndsText = (name: string, days: number, until: string) =>
   `${name}'s ${introAdjective(days)} rate ends after ${shortDate(until)}; from then on it earns its standard rates.`
+
+// Merchant statement credits. Always dollars, never a percentage.
+export const CREDIT_PERIODS: Record<Credit['period'], string> = {
+  month: 'each month',
+  quarter: 'each quarter',
+  half_year: 'each half year',
+  calendar_year: 'each calendar year',
+  cardmember_year: 'each cardmember year',
+}
+
+export const CREDIT_THIS_PERIOD: Record<Credit['period'], string> = {
+  month: 'this month',
+  quarter: 'this quarter',
+  half_year: 'this half year',
+  calendar_year: 'this year',
+  cardmember_year: 'this cardmember year',
+}
+
+export const ENROLL_FIRST = 'enroll first'
+
+// The group of cards with a credit at the store, shown before the ranking.
+export const CREDIT_GROUP = 'With a store credit'
+
+// "$75 back each quarter"
+export const creditBack = (c: Pick<Credit, 'amount' | 'period'>) =>
+  `${money(c.amount)} back ${CREDIT_PERIODS[c.period]}`
+
+// "$75 back each quarter, then 1x Amex Membership Rewards"
+export const creditThen = (
+  c: Pick<Credit, 'amount' | 'period'>,
+  earn: string,
+) => `${creditBack(c)}, then ${earn}`
+
+// "$35 left this quarter"
+export const creditLeft = (left: number, period: Credit['period']) =>
+  `${money(left)} left ${CREDIT_THIS_PERIOD[period]}`
+
+export type CreditWords = {
+  name: string // "lululemon"
+  amount: number
+  period: Credit['period']
+  enrolled: boolean
+  left: number | null // this period, before the purchase
+  until: string | null // the period's last day
+}
+
+// A line for an answer that uses the card's credit, or says why it doesn't.
+export function creditAnswerText(c: CreditWords, dollars: number | null) {
+  const credit = `${c.name} credit (${creditBack(c)})`
+  if (!c.enrolled)
+    return `Has a ${credit} here; ${ENROLL_FIRST} with the issuer, then mark it enrolled in your wallet. It isn't counted until then.`
+  if (c.left === null)
+    return `Has a ${credit} here; give the card's anniversary to track it.`
+  if (c.left <= 0)
+    return `Its ${c.name} credit is used up ${CREDIT_THIS_PERIOD[c.period]}${c.until === null ? '' : `; it renews after ${shortDate(c.until)}`}.`
+  if (dollars === null)
+    return `Its ${credit} has ${creditLeft(c.left, c.period)}; give the amount to count it.`
+  return dollars < c.left
+    ? `${money(dollars)} back from its ${credit}, on top of what it earns; ${creditLeft(roundCents(c.left - dollars), c.period)} after this.`
+    : `${money(dollars)} back from its ${credit}: all that's left ${CREDIT_THIS_PERIOD[c.period]}, on top of what it earns.`
+}
+
+// One short line beside a ranked card: "+ $35 back from its Lululemon
+// credit", "Lululemon credit: $35 left this quarter".
+export function creditShort(c: CreditWords, dollars: number | null): string {
+  if (!c.enrolled) return `${c.name} credit: ${creditBack(c)}, ${ENROLL_FIRST}`
+  if (c.left === null) return `${c.name} credit: ${creditBack(c)}`
+  if (c.left <= 0)
+    return `${c.name} credit used up ${CREDIT_THIS_PERIOD[c.period]}`
+  if (dollars === null || dollars <= 0)
+    return `${c.name} credit: ${creditLeft(c.left, c.period)}`
+  return `+ ${money(dollars)} back from its ${c.name} credit`
+}
+
+// For the to-do list: "Use your $75 lululemon credit on Amex Platinum by Dec
+// 31, 2026: $35 left."
+export const useCreditText = (card: string, c: CreditWords, left: number) =>
+  `Use your ${money(c.amount)} ${c.name} credit on ${card}${c.until === null ? '' : ` by ${shortDate(c.until)}`}: ${money(left)} left.`
+
+export const enrollCreditText = (card: string, name: string) =>
+  `Enroll in ${card}'s ${name} credit with the issuer, then mark it enrolled.`
+
+// Simulations, the cheat sheet and welcome-offer comparisons.
+export const CREDITS_LEFT_OUT =
+  'Merchant statement credits (dollars back at a named store) are left out.'

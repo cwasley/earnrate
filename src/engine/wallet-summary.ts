@@ -1,4 +1,4 @@
-import type { Card, Cap, Rule } from '../schema/card.ts'
+import type { Card, Cap, Credit, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
@@ -11,6 +11,7 @@ import {
 import { introUntil, introWindows, openedOn } from './intro.ts'
 import { membershipName } from './memberships.ts'
 import { milestoneSummaries, type MilestoneSummary } from './milestones.ts'
+import { creditStates } from './credits.ts'
 import { optionName, ruleParts } from './rule-text.ts'
 import { choicePeriod, daysBetween, inEffect, periodEnd } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
@@ -19,6 +20,9 @@ import { activationRules } from './setup.ts'
 import {
   CAP_PERIODS,
   categoryReadsOn,
+  creditBack,
+  creditLeft,
+  ENROLL_FIRST,
   choiceName,
   currencyLabel,
   earnText,
@@ -41,6 +45,20 @@ export type CapSummary = {
   remaining: number | null
 }
 
+export type CreditSummary = {
+  id: string // what enrolled and credit_usage call it
+  name: string // what it's for: "Lululemon"
+  amount: number // dollars each period
+  period: Credit['period']
+  enroll: boolean // the cardholder must enroll first
+  enrolled: boolean // enrolled, or no enrollment needed
+  currentPeriod: string | null // null for a cardmember year without an anniversary
+  until: string | null // the period's last day, YYYY-MM-DD
+  used: number
+  left: number | null
+  text: string // "$75 back each quarter at Lululemon: $35 left this quarter."
+}
+
 export type CardSummary = {
   cardId: string
   cardName: string
@@ -58,6 +76,7 @@ export type CardSummary = {
   rotationGap: string | null // a rotating card's current period, when its categories aren't in the data
   caps: CapSummary[]
   milestones: MilestoneSummary[] // spend milestones and progress toward them
+  credits: CreditSummary[] // merchant statement credits and what's left
   chosen: {
     period: string
     current: boolean
@@ -341,6 +360,7 @@ export function walletSummary(
       rotationGap: rotationGap(card, today),
       caps: capSummaries(catalog, card, held, today),
       milestones: milestoneSummaries(card, held, today),
+      credits: creditSummaries(catalog, card, held, today),
       chosen: held.chosen
         ? {
             period: held.chosen.period,
@@ -378,6 +398,34 @@ export function walletSummary(
     started: null,
     cards,
   }
+}
+
+function creditSummaries(
+  catalog: Catalog,
+  card: Card,
+  held: WalletCard,
+  today: string,
+): CreditSummary[] {
+  return creditStates(catalog, card, held, today).map((s) => {
+    const status = !s.enrolled
+      ? `${ENROLL_FIRST}, then mark it enrolled`
+      : s.left === null
+        ? "give the card's anniversary to track it"
+        : `${creditLeft(s.left, s.period)}${s.until === null ? '' : `, through ${shortDate(s.until)}`}`
+    return {
+      id: s.credit.id,
+      name: s.name,
+      amount: s.amount,
+      period: s.period,
+      enroll: s.credit.enroll === true,
+      enrolled: s.enrolled,
+      currentPeriod: s.key,
+      until: s.until,
+      used: s.used,
+      left: s.left,
+      text: `${creditBack(s)} at ${s.name}: ${status}.`,
+    }
+  })
 }
 
 function introSummary(

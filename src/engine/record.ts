@@ -1,9 +1,10 @@
 import { resolveMerchant } from '../merchants/resolve.ts'
-import type { Cap, Milestone } from '../schema/card.ts'
+import type { Cap, Credit, Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { bonusStatus, countsTowardBonus } from './bonus.ts'
 import { evaluateCard, purchaseContext } from './evaluate.ts'
+import { creditAt, creditDollars } from './credits.ts'
 import { milestoneProgress } from './milestones.ts'
 import { roundCents } from './text.ts'
 import type { MerchantResolution, RecordedPurchase } from './types.ts'
@@ -183,11 +184,73 @@ export function applyMilestoneBooking(
   }
 }
 
+export type CreditBooking = {
+  cardId: string
+  creditId: string
+  name: string // what the credit is for, in words
+  period: string
+  periodKind: Credit['period']
+  amount: number // the credit's dollars each period
+  before: number // dollars of credit used this period before the purchase
+  after: number
+}
+
+// The part of an enrolled merchant credit this purchase uses. None when the
+// card has no credit here, it isn't enrolled, or it's used up.
+export function creditBooking(
+  catalog: Catalog,
+  wallet: Wallet,
+  purchase: RecordedPurchase,
+  merchant: MerchantResolution = resolveMerchant(
+    catalog,
+    purchase.merchant,
+    purchase.channel,
+  ),
+): CreditBooking | null {
+  const held = wallet.cards.find((c) => c.id === purchase.cardId)
+  const card = catalog.cards.find((c) => c.id === purchase.cardId)
+  if (!held || !card) return null
+  const state = creditAt(catalog, card, held, merchant, purchase.date)
+  const back = state ? creditDollars(state, purchase.amount) : null
+  if (!state || state.key === null || back === null || back <= 0) return null
+  return {
+    cardId: card.id,
+    creditId: state.credit.id,
+    name: state.name,
+    period: state.key,
+    periodKind: state.period,
+    amount: state.amount,
+    before: state.used,
+    after: roundCents(state.used + back),
+  }
+}
+
+export function applyCreditBooking(
+  wallet: Wallet,
+  b: Pick<CreditBooking, 'cardId' | 'creditId' | 'period' | 'after'>,
+): Wallet {
+  return {
+    ...wallet,
+    cards: wallet.cards.map((c) =>
+      c.id === b.cardId
+        ? {
+            ...c,
+            credit_usage: {
+              ...c.credit_usage,
+              [b.creditId]: { period: b.period, used: b.after },
+            },
+          }
+        : c,
+    ),
+  }
+}
+
 export type BookedPurchase = {
   wallet: Wallet
   cap: CapBooking | null
   bonus: BonusBooking | null
   milestones: MilestoneBooking[]
+  credit: CreditBooking | null
 }
 
 export function bookPurchase(
@@ -199,8 +262,10 @@ export function bookPurchase(
   const cap = capBooking(catalog, wallet, purchase, merchant)
   const bonus = bonusBooking(catalog, wallet, purchase)
   const milestones = milestoneBookings(catalog, wallet, purchase)
+  const credit = creditBooking(catalog, wallet, purchase, merchant)
   let next = cap ? applyBooking(wallet, cap) : wallet
   if (bonus) next = applyBonusBooking(next, bonus)
   for (const m of milestones) next = applyMilestoneBooking(next, m)
-  return { wallet: next, cap, bonus, milestones }
+  if (credit) next = applyCreditBooking(next, credit)
+  return { wallet: next, cap, bonus, milestones, credit }
 }

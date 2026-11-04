@@ -4,7 +4,7 @@ import { bonusDollars } from './bonus.ts'
 import { matchesFilters } from './explore.ts'
 import { membershipCosts, paidMemberships } from './memberships.ts'
 import { inEffect } from './periods.ts'
-import { money, roundCents } from './text.ts'
+import { CREDITS_LEFT_OUT, money, roundCents } from './text.ts'
 import { cardValuation } from './valuation.ts'
 
 export type OfferFilters = {
@@ -159,6 +159,7 @@ export function compareOffers(
     `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`,
     `Each offer is the public one on the issuer's page on the date shown, checked weekly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how.`,
     "First-year value is the bonus at your point values minus the first year's annual fee and any membership the card needs that you don't have. It leaves out what the card earns on your spending and any credits or perks.",
+    CREDITS_LEFT_OUT,
   ]
   return { offers, withoutOffer, notes }
 }

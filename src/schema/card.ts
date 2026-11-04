@@ -198,6 +198,31 @@ export const IntroRateSchema = z
     'an intro rate needs multiply or add, not both',
   )
 
+// Merchant statement credits: dollars back for spending at named merchants
+// (or a category) up to `amount` each period, like Amex Platinum's $75 a
+// quarter at lululemon. They're separate from earn rates: the purchase still
+// earns the card's rate on its whole amount, and the credit comes on top.
+// `half_year` runs January to June and July to December.
+export const CreditPeriod = z.enum([...CapPeriod.options, 'half_year'])
+
+export const CreditSchema = z.strictObject({
+  id: KebabId,
+  match: z
+    .strictObject({
+      merchants: z.array(KebabId).min(1).optional(),
+      categories: z.array(CategoryId).min(1).optional(),
+    })
+    .refine(
+      (m) => (m.merchants === undefined) !== (m.categories === undefined),
+      'a credit matches merchants or categories, not both',
+    ),
+  amount: z.number().positive(), // dollars of credit per period
+  period: CreditPeriod,
+  // The cardholder must enroll with the issuer before it pays.
+  enroll: z.literal(true).optional(),
+  note: z.string().optional(),
+})
+
 const HexColor = z.string().regex(/^#[0-9a-f]{6}$/)
 
 export const CardSchema = z
@@ -245,8 +270,10 @@ export const CardSchema = z
     rules: z.array(RuleSchema).default([]),
     milestones: z.array(MilestoneSchema).default([]),
     intro_rates: z.array(IntroRateSchema).default([]),
-    // A short quote from an issuer page for each rule (or `base_rate`). The
-    // weekly source check fails a rule whose quote disappears from its page.
+    credits: z.array(CreditSchema).default([]),
+    // A short quote from an issuer page for each rule (or `base_rate`, or a
+    // credit's id). The weekly source check fails a rule whose quote
+    // disappears from its page.
     evidence: z
       .array(
         z.strictObject({
@@ -270,3 +297,4 @@ export type Choice = z.output<typeof ChoiceSchema>
 export type Card = z.output<typeof CardSchema>
 export type Milestone = z.output<typeof MilestoneSchema>
 export type IntroRate = z.output<typeof IntroRateSchema>
+export type Credit = z.output<typeof CreditSchema>

@@ -28,6 +28,7 @@ describe('checklist', () => {
       'cap:amex-blue-cash-preferred',
       'pick:usbank-cash-plus',
       'bonus:amex-blue-cash-preferred',
+      'enroll:amex-blue-cash-preferred',
     ])
     expect(items[0]).toMatchObject({ due: '2026-12-14' })
     expect(items[0]?.text).toMatch(/by Dec 14, 2026\.$/)
@@ -90,6 +91,7 @@ describe('checklist', () => {
     const early = checklist(catalog, w, TODAY).map((i) => i.text)
     expect(early.join(' ')).not.toMatch(/left of \$6,000/)
     expect(early).toEqual([
+      expect.stringMatching(/^Enroll in .*Disney\+, Hulu and ESPN credit/),
       expect.stringMatching(
         /3% pick is assumed to be gas stations and EV charging; set it/,
       ),

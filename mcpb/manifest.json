@@ -48,7 +48,7 @@
     },
     {
       "name": "list_wallet",
-      "description": "A to-do list for your cards right now, then your cards, caps left, picked categories, welcome-bonus progress and point values."
+      "description": "A to-do list for your cards right now, then your cards, caps left, picked categories, store credits left, welcome-bonus progress and point values."
     },
     {
       "name": "cheat_sheet",
@@ -56,7 +56,7 @@
     },
     {
       "name": "best_cards_for",
-      "description": "Every card earnrate knows, ranked for one store or category."
+      "description": "Every card earnrate knows, ranked for one store or category, with cards that have a credit at the store first."
     },
     {
       "name": "simulate_spending",
@@ -68,7 +68,7 @@
     },
     {
       "name": "record_purchase",
-      "description": "Books a purchase against its cap, welcome bonus and yearly spend bonus."
+      "description": "Books a purchase against its cap, welcome bonus, yearly spend bonus and store credit."
     },
     {
       "name": "search_cards",
@@ -80,7 +80,7 @@
     },
     {
       "name": "update_card",
-      "description": "Sets a card's picks, activations, checkout name, anniversary, opening date, cap spending or welcome bonus."
+      "description": "Sets a card's picks, activations, checkout name, anniversary, opening date, cap spending, store credits or welcome bonus."
     },
     {
       "name": "remove_card",

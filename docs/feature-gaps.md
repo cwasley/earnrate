@@ -111,7 +111,7 @@ A `cardmember_year` milestone runs from the account anniversary date. Citi count
 
 ### Credits that offset the annual fee
 
-Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. It would need a per-card credit value with evidence, kept apart from earn rates (credits as rewards stay out of scope, below).
+Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. Merchant credits are now on cards (`credits:`), but they don't count toward annual-fee math, and the credits below aren't merchant credits.
 
 - `amex-hilton-honors-surpass`: up to $200 a year in Hilton credits ($50 a quarter).
 - `amex-hilton-honors-aspire`: Hilton resort, flight, CLEAR+ and Waldorf Astoria or Conrad property credits, plus an Annual Free Night Reward with no spending needed.
@@ -120,6 +120,6 @@ Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed ye
 
 Out of scope per the project's non-goals, or too variable to model as a rate.
 
-- Statement credits other than merchant credits (airline fee credits you choose an airline for, Global Entry and TSA PreCheck, free nights). Merchant credits (dollars back at a named merchant up to a limit per period, like Amex Platinum's Lululemon credit) are planned (Collin's call, 2026-11-04).
+- Statement credits other than merchant credits: credits for a merchant you choose first (an airline fee credit), credits once every several years (Global Entry, TSA PreCheck), and benefits that aren't spending (free nights, lounges, memberships). Merchant credits (dollars back at named merchants up to a limit per period, like Amex Platinum's lululemon credit) are modeled as card `credits:` (Collin's call, 2026-11-04).
 - Store discounts and coupons (Kohl's, Target, Nordstrom cardholder offers).
 - Per-item and limited-time promotions (Prime Card Bonus, Prime Visa's 6% with select delivery, Nordstrom bonus points events, Bilt Neighborhood Dining).

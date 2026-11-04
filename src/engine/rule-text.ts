@@ -1,5 +1,5 @@
 import { findMerchant } from '../merchants/resolve.ts'
-import type { Card, IntroRate, Rule } from '../schema/card.ts'
+import type { Card, Credit, IntroRate, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import {
   categoryPhrase,
@@ -97,3 +97,10 @@ export function introWhat(
         : `${num(intro.multiply)} times ${on}`
   return `${change} for the ${introPeriod(intro.days)}`
 }
+
+// What a merchant credit is named for: "Lululemon", "Disney+, Hulu and ESPN".
+export const creditName = (catalog: Catalog, credit: Credit) =>
+  listed([
+    ...(credit.match.merchants ?? []).map((m) => merchantName(catalog, m)),
+    ...(credit.match.categories ?? []).map((c) => categoryPhrase(catalog, c)),
+  ])

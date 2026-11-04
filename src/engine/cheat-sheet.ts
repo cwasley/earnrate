@@ -11,7 +11,14 @@ import { periodKey } from './periods.ts'
 import { ABROAD, recommend } from './recommend.ts'
 import { checklist } from './checklist.ts'
 import { setupNotes } from './setup.ts'
-import { capitalize, feeText, listed, money, shortDate } from './text.ts'
+import {
+  capitalize,
+  CREDITS_LEFT_OUT,
+  feeText,
+  listed,
+  money,
+  shortDate,
+} from './text.ts'
 import type { RankedCard } from './types.ts'
 
 // `merchant` is a merchant id.
@@ -52,6 +59,7 @@ export type CheatSheet = {
   date: string
   rows: CheatSheetRow[]
   notes: string[] // what the wallet still needs: picks, activations, missing quarters
+  assumptions: string[]
 }
 
 // The best card in the wallet for each everyday kind of purchase on `date`,
@@ -83,6 +91,7 @@ export function cheatSheet(
         country: 'US',
       },
       merchant,
+      { credits: false },
     )
     // The card that earns the most, even when a welcome bonus would take the
     // pick for one purchase: the sheet is for the whole quarter.
@@ -157,6 +166,7 @@ export function cheatSheet(
     date,
     rows,
     notes,
+    assumptions: [CREDITS_LEFT_OUT],
   }
 }
 
@@ -181,6 +191,7 @@ function abroadRow(
       country: ABROAD,
     },
     merchant,
+    { credits: false },
   )
   const top = rec.decision ? rec.ranked[0] : undefined
   const allCharge =
@@ -269,5 +280,6 @@ export function catalogCheatSheet(
     date,
     rows,
     notes: [],
+    assumptions: [CREDITS_LEFT_OUT],
   }
 }

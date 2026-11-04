@@ -30,6 +30,11 @@ const CapUsage = z.strictObject({
   spent: z.number().nonnegative(), // dollars
 })
 
+const CreditUsage = z.strictObject({
+  period: PeriodKey,
+  used: z.number().nonnegative(), // dollars of credit
+})
+
 export const WalletCardSchema = z.strictObject({
   id: KebabId,
   checkout_label: z
@@ -56,6 +61,10 @@ export const WalletCardSchema = z.strictObject({
   activated: z.array(KebabId).default([]),
   // Keyed by milestone id: every purchase on the card this period.
   milestone_usage: z.record(KebabId, CapUsage).optional(),
+  // Merchant credits (the card's `credits`) the cardholder has enrolled in,
+  // by credit id, and the dollars of each credit already received this period.
+  enrolled: z.array(KebabId).optional(),
+  credit_usage: z.record(KebabId, CreditUsage).optional(),
   // A welcome bonus in progress. Terms default to the card's published
   // offer; set spend, by, points or dollars when yours was different.
   bonus: z

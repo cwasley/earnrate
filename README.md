@@ -153,6 +153,18 @@ Every purchase on the card counts. Once earnrate knows how much you've spent on 
 
 `earnrate simulate` adds a bonus's points to a card's yearly rewards when the year's spending on it reaches the total.
 
+### Store credits
+
+Some cards give dollars back for spending at a named store, up to a limit each period: Amex Platinum's $75 a quarter at lululemon, Amex Gold's $7 a month at Dunkin', Blue Cash Preferred's $10 a month on Disney+, Hulu or ESPN subscriptions. The purchase still earns the card's rate; the credit comes on top. Asking about the store with no cards saved lists the cards with a credit there first, "With a store credit", in dollars ("$75 back each quarter, then 1x Amex Membership Rewards"), then the usual ranking by rate. A search for a kind of purchase ("clothing") doesn't.
+
+With a saved wallet, a credit counts only once you mark it enrolled (these all need enrolling with the issuer), and only while some is left this period. Given an amount, its dollars count toward that card's return and can make it the pick; without one, the answer shows what's left. Recording a purchase from an AI assistant uses it up, and `earnrate todo` reminds you to enroll and to use what's left before the period ends:
+
+```sh
+earnrate update amex-platinum --enrolled lululemon --credit-used lululemon=40
+```
+
+In the wallet file that's `enrolled: [lululemon]` and `credit_usage: { lululemon: { period: 2026-Q4, used: 40 } }` on the card. On earnrate.dev it's in the card's settings. The cheat sheet, simulations and welcome-offer comparisons leave credits out.
+
 ### Which new card?
 
 These compare every card earnrate knows that's open to new applicants:
@@ -227,10 +239,10 @@ Use the connector (or plugin) or the local extension, not both: each keeps its o
 - `best_card_for_purchase`: which card to use, with reasons
 - `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
 - `resolve_merchant`: how a merchant was identified
-- `list_wallet`: a to-do list for your cards right now, then your cards, caps left this period, chosen categories, welcome-bonus and spend-bonus progress and the point values you've set
+- `list_wallet`: a to-do list for your cards right now, then your cards, caps left this period, chosen categories, store credits left, welcome-bonus and spend-bonus progress and the point values you've set
 - `cheat_sheet`: the card to use for each everyday kind of purchase this quarter
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have
-- `record_purchase`: books a purchase against its cap, any open welcome bonus and the card's yearly spend bonuses in your wallet file, keeping your comments
+- `record_purchase`: books a purchase against its cap, any open welcome bonus, the card's yearly spend bonuses and an enrolled store credit in your wallet file, keeping your comments
 - `search_cards`, `add_card`, `update_card`, `remove_card`, `set_memberships` and `set_point_values`: set up the wallet in conversation, including what your points are worth (memberships and point values need no cards)
 
 Both servers also offer four prompts, ready-made questions you can pick in Claude instead of typing one. None needs your cards:
