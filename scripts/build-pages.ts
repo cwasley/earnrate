@@ -32,6 +32,7 @@ import {
   monthYear,
   num,
   pct,
+  PAYMENT_PHRASES,
   PICK_PERIODS,
   shortDate,
   wholeDollars,
@@ -440,6 +441,12 @@ function ruleWhat(card: Card, rule: Rule): string {
 }
 
 function ruleWhatRaw(card: Card, rule: Rule): string {
+  const payment = rule.requires?.payment
+  const what = ruleScope(card, rule)
+  return payment === undefined ? what : `${what} ${PAYMENT_PHRASES[payment]}`
+}
+
+function ruleScope(card: Card, rule: Rule): string {
   const m = rule.match
   if (m.any) return 'every purchase'
   const parts: string[] = []
@@ -637,7 +644,8 @@ function headlineFor(card: Card): string {
     const same = stores.filter(
       (r) =>
         r.rate === best.rate &&
-        r.requires?.membership === best.requires?.membership,
+        r.requires?.membership === best.requires?.membership &&
+        r.requires?.payment === best.requires?.payment,
     )
     const names = [
       ...new Set(
@@ -647,10 +655,20 @@ function headlineFor(card: Card): string {
       ),
     ]
     const membership = best.requires?.membership
+    const payment = best.requires?.payment
     clauses.unshift(
-      `${earnText(catalog, best.rate, card.currency)} at ${listed(names)}${membership ? ` with ${membershipName(membership)}` : ''}`,
+      `${earnText(catalog, best.rate, card.currency)} at ${listed(names)}${membership ? ` with ${membershipName(membership)}` : ''}${payment ? ` ${PAYMENT_PHRASES[payment]}` : ''}`,
     )
   }
+  for (const r of current)
+    if (
+      r.match.any &&
+      r.requires?.payment !== undefined &&
+      r.rate > card.base_rate
+    )
+      clauses.push(
+        `${earnText(catalog, r.rate, card.currency)} ${PAYMENT_PHRASES[r.requires.payment]}`,
+      )
 
   const rotating = card.caps.find((c) => c.rotating)
   const rotatingRates = rotating

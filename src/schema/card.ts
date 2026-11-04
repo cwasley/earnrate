@@ -48,6 +48,18 @@ export const SharedCapSchema = CapSchema.extend({
   rotating: z.literal(true).optional(),
 })
 
+// How a purchase is paid, for rates that depend on it: Apple Card's 2% with
+// Apple Pay, PayPal Cashback's 3% through PayPal checkout. `card` is the card
+// itself or its number, not a phone wallet or PayPal. Unknown unless the
+// person says, so a rule that requires one never applies by assumption.
+export const PaymentMethod = z.enum([
+  'card',
+  'apple-pay',
+  'google-pay',
+  'paypal',
+])
+export type PaymentMethod = z.output<typeof PaymentMethod>
+
 const hasAny = (m: Record<string, unknown[] | string | true | undefined>) =>
   Object.values(m).some((v) => v === true || (v !== undefined && v.length > 0))
 
@@ -70,8 +82,9 @@ export const ExcludeSchema = z
     categories: z.array(CategoryId).optional(),
     merchants: z.array(KebabId).optional(),
     mccs: z.array(Mcc).optional(),
+    payment: z.array(PaymentMethod).optional(),
   })
-  .refine(hasAny, 'exclude needs categories, merchants or mccs')
+  .refine(hasAny, 'exclude needs categories, merchants, mccs or payment')
 
 export const RuleSchema = z
   .strictObject({
@@ -90,6 +103,7 @@ export const RuleSchema = z
       .strictObject({
         membership: KebabId.optional(),
         activation: z.boolean().optional(),
+        payment: PaymentMethod.optional(),
       })
       .optional(),
     valid_from: IsoDate.optional(),
