@@ -2,6 +2,17 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.04.5
+
+First-year rates, as `intro_rates` on the card, applied when the wallet card's `opened` date (or its welcome bonus's) falls in the window:
+
+| Card                                      | First-year rate                                                                                                              | Source                                                                                                                                                                    |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `discover-it-cash-back`                   | Cashback Match: every rate doubled for the first 365 days, past caps included                                                | [Discover it card page](https://www.discover.com/credit-cards/cash-back/it-card/), [Cashback Match terms](https://disclosures.capitalone.com/disclosure.42300.en-US.html) |
+| `bank-of-america-customized-cash-rewards` | An extra 3% in the choice category for 365 days, inside the $2,500 quarterly cap, with no BofA Rewards bonus on the extra 3% | [Customized Cash terms](https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/)                                                                       |
+
+Without an opening date, both rank at their standard rates.
+
 ## 2026.11.04.4
 
 The merchant directory grows from 399 to 640 entries (241 added), so each gets its own `/best/<store>` page. Names come from [NRF's 2025 Top 100 Retailers](https://nrf.com/research-insights/top-retailers/top-100-retailers/top-100-retailers-2025-list), the issuers' own merchant lists below, and well-known regional and national chains in each category; no merchant data was copied from another directory. No card rules or rates changed.
