@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.04.6
+
+`amex-blue-cash-preferred`'s 6% U.S. streaming rule now covers AMC+, BritBox, iHeartRadio, Kindle Unlimited, MGM+ and YouTube Music Premium, all named on Amex's [Select U.S. Streaming Subscriptions list](https://www.americanexpress.com/us/content/rewards-info/retail.html) (read 2026-11-04). They joined the merchant directory in 2026.11.04.4.
+
 ## 2026.11.04.5
 
 First-year rates, as `intro_rates` on the card, applied when the wallet card's `opened` date (or its welcome bonus's) falls in the window:
