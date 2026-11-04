@@ -56,6 +56,19 @@ milestones:
     rewards:
       - a free night at IHG hotels (up to 50,000 points)
     note: 'Use it within 12 months.'
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: instacart
+    match: { merchants: [instacart] }
+    amount: 10
+    period: month
+    enroll: true
+    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Through December 31, 2027."
+  - id: expensify
+    match: { merchants: [expensify] }
+    amount: 100
+    period: calendar_year
+    note: 'Bought directly from Expensify on expensify.com or in its app, applied automatically.'
 evidence:
   - rule: base_rate
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
@@ -117,6 +130,19 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65355.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: instacart
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'Receive a $10 Instacart credit monthly for purchases made directly through Instacart'
+  - rule: instacart
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'Active Instacart+ membership is required to receive your $10 monthly credit.'
+  - rule: expensify
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'up to a maximum accumulation of $100 in a calendar year'
+  - rule: expensify
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'purchases made directly with Expensify through expensify.com and the Expensify app'
 todo:
   - "Starting January 1, 2027, $50,000 of purchases in a calendar year earns Diamond Elite status. It isn't listed as a milestone yet, because a milestone has no start date."
-  - The $100 airline statement credit and the up to $100 yearly Expensify credit aren't modeled.
+  - The $100 airline statement credit (after $250 on flights bought directly each calendar year) isn't modeled.
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

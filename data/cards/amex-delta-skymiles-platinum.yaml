@@ -42,6 +42,25 @@ rules:
     rate: 2
     geography: us_only
     note: Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: resy
+    match: { merchants: [resy] }
+    amount: 10
+    period: month
+    enroll: true
+    note: 'U.S. restaurants that take Resy reservations, and purchases on Resy.com, in the Resy app or through Resy Pay.'
+  - id: rideshare
+    match: { merchants: [uber, lyft, curb, alto] }
+    amount: 10
+    period: month
+    enroll: true
+    note: 'U.S. rides with Uber, Lyft, Curb or Alto.'
+  - id: delta-stays
+    match: { merchants: [delta-stays] }
+    amount: 150
+    period: calendar_year
+    note: 'A new prepaid hotel or vacation rental booked on Delta Stays (delta.com/stays). Not resort, property or cancellation fees.'
 evidence:
   - rule: base_rate
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
@@ -112,9 +131,22 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'
+  - rule: resy
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'can earn up to $10 in statement credits each month when the Basic Card'
+  - rule: rideshare
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'Enrolled Basic Card Members can earn up to $10 in statement credits per month each year'
+  - rule: rideshare
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'rideshare services: Uber, Lyft, Curb, and Alto'
+  - rule: delta-stays
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'can earn up to $150 in statement credits per calendar year when a Basic Card'
 todo:
   - The welcome offer's $300 statement credit (same $4,000 spend as the miles) isn't counted, since an offer is either miles or dollars.
   - The welcome offer ends 11/04/2026; re-check the card page for the next one.
   - MQD Boost ($1 Medallion Qualification Dollar per $20 of purchases each calendar year) can't be expressed, since it's a second per-dollar currency, not miles and not a one-time spend total.
   - Not tied to spending, so not modeled as milestones the $2,500 MQD Headstart each Medallion Qualification Year and the Companion Certificate each year after renewal.
-  - Not modeled (statement credits and perks, not miles per dollar) the $150 Delta Stays credit, the $120 rideshare credit and $120 Resy credit (enrollment required), 20% back on Delta in-flight food and drinks, and TakeOff 15 (15% off Delta award flights).
+  - Not modeled (statement credits and perks, not miles per dollar) 20% back on Delta in-flight food and drinks, and TakeOff 15 (15% off Delta award flights).
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'

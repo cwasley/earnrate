@@ -64,9 +64,28 @@ rules:
       }
     rate: 2
     note: Prepaid car rentals, cruises and prepaid Airbnb stays booked through AmexTravel.com or the Amex Travel app.
-# Not modeled: the $240 flexible business credit, the ChatGPT Business,
-# Squarespace and Walmart+ credits, and the Venue Collection, which are
-# statement credits rather than points.
+# Not modeled: the $240 flexible business credit (Grubhub and UPS.com plus
+# the office supply store category, which a credit can't mix) and the Venue
+# Collection (10% back, not a fixed amount).
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: chatgpt-business
+    match: { merchants: [chatgpt] }
+    amount: 300
+    period: calendar_year
+    enroll: true
+    note: 'ChatGPT Business bought directly from OpenAI in the U.S.'
+  - id: squarespace
+    match: { merchants: [squarespace] }
+    amount: 150
+    period: calendar_year
+    enroll: true
+    note: 'Bought directly from Squarespace on squarespace.com or acuityscheduling.com.'
+  - id: walmart-plus
+    match: { merchants: [walmart-plus] }
+    amount: 12.95
+    period: month
+    note: 'One Walmart+ monthly membership fee a month, plus its tax. Not annual memberships, Plus Ups or Walmart Business+.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -129,6 +148,22 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'
+  - rule: chatgpt-business
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'Each Card Account is eligible for up to $300 in statement credits per calendar year.'
+  - rule: chatgpt-business
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'Valid only on purchases of ChatGPT Business made directly with OpenAI'
+  - rule: squarespace
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'Each Card Account is eligible for up to $150 in statement credits per calendar year.'
+  - rule: squarespace
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'Valid only on purchases made directly with Squarespace on squarespace.com or acuityscheduling.com'
+  - rule: walmart-plus
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'statement credit for one Walmart+ monthly membership fee (up to $12.95 plus applicable taxes)'
 todo:
   - 'Software and cloud system providers count toward the electronics category, but earnrate has no software or cloud category, so only electronics stores are modeled.'
   - "From February 17, 2027, advertising counts only when bought directly from Meta, Google, Amazon, Microsoft, GoDaddy and Yelp, and wireless only from Verizon, AT&T, T-Mobile, Frontier, Comcast, Charter, Spectrum Mobile, UScellular, Optimum, Ultra Mobile and Mint Mobile. earnrate has no way to limit a category to named merchants from a date, so this isn't modeled yet."
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'

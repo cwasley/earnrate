@@ -39,9 +39,22 @@ rules:
     exclude: { merchants: [dodger-stadium, bellagio] }
     rate: 3
     note: 6x during Citi Nights (purchases authorized Friday 6 PM to Saturday 6 AM ET and Saturday 6 PM to Sunday 6 AM ET); earnrate can't see the time of a purchase, so this models the 3x rate. Includes cafes, bars, lounges, fast food, takeout and restaurant delivery services. Excludes bakeries, caterers and restaurants inside another business (hotels, stores, stadiums, grocery stores, warehouse clubs).
-# Not modeled: statement credits (hotel benefit, Splurge Credit, Blacklane, Global Entry/TSA PreCheck).
+# Not modeled: the Splurge Credit (brands you pick) and the Global Entry/TSA PreCheck credit.
 todo:
   - Citi Nights 6x at restaurants depends on the authorization time, which the schema can't express. Modeled at 3x.
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: blacklane
+    match: { merchants: [blacklane] }
+    amount: 100
+    period: half_year
+    note: 'Blacklane chauffeur bookings: up to $100 from January through June and $100 from July through December.'
+  - id: hotel
+    match: { merchants: [citi-travel-hotels] }
+    amount: 300
+    period: calendar_year
+    note: 'Once a year, $300 off one hotel stay of 2 nights or more booked on cititravel.com, before taxes and fees. It applies to one stay, not split across several.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -83,3 +96,9 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
     quote: 'Fee for foreign purchases - None'
+  - rule: blacklane
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: 'Earn up to $100 on Blacklane purchases January through June and up to $100 July through December.'
+  - rule: hotel
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: 'Once per calendar year, you can enjoy $300 off a single hotel stay of 2 nights or more'

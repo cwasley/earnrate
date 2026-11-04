@@ -61,6 +61,13 @@ rules:
     channel: online
     geography: us_only
     note: U.S. merchants selling physical goods, paid on their own website or app. Not restaurants, supermarkets, gas, car dealers, travel, entertainment or services. Online marketplaces with multiple retailers and third-party payment accounts don't count, nor do orders paid in store, in-store mobile wallet, phone or mail orders, or buy-now-pay-later. Amex's rewards-info page names Amazon.com and Walmart.com as online retailers, but these terms also exclude online marketplaces with multiple retailers, so Amazon Marketplace sellers may not earn 4x.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: hilton
+    match: { merchants: [hilton] }
+    amount: 50
+    period: quarter
+    note: 'Bookings made directly with Hilton, and incidental charges put on the room, at any property in the Hilton portfolio. Not through a travel website.'
 evidence:
   - rule: base_rate
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
@@ -134,6 +141,12 @@ evidence:
   - rule: spend-40k
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-surpass/
     quote: 'after you spend $40,000 in eligible purchases on your Card in a calendar year.'
+  - rule: hilton
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'up to a total of $50 in statement credits each calendar quarter'
+  - rule: hilton
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'eligible purchases charged directly with a property within the Hilton portfolio'
 milestones:
   - id: spend-15k
     spend: 15000
@@ -148,6 +161,6 @@ milestones:
       - Hilton Honors Diamond status
     note: Basic Card Member only, though Additional Card purchases count. Calendar year regardless of when the account opened. Diamond lasts through the end of the next calendar year.
 todo:
-  - The $200 Hilton credit (up to $50 in statement credits each calendar quarter on purchases made directly with a Hilton property) isn't modeled.
   - Complimentary Hilton Honors Gold status and National Car Rental Emerald Club Executive status (with enrollment) aren't modeled.
   - The welcome offer's Free Night Reward isn't valued; a welcome offer holds only points.
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'

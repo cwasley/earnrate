@@ -47,6 +47,26 @@ milestones:
     note: "One a calendar year. It posts to MileagePlus within 6-8 weeks and expires 12 months after it's issued."
 todo:
   - United Card Events from Chase also earn 3x; no merchant exists for them, so they aren't modeled.
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: instacart
+    match: { merchants: [instacart] }
+    amount: 10
+    period: month
+    enroll: true
+    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Through December 31, 2027."
+  - id: rideshare
+    match: { categories: [transit.rideshare] }
+    amount: 5
+    period: month
+    enroll: true
+    note: 'Rideshare rides. Opt in each year.'
+  - id: jsx
+    match: { merchants: [jsx] }
+    amount: 100
+    period: cardmember_year
+    note: 'Flights booked directly with JSX.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: annual_fee
@@ -94,3 +114,15 @@ evidence:
   - rule: spend-20k
     url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
     quote: 'Earn a 10,000-mile award flight discount after spending $20,000 each calendar year'
+  - rule: instacart
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
+    quote: 'you can receive one $10 credit in your Instacart account each month'
+  - rule: rideshare
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
+    quote: 'receive up to $5 back as a statement credit each month on rideshare purchases'
+  - rule: rideshare
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
+    quote: 'Yearly opt-in is required.'
+  - rule: jsx
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
+    quote: 'Get up to $100 back as a statement credit each anniversary year when you book flights directly with JSX'

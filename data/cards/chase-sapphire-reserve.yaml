@@ -18,10 +18,10 @@ welcome_offer:
   spend: 6000
   months: 3
   note: 'Chase: "This credit card is unavailable to you if you currently have this card open. The new cardmember bonus may not be available to you if you previously held this card or received a new cardmember bonus for this card." Chase may also weigh how many cards you''ve opened and closed.'
-# Not modeled on purpose: the $300 travel credit, The Edit credit, dining,
-# StubHub, Lyft and Peloton statement credits, and the $75,000-spend benefits.
-# They're credits or perks, not earn rates. Purchases covered by the travel
-# credit or The Edit credit earn no points.
+# Not modeled: The Edit credit (per booking), the Exclusive Tables dining
+# credit (restaurants in an OpenTable program), DoorDash promos and the
+# $75,000-spend benefits. Purchases covered by the travel credit or The Edit
+# credit earn no points.
 rules:
   - id: chase-travel
     match: { merchants: [chase-travel] }
@@ -58,6 +58,30 @@ milestones:
       - up to $500 in Southwest credits on Chase Travel
       - up to $250 in credits at The Shops at Chase
     note: 'For the primary cardmember. Each lasts the rest of that calendar year and all of the next (Explorist through the following February). A-List needs your Rapid Rewards number linked on Chase.com.'
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: travel
+    match: { categories: [travel] }
+    amount: 300
+    period: cardmember_year
+    note: "Anything in Chase's travel category, applied automatically; earnrate matches its travel purchases, not the trains, buses, taxis, tolls and parking Chase also counts. The purchases it covers earn no points. The year runs from the account anniversary (Chase counts to the first statement after it)."
+  - id: stubhub
+    match: { merchants: [stubhub, viagogo] }
+    amount: 150
+    period: half_year
+    enroll: true
+    note: 'StubHub and viagogo, through December 31, 2027. Activate once on chase.com.'
+  - id: lyft-credit
+    match: { merchants: [lyft] }
+    amount: 10
+    period: month
+    note: 'A $10 Lyft credit in the app each month, through September 30, 2027, once the card is added to Lyft. Rides only, not memberships, fees, tips or taxes.'
+  - id: peloton-credit
+    match: { merchants: [peloton-membership] }
+    amount: 10
+    period: month
+    enroll: true
+    note: 'Peloton memberships (All-Access, Rental, App+, Guide, App One, Strength+), through December 31, 2027. Activate once on chase.com.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -126,5 +150,21 @@ evidence:
   - rule: spend-75k
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: '$75,000 Spend Benefit – $250 Credit for The Shops at Chase'
+  - rule: travel
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'A statement credit will be automatically applied to your account for purchases made in the travel category'
+  - rule: travel
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'any purchases that qualify for the $300 Annual Travel Credit'
+  - rule: stubhub
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'with StubHub and viagogo up to a maximum accumulation of $150 in statement credits'
+  - rule: lyft-credit
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'will receive a $10 Lyft credit each calendar month through 9/30/2027'
+  - rule: peloton-credit
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'qualifying Peloton Membership purchases up to a monthly maximum of $10'
 todo:
   - "peloton: the $5,000 limit runs across the whole offer (4/1/2025 to 12/31/2027), which no cap period can express, and the $150 minimum per purchase isn't modeled."
+  - "Chase's terms say purchases the $300 travel credit covers earn no points, but earnrate counts the card's rate on the whole purchase with the credit on top (an engine gap). For its other credits the terms don't say, and they're modeled the same way."

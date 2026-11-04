@@ -48,6 +48,23 @@ rules:
     match: { merchants: [capital-one-entertainment] }
     rate: 5
     note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales and tickets bought directly from Capital One Hall or Capital One Arena are excluded.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: capital-one-business-travel
+    match:
+      {
+        merchants:
+          [
+            capital-one-business-travel,
+            capital-one-business-travel-hotels,
+            capital-one-business-travel-vacation-rentals,
+            capital-one-business-travel-car-rentals,
+            capital-one-business-travel-flights,
+          ],
+      }
+    amount: 300
+    period: cardmember_year
+    note: 'A credit in Capital One Business Travel, used at checkout and good until the next account anniversary. The part it pays for earns no miles.'
 evidence:
   - rule: base_rate
     url: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
@@ -91,7 +108,17 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
     quote: 'Pay zero foreign transaction fees on purchases made outside of the United States'
+  - rule: capital-one-business-travel
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: 'will receive a $300 Capital One Business Travel credit'
+  - rule: capital-one-business-travel
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: 'Each annual Credit will expire on the next account open date anniversary.'
+  - rule: capital-one-business-travel
+    url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    quote: 'Rewards will not be earned on the Credit.'
 todo:
   - "The welcome offer's second tier (another 150,000 miles and a $1,000 Capital One Business Travel credit after $120,000 in the first 4 months) isn't modeled: a welcome offer has one spend threshold."
-  - Not modeled (credits and perks, not miles per dollar) the $300 annual Capital One Business Travel credit, the 10,000-mile anniversary bonus, the $120 Global Entry/TSA PreCheck credit and lounge access.
+  - Not modeled (credits and perks, not miles per dollar) the 10,000-mile anniversary bonus, the $120 Global Entry/TSA PreCheck credit and lounge access.
   - The rates disclosure lists no foreign transaction fee in its fee table; the 0 comes from the card page's "Pay zero foreign transaction fees".
+  - "Capital One's terms say rewards aren't earned on the part of a purchase the travel credit pays for, but earnrate counts the card's rate on the whole purchase with the credit on top (an engine gap)."

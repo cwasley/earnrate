@@ -60,6 +60,31 @@ milestones:
     note: 'Premier Gold status unlocks it too. It lasts the rest of that calendar year and all of the next.'
 todo:
   - United Card Events from Chase also earn 5x; no merchant exists for them, so they aren't modeled.
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: instacart
+    match: { merchants: [instacart] }
+    amount: 20
+    period: month
+    enroll: true
+    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Through December 31, 2027. Each credit applies to one order."
+  - id: rideshare
+    match: { categories: [transit.rideshare] }
+    amount: 12
+    period: month
+    enroll: true
+    note: 'Rideshare rides. Opt in each year. December allows $18 (modeled at $12).'
+  - id: jsx
+    match: { merchants: [jsx] }
+    amount: 200
+    period: cardmember_year
+    note: 'Flights booked directly with JSX.'
+  - id: renowned-hotels-credit
+    match: { merchants: [renowned-hotels-chase-travel] }
+    amount: 200
+    period: cardmember_year
+    note: 'Hotel stays prepaid through Renowned Hotels and Resorts for United cardmembers.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: annual_fee
@@ -122,3 +147,18 @@ evidence:
   - rule: spend-50k
     url: https://creditcards.chase.com/travel-credit-cards/united/united-club
     quote: 'Receive United Club All Access Membership after spending $50,000 in a calendar year'
+  - rule: instacart
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    quote: 'you can receive two (2) $10 credits in your Instacart account each month'
+  - rule: rideshare
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    quote: 'up to $12 back as a statement credit each month from January through November'
+  - rule: rideshare
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    quote: 'Yearly opt-in is required.'
+  - rule: jsx
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    quote: 'Get up to $200 back as a statement credit each anniversary year when you book flights directly with JSX'
+  - rule: renowned-hotels-credit
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    quote: 'Receive up to $200 back in statement credits each anniversary year on hotel accommodations'

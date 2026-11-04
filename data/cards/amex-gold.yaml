@@ -67,8 +67,29 @@ credits:
     period: month
     enroll: true
     note: "At U.S. Dunkin' locations, bought directly: not through a delivery app or caterer, or at a Dunkin' inside an airport or gas station. Not gift cards."
+  - id: uber-cash
+    match: { merchants: [uber, uber-eats] }
+    amount: 10
+    period: month
+    note: 'Uber Cash, added to your Uber account each month once the card is in it. Only on U.S. rides and orders paid with an Amex card; not for a card added through Apple Pay or PayPal.'
+  - id: dining
+    match:
+      {
+        merchants:
+          [grubhub, buffalo-wild-wings, five-guys, cheesecake-factory, wonder],
+      }
+    amount: 10
+    period: month
+    enroll: true
+    note: 'U.S. orders from Grubhub (and Seamless), Buffalo Wild Wings, Five Guys, The Cheesecake Factory and Wonder.'
+  - id: resy
+    match: { merchants: [resy] }
+    amount: 50
+    period: half_year
+    enroll: true
+    note: 'U.S. restaurants that take Resy reservations, and purchases on Resy.com, in the Resy app or through Resy Pay.'
 todo:
-  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits", which may or may not take out benefit statement credits; it doesn''t say. The dunkin credit is modeled as earning the card''s rate on the whole purchase, with the credit on top.'
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -137,3 +158,15 @@ evidence:
   - rule: dunkin
     url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
     quote: "at U.S. Dunkin' locations. Enrollment required."
+  - rule: uber-cash
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'are eligible for $10 in Uber Cash each month'
+  - rule: dining
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'eligible for up to a $10 statement credit per month'
+  - rule: dining
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'Participating partners are Grubhub (including Seamless), Buffalo Wild Wings, Five Guys, The Cheesecake Factory, and Wonder.'
+  - rule: resy
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'eligible for up to $50 in statement credits from January through June'

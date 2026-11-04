@@ -78,6 +78,14 @@ milestones:
     note: 'For the primary cardmember, for the rest of that calendar year and all of the next.'
 todo:
   - 'Through December 31, 2026, the cardmember page creditcards.chase.com/aircanada lists 500 bonus points for each $2,000 spent per calendar month, up to 1,500 a month (+0.25x on the first $6,000). It is not on the product page, and the engine picks one rule rather than stacking, so it is not modeled.'
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: air-canada-credit
+    match: { merchants: [air-canada] }
+    amount: 50
+    period: half_year
+    note: 'Air Canada purchases, applied automatically: up to $50 from January through June and $50 from July through December.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -146,3 +154,9 @@ evidence:
   - rule: spend-75k
     url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
     quote: 'Each calendar year you spend at least $75,000 in purchases on your Chase Air Canada Aeroplan Card account'
+  - rule: air-canada-credit
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'up to a maximum accumulation of $50 in statement credits from January 1 through June 30'
+  - rule: air-canada-credit
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'for qualifying Air Canada purchases made using your Chase Air Canada Aeroplan credit card'

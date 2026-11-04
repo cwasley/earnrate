@@ -46,6 +46,19 @@ milestones:
     rewards:
       - $200 Delta Flight Credit
     note: A Delta eCredit for Delta flights bought on delta.com or with Delta Reservations (also the airfare part of a Delta Vacations package), not bag fees, upgrades or other fees. It expires one year after it's issued. Additional Card Members' purchases count; gift cards, prepaid cards and cash equivalents don't.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: delta-stays
+    match: { merchants: [delta-stays] }
+    amount: 100
+    period: calendar_year
+    note: 'A new prepaid hotel or vacation rental booked on Delta Stays (delta.com/stays). Not resort, property or cancellation fees.'
+  - id: rideshare
+    match: { merchants: [uber, lyft, curb, alto] }
+    amount: 10
+    period: month
+    enroll: true
+    note: 'U.S. rides with Uber, Lyft, Curb or Alto. Enrollment opens 12 months after the account opens.'
 evidence:
   - rule: base_rate
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
@@ -116,7 +129,20 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'
+  - rule: delta-stays
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
+    quote: 'can earn up to $100 in statement credits per calendar year when a Basic Card'
+  - rule: rideshare
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
+    quote: 'Enrolled Basic Card Members can earn up to $10 in statement credits per month each year'
+  - rule: rideshare
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
+    quote: 'is available starting 12 months from the date the Card Account is opened'
+  - rule: rideshare
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
+    quote: 'rideshare services: Uber, Lyft, Curb, and Alto'
 todo:
   - The welcome offer's $250 statement credit (same $3,000 spend as the miles) isn't counted, since an offer is either miles or dollars.
   - The welcome offer ends 11/04/2026; re-check the card page for the next one.
-  - Not modeled (statement credits and perks, not miles per dollar) the $100 Delta Stays credit, the $120 rideshare credit (after the first renewal, enrollment required), 20% back on Delta in-flight food and drinks, and TakeOff 15 (15% off Delta award flights).
+  - Not modeled (statement credits and perks, not miles per dollar) 20% back on Delta in-flight food and drinks, and TakeOff 15 (15% off Delta award flights).
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'

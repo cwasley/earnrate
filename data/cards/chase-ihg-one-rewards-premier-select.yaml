@@ -48,6 +48,16 @@ milestones:
     rewards:
       - a free night at IHG hotels (up to 60,000 points)
     note: 'A second free night on top of the Anniversary Free Night; use it within 12 months.'
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: instacart
+    match: { merchants: [instacart] }
+    amount: 10
+    period: month
+    enroll: true
+    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Through December 31, 2027."
+todo:
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
 evidence:
   - rule: base_rate
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
@@ -91,3 +101,9 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65336.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: instacart
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'Receive a $10 Instacart credit monthly for purchases made directly through Instacart'
+  - rule: instacart
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'Active Instacart+ membership is required to receive your $10 monthly credit.'
