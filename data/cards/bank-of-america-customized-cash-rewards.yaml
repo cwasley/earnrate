@@ -1,6 +1,7 @@
 id: bank-of-america-customized-cash-rewards
 name: Bank of America Customized Cash Rewards Credit Card
 short_name: BofA Customized Cash
+color: '#c8102e'
 issuer: bank-of-america
 # Bank of America's terms carry only the Visa and Visa Signature trademark
 # notice, so the network is Visa.

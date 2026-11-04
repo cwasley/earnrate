@@ -1,6 +1,7 @@
 id: chase-southwest-plus
 name: Southwest Rapid Rewards Plus Credit Card
 short_name: Southwest Plus
+color: '#3c6fc4'
 issuer: chase
 network: visa
 currency: southwest-rapid-rewards

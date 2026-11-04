@@ -1,12 +1,12 @@
-// Daily request counts for the hosted server, from its Analytics Engine
-// tally (method and tool names only; nothing about what was asked).
+// What got used, from earnrate's own tallies: the site's event counts and
+// the pass signer's (earnrate_site_usage, by device kind), the hosted
+// server's (earnrate_mcp_usage, by kind of app), plus npm and Desktop
+// bundle downloads. Counts of actions, never people.
 // Needs a Cloudflare API token with "Account Analytics: Read", from
 // CLOUDFLARE_API_TOKEN or the macOS Keychain item earnrate-cloudflare-analytics,
-// and the account ID from CLOUDFLARE_ACCOUNT_ID.
+// and the account ID from CLOUDFLARE_ACCOUNT_ID (or the token's only account).
 // Usage: yarn usage [days]   (default 7)
 import { execFileSync } from 'node:child_process'
-
-const DATASET = 'earnrate_mcp_usage'
 
 function keychain(service: string): string | undefined {
   if (process.platform !== 'darwin') return undefined
@@ -23,13 +23,13 @@ function keychain(service: string): string | undefined {
 
 const token =
   process.env.CLOUDFLARE_API_TOKEN ?? keychain('earnrate-cloudflare-analytics')
-const account = process.env.CLOUDFLARE_ACCOUNT_ID
-if (!token || !account) {
+if (!token) {
   console.error(
-    'Set CLOUDFLARE_ACCOUNT_ID, and CLOUDFLARE_API_TOKEN (or the Keychain item earnrate-cloudflare-analytics) to a token with Account Analytics: Read.',
+    'Set CLOUDFLARE_API_TOKEN (or the Keychain item earnrate-cloudflare-analytics) to a token with Account Analytics: Read.',
   )
   process.exit(2)
 }
+const auth = { authorization: `Bearer ${token}` }
 
 const days = Number(process.argv[2] ?? 7)
 if (!Number.isInteger(days) || days < 1 || days > 90) {
@@ -37,49 +37,134 @@ if (!Number.isInteger(days) || days < 1 || days > 90) {
   process.exit(2)
 }
 
+async function accountId(): Promise<string> {
+  if (process.env.CLOUDFLARE_ACCOUNT_ID)
+    return process.env.CLOUDFLARE_ACCOUNT_ID
+  const res = await fetch('https://api.cloudflare.com/client/v4/accounts', {
+    headers: auth,
+  })
+  const body = (await res.json()) as { result?: { id: string }[] }
+  const only = body.result?.length === 1 ? body.result[0]?.id : undefined
+  if (!only) {
+    console.error('Set CLOUDFLARE_ACCOUNT_ID.')
+    process.exit(2)
+  }
+  return only
+}
+const account = await accountId()
+
+type Row = { label: string; kind: string; count: number }
+
 // Rows are sampled at high volume, so counts sum the sample interval.
-const sql = `
-  SELECT toStartOfDay(timestamp) AS day, blob1 AS label, SUM(_sample_interval) AS count
-  FROM ${DATASET}
-  WHERE timestamp > NOW() - INTERVAL '${String(days)}' DAY
-  GROUP BY day, label
-  ORDER BY day DESC, count DESC
-  FORMAT JSON`
+async function tally(dataset: string): Promise<Row[]> {
+  const sql = `
+    SELECT blob1 AS label, blob2 AS kind, SUM(_sample_interval) AS count
+    FROM ${dataset}
+    WHERE timestamp > NOW() - INTERVAL '${String(days)}' DAY
+    GROUP BY label, kind
+    FORMAT JSON`
+  const res = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${account}/analytics_engine/sql`,
+    { method: 'POST', headers: auth, body: sql },
+  )
+  if (!res.ok) {
+    // A dataset appears with its first write.
+    if (
+      res.status === 422 &&
+      /unknown table|doesn't exist/i.test(await res.text())
+    )
+      return []
+    throw new Error(`Cloudflare answered ${String(res.status)} for ${dataset}`)
+  }
+  const { data } = (await res.json()) as {
+    data: { label: string; kind: string; count: string | number }[]
+  }
+  return data.map((r) => ({
+    label: r.label,
+    kind: r.kind === '' ? 'unknown' : r.kind,
+    count: Number(r.count),
+  }))
+}
 
-const response = await fetch(
-  `https://api.cloudflare.com/client/v4/accounts/${account}/analytics_engine/sql`,
-  { method: 'POST', headers: { authorization: `Bearer ${token}` }, body: sql },
+function table(title: string, rows: Row[], kinds: string[]) {
+  console.log(`\n${title}`)
+  if (rows.length === 0) {
+    console.log('  nothing counted yet')
+    return
+  }
+  const seen = [...new Set([...kinds, ...rows.map((r) => r.kind)])].filter(
+    (k) => rows.some((r) => r.kind === k),
+  )
+  const labels = [...new Set(rows.map((r) => r.label))]
+  const get = (label: string, kind?: string) =>
+    rows
+      .filter(
+        (r) => r.label === label && (kind === undefined || r.kind === kind),
+      )
+      .reduce((n, r) => n + r.count, 0)
+  labels.sort((a, b) => get(b) - get(a))
+  const cell = (s: string) => s.padStart(11)
+  console.log(`  ${''.padEnd(36)}${cell('total')}${seen.map(cell).join('')}`)
+  for (const label of labels)
+    console.log(
+      `  ${label.padEnd(36)}${cell(String(get(label)))}${seen.map((k) => cell(String(get(label, k)))).join('')}`,
+    )
+}
+
+console.log(
+  `earnrate usage, last ${String(days)} days. Counts of actions, not people.`,
 )
-if (!response.ok) {
-  console.error(
-    `Cloudflare answered ${String(response.status)}: ${await response.text()}`,
-  )
-  process.exit(1)
-}
-const { data } = (await response.json()) as {
-  data: { day: string; label: string; count: string | number }[]
-}
+const site = await tally('earnrate_site_usage')
+const devices = ['iphone', 'android', 'desktop', 'other']
+table(
+  'earnrate.dev (each at most once per visit)',
+  site.filter((r) => !r.label.startsWith('pass-')),
+  devices,
+)
+table(
+  'Apple Wallet passes (pass.earnrate.dev)',
+  site.filter((r) => r.label.startsWith('pass-')),
+  devices,
+)
+const server = await tally('earnrate_mcp_usage')
+table(
+  'Hosted server (Claude, ChatGPT and other apps; "check" is our live check)',
+  server.filter(
+    (r) =>
+      r.label.startsWith('tool:') ||
+      r.label.startsWith('tool-error:') ||
+      r.label.startsWith('wallet-') ||
+      r.label.startsWith('error:'),
+  ),
+  ['claude', 'chatgpt', 'local', 'other', 'check', 'signed-out', 'unknown'],
+)
 
-if (data.length === 0) {
-  console.log(`No requests in the last ${String(days)} days.`)
-  process.exit(0)
-}
-const byDay = new Map<string, { label: string; count: number }[]>()
-for (const row of data) {
-  const day = row.day.slice(0, 10)
-  byDay.set(day, [
-    ...(byDay.get(day) ?? []),
-    { label: row.label, count: Number(row.count) },
-  ])
-}
-for (const [day, rows] of byDay) {
-  const tools = rows.filter((r) => r.label.startsWith('tool:'))
-  // A refusal is counted on top of its tool call, not as another request.
-  const refusals = rows.filter((r) => r.label.startsWith('tool-error:'))
-  const total = (list: typeof rows) => list.reduce((n, r) => n + r.count, 0)
+// Public download counts; npm's include mirrors and bots.
+const period = days <= 7 ? 'last-week' : 'last-month'
+try {
+  const npm = (await (
+    await fetch(`https://api.npmjs.org/downloads/point/${period}/earnrate`)
+  ).json()) as { downloads?: number }
   console.log(
-    `${day}  ${String(total(rows) - total(refusals))} requests, ${String(total(tools))} tool calls, ${String(total(refusals))} refused`,
+    `\nnpm downloads (${period}, includes bots): ${String(npm.downloads ?? '?')}`,
   )
-  for (const r of rows)
-    console.log(`  ${r.label.padEnd(32)} ${String(r.count).padStart(6)}`)
+} catch {
+  console.log('\nnpm downloads: unavailable')
 }
+try {
+  const releases = (await (
+    await fetch(
+      'https://api.github.com/repos/cwasley/earnrate/releases?per_page=100',
+    )
+  ).json()) as { assets: { name: string; download_count: number }[] }[]
+  const mcpb = releases
+    .flatMap((r) => r.assets)
+    .filter((a) => a.name.endsWith('.mcpb'))
+    .reduce((n, a) => n + a.download_count, 0)
+  console.log(
+    `Claude Desktop bundle downloads (all releases, all time): ${String(mcpb)}`,
+  )
+} catch {
+  console.log('Claude Desktop bundle downloads: unavailable')
+}
+console.log('Page visits: Cloudflare dashboard → Web Analytics → earnrate.dev')

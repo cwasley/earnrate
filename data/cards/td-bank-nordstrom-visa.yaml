@@ -1,5 +1,6 @@
 id: td-bank-nordstrom-visa
 name: Nordstrom Visa Credit Card
+color: '#2a2a2a'
 issuer: td-bank
 network: visa
 currency: nordy-club

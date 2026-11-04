@@ -992,3 +992,168 @@ input[type='number']::-webkit-outer-spin-button {
   opacity: 0.4;
   cursor: default;
 }
+
+/* earnrate's drawings of cards (CardArt.tsx) */
+.card-art {
+  display: inline-flex;
+  flex: none;
+  line-height: 0;
+}
+
+.card-art svg {
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+.result-top {
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+}
+
+.art-pair {
+  display: inline-flex;
+}
+
+.art-pair .card-art + .card-art {
+  margin-left: -22px;
+  margin-top: 8px;
+}
+
+.held-row {
+  align-items: center;
+}
+
+.held-name,
+.found-name,
+.sheet-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sheet-rows li {
+  align-items: center;
+}
+
+/* The ranking shown before a search */
+.example {
+  margin: 18px 0 0;
+}
+
+.example h3 {
+  font-size: 16px;
+  margin: 0 0 10px;
+}
+
+.example h3 .muted {
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.example-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.example-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.example-list li:last-child {
+  border-bottom: 0;
+}
+
+.example-name {
+  display: grid;
+  min-width: 0;
+}
+
+.example-name .muted {
+  font-size: 13.5px;
+}
+
+.example .more {
+  margin-top: 10px;
+}
+
+/* What to do after an answer */
+.next-steps {
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  font-size: 15px;
+}
+
+.next-steps p {
+  margin: 0;
+}
+
+.next-steps p + p {
+  margin-top: 8px;
+}
+
+.pass-hint {
+  font-size: 14.5px;
+  color: var(--muted);
+  margin: 12px 0 0;
+}
+
+.next-steps .link,
+.pass-hint .link {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.next-steps a {
+  font-weight: 600;
+}
+
+/* On a phone the quick picks scroll sideways in one row, so the example
+   ranking below them is on the first screen. */
+@media (max-width: 639px) {
+  .panel > .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 -18px;
+    padding: 2px 18px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to right, #000 85%, transparent);
+  }
+
+  .panel > .chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .panel > .chips .chip {
+    flex: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .example h3 .muted {
+    display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .sheet-card .card-art {
+    display: none;
+  }
+}

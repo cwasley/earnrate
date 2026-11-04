@@ -1,6 +1,7 @@
 id: amex-marriott-bonvoy-brilliant
 name: Marriott Bonvoy Brilliant American Express Card
 short_name: Bonvoy Brilliant
+color: '#2a2a2e'
 issuer: amex
 network: amex
 currency: marriott-bonvoy

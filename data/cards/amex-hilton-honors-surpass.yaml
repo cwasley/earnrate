@@ -1,6 +1,7 @@
 id: amex-hilton-honors-surpass
 name: Hilton Honors American Express Surpass Card
 short_name: Hilton Honors Surpass
+color: '#9aa3ad'
 issuer: amex
 network: amex
 currency: hilton-honors

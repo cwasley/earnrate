@@ -34,6 +34,7 @@ import {
   words,
   foreignFeeText,
 } from '../src/engine/text.ts'
+import { cardArtSvg, cardColor } from '../src/format/card-art.ts'
 import { cardText } from '../src/format/card-text.ts'
 import type { Card, Rule } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
@@ -227,6 +228,9 @@ function gotchas(r: Exploration): string {
     : `<h2>Good to know</h2><ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`
 }
 
+const art = (cardId: string, width?: number) =>
+  `<span class="card-art">${cardArtSvg(cardColor(catalog, cardId), width)}</span>`
+
 function table(shown: ExploreEntry[]): string {
   const rows = shown
     .map((e, i) => {
@@ -236,7 +240,7 @@ function table(shown: ExploreEntry[]): string {
         lines.push(
           `${pct(upgrade.effectiveReturnPct)} with ${membershipName(upgrade.membership)}`,
         )
-      return `<li><span class="rank">${String(i + 1)}</span><div><strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a></strong> <span class="rate">${pct(e.effectiveReturnPct)}</span><br /><span class="muted">${esc(issuerName(e.issuer))} · ${esc(feeLabel(e.cardId))}</span>${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</div></li>`
+      return `<li><span class="rank">${String(i + 1)}</span>${art(e.cardId)}<div><strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a></strong> <span class="rate">${pct(e.effectiveReturnPct)}</span><br /><span class="muted">${esc(issuerName(e.issuer))} · ${esc(feeLabel(e.cardId))}</span>${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</div></li>`
     })
     .join('')
   return `<ol class="cards">${rows}</ol>`
@@ -669,7 +673,7 @@ function renderCard(
   const description = `${card.name}: ${headline}. ${feeLabel(card.id)}. Every earning rule quoted from ${issuer}'s terms, and the stores where it beats other cards. No affiliate links.`
   const canonical = `${SITE}/cards/${card.id}`
   const body = `
-      <h1>${esc(card.name)}</h1>
+      <div class="card-head">${art(card.id, 112)}<h1>${esc(card.name)}</h1></div>
       <p class="updated">${esc(issuer)} · ${esc(card.business ? 'Business card' : 'Personal card')} · Checked against ${esc(issuer)}'s terms ${esc(shortDate(card.last_verified))}</p>
       <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeLabel(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listed(card.only_at.map((id) => merchantName(id) ?? words(id))))}.` : ''}</p>
       <p><a class="button" href="/#wallet">Add it to your wallet</a></p>
@@ -712,9 +716,12 @@ function renderCardIndex(): string {
     .sort((a, b) => issuerName(a[0]).localeCompare(issuerName(b[0])))
     .map(
       ([issuer, list]) =>
-        `<h2>${esc(issuerName(issuer))}</h2><p class="links">${list
-          .map((c) => `<a href="/cards/${c.id}">${esc(shortName(c.id))}</a>`)
-          .join(' · ')}</p>`,
+        `<h2>${esc(issuerName(issuer))}</h2><ul class="card-grid">${list
+          .map(
+            (c) =>
+              `<li><a href="/cards/${c.id}">${art(c.id, 44)}<span>${esc(c.short_name ?? shortName(c.id))}</span></a></li>`,
+          )
+          .join('')}</ul>`,
     )
     .join('')
   return layout(
@@ -725,7 +732,8 @@ function renderCardIndex(): string {
       <h1>Credit cards earnrate tracks</h1>
       <p class="updated">Updated ${esc(todayWords)}</p>
       <p>Every earning rule for ${String(catalog.cards.length)} U.S. cards, quoted from the issuer's own terms, and where each card beats the others.</p>
-      ${sections}`,
+      ${sections}
+      <p class="muted">The card pictures are earnrate's drawings in each card's color, not the issuers' designs.</p>`,
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',

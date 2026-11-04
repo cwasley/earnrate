@@ -1,6 +1,7 @@
 id: chase-ihg-one-rewards-premier-select
 name: IHG One Rewards Premier Select Credit Card
 short_name: IHG Premier Select
+color: '#2f4f6f'
 issuer: chase
 network: mastercard
 currency: ihg-points

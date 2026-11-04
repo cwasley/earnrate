@@ -1,35 +1,47 @@
 # The banks behind the cards: the name shown for each, and other words people
-# search with ("bofa", "amex"). Every card's `issuer` must be one of these.
+# search with ("bofa", "amex"), and a color for drawing a card that has none
+# of its own. Every card's `issuer` must be one of these.
 
 - id: amex
   name: American Express
+  color: '#2a6db0'
   search: [amex, american express]
 - id: bank-of-america
   name: Bank of America
+  color: '#b5122b'
   search: [bofa, boa, bankofamerica]
 - id: capital-one
   name: Capital One
+  color: '#1d3c6e'
   search: [capitalone]
 - id: chase
   name: Chase
+  color: '#1f4f9c'
 - id: citi
   name: Citi
+  color: '#3b4f66'
   search: [citibank]
 - id: column
   # Column N.A. issues the Bilt card; people know it as Bilt.
   name: Bilt
+  color: '#1a1a1a'
   search: [bilt]
 - id: discover
   name: Discover
+  color: '#e8751a'
   search: [discover it]
 - id: sofi
   name: SoFi
+  color: '#2d2f36'
 - id: td-bank
   name: TD Bank
+  color: '#2f6b3a'
   search: [td]
 - id: usbank
   name: U.S. Bank
+  color: '#3c4655'
   search: [us bank]
 - id: wells-fargo
   name: Wells Fargo
+  color: '#b8333a'
   search: [wf, wellsfargo]

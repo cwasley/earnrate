@@ -301,14 +301,42 @@ describe('the cheat-sheet pass', () => {
     ).toBe(404)
   })
 
-  test('the pass Worker has no storage and no logs', async () => {
+  test('passes are counted by outcome and kind of device, nothing else', async () => {
+    const points: { blobs?: string[] }[] = []
+    const e: PassEnv = {
+      ...env,
+      USAGE: { writeDataPoint: (p) => points.push(p) },
+    }
+    const w = worker()
+    const send = (wallet: string) =>
+      w.fetch(
+        new Request('https://pass.earnrate.dev/', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+            'user-agent':
+              'Mozilla/5.0 (iPhone; CPU iPhone OS 19_1 like Mac OS X) Safari',
+          },
+          body: new URLSearchParams({ wallet }).toString(),
+        }),
+        e,
+      )
+    expect((await send(JSON.stringify(WALLET))).status).toBe(200)
+    expect((await send('not json')).status).toBe(400)
+    expect(points.map((p) => p.blobs)).toEqual([
+      ['pass-made', 'iphone'],
+      ['pass-refused:400', 'iphone'],
+    ])
+  })
+
+  test('the pass Worker has no storage and no logs, only counts', async () => {
     const config = await readFile(
       path.join(ROOT, 'pass/wrangler.jsonc'),
       'utf8',
     )
     expect(config).toContain('"observability": { "enabled": false }')
     expect(config).not.toMatch(
-      /kv_namespaces|durable_objects|d1_databases|r2_buckets|analytics_engine/,
+      /kv_namespaces|durable_objects|d1_databases|r2_buckets/,
     )
   })
 })

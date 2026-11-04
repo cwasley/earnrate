@@ -198,6 +198,8 @@ export const IntroRateSchema = z
     'an intro rate needs multiply or add, not both',
   )
 
+const HexColor = z.string().regex(/^#[0-9a-f]{6}$/)
+
 export const CardSchema = z
   .strictObject({
     id: KebabId,
@@ -205,6 +207,9 @@ export const CardSchema = z
     // A name that fits one line of the Wallet pass's strip (24 characters),
     // for cards whose name is longer: "AAdvantage Platinum".
     short_name: z.string().min(1).max(24).optional(),
+    // The card face's main color, roughly, for earnrate's drawing of the
+    // card. Never the issuer's card art.
+    color: HexColor.optional(),
     issuer: z.string().min(1),
     network: CardNetwork,
     // Merchant ids a store card works at. Required for, and only for, `store`.

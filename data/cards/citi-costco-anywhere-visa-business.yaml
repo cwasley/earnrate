@@ -1,6 +1,7 @@
 id: citi-costco-anywhere-visa-business
 name: Costco Anywhere Visa Business Card by Citi
 short_name: Costco Visa Business
+color: '#3a3e44'
 issuer: citi
 network: visa
 currency: cash

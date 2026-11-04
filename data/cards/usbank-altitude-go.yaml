@@ -1,5 +1,6 @@
 id: usbank-altitude-go
 name: U.S. Bank Altitude Go Visa Signature Card
+color: '#6b7f8f'
 issuer: usbank
 network: visa
 currency: usbank-altitude

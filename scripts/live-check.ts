@@ -102,6 +102,12 @@ async function site() {
         : String(res.status),
     )
   }
+  // The site Worker answers /count; a name it doesn't know is dropped.
+  const count = await fetch(`${SITE}/count`, {
+    method: 'POST',
+    body: 'live-check',
+  })
+  check('earnrate.dev/count', count.status === 204, String(count.status))
 }
 
 // The app itself, in a real browser: it renders an answer and logs no errors.

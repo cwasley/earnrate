@@ -1,5 +1,6 @@
 id: amex-gold
 name: American Express Gold Card
+color: '#d4af6a'
 issuer: amex
 network: amex
 currency: MR

@@ -1,6 +1,7 @@
 id: citi-costco-anywhere-visa
 name: Costco Anywhere Visa Card by Citi
 short_name: Costco Anywhere Visa
+color: '#2f3338'
 issuer: citi
 network: visa
 currency: cash

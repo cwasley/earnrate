@@ -1,5 +1,6 @@
 id: citi-double-cash
 name: Citi Double Cash Card
+color: '#6aa7a8'
 issuer: citi
 network: mastercard
 currency: cash

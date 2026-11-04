@@ -69,6 +69,34 @@ type Grant = { walletId: string; walletKey: string }
 
 export type AuthEnv = { OAUTH_KV: unknown }
 
+// Which kind of app a connection comes from, the only thing usage counts
+// say about who asked. Never an app's own name, which it chooses itself.
+export type AppKind = 'claude' | 'chatgpt' | 'check' | 'local' | 'other'
+export const LIVE_CHECK_CLIENT = 'earnrate live check'
+const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]'])
+
+export function appKind(client: {
+  clientId: string
+  redirectUris: string[]
+  clientName?: string
+}): AppKind {
+  if (client.clientName === LIVE_CHECK_CLIENT) return 'check'
+  const hosts = [client.clientId, ...client.redirectUris].flatMap((u) => {
+    try {
+      return [new URL(u).hostname]
+    } catch {
+      return []
+    }
+  })
+  const under = (domain: string) =>
+    hosts.some((h) => h === domain || h.endsWith(`.${domain}`))
+  if (under('claude.ai') || under('claude.com') || under('anthropic.com'))
+    return 'claude'
+  if (under('chatgpt.com') || under('openai.com')) return 'chatgpt'
+  if (hosts.length > 0 && hosts.every((h) => LOOPBACK.has(h))) return 'local'
+  return 'other'
+}
+
 export type VaultFor<Env> = (env: Env, walletId: string) => VaultApi
 
 // The OAuth library's tokens are "{userId}:{grantId}:{secret}". Only the
@@ -113,7 +141,10 @@ export function challenge(resource: string, invalidToken = false): Response {
   )
 }
 
-export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
+export function makeAuth<Env extends AuthEnv>(
+  vaultFor: VaultFor<Env>,
+  onWalletCreated: (env: Env, kind: AppKind) => void = () => undefined,
+) {
   const server = new OAuthAuthorizationServer<Env>({
     issuer: ORIGIN,
     resources: RESOURCES,
@@ -152,6 +183,26 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
           : null
     }
     return null
+  }
+
+  // Cached per isolate: a client's registration doesn't change.
+  const kinds = new Map<string, AppKind>()
+  async function clientKind(env: Env, clientId: string): Promise<AppKind> {
+    const cached = kinds.get(clientId)
+    if (cached) return cached
+    let kind: AppKind = 'other'
+    try {
+      // A client metadata document's id is its URL; no need to fetch it.
+      const client = /^https:\/\//.test(clientId)
+        ? { clientId, redirectUris: [] }
+        : await server.getOAuthApi(env).lookupClient(clientId)
+      if (client) kind = appKind(client)
+    } catch {
+      // counted as 'other'
+    }
+    if (kinds.size >= 1000) kinds.clear()
+    kinds.set(clientId, kind)
+    return kind
   }
 
   // `clientId` limits it to one app's connections. A token doesn't say
@@ -254,6 +305,7 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
       )
       if (!created)
         return html(errorPage("Couldn't start a wallet. Try again."), 500)
+      onWalletCreated(env, await clientKind(env, approved.request.clientId))
       const { redirectTo } = await connect(
         oauth,
         approved.request,
@@ -343,6 +395,7 @@ export function makeAuth<Env extends AuthEnv>(vaultFor: VaultFor<Env>) {
     authorize,
     changeCode,
     validate,
+    clientKind,
     signOutEverywhere,
     fetch: (request: Request, env: Env, ctx: ExecutionContextLike) =>
       server.fetch(request, env, ctx as never),

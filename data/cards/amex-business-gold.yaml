@@ -1,5 +1,6 @@
 id: amex-business-gold
 name: American Express Business Gold Card
+color: '#c9a55c'
 issuer: amex
 network: amex
 currency: MR

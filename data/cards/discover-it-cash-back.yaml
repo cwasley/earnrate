@@ -1,5 +1,6 @@
 id: discover-it-cash-back
 name: Discover it Cash Back Credit Card
+color: '#e8751a'
 # Discover merged into Capital One, N.A.; the application terms are headed
 # "Discover by Capital One" and served from disclosures.capitalone.com.
 issuer: discover

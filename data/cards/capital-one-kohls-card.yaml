@@ -1,5 +1,6 @@
 id: capital-one-kohls-card
 name: Kohl's Credit Card
+color: '#444a55'
 issuer: capital-one
 network: store
 only_at: [kohls]

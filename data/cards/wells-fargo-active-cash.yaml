@@ -1,5 +1,6 @@
 id: wells-fargo-active-cash
 name: Wells Fargo Active Cash Card
+color: '#b8333a'
 issuer: wells-fargo
 network: visa
 currency: cash

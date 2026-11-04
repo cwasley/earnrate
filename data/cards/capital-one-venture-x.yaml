@@ -1,6 +1,7 @@
 id: capital-one-venture-x
 name: Capital One Venture X Rewards Credit Card
 short_name: Capital One Venture X
+color: '#2b2d31'
 issuer: capital-one
 network: visa # Visa Infinite, per the card page's footnotes
 currency: C1

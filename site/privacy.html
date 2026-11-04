@@ -56,7 +56,7 @@
           only your recovery code or the apps you connect can open it. Here's
           where your data goes, and where it doesn't.
         </p>
-        <p class="updated">Updated November 3, 2026.</p>
+        <p class="updated">Updated November 4, 2026.</p>
       </header>
 
       <section>
@@ -66,7 +66,8 @@
           the spending simulator and your wallet. The card data loads with the
           page, and the stores, amounts, cards and settings you enter are never
           sent anywhere, except when you add the cheat sheet to Apple Wallet
-          (below). Your wallet, your spending amounts and your settings are
+          (below). The site does count which of its parts get used, by name only
+          (also below). Your wallet, your spending amounts and your settings are
           saved in your browser's storage on that device, so they're there next
           time. Deleting the wallet on the page, or clearing the site's data in
           your browser, removes them. An exported wallet file goes only where
@@ -94,13 +95,62 @@
           server works out the cheat sheet, signs the pass so Apple Wallet
           accepts it, and sends it back. It doesn't keep what you sent or the
           pass, request logging is turned off, and Cloudflare limits how many
-          passes one IP address can make per minute.
+          passes one IP address can make per minute. It counts passes made and
+          refused, with the kind of device, and nothing about the pass.
         </p>
         <p>
           The pass then lives in Apple Wallet on your device, under Apple's
           privacy terms. It doesn't check back with earnrate for updates: when
           the quarter ends it expires, and you make a new one.
         </p>
+        <h3>What the site counts</h3>
+        <p>
+          So I can tell which parts of earnrate.dev people use, the page counts
+          the actions below. When you do one, your browser sends earnrate.dev
+          just that action's name, at most once per visit, and the server adds
+          one to a tally along with the kind of device: iPhone, Android,
+          computer or other, worked out from your browser's description of
+          itself, which isn't kept. Nothing else is sent: never a store you
+          searched, a card, an amount or a setting. No cookie, ID or IP address
+          is kept, so the tallies can't tell visitors apart or follow anyone. To
+          count how many people start a wallet, your browser's storage remembers
+          that your first card was already counted; that note never leaves your
+          device. Cloudflare limits how many counts one IP address can send per
+          minute.
+        </p>
+        <ul class="events">
+          <li>
+            Opening a tab: <code>tab-best</code>, <code>tab-spending</code>,
+            <code>tab-wallet</code>
+          </li>
+          <li>
+            Running a search (not what it was): <code>search</code>; opening the
+            example ranking: <code>example-search</code>; changing an amount in
+            My spending: <code>spending-edit</code>
+          </li>
+          <li>
+            In My wallet: <code>wallet-first-card</code> (the first card ever
+            added in this browser), <code>wallet-card-added</code>,
+            <code>wallet-which-card</code> (asking which card to use),
+            <code>wallet-export</code>, <code>wallet-import</code>,
+            <code>cheat-sheet</code> (the cheat sheet was shown),
+            <code>cheat-sheet-image</code> (downloaded as an image),
+            <code>apple-wallet</code> (pressed Add to Apple Wallet)
+          </li>
+          <li>
+            Following a link to set up earnrate elsewhere:
+            <code>cta-claude</code>, <code>cta-after-answer</code>,
+            <code>cta-save-cards</code>, <code>cta-pass-hint</code>,
+            <code>cta-bottom</code>
+          </li>
+          <li>
+            In the setup section: <code>setup-code</code>,
+            <code>setup-desktop</code>, <code>setup-cli</code> (opening those
+            tabs), <code>copy-connector</code>, <code>copy-plugin</code>,
+            <code>copy-cli</code> (copying a command),
+            <code>desktop-download</code>
+          </li>
+        </ul>
       </section>
 
       <section>
@@ -117,11 +167,15 @@
         <p>
           It counts how often each kind of request is made, like "best card for
           a purchase," and how often one fails, by tool or page, without what
-          was asked. To stop abuse, Cloudflare, which runs the server, limits
-          how many requests one IP address can make per minute, and once you're
-          signed in, how many your wallet's connections can make per minute.
-          That limit counts under a one-way hash of the wallet's ID, not the ID
-          itself. earnrate doesn't store IP addresses or those hashes.
+          was asked. Each count also notes the kind of app it came from: Claude,
+          ChatGPT, an app on your own computer, or another, judged from the
+          address the app signs in through. It also counts how many wallets are
+          started and how many are used each day, without saying which. To stop
+          abuse, Cloudflare, which runs the server, limits how many requests one
+          IP address can make per minute, and once you're signed in, how many
+          your wallet's connections can make per minute. That limit counts under
+          a one-way hash of the wallet's ID, not the ID itself. earnrate doesn't
+          store IP addresses or those hashes.
         </p>
       </section>
 
@@ -246,15 +300,15 @@
       <section>
         <h2>This website</h2>
         <p>
-          earnrate.dev is a static site with no cookies and no server code. It
-          counts visits with Cloudflare Web Analytics, a small script that
-          records which page you opened, the site that linked you here, how fast
-          the page loaded, and your country, browser and device type. It doesn't
-          recognize you from one visit to the next. Cloudflare hosts the site
-          and, like any host, handles your IP address and request details to
-          serve the page and block abuse. Its dashboard shows me aggregate
-          counts, not who visited. Logging is off. The sign-in pages on
-          mcp.earnrate.dev don't load the analytics script.
+          earnrate.dev is a static site with no cookies. Its only server code
+          adds up the counts described above. It counts visits with Cloudflare
+          Web Analytics, a small script that records which page you opened, the
+          site that linked you here, how fast the page loaded, and your country,
+          browser and device type. It doesn't recognize you from one visit to
+          the next. Cloudflare hosts the site and, like any host, handles your
+          IP address and request details to serve the page and block abuse. Its
+          dashboard shows me aggregate counts, not who visited. Logging is off.
+          The sign-in pages on mcp.earnrate.dev don't load the analytics script.
         </p>
       </section>
 
@@ -278,6 +332,9 @@
           the server's rate limit counts per wallet as well as per IP address.
           Also November 3: earnrate.dev can add your cheat sheet to Apple
           Wallet, which sends what the pass needs to earnrate's pass server.
+          November 4, 2026: earnrate.dev counts which of its parts are used, by
+          name only; the server's counts note the kind of app and count wallets
+          started and used each day; and the pass server counts passes made.
         </p>
       </section>
 

@@ -1,5 +1,6 @@
 id: chase-sapphire-reserve
 name: Chase Sapphire Reserve
+color: '#1b2a44'
 issuer: chase
 network: visa
 currency: UR

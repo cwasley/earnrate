@@ -1,5 +1,6 @@
 id: chase-ink-business-unlimited
 name: Ink Business Unlimited
+color: '#4a5560'
 issuer: chase
 # The pricing and terms say "By becoming a Visa Business Card cardmember".
 network: visa

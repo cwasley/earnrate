@@ -1,13 +1,29 @@
 {
   "name": "earnrate",
+  // Static files; the Worker runs only for /count (site/worker.ts).
+  "main": "site/worker.ts",
   "compatibility_date": "2026-10-01",
+  "observability": { "enabled": false },
   // earnrate.dev is the only address; no workers.dev or preview copies.
   "workers_dev": false,
   "preview_urls": false,
   "assets": {
     "directory": "./site-dist",
     "not_found_handling": "404-page",
+    "binding": "ASSETS",
+    "run_worker_first": ["/count"],
   },
+  // Event names and device kinds only (site/events.ts).
+  "analytics_engine_datasets": [
+    { "binding": "USAGE", "dataset": "earnrate_site_usage" },
+  ],
+  "ratelimits": [
+    {
+      "name": "LIMITER",
+      "namespace_id": "1104",
+      "simple": { "limit": 60, "period": 60 },
+    },
+  ],
   "routes": [
     { "pattern": "earnrate.dev", "custom_domain": true },
     // Kept attached for its DNS record and certificate. The zone's redirect

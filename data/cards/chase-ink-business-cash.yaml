@@ -1,5 +1,6 @@
 id: chase-ink-business-cash
 name: Ink Business Cash
+color: '#33393f'
 issuer: chase
 network: visa
 currency: cash
