@@ -43,6 +43,13 @@ rules:
     rate: 1.1
     requires: { membership: bank-of-america-small-business-account }
     note: The 1x base rate plus the 10% rewards bonus when the company has an eligible Bank of America small business account.
+milestones:
+  - id: spend-6k
+    spend: 6000
+    period: cardmember_year
+    rewards:
+      - a $99 Companion Fare
+    note: 'Spending by the account anniversary counts; the code arrives within 2 billing cycles after it. $99 plus taxes and fees from $23, for a companion on a Saver or Main Cabin fare within North America on Alaska or Hawaiian. Use it within 12 months.'
 evidence:
   - rule: base_rate
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
@@ -86,6 +93,12 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
     quote: 'International Transaction None Penalty Fee'
+  - rule: spend-6k
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    quote: 'every year that you spend at least $6,000 on purchases with your card'
+  - rule: spend-6k
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
+    quote: 'after $6,000 or more in Net Purchases post to the account billing statement during the card anniversary year'
 todo:
   - 'annual_fee is the $70 per-company fee. Each card also costs $25 a year, which the schema has no field for.'
   - "BofA's rewards page lists Atmos Rewards cards as not eligible for the BofA Rewards tier bonus (in a popup the source check can't read), so the 10% account bonus stands alone."

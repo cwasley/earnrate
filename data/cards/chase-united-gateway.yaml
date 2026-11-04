@@ -30,6 +30,15 @@ rules:
     match: { categories: [transit] }
     rate: 2
     note: Local transit and commuting, including rideshare, taxis, trains, buses, ferries, tolls and parking. Not airlines, car rentals, bike or scooter rentals or car sharing.
+milestones:
+  - id: spend-10k
+    spend: 10000
+    period: calendar_year
+    rewards:
+      - 2 first checked bag certificates
+      - 10% or more off award flights
+      - 6x MileagePlus miles from United on United fares
+    note: "The award discount lasts the rest of that calendar year and all of the next. The 6x miles come from United's MileagePlus program, not the card, so they don't change what the card earns."
 todo:
   - United Card Events from Chase also earn 2x; no merchant exists for them, so they aren't modeled.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
@@ -67,3 +76,12 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65777.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: spend-10k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-gateway
+    quote: 'Earn 2 first standard checked bags after you spend $10,000 in a calendar year.'
+  - rule: spend-10k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-gateway
+    quote: 'Save 10% or more on flights booked with miles after spending $10,000 in a calendar year.'
+  - rule: spend-10k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-gateway
+    quote: "you'll earn 6x miles on fare from United as a MileagePlus member after spending $10,000"

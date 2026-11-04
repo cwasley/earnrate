@@ -38,6 +38,25 @@ rules:
     match: { categories: [dining] }
     rate: 2
     note: Includes takeout and eligible delivery services.
+milestones:
+  - id: spend-20k
+    spend: 20000
+    period: calendar_year
+    rewards:
+      - a 10,000-mile award flight discount
+    note: "Up to two a calendar year. It posts to MileagePlus within 6-8 weeks and expires 12 months after it's issued."
+  - id: spend-40k
+    spend: 40000
+    period: calendar_year
+    rewards:
+      - a second 10,000-mile award flight discount
+    note: "The most a calendar year: two discounts, on up to $40,000 of purchases. It posts to MileagePlus within 6-8 weeks and expires 12 months after it's issued."
+  - id: spend-50k
+    spend: 50000
+    period: calendar_year
+    rewards:
+      - United Club All Access membership
+    note: 'Premier Gold status unlocks it too. It lasts the rest of that calendar year and all of the next.'
 todo:
   - United Card Events from Chase also earn 5x; no merchant exists for them, so they aren't modeled.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
@@ -90,3 +109,15 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC62957.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: spend-20k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    quote: 'Earn a 10,000-mile award flight discount after $20,000 in purchases'
+  - rule: spend-40k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    quote: 'up to two times each calendar year'
+  - rule: spend-40k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    quote: 'on up to a maximum of $40,000 in net purchases per calendar year'
+  - rule: spend-50k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    quote: 'Receive United Club All Access Membership after spending $50,000 in a calendar year'

@@ -46,6 +46,14 @@ rules:
     match: { merchants: [amex-travel-cruises] }
     rate: 2
     note: Cruises booked and charged through AmexTravel.com or by phone with Amex Travel. Payments made directly to the cruise line don't count.
+milestones:
+  - id: spend-75k
+    spend: 75000
+    period: calendar_year
+    rewards:
+      - Centurion Lounge guest access for 2 guests
+      - unlimited Delta Sky Club access
+    note: 'Purchases by additional card members count. Both last the rest of that calendar year, all of the next and through the January 31 after. Sky Club visits still need a same-day Delta flight.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -90,3 +98,9 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'
+  - rule: spend-75k
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'after spending $75,000 or more on eligible purchases on the Platinum Account in a calendar year'
+  - rule: spend-75k
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'the total eligible purchases on the Eligible Platinum Card Account must equal or exceed $75,000'
