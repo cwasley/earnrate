@@ -450,6 +450,17 @@
   domains: [postmates.com]
   category: dining
   note: A delivery app that codes as a restaurant for most issuers. Bonuses limited to buying directly from a restaurant don't count it.
+- id: caviar
+  name: Caviar
+  domains: [trycaviar.com]
+  category: dining
+  note: A delivery app that codes as a restaurant for most issuers. Bonuses limited to buying directly from a restaurant don't count it.
+- id: delivery-com
+  name: Delivery.com
+  aliases: [delivery com]
+  domains: [delivery.com]
+  category: dining
+  note: A delivery app that codes as a restaurant for most issuers. Bonuses limited to buying directly from a restaurant don't count it.
 
 # A dinner theater: food ordered at your seat may land on the same check.
 - id: alamo-drafthouse

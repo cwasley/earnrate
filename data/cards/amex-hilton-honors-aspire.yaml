@@ -1,0 +1,140 @@
+id: amex-hilton-honors-aspire
+name: Hilton Honors American Express Aspire Card
+issuer: amex
+network: amex
+currency: hilton-honors
+last_verified: 2026-11-03
+verified_by: claude
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
+  - https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+  - https://www.americanexpress.com/us/content/rewards-info/retail.html
+  - https://www.americanexpress.com/us/content/rewards-info/travel.html
+base_rate: 3
+annual_fee: 550
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 200000
+  spend: 6000
+  months: 6
+  valid_to: 2027-01-13
+  note: 'Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card or previous versions of these Cards," and may also decline based on your history with balance transfers, as a Card Member, and the number of cards you have opened and closed. Offers may vary between advertisements.'
+rules:
+  - id: hilton-purchases
+    match: { merchants: [hilton] }
+    rate: 14
+    note: Charged directly with a hotel or resort in the Hilton portfolio. Bookings count only through a Hilton-operated reservation channel, not online travel sites; incidentals (hotel restaurants, spas) count when charged to the room and paid with the card at checkout.
+  - id: us-restaurants
+    match: { categories: [dining] }
+    exclude: { merchants: [dodger-stadium, bellagio], mccs: [5813] }
+    rate: 7
+    geography: us_only
+    note: U.S. restaurants, including takeout and delivery. Not restaurants abroad (even U.S.-owned chains), nightclubs or bars, and possibly not restaurants inside hotels, casinos or event venues.
+  - id: flights
+    match: { categories: [travel.flights] }
+    rate: 7
+    note: Scheduled flights charged directly with the airline or through Amex Travel. Charter and private jet flights are excluded.
+  - id: flights-amex-travel
+    match: { merchants: [amex-travel-flights] }
+    rate: 7
+  - id: select-car-rentals
+    match:
+      merchants:
+        [
+          alamo,
+          avis,
+          budget,
+          dollar-car-rental,
+          enterprise,
+          ez-rent-a-car,
+          fox-rent-a-car,
+          hertz,
+          national-car-rental,
+          payless-car-rental,
+          sixt,
+          thrifty,
+        ]
+    rate: 7
+    note: Bought directly from one of Amex's select major car rental companies, at U.S. or international locations. Not through a third party such as an online travel agency, and not as part of a vacation package.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'You will receive 3 Hilton Honors Bonus Points for each dollar of eligible purchases.'
+  - rule: hilton-purchases
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'for a total of 14, for each dollar of eligible purchases charged directly with a property within the Hilton portfolio'
+  - rule: hilton-purchases
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'the booking must be made directly through a reservation channel operated by Hilton'
+  - rule: us-restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'for a total of 7, for each dollar of eligible purchases at the following categories of merchants'
+  - rule: us-restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'You will NOT get additional Points for purchases made at a restaurant owned by a U.S. company'
+  - rule: us-restaurants
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'You will NOT earn additional rewards at bars, nightclubs, convenience stores, supermarkets'
+  - rule: us-restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
+    quote: 'At U.S. restaurants, including takeout and delivery.'
+  - rule: flights
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'airfare on a scheduled flight charged directly with passenger airlines'
+  - rule: flights
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: '(charter flights and private jet flights are excluded)'
+  - rule: flights-amex-travel
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
+    quote: 'Including flights booked directly with airlines or AmexTravel.com'
+  - rule: select-car-rentals
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'purchases directly from select major car rental companies listed at americanexpress.com/rewards-info'
+  - rule: select-car-rentals
+    url: https://www.americanexpress.com/us/content/rewards-info/travel.html
+    quote: 'Car rental companies included are Alamo, Avis, Budget, Dollar, Enterprise, E-Z, Fox, Hertz, National, Payless, Sixt and Thrifty.'
+  - rule: select-car-rentals
+    url: https://www.americanexpress.com/us/content/rewards-info/travel.html
+    quote: 'whether you rent a car from a US or international location.'
+  - rule: select-car-rentals
+    url: https://www.americanexpress.com/us/content/rewards-info/travel.html
+    quote: 'vacation package or purchased through a third party, such as an online travel agent.'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
+    quote: 'The annual fee for the Hilton Honors American Express Aspire Card is $550.'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
+    quote: 'Best Hilton Points Offer Yet: Earn 200,000 Hilton Honors Bonus Points'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'after you spend $6,000 (the "Threshold Amount") on eligible purchases on your Card in your first 6 months'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'Offer ends 01/13/2027 at 11:59 PM MST.'
+  - rule: spend-30k
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'Account reach $30,000 or more in a calendar year.'
+  - rule: spend-60k
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'totaling $60,000 or more in cumulative purchases in that calendar year.'
+milestones:
+  - id: spend-30k
+    spend: 30000
+    period: calendar_year
+    rewards:
+      - Free Night Reward
+    note: Basic Card Member only, though Additional Card purchases count. A standard room for one night, expiring a year after it is issued. Amex says 8-12 weeks to arrive by email.
+  - id: spend-60k
+    spend: 60000
+    period: calendar_year
+    rewards:
+      - A second Free Night Reward
+    note: Another $30,000 on top of the first, $60,000 in the calendar year in all.
+todo:
+  - The Annual Free Night Reward (one each year of Card Membership, no spending needed) isn't modeled.
+  - "Statement credits aren't modeled: the $400 Hilton Resort credit (up to $200 each half year at participating Hilton Resorts), the $200 flight credit (up to $50 each quarter), and the $219 CLEAR+ credit."
+  - The $100 property credit on two-night Waldorf Astoria and Conrad stays booked through the Aspire card site or phone line is an on-property credit, not modeled.
+  - Complimentary Hilton Honors Diamond status and National Car Rental Emerald Club Executive status aren't modeled.

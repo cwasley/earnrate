@@ -1,0 +1,151 @@
+id: amex-hilton-honors-surpass
+name: Hilton Honors American Express Surpass Card
+issuer: amex
+network: amex
+currency: hilton-honors
+last_verified: 2026-11-03
+verified_by: claude
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/card/hilton-honors-surpass/
+  - https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+  - https://www.americanexpress.com/us/content/rewards-info/retail.html
+base_rate: 3
+annual_fee: 150
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 130000
+  spend: 3000
+  months: 6
+  valid_to: 2027-01-13
+  note: 'Plus one Free Night Reward (a standard room, expiring 12 months after it is issued), which earnrate does not value. Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card, the Hilton Honors Amex Ascend Card or previous versions of these Cards," and may also decline based on your history with balance transfers, as a Card Member, and the number of cards you have opened and closed. Offers may vary between advertisements.'
+rules:
+  - id: hilton-purchases
+    match: { merchants: [hilton] }
+    rate: 12
+    note: Charged directly with a hotel or resort in the Hilton portfolio. Bookings count only through a Hilton-operated reservation channel, not online travel sites; incidentals (hotel restaurants, spas) count when charged to the room and paid with the card at checkout.
+  - id: us-restaurants
+    match: { categories: [dining] }
+    exclude: { merchants: [dodger-stadium, bellagio], mccs: [5813] }
+    rate: 6
+    geography: us_only
+    note: U.S. restaurants, including takeout and delivery. Not restaurants abroad (even U.S.-owned chains), nightclubs or bars, and possibly not restaurants inside hotels, casinos or event venues.
+  - id: us-supermarkets
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club, convenience_store] }
+    rate: 6
+    geography: us_only
+    note: Not superstores or warehouse clubs.
+  - id: us-gas
+    match: { categories: [gas] }
+    exclude: { categories: [gas.grocery_store, gas.superstore] }
+    rate: 6
+    geography: us_only
+    note: U.S. gas stations; not gas at superstores or warehouse clubs.
+  - id: us-online-retail
+    match:
+      categories:
+        [
+          online_retail,
+          superstore,
+          drugstore,
+          department_store,
+          clothing,
+          electronics,
+          sporting_goods,
+          home_improvement,
+          furniture,
+        ]
+    rate: 4
+    channel: online
+    geography: us_only
+    note: U.S. merchants selling physical goods, paid on their own website or app. Not restaurants, supermarkets, gas, car dealers, travel, entertainment or services. Online marketplaces with multiple retailers and third-party payment accounts don't count, nor do orders paid in store, in-store mobile wallet, phone or mail orders, or buy-now-pay-later. Amex's rewards-info page names Amazon.com and Walmart.com as online retailers, but these terms also exclude online marketplaces with multiple retailers, so Amazon Marketplace sellers may not earn 4x.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'You will receive 3 Hilton Honors Bonus Points for each dollar of eligible purchases.'
+  - rule: hilton-purchases
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'for a total of 12, for each dollar of eligible purchases charged directly with a property within the Hilton portfolio'
+  - rule: hilton-purchases
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'the booking must be made directly through a reservation channel operated by Hilton'
+  - rule: us-restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'for a total of 6, for each dollar of eligible purchases at the following categories of merchants'
+  - rule: us-restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'excluding superstores and warehouse clubs: restaurants located in the U.S., supermarkets located in the U.S.'
+  - rule: us-restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'You will NOT get additional Points for purchases made at a restaurant owned by a U.S. company'
+  - rule: us-restaurants
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'You will NOT earn additional rewards at bars, nightclubs, convenience stores, supermarkets'
+  - rule: us-restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-surpass/
+    quote: 'At U.S. restaurants, including takeout and delivery.'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'supermarkets located in the U.S. and on gasoline at gas stations located in the U.S.'
+  - rule: us-gas
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-surpass/
+    quote: 'Earn 6X Hilton Honors Bonus Points at U.S. restaurants, U.S. gas stations, and U.S. supermarkets.'
+  - rule: us-gas
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'excluding superstores and warehouse clubs'
+  - rule: us-online-retail
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'for a total of 4, for each dollar of eligible online retail purchases'
+  - rule: us-online-retail
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'from a U.S. retail merchant that sells physical goods or merchandise directly to consumers'
+  - rule: us-online-retail
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'Purchases made through a third-party payment account or on an online marketplace (with multiple retailers)'
+  - rule: us-online-retail
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'You will not receive additional Hilton Honors Bonus Points for purchases made online but paid for in store.'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'Annual Fee $150 Transaction Fees'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-surpass/
+    quote: 'Earn 130,000 Hilton Honors Bonus Points + A Free Night Reward'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'after you spend $3,000 (the "Threshold Amount") on eligible purchases on your Card in your first 6 months'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'Offer ends 01/13/2027 at 23:59 MST.'
+  - rule: spend-15k
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'account reach $15,000 in a calendar year.'
+  - rule: spend-15k
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-surpass/
+    quote: 'Earn a Free Night Reward from Hilton Honors after you spend $15,000 on eligible purchases'
+  - rule: spend-40k
+    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
+    quote: 'You may receive an upgrade to Hilton Honors Diamond status if the total eligible purchases'
+  - rule: spend-40k
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-surpass/
+    quote: 'after you spend $40,000 in eligible purchases on your Card in a calendar year.'
+milestones:
+  - id: spend-15k
+    spend: 15000
+    period: calendar_year
+    rewards:
+      - Free Night Reward
+    note: Basic Card Member only, though Additional Card purchases count. A standard room for one night, expiring a year after it is issued. Amex says 8-12 weeks to arrive by email.
+  - id: spend-40k
+    spend: 40000
+    period: calendar_year
+    rewards:
+      - Hilton Honors Diamond status
+    note: Basic Card Member only, though Additional Card purchases count. Calendar year regardless of when the account opened. Diamond lasts through the end of the next calendar year.
+todo:
+  - The $200 Hilton credit (up to $50 in statement credits each calendar quarter on purchases made directly with a Hilton property) isn't modeled.
+  - Complimentary Hilton Honors Gold status and National Car Rental Emerald Club Executive status (with enrollment) aren't modeled.
+  - The welcome offer's Free Night Reward isn't valued; a welcome offer holds only points.

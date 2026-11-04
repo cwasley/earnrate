@@ -139,12 +139,16 @@
 - id: hilton-honors
   name: Hilton Honors points
   value_cents: 0.5
-  note: TODO Hilton publishes no fixed cash value for points. 0.5¢ is the floor the other hotel currency (IHG) uses.
+  note: Hilton publishes no general cash value for points; its terms say rewards can't be redeemed for cash, and the only fixed rate is for Event Credits on group bills (25,000 points for $50, 0.2¢). TODO pick a value; 0.5¢ is the floor the other hotel currency (IHG) uses.
+  sources:
+    - https://www.hilton.com/en/hilton-honors/terms/
 
 - id: marriott-bonvoy
   name: Marriott Bonvoy points
   value_cents: 0.5
-  note: TODO Marriott publishes no fixed cash value for points. 0.5¢ is the floor the other hotel currency (IHG) uses.
+  note: Marriott publishes no general cash value for points. The only fixed rate is Chase's Pay Yourself Back on the Bonvoy Bold card, $100 for every 12,500 points (0.8¢), limited to airline and Marriott purchases on that card. TODO pick a value; 0.5¢ is the floor the other hotel currency (IHG) uses.
+  sources:
+    - https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
 
 - id: kohls-rewards
   name: Kohl's Rewards

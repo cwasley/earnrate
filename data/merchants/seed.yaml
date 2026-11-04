@@ -1333,6 +1333,34 @@
     category: travel.car_rental,
   }
 - {
+    id: ez-rent-a-car,
+    name: E-Z Rent-A-Car,
+    aliases: [ez rent a car],
+    domains: [e-zrentacar.com],
+    category: travel.car_rental,
+  }
+- {
+    id: fox-rent-a-car,
+    name: Fox Rent A Car,
+    aliases: [fox car rental],
+    domains: [foxrentacar.com],
+    category: travel.car_rental,
+  }
+- {
+    id: payless-car-rental,
+    name: Payless Car Rental,
+    aliases: [payless car],
+    domains: [paylesscar.com],
+    category: travel.car_rental,
+  }
+- {
+    id: sixt,
+    name: Sixt,
+    aliases: [sixt rent a car],
+    domains: [sixt.com],
+    category: travel.car_rental,
+  }
+- {
     id: dollar-car-rental,
     name: Dollar Rent A Car,
     aliases: [dollar car rental],

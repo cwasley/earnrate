@@ -96,6 +96,9 @@ Spend milestones (`milestones:`) have no start date, so one the issuer announces
 
 Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. It would need a per-card credit value with evidence, kept apart from earn rates (credits as rewards stay out of scope, below).
 
+- `amex-hilton-honors-surpass`: up to $200 a year in Hilton credits ($50 a quarter).
+- `amex-hilton-honors-aspire`: Hilton resort, flight, CLEAR+ and Waldorf Astoria or Conrad property credits, plus an Annual Free Night Reward with no spending needed.
+
 ## Not planned
 
 Out of scope per the project's non-goals, or too variable to model as a rate.
