@@ -212,6 +212,11 @@
     aliases: [capital one travel car rental],
     category: travel,
   }
+- id: capital-one-travel-activities
+  kind: booking
+  name: Activity through Capital One Travel
+  aliases: [capital one travel activity]
+  category: travel
 - {
     id: capital-one-travel-flights,
     kind: booking,
