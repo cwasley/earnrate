@@ -264,3 +264,99 @@ ol.cards > li > .card-art {
 .card-grid a:hover {
   border-color: var(--accent);
 }
+
+h3 {
+  font-size: 17px;
+  margin: 22px 0 6px;
+}
+
+.crumbs ol {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 0;
+  padding: 0;
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.crumbs li + li::before {
+  content: '›';
+  margin: 0 8px;
+}
+
+.crumbs a {
+  color: var(--muted);
+}
+
+.quarter-card {
+  margin: 0 0 28px;
+}
+
+.card-head.small {
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.card-head.small h3 {
+  margin: 0;
+  font-size: 19px;
+}
+
+@media (max-width: 479px) {
+  .card-head.small {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* An issuer's definitions next to the others' on wide screens. */
+.issuers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+
+.issuer {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 4px 16px 8px;
+  min-width: 0;
+}
+
+.issuer h2 {
+  margin: 12px 0 6px;
+}
+
+.definition + .definition {
+  border-top: 1px solid var(--line);
+}
+
+.definition ul {
+  font-size: 15px;
+  padding-left: 1.1em;
+}
+
+table.numbers {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+table.numbers th,
+table.numbers td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+table.numbers tr:last-child td {
+  border-bottom: none;
+}

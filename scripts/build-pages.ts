@@ -16,61 +16,52 @@ import { membershipNeeded, paidMemberships } from '../src/engine/memberships.ts'
 import { findMerchant } from '../src/merchants/resolve.ts'
 import { inEffect, localToday } from '../src/engine/periods.ts'
 import {
-  CAP_PERIODS,
   capitalize,
   categoryPhrase,
-  categoryReadsOn,
   currencyName,
   earnText,
   hostname,
   listed,
   longDate,
-  monthYear,
   num,
   pct,
   PICK_PERIODS,
   shortDate,
-  wholeDollars,
   words,
   foreignFeeText,
 } from '../src/engine/text.ts'
-import { cardArtSvg, cardColor } from '../src/format/card-art.ts'
-import { cardText } from '../src/format/card-text.ts'
-import type { Card, Rule } from '../src/schema/card.ts'
+import { cardColor } from '../src/format/card-art.ts'
+import type { Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
 import { milestoneWhat } from '../src/engine/milestones.ts'
 import { changeDates, latest } from './lastmod.ts'
+import { pageContext, type GeneratedPage } from './pages/context.ts'
+import { categoryPageFor, categoryPages } from './pages/categories.ts'
+import {
+  hasCodingNotes,
+  howItCodes,
+  howStoresCodePage,
+} from './pages/coding.ts'
+import { feeWorthKit, feeWorthSection } from './pages/fee-worth.ts'
+import { drawImages, type OgImage } from './pages/og.ts'
+import { quarterlyCardIds, quarterlyPages } from './pages/quarterly.ts'
+import { esc, fitDescription, fitTitle, SITE, slugify } from './pages/site.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
-const OUT = path.join(ROOT, 'site-dist')
-const SITE = 'https://earnrate.dev'
+// Tests build into a temporary directory.
+const OUT = process.env.EARNRATE_PAGES_OUT ?? path.join(ROOT, 'site-dist')
 const TOP = 10
-const ICON = '/favicon.svg?v=2'
 const RELATED = 8
 
 const catalog = await loadCatalog()
 const dataVersion = (await readFile(`${DATA_DIR}VERSION`, 'utf8')).trim()
-const today = localToday()
-const thisMonth = monthYear(today)
-const todayWords = longDate(today)
-
-const esc = (s: string) =>
-  s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-
-const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/['’.+]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-
+const today = process.env.EARNRATE_PAGES_TODAY ?? localToday()
+const ctx = pageContext(catalog, { today, dataVersion })
+const { thisMonth, todayWords, art, layout } = ctx
+const { ruleWhat, ruleWhatRaw, ruleConditions, evidenceFor } = ctx
+const { merchantName, readsOn } = ctx
 const {
   cards,
   shortName,
@@ -78,7 +69,7 @@ const {
   requirementLines,
   membershipName,
   issuerName,
-} = cardText(catalog)
+} = ctx
 
 // Memberships worth calling out on a search page: the ones most people would
 // know, which the site asks about too.
@@ -228,9 +219,6 @@ function gotchas(r: Exploration): string {
     : `<h2>Good to know</h2><ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`
 }
 
-const art = (cardId: string, width?: number) =>
-  `<span class="card-art">${cardArtSvg(cardColor(catalog, cardId), width)}</span>`
-
 function table(shown: ExploreEntry[]): string {
   const rows = shown
     .map((e, i) => {
@@ -284,54 +272,6 @@ function related(page: Page, all: Page[]): string {
     : `<h2>Related</h2><p class="links">${links.join(' · ')}</p>`
 }
 
-function layout(
-  title: string,
-  description: string,
-  canonical: string,
-  body: string,
-  jsonLd: object,
-): string {
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${esc(title)}</title>
-    <meta name="description" content="${esc(description)}" />
-    <meta name="color-scheme" content="light dark" />
-    <link rel="canonical" href="${canonical}" />
-    <meta property="og:type" content="article" />
-    <meta property="og:site_name" content="earnrate" />
-    <meta property="og:url" content="${canonical}" />
-    <meta property="og:title" content="${esc(title)}" />
-    <meta property="og:description" content="${esc(description)}" />
-    <meta property="og:image" content="${SITE}/og.png" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#9a5020" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
-    <link rel="icon" href="${ICON}" />
-    <link rel="stylesheet" href="/pages.css" />
-    <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>
-  </head>
-  <body>
-    <main>
-      <header><a class="wordmark" href="/">earnrate</a></header>
-${body}
-      <aside class="next">
-        <h2>Use it with your own cards</h2>
-        <p><a href="/#wallet">Add your cards on earnrate.dev</a> and it picks the best one anywhere, tracking your spending caps and quarterly picks. It runs in your browser, with no sign-up.</p>
-        <p>Or <a href="/#claude">use it in Claude</a>: ask on claude.ai, in the desktop app, in Claude Code or in Cowork.</p>
-      </aside>
-      <footer>
-        <p>earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(dataVersion)}, updated ${esc(todayWords)}. Rates change, so check the issuer's terms before you apply. Wrong rate? <a href="/support">Tell us</a>.</p>
-        <p><a href="/">earnrate.dev</a> · <a href="/best/">Best card for every store</a> · <a href="/cards/">All cards</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/companies">For companies</a> · <a href="/support">Support</a></p>
-      </footer>
-    </main>
-  </body>
-</html>
-`
-}
-
 const ranked = (r: Exploration) =>
   r.ranked.filter((e) => !isUnverified(e)).slice(0, TOP)
 
@@ -340,14 +280,27 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   const shown = ranked(r)
   const top = shown[0]
   const subject = page.label
-  const title =
-    page.merchant === null
-      ? `Best credit card for ${subject} (${thisMonth}) | earnrate`
-      : `Best credit card to use at ${subject} (${thisMonth}) | earnrate`
-  const description = top
-    ? `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${page.merchant === null ? 'on' : 'at'} ${subject}. Compare ${String(r.ranked.length)} cards by rate, annual fee and conditions, quoted from issuer terms. No affiliate links.`
-    : `Which credit card earns the most ${page.merchant === null ? 'on' : 'at'} ${subject}, compared across ${String(catalog.cards.length)} cards from issuer terms.`
+  const lead = page.merchant === null ? 'for' : 'to use at'
+  const title = fitTitle([
+    `Best credit card ${lead} ${subject} (${thisMonth})`,
+    `Best credit card ${lead} ${subject}`,
+    `Best card ${page.merchant === null ? 'for' : 'at'} ${subject}`,
+  ])
+  const where = page.merchant === null ? 'on' : 'at'
+  const description = fitDescription(
+    top
+      ? [
+          `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}. Compare ${String(r.ranked.length)} cards by rate, annual fee and conditions, quoted from issuer terms. No affiliate links.`,
+          `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}. ${String(r.ranked.length)} cards compared from issuer terms. No affiliate links.`,
+          `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}, of ${String(r.ranked.length)} cards compared.`,
+        ]
+      : [
+          `Which credit card earns the most ${where} ${subject}, compared across ${String(catalog.cards.length)} cards from issuer terms.`,
+          `Which credit card earns the most ${where} ${subject}.`,
+        ],
+  )
   const canonical = `${SITE}/best/${page.slug}`
+  const definitions = categoryPageFor(page.categoryId)
   const appLink = `/#wallet=${encodeURIComponent(page.merchant?.name ?? catalog.categories.find((c) => c.id === page.categoryId)?.name ?? page.label).replace(/%20/g, '+')}`
   const body = `
       <h1>Best credit card ${page.merchant === null ? 'for' : 'to use at'} ${esc(subject)}</h1>
@@ -358,10 +311,12 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       ${table(shown)}
       ${hidden.length > 0 ? `<p class="muted">Not ranked: ${hidden.map((e) => esc(shortName(e.cardId))).join(', ')}, whose rate here isn't confirmed against the issuer's terms yet.</p>` : ''}
       ${gotchas(r)}
+      ${page.merchant ? howItCodes(ctx, page.merchant, categoryPageFor) : ''}
       ${sources(shown)}
       <h2>How this is ranked</h2>
       <p>Every personal card earnrate tracks that's open to new applicants, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, use <a href="/#spending">My spending</a>.</p>
-      ${related(page, all)}`
+      ${related(page, all)}
+      ${definitions ? `<p>What counts as ${esc(definitions)} for each issuer: <a href="/categories/${definitions}">their definitions, side by side</a>.</p>` : ''}`
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -380,7 +335,29 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       })),
     },
   }
-  return layout(title, description, canonical, body, jsonLd)
+  if (top)
+    images.push({
+      file: `og/best/${page.slug}.jpg`,
+      color: cardColor(catalog, top.cardId),
+      kicker: `Best card ${page.merchant === null ? 'for' : 'at'}`,
+      name: page.merchant?.name ?? capitalize(subject),
+      line: `${shortName(top.cardId)}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ' in points'}`,
+    })
+  return layout({
+    title,
+    description,
+    path: `/best/${page.slug}`,
+    body,
+    jsonLd,
+    crumbs: [
+      { name: 'Best cards', path: '/best/' },
+      {
+        name: page.merchant?.name ?? capitalize(subject),
+        path: `/best/${page.slug}`,
+      },
+    ],
+    ...(top ? { image: `/og/best/${page.slug}.jpg` } : {}),
+  })
 }
 
 function renderIndex(all: Page[]): string {
@@ -402,95 +379,18 @@ function renderIndex(all: Page[]): string {
         'Stores',
         all.filter((p) => p.merchant !== null),
       )}`
-  return layout(
-    'Best credit card for every store and category | earnrate',
-    `Which credit card earns the most at ${String(all.filter((p) => p.merchant).length)} stores and ${String(all.filter((p) => !p.merchant).length)} spending categories, from issuer terms. No affiliate links.`,
-    `${SITE}/best/`,
+  return layout({
+    title: fitTitle(['Best credit card for every store and category']),
+    description: `Which credit card earns the most at ${String(all.filter((p) => p.merchant).length)} stores and ${String(all.filter((p) => !p.merchant).length)} spending categories, from issuer terms. No affiliate links.`,
+    path: '/best/',
     body,
-    {
+    crumbs: [{ name: 'Best cards', path: '/best/' }],
+    jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
       url: `${SITE}/best/`,
     },
-  )
-}
-
-const merchantName = (id: string) => findMerchant(catalog, id)?.name
-
-const readsOn = (id: string) => categoryReadsOn(catalog, id)
-
-function ruleWhat(card: Card, rule: Rule): string {
-  return capitalize(ruleWhatRaw(card, rule))
-}
-
-function ruleWhatRaw(card: Card, rule: Rule): string {
-  const m = rule.match
-  if (m.any) return 'every purchase'
-  const parts: string[] = []
-  if (m.choice !== undefined) {
-    const choice = card.choices.find((c) => c.id === m.choice)
-    parts.push(
-      choice
-        ? `${choice.pick === 1 ? 'one category' : `${String(choice.pick)} categories`} you pick${choice.period === 'until_changed' ? '' : ` ${PICK_PERIODS[choice.period]}`}`
-        : 'the category you pick',
-    )
-  }
-  if (m.merchants?.length)
-    parts.push(listed(m.merchants.map((id) => merchantName(id) ?? words(id))))
-  if (m.categories?.length) {
-    const cats = listed(m.categories.map((id) => categoryPhrase(catalog, id)))
-    parts.push(m.merchants?.length ? `when it codes as ${cats}` : cats)
-  }
-  if (m.mccs?.length)
-    parts.push(`purchases coded MCC ${m.mccs.map(String).join(', ')}`)
-  return parts.join(' ')
-}
-
-function ruleConditions(card: Card, rule: Rule): string[] {
-  const lines: string[] = []
-  const ex = rule.exclude
-  if (ex) {
-    const names = [
-      ...(ex.categories ?? []).map((id) => categoryPhrase(catalog, id)),
-      ...(ex.merchants ?? []).map((id) => merchantName(id) ?? words(id)),
-    ]
-    if (names.length > 0) lines.push(`Not at ${listed(names, 'or')}`)
-  }
-  if (rule.channel === 'online') lines.push('Online only')
-  if (rule.channel === 'in_store') lines.push('In store only')
-  if (rule.geography === 'us_only') lines.push('U.S. purchases only')
-  if (rule.geography === 'foreign_only')
-    lines.push('Purchases outside the U.S. only')
-  if (rule.requires?.membership !== undefined)
-    lines.push(`With ${membershipName(rule.requires.membership)}`)
-  if (rule.requires?.activation === true)
-    lines.push(`Activate it with ${issuerName(card.issuer)} first`)
-  if (rule.valid_from !== undefined || rule.valid_to !== undefined)
-    lines.push(
-      rule.valid_from !== undefined && rule.valid_to !== undefined
-        ? `${shortDate(rule.valid_from)} to ${shortDate(rule.valid_to)}`
-        : rule.valid_to !== undefined
-          ? `Through ${shortDate(rule.valid_to)}`
-          : `From ${shortDate(rule.valid_from ?? '')}`,
-    )
-  const cap =
-    typeof rule.cap === 'string'
-      ? card.caps.find((c) => c.id === rule.cap)
-      : rule.cap
-  if (cap)
-    lines.push(
-      `Up to ${wholeDollars(cap.amount)} of spending ${CAP_PERIODS[cap.period]}${typeof rule.cap === 'string' ? ' (shared with its other bonus categories on this cap)' : ''}, then ${earnText(catalog, cap.then_rate, card.currency)}`,
-    )
-  if (rule.unverified !== undefined)
-    lines.push("Not yet confirmed against the issuer's terms")
-  return lines
-}
-
-function evidenceFor(card: Card, ruleId: string): string {
-  const ev = card.evidence.find((e) => e.rule === ruleId)
-  if (!ev) return ''
-  const host = hostname(ev.url)
-  return `<p class="muted">“${esc(ev.quote)}” <a href="${esc(ev.url)}" rel="nofollow noopener">${esc(host)}</a></p>`
+  })
 }
 
 function rulesList(card: Card): string {
@@ -661,7 +561,7 @@ function renderCard(
   const headline = headlineFor(card)
   const closed = card.applications_closed !== undefined && !card.only_at
   const where = closed ? [] : placements(card, all, byPage)
-  const firsts = where.filter((w) => w.rank === 1).slice(0, 30)
+  const firsts = where.filter((w) => w.rank === 1)
   const others = where.filter((w) => w.rank > 1).slice(0, 12)
   const link = (w: { page: Page; pct: number }) =>
     `<a href="/best/${w.page.slug}">${esc(w.page.label)}</a> (${pct(w.pct)})`
@@ -669,9 +569,25 @@ function renderCard(
     currency && card.currency !== 'cash'
       ? ` earnrate counts ${esc(currency.name)} at ${String(currency.value_cents)}¢ each${currency.range ? `; transferring to airlines or hotels can be worth up to about ${String(currency.range[1])}¢` : ''}.`
       : ''
-  const title = `${name}: rewards rates, annual fee and where to use it (${thisMonth}) | earnrate`
-  const description = `${card.name}: ${headline}. ${feeLabel(card.id)}. Every earning rule quoted from ${issuer}'s terms, and the stores where it beats other cards. No affiliate links.`
+  const title = fitTitle([
+    `${name} rewards rates and annual fee (${thisMonth})`,
+    `${name} rewards rates and annual fee`,
+    `${name} rewards and fee`,
+    name,
+  ])
+  const firstClause = headline.split('; ')[0] ?? headline
+  const description = fitDescription([
+    `${card.name}: ${headline}. ${feeLabel(card.id)}. Every earning rule quoted from ${issuer}'s terms, and the stores where it beats other cards. No affiliate links.`,
+    `${card.name}: ${headline}. ${feeLabel(card.id)}.`,
+    `${name}: ${headline}. ${feeLabel(card.id)}.`,
+    `${name}: ${firstClause}. ${feeLabel(card.id)}. Every rule quoted from ${issuer}'s terms.`,
+    `${name}: ${firstClause}. ${feeLabel(card.id)}.`,
+    `${name}: every earning rate, cap and fee, quoted from ${issuer}'s terms. ${feeLabel(card.id)}.`,
+    `${name}: every earning rate, cap and fee, from ${issuer}'s terms.`,
+  ])
   const canonical = `${SITE}/cards/${card.id}`
+  const worth = feeWorth(card)
+  const rotates = quarterly.has(card.id)
   const body = `
       <div class="card-head">${art(card.id, 112)}<h1>${esc(card.name)}</h1></div>
       <p class="updated">${esc(issuer)} · ${esc(card.business ? 'Business card' : 'Personal card')} · Checked against ${esc(issuer)}'s terms ${esc(shortDate(card.last_verified))}</p>
@@ -691,6 +607,8 @@ function renderCard(
       ${rulesList(card)}
       ${choicesText(card)}
       ${milestonesText(card)}
+      ${rotates ? `<p>Its categories quarter by quarter, with deadlines: <a href="/quarterly/">this quarter's bonus categories</a>.</p>` : ''}
+      ${worth ? feeWorthSection(ctx, worth) : ''}
       ${foreignFeeSection(card)}
       ${offerText(card)}
       <h2>Sources</h2>
@@ -705,7 +623,25 @@ function renderCard(
     feesAndCommissionsSpecification: feeLabel(card.id),
     description: `${headline}.`,
   }
-  return layout(title, description, canonical, body, jsonLd)
+  images.push({
+    file: `og/cards/${card.id}.jpg`,
+    color: cardColor(catalog, card.id),
+    kicker: `${issuer} · ${feeLabel(card.id).split(';')[0] ?? ''}`,
+    name: card.short_name ?? name,
+    line: capitalize(firstClause),
+  })
+  return layout({
+    title,
+    description,
+    path: `/cards/${card.id}`,
+    body,
+    jsonLd,
+    crumbs: [
+      { name: 'Cards', path: '/cards/' },
+      { name: card.short_name ?? name, path: `/cards/${card.id}` },
+    ],
+    image: `/og/cards/${card.id}.jpg`,
+  })
 }
 
 function renderCardIndex(): string {
@@ -724,24 +660,28 @@ function renderCardIndex(): string {
           .join('')}</ul>`,
     )
     .join('')
-  return layout(
-    'Credit card rewards rates, from issuer terms | earnrate',
-    `Earning rates, caps and annual fees for ${String(catalog.cards.length)} U.S. credit cards, each quoted from the issuer's own terms. No affiliate links.`,
-    `${SITE}/cards/`,
-    `
+  return layout({
+    title: fitTitle(['Credit card rewards rates, from issuer terms']),
+    description: `Earning rates, caps and annual fees for ${String(catalog.cards.length)} U.S. credit cards, each quoted from the issuer's own terms. No affiliate links.`,
+    path: '/cards/',
+    crumbs: [{ name: 'Cards', path: '/cards/' }],
+    body: `
       <h1>Credit cards earnrate tracks</h1>
       <p class="updated">Updated ${esc(todayWords)}</p>
       <p>Every earning rule for ${String(catalog.cards.length)} U.S. cards, quoted from the issuer's own terms, and where each card beats the others.</p>
       ${sections}
       <p class="muted">The card pictures are earnrate's drawings in each card's color, not the issuers' designs.</p>`,
-    {
+    jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
       url: `${SITE}/cards/`,
     },
-  )
+  })
 }
 
+const images: OgImage[] = []
+const { feeWorth } = feeWorthKit(catalog, today)
+const quarterly = new Set(quarterlyCardIds(catalog))
 const all = pages(catalog)
 const results = new Map(
   all.map((p) => [p.slug, exploreCards(catalog, p.query, options)]),
@@ -775,18 +715,17 @@ for (const card of catalog.cards) {
 await writeFile(path.join(OUT, 'cards', 'index.html'), renderCardIndex())
 await writeFile(
   path.join(OUT, '404.html'),
-  layout(
-    'Page not found | earnrate',
-    "This page doesn't exist.",
-    `${SITE}/`,
-    `
+  layout({
+    title: 'Page not found | earnrate',
+    description: "This page doesn't exist.",
+    path: '/',
+    crumbs: [],
+    noindex: true,
+    body: `
       <h1>That page doesn't exist</h1>
       <p>Try the <a href="/">card comparison</a>, or the <a href="/best/">best card for every store and category</a>.</p>`,
-    { '@context': 'https://schema.org', '@type': 'WebPage' },
-  ).replace(
-    '<meta name="description"',
-    '<meta name="robots" content="noindex" />\n    <meta name="description"',
-  ),
+    jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage' },
+  }),
 )
 
 // lastmod is when a page's facts last changed, not when it was built: a
@@ -797,18 +736,58 @@ const dataFiles = (await readdir(DATA_DIR, { recursive: true }))
   .filter((f) => /\.ya?ml$/.test(f))
   .map((f) => path.join('data', f))
 const dataDate = latest(dataFiles.map(changed))
+const filesDate = (files: string[]) => latest(files.map(changed))
+const merchantsDate = filesDate(
+  dataFiles.filter((f) => f.startsWith('data/merchants/')),
+)
+const bestSlug = (merchantId: string) =>
+  all.find((p) => p.merchant?.id === merchantId)?.slug ?? null
+const categorySlug = (id: string) =>
+  all.find((p) => p.merchant === null && p.categoryId === id)?.slug ?? null
+const generated: GeneratedPage[] = [
+  ...quarterlyPages(
+    ctx,
+    { category: categorySlug, merchant: bestSlug },
+    filesDate,
+  ),
+  howStoresCodePage(
+    ctx,
+    bestSlug,
+    latest([
+      merchantsDate,
+      filesDate(catalog.cards.map((c) => `data/cards/${c.id}.yaml`)),
+    ]),
+  ),
+  ...categoryPages(ctx, categorySlug, filesDate),
+]
+for (const page of generated) {
+  await mkdir(path.dirname(path.join(OUT, page.file)), { recursive: true })
+  await writeFile(path.join(OUT, page.file), page.html)
+}
+const noFeeFiles = catalog.cards
+  .filter((c) => c.annual_fee === 0)
+  .map((c) => `data/cards/${c.id}.yaml`)
 const urls: [string, string][] = [
   [`${SITE}/`, latest([dataDate, changed('site/index.html')])],
   [`${SITE}/best/`, dataDate],
-  ...all.map((p): [string, string] => [`${SITE}/best/${p.slug}`, dataDate]),
+  ...all.map((p): [string, string] => [
+    `${SITE}/best/${p.slug}`,
+    // A store's "How it codes" follows the merchant files, already in data/.
+    p.merchant && hasCodingNotes(p.merchant)
+      ? latest([dataDate, merchantsDate])
+      : dataDate,
+  ]),
   [`${SITE}/cards/`, dataDate],
   ...catalog.cards.map((c): [string, string] => [
     `${SITE}/cards/${c.id}`,
     latest([
       changed(`data/cards/${c.id}.yaml`),
       changed('data/currencies.yaml'),
+      // Its annual-fee section compares it with every no-fee card.
+      ...(c.annual_fee ? noFeeFiles.map(changed) : []),
     ]),
   ]),
+  ...generated.map((g): [string, string] => [`${SITE}${g.path}`, g.lastmod]),
   ...['privacy', 'terms', 'companies', 'support'].map(
     (page): [string, string] => [
       `${SITE}/${page}`,
@@ -833,6 +812,8 @@ Allow: /
 Sitemap: ${SITE}/sitemap.xml
 `,
 )
+const drawn =
+  process.env.EARNRATE_OG === 'off' ? null : await drawImages(ROOT, OUT, images)
 console.log(
-  `Wrote ${String(all.length)} comparison pages, ${String(catalog.cards.length)} card pages, sitemap.xml and robots.txt.`,
+  `Wrote ${String(all.length)} comparison pages, ${String(catalog.cards.length)} card pages, ${String(generated.length)} other pages, sitemap.xml and robots.txt.${drawn ? ` ${String(images.length)} preview images (${String(drawn.drawn)} redrawn), ${(drawn.bytes / 1e6).toFixed(1)} MB.` : ''}`,
 )
