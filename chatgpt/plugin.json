@@ -1,0 +1,99 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "earnrate",
+  "version": "1.0.0",
+  "description": "Which credit card earns the most for a purchase, from each issuer's own terms.",
+  "author": {
+    "name": "Collin Wasley",
+    "url": "https://earnrate.dev"
+  },
+  "homepage": "https://earnrate.dev",
+  "repository": "https://github.com/cwasley/earnrate",
+  "license": "MIT",
+  "keywords": ["credit cards", "rewards", "cash back", "points"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "earnrate",
+        "shortDescription": "Which credit card to use",
+        "longDescription": "earnrate tells you which credit card earns the most for a purchase, from each issuer's own terms. Ask about a store, a kind of place or an amount, like \"which card at Whole Foods for $80?\", and it names the card, the rate and the reason, with the rule it used and what it assumed.\n\nIt works with no setup. Without your cards, it answers from all 69 U.S. credit cards it knows, from 11 issuers. Name your cards for an answer from just those, or save them to an anonymous wallet so earnrate can track spending caps, quarterly bonus categories and activations, welcome bonuses and yearly spend bonuses. It can also make a cheat sheet of which card to use for everyday spending, list what to do with your cards this quarter, compare welcome offers, and run a year of spending through every card and pair of cards.\n\nThe saved wallet has no email or name: you get a recovery code, which you type only on earnrate's own page. earnrate never asks for card numbers. It doesn't apply for cards, make payments, or show ads or affiliate links, and nothing but the issuer's terms and your own cards and settings decides a ranking.\n\nLimitations: U.S. personal and small-business credit cards only. Card terms are checked against the issuers' pages every week, but issuers can change them at any time, so check the issuer's page before relying on an answer for a large purchase.",
+        "developerName": "Collin Wasley",
+        "category": "Finance",
+        "capabilities": [
+          "Best card for a store, a kind of place or an amount",
+          "Cheat sheet of which card to use for everyday spending",
+          "Track caps, quarterly bonuses and welcome bonuses in a saved wallet"
+        ],
+        "websiteURL": "https://earnrate.dev",
+        "supportURL": "https://earnrate.dev/support",
+        "privacyPolicyURL": "https://earnrate.dev/privacy",
+        "termsOfServiceURL": "https://earnrate.dev/terms",
+        "defaultPrompt": [
+          "Which credit card should I use at Whole Foods?",
+          "What's the best credit card for restaurants?",
+          "What should I do with my cards this quarter?"
+        ],
+        "brandColor": "#9a5020",
+        "brandColorDark": "#e8a877",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/logo.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Best of the user's saved cards for a purchase",
+              "prompt": "Which of my credit cards should I use at Whole Foods for $80?",
+              "tools_triggered": "best_card_for_purchase",
+              "expected_behavior": "Answers from the test wallet's four cards: use the American Express Gold Card, 4x Membership Rewards on U.S. supermarkets, about $3.20 back, with the matched rule, its assumptions and the next-best card."
+            },
+            {
+              "description": "A store that takes only some card networks",
+              "prompt": "Which of my cards should I use at Costco?",
+              "tools_triggered": "best_card_for_purchase",
+              "expected_behavior": "Recommends the Chase Sapphire Preferred, the only Visa in the test wallet, and says Costco takes only Visa in its stores, so the Amex Gold, Chase Freedom Flex and Citi Double Cash can't be used there."
+            },
+            {
+              "description": "Ranking every card when the user names none",
+              "prompt": "What's the best credit card for restaurants?",
+              "tools_triggered": "best_cards_for",
+              "expected_behavior": "Ranks cards from every card earnrate knows, not only the saved ones, with each card's rate at restaurants, its annual fee and conditions such as a quarterly activation or a spending cap."
+            },
+            {
+              "description": "The saved wallet's to-do list",
+              "prompt": "What should I do with my cards this quarter?",
+              "tools_triggered": "list_wallet",
+              "expected_behavior": "Lists the wallet's to-dos with dates, such as activating the Chase Freedom Flex's quarterly 5% categories before Chase's deadline, then summarizes the saved cards."
+            },
+            {
+              "description": "A cheat sheet for everyday spending",
+              "prompt": "Make me a cheat sheet of which card to use for everyday spending.",
+              "tools_triggered": "cheat_sheet",
+              "expected_behavior": "Shows one card from the test wallet for each everyday kind of purchase (groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores and everything else), with its rate and any note such as an activation."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Applying for a card is out of scope; earnrate never applies or links to applications",
+              "prompt": "Apply for the Chase Sapphire Reserve for me."
+            },
+            {
+              "description": "earnrate never stores card numbers or makes payments",
+              "prompt": "Save my card number and expiration date so you can pay for my groceries."
+            },
+            {
+              "description": "Investment advice is out of scope",
+              "prompt": "Which stocks should I buy with my cash back?"
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "earnrate doesn't sell anything, process payments, link to card applications or show ads."
+      },
+      "publication": {
+        "countries": ["US"],
+        "release_notes": "First release: the best card for a purchase from every card or the user's own, cheat sheets, quarterly to-dos, welcome-offer comparisons and spending simulations, with an optional anonymous saved wallet."
+      }
+    }
+  }
+}

@@ -38,6 +38,8 @@ export type Env = AuthEnv & {
   LIMITER?: RateLimit // every request: per wallet once signed in, else per IP
   SIGN_IN_LIMITER?: RateLimit // sign-in steps and rejected tokens
   USAGE?: Dataset // counts only: the method or tool name, never arguments
+  // OpenAI's plugin portal checks this token to verify the domain; not secret.
+  OPENAI_APPS_CHALLENGE?: string
 }
 
 export type Bundle = { catalog: Catalog; version: string }
@@ -318,6 +320,12 @@ export function makeWorker<E extends Env>(
         return protectedResourceMetadata(resourceFor('/mcp'))
       if (pathname === '/.well-known/oauth-authorization-server')
         return auth.fetch(request, env, ctx)
+      if (pathname === '/.well-known/openai-apps-challenge')
+        return env.OPENAI_APPS_CHALLENGE
+          ? new Response(env.OPENAI_APPS_CHALLENGE.trim(), {
+              headers: { 'content-type': 'text/plain; charset=utf-8' },
+            })
+          : new Response('Not found.', { status: 404 })
 
       // A request with a credential counts against the wallet or grant it
       // names, so users of one app don't share its servers' limit.

@@ -58,6 +58,7 @@ export default defineConfig({
         privacy: `${import.meta.dirname}/privacy.html`,
         terms: `${import.meta.dirname}/terms.html`,
         companies: `${import.meta.dirname}/companies.html`,
+        support: `${import.meta.dirname}/support.html`,
       },
     },
   },

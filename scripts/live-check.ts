@@ -85,6 +85,7 @@ async function site() {
     ['/cards/amex-gold', 'American Express Gold Card'],
     ['/privacy', 'On earnrate.dev'],
     ['/companies', 'What you can license'],
+    ['/support', 'A rate looks wrong'],
     ['/manifest.webmanifest', '"short_name"'],
     ['/sw.js', "const CACHE = 'earnrate-v"],
   ]

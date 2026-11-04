@@ -318,7 +318,7 @@ ${body}
       </aside>
       <footer>
         <p>earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(dataVersion)}, updated ${esc(todayWords)}. Rates change, so check the issuer's terms before you apply.</p>
-        <p><a href="/">earnrate.dev</a> · <a href="/best/">Best card for every store</a> · <a href="/cards/">All cards</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/companies">For companies</a></p>
+        <p><a href="/">earnrate.dev</a> · <a href="/best/">Best card for every store</a> · <a href="/cards/">All cards</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/companies">For companies</a> · <a href="/support">Support</a></p>
       </footer>
     </main>
   </body>
@@ -794,6 +794,7 @@ const urls = [
   `${SITE}/privacy`,
   `${SITE}/terms`,
   `${SITE}/companies`,
+  `${SITE}/support`,
 ]
 await writeFile(
   path.join(OUT, 'sitemap.xml'),

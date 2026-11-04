@@ -42,6 +42,7 @@
     "prepack": "yarn build",
     "smoke:pack": "node scripts/smoke-pack.ts",
     "mcpb:pack": "node scripts/build-mcpb.ts",
+    "chatgpt:pack": "node scripts/pack-chatgpt.ts",
     "smoke:mcpb": "node scripts/smoke-mcpb.ts",
     "remote:build": "node scripts/build-remote.ts",
     "remote:check": "yarn remote:build && WRANGLER_SEND_METRICS=false wrangler deploy --config remote/wrangler.jsonc --dry-run --outdir dist",

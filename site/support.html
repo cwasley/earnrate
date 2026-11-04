@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Support · earnrate</title>
+    <meta
+      name="description"
+      content="Get help with earnrate: report a wrong rate, fix a sign-in, or manage your saved wallet."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://earnrate.dev/support" />
+    <meta name="theme-color" content="#9a5020" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+    <link rel="icon" href="/favicon.svg?v=2" />
+    <link rel="stylesheet" href="/pages.css" />
+    <style>
+      header {
+        padding: 48px 0 8px;
+      }
+      h1 {
+        font-size: clamp(34px, 7vw, 50px);
+        line-height: 1.08;
+        margin: 22px 0 14px;
+      }
+      h2 {
+        font-size: 22px;
+        margin: 44px 0 10px;
+      }
+      p {
+        margin: 0 0 14px;
+      }
+      ul {
+        margin: 0 0 14px;
+        padding-left: 1.2em;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+      .lede {
+        font-size: 19px;
+        color: var(--muted);
+        max-width: 36em;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="wordmark" href="/">earnrate</a>
+        <h1>Support</h1>
+        <p class="lede">
+          Something wrong with an answer, a sign-in or your saved wallet? Here's
+          how to fix the common problems and how to reach a person.
+        </p>
+      </header>
+
+      <section>
+        <h2>A rate looks wrong</h2>
+        <p>
+          Every answer names the rule it used and quotes the issuer's page
+          behind it. If the issuer's page says something different, or a store
+          is counted in the wrong category, tell us with the card, the store and
+          a link to the issuer's page. Corrections come from the issuer's own
+          terms, so that link is what lets us fix it.
+        </p>
+        <p>
+          Report it as a
+          <a href="https://github.com/cwasley/earnrate/issues/new"
+            >GitHub issue</a
+          >
+          or by email at
+          <a href="mailto:support@earnrate.dev">support@earnrate.dev</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Connecting earnrate to an AI app</h2>
+        <p>
+          When you add earnrate to an app like Claude, it opens earnrate's
+          sign-in page once. Choose <b>Start a wallet</b> for a new, empty
+          wallet, or <b>Already have a wallet?</b> and type your recovery code
+          to connect one you already have. There's no email or password. If the
+          app keeps asking you to sign in, remove earnrate from the app's
+          connector settings and add it again.
+        </p>
+        <p>
+          Never type your recovery code into the chat. earnrate only asks for it
+          on its own page.
+        </p>
+      </section>
+
+      <section>
+        <h2>Your saved wallet</h2>
+        <ul>
+          <li>
+            <b>Lost your recovery code?</b> earnrate can't look it up or reset
+            it, because the wallet isn't tied to an email. Apps that are already
+            connected keep working. To connect a new app, start a new wallet.
+          </li>
+          <li>
+            <b>Change your recovery code</b> at
+            <a href="https://mcp.earnrate.dev/change-code"
+              >mcp.earnrate.dev/change-code</a
+            >. The old code stops working and connected apps are signed out.
+          </li>
+          <li>
+            <b>Use another wallet:</b> ask the app to switch wallets, then
+            connect on earnrate's page with that wallet's recovery code.
+          </li>
+          <li>
+            <b>Delete your wallet:</b> ask the app to delete your earnrate
+            wallet. It's deleted at once. A wallet unused for 13 months is
+            deleted automatically.
+          </li>
+        </ul>
+        <p>
+          earnrate.dev and the command line keep their own wallets, separate
+          from the one your AI app uses. You can move one between them by
+          exporting and importing it.
+        </p>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <p>
+          Email <a href="mailto:support@earnrate.dev">support@earnrate.dev</a>.
+          Don't include card numbers or recovery codes: earnrate never needs
+          them.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Support:
+          <a href="mailto:support@earnrate.dev">support@earnrate.dev</a>.
+          <a href="/privacy">Privacy</a>. <a href="/terms">Terms</a>.
+          <a href="/">Back to earnrate</a>.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

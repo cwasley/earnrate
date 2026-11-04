@@ -123,6 +123,18 @@ function deployment({ kvLag = false } = {}) {
   return { worker, env, fetch, storages }
 }
 
+test('serves the OpenAI domain-verification token as plain text', async () => {
+  const d = deployment()
+  const path = '/.well-known/openai-apps-challenge'
+  expect((await d.fetch(path)).status).toBe(404)
+  const res = await d.fetch(path, undefined, {
+    OPENAI_APPS_CHALLENGE: 'token-123\n',
+  })
+  expect(res.status).toBe(200)
+  expect(res.headers.get('content-type')).toMatch(/^text\/plain/)
+  expect(await res.text()).toBe('token-123')
+})
+
 const cleanups: (() => Promise<void>)[] = []
 afterEach(async () => {
   for (const c of cleanups.splice(0)) await c()

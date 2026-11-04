@@ -2,17 +2,25 @@
 // deleted a week after it was started. For wallets that only a health checker
 // connects to (Glama lists tools but never calls one).
 // Usage: node scripts/touch-wallet.ts <file holding the recovery code>
-// The code is read from the file and never printed.
+//   [--cards amex-gold,chase-freedom-flex]
+// --cards also saves those cards, for a reviewer's demo wallet. The code is
+// read from the file and never printed.
 import { readFile } from 'node:fs/promises'
+import { parseArgs } from 'node:util'
 
 const SERVER = 'https://mcp.earnrate.dev'
 const CALLBACK = 'http://127.0.0.1:53682/callback'
 
-const file = process.argv[2]
+const { positionals, values } = parseArgs({
+  allowPositionals: true,
+  options: { cards: { type: 'string' } },
+})
+const file = positionals[0]
 if (!file) {
-  console.error('Usage: node scripts/touch-wallet.ts <code file>')
+  console.error('Usage: node scripts/touch-wallet.ts <code file> [--cards …]')
   process.exit(2)
 }
+const cards = (values.cards ?? '').split(',').filter((c) => c !== '')
 const code = (await readFile(file, 'utf8')).trim()
 
 const base64url = (bytes: Uint8Array) =>
@@ -89,7 +97,7 @@ if (token === undefined) {
   process.exit(1)
 }
 
-const call = (name: string) =>
+const call = (name: string, args: Record<string, unknown> = {}) =>
   fetch(SERVER, {
     method: 'POST',
     headers: {
@@ -101,10 +109,19 @@ const call = (name: string) =>
       jsonrpc: '2.0',
       id: 1,
       method: 'tools/call',
-      params: { name, arguments: {} },
+      params: { name, arguments: args },
     }),
   })
 
+for (const cardId of cards) {
+  const added = await call('add_card', { cardId })
+  const body = await added.text()
+  console.log(
+    added.ok && !body.includes('"isError":true')
+      ? `Saved ${cardId}.`
+      : `Couldn't save ${cardId} (HTTP ${String(added.status)}).`,
+  )
+}
 const listed = await call('list_wallet')
 console.log(
   listed.ok

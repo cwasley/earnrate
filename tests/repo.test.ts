@@ -105,7 +105,14 @@ test('the policy pages and READMEs state the hosted server’s retention', async
   const readme = await read('README.md')
   const plugin = await read('plugin/README.md')
   const wrangler = await read('remote/wrangler.jsonc')
-  for (const [file, text] of Object.entries({ privacy, terms, readme, plugin }))
+  const support = await read('site/support.html')
+  for (const [file, text] of Object.entries({
+    privacy,
+    terms,
+    readme,
+    plugin,
+    support,
+  }))
     expect(flat(text), file).toContain(`${String(RETENTION_MONTHS)} months`)
   for (const [file, text] of Object.entries({ privacy, terms, readme, plugin }))
     expect(flat(text), file).toContain(UNUSED_NEW_WALLET.words)
