@@ -1,0 +1,115 @@
+id: amex-marriott-bonvoy-business
+name: Marriott Bonvoy Business American Express Card
+short_name: Marriott Bonvoy Business
+issuer: amex
+network: amex
+currency: marriott-bonvoy
+business: true
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+base_rate: 2
+annual_fee: 125
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 100000
+  spend: 8000
+  months: 6
+  valid_to: 2026-11-04
+  note: 'Plus a Free Night Award (up to 50,000 points), which earnrate does not value. Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card or the Starwood Preferred Guest® Business Credit Card from American Express or previous versions of these Cards," and may also decline based on your card history. Also not available to anyone who had a Marriott business card from Chase in the last 30 days, opened the Marriott Bonvoy Bountiful, Boundless or Bold card from Chase in the last 90 days, or got a new Card Member bonus on one of those Chase cards in the last 24 months.'
+rules:
+  - id: marriott-hotels
+    match: { merchants: [marriott] }
+    rate: 6
+    note: Charged directly with participating Marriott Bonvoy hotels, standalone Marriott retail stores and Marriott online stores (including Marriott gift cards online). Marriott's own member and elite points for stays aren't card earnings.
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 4
+    note: Charged directly at restaurants worldwide; a restaurant inside a hotel, casino or event venue may code as that place instead.
+  - id: us-gas
+    match: { categories: [gas] }
+    rate: 4
+    geography: us_only
+    note: Gasoline at U.S. gas stations.
+  - id: us-wireless
+    match: { categories: [phone] }
+    rate: 4
+    geography: us_only
+    note: Wireless phone service bought directly from a U.S. provider. Not Google Fi.
+  - id: us-shipping
+    match: { categories: [shipping] }
+    rate: 4
+    geography: us_only
+    note: Shipping bought from U.S. merchants.
+milestones:
+  - id: free-night-60k
+    spend: 60000
+    period: calendar_year
+    rewards:
+      - Marriott Bonvoy Free Night Award (up to 35,000 points)
+    note: Basic Card Member only, though Additional Card purchases count. Deposited 8-12 weeks after you reach $60,000; expires a year after it's issued.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'You will receive 2 Marriott Bonvoy® points for each U.S. dollar of eligible purchases'
+  - rule: marriott-hotels
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
+    quote: 'Per dollar on eligible purchases at hotels participating in Marriott Bonvoy®.'
+  - rule: marriott-hotels
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'You will receive 4 additional points (for a total of 6 points)'
+  - rule: marriott-hotels
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'standalone Marriott branded retail establishments, and Marriott branded online stores'
+  - rule: restaurants
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
+    quote: 'at restaurants worldwide, at U.S. gas stations, on wireless telephone services'
+  - rule: restaurants
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'You will receive 2 additional points (for a total of 4 points)'
+  - rule: restaurants
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'when charged directly at restaurants worldwide'
+  - rule: us-gas
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'on gasoline at U.S. gas stations'
+  - rule: us-wireless
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'on wireless telephone services purchased directly from U.S. service providers (excludes Google Fi)'
+  - rule: us-shipping
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'on purchases made from merchants in the U.S. for shipping'
+  - rule: us-shipping
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
+    quote: 'purchased directly from U.S. service providers and on U.S. purchases for shipping.'
+  - rule: free-night-60k
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'total eligible purchases on the Marriott Bonvoy Business® American Express® Card reach $60,000'
+  - rule: free-night-60k
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
+    quote: 'earn an additional Free Night Award after you spend $60K in purchases on your Card in a calendar year.'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
+    quote: 'Annual Fee: $125'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'Annual Fee $125 Transaction Fees'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
+    quote: 'Earn 100,000 Marriott Bonvoy® Bonus Points and 1 Free Night Award'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'after you spend $8,000 or more (the “Threshold Amount”) in eligible purchases'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'Offer ends 11/4/2026 at 11:59 PM MST.'
+todo:
+  - The welcome offer ends 11/04/2026; re-check the card page for the next one.
+  - The welcome offer's Free Night Award isn't valued; a welcome offer holds only points.
+  - Not modeled (perks, not points per dollar) the yearly Free Night Award after each renewal, 15 Elite Night Credits a year, complimentary Gold Elite status and the 7% Amex Business Card Rate discount.
+  - The terms don't say whether gas at superstores or warehouse clubs counts as a U.S. gas station, so it isn't excluded.

@@ -1,0 +1,40 @@
+id: paypal-cashback-mastercard
+name: PayPal Cashback Mastercard
+short_name: PayPal Cashback
+# Issued by Synchrony Bank; rewards are paid into the linked PayPal account.
+issuer: synchrony
+network: mastercard
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard
+  - https://www.synchronybankterms.com/gecrbterms/html/PayPalCashbackApplyTerms_combo.htm
+  - https://www.synchronycredit.com/gecrbterms/html/PayPalCashbackRewardsTerms.htm
+base_rate: 1.5
+annual_fee: 0
+foreign_transaction_fee: 3
+todo:
+  - "3% cash back when the card is paid through your PayPal account online (PayPal checkout, or sending money to other PayPal users) isn't modeled: earnrate sees the merchant and channel, not how a purchase is paid, so every purchase gets 1.5% here."
+evidence:
+  - rule: base_rate
+    url: https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard
+    quote: '1.5% cash back on all other purchases everywhere Mastercard is accepted.'
+  - rule: base_rate
+    url: https://www.synchronycredit.com/gecrbterms/html/PayPalCashbackRewardsTerms.htm
+    quote: '1.5%: Each Eligible Purchase made by you everywhere else that Mastercard is accepted will earn 1.5% Cash Rewards.'
+  - rule: base_rate
+    url: https://www.synchronycredit.com/gecrbterms/html/PayPalCashbackRewardsTerms.htm
+    quote: 'there is no maximum amount of Eligible Purchases that may earn Cash Rewards.'
+  - rule: annual_fee
+    url: https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard
+    quote: 'no rotating categories, and no annual fee.'
+  - rule: annual_fee
+    url: https://www.synchronybankterms.com/gecrbterms/html/PayPalCashbackApplyTerms_combo.htm
+    quote: 'Annual Fee None Transaction Fees'
+  - rule: foreign_transaction_fee
+    url: https://www.synchronybankterms.com/gecrbterms/html/PayPalCashbackApplyTerms_combo.htm
+    quote: 'Either $10.00 or 5% of the amount of each cash advance, whichever is greater. 3% of each transaction.'
+  - rule: foreign_transaction_fee
+    url: https://www.synchronybankterms.com/gecrbterms/html/PayPalCashbackApplyTerms_combo.htm
+    quote: 'We will charge this fee for purchases or cash advances you make in currencies other than U.S. dollars'

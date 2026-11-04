@@ -1,0 +1,59 @@
+id: bilt-blue
+name: Bilt Blue Card
+# Issued by Column N.A. and serviced by Cardless; Bilt runs the rewards.
+# Full earning terms are in the Bilt Card Offer Terms PDF, which the source
+# checker can't read, so they're not in source_urls.
+issuer: column
+network: mastercard # World Elite Mastercard, per the card page's FAQ
+currency: BILT
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.bilt.com/card/blue
+  - https://www.bilt.com/card
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 0
+rules:
+  - id: bilt-travel-hotels
+    match: { merchants: [bilt-travel-hotels] }
+    rate: 3
+    note: 1X card earn plus 2 Bilt Travel Portal bonus points on hotels booked at biltrewards.com/travel.
+  - id: bilt-travel-flights
+    match: { merchants: [bilt-travel-flights] }
+    rate: 2
+    note: 1X card earn plus 1 Bilt Travel Portal bonus point on flights booked at biltrewards.com/travel.
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 3
+    requires: { activation: true }
+    note: 1X card earn plus 2X Bilt bonus on eligible rides after linking Bilt and Lyft accounts in the Bilt app. Uncapped.
+todo:
+  - Rent and mortgage paid through Bilt earn 0.5X-1.25X depending on the cycle's everyday spend as a share of the housing payment (25%/50%/75%/100% give 0.5X/0.75X/1X/1.25X; below 25% a flat 250 points). earnrate has no housing category or spend-ratio rule.
+  - Bilt Neighborhood Dining restaurants add a per-restaurant bonus (up to 4X total). It varies by restaurant, so it isn't modeled.
+  - 'Welcome offer not modeled: the page offers $100 in Bilt Cash, a second currency (not BILT points or cash), with no spend required.'
+evidence:
+  - rule: base_rate
+    url: https://www.bilt.com/card/blue
+    quote: '2X on flights through Bilt Travel. 1X on everything else.'
+  - rule: bilt-travel-hotels
+    url: https://www.bilt.com/card/blue
+    quote: 'the Blue Card earns +2X on hotel bookings and +1X on flights'
+  - rule: bilt-travel-hotels
+    url: https://www.bilt.com/card/blue
+    quote: 'That means 3X total on hotels and 2X total on flights booked at biltrewards.com/travel'
+  - rule: bilt-travel-flights
+    url: https://www.bilt.com/card/blue
+    quote: 'That means 3X total on hotels and 2X total on flights booked at biltrewards.com/travel'
+  - rule: lyft
+    url: https://www.bilt.com/card/blue
+    quote: 'for 3X total Bilt Points per dollar on Lyft'
+  - rule: lyft
+    url: https://www.bilt.com/card/blue
+    quote: 'On Lyft, link your Bilt and Lyft accounts in the Bilt app.'
+  - rule: annual_fee
+    url: https://www.bilt.com/card/blue
+    quote: 'The Bilt Blue Card is a $0 annual fee World Elite Mastercard.'
+  - rule: foreign_transaction_fee
+    url: https://www.bilt.com/card/blue
+    quote: '$0 annual fee; no foreign transaction fees; no transaction fee on housing payments'

@@ -7,6 +7,9 @@
 - id: bank-of-america
   name: Bank of America
   search: [bofa, boa, bankofamerica]
+- id: barclays
+  name: Barclays
+  search: [barclaycard, barclays us]
 - id: capital-one
   name: Capital One
   search: [capitalone]
@@ -24,6 +27,10 @@
   search: [discover it]
 - id: sofi
   name: SoFi
+- id: synchrony
+  # Synchrony Bank issues the PayPal Cashback Mastercard.
+  name: Synchrony
+  search: [syf, synchrony bank]
 - id: td-bank
   name: TD Bank
   search: [td]

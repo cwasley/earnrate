@@ -179,19 +179,20 @@ It totals what each card earned against the best card in your wallet for each pu
 
 ## Supported cards
 
-80 cards, each modeled from the issuer's own terms and checked weekly against them:
+89 cards, each modeled from the issuer's own terms and checked weekly against them:
 
 - **American Express:** Gold, Platinum, Blue Cash Preferred, Blue Cash Everyday, Business Gold, Business Platinum, Blue Business Plus
-- **American Express airline and hotel:** Delta SkyMiles Gold, Platinum, Reserve; Hilton Honors, Surpass, Aspire; Marriott Bonvoy Brilliant, Bevy
+- **American Express airline and hotel:** Delta SkyMiles Blue, Gold, Platinum, Reserve; Hilton Honors, Surpass, Aspire, Business; Marriott Bonvoy Brilliant, Bevy, Business
 - **Chase:** Sapphire Preferred, Sapphire Reserve, Freedom Unlimited, Freedom Flex, Freedom Rise, Ink Business Cash, Ink Business Unlimited, Ink Business Preferred, Prime Visa
 - **Chase airline and hotel:** United Gateway, Explorer, Quest, Club, Business, Club Business; Southwest Plus, Premier, Priority, Premier Business, Performance Business; Aeroplan; IHG One Rewards, Premier, Premier Select, Business; Marriott Bonvoy Boundless, Bold
 - **Citi:** Strata Elite, Strata Premier, Strata, Double Cash, Custom Cash, My Best Buy Visa, Costco Anywhere Visa (personal and business); AAdvantage MileUp, Platinum Select, Globe, Executive, Business
-- **Capital One:** Venture X, Venture, Savor, Quicksilver, Kohl's Card, Kohl's Rewards Visa
+- **Capital One:** Venture X, Venture, Savor, Quicksilver, Venture X Business, Spark Cash Plus, Kohl's Card, Kohl's Rewards Visa
 - **Wells Fargo:** Active Cash, Autograph, Autograph Journey
 - **Bank of America:** Customized Cash Rewards, Unlimited Cash Rewards, Travel Rewards, Premium Rewards; Atmos Rewards Ascent, Summit, Business
 - **TD Bank:** Target Circle Card, Nordstrom card, Nordstrom Visa
 - **U.S. Bank:** Cash+, Altitude Go, Altitude Connect
-- **Others:** Discover it Cash Back, Bilt Obsidian, SoFi Unlimited 2%
+- **Bilt:** Blue, Obsidian, Palladium
+- **Others:** Discover it Cash Back, SoFi Unlimited 2%, JetBlue Plus (Barclays), PayPal Cashback Mastercard (Synchrony)
 
 Store cards (Target, Kohl's, Nordstrom) only come up at their own stores. Airline and hotel cards count only what the card itself earns, not the points a program gives members however they pay, and their perks (bags, free nights, lounges) aren't counted.
 

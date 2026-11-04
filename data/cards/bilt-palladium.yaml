@@ -1,0 +1,75 @@
+id: bilt-palladium
+name: Bilt Palladium Card
+# Issued by Column N.A. and serviced by Cardless; Bilt runs the rewards.
+# Full earning terms are in the Bilt Card Offer Terms PDF, which the source
+# checker can't read, so they're not in source_urls.
+issuer: column
+network: mastercard # World Legend Mastercard, per the card page's FAQ
+currency: BILT
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.bilt.com/card/palladium
+  - https://www.bilt.com/card
+base_rate: 2
+annual_fee: 495
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 50000
+  spend: 4000
+  months: 3
+  note: 'Within 90 days of account opening, on purchases other than rent or mortgage. Also Bilt Gold status and $300 in Bilt Cash on approval, which earnrate does not value. For new Bilt Card 2.0 cardholders.'
+rules:
+  - id: bilt-travel-hotels
+    match: { merchants: [bilt-travel-hotels] }
+    rate: 4
+    note: 2X card earn plus 2 Bilt Travel Portal bonus points on hotels booked at biltrewards.com/travel.
+  - id: bilt-travel-flights
+    match: { merchants: [bilt-travel-flights] }
+    rate: 3
+    note: 2X card earn plus 1 Bilt Travel Portal bonus point on flights booked at biltrewards.com/travel.
+  - id: lyft
+    match: { merchants: [lyft] }
+    rate: 4
+    requires: { activation: true }
+    note: 2X card earn plus 2X Bilt bonus on eligible rides after linking Bilt and Lyft accounts in the Bilt app. Uncapped.
+# Not modeled on purpose: the $400 Bilt Travel Hotel credit, $200 annual Bilt
+# Cash and Priority Pass.
+todo:
+  - Rent and mortgage paid through Bilt earn 0.5X-1.25X depending on the cycle's everyday spend as a share of the housing payment (25%/50%/75%/100% give 0.5X/0.75X/1X/1.25X; below 25% a flat 250 points). earnrate has no housing category or spend-ratio rule.
+  - Bilt Neighborhood Dining restaurants add a per-restaurant bonus (usually +2-3X, up to 5X total). It varies by restaurant, so it isn't modeled.
+  - Point Accelerator (spend $200 Bilt Cash for +1X on the next $5,000, up to five times a year) isn't modeled.
+evidence:
+  - rule: base_rate
+    url: https://www.bilt.com/card/palladium
+    quote: '4X on Lyft, 2X points on all everyday purchases'
+  - rule: bilt-travel-hotels
+    url: https://www.bilt.com/card/palladium
+    quote: 'the Palladium Card earns +2X on hotels and +1X on flights stacked on top of its 2X base rate.'
+  - rule: bilt-travel-hotels
+    url: https://www.bilt.com/card/palladium
+    quote: 'That delivers 4X total on hotels and 3X total on flights booked at biltrewards.com/travel.'
+  - rule: bilt-travel-flights
+    url: https://www.bilt.com/card/palladium
+    quote: 'That delivers 4X total on hotels and 3X total on flights booked at biltrewards.com/travel.'
+  - rule: lyft
+    url: https://www.bilt.com/card/palladium
+    quote: 'you earn 4X total Bilt Points per dollar on Lyft'
+  - rule: lyft
+    url: https://www.bilt.com/card/palladium
+    quote: 'On Lyft, link your Bilt and Lyft accounts to earn an additional 2X per dollar'
+  - rule: annual_fee
+    url: https://www.bilt.com/card/palladium
+    quote: '$495 annual fee'
+  - rule: annual_fee
+    url: https://www.bilt.com/card
+    quote: 'Annual fee $0 $95 $495'
+  - rule: welcome_offer
+    url: https://www.bilt.com/card/palladium
+    quote: 'After you spend $4,000 on purchases (excluding rent or mortgage) in your first 90 days.'
+  - rule: welcome_offer
+    url: https://www.bilt.com/card/palladium
+    quote: '50,000 Bilt Points and Bilt Gold elite status are earned after spending $4,000'
+  - rule: foreign_transaction_fee
+    url: https://www.bilt.com/card/palladium
+    quote: 'No foreign transaction fees'
