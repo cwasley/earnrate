@@ -152,12 +152,18 @@ export class FileWalletStore implements WalletStore {
         return failed(`${purchase.cardId} isn't in the wallet.`)
       const booked = bookPurchase(this.catalog, wallet, purchase, merchant)
       try {
-        if (booked.cap || booked.bonus || booked.milestones.length > 0)
+        if (
+          booked.cap ||
+          booked.bonus ||
+          booked.milestones.length > 0 ||
+          booked.credit
+        )
           await writeProgress(
             this.where,
             booked.cap ? [booked.cap] : [],
             booked.bonus ? [booked.bonus] : [],
             booked.milestones,
+            booked.credit ? [booked.credit] : [],
           )
       } catch (e) {
         return failed(errorText(e))

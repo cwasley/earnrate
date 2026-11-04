@@ -4,10 +4,12 @@ import { currentPeriodEnd, daysBetween } from './periods.ts'
 import {
   CAP_PERIODS,
   choiceName,
+  enrollCreditText,
   introEndsText,
   listed,
   money,
   shortDate,
+  useCreditText,
   wholeDollars,
 } from './text.ts'
 import { milestonePays } from './milestones.ts'
@@ -22,15 +24,26 @@ import {
 
 export type ChecklistItem = {
   kind:
-    'activate' | 'pick' | 'cap' | 'bonus' | 'milestone' | 'rotation' | 'intro'
+    | 'activate'
+    | 'pick'
+    | 'cap'
+    | 'bonus'
+    | 'milestone'
+    | 'rotation'
+    | 'intro'
+    | 'credit'
+    | 'enroll'
   cardId: string
+  // Tells apart a card's items of the same kind and date (two credits).
+  ref?: string
   text: string
   due: string | null // YYYY-MM-DD: the deadline, or when a cap resets
 }
 
 // What the wallet's cards need this period, soonest first: bonuses to
 // activate, categories to pick, caps running low, welcome bonuses to finish,
-// and rotating categories the issuer hasn't posted yet.
+// merchant credits to enroll in or use, and rotating categories the issuer
+// hasn't posted yet.
 export function checklist(
   catalog: Catalog,
   wallet: Wallet,
@@ -135,6 +148,25 @@ export function checklist(
       })
     }
 
+    for (const c of s.credits) {
+      if (!c.enrolled)
+        items.push({
+          kind: 'enroll',
+          cardId: card.id,
+          ref: c.id,
+          text: enrollCreditText(name, c.name),
+          due: null,
+        })
+      else if (c.left !== null && c.left > 0)
+        items.push({
+          kind: 'credit',
+          cardId: card.id,
+          ref: c.id,
+          text: useCreditText(name, c, c.left),
+          due: c.until,
+        })
+    }
+
     const b = s.bonus
     if (b?.state === 'open' && b.remaining !== null && b.deadline !== null) {
       const weeks = Math.max(1, (b.daysLeft ?? 7) / 7)
@@ -177,7 +209,7 @@ export function checklist(
 }
 
 // An all-day calendar event for each dated action (activations, picks,
-// welcome-bonus deadlines), with a reminder two days before. Built on the
+// welcome-bonus deadlines, credits to use), with a reminder two days before. Built on the
 // device: nothing is sent anywhere.
 export function checklistCalendar(
   items: ChecklistItem[],
@@ -202,7 +234,7 @@ export function checklistCalendar(
       const due = i.due ?? ''
       return [
         'BEGIN:VEVENT',
-        `UID:${i.kind}-${i.cardId}-${due}@earnrate.dev`,
+        `UID:${i.kind}-${i.cardId}${i.ref === undefined ? '' : `-${i.ref}`}-${due}@earnrate.dev`,
         `DTSTAMP:${stamp}`,
         `DTSTART;VALUE=DATE:${day(due)}`,
         `DTEND;VALUE=DATE:${day(next(due))}`,

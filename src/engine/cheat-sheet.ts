@@ -13,6 +13,7 @@ import { checklist } from './checklist.ts'
 import { setupNotes } from './setup.ts'
 import {
   capitalize,
+  CREDITS_LEFT_OUT,
   feeText,
   listed,
   money,
@@ -59,6 +60,7 @@ export type CheatSheet = {
   date: string
   rows: CheatSheetRow[]
   notes: string[] // what the wallet still needs: picks, activations, missing quarters
+  assumptions: string[]
 }
 
 // The best card in the wallet for each everyday kind of purchase on `date`,
@@ -90,6 +92,7 @@ export function cheatSheet(
         country: 'US',
       },
       merchant,
+      { credits: false },
     )
     // The card that earns the most, even when a welcome bonus would take the
     // pick for one purchase: the sheet is for the whole quarter.
@@ -171,6 +174,7 @@ export function cheatSheet(
     date,
     rows,
     notes,
+    assumptions: [CREDITS_LEFT_OUT],
   }
 }
 
@@ -195,6 +199,7 @@ function abroadRow(
       country: ABROAD,
     },
     merchant,
+    { credits: false },
   )
   const top = rec.decision ? rec.ranked[0] : undefined
   const allCharge =
@@ -289,5 +294,6 @@ export function catalogCheatSheet(
           .map((card) => ({ name: card.name, card })),
       ),
     ].filter((n) => n !== null),
+    assumptions: [CREDITS_LEFT_OUT],
   }
 }

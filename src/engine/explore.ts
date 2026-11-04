@@ -1,8 +1,10 @@
 import { categoryResolution, resolvePlace } from '../merchants/resolve.ts'
-import type { Cap, Card, PaymentMethod } from '../schema/card.ts'
+import type { Cap, Card, Credit, PaymentMethod } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
+import { creditCovers, creditPerYear } from './credits.ts'
 import { evaluateCard, paymentUpgrade, purchaseContext } from './evaluate.ts'
+import { creditName } from './rule-text.ts'
 import {
   membershipName,
   membershipNeeded,
@@ -18,6 +20,8 @@ import {
   categoryPhrase,
   choiceName,
   codesAs,
+  creditBack,
+  creditThen,
   earnText,
   listed,
   money,
@@ -119,8 +123,31 @@ export type Requirements = {
   } | null
 }
 
+// A card with a statement credit at this store, shown ahead of the ranking:
+// "$75 back each quarter, then 1x Amex Membership Rewards". Only for a store
+// itself, never for a kind of purchase.
+export type CreditPick = {
+  cardId: string
+  cardName: string
+  issuer: string
+  network: Card['network']
+  annualFee: number | null
+  firstYearFee: number | null
+  creditId: string
+  name: string // what the credit is for: "Lululemon"
+  amount: number // dollars each period
+  period: Credit['period']
+  enroll: boolean // the cardholder must enroll first
+  note: string | null
+  back: string // "$75 back each quarter"
+  earn: string // what the purchase earns too: "1x Amex Membership Rewards"
+  text: string // the two together
+  evidence: { quote: string; url: string } | null
+}
+
 export type Exploration = {
   merchant: MerchantResolution
+  credits: CreditPick[]
   ranked: ExploreEntry[]
   excluded: ExcludedCard[]
   assumptions: string[]
@@ -339,7 +366,9 @@ export function exploreCards(
     )
     const held = idealHolding(card, query.date, picks)
     const wallet = walletOf(held, options)
-    const rec = recommend(catalog, wallet, purchase, merchant)
+    const rec = recommend(catalog, wallet, purchase, merchant, {
+      credits: false,
+    })
     const top = rec.ranked[0]
     if (!top) {
       excluded.push(...rec.excluded)
@@ -407,6 +436,7 @@ export function exploreCards(
 
   return {
     merchant,
+    credits: creditPicks(catalog, merchant, ranked),
     ranked,
     excluded,
     assumptions: exploreAssumptions(
@@ -419,6 +449,46 @@ export function exploreCards(
     ),
     warnings: exploreWarnings(catalog, merchant),
   }
+}
+
+function creditPicks(
+  catalog: Catalog,
+  merchant: MerchantResolution,
+  ranked: ExploreEntry[],
+): CreditPick[] {
+  const picks = ranked.flatMap((entry) => {
+    const card = catalog.cards.find((c) => c.id === entry.cardId)
+    return (card?.credits ?? [])
+      .filter((c) => creditCovers(c, merchant))
+      .map((credit): CreditPick => {
+        const earn = earnText(catalog, entry.rate, entry.currency)
+        const evidence = card?.evidence.find((e) => e.rule === credit.id)
+        return {
+          cardId: entry.cardId,
+          cardName: entry.cardName,
+          issuer: entry.issuer,
+          network: entry.network,
+          annualFee: entry.annualFee,
+          firstYearFee: entry.firstYearFee,
+          creditId: credit.id,
+          name: creditName(catalog, credit),
+          amount: credit.amount,
+          period: credit.period,
+          enroll: credit.enroll === true,
+          note: credit.note ?? null,
+          back: creditBack(credit),
+          earn,
+          text: creditThen(credit, earn),
+          evidence: evidence
+            ? { quote: evidence.quote, url: evidence.url }
+            : null,
+        }
+      })
+  })
+  return picks.sort(
+    (a, b) =>
+      creditPerYear(b) - creditPerYear(a) || a.cardId.localeCompare(b.cardId),
+  )
 }
 
 type PaidUpgrade = {

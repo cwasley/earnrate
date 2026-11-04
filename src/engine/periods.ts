@@ -1,10 +1,12 @@
 import type { Card } from '../schema/card.ts'
 
-export type Period = 'month' | 'quarter' | 'calendar_year' | 'cardmember_year'
+export type Period =
+  'month' | 'quarter' | 'half_year' | 'calendar_year' | 'cardmember_year'
 
-// Keys match the wallet's PeriodKey format: "2026" or "2026-Q4". A cardmember
-// year is keyed by the calendar year it started in. Returns null when a
-// cardmember year is asked for without an anniversary (MM-DD).
+// Keys match the wallet's PeriodKey format: "2026", "2026-Q4" or "2026-H2"
+// (July to December). A cardmember year is keyed by the calendar year it
+// started in. Returns null when a cardmember year is asked for without an
+// anniversary (MM-DD).
 export function periodKey(
   period: Period,
   date: string,
@@ -19,6 +21,8 @@ export function periodKey(
       return String(year)
     case 'quarter':
       return `${String(year)}-Q${String(Math.floor((month - 1) / 3) + 1)}`
+    case 'half_year':
+      return `${String(year)}-H${month <= 6 ? '1' : '2'}`
     case 'cardmember_year':
       if (anniversary === null) return null
       return String(date.slice(5) >= anniversary ? year : year - 1)
@@ -80,6 +84,10 @@ export function periodEnd(
     case 'quarter': {
       const q = /^(\d{4})-Q([1-4])$/.exec(key)
       return q ? utcDay(Number(q[1]), Number(q[2]) * 3 + 1, 0) : null
+    }
+    case 'half_year': {
+      const h = /^(\d{4})-H([12])$/.exec(key)
+      return h ? utcDay(Number(h[1]), Number(h[2]) * 6 + 1, 0) : null
     }
     case 'calendar_year':
       return /^\d{4}$/.test(key) ? `${key}-12-31` : null

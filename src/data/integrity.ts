@@ -143,6 +143,7 @@ function cardProblems(
     ['choice', card.choices.map((c) => c.id)],
     ['milestone', card.milestones.map((m) => m.id)],
     ['intro rate', card.intro_rates.map((i) => i.id)],
+    ['credit', card.credits.map((c) => c.id)],
   ] as const) {
     for (const id of duplicates(ids))
       problems.push(`${where}: duplicate ${kind} id '${id}'`)
@@ -160,6 +161,18 @@ function cardProblems(
     for (const id of intro.rules ?? [])
       if (!card.rules.some((r) => r.id === id))
         problems.push(`${where} intro rate ${intro.id}: unknown rule '${id}'`)
+  }
+  for (const credit of card.credits) {
+    if (
+      card.rules.some((r) => r.id === credit.id) ||
+      card.milestones.some((m) => m.id === credit.id) ||
+      card.intro_rates.some((i) => i.id === credit.id)
+    )
+      problems.push(`${where}: credit '${credit.id}' has a rule's id`)
+    for (const c of credit.match.categories ?? [])
+      checkCategory(c, `credit ${credit.id}`)
+    for (const m of credit.match.merchants ?? [])
+      checkMerchant(m, `credit ${credit.id}`)
   }
   if (
     card.foreign_transaction_fee === null &&
@@ -182,6 +195,7 @@ function cardProblems(
     ...card.rules.map((r) => r.id),
     ...card.milestones.map((m) => m.id),
     ...card.intro_rates.map((i) => i.id),
+    ...card.credits.map((c) => c.id),
   ])
   const sourcePages = new Set(card.source_urls.map((u) => u.split('#')[0]))
   const backed = new Set(card.evidence.map((e) => e.rule))

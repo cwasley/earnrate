@@ -47,3 +47,29 @@ test('refuses a cap_usage written inline, rather than reformatting it', async ()
     write('cards:\n  - id: amex-blue-cash-preferred\n    cap_usage: {}\n'),
   ).rejects.toThrow(/by hand/)
 })
+
+test('writes credit used next to the card, as a flow map', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'earnrate-write-'))
+  const file = path.join(dir, 'wallet.yaml')
+  await writeFile(
+    file,
+    'cards:\n  - id: amex-platinum # the heavy one\n    enrolled: [lululemon]\n',
+  )
+  await writeProgress(
+    file,
+    [],
+    [],
+    [],
+    [
+      {
+        cardId: 'amex-platinum',
+        creditId: 'lululemon',
+        period: '2026-Q4',
+        after: 35,
+      },
+    ],
+  )
+  expect(await readFile(file, 'utf8')).toBe(
+    'cards:\n  - id: amex-platinum # the heavy one\n    enrolled: [lululemon]\n    credit_usage:\n      lululemon: { period: 2026-Q4, used: 35 }\n',
+  )
+})

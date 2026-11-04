@@ -400,6 +400,21 @@ input::-webkit-list-button {
   margin: 6px 0 0;
 }
 
+.credit-group {
+  margin: 14px 0 8px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.result.credit-pick p,
+.result.credit-pick details {
+  margin-left: 0;
+}
+
+.credit-enroll {
+  color: var(--accent);
+}
+
 .result blockquote {
   margin: 8px 0 0;
   padding-left: 10px;
@@ -1008,6 +1023,10 @@ input[type='number']::-webkit-outer-spin-button {
 .result-top {
   grid-template-columns: auto auto 1fr auto;
   align-items: center;
+}
+
+.credit-pick .result-top {
+  grid-template-columns: auto 1fr auto;
 }
 
 .art-pair {

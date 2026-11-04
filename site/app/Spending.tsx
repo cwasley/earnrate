@@ -12,7 +12,7 @@ import {
   TYPICAL_MONTHLY_SPEND,
   type Simulation,
 } from '../../src/engine/simulate.ts'
-import { categoryPhrase } from '../../src/engine/text.ts'
+import { categoryPhrase, CREDITS_LEFT_OUT } from '../../src/engine/text.ts'
 import { feeLabel, shortName, wholeDollars, words } from './format.ts'
 import {
   engineOptions,
@@ -276,6 +276,7 @@ export function Spending({
                 Each card uses its best category picks, with any bonus
                 activations done.
               </li>
+              <li>{CREDITS_LEFT_OUT}</li>
               {notes.map((n) => (
                 <li key={n}>{n}</li>
               ))}

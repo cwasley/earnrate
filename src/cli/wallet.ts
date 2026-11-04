@@ -26,6 +26,12 @@ const CARD_OPTIONS = `Options:
                              card is ranked at its standard rates.
   --activated <rules>        Rules you've activated with the issuer, comma
                              separated. Replaces the current list.
+  --enrolled <credits>       Merchant credits you've enrolled in with the
+                             issuer, comma separated, e.g. --enrolled lululemon.
+                             Replaces the current list.
+  --credit-used <credit>=<dollars>
+                             How much of a credit you've received this period,
+                             e.g. --credit-used lululemon=40. Repeat for each.
   --bonus-opened <date>      Track a welcome bonus: the day the account opened
                              (YYYY-MM-DD). Spending needed and the deadline
                              default to the card's published offer.
@@ -55,8 +61,8 @@ ${CARD_OPTIONS}
   update: `Usage: ${CLI_NAME} update <card-id> [options]
 
 Changes a card in your wallet: picks for this period, label, anniversary,
-opening date, activations or welcome bonus. Picks for the current period are merged with
-ones already set.
+opening date, activations, merchant credits or welcome bonus. Picks for the
+current period are merged with ones already set.
 
 ${CARD_OPTIONS}
 `,
@@ -158,6 +164,8 @@ export async function runWalletCommand(
         anniversary: { type: 'string' },
         opened: { type: 'string' },
         activated: { type: 'string' },
+        enrolled: { type: 'string' },
+        'credit-used': { type: 'string', multiple: true },
         'bonus-opened': { type: 'string' },
         'bonus-spent': { type: 'string' },
         'bonus-spend': { type: 'string' },
@@ -188,7 +196,9 @@ export async function runWalletCommand(
     values.pick !== undefined ||
     values.anniversary !== undefined ||
     values.opened !== undefined ||
-    values.activated !== undefined
+    values.activated !== undefined ||
+    values.enrolled !== undefined ||
+    values['credit-used'] !== undefined
   if (command !== 'add' && command !== 'update' && cardOptionsGiven) {
     return usage(`${CLI_NAME} ${command} doesn't take card options.`)
   }
@@ -314,6 +324,25 @@ export async function runWalletCommand(
     if (text === undefined) return undefined
     const n = Number(text.replace(/[$,]/g, ''))
     return Number.isFinite(n) ? n : `--${flag} takes dollars, like 1200.`
+  }
+  if (values.enrolled !== undefined) {
+    input.enrolled = values.enrolled
+      .split(',')
+      .map((r) => r.trim())
+      .filter((r) => r !== '')
+  }
+  if (values['credit-used'] !== undefined) {
+    const used: Record<string, number> = {}
+    for (const pair of values['credit-used']) {
+      const [credit = '', dollars] = pair.split('=')
+      const n = dollarsFlag('credit-used', dollars)
+      if (credit.trim() === '' || n === undefined || typeof n === 'string')
+        return usage(
+          '--credit-used takes <credit>=<dollars>, like lululemon=40.',
+        )
+      used[credit.trim()] = n
+    }
+    input.creditUsed = used
   }
   if (values['no-bonus']) {
     input.bonus = null

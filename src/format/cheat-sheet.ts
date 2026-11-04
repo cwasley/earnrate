@@ -22,5 +22,6 @@ export function formatCheatSheet(sheet: CheatSheet): string {
       )
   }
   if (sheet.notes.length > 0) lines.push('', ...sheet.notes)
+  if (sheet.assumptions.length > 0) lines.push('', ...sheet.assumptions)
   return `${lines.join('\n')}\n`
 }

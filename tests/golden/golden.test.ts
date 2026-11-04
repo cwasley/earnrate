@@ -4,6 +4,8 @@ import { recommend } from '../../src/engine/recommend.ts'
 import { resolveMerchant } from '../../src/merchants/resolve.ts'
 import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
+import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
+import { ALL_PERSONAL_CARDS, exploreCards } from '../../src/engine/explore.ts'
 import { resolveSpendLines, simulateWallet } from '../../src/engine/simulate.ts'
 import type {
   Purchase,
@@ -1746,6 +1748,211 @@ describe('#31 credit union and fintech cards', () => {
       expect(rateAt('venmo-credit-card', 'Chipotle')).toBe(3)
       expect(rateAt('venmo-credit-card', 'AMC Theatres')).toBe(3)
       expect(rateAt('venmo-credit-card', 'Safeway')).toBe(1)
+    },
+  )
+})
+
+describe('#32 merchant statement credits', () => {
+  const lululemon = (amount: number | null = 100) =>
+    purchase('Lululemon', { amount, channel: 'in_store' })
+  const wallet = (platinum: object = {}) =>
+    withProfile(
+      WalletSchema.parse({
+        cards: [
+          { id: 'amex-platinum', ...platinum },
+          { id: 'citi-double-cash' },
+        ],
+      }),
+      'flat',
+    )
+  const enrolled = (used?: number) => ({
+    enrolled: ['lululemon'],
+    ...(used === undefined
+      ? {}
+      : { credit_usage: { lululemon: { period: '2026-Q4', used } } }),
+  })
+
+  goldenTest(
+    '#32a Lululemon with no wallet: the credit group first, then the ranking by rate',
+    () => {
+      const r = exploreCards(
+        catalog,
+        {
+          merchant: 'Lululemon',
+          category: null,
+          amount: null,
+          channel: null,
+          date: TODAY,
+        },
+        { filters: ALL_PERSONAL_CARDS, memberships: [], valuations: {} },
+      )
+      expect(r.credits).toHaveLength(1)
+      expect(r.credits[0]).toMatchObject({
+        cardId: 'amex-platinum',
+        creditId: 'lululemon',
+        amount: 75,
+        period: 'quarter',
+        enroll: true,
+        text: '$75 back each quarter, then 1x Amex Membership Rewards',
+      })
+      expect(r.credits[0]?.evidence?.quote).toMatch(/\$75 in statement credits/)
+      expect(r.credits[0]?.text).not.toMatch(/%/)
+      expect(r.ranked[0]?.cardId).not.toBe('amex-platinum')
+      const platinum = r.ranked.find((e) => e.cardId === 'amex-platinum')
+      expect(platinum?.effectiveReturnPct).toBeCloseTo(1)
+      expect(platinum?.credit).toBeNull()
+      const clothing = exploreCards(
+        catalog,
+        {
+          merchant: null,
+          category: 'clothing',
+          amount: null,
+          channel: null,
+          date: TODAY,
+        },
+        { filters: ALL_PERSONAL_CARDS, memberships: [], valuations: {} },
+      )
+      expect(clothing.credits).toEqual([])
+    },
+  )
+
+  goldenTest(
+    '#32b enrolled, with an amount: Platinum wins with the credit dollars counted',
+    () => {
+      const rec = recommend(catalog, wallet(enrolled()), lululemon())
+      expect(rec.decision?.cardId).toBe('amex-platinum')
+      const it = entry(rec, 'amex-platinum')
+      expect(it.effectiveReturnPct).toBeCloseTo(1)
+      expect(it.earned).toBeCloseTo(1)
+      expect(it.credit).toMatchObject({ dollars: 75, left: 75, enrolled: true })
+      expectSome(it.reasoning, /^\$75 back from its Lululemon credit/)
+    },
+  )
+
+  goldenTest('#32c not enrolled: shown, says enroll first, never wins', () => {
+    const rec = recommend(catalog, wallet(), lululemon())
+    expect(rec.decision?.cardId).toBe('citi-double-cash')
+    const it = entry(rec, 'amex-platinum')
+    expect(it.credit).toMatchObject({ enrolled: false, dollars: 0 })
+    expectSome(it.reasoning, /enroll first/)
+  })
+
+  goldenTest('#32d used up this quarter: the rate decides again', () => {
+    const rec = recommend(catalog, wallet(enrolled(75)), lululemon())
+    expect(rec.decision?.cardId).toBe('citi-double-cash')
+    const it = entry(rec, 'amex-platinum')
+    expect(it.credit).toMatchObject({ left: 0, dollars: 0 })
+    expectSome(
+      it.reasoning,
+      /used up this quarter; it renews after Dec 31, 2026/,
+    )
+    const nextQuarter = recommend(
+      catalog,
+      wallet(enrolled(75)),
+      purchase('Lululemon', { amount: 100, date: '2027-01-02' }),
+    )
+    expect(entry(nextQuarter, 'amex-platinum').credit?.dollars).toBe(75)
+  })
+
+  goldenTest(
+    '#32e a purchase that straddles what is left uses only the rest, and recording it uses it up',
+    () => {
+      const w = wallet(enrolled(40))
+      const rec = recommend(catalog, w, lululemon())
+      const it = entry(rec, 'amex-platinum')
+      expect(rec.decision?.cardId).toBe('amex-platinum')
+      expect(it.credit?.dollars).toBe(35)
+      expectSome(it.reasoning, /^\$35 back .*all that's left this quarter/)
+      const booked = bookPurchase(catalog, w, {
+        cardId: 'amex-platinum',
+        merchant: 'Lululemon',
+        amount: 100,
+        date: TODAY,
+        channel: 'in_store',
+      })
+      expect(booked.credit).toMatchObject({
+        creditId: 'lululemon',
+        period: '2026-Q4',
+        before: 40,
+        after: 75,
+      })
+      const after = recommend(catalog, booked.wallet, lululemon())
+      expect(after.decision?.cardId).toBe('citi-double-cash')
+      const notEnrolled = bookPurchase(catalog, wallet(), {
+        cardId: 'amex-platinum',
+        merchant: 'Lululemon',
+        amount: 100,
+        date: TODAY,
+        channel: 'in_store',
+      })
+      expect(notEnrolled.credit).toBeNull()
+    },
+  )
+
+  goldenTest(
+    '#32f with no amount the credit and what is left show beside the ranking',
+    () => {
+      const rec = recommend(catalog, wallet(enrolled(40)), lululemon(null))
+      expect(rec.decision?.cardId).toBe('citi-double-cash')
+      const it = entry(rec, 'amex-platinum')
+      expect(it.credit).toMatchObject({ left: 35, dollars: null })
+      expectSome(it.reasoning, /\$35 left this quarter/)
+    },
+  )
+
+  goldenTest(
+    '#32g Gold at Dunkin: 4x at restaurants plus the monthly $7',
+    () => {
+      const rec = recommend(
+        catalog,
+        withProfile(
+          WalletSchema.parse({
+            cards: [
+              { id: 'amex-gold', enrolled: ['dunkin'] },
+              { id: 'citi-double-cash' },
+            ],
+          }),
+          'flat',
+        ),
+        purchase("Dunkin'", { amount: 5, channel: 'in_store' }),
+      )
+      const it = entry(rec, 'amex-gold')
+      expect(rec.decision?.cardId).toBe('amex-gold')
+      expect(it.rate).toBe(4)
+      expect(it.credit).toMatchObject({ dollars: 5, left: 7, period: 'month' })
+    },
+  )
+
+  goldenTest(
+    '#32h the to-do list: use what is left by the period end, or enroll',
+    () => {
+      const items = checklist(catalog, wallet(enrolled(40)), TODAY)
+      const use = items.find((i) => i.kind === 'credit')
+      expect(use).toMatchObject({
+        cardId: 'amex-platinum',
+        ref: 'lululemon',
+        due: '2026-12-31',
+        text: 'Use your $75 Lululemon credit on The Platinum Card from American Express by Dec 31, 2026: $35 left.',
+      })
+      const ics = checklistCalendar(items, '20261024T000000Z')
+      expect(ics).toContain('UID:credit-amex-platinum-lululemon-2026-12-31')
+      const usedUp = checklist(catalog, wallet(enrolled(75)), TODAY)
+      expect(usedUp.some((i) => i.kind === 'credit')).toBe(false)
+      const todo = checklist(catalog, wallet(), TODAY)
+      expect(todo.find((i) => i.kind === 'enroll')).toMatchObject({
+        text: "Enroll in The Platinum Card from American Express's Lululemon credit with the issuer, then mark it enrolled.",
+        due: null,
+      })
+    },
+  )
+
+  goldenTest(
+    '#32i the cheat sheet and simulations leave credits out and say so',
+    () => {
+      const sheet = cheatSheet(catalog, wallet(enrolled()), TODAY)
+      expect(sheet.assumptions.join(' ')).toMatch(
+        /Merchant statement credits .* are left out/,
+      )
     },
   )
 })
