@@ -9,7 +9,7 @@ last_verified: 2026-11-04
 verified_by: claude
 source_urls:
   - https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-blue-american-express-card/
-  - https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
   - https://www.americanexpress.com/us/content/rewards-info/retail.html
 base_rate: 1
 annual_fee: 0
@@ -37,55 +37,55 @@ rules:
     note: Charged directly with Delta as merchant of record (delta.com, the Fly Delta app, phone, ticket counters), including Basic Economy fares, upgrades, seats, Sky Club membership, Delta-operated in-flight food and drinks, Delta Vacations packages and new Delta Stays bookings. Not Delta gift cards, deltashop.com, the Delta Flight Museum or in-flight Wi-Fi.
 evidence:
   - rule: base_rate
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: '1x Mile on eligible purchases: Basic Card Members will earn 1 mile for each dollar'
   - rule: restaurants
     url: https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-blue-american-express-card/
     quote: 'At restaurants, including takeout and delivery in the U.S.'
   - rule: restaurants
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: '2x Miles at Restaurants: Basic Card Members will earn 1 additional mile'
   - rule: restaurants
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'Card Account charged at restaurants worldwide.'
   - rule: restaurants
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'will not earn additional miles for purchases at bars, nightclubs, cafeterias, and convenience stores'
   - rule: restaurants
     url: https://www.americanexpress.com/us/content/rewards-info/retail.html
     quote: 'fast food restaurants are included in the global restaurants rewards category'
   - rule: delta
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: '2x Miles on Delta Purchases: Basic Card Members will earn 1 additional mile'
   - rule: delta
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'charged directly with Delta where Delta is the merchant of record'
   - rule: delta
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'Delta Purchases do not include Delta Gift Cards and purchases made at deltashop.com'
   - rule: delta
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'Delta Purchases include Delta Vacations® packages but not other all-inclusive packages.'
   - rule: delta
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'Delta Purchases include new Delta Stays prepaid hotel or vacation rental bookings'
   - rule: annual_fee
     url: https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-blue-american-express-card/
     quote: 'Annual Fee: No Annual Fee'
   - rule: annual_fee
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'Annual Fee $0 Transaction Fees'
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-blue-american-express-card/
     quote: 'after you spend $1,000 on eligible purchases on your new Card within your first 6 months'
   - rule: welcome_offer
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'To qualify for the 10,000 bonus miles, you must make eligible purchases'
   - rule: not_with
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'the Delta SkyMiles® Gold American Express Card, the Delta SkyMiles® Platinum American Express Card'
   - rule: foreign_transaction_fee
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'
 todo:
   - Not modeled (statement credits and perks, not miles per dollar) 20% back as a statement credit on Delta in-flight food and drinks, and Pay with Miles ($50 off a Delta fare for every 5,000 miles).
