@@ -84,6 +84,7 @@ async function site() {
     ['/best/costco', 'Use it with your own cards'],
     ['/cards/amex-gold', 'American Express Gold Card'],
     ['/privacy', 'On earnrate.dev'],
+    ['/companies', 'What you can license'],
     ['/manifest.webmanifest', '"short_name"'],
     ['/sw.js', "const CACHE = 'earnrate-v"],
   ]
