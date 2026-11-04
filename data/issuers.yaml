@@ -34,6 +34,11 @@
   name: Discover
   color: '#e8751a'
   search: [discover it]
+- id: goldman-sachs
+  # Goldman Sachs Bank USA issues the Apple Card.
+  name: Goldman Sachs
+  color: '#6b8fbf'
+  search: [goldman, gs]
 - id: sofi
   name: SoFi
   color: '#2d2f36'

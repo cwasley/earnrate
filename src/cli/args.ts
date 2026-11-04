@@ -7,6 +7,7 @@ import { knownMemberships } from '../engine/setup.ts'
 import type { Channel } from '../engine/types.ts'
 import { COUNTRY_CODE, countryProblem } from '../schema/common.ts'
 import type { Catalog } from '../schema/catalog.ts'
+import { PaymentMethod } from '../schema/card.ts'
 
 export type CliOptions = {
   merchant: string
@@ -15,6 +16,7 @@ export type CliOptions = {
   valuation: ValuationProfile | null
   date: string | null
   country: string
+  payment: PaymentMethod | null
   json: boolean
   all: boolean
   category: string | null // checked against the catalog once it's loaded
@@ -86,6 +88,21 @@ export function membershipProblem(
     : `Unknown membership "${unknown.join('", "')}". Use one of: ${known.join(', ')}.`
 }
 
+export const PAYING_HELP = `--paying <how>         card, apple-pay, google-pay or paypal. Rates that need
+                         one (Apple Pay on Apple Card) count only when you say.`
+
+export function paymentOf(
+  text: string | undefined,
+): { payment: PaymentMethod | null } | { problem: string } {
+  if (text === undefined) return { payment: null }
+  const parsed = PaymentMethod.safeParse(text.toLowerCase())
+  return parsed.success
+    ? { payment: parsed.data }
+    : {
+        problem: `Unknown way of paying "${text}". Use one of: ${PaymentMethod.options.join(', ')}.`,
+      }
+}
+
 export const BOTH_CHANNELS = 'Pick --online or --in-store, not both.'
 
 export function channelOf(values: {
@@ -117,6 +134,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
         valuation: { type: 'string' },
         date: { type: 'string' },
         country: { type: 'string' },
+        paying: { type: 'string' },
         json: { type: 'boolean' },
         category: { type: 'string' },
         all: { type: 'boolean' },
@@ -155,6 +173,9 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
   if (!COUNTRY_CODE.test(country))
     return { kind: 'error', message: countryProblem(country) }
 
+  const paying = paymentOf(values.paying)
+  if ('problem' in paying) return { kind: 'error', message: paying.problem }
+
   return {
     kind: 'run',
     options: {
@@ -164,6 +185,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
       valuation,
       date: values.date ?? null,
       country: country.toUpperCase(),
+      payment: paying.payment,
       json: values.json ?? false,
       all: values.all ?? false,
       category: values.category ?? null,

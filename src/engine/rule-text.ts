@@ -8,6 +8,7 @@ import {
   introPeriod,
   listed,
   num,
+  PAYMENT_PHRASES,
   words,
 } from './text.ts'
 
@@ -47,7 +48,9 @@ export function ruleParts(catalog: Catalog, rule: Rule): string[] {
     return [
       rule.geography === 'foreign_only'
         ? 'purchases outside the U.S.'
-        : 'everything else',
+        : rule.requires?.payment !== undefined
+          ? 'purchases'
+          : 'everything else',
     ]
   if (rule.match.choice !== undefined)
     return [`your ${choiceName(rule.match.choice)} picks`]
@@ -74,7 +77,9 @@ export function ruleParts(catalog: Catalog, rule: Rule): string[] {
 }
 
 export function ruleWhat(catalog: Catalog, rule: Rule): string {
-  return listed(ruleParts(catalog, rule))
+  const payment = rule.requires?.payment
+  const what = listed(ruleParts(catalog, rule))
+  return payment === undefined ? what : `${what} ${PAYMENT_PHRASES[payment]}`
 }
 
 // "double every rate for the first year", "an extra 3% cash back on your 3%

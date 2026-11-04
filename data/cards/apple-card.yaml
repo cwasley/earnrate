@@ -1,0 +1,76 @@
+id: apple-card
+name: Apple Card
+color: '#e4e4e2'
+# Issued by Goldman Sachs Bank USA, per apple.com on 2026-11-04. Chase is
+# taking over as issuer (announced January 2026, about 24 months); move
+# `issuer` and the sources when Apple's page names Chase.
+issuer: goldman-sachs
+network: mastercard
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.apple.com/apple-card/
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 0
+rules:
+  - id: apple
+    match: { merchants: [apple-store, apple-tv, apple-music] }
+    rate: 3
+    note: Everything bought from Apple, paid with the card any way, in Apple Stores, on apple.com, in the App Store and for Apple services like Apple Music and Apple TV.
+  - id: apple-pay-merchants
+    match:
+      merchants:
+        [
+          ace-hardware,
+          chargepoint,
+          duane-reade,
+          exxon-mobil,
+          hertz,
+          nike,
+          uber,
+          uber-eats,
+          walgreens,
+        ]
+    rate: 3
+    geography: us_only
+    requires: { payment: apple-pay }
+    note: Where the store offers Apple Pay (not at Walgreens drive-thrus, for one), and only in the U.S. Ace Hardware at participating stores; Exxon and Mobil pumps and their attached convenience stores; Hertz rentals from U.S. corporate locations booked with Hertz. Gift cards and third-party sellers inside these stores don't count.
+  - id: apple-pay
+    match: { any: true }
+    rate: 2
+    requires: { payment: apple-pay }
+    note: Any purchase paid with Apple Card through Apple Pay, in stores, in apps and on websites. The titanium card or the card number earns 1%.
+todo:
+  - Booking.com earns 3% only on stays and rentals booked through Apple's own Booking.com link, prepaid with Apple Pay, so it isn't on the Apple Pay merchant list here.
+  - The rates and fees table is in Goldman Sachs's Customer Agreement, a PDF the source check can't read; the fees are quoted from apple.com instead.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.apple.com/apple-card/
+    quote: 'When you use the card, you’ll get 1% Daily Cash back on every purchase.'
+  - rule: apple
+    url: https://www.apple.com/apple-card/
+    quote: 'Apple Card gives you unlimited 3% Daily Cash back on everything you buy at Apple'
+  - rule: apple-pay-merchants
+    url: https://www.apple.com/apple-card/
+    quote: '3% Daily Cash back when you use your Apple Card with Apple Pay at your favorites like Nike, Uber, Walgreens'
+  - rule: apple-pay-merchants
+    url: https://www.apple.com/apple-card/
+    quote: 'Nike: 3% Daily Cash is available on purchases made in the U.S. using Apple Card with Apple Pay'
+  - rule: apple-pay-merchants
+    url: https://www.apple.com/apple-card/
+    quote: 'Walgreens/Duane Reade: 3% Daily Cash is available in the United States when using Apple Card with Apple Pay'
+  - rule: apple-pay-merchants
+    url: https://www.apple.com/apple-card/
+    quote: 'ChargePoint: 3% Daily Cash is available when using Apple Card with Apple Pay'
+  - rule: apple-pay
+    url: https://www.apple.com/apple-card/
+    quote: 'with every purchase you make using your Apple Card with Apple Pay, you get 2% Daily Cash back'
+  - rule: annual_fee
+    url: https://www.apple.com/apple-card/
+    quote: 'No annual, over-the-limit, foreign-transaction, or late fees.'
+  - rule: foreign_transaction_fee
+    url: https://www.apple.com/apple-card/
+    quote: 'No annual, over-the-limit, foreign-transaction, or late fees.'

@@ -23,6 +23,7 @@ import {
   currencyLabel,
   earnText,
   listed,
+  PAYMENT_PHRASES,
   shortDate,
   wholeDollars,
   words,
@@ -163,10 +164,12 @@ function headlineRates(
     )
     if (replaced) continue
     const pending = r.requires?.activation && !isActivated(card, held, r.id)
+    const payment = r.requires?.payment
     const key = [
       `${earnText(catalog, r.rate, currency)} on`,
       capLimit(card, shown, r),
       pending ? ', once activated' : '',
+      payment === undefined ? '' : ` ${PAYMENT_PHRASES[payment]}`,
     ].join('|')
     const whats = lines.get(key) ?? []
     for (const part of ruleParts(catalog, r))
@@ -175,14 +178,15 @@ function headlineRates(
   }
   return [
     ...[...lines].map(([key, whats]) => {
-      const [head = '', limit = '', activate = ''] = key.split('|')
+      const [head = '', limit = '', activate = '', paid = ''] = key.split('|')
       const after = `${limit}${activate}`
-      return `${head} ${listed(whats)}${after === '' ? '' : ` (${after.replace(/^, /, '')})`}`
+      return `${head} ${listed(whats)}${paid}${after === '' ? '' : ` (${after.replace(/^, /, '')})`}`
     }),
     ...(shown.some(
       (r) =>
         r.match.any &&
         r.geography !== 'foreign_only' &&
+        r.requires?.payment === undefined &&
         r.rate > card.base_rate,
     )
       ? []

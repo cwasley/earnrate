@@ -1,7 +1,8 @@
-import type { Cap, Card, Rule } from '../schema/card.ts'
+import type { Cap, Card, PaymentMethod, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { merchantFamily } from '../merchants/resolve.ts'
+import { EPSILON } from './compare.ts'
 import {
   introCovers,
   introWindows,
@@ -20,15 +21,23 @@ export type PurchaseContext = {
   date: string
   amount: number | null
   memberships: Set<string>
+  payment: PaymentMethod | null
 }
+
+// PayPal checkout happens online, so paying through it says the channel.
+export const paymentChannel = (
+  channel: Channel | null,
+  payment: PaymentMethod | null,
+): Channel | null => channel ?? (payment === 'paypal' ? 'online' : null)
 
 export function purchaseContext(
   catalog: Catalog,
   wallet: Wallet,
   merchant: MerchantResolution,
   category: string,
-  purchase: Pick<Purchase, 'amount' | 'date' | 'country'>,
+  purchase: Pick<Purchase, 'amount' | 'date' | 'country' | 'payment'>,
 ): PurchaseContext {
+  const payment = purchase.payment ?? null
   return {
     category,
     merchantIds: merchantFamily(catalog, merchant.merchantId),
@@ -36,11 +45,12 @@ export function purchaseContext(
       category === merchant.category && merchant.likelyMcc !== null
         ? merchant.likelyMcc
         : singleMcc(catalog, category),
-    channel: merchant.channel,
+    channel: paymentChannel(merchant.channel, payment),
     country: purchase.country,
     date: purchase.date,
     amount: purchase.amount,
     memberships: new Set(wallet.memberships),
+    payment,
   }
 }
 
@@ -202,6 +212,12 @@ function applicability(
   if (named(exclude?.merchants)) return 'no'
   if (exclude?.mccs && ctx.mcc !== null && exclude.mccs.includes(ctx.mcc))
     return 'no'
+  if (
+    exclude?.payment &&
+    ctx.payment !== null &&
+    exclude.payment.includes(ctx.payment)
+  )
+    return 'no'
 
   if (rule.channel !== 'any' && rule.channel !== ctx.channel) return 'no'
   if (rule.geography === 'us_only' && ctx.country !== 'US') return 'no'
@@ -209,6 +225,8 @@ function applicability(
   if (!inEffect(rule, ctx.date)) return 'no'
   const membership = rule.requires?.membership
   if (membership !== undefined && !ctx.memberships.has(membership)) return 'no'
+  const payment = rule.requires?.payment
+  if (payment !== undefined && ctx.payment !== payment) return 'no'
   if (rule.requires?.activation && !isActivated(card, held, rule.id))
     return 'needs-activation'
   return 'applies'
@@ -335,4 +353,36 @@ export function evaluateCard(
     needsActivation: blocked.filter((r) => rateOf(r) > best.rate),
     staleChoice,
   }
+}
+
+// The way of paying (one a rule on the card requires) that would earn the
+// most on this purchase, when that beats `rate`. Only while the purchase
+// doesn't say how it's paid.
+export function paymentUpgrade(
+  card: Card,
+  held: WalletCard,
+  ctx: PurchaseContext,
+  rate: number,
+): { payment: PaymentMethod; rate: number; nominalRate: number } | null {
+  if (ctx.payment !== null) return null
+  let best: {
+    payment: PaymentMethod
+    rate: number
+    nominalRate: number
+  } | null = null
+  const methods = new Set(
+    card.rules.flatMap((r) =>
+      r.requires?.payment === undefined ? [] : [r.requires.payment],
+    ),
+  )
+  for (const payment of methods) {
+    const paid = evaluateCard(card, held, {
+      ...ctx,
+      payment,
+      channel: paymentChannel(ctx.channel, payment),
+    }).best
+    if (paid.rate > (best?.rate ?? rate) + EPSILON)
+      best = { payment, rate: paid.rate, nominalRate: paid.nominalRate }
+  }
+  return best
 }

@@ -3,6 +3,7 @@ import { ALL_PERSONAL_CARDS } from '../engine/explore.ts'
 import { profileText, VALUATION_PROFILES } from '../engine/profiles.ts'
 import { knownMemberships } from '../engine/setup.ts'
 import type { CardInput } from '../engine/wallet-change.ts'
+import { PaymentMethod } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { IsoDate } from '../schema/common.ts'
 import { COUNTRY_CODE } from '../schema/common.ts'
@@ -33,6 +34,10 @@ export const CountryInput = z
   .describe(
     'Where the purchase is made, as a two-letter country code (FR, GB, JP). Pass it when the user is paying abroad or in another currency: abroad, cards are ranked after their foreign transaction fees. Default US.',
   )
+
+export const PaymentInput = PaymentMethod.optional().describe(
+  "How the purchase is paid, only when the user says: card (the card itself or its number), apple-pay, google-pay or paypal (PayPal checkout). Optional; omit it when unknown, and never assume Apple Pay. Some rates need one (Apple Card's 2% with Apple Pay, PayPal Cashback's 3% through PayPal checkout), and the answer's assumptions say when paying another way would change the pick.",
+)
 
 export const CardId = z
   .string()
