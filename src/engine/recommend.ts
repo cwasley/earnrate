@@ -1,5 +1,6 @@
 import {
   findMerchant,
+  merchantFamily,
   resolveMerchant,
   resolveMerchantById,
 } from '../merchants/resolve.ts'
@@ -487,8 +488,9 @@ function assumptionsFor(
     const naming = entries.flatMap((e) => {
       const rule = e.evaluation.best.rule
       return rule &&
-        merchant.merchantId !== null &&
-        (rule.match.merchants ?? []).includes(merchant.merchantId)
+        merchantFamily(catalog, merchant.merchantId).some((id) =>
+          (rule.match.merchants ?? []).includes(id),
+        )
         ? [`${displayName(e)} (${ruleWhat(catalog, rule)})`]
         : []
     })
