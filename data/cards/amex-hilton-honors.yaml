@@ -7,7 +7,7 @@ last_verified: 2026-11-03
 verified_by: claude
 source_urls:
   - https://www.americanexpress.com/us/credit-cards/card/hilton-honors/
-  - https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
   - https://www.americanexpress.com/us/content/rewards-info/retail.html
 base_rate: 3
 annual_fee: 0
@@ -50,28 +50,28 @@ milestones:
     note: Basic Card Member only, though Additional Card purchases count. Calendar year regardless of when the account opened. Gold lasts through the end of the next calendar year. Amex says about 10-12 weeks to take effect.
 evidence:
   - rule: base_rate
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'You will receive 3 Hilton Honors Bonus Points for each dollar of eligible purchases.'
   - rule: hilton-purchases
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'for a total of 7, for each dollar of eligible purchases charged directly with a property within the Hilton portfolio'
   - rule: hilton-purchases
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'the booking must be made directly through a reservation channel operated by Hilton'
   - rule: hilton-purchases
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors/
     quote: 'Earn 7X Hilton Honors Bonus Points on eligible Hilton purchases'
   - rule: us-restaurants
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'for a total of 5, for each dollar of eligible purchases at the following categories of merchants'
   - rule: us-restaurants
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'restaurants located in the U.S., supermarkets located in the U.S.'
   - rule: us-restaurants
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'You will NOT get additional Points for purchases made at a restaurant owned by a U.S. company'
   - rule: us-restaurants
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'a restaurant located within another establishment (e.g. a restaurant inside a hotel, casino, or event venue)'
   - rule: us-restaurants
     url: https://www.americanexpress.com/us/content/rewards-info/retail.html
@@ -80,37 +80,37 @@ evidence:
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors/
     quote: 'At U.S. restaurants, including takeout and delivery.'
   - rule: us-supermarkets
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'supermarkets located in the U.S. and on gasoline at gas stations located in the U.S.'
   - rule: us-supermarkets
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'purchases of groceries made at superstores, warehouse clubs, and convenience stores'
   - rule: us-gas
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'Purchases of gasoline at supermarkets, superstores, and warehouse clubs will only get 3 Bonus Points per dollar.'
   - rule: us-gas
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors/
     quote: 'Earn 5X Hilton Honors Bonus Points at U.S. restaurants, U.S. gas stations, and U.S. supermarkets'
   - rule: spend-20k
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'You may receive an upgrade to Hilton Honors Gold status if the total eligible purchases'
   - rule: spend-20k
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'during a calendar year reach $20,000 or more.'
   - rule: annual_fee
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors/
     quote: 'There is no annual fee for the Hilton Honors American Express Card.'
   - rule: foreign_transaction_fee
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors/
     quote: 'Earn 70,000 Hilton Honors Bonus Points + A Free Night Reward'
   - rule: welcome_offer
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'after you spend $2,000 (the "Threshold Amount") on eligible purchases on your Card in your first 6 months'
   - rule: welcome_offer
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'Offer ends 01/13/2027 at 11:59 PM MST.'
 todo:
   - Complimentary Hilton Honors Silver status (automatic with the card) isn't modeled.

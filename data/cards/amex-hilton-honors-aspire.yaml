@@ -7,7 +7,7 @@ last_verified: 2026-11-03
 verified_by: claude
 source_urls:
   - https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
-  - https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
   - https://www.americanexpress.com/us/content/rewards-info/retail.html
   - https://www.americanexpress.com/us/content/rewards-info/travel.html
 base_rate: 3
@@ -58,19 +58,19 @@ rules:
     note: Bought directly from one of Amex's select major car rental companies, at U.S. or international locations. Not through a third party such as an online travel agency, and not as part of a vacation package.
 evidence:
   - rule: base_rate
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'You will receive 3 Hilton Honors Bonus Points for each dollar of eligible purchases.'
   - rule: hilton-purchases
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'for a total of 14, for each dollar of eligible purchases charged directly with a property within the Hilton portfolio'
   - rule: hilton-purchases
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'the booking must be made directly through a reservation channel operated by Hilton'
   - rule: us-restaurants
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'for a total of 7, for each dollar of eligible purchases at the following categories of merchants'
   - rule: us-restaurants
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'You will NOT get additional Points for purchases made at a restaurant owned by a U.S. company'
   - rule: us-restaurants
     url: https://www.americanexpress.com/us/content/rewards-info/retail.html
@@ -79,16 +79,16 @@ evidence:
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
     quote: 'At U.S. restaurants, including takeout and delivery.'
   - rule: flights
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'airfare on a scheduled flight charged directly with passenger airlines'
   - rule: flights
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: '(charter flights and private jet flights are excluded)'
   - rule: flights-amex-travel
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
     quote: 'Including flights booked directly with airlines or AmexTravel.com'
   - rule: select-car-rentals
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'purchases directly from select major car rental companies listed at americanexpress.com/rewards-info'
   - rule: select-car-rentals
     url: https://www.americanexpress.com/us/content/rewards-info/travel.html
@@ -103,22 +103,22 @@ evidence:
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
     quote: 'The annual fee for the Hilton Honors American Express Aspire Card is $550.'
   - rule: foreign_transaction_fee
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
     quote: 'Best Hilton Points Offer Yet: Earn 200,000 Hilton Honors Bonus Points'
   - rule: welcome_offer
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'after you spend $6,000 (the "Threshold Amount") on eligible purchases on your Card in your first 6 months'
   - rule: welcome_offer
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'Offer ends 01/13/2027 at 11:59 PM MST.'
   - rule: spend-30k
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'Account reach $30,000 or more in a calendar year.'
   - rule: spend-60k
-    url: https://www.americanexpress.com/us/credit-cards/card-application/apply/prospect/terms/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'totaling $60,000 or more in cumulative purchases in that calendar year.'
 milestones:
   - id: spend-30k
