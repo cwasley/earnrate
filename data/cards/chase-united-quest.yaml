@@ -65,6 +65,19 @@ rules:
       }
     rate: 2
     note: Only the services on Chase's select streaming list, like Netflix, Hulu, Disney+ and Spotify.
+milestones:
+  - id: spend-20k
+    spend: 20000
+    period: calendar_year
+    rewards:
+      - a 10,000-mile award flight discount
+    note: "One a calendar year. It posts to MileagePlus within 6-8 weeks and expires 12 months after it's issued. Separate from the 10,000-mile discount every cardmember anniversary."
+  - id: spend-40k
+    spend: 40000
+    period: calendar_year
+    rewards:
+      - 2 global Economy Plus seat upgrades
+    note: 'For the primary cardmember, on tickets bought with the card. Chase says to allow 6-8 weeks for them to post; use them within 12 months.'
 todo:
   - United Card Events from Chase also earn 4x; no merchant exists for them, so they aren't modeled.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
@@ -120,3 +133,9 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65756.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: spend-20k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'Earn a 10,000-mile award flight discount after spending $20,000 each calendar year'
+  - rule: spend-40k
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    quote: 'Earn 2 global Economy Plus® seat upgrades after spending $40,000 each calendar year.'

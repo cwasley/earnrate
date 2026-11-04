@@ -30,8 +30,16 @@ rules:
     exclude: { categories: [gas.superstore] }
     rate: 2
     note: Warehouse-club gas counts only when the club codes it as a gas station, so superstore and warehouse-club gas is excluded here to stay conservative. Discount, department and convenience stores don't count.
-# Not modeled: free first checked bag, preferred boarding, companion certificate. Loyalty Points toward status aren't card earnings.
+milestones:
+  - id: spend-20k
+    spend: 20000
+    period: cardmember_year
+    rewards:
+      - a $125 American Airlines Flight Discount
+    note: "Citi's cardmembership year runs from the billing cycle after the anniversary month, so it can be a few weeks off the anniversary date. The discount expires a year after it's issued."
+# Not modeled: free first checked bag, preferred boarding. Loyalty Points toward status aren't card earnings.
 todo:
+  - Citi counts the $20,000 milestone over a cardmembership year that starts with the billing cycle after the anniversary month; `cardmember_year` uses the anniversary date, so progress can be a few weeks off.
   - Warehouse-club gas earns 2x if the club codes it as a gas station; earnrate's gas.superstore can't tell, so it's excluded. Moot at Costco, which takes only Visa.
 evidence:
   - rule: base_rate
@@ -73,3 +81,6 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'there are no foreign transaction fees'
+  - rule: spend-20k
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'Earn a $125 American Airlines Flight Discount certificate (the “Flight Discount”) after you spend $20,000 or more in purchases'
