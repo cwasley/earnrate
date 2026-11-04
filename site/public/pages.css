@@ -105,7 +105,7 @@ ol.cards {
 
 ol.cards > li {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto auto 1fr;
   gap: 10px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -167,4 +167,72 @@ footer {
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 14px;
+}
+
+/* earnrate's drawings of cards (src/format/card-art.ts) */
+.card-art {
+  display: inline-flex;
+  flex: none;
+  line-height: 0;
+}
+
+.card-art svg {
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+ol.cards > li > .card-art {
+  margin-top: 1px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.card-head h1 {
+  margin: 0;
+}
+
+.card-head .card-art svg {
+  border-radius: 7px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 479px) {
+  .card-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+.card-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.card-grid a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 1.25;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.card-grid a:hover {
+  border-color: var(--accent);
 }

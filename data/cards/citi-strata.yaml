@@ -1,5 +1,6 @@
 id: citi-strata
 name: Citi Strata Card
+color: '#5c6b7a'
 issuer: citi
 # The card page's FAQ: "The Citi Strata Card is a Mastercard."
 network: mastercard

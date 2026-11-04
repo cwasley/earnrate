@@ -1,6 +1,7 @@
 id: citi-aadvantage-platinum-select
 name: Citi / AAdvantage Platinum Select World Elite Mastercard
 short_name: AAdvantage Platinum
+color: '#a7b0b8'
 issuer: citi
 network: mastercard
 currency: aadvantage-miles

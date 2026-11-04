@@ -1,5 +1,6 @@
 id: bilt-obsidian
 name: Bilt Obsidian Card
+color: '#1a1a1a'
 # Issued by Column N.A. and serviced by Cardless; Bilt runs the rewards.
 # Full earning terms: https://www.bilt.com/terms/bilt-card-offer-terms (PDF,
 # not in source_urls because the source checker can't read PDFs).

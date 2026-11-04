@@ -1,5 +1,6 @@
 id: amex-blue-cash-everyday
 name: American Express Blue Cash Everyday Card
+color: '#4a90c8'
 issuer: amex
 network: amex
 currency: cash

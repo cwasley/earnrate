@@ -1,5 +1,6 @@
 id: usbank-cash-plus
 name: U.S. Bank Cash+ Visa Signature Card
+color: '#4b6e8d'
 issuer: usbank
 network: visa
 currency: cash

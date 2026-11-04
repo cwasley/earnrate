@@ -1,5 +1,6 @@
 id: chase-sapphire-preferred
 name: Chase Sapphire Preferred Card
+color: '#1f4f9c'
 issuer: chase
 network: visa
 currency: UR

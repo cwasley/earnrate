@@ -1,5 +1,6 @@
 id: chase-marriott-bonvoy-bold
 name: Marriott Bonvoy Bold Credit Card
+color: '#4b5a6a'
 issuer: chase
 network: visa
 currency: marriott-bonvoy

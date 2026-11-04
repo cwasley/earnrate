@@ -1,6 +1,7 @@
 id: citi-aadvantage-business
 name: Citi / AAdvantage Business World Elite Mastercard
 short_name: AAdvantage Business
+color: '#3a4a5a'
 issuer: citi
 network: mastercard
 currency: aadvantage-miles

@@ -1,5 +1,6 @@
 id: wells-fargo-autograph
 name: Wells Fargo Autograph Card
+color: '#7d2130'
 issuer: wells-fargo
 network: visa
 currency: WFR
