@@ -41,3 +41,8 @@
   group: bofa-preferred-rewards
 - id: nordy-club-ambassador
   name: Nordy Club Ambassador
+# Credit union memberships are by eligibility (employer, family, area), not
+# a yearly fee. Caltech EFCU's is a one-time $5 fee plus a $5 deposit.
+- id: caltech-efcu
+  name: Caltech Employees Federal Credit Union membership
+  annual_fee: 0

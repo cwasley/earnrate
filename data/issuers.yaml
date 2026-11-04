@@ -18,6 +18,10 @@
   name: Capital One
   color: '#1d3c6e'
   search: [capitalone]
+- id: caltech-efcu
+  name: Caltech Employees Federal Credit Union
+  color: '#ff6c0c'
+  search: [cefcu, caltech efcu, caltech credit union]
 - id: chase
   name: Chase
   color: '#1f4f9c'

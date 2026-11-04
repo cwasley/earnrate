@@ -1470,3 +1470,30 @@ describe('#29 new cards', () => {
     },
   )
 })
+
+describe('#30 credit union and fintech cards', () => {
+  const wallet = (cards: object[]) =>
+    withProfile(WalletSchema.parse({ cards }), 'flat')
+
+  goldenTest(
+    '#30a Caltech EFCU Platinum Mastercard earns nothing, but has no foreign transaction fee',
+    () => {
+      const cards = wallet([
+        { id: 'caltech-efcu-platinum-mastercard' },
+        { id: 'citi-double-cash' },
+      ])
+      const etsy = (country: string) =>
+        purchase('Etsy', { amount: 100, channel: 'online', country })
+      const home = recommend(catalog, cards, etsy('US'))
+      expect(home.decision?.cardId).toBe('citi-double-cash')
+      expect(home.decision?.effectiveReturnPct).toBeCloseTo(2)
+      expect(entry(home, 'caltech-efcu-platinum-mastercard').rate).toBe(0)
+      const abroad = recommend(catalog, cards, etsy('GB'))
+      expect(abroad.decision?.cardId).toBe('caltech-efcu-platinum-mastercard')
+      expect(abroad.decision?.effectiveReturnPct).toBeCloseTo(0)
+      expect(entry(abroad, 'citi-double-cash').effectiveReturnPct).toBeCloseTo(
+        2 - 3,
+      )
+    },
+  )
+})

@@ -1,0 +1,49 @@
+id: caltech-efcu-platinum-mastercard
+name: Caltech EFCU Platinum Mastercard
+color: '#1c2541'
+# Caltech Employees Federal Credit Union's only credit card. It earns no
+# rewards: none of the credit union's pages about it mentions points or cash
+# back, and its benefits list names none. The Student Platinum Mastercard is
+# the same card for full-time students.
+issuer: caltech-efcu
+network: mastercard
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.caltechefcu.org/home/products/lending/mastercard
+  - https://www.caltechefcu.org/home/products/lending/mastercard/disclosure
+  - https://www.caltechefcu.org/home/products/lending/mastercard/mastercard_faqs
+  - https://www.caltechefcu.org/home/products/lending/mastercard/student_mastercard
+  - https://www.caltechefcu.org/home/resources/fees
+  - https://www.caltechefcu.org/home/membership/eligibility
+base_rate: 0
+annual_fee: 0
+foreign_transaction_fee: 0
+requires_membership: caltech-efcu
+evidence:
+  - rule: base_rate
+    url: https://www.caltechefcu.org/home/products/lending/mastercard
+    quote: 'Cardholder Benefits Manage your account online Easy payment methods Mastercard ATM access'
+  - rule: annual_fee
+    url: https://www.caltechefcu.org/home/products/lending/mastercard/disclosure
+    quote: 'Annual Fee NONE'
+  - rule: annual_fee
+    url: https://www.caltechefcu.org/home/products/lending/mastercard
+    quote: 'No annual fee'
+  - rule: foreign_transaction_fee
+    url: https://www.caltechefcu.org/home/products/lending/mastercard/disclosure
+    quote: 'Foreign Transaction NONE'
+  - rule: foreign_transaction_fee
+    url: https://www.caltechefcu.org/home/products/lending/mastercard
+    quote: 'No foreign transaction fee'
+  - rule: requires_membership
+    url: https://www.caltechefcu.org/home/products/lending/mastercard
+    quote: 'Log in to eBranch and select ‘Apply for a Loan’ to get started.'
+  - rule: requires_membership
+    url: https://www.caltechefcu.org/home/membership/eligibility
+    quote: 'serves an exclusive field of membership'
+todo:
+  - "Membership is by eligibility, not a yearly fee: Caltech, JPL and affiliate employees, Caltech students and alumni association members, and their immediate family, with a $5 minimum deposit and a one-time $5 membership fee. No Caltech EFCU page says in so many words that the card needs membership; the card page sends applicants to eBranch, the members' online banking."
+  - "caltechefcu.org sits behind Cloudflare and refuses plain curl, so the source check may list its pages as unreachable. The membership eligibility page's quote was read 2026-11-04 with an ordinary web fetch, not machine-checked."
+  - "For California borrowers the disclosure says the card is secured by goods bought with it and by shares held at the credit union. That doesn't change what it earns."
