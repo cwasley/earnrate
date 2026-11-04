@@ -1,5 +1,6 @@
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
+import { resolveMerchant } from '../merchants/resolve.ts'
 import type { Merchant } from '../schema/merchant.ts'
 import { WALLET_VERSION, type Wallet } from '../schema/wallet.ts'
 
@@ -47,6 +48,34 @@ function merchantProblems(
       owner.set(name, m.id)
     }
   }
+  return problems
+}
+
+// Overrides are searched before seed, and a known name followed by more words
+// still matches it, so a name can be taken by another merchant without ever
+// being listed twice.
+function lookupProblems(catalog: Catalog): string[] {
+  const problems: string[] = []
+  const { seed, overrides } = catalog.merchants
+  for (const m of [...overrides, ...seed]) {
+    for (const key of [m.name, ...m.aliases, ...m.domains]) {
+      const found = resolveMerchant(catalog, key, null).merchantId
+      if (found !== m.id)
+        problems.push(
+          `merchant ${m.id}: '${key}' resolves to ${found ?? 'no merchant'}`,
+        )
+    }
+  }
+  for (const c of catalog.categories)
+    for (const word of new Set([
+      c.name,
+      ...c.aliases,
+      c.id.replace(/[._]/g, ' '),
+    ])) {
+      const found = resolveMerchant(catalog, word, null).merchantId
+      if (found !== null)
+        problems.push(`category ${c.id}: '${word}' resolves to ${found}`)
+    }
   return problems
 }
 
@@ -251,6 +280,8 @@ export function catalogProblems(catalog: Catalog): string[] {
   const { seed, overrides } = catalog.merchants
   problems.push(...merchantProblems('seed', seed, categories))
   problems.push(...merchantProblems('overrides', overrides, categories))
+
+  problems.push(...lookupProblems(catalog))
 
   const merchantIds = new Set([...seed, ...overrides].map((m) => m.id))
   for (const m of [...seed, ...overrides]) {
