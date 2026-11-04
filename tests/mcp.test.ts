@@ -1259,9 +1259,9 @@ describe('wallet setup', () => {
     const platinum = (wallet.structuredContent as WalletSummary).cards.find(
       (c) => c.cardId === 'amex-platinum',
     )
-    expect(platinum?.credits).toEqual([
+    expect(platinum?.credits).toContainEqual(
       expect.objectContaining({ id: 'lululemon', enrolled: true, left: 35 }),
-    ])
+    )
     expect(text(wallet)).toMatch(
       /Credit \(lululemon\): \$75 back each quarter at Lululemon: \$35 left this quarter/,
     )

@@ -1956,3 +1956,143 @@ describe('#32 merchant statement credits', () => {
     },
   )
 })
+
+describe('#33 merchant credits across issuers', () => {
+  const wallet = (cards: object[]) =>
+    withProfile(WalletSchema.parse({ cards }), 'flat')
+  const everyCard = (merchant: string) =>
+    exploreCards(
+      catalog,
+      { merchant, category: null, amount: null, channel: null, date: TODAY },
+      { filters: ALL_PERSONAL_CARDS, memberships: [], valuations: {} },
+    )
+
+  goldenTest(
+    '#33a Hilton Surpass: $50 a quarter at any Hilton brand, Hampton Inn included, with no enrollment',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: 'amex-hilton-honors-surpass' }]),
+        purchase('Hampton Inn', { amount: 180 }),
+      )
+      expect(entry(rec, 'amex-hilton-honors-surpass').credit).toMatchObject({
+        id: 'hilton',
+        amount: 50,
+        period: 'quarter',
+        enrolled: true,
+        dollars: 50,
+        until: '2026-12-31',
+      })
+    },
+  )
+
+  goldenTest(
+    '#33b Sapphire Reserve: $300 of travel each cardmember year, and the rest of a $400 flight earns only points',
+    () => {
+      const reserve = { id: 'chase-sapphire-reserve', anniversary: '03-01' }
+      const rec = recommend(
+        catalog,
+        wallet([reserve]),
+        purchase('Delta', { amount: 400 }),
+      )
+      expect(entry(rec, 'chase-sapphire-reserve').credit).toMatchObject({
+        id: 'travel',
+        dollars: 300,
+        left: 300,
+        until: '2027-02-28',
+      })
+      const used = recommend(
+        catalog,
+        wallet([
+          {
+            ...reserve,
+            credit_usage: { travel: { period: '2026', used: 300 } },
+          },
+        ]),
+        purchase('Delta', { amount: 400 }),
+      )
+      expect(entry(used, 'chase-sapphire-reserve').credit?.dollars).toBe(0)
+      const noAnniversary = recommend(
+        catalog,
+        wallet([{ id: 'chase-sapphire-reserve' }]),
+        purchase('Delta', { amount: 400 }),
+      )
+      expect(
+        entry(noAnniversary, 'chase-sapphire-reserve').credit,
+      ).toMatchObject({ left: null, dollars: 0 })
+    },
+  )
+
+  goldenTest(
+    '#33c United Quest: $8 a month on rideshare once opted in, by category',
+    () => {
+      const ride = purchase('Uber', { amount: 25 })
+      const opted = recommend(
+        catalog,
+        wallet([{ id: 'chase-united-quest', enrolled: ['rideshare'] }]),
+        ride,
+      )
+      expect(entry(opted, 'chase-united-quest').credit).toMatchObject({
+        id: 'rideshare',
+        dollars: 8,
+        period: 'month',
+      })
+      const not = recommend(
+        catalog,
+        wallet([{ id: 'chase-united-quest' }]),
+        ride,
+      )
+      expect(entry(not, 'chase-united-quest').credit).toMatchObject({
+        enrolled: false,
+        dollars: 0,
+      })
+    },
+  )
+
+  goldenTest(
+    '#33d Venture X: the $300 Capital One Travel credit on a hotel booked there',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: 'capital-one-venture-x', anniversary: '06-15' }]),
+        purchase('Hotel through Capital One Travel', { amount: 500 }),
+      )
+      expect(entry(rec, 'capital-one-venture-x').credit).toMatchObject({
+        id: 'capital-one-travel',
+        dollars: 300,
+        until: '2027-06-14',
+      })
+    },
+  )
+
+  goldenTest(
+    '#33e Resy with no wallet: every card with a Resy credit, most per year first',
+    () => {
+      expect(everyCard('Resy').credits.map((c) => [c.cardId, c.back])).toEqual([
+        ['amex-platinum', '$100 back each quarter'],
+        ['amex-delta-skymiles-reserve', '$20 back each month'],
+        ['amex-delta-skymiles-platinum', '$10 back each month'],
+        ['amex-gold', '$50 back each half year'],
+      ])
+    },
+  )
+
+  goldenTest(
+    '#33f Uber with no wallet: Uber Cash and the credits that name Uber, never as a percent',
+    () => {
+      const credits = everyCard('Uber').credits
+      expect(credits[0]).toMatchObject({
+        cardId: 'amex-platinum',
+        creditId: 'uber-cash',
+        enroll: false,
+        text: '$15 back each month, then 1x Amex Membership Rewards',
+      })
+      const cards = credits.map((c) => c.cardId)
+      expect(cards).toEqual(
+        expect.arrayContaining(['amex-gold', 'amex-delta-skymiles-gold']),
+      )
+      expect(cards).not.toContain('chase-united-explorer')
+      for (const c of credits) expect(c.text).not.toMatch(/%/)
+    },
+  )
+})

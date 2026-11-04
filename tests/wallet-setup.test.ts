@@ -642,12 +642,12 @@ describe('merchant credits', () => {
     expect(
       errorOf(
         await store(file).addCard(
-          { id: 'amex-platinum', enrolled: ['resy'] },
+          { id: 'amex-platinum', enrolled: ['dell'] },
           TODAY,
         ),
       ),
     ).toMatch(
-      /'resy' isn't a amex-platinum credit that needs enrolling\. Those are: lululemon\./,
+      /'dell' isn't a amex-platinum credit that needs enrolling\. Those are: lululemon, resy,/,
     )
     expect(
       errorOf(
@@ -664,20 +664,20 @@ describe('merchant credits', () => {
           TODAY,
         ),
       ),
-    ).toMatch(/amex-gold has no credit 'lululemon'\. Its credits are: dunkin\./)
+    ).toMatch(
+      /amex-gold has no credit 'lululemon'\. Its credits are: dunkin, uber-cash,/,
+    )
   })
 
   test('search_cards lists a card’s credits', () => {
     const [card] = searchCards(catalog, 'amex platinum', null, TODAY).cards
-    expect(card?.credits).toEqual([
-      {
-        id: 'lululemon',
-        name: 'Lululemon',
-        amount: 75,
-        period: 'quarter',
-        enroll: true,
-        text: '$75 back each quarter at Lululemon, enroll first',
-      },
-    ])
+    expect(card?.credits[0]).toEqual({
+      id: 'lululemon',
+      name: 'Lululemon',
+      amount: 75,
+      period: 'quarter',
+      enroll: true,
+      text: '$75 back each quarter at Lululemon, enroll first',
+    })
   })
 })
