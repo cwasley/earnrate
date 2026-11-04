@@ -58,6 +58,12 @@ A choice option is a list of categories, a list of merchants, or "any online pur
 - `chase-sapphire-reserve`: the Peloton $5,000 limit runs across the whole offer (2025-04-01 to 2027-12-31), and each purchase must be at least $150.
 - `chase-sapphire-preferred`: the same Peloton offer and limits.
 
+### Minimum purchase size
+
+A rule that applies only to purchases above an amount. The engine has the purchase amount when one is given, but no rule condition on it.
+
+- `amex-business-platinum`: 2X on any eligible purchase of $5,000 or more, inside the $2 million yearly cap shared with its 2X categories.
+
 ### Payment-method exclusions
 
 There's no input for how a purchase was paid beyond online or in store.
@@ -70,6 +76,9 @@ Merchant types some cards name that have no earnrate category, so they fall to `
 
 - `bank-of-america-customized-cash-rewards`: Online Shopping excludes doctors and hospitals, government services and taxes, insurance and schools.
 - `capital-one-savor`: amusement parks, tourist attractions, aquariums, zoos, record stores, pool halls and bowling alleys earn 3% as entertainment; golf courses and collegiate sporting events are excluded.
+- `amex-business-gold`, `amex-business-platinum`: software and cloud system providers count with electronics stores.
+- `citi-strata`: the Self-Select Category's Cosmetic Stores/Barber Shops/Hair Salons and Pet Supply Stores options.
+- `bank-of-america-premium-rewards`: travel includes tourist attractions, galleries, amusement parks, aquariums and zoos.
 
 ### Housing payments and second currencies
 

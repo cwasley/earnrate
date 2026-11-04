@@ -1,0 +1,132 @@
+id: bank-of-america-premium-rewards
+name: Bank of America Premium Rewards Credit Card
+issuer: bank-of-america
+# The page names the Visa Signature Luxury Hotel Collection and concierge as
+# card benefits, and the terms carry the Visa trademark notice.
+network: visa
+currency: bofa-premium-rewards
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.bankofamerica.com/credit-cards/products/premium-rewards-credit-card/
+  - https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+  - https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+base_rate: 1.5
+annual_fee: 95
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 60000
+  spend: 4000
+  months: 3
+  note: Online offer; the window is 90 days from account opening, modeled as 3 months. The offer may not be available elsewhere after leaving the page. The card may not be available to anyone who has or had it in the past 24 months.
+rules:
+  - id: travel-dining
+    match: { categories: [travel, transit, dining] }
+    rate: 2
+    note: Restaurants (fast food included) and bars; airlines, hotels and motels, timeshares, campgrounds, car and RV rentals, cruises, travel agencies and tour operators, trains, buses, taxis, limousines, ferries, parking, and tolls. Not in-flight or duty-free airport purchases, or purchases through third-party payment accounts, mobile card readers or unsupported digital wallets.
+  # BofA Rewards members earn a tier bonus on all points: 10% for Member,
+  # 25% Preferred Plus, 50% Preferred Honors, 75% Premier.
+  - id: travel-dining-bofa-rewards-member
+    match: { categories: [travel, transit, dining] }
+    rate: 2.2
+    requires: { membership: bofa-rewards-member }
+    note: 2x plus the 10% BofA Rewards Member bonus.
+  - id: everything-bofa-rewards-member
+    match: { any: true }
+    rate: 1.65
+    requires: { membership: bofa-rewards-member }
+    note: 1.5x plus the 10% BofA Rewards Member bonus.
+  - id: travel-dining-bofa-rewards-preferred-plus
+    match: { categories: [travel, transit, dining] }
+    rate: 2.5
+    requires: { membership: bofa-rewards-preferred-plus }
+    note: 2x plus the 25% BofA Rewards Preferred Plus bonus.
+  - id: everything-bofa-rewards-preferred-plus
+    match: { any: true }
+    rate: 1.875
+    requires: { membership: bofa-rewards-preferred-plus }
+    note: 1.5x plus the 25% BofA Rewards Preferred Plus bonus.
+  - id: travel-dining-bofa-rewards-preferred-honors
+    match: { categories: [travel, transit, dining] }
+    rate: 3
+    requires: { membership: bofa-rewards-preferred-honors }
+    note: 2x plus the 50% BofA Rewards Preferred Honors bonus.
+  - id: everything-bofa-rewards-preferred-honors
+    match: { any: true }
+    rate: 2.25
+    requires: { membership: bofa-rewards-preferred-honors }
+    note: 1.5x plus the 50% BofA Rewards Preferred Honors bonus.
+  - id: travel-dining-bofa-rewards-premier
+    match: { categories: [travel, transit, dining] }
+    rate: 3.5
+    requires: { membership: bofa-rewards-premier }
+    note: 2x plus the 75% BofA Rewards Premier bonus.
+  - id: everything-bofa-rewards-premier
+    match: { any: true }
+    rate: 2.625
+    requires: { membership: bofa-rewards-premier }
+    note: 1.5x plus the 75% BofA Rewards Premier bonus.
+# Not modeled: the $100 airline incidental and $100 TSA PreCheck or Global
+# Entry statement credits.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+    quote: 'Earn 1.5 base points for every $1 of Net Purchases (non-Travel and Dining)'
+  - rule: travel-dining
+    url: https://www.bankofamerica.com/credit-cards/products/premium-rewards-credit-card/
+    quote: 'Earn unlimited 2 points for every $1 spent on travel and dining purchases'
+  - rule: travel-dining
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+    quote: 'Dining includes Restaurants, including Fast Food, and Drinking Establishments, such as Bars or Taverns.'
+  - rule: travel-dining
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+    quote: 'operators of passenger trains, buses, taxis, limousines, ferries, boat rentals, parking lots and garages, tolls and bridge fees'
+  - rule: travel-dining
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+    quote: 'like in-flight goods and services, and duty-free airport purchases'
+  - rule: travel-dining-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'bonus of 10% for the Member tier'
+  - rule: everything-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'bonus of 10% for the Member tier'
+  - rule: travel-dining-bofa-rewards-preferred-plus
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '25% for the Preferred Plus tier'
+  - rule: everything-bofa-rewards-preferred-plus
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '25% for the Preferred Plus tier'
+  - rule: travel-dining-bofa-rewards-preferred-honors
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '50% for the Preferred Honors tier'
+  - rule: everything-bofa-rewards-preferred-honors
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '50% for the Preferred Honors tier'
+  - rule: travel-dining-bofa-rewards-premier
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'or 75% for the Premier tier'
+  - rule: everything-bofa-rewards-premier
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'or 75% for the Premier tier'
+  - rule: travel-dining-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'a purchase that earns 100 base points will actually earn 110, 125, 150, or 175 points'
+  - rule: annual_fee
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+    quote: 'Annual Fee $95'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/products/premium-rewards-credit-card/
+    quote: 'after you make at least $4,000 in purchases in the first 90 days of account opening'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/products/premium-rewards-credit-card/
+    quote: '60,000 online bonus points offer'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+    quote: 'This card may not be available to you if you currently have or have had the card'
+  - rule: foreign_transaction_fee
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+    quote: 'Foreign Transaction None'
+todo:
+  - 'The BofA Rewards rules use proposed membership ids: bofa-rewards-member, bofa-rewards-preferred-plus, bofa-rewards-preferred-honors and bofa-rewards-premier. Cardholders who joined Preferred Rewards before May 26, 2026 may have an "extended card benefit" that Bank of America doesn''t define.'
+  - 'Travel also covers tourist attractions and exhibits (art galleries, amusement parks, carnivals, circuses, aquariums, zoos), which have no earnrate category, so they earn 1.5x here.'

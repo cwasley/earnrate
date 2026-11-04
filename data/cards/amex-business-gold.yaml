@@ -1,0 +1,133 @@
+id: amex-business-gold
+name: American Express Business Gold Card
+issuer: amex
+network: amex
+currency: MR
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-gold-card-amex/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+base_rate: 1
+business: true
+annual_fee: 375
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 200000
+  spend: 15000
+  months: 3
+  varies: true
+  note: 'The public offer is "as high as" 200,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. Not available if you have or have had this Card or previous versions of it, and Amex may also decline based on your card history. One offer per Card Account.'
+choices:
+  # Amex picks these itself: the 2 of 6 categories with the most eligible
+  # purchases each billing period. Tell earnrate the two you expect.
+  - id: top-two
+    pick: 2
+    period: month
+    options:
+      us-advertising: [online_advertising]
+      us-electronics-software-cloud: [electronics]
+      us-restaurants: [dining]
+      us-gas-stations: [gas]
+      transit: [transit]
+      us-wireless-phone: [phone]
+caps:
+  - id: top-two
+    amount: 150000
+    period: calendar_year
+    then_rate: 1
+rules:
+  - id: top-two-us
+    match:
+      choice: top-two
+      categories: [online_advertising, electronics, dining, gas, phone]
+    exclude: { categories: [gas.grocery_store, gas.superstore] }
+    rate: 4
+    geography: us_only
+    cap: top-two
+    note: In the 2 of 6 categories with the most purchases each billing period, the first $150,000 a calendar year across both. U.S. online, TV and radio advertising; U.S. electronics stores and software and cloud providers; U.S. restaurants, including takeout and delivery; U.S. gas stations (not at superstores, supermarkets or warehouse clubs); and U.S. wireless phone service bought directly from the carrier (not Google Fi, resellers or authorized retailers).
+  - id: top-two-transit
+    match: { choice: top-two, categories: [transit] }
+    rate: 4
+    cap: top-two
+    note: When transit is one of the top 2 categories. Trains, taxis, rideshare, ferries, tolls, parking, buses and subways. Shares the $150,000 yearly cap.
+  - id: flights-prepaid-hotels-amex-travel
+    match: { merchants: [amex-travel-flights, amex-travel-hotels] }
+    rate: 3
+    note: Scheduled flights booked online at AmexTravel.com or the Amex Travel app, and prepaid hotels booked through American Express Travel. Not non-prepaid hotels, or flights or flight+hotel packages booked by phone.
+  - id: other-amex-travel
+    match:
+      {
+        merchants:
+          [amex-travel-car-rentals, amex-travel-cruises, airbnb-amex-travel],
+      }
+    rate: 2
+    note: Prepaid car rentals, cruises and prepaid Airbnb stays booked through AmexTravel.com or the Amex Travel app.
+# Not modeled: the $240 flexible business credit, the ChatGPT Business,
+# Squarespace and Walmart+ credits, and the Venue Collection, which are
+# statement credits rather than points.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'will get at least one Membership Rewards® point for each dollar of eligible purchases'
+  - rule: top-two-us
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-gold-card-amex/
+    quote: '4X points are earned on the first $150,000 in combined purchases each calendar year.'
+  - rule: top-two-us
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'in the 2 categories (of 6) where the Card Account had the most eligible purchases each billing period'
+  - rule: top-two-us
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'purchases of online, television, and radio advertising made from media providers located in the U.S.'
+  - rule: top-two-us
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'purchases from electronic goods retailers or software and cloud system providers in the U.S.'
+  - rule: top-two-us
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'restaurants located in the U.S, including takeout and delivery'
+  - rule: top-two-us
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'superstores, supermarkets and warehouse clubs that sell gasoline are not considered gas stations'
+  - rule: top-two-us
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'monthly wireless telephone service charges made directly from a wireless telephone service provider located in the U.S.'
+  - rule: top-two-us
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'Any purchases from Google Fi, third parties, authorized retailers or resellers are excluded.'
+  - rule: top-two-transit
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'trains, taxi cabs, rideshare services, ferries, tolls, parking, buses, and subways'
+  - rule: flights-prepaid-hotels-amex-travel
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-gold-card-amex/
+    quote: 'On Flights & Pre-Paid Hotels'
+  - rule: flights-prepaid-hotels-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'Basic Card Members will get 2 additional points (for a total of 3 points)'
+  - rule: other-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'prepaid car rental reservations booked through AmexTravel.com or the Amex Travel App'
+  - rule: other-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'cruise reservations booked through AmexTravel.com'
+  - rule: other-amex-travel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'prepaid short-term rental reservations booked with Airbnb through AmexTravel.com'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'The annual fee for the Business Gold Card is $375.'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-gold-card-amex/
+    quote: 'AS HIGH AS 200,000 Membership Rewards® Points'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-gold-card-amex/
+    quote: 'after you spend $15,000 in purchases on your new Card within the first 3 months of Card Membership'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'if you have or have had this Card or previous versions of this Card'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'
+todo:
+  - 'Software and cloud system providers count toward the electronics category, but earnrate has no software or cloud category, so only electronics stores are modeled.'
+  - "From February 17, 2027, advertising counts only when bought directly from Meta, Google, Amazon, Microsoft, GoDaddy and Yelp, and wireless only from Verizon, AT&T, T-Mobile, Frontier, Comcast, Charter, Spectrum Mobile, UScellular, Optimum, Ultra Mobile and Mint Mobile. earnrate has no way to limit a category to named merchants from a date, so this isn't modeled yet."

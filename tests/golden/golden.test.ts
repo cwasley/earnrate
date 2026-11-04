@@ -1050,3 +1050,101 @@ describe('#26 new cards', () => {
     expect(rec.decision?.effectiveReturnPct).toBeCloseTo(1.5)
   })
 })
+
+describe('#27 new cards', () => {
+  const wallet = (cards: object[], memberships: string[] = []) =>
+    withProfile(WalletSchema.parse({ cards, memberships }), 'flat')
+
+  goldenTest("#27a Altitude Go's 4x dining stops at $2,000 a quarter", () => {
+    const dinner = purchase('Chipotle', { amount: 100, channel: 'in_store' })
+    const fresh = entry(
+      recommend(catalog, wallet([{ id: 'usbank-altitude-go' }]), dinner),
+      'usbank-altitude-go',
+    )
+    expect(fresh.rate).toBe(4)
+    expect(fresh.effectiveReturnPct).toBeCloseTo(4)
+    const nearCap = entry(
+      recommend(
+        catalog,
+        wallet([
+          {
+            id: 'usbank-altitude-go',
+            cap_usage: { dining: { period: '2026-Q4', spent: 1950 } },
+          },
+        ]),
+        dinner,
+      ),
+      'usbank-altitude-go',
+    )
+    expect(nearCap.effectiveReturnPct).toBeCloseTo(2.5)
+  })
+
+  goldenTest(
+    '#27b Premium Rewards earns 2x on dining, 3x with Preferred Honors',
+    () => {
+      const dinner = purchase('Chipotle', { amount: 50, channel: 'in_store' })
+      const plain = recommend(
+        catalog,
+        wallet([{ id: 'bank-of-america-premium-rewards' }]),
+        dinner,
+      )
+      expect(plain.decision?.effectiveReturnPct).toBeCloseTo(2)
+      const honors = recommend(
+        catalog,
+        wallet(
+          [{ id: 'bank-of-america-premium-rewards' }],
+          ['bofa-rewards-preferred-honors'],
+        ),
+        dinner,
+      )
+      expect(honors.decision?.effectiveReturnPct).toBeCloseTo(3)
+    },
+  )
+
+  goldenTest(
+    "#27c Business Gold's 4x needs restaurants in its top two categories",
+    () => {
+      const dinner = purchase('Chipotle', { amount: 60, channel: 'in_store' })
+      const picked = recommend(
+        catalog,
+        wallet([
+          {
+            id: 'amex-business-gold',
+            chosen: {
+              period: '2026-10',
+              picks: { 'top-two': ['us-restaurants', 'transit'] },
+            },
+          },
+        ]),
+        dinner,
+      )
+      expect(entry(picked, 'amex-business-gold').rate).toBe(4)
+      const notPicked = recommend(
+        catalog,
+        wallet([
+          {
+            id: 'amex-business-gold',
+            chosen: {
+              period: '2026-10',
+              picks: { 'top-two': ['us-advertising', 'transit'] },
+            },
+          },
+        ]),
+        dinner,
+      )
+      expect(entry(notPicked, 'amex-business-gold').rate).toBe(1)
+    },
+  )
+
+  goldenTest(
+    "#27d Citi Strata's Self-Select Category starts on streaming",
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: 'citi-strata' }]),
+        purchase('Netflix', { amount: 20, channel: 'online' }),
+      )
+      expect(entry(rec, 'citi-strata').rate).toBe(3)
+    },
+  )
+})

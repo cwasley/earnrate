@@ -1,0 +1,28 @@
+id: chase-freedom-rise
+name: Chase Freedom Rise
+issuer: chase
+network: visa
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://creditcards.chase.com/cash-back-credit-cards/freedom/rise
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65397.html
+base_rate: 1.5
+annual_fee: 0
+foreign_transaction_fee: 3
+# No welcome offer: the $25 statement credit for enrolling in automatic
+# payments needs no spending, so it isn't a welcome offer earnrate can value.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/rise
+    quote: 'establish credit and earn 1.5% cash back on all purchases'
+  - rule: annual_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65397.html
+    quote: 'Annual Membership Fee None'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65397.html
+    quote: 'Foreign Transactions 3% of the amount of each transaction in U.S. dollars'
+todo:
+  - "Chase doesn't say on these pages whether Freedom Rise's cash back can be moved to a Sapphire or Ink Preferred card as Ultimate Rewards points, so pools_into isn't set."

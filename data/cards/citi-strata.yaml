@@ -1,0 +1,163 @@
+id: citi-strata
+name: Citi Strata Card
+issuer: citi
+# The card page's FAQ: "The Citi Strata Card is a Mastercard."
+network: mastercard
+currency: TYP
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.citi.com/credit-cards/citi-strata-credit-card
+  # The card page's "Important Pricing & Information" link (terms, fees and
+  # rewards definitions).
+  - https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 3
+welcome_offer:
+  points: 20000
+  spend: 1000
+  months: 3
+  note: Not available if you currently have or previously had a Citi Strata or Citi Strata Student account; Citi may also decline the bonus based on your history of opening, closing and using credit cards. Offers may vary.
+choices:
+  # Select Streaming Services until changed; it can be changed once each
+  # calendar quarter.
+  - id: self-select
+    pick: 1
+    period: until_changed
+    default: [select-streaming]
+    options:
+      select-streaming:
+        merchants:
+          [
+            amazon-prime-video,
+            apple-music,
+            disney-plus,
+            directv-stream,
+            espn,
+            fandango-at-home,
+            fubotv,
+            max,
+            hulu,
+            mlb-tv,
+            nba-league-pass,
+            netflix,
+            pandora,
+            paramount-plus,
+            sling-tv,
+            spotify,
+            starz,
+            siriusxm,
+            tidal,
+            youtube-premium,
+            youtube-tv,
+          ]
+      fitness-clubs: [fitness]
+      live-entertainment: [entertainment]
+rules:
+  - id: citi-travel-hotels-cars-attractions
+    match:
+      {
+        merchants:
+          [
+            citi-travel-hotels,
+            citi-travel-car-rentals,
+            citi-travel-attractions,
+          ],
+      }
+    rate: 5
+    note: Booked on the Citi Travel site (cititravel.com or 1-833-737-1288). Only the part paid with the card earns, not the part paid with points.
+  - id: supermarkets
+    match: { categories: [grocery.supermarket] }
+    exclude:
+      { categories: [superstore, warehouse_club, convenience_store, drugstore] }
+    rate: 3
+    note: Excludes superstores, warehouse clubs, convenience stores, drugstores, specialty food stores, bakeries and meal kit delivery. Online supermarkets count only if the merchant uses the supermarket merchant code.
+  - id: gas-ev-charging-select-transit
+    match: { categories: [gas, ev_charging, transit, travel.car_rental] }
+    exclude: { categories: [gas.superstore] }
+    rate: 3
+    note: Gas stations and EV charging, plus car rentals, ferries, commuter and passenger railways, subways, taxis and car services, tolls, parking, bus lines and RV rentals. Gas at warehouse clubs, superstores, discount, department and convenience stores doesn't count; neither do bike or scooter rentals.
+  - id: self-select
+    match: { choice: self-select }
+    rate: 3
+    note: The Self-Select Category you chose (Select Streaming Services until you change it). Streaming bundled with another product, or billed through another platform, doesn't count. Live entertainment is tickets for concerts, live sports, theater and amusement parks, not movie theaters, museums or golf.
+  - id: restaurants
+    match: { categories: [dining] }
+    exclude: { merchants: [dodger-stadium, bellagio] }
+    rate: 2
+    note: Includes cafes, bars, lounges, fast food, takeout and restaurant delivery services. Excludes bakeries, caterers and restaurants inside another business (hotels, stores, stadiums, grocery stores, warehouse clubs).
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.citi.com/credit-cards/citi-strata-credit-card
+    quote: '1 point per dollar spent on All Other Purchases'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://www.citi.com/credit-cards/citi-strata-credit-card
+    quote: '5 points per dollar spent on Hotels, Car Rentals, and Attractions booked on cititravel.com'
+  - rule: citi-travel-hotels-cars-attractions
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'only the portion paid with your card will earn points'
+  - rule: supermarkets
+    url: https://www.citi.com/credit-cards/citi-strata-credit-card
+    quote: '3 points per dollar spent at Supermarkets'
+  - rule: supermarkets
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Excludes purchases at general merchandise/discount superstores'
+  - rule: supermarkets
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'drugstores, warehouse clubs, wholesale clubs, specialty vendors, bakeries'
+  - rule: gas-ev-charging-select-transit
+    url: https://www.citi.com/credit-cards/citi-strata-credit-card
+    quote: '3 points per dollar spent at Gas & EV Charging Stations and on Select Transit.'
+  - rule: gas-ev-charging-select-transit
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Select transit includes car rentals, ferries, commuter railways, subways, taxis/limousines/car services'
+  - rule: gas-ev-charging-select-transit
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'bridge and road tolls, parking lots/garages, bus lines, and motor home and recreational vehicle rentals'
+  - rule: gas-ev-charging-select-transit
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Gas stations exclude gas purchases at warehouse clubs, wholesale stores, superstores, discount stores'
+  - rule: self-select
+    url: https://www.citi.com/credit-cards/citi-strata-credit-card
+    quote: '3 points per dollar spent on an eligible Self-Select Category of your choice'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'the default Self-Select Category is Select Streaming Services'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'You may change your Self-Select Category once each calendar quarter'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Includes the following streaming providers: Amazon Prime Video, Apple Music, Disney+'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'including concerts, live sporting events, live theatrical productions, amusement parks, and orchestras'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'athletic, sports and recreation facilities requiring membership such as health, tennis, and swimming clubs'
+  - rule: restaurants
+    url: https://www.citi.com/credit-cards/citi-strata-credit-card
+    quote: '2 points per dollar spent at Restaurants'
+  - rule: restaurants
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Excludes purchases at bakeries, caterers, and restaurants located inside another business'
+  - rule: annual_fee
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Annual Fee None'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-strata-credit-card
+    quote: 'after spending $1,000 in the first 3 months'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-strata-credit-card
+    quote: 'Earn 20,000 bonus points'
+  - rule: welcome_offer
+    url: https://www.citi.com/credit-cards/citi-strata-credit-card
+    quote: 'if you currently have or previously had a Citi Strata® or a Citi Strata Student account'
+  - rule: foreign_transaction_fee
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Foreign Purchase Transaction 3% of each purchase transaction in U.S. dollars.'
+todo:
+  - "The Self-Select Category can also be Cosmetic Stores/Barber Shops/Hair Salons or Pet Supply Stores, which have no earnrate category, so those two options aren't offered."
+  - "The terms link carries a session-like token (HKOP); if Citi rotates it, take the new one from the card page's Important Pricing & Information link."

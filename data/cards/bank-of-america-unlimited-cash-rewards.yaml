@@ -1,0 +1,81 @@
+id: bank-of-america-unlimited-cash-rewards
+name: Bank of America Unlimited Cash Rewards Credit Card
+issuer: bank-of-america
+# Bank of America's terms carry only the Visa and Visa Signature trademark
+# notice, so the network is Visa.
+network: visa
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.bankofamerica.com/credit-cards/products/unlimited-cash-back-credit-card/
+  - https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4082058&productoffercode=6E&locale=en_US
+  - https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+base_rate: 1.5
+annual_fee: 0
+foreign_transaction_fee: 3
+welcome_offer:
+  dollars: 250
+  spend: 1000
+  months: 3
+  note: Online offer; the window is 90 days from account opening, modeled as 3 months. The offer may not be available elsewhere after leaving the page. The card may not be available to anyone who has or had it in the past 24 months.
+rules:
+  # BofA Rewards members earn a tier bonus on all cash back: 10% for Member,
+  # 25% Preferred Plus, 50% Preferred Honors, 75% Premier.
+  - id: everything-bofa-rewards-member
+    match: { any: true }
+    rate: 1.65
+    requires: { membership: bofa-rewards-member }
+    note: 1.5% plus the 10% BofA Rewards Member bonus.
+  - id: everything-bofa-rewards-preferred-plus
+    match: { any: true }
+    rate: 1.875
+    requires: { membership: bofa-rewards-preferred-plus }
+    note: 1.5% plus the 25% BofA Rewards Preferred Plus bonus.
+  - id: everything-bofa-rewards-preferred-honors
+    match: { any: true }
+    rate: 2.25
+    requires: { membership: bofa-rewards-preferred-honors }
+    note: 1.5% plus the 50% BofA Rewards Preferred Honors bonus.
+  - id: everything-bofa-rewards-premier
+    match: { any: true }
+    rate: 2.625
+    requires: { membership: bofa-rewards-premier }
+    note: 1.5% plus the 75% BofA Rewards Premier bonus.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.bankofamerica.com/credit-cards/products/unlimited-cash-back-credit-card/
+    quote: 'Earn unlimited 1.5% cash back on all purchases'
+  - rule: base_rate
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4082058&productoffercode=6E&locale=en_US
+    quote: 'Earn 1.5% cash back (equal to $0.015 for every $1) on all Net Purchases'
+  - rule: everything-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'bonus of 10% for the Member tier'
+  - rule: everything-bofa-rewards-preferred-plus
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '25% for the Preferred Plus tier'
+  - rule: everything-bofa-rewards-preferred-honors
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: '50% for the Preferred Honors tier'
+  - rule: everything-bofa-rewards-premier
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'or 75% for the Premier tier'
+  - rule: everything-bofa-rewards-member
+    url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
+    quote: 'a $100 purchase that earns 3% ($3.00) will actually earn $3.30'
+  - rule: annual_fee
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4082058&productoffercode=6E&locale=en_US
+    quote: 'Annual Fee None'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/products/unlimited-cash-back-credit-card/
+    quote: 'Online $250 cash rewards bonus after making at least $1,000 in purchases in the first 90 days'
+  - rule: welcome_offer
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4082058&productoffercode=6E&locale=en_US
+    quote: 'This card may not be available to you if you currently have or have had the card'
+  - rule: foreign_transaction_fee
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4082058&productoffercode=6E&locale=en_US
+    quote: 'Foreign Transaction 3% of the U.S. dollar amount of each transaction'
+todo:
+  - 'The BofA Rewards rules use proposed membership ids: bofa-rewards-member, bofa-rewards-preferred-plus, bofa-rewards-preferred-honors and bofa-rewards-premier. Cardholders who joined Preferred Rewards before May 26, 2026 may have an "extended card benefit" that Bank of America doesn''t define.'
