@@ -15,7 +15,12 @@ import { rotationGapText } from '../src/engine/rotation.ts'
 import { simulateSingles } from '../src/engine/simulate.ts'
 import { earnText, shortDate } from '../src/engine/text.ts'
 import { pageContext } from '../scripts/pages/context.ts'
-import { feeWorthKit } from '../scripts/pages/fee-worth.ts'
+import {
+  feeWorthKit,
+  type FeeWorth,
+  MAX_MONTHLY,
+  STEP,
+} from '../scripts/pages/fee-worth.ts'
 import { quarterlyPages, quarters } from '../scripts/pages/quarterly.ts'
 import { DESCRIPTION_MAX, esc, TITLE_MAX } from '../scripts/pages/site.ts'
 import { ROOT } from './helpers.ts'
@@ -183,40 +188,56 @@ describe('quarterly pages', () => {
 })
 
 describe('is the annual fee worth it', () => {
-  test("Amex Gold's break-even matches the engine run directly", () => {
-    const card = catalog.cards.find((c) => c.id === 'amex-gold')
-    if (!card) throw new Error('amex-gold missing')
-    const worth = feeWorthKit(catalog, today).feeWorth(card)
-    const breakEven = worth?.breakEven ?? null
-    expect(breakEven).not.toBeNull()
-    const options = {
-      filters: {
-        kind: 'any' as const,
-        business: false,
-        noAnnualFee: true,
-        issuer: null,
-        includeClosed: false,
-      },
-      memberships: [],
-      valuations: {},
-      start: today,
+  const kit = feeWorthKit(catalog, today)
+  const personal = catalog.cards.filter(
+    (c) => !c.business && (c.annual_fee ?? 0) > 0,
+  )
+  const options = {
+    filters: {
+      kind: 'any' as const,
+      business: false,
+      noAnnualFee: true,
+      issuer: null,
+      includeClosed: false,
+    },
+    memberships: [],
+    valuations: {},
+    start: today,
+  }
+  const noFee = catalog.cards.filter(
+    (c) =>
+      c.annual_fee === 0 && !c.business && c.applications_closed === undefined,
+  )
+  const first = (wanted: (w: FeeWorth) => boolean) => {
+    for (const card of personal) {
+      const w = kit.feeWorth(card)
+      if (w && wanted(w)) return w
     }
-    const noFee = catalog.cards.filter(
-      (c) =>
-        c.annual_fee === 0 &&
-        !c.business &&
-        c.applications_closed === undefined,
-    )
-    const at = (monthly: number) => {
-      const lines = (worth?.lines ?? []).map((l) => ({
-        ...l,
-        monthly: l.monthly * monthly,
-      }))
-      const own = simulateSingles(catalog, [card], lines, options)[0]?.net ?? 0
-      const best = simulateSingles(catalog, noFee, lines, options)[0]?.net ?? 0
-      return own - best
-    }
-    expect(at(breakEven ?? 0)).toBeGreaterThan(0)
-    expect(at((breakEven ?? 0) - 10)).toBeLessThanOrEqual(0)
-  })
+    return null
+  }
+  const lead = (worth: FeeWorth, monthly: number) => {
+    const lines = worth.lines.map((l) => ({
+      ...l,
+      monthly: l.monthly * monthly,
+    }))
+    const own =
+      simulateSingles(catalog, [worth.card], lines, options)[0]?.net ?? 0
+    const best = simulateSingles(catalog, noFee, lines, options)[0]?.net ?? 0
+    return own - best
+  }
+
+  test('a break-even matches the engine run directly', () => {
+    const worth = first((w) => w.breakEven !== null)
+    if (!worth) return
+    const breakEven = worth.breakEven ?? 0
+    expect(lead(worth, breakEven), worth.card.id).toBeGreaterThan(0)
+    expect(lead(worth, breakEven - 10), worth.card.id).toBeLessThanOrEqual(0)
+  }, 60_000)
+
+  test('a card that never comes out ahead is behind at every amount', () => {
+    const worth = first((w) => w.breakEven === null)
+    if (!worth) return
+    for (const m of [STEP, 1000, MAX_MONTHLY])
+      expect(lead(worth, m), worth.card.id).toBeLessThanOrEqual(0)
+  }, 60_000)
 })
