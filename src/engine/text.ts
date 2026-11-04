@@ -87,6 +87,15 @@ export function categoryPhrase(catalog: Catalog, id: string): string {
     : name.charAt(0).toLowerCase() + name.slice(1)
 }
 
+// A category bought as a service reads "on" (streaming services); its own
+// preposition or a parent's says so. Everything else reads "at".
+export function categoryReadsOn(catalog: Catalog, id: string): boolean {
+  const category = catalog.categories.find((c) => c.id === id)
+  if (category?.preposition === 'on') return true
+  const dot = id.lastIndexOf('.')
+  return dot !== -1 && categoryReadsOn(catalog, id.slice(0, dot))
+}
+
 export function earnText(
   catalog: Catalog,
   rate: number,

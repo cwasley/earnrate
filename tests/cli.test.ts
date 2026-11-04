@@ -457,7 +457,7 @@ describe('no wallet needed', () => {
     ])
     expect(code).toBe(0)
     expect(stdout).toMatch(
-      /^- Activate Freedom Flex's bonus on .*by Dec 14, 2026\.$/m,
+      /^- Activate Freedom Flex's bonus at grocery stores, restaurants and American Red Cross by Dec 14, 2026\.$/m,
     )
     expect(await readFile(ics, 'utf8')).toMatch(/^BEGIN:VCALENDAR/)
   })

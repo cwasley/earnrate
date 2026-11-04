@@ -27,7 +27,7 @@ describe('cheat sheet', () => {
     ])
     expect(sheet.notes).toContainEqual(
       expect.stringMatching(
-        /^Activate Freedom Flex's bonus on .*by Dec 14, 2026\.$/,
+        /^Activate Freedom Flex's bonus at grocery stores, restaurants and American Red Cross by Dec 14, 2026\.$/,
       ),
     )
     expect(sheet.notes.join(' ')).not.toMatch(/q4-2026|gas-ev-charging/)

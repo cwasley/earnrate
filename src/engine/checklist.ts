@@ -47,12 +47,12 @@ export function checklist(
     for (const a of activationsDue(catalog, card, held, today)) {
       const starts =
         a.from !== null && a.from > today
-          ? `, starting ${shortDate(a.from)}`
+          ? ` (it starts ${shortDate(a.from)})`
           : ''
       items.push({
         kind: 'activate',
         cardId: card.id,
-        text: `Activate ${name}'s bonus on ${a.what}${starts}${a.activateBy === null ? '' : `, by ${shortDate(a.activateBy)}`}.`,
+        text: `Activate ${name}'s bonus ${a.preposition} ${a.what}${a.activateBy === null ? '' : ` by ${shortDate(a.activateBy)}`}${starts}.`,
         due:
           a.activateBy ?? (a.from !== null && a.from > today ? a.from : a.to),
       })

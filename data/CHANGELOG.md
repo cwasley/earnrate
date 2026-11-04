@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.04.1
+
+The parent `grocery` category reads "grocery stores" in sentences ("bonus at grocery stores, restaurants and American Red Cross"); its search page stays at /best/grocery. No rates changed.
+
 ## 2026.11.04
 
 Eleven new cards, each from the issuer's own pages: Ink Business Unlimited and Freedom Rise (Chase); Business Gold and Business Platinum (Amex); Unlimited Cash Rewards, Travel Rewards and Premium Rewards (Bank of America, with the BofA Rewards tiers as on Customized Cash Rewards); Altitude Go and Altitude Connect (U.S. Bank); Autograph Journey (Wells Fargo); and Citi Strata. New currencies: Bank of America Travel Rewards points (1¢ as a travel and dining statement credit, 0.6¢ as cash), Bank of America Premium Rewards points (1¢) and U.S. Bank Altitude points (1¢), each at the issuer's own redemption rate. New merchants: Bank of America Travel Center, and prepaid hotels and car rentals through the U.S. Bank Travel Center. Apple Card, Amex Green and Capital One SavorOne weren't added: Apple Card's 1% rate is stated only in a PDF agreement and its 2% needs Apple Pay, which earnrate can't see; Amex no longer lists Green; SavorOne's page now redirects to Savor, already on file.

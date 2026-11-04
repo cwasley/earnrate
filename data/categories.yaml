@@ -26,7 +26,9 @@
   mccs: [5814]
 
 - id: grocery
-  name: Grocery
+  name: Grocery stores
+  # Keeps /best/grocery, the page's address before it had this name.
+  slug: grocery
 - id: grocery.supermarket
   name: Supermarkets
   aliases: [groceries, grocery, grocery stores, supermarket]

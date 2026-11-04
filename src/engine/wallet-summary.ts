@@ -10,13 +10,14 @@ import {
 } from './evaluate.ts'
 import { membershipName } from './memberships.ts'
 import { milestoneSummaries, type MilestoneSummary } from './milestones.ts'
-import { optionName, ruleParts, ruleWhat } from './rule-text.ts'
+import { optionName, ruleParts } from './rule-text.ts'
 import { choicePeriod, daysBetween, inEffect, periodEnd } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { activationRules } from './setup.ts'
 import {
   CAP_PERIODS,
+  categoryReadsOn,
   choiceName,
   currencyLabel,
   earnText,
@@ -181,7 +182,8 @@ function headlineRates(
 }
 
 export type ActivationDue = {
-  what: string // the bonus categories, in words
+  what: string // the bonus categories, in words: "grocery stores and restaurants"
+  preposition: 'at' | 'on' // "bonus at grocery stores", "bonus on streaming services"
   from: string | null
   to: string | null
   activateBy: string | null
@@ -203,8 +205,14 @@ export function activationsDue(
     for (const g of group) seen.add(g)
     const rules = card.rules.filter((r) => group.includes(r.id))
     const first = rules[0]
+    const categories = rules.flatMap((r) => r.match.categories ?? [])
+    const servicesOnly =
+      categories.length > 0 &&
+      rules.every((r) => (r.match.merchants ?? []).length === 0) &&
+      categories.every((c) => categoryReadsOn(catalog, c))
     out.push({
-      what: rules.map((r) => ruleWhat(catalog, r)).join(', '),
+      what: listed([...new Set(rules.flatMap((r) => ruleParts(catalog, r)))]),
+      preposition: servicesOnly ? 'on' : 'at',
       from: first?.valid_from ?? null,
       to: first?.valid_to ?? null,
       activateBy: first?.activate_by ?? null,
@@ -261,7 +269,7 @@ function capSummaries(
     const shared = card.caps.find((c) => c.id === key)
     const label = shared?.rotating
       ? 'the rotating bonus categories'
-      : [...new Set(covered.map((r) => ruleWhat(catalog, r)))].join(', ') ||
+      : listed([...new Set(covered.flatMap((r) => ruleParts(catalog, r)))]) ||
         words(key)
     return {
       key,

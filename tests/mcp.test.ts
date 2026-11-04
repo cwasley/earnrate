@@ -386,7 +386,7 @@ describe('tools', () => {
     )
     expect(text(result)).toMatch(/^Memberships: /m)
     expect(text(result)).toMatch(
-      /^To do now:\n- Activate Freedom Flex's bonus on /m,
+      /^To do now:\n- Activate Freedom Flex's bonus at grocery stores, /m,
     )
   })
 

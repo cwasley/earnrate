@@ -19,6 +19,7 @@ import {
   CAP_PERIODS,
   capitalize,
   categoryPhrase,
+  categoryReadsOn,
   currencyName,
   earnText,
   hostname,
@@ -412,13 +413,7 @@ function renderIndex(all: Page[]): string {
 
 const merchantName = (id: string) => findMerchant(catalog, id)?.name
 
-// A category bought as a service reads "on"; its own or a parent's says so.
-const readsOn = (id: string): boolean => {
-  const category = catalog.categories.find((c) => c.id === id)
-  if (category?.preposition === 'on') return true
-  const dot = id.lastIndexOf('.')
-  return dot !== -1 && readsOn(id.slice(0, dot))
-}
+const readsOn = (id: string) => categoryReadsOn(catalog, id)
 
 function ruleWhat(card: Card, rule: Rule): string {
   return capitalize(ruleWhatRaw(card, rule))
