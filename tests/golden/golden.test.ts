@@ -12,7 +12,7 @@ import type {
   RankedCard,
   Recommendation,
 } from '../../src/engine/types.ts'
-import { CardSchema } from '../../src/schema/card.ts'
+import { CardSchema, type PaymentMethod } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import { WalletSchema, type Wallet } from '../../src/schema/wallet.ts'
 import {
@@ -1473,7 +1473,286 @@ describe('#29 new cards', () => {
   )
 })
 
-describe('#30 merchant statement credits', () => {
+describe('#30 how a purchase is paid', () => {
+  const wallet = (cards: object[]) =>
+    withProfile(WalletSchema.parse({ cards }), 'flat')
+  const PAYPAL = 'paypal-cashback-mastercard'
+  const APPLE = 'apple-card'
+  const rateAt = (
+    cardId: string,
+    merchant: string,
+    extra: Partial<Omit<Purchase, 'merchant'>> = {},
+  ) =>
+    entry(
+      recommend(
+        catalog,
+        wallet([{ id: cardId }]),
+        purchase(merchant, { amount: 100, ...extra }),
+      ),
+      cardId,
+    )
+
+  goldenTest(
+    '#30a PayPal Cashback: 3% through PayPal checkout online, 1.5% otherwise',
+    () => {
+      const checkout = rateAt(PAYPAL, 'etsy.com', { payment: 'paypal' })
+      expect(checkout.rate).toBe(3)
+      expect(checkout.earned).toBeCloseTo(3)
+      expect(checkout.matchedRule).toBe('paypal-checkout')
+      // PayPal checkout is online, so an unknown channel counts as online.
+      expect(rateAt(PAYPAL, 'Etsy', { payment: 'paypal' }).rate).toBe(3)
+      expect(rateAt(PAYPAL, 'etsy.com', { payment: 'card' }).rate).toBe(1.5)
+      expect(
+        rateAt(PAYPAL, 'Target', { payment: 'paypal', channel: 'in_store' })
+          .rate,
+      ).toBe(1.5)
+    },
+  )
+
+  goldenTest(
+    '#30b PayPal Cashback with the payment unknown: 1.5%, and the 3% is an assumption line',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: PAYPAL }, { id: 'citi-double-cash' }]),
+        purchase('etsy.com', { amount: 100 }),
+      )
+      expect(rec.decision?.cardId).toBe('citi-double-cash')
+      expect(entry(rec, PAYPAL).rate).toBe(1.5)
+      expect(rec.assumptions).toContain(
+        "Through PayPal checkout, PayPal Cashback Mastercard would earn 3% cash back here, instead of the 1.5% cash back it's ranked at. Say how you're paying to count it.",
+      )
+      const told = recommend(
+        catalog,
+        wallet([{ id: PAYPAL }, { id: 'citi-double-cash' }]),
+        purchase('etsy.com', { amount: 100, payment: 'paypal' }),
+      )
+      expect(told.decision?.cardId).toBe(PAYPAL)
+      expectSome(
+        told.assumptions,
+        /^Counts this as paid through PayPal checkout/,
+      )
+      expect(told.assumptions.join(' ')).not.toMatch(/would earn/)
+    },
+  )
+
+  goldenTest(
+    '#30c Apple Card: 2% with Apple Pay, 1% with the card, never Apple Pay by assumption',
+    () => {
+      const grocery = (payment?: Purchase['payment']) =>
+        rateAt(APPLE, 'Safeway', {
+          channel: 'in_store',
+          ...(payment === undefined ? {} : { payment }),
+        }).rate
+      expect(grocery()).toBe(1)
+      expect(grocery(null)).toBe(1)
+      expect(grocery('card')).toBe(1)
+      expect(grocery('google-pay')).toBe(1)
+      expect(grocery('apple-pay')).toBe(2)
+    },
+  )
+
+  goldenTest(
+    '#30d Apple Card: 3% at Apple however it is paid, 3% at Nike and Walgreens only with Apple Pay',
+    () => {
+      expect(rateAt(APPLE, 'Apple Store').rate).toBe(3)
+      expect(rateAt(APPLE, 'Apple Store', { payment: 'card' }).rate).toBe(3)
+      expect(rateAt(APPLE, 'Nike', { payment: 'apple-pay' }).rate).toBe(3)
+      expect(rateAt(APPLE, 'Walgreens', { payment: 'apple-pay' }).rate).toBe(3)
+      expect(rateAt(APPLE, 'Nike', { payment: 'card' }).rate).toBe(1)
+      // The merchant 3% is U.S. only; abroad, Apple Pay earns 2% with no fee.
+      const abroad = rateAt(APPLE, 'Nike', {
+        payment: 'apple-pay',
+        country: 'FR',
+      })
+      expect(abroad.rate).toBe(2)
+      expect(abroad.effectiveReturnPct).toBe(2)
+      expect(abroad.foreignFee).toBeNull()
+    },
+  )
+
+  goldenTest(
+    '#30e the Apple Pay line appears only where it would change the pick or raise the winner',
+    () => {
+      const cards = wallet([{ id: APPLE }, { id: 'citi-double-cash' }])
+      const nike = recommend(catalog, cards, purchase('Nike'))
+      expect(nike.decision?.cardId).toBe('citi-double-cash')
+      expect(nike.assumptions).toContain(
+        "With Apple Pay, Apple Card would earn 3% cash back here, instead of the 1% cash back it's ranked at. Say how you're paying to count it.",
+      )
+      // 2% with Apple Pay only ties Double Cash's 2%.
+      const grocery = recommend(catalog, cards, purchase('Safeway'))
+      expect(grocery.assumptions.join(' ')).not.toMatch(/Apple Pay/)
+      const alone = recommend(
+        catalog,
+        wallet([{ id: APPLE }]),
+        purchase('Safeway'),
+      )
+      expectSome(alone.assumptions, /^With Apple Pay, Apple Card would earn 2%/)
+    },
+  )
+
+  goldenTest(
+    '#30f a rule can exclude a way of paying: it still applies when the payment is unknown',
+    () => {
+      const card = CardSchema.parse({
+        id: 'test-no-paypal',
+        name: 'Test No PayPal',
+        issuer: 'chase',
+        network: 'visa',
+        currency: 'cash',
+        last_verified: TODAY,
+        verified_by: 'test',
+        source_urls: ['https://example.com/'],
+        base_rate: 1,
+        foreign_transaction_fee: 0,
+        rules: [
+          {
+            id: 'dining',
+            match: { categories: ['dining'] },
+            exclude: { payment: ['paypal'] },
+            rate: 4,
+          },
+        ],
+      })
+      const withCard = { ...catalog, cards: [...catalog.cards, card] }
+      const rate = (payment: PaymentMethod | null) =>
+        entry(
+          recommend(
+            withCard,
+            wallet([{ id: card.id }]),
+            purchase('Chipotle', { payment }),
+          ),
+          card.id,
+        ).rate
+      expect(rate(null)).toBe(4)
+      expect(rate('apple-pay')).toBe(4)
+      expect(rate('paypal')).toBe(1)
+    },
+  )
+
+  goldenTest(
+    '#30g the cheat sheet and simulations use rates without a way of paying, and say so',
+    () => {
+      const cards = wallet([{ id: APPLE }, { id: PAYPAL }])
+      const sheet = cheatSheet(catalog, cards, TODAY)
+      expect(sheet.notes).toContain(
+        "Rates with Apple Pay or through PayPal checkout (Apple Card and PayPal Cashback Mastercard) aren't counted: this ranks each card by what it earns however you pay.",
+      )
+      expect(
+        sheet.rows.find((r) => r.label === 'Groceries')?.effectiveReturnPct,
+      ).toBe(1.5)
+      const year = simulateWallet(
+        catalog,
+        wallet([{ id: APPLE }]),
+        resolveSpendLines(catalog, [
+          { merchant: null, category: 'grocery.supermarket', monthly: 100 },
+        ]),
+        '2027-01-01',
+      )
+      expect(year.rewards).toBeCloseTo(12)
+      expectSome(
+        year.notes,
+        /^Rates with Apple Pay \(Apple Card\) aren't counted/,
+      )
+    },
+  )
+})
+
+describe('#31 credit union and fintech cards', () => {
+  const wallet = (cards: object[], memberships: string[] = []) =>
+    withProfile(WalletSchema.parse({ cards, memberships }), 'flat')
+  const rateAt = (cardId: string, merchant: string) =>
+    entry(
+      recommend(
+        catalog,
+        wallet([{ id: cardId }]),
+        purchase(merchant, { amount: 100, channel: 'in_store' }),
+      ),
+      cardId,
+    ).rate
+
+  goldenTest(
+    '#31a Caltech EFCU Platinum Mastercard earns nothing, but has no foreign transaction fee',
+    () => {
+      const cards = wallet([
+        { id: 'caltech-efcu-platinum-mastercard' },
+        { id: 'citi-double-cash' },
+      ])
+      const etsy = (country: string) =>
+        purchase('Etsy', { amount: 100, channel: 'online', country })
+      const home = recommend(catalog, cards, etsy('US'))
+      expect(home.decision?.cardId).toBe('citi-double-cash')
+      expect(home.decision?.effectiveReturnPct).toBeCloseTo(2)
+      expect(entry(home, 'caltech-efcu-platinum-mastercard').rate).toBe(0)
+      const abroad = recommend(catalog, cards, etsy('GB'))
+      expect(abroad.decision?.cardId).toBe('caltech-efcu-platinum-mastercard')
+      expect(abroad.decision?.effectiveReturnPct).toBeCloseTo(0)
+      expect(entry(abroad, 'citi-double-cash').effectiveReturnPct).toBeCloseTo(
+        2 - 3,
+      )
+    },
+  )
+
+  goldenTest(
+    '#31b Smartly: 2% without a tier, 3% at the 50% tier on the first $10,000 a billing cycle',
+    () => {
+      const etsy = purchase('Etsy', { amount: 100, channel: 'online' })
+      const smartly = (cards: object[], memberships: string[] = []) =>
+        entry(
+          recommend(catalog, wallet(cards, memberships), etsy),
+          'usbank-smartly',
+        ).effectiveReturnPct
+      expect(smartly([{ id: 'usbank-smartly' }])).toBeCloseTo(2)
+      expect(
+        smartly([{ id: 'usbank-smartly' }], ['usbank-smartly-50']),
+      ).toBeCloseTo(3)
+      const nearCap = [
+        {
+          id: 'usbank-smartly',
+          cap_usage: {
+            'smartly-earning-bonus': { period: '2026-10', spent: 9950 },
+          },
+        },
+      ]
+      expect(smartly(nearCap, ['usbank-smartly-50'])).toBeCloseTo(
+        (50 * 3 + 50 * 2) / 100,
+      )
+    },
+  )
+
+  goldenTest(
+    '#31c Verizon Visa: 4% on gas, supermarkets, dining and Verizon devices; 1% on the Verizon bill',
+    () => {
+      expect(rateAt('verizon-visa-card', 'Shell')).toBe(4)
+      expect(rateAt('verizon-visa-card', 'Safeway')).toBe(4)
+      expect(rateAt('verizon-visa-card', 'Chipotle')).toBe(4)
+      expect(rateAt('verizon-visa-card', 'Verizon store')).toBe(4)
+      expect(rateAt('verizon-visa-card', 'Verizon')).toBe(1)
+    },
+  )
+
+  goldenTest(
+    '#31d Navy Federal More Rewards: 3X at supermarkets, gas and restaurants, 1X at Walmart',
+    () => {
+      expect(rateAt('navy-federal-more-rewards-amex', 'Safeway')).toBe(3)
+      expect(rateAt('navy-federal-more-rewards-amex', 'Shell')).toBe(3)
+      expect(rateAt('navy-federal-more-rewards-amex', 'Chipotle')).toBe(3)
+      expect(rateAt('navy-federal-more-rewards-amex', 'Walmart')).toBe(1)
+    },
+  )
+
+  goldenTest(
+    '#31e Venmo: 3% on dining and at movie theaters, 1% at supermarkets',
+    () => {
+      expect(rateAt('venmo-credit-card', 'Chipotle')).toBe(3)
+      expect(rateAt('venmo-credit-card', 'AMC Theatres')).toBe(3)
+      expect(rateAt('venmo-credit-card', 'Safeway')).toBe(1)
+    },
+  )
+})
+
+describe('#32 merchant statement credits', () => {
   const lululemon = (amount: number | null = 100) =>
     purchase('Lululemon', { amount, channel: 'in_store' })
   const wallet = (platinum: object = {}) =>
@@ -1494,7 +1773,7 @@ describe('#30 merchant statement credits', () => {
   })
 
   goldenTest(
-    '#30a Lululemon with no wallet: the credit group first, then the ranking by rate',
+    '#32a Lululemon with no wallet: the credit group first, then the ranking by rate',
     () => {
       const r = exploreCards(
         catalog,
@@ -1538,7 +1817,7 @@ describe('#30 merchant statement credits', () => {
   )
 
   goldenTest(
-    '#30b enrolled, with an amount: Platinum wins with the credit dollars counted',
+    '#32b enrolled, with an amount: Platinum wins with the credit dollars counted',
     () => {
       const rec = recommend(catalog, wallet(enrolled()), lululemon())
       expect(rec.decision?.cardId).toBe('amex-platinum')
@@ -1550,7 +1829,7 @@ describe('#30 merchant statement credits', () => {
     },
   )
 
-  goldenTest('#30c not enrolled: shown, says enroll first, never wins', () => {
+  goldenTest('#32c not enrolled: shown, says enroll first, never wins', () => {
     const rec = recommend(catalog, wallet(), lululemon())
     expect(rec.decision?.cardId).toBe('citi-double-cash')
     const it = entry(rec, 'amex-platinum')
@@ -1558,7 +1837,7 @@ describe('#30 merchant statement credits', () => {
     expectSome(it.reasoning, /enroll first/)
   })
 
-  goldenTest('#30d used up this quarter: the rate decides again', () => {
+  goldenTest('#32d used up this quarter: the rate decides again', () => {
     const rec = recommend(catalog, wallet(enrolled(75)), lululemon())
     expect(rec.decision?.cardId).toBe('citi-double-cash')
     const it = entry(rec, 'amex-platinum')
@@ -1576,7 +1855,7 @@ describe('#30 merchant statement credits', () => {
   })
 
   goldenTest(
-    '#30e a purchase that straddles what is left uses only the rest, and recording it uses it up',
+    '#32e a purchase that straddles what is left uses only the rest, and recording it uses it up',
     () => {
       const w = wallet(enrolled(40))
       const rec = recommend(catalog, w, lululemon())
@@ -1611,7 +1890,7 @@ describe('#30 merchant statement credits', () => {
   )
 
   goldenTest(
-    '#30f with no amount the credit and what is left show beside the ranking',
+    '#32f with no amount the credit and what is left show beside the ranking',
     () => {
       const rec = recommend(catalog, wallet(enrolled(40)), lululemon(null))
       expect(rec.decision?.cardId).toBe('citi-double-cash')
@@ -1622,7 +1901,7 @@ describe('#30 merchant statement credits', () => {
   )
 
   goldenTest(
-    '#30g Gold at Dunkin: 4x at restaurants plus the monthly $7',
+    '#32g Gold at Dunkin: 4x at restaurants plus the monthly $7',
     () => {
       const rec = recommend(
         catalog,
@@ -1645,7 +1924,7 @@ describe('#30 merchant statement credits', () => {
   )
 
   goldenTest(
-    '#30h the to-do list: use what is left by the period end, or enroll',
+    '#32h the to-do list: use what is left by the period end, or enroll',
     () => {
       const items = checklist(catalog, wallet(enrolled(40)), TODAY)
       const use = items.find((i) => i.kind === 'credit')
@@ -1668,7 +1947,7 @@ describe('#30 merchant statement credits', () => {
   )
 
   goldenTest(
-    '#30i the cheat sheet and simulations leave credits out and say so',
+    '#32i the cheat sheet and simulations leave credits out and say so',
     () => {
       const sheet = cheatSheet(catalog, wallet(enrolled()), TODAY)
       expect(sheet.assumptions.join(' ')).toMatch(

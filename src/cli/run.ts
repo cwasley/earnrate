@@ -37,7 +37,7 @@ import { resolvePlace, withCallerCategory } from '../merchants/resolve.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { packageVersion } from '../version.ts'
-import { membershipProblem, parseCliArgs } from './args.ts'
+import { membershipProblem, PAYING_HELP, parseCliArgs } from './args.ts'
 import { runCheatSheet } from './cheatsheet.ts'
 import { runMissed } from './missed.ts'
 import { runTodo } from './todo.ts'
@@ -97,6 +97,7 @@ Options:
   --date <YYYY-MM-DD>    Purchase date. Default: today.
   --country <code>       Where you're paying. Abroad, cards rank after their
                          foreign transaction fees. Default: US.
+  ${PAYING_HELP}
   --cards <ids>          Answer for these cards instead of your wallet, comma
                          separated: --cards amex-gold,chase-prime-visa.
   --member <name>        A membership you have, in place of the saved ones.
@@ -252,6 +253,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
     channel: options.channel,
     date: options.date ?? io.today,
     country: options.country,
+    payment: options.payment,
   }
 
   if (
@@ -311,6 +313,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
         channel: purchase.channel,
         date: purchase.date,
         country: purchase.country,
+        payment: purchase.payment ?? null,
       },
       {
         filters: ALL_PERSONAL_CARDS,

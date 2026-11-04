@@ -1,4 +1,11 @@
-import type { Cap, Choice, Credit, Milestone } from '../schema/card.ts'
+import type {
+  Cap,
+  Card,
+  Choice,
+  Credit,
+  Milestone,
+  PaymentMethod,
+} from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { singleMcc } from './evaluate.ts'
 import type { MerchantResolution } from './types.ts'
@@ -137,6 +144,47 @@ export const NETWORK_NAMES: Record<string, string> = {
   amex: 'American Express',
   discover: 'Discover',
   store: 'store card',
+}
+
+// How a purchase is paid, mid-sentence: "2% cash back with Apple Pay".
+export const PAYMENT_PHRASES: Record<PaymentMethod, string> = {
+  card: 'with the card itself',
+  'apple-pay': 'with Apple Pay',
+  'google-pay': 'with Google Pay',
+  paypal: 'through PayPal checkout',
+}
+
+export const paidText = (payment: PaymentMethod) =>
+  `Counts this as paid ${PAYMENT_PHRASES[payment]}, as you said.`
+
+export const paymentUnknownText = (
+  name: string,
+  payment: PaymentMethod,
+  earn: string,
+  standard: string,
+) =>
+  `${capitalize(PAYMENT_PHRASES[payment])}, ${name} would earn ${earn} here, instead of the ${standard} it's ranked at. Say how you're paying to count it.`
+
+// For answers that never ask how each purchase is paid (cheat sheets and
+// simulations): which cards' rates that need a way of paying are left out.
+export function paymentNote(
+  cards: { name: string; card: Card }[],
+): string | null {
+  const payments = new Set<PaymentMethod>()
+  const names: string[] = []
+  for (const { name, card } of cards) {
+    const needs = card.rules.flatMap((r) =>
+      r.requires?.payment === undefined ? [] : [r.requires.payment],
+    )
+    if (needs.length === 0) continue
+    names.push(name)
+    for (const p of needs) payments.add(p)
+  }
+  if (names.length === 0) return null
+  return `Rates ${listed(
+    [...payments].map((p) => PAYMENT_PHRASES[p]),
+    'or',
+  )} (${listed(names)}) aren't counted: this ranks each card by what it earns however you pay.`
 }
 
 // A name with its own "and" ("drugstores and pharmacies") would run into the

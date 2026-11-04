@@ -1,9 +1,9 @@
 import { categoryResolution, resolvePlace } from '../merchants/resolve.ts'
-import type { Cap, Card, Credit } from '../schema/card.ts'
+import type { Cap, Card, Credit, PaymentMethod } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { creditCovers, creditPerYear } from './credits.ts'
-import { evaluateCard, purchaseContext } from './evaluate.ts'
+import { evaluateCard, paymentUpgrade, purchaseContext } from './evaluate.ts'
 import { creditName } from './rule-text.ts'
 import {
   membershipName,
@@ -25,6 +25,9 @@ import {
   earnText,
   listed,
   money,
+  PAYMENT_PHRASES,
+  paidText,
+  paymentUnknownText,
   PICK_PERIODS,
   pointValuesText,
 } from './text.ts'
@@ -158,6 +161,7 @@ export type ExploreQuery = {
   channel: Channel | null
   date: string
   country?: string // where the purchase is made; default US
+  payment?: PaymentMethod | null // how it's paid; default unknown
 }
 
 export type ExploreOptions = {
@@ -340,11 +344,13 @@ export function exploreCards(
     channel: query.channel,
     date: query.date,
     country: query.country ?? 'US',
+    payment: query.payment ?? null,
   }
   const ranked: ExploreEntry[] = []
+  const ifPaid = new Map<string, PaidUpgrade>()
   const excluded: ExcludedCard[] = []
   // A Costco purchase means a Costco member: no membership to point out.
-  const paid = paidMemberships(catalog, {
+  const members = paidMemberships(catalog, {
     memberships: options.memberships,
     merchantIds: [merchant.merchantId],
   })
@@ -377,6 +383,21 @@ export function exploreCards(
       purchase,
     )
     const gap = rotationGap(card, query.date)
+    const paid = paymentUpgrade(
+      card,
+      held,
+      purchaseContext(catalog, wallet, merchant, merchant.category, purchase),
+      top.rate,
+    )
+    if (paid)
+      ifPaid.set(card.id, {
+        payment: paid.payment,
+        earn: earnText(catalog, paid.nominalRate, top.currency),
+        standard: earnText(catalog, top.rate, top.currency),
+        returnPct: paid.rate * top.centsPerUnit - (top.foreignFee ?? 0),
+      })
+    const payment = card.rules.find((r) => r.id === top.matchedRule)?.requires
+      ?.payment
     const evidenceRule = top.matchedRule ?? 'base_rate'
     const evidence = card.evidence.find((e) => e.rule === evidenceRule)
     ranked.push({
@@ -396,7 +417,8 @@ export function exploreCards(
       requirements,
       conditions: [
         ...conditionsText(catalog, card, requirements),
-        ...membershipNeeded(catalog, card, paid),
+        ...(payment === undefined ? [] : [`Paid ${PAYMENT_PHRASES[payment]}.`]),
+        ...membershipNeeded(catalog, card, members),
       ],
       evidence: evidence ? { quote: evidence.quote, url: evidence.url } : null,
       withMembership: membershipUpgrades(
@@ -423,6 +445,7 @@ export function exploreCards(
       ranked,
       options,
       purchase,
+      ifPaid,
     ),
     warnings: exploreWarnings(catalog, merchant),
   }
@@ -468,12 +491,20 @@ function creditPicks(
   )
 }
 
+type PaidUpgrade = {
+  payment: PaymentMethod
+  earn: string
+  standard: string
+  returnPct: number
+}
+
 function exploreAssumptions(
   catalog: Catalog,
   merchant: MerchantResolution,
   ranked: ExploreEntry[],
   options: ExploreOptions,
   purchase: Purchase,
+  ifPaid: Map<string, PaidUpgrade>,
 ): string[] {
   const assumptions: string[] = []
   if (merchant.source === 'category') {
@@ -494,6 +525,22 @@ function exploreAssumptions(
   const values = pointValuesText(catalog, ranked.slice(0, 10))
   if (values !== null) assumptions.push(values)
   if (isForeign(purchase)) assumptions.push(FOREIGN_ASSUMPTION)
+  if (purchase.payment) assumptions.push(paidText(purchase.payment))
+  const top = ranked[0]
+  for (const entry of ranked) {
+    const paid = ifPaid.get(entry.cardId)
+    if (!paid || !top) continue
+    if (entry !== top && paid.returnPct <= top.effectiveReturnPct + EPSILON)
+      continue
+    assumptions.push(
+      paymentUnknownText(
+        entry.cardName,
+        paid.payment,
+        paid.earn,
+        paid.standard,
+      ),
+    )
+  }
   return assumptions
 }
 

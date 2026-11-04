@@ -316,6 +316,19 @@ export function catalogProblems(catalog: Catalog): string[] {
         problems.push(`merchant ${m.id}: booked_via '${via}' is not a merchant`)
     }
   }
+  const all = new Map([...seed, ...overrides].map((m) => [m.id, m]))
+  for (const m of all.values()) {
+    if (m.brand_of === undefined) continue
+    const parent = all.get(m.brand_of)
+    if (!parent)
+      problems.push(
+        `merchant ${m.id}: brand_of '${m.brand_of}' is not a merchant`,
+      )
+    else if (parent.brand_of !== undefined)
+      problems.push(
+        `merchant ${m.id}: brand_of '${m.brand_of}' is itself a brand of '${parent.brand_of}'`,
+      )
+  }
   for (const m of catalog.memberships)
     for (const id of m.members_shop_at)
       if (!merchantIds.has(id))

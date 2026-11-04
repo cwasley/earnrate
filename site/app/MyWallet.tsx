@@ -59,6 +59,8 @@ import {
   words,
 } from './format.ts'
 import { ABROAD_NOTE, AbroadToggle } from './AbroadToggle.tsx'
+import { PayingWith, payingNote } from './PayingWith.tsx'
+import type { PaymentMethod } from '../../src/schema/card.ts'
 import { SearchInput } from './SearchInput.tsx'
 import { load, loadList, save } from './settings.ts'
 import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
@@ -98,6 +100,7 @@ function ask(
   text: string,
   amount: number | null,
   abroad: boolean,
+  payment: PaymentMethod | null,
 ) {
   const purchase = {
     merchant: text,
@@ -105,6 +108,7 @@ function ask(
     channel: null,
     date: localToday(),
     country: abroad ? ABROAD : 'US',
+    payment,
   }
   return recommend(catalog, wallet, purchase, resolvePlace(catalog, text, null))
 }
@@ -1131,6 +1135,7 @@ export function MyWallet({
   const [query, setQuery] = useState(initialQuery)
   const [amount, setAmount] = useState('')
   const [abroad, setAbroad] = useState(false)
+  const [payment, setPayment] = useState<PaymentMethod | null>(null)
   const [asked, setAsked] = useState<{
     text: string
     amount: number | null
@@ -1162,9 +1167,9 @@ export function MyWallet({
   const rec = useMemo(
     () =>
       wallet && wallet.cards.length > 0 && asked && problems.length === 0
-        ? ask(wallet, asked.text, asked.amount, abroad)
+        ? ask(wallet, asked.text, asked.amount, abroad, payment)
         : null,
-    [wallet, asked, abroad, problems.length],
+    [wallet, asked, abroad, payment, problems.length],
   )
 
   if (wallet && problems.length > 0) {
@@ -1287,18 +1292,28 @@ export function MyWallet({
             </button>
           ))}
         </div>
-        <AbroadToggle abroad={abroad} onChange={setAbroad} />
+        <div class="options">
+          <AbroadToggle abroad={abroad} onChange={setAbroad} />
+          <PayingWith
+            name="wallet-paying"
+            payment={payment}
+            onChange={setPayment}
+          />
+        </div>
         <div aria-live="polite">
           {rec ? (
             <div
               class="results"
-              key={`${asked?.text ?? ''} ${String(asked?.amount ?? '')} ${String(abroad)}`}
+              key={`${asked?.text ?? ''} ${String(asked?.amount ?? '')} ${String(abroad)} ${payment ?? ''}`}
             >
               <h4>
                 {rec.merchant.source === 'category'
                   ? `For ${categoryPhrase(catalog, rec.merchant.category)}`
                   : `At ${rec.merchant.resolvedName}`}
                 {abroad ? <span class="muted">{ABROAD_NOTE}</span> : null}
+                {payment ? (
+                  <span class="muted">{payingNote(payment)}</span>
+                ) : null}
               </h4>
               <Answer wallet={wallet} rec={rec} />
             </div>

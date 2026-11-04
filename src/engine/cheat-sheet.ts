@@ -4,7 +4,7 @@ import {
 } from '../merchants/resolve.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
-import { exploreCards, type ExploreOptions } from './explore.ts'
+import { exploreCards, matchesFilters, type ExploreOptions } from './explore.ts'
 import { bonusStatus } from './bonus.ts'
 import { EPSILON, isClose } from './compare.ts'
 import { periodKey } from './periods.ts'
@@ -17,6 +17,7 @@ import {
   feeText,
   listed,
   money,
+  paymentNote,
   shortDate,
 } from './text.ts'
 import type { RankedCard } from './types.ts'
@@ -159,6 +160,13 @@ export function cheatSheet(
       ),
     ]),
   ]
+  const paying = paymentNote(
+    wallet.cards.flatMap((held) => {
+      const card = catalog.cards.find((c) => c.id === held.id)
+      return card ? [{ name: held.checkout_label ?? card.name, card }] : []
+    }),
+  )
+  if (paying !== null) notes.push(paying)
   const [year, q] = (periodKey('quarter', date, null) ?? '').split('-')
   return {
     scope: 'wallet',
@@ -279,7 +287,13 @@ export function catalogCheatSheet(
     quarter: `${q ?? ''} ${year ?? ''}`,
     date,
     rows,
-    notes: [],
+    notes: [
+      paymentNote(
+        catalog.cards
+          .filter((card) => matchesFilters(card, options.filters))
+          .map((card) => ({ name: card.name, card })),
+      ),
+    ].filter((n) => n !== null),
     assumptions: [CREDITS_LEFT_OUT],
   }
 }

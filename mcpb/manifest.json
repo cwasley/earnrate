@@ -99,7 +99,7 @@
     {
       "name": "which-card",
       "description": "Which credit card should I use? The card that earns the most at a store or for a kind of purchase, with the reason.",
-      "arguments": ["store", "amount", "country"],
+      "arguments": ["store", "amount", "country", "paying"],
       "text": "Which credit card should I use at ${arguments.store}?"
     },
     {

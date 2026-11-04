@@ -34,6 +34,7 @@ import {
   channelOf,
   dateProblem,
   membershipProblem,
+  paymentOf,
   splitAmount,
   valuationProblem,
 } from './args.ts'
@@ -72,6 +73,8 @@ ${FILTER_OPTIONS}
   --date <YYYY-MM-DD>     Purchase date. Default: today.
   --country <code>        Where you're paying. Abroad, cards rank after their
                           foreign transaction fees. Default: US.
+  --paying <how>          card, apple-pay, google-pay or paypal. Rates that need
+                          one (Apple Pay on Apple Card) count only when you say.
   --all                   List every card, not just the top 10.
   --json                  Print the full result as JSON.
   -h, --help              Show this help.
@@ -172,6 +175,7 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
         'in-store': { type: 'boolean' },
         date: { type: 'string' },
         country: { type: 'string' },
+        paying: { type: 'string' },
       },
     })
   } catch (e) {
@@ -207,6 +211,11 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
     io.stderr(`${countryProblem(country)}\n`)
     return USAGE_ERROR
   }
+  const paying = paymentOf(values.paying)
+  if ('problem' in paying) {
+    io.stderr(`${paying.problem}\n`)
+    return USAGE_ERROR
+  }
   const catalog = await loadCatalog()
   const settings = settingsFrom(values, catalog, await savedSettings(io))
   if (typeof settings === 'string') {
@@ -222,6 +231,7 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
       channel: channelOf(values),
       date: values.date ?? io.today,
       country: country.toUpperCase(),
+      payment: paying.payment,
     },
     settings,
   )

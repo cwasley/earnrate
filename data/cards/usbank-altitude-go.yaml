@@ -40,6 +40,7 @@ rules:
         [
           amazon-music,
           amazon-prime-video,
+          amc-plus,
           apple-music,
           apple-tv,
           audible,
@@ -48,9 +49,13 @@ rules:
           disney-plus,
           espn,
           fandango-at-home,
+          fanduel-sports-network,
           fubotv,
-          max,
           hulu,
+          iheartradio,
+          liveone,
+          luminary,
+          max,
           mlb-tv,
           nba-league-pass,
           netflix,
@@ -63,6 +68,7 @@ rules:
           spotify,
           starz,
           tidal,
+          youtube-music,
           youtube-premium,
           youtube-tv,
         ]
@@ -115,4 +121,4 @@ evidence:
     url: https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=HQWRM3D57Q&sourceCode=88268&page=terms
     quote: 'Foreign Transaction 3% of each foreign transaction'
 todo:
-  - 'AMC+, FanDuel Sports Network, iHeart, LiveOne, Luminary, Stitcher and YouTube Music are qualifying streaming services that earnrate has no merchant for yet.'
+  - 'Stitcher is a qualifying streaming service that earnrate has no merchant for yet.'

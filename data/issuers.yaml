@@ -18,6 +18,10 @@
   name: Capital One
   color: '#1d3c6e'
   search: [capitalone]
+- id: caltech-efcu
+  name: Caltech Employees Federal Credit Union
+  color: '#ff6c0c'
+  search: [cefcu, caltech efcu, caltech credit union]
 - id: chase
   name: Chase
   color: '#1f4f9c'
@@ -34,6 +38,20 @@
   name: Discover
   color: '#e8751a'
   search: [discover it]
+- id: elan
+  # Elan Financial Services issues the Fidelity Rewards Visa Signature.
+  name: Elan Financial Services
+  color: '#1d3f6e'
+  search: [elan, elan financial]
+- id: goldman-sachs
+  # Goldman Sachs Bank USA issues the Apple Card.
+  name: Goldman Sachs
+  color: '#6b8fbf'
+  search: [goldman, gs]
+- id: navy-federal
+  name: Navy Federal Credit Union
+  color: '#1b3a6b'
+  search: [nfcu, navy federal, navy fed]
 - id: sofi
   name: SoFi
   color: '#2d2f36'
