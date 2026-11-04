@@ -1,0 +1,62 @@
+id: capital-one-rei-co-op-mastercard
+name: REI Co-op Mastercard
+color: '#2d5a45'
+issuer: capital-one
+# The FAQ says cardmembers get World Elite Mastercard benefits.
+network: mastercard
+currency: rei-rewards
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.capitalone.com/credit-cards/rei/
+# Units are cents of REI Co-op Mastercard Rewards per dollar, so 5 is 5%.
+base_rate: 1.5
+annual_fee: 0
+foreign_transaction_fee: 0
+# REI's membership fee isn't on file (see todo).
+requires_membership: rei-co-op
+welcome_offer:
+  dollars: 100
+  spend: 0
+  months: 2
+  note: A $100 REI gift card, not cash back, after the first purchase outside REI within 60 days of account opening (modeled as 2 months; any non-REI purchase qualifies, so spend 0). Existing or previous REI Co-op Mastercard cardmembers aren't eligible.
+rules:
+  - id: rei
+    match: { merchants: [rei] }
+    rate: 5
+    note: REI stores and REI.com, including full-price and discounted items, REI gift cards, paid REI classes and events, services and fees, and donations to the REI Cooperative Action Fund. On top of the co-op's own yearly member reward (typically 10% of eligible full-price REI purchases, however you pay), which earnrate doesn't count.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/credit-cards/rei/
+    quote: 'You will earn 1.5% in REI Co-op Mastercard Rewards on all other purchases made outside of REI.'
+  - rule: rei
+    url: https://www.capitalone.com/credit-cards/rei/
+    quote: 'net purchases (purchases minus any credits or returns) made at REI retail locations or REI.com'
+  - rule: rei
+    url: https://www.capitalone.com/credit-cards/rei/
+    quote: 'Purchases include full-price and discount-price items, REI gift cards, paid REI classes and events, services and fees.'
+  - rule: rei
+    url: https://www.capitalone.com/credit-cards/rei/
+    quote: 'on top of your annual 10% Co-op Member Reward'
+  - rule: annual_fee
+    url: https://www.capitalone.com/credit-cards/rei/
+    quote: 'There is no annual fee associated with this card.'
+  - rule: foreign_transaction_fee
+    url: https://www.capitalone.com/credit-cards/rei/
+    quote: 'No foreign transaction fees Avoid additional charges or fees while abroad or with foreign currency.'
+  - rule: requires_membership
+    url: https://www.capitalone.com/credit-cards/rei/
+    quote: 'Choose outside every day with the REI Co-op® Mastercard®—just for REI Co-op members.'
+  - rule: welcome_offer
+    url: https://www.capitalone.com/credit-cards/rei/
+    quote: 'Earn a $100 REI gift card after your first non-REI purchase outside of REI within 60 days from account opening.'
+  - rule: welcome_offer
+    url: https://www.capitalone.com/credit-cards/rei/
+    quote: 'Existing or previous REI Co-op Mastercard cardmembers will not be eligible for this one-time gift card.'
+todo:
+  - 'The foreign transaction fee and annual fee are quoted from the card page''s benefit tiles and FAQ. The page''s "View important rates and disclosures" link opens a modal that needs JavaScript, so its disclosures.capitalone.com address isn''t known; add it to source_urls and quote its fee rows once read in a browser.'
+  - "Requires an REI Co-op membership (Capital One validates it before the application). No readable page states the membership's price (rei.com refuses plain fetches, and Capital One's page doesn't say), so the rei-co-op membership has annual_fee 0 as a placeholder and nothing is counted against the card for it. Check the price and whether it's one-time or yearly on rei.com/membership by hand."
+  - "Rewards are spendable only at REI (REI.com, REI Outlet, REI stores and the REI app), not as cash or check; they post 1-2 business days after the purchase posts and don't expire for the life of the account."
+  - "Cardmember Double Rewards event: once a year, an extra 5% (10% total) on REI purchases. Capital One doesn't publish the dates, so it isn't modeled; add it as a dated rule (valid_from/valid_to) when the event is announced."
+  - 'The welcome offer counts only a purchase outside REI; earnrate counts any purchase toward it.'

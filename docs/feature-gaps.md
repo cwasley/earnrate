@@ -34,6 +34,8 @@ The engine picks the single best rule per purchase. Some bonuses add on top of a
 
 - `chase-aeroplan`: 500 bonus points per $2,000 spent in a calendar month, up to 1,500 a month, through 2026-12-31.
 - `citi-custom-cash`: whether the extra 4% on Citi Travel hotels stacks on the 5% top category is unconfirmed.
+- `usbank-smartly`: whether the Smartly Earning Bonus also applies to the 4 extra points on Travel Center hotels and car rentals is unstated. Modeled at 6% for every tier.
+- `venmo-credit-card`: an extra 1% on dining and entertainment when the purchase is split with another Venmo user in the app.
 
 ### Choice options that mix kinds
 
@@ -63,6 +65,7 @@ There's no input for how a purchase was paid beyond online or in store.
 
 - `capital-one-savor`, `bank-of-america-customized-cash-rewards`: purchases through third-party payment accounts or unsupported digital wallets may not earn the bonus.
 - `paypal-cashback-mastercard`: 3% when the card is paid through the holder's PayPal account online (PayPal checkout or sending money); 1.5% otherwise. Modeled at 1.5% everywhere.
+- `venmo-credit-card`: 3% when the card is the linked payment method in Venmo (Venmo checkout, a business profile or a goods-and-services payment). Modeled at each purchase's category rate.
 
 ### Category taxonomy
 
@@ -73,6 +76,8 @@ Merchant types some cards name that have no earnrate category, so they fall to `
 - `amex-business-gold`, `amex-business-platinum`: software and cloud system providers count with electronics stores.
 - `citi-strata`: the Self-Select Category's Cosmetic Stores/Barber Shops/Hair Salons and Pet Supply Stores options.
 - `bank-of-america-premium-rewards`: travel includes tourist attractions, galleries, amusement parks, aquariums and zoos.
+- `usbank-smartly`: education, gift cards, insurance, tax, business-to-business merchants and third-party bill payment earn 2% at every Smartly tier and don't count toward the $10,000.
+- `venmo-credit-card`: cable, satellite and pay TV earn 3% as entertainment, but earnrate's `tv_internet` also covers internet service, which earns 1%.
 
 ### Housing payments and second currencies
 
@@ -84,6 +89,7 @@ A welcome offer has one spend threshold and one bonus.
 
 - `capital-one-venture-x-business`: a second 150,000 miles (and a $1,000 travel credit) at $120,000 in the same first 4 months. Only the first tier is modeled.
 - `capital-one-spark-cash-plus`: $2,000 for every $500,000 spent in the first 12 months, on top of the $2,000 welcome offer.
+- `capital-one-rei-co-op-mastercard`: the $100 REI gift card needs a purchase outside REI; welcome-offer progress counts every purchase.
 
 ### Per-card fees
 
@@ -94,6 +100,19 @@ A welcome offer has one spend threshold and one bonus.
 Holding some cards means holding a membership, but the wallet asks for memberships separately, so a rate gated on one stays off until the user adds it.
 
 - `chase-prime-visa`: needs Amazon Prime for its Amazon and Whole Foods rates.
+
+### Memberships without a yearly price
+
+`requires_membership` needs a membership with an `annual_fee`. Some cards need a membership you qualify for, or a service you already pay for, rather than one you buy each year, so these have `annual_fee: 0` and answers can't say who may join.
+
+- `caltech-efcu-platinum-mastercard`: Caltech EFCU membership (Caltech, JPL and affiliate employees, students, alumni and family; a one-time $5 fee).
+- `navy-federal-cash-rewards`, `navy-federal-cash-rewards-plus`, `navy-federal-more-rewards-amex`: Navy Federal membership (the armed forces, veterans, DoD civilians and their families).
+- `verizon-visa-card`: a Verizon wireless or Fios account.
+- `capital-one-rei-co-op-mastercard`: an REI Co-op membership, whose price isn't on file.
+
+### One application, two cards
+
+- `navy-federal-cash-rewards`, `navy-federal-cash-rewards-plus`: one cashRewards application issues cashRewards (1.5%) below a $5,000 credit limit or cashRewards Plus (2%) at $5,000 or more, on Visa or Mastercard. earnrate lists two Visa cards and can't say an applicant may get either.
 
 ### Spend milestones that start later
 

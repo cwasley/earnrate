@@ -65,6 +65,13 @@
   sources:
     - https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
 
+- id: rei-rewards
+  name: REI Co-op Mastercard rewards
+  value_cents: 1.0
+  note: Dollars to spend at REI stores, REI.com, REI Outlet and the REI app, as Total REI Rewards. They can't be taken as cash or a check, and don't expire while the account is open.
+  sources:
+    - https://www.capitalone.com/credit-cards/rei/
+
 - id: best-buy-rewards
   name: My Best Buy rewards
   value_cents: 2.0

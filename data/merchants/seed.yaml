@@ -881,6 +881,11 @@
     category: tv_internet,
   }
 - { id: verizon, name: Verizon, aliases: [verizon wireless], category: phone }
+- id: verizon-store
+  name: Verizon store
+  aliases: [verizon store, verizon accessories]
+  category: electronics
+  note: Phones, devices and accessories bought from Verizon in store, online or by phone. The monthly bill is `verizon`.
 - { id: t-mobile, name: T-Mobile, aliases: [tmobile], category: phone }
 - {
     id: socal-edison,

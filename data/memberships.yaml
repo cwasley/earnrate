@@ -51,3 +51,24 @@
 - id: navy-federal
   name: Navy Federal Credit Union membership
   annual_fee: 0
+# U.S. Bank Smartly Earning Bonus tiers, by the qualifying balance in Bank
+# Smartly Checking and Safe Debit with a Bank Smartly Savings account.
+- id: usbank-smartly-25
+  name: U.S. Bank Smartly Earning Bonus, 25% tier
+  group: usbank-smartly-earning-bonus
+- id: usbank-smartly-50
+  name: U.S. Bank Smartly Earning Bonus, 50% tier ($50,000 or more)
+  group: usbank-smartly-earning-bonus
+- id: usbank-smartly-100
+  name: U.S. Bank Smartly Earning Bonus, 100% tier ($100,000 or more)
+  group: usbank-smartly-earning-bonus
+# The price isn't on file: rei.com refuses plain fetches and Capital One's
+# card page doesn't state it. 0 is a placeholder.
+- id: rei-co-op
+  name: REI Co-op membership
+  annual_fee: 0
+# Account Owner or Manager on a consumer postpaid Verizon wireless account,
+# or a Fios Account Owner. It's the service bill, not a fee of its own.
+- id: verizon-account
+  name: Verizon wireless or Fios account
+  annual_fee: 0

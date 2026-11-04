@@ -1472,8 +1472,17 @@ describe('#29 new cards', () => {
 })
 
 describe('#30 credit union and fintech cards', () => {
-  const wallet = (cards: object[]) =>
-    withProfile(WalletSchema.parse({ cards }), 'flat')
+  const wallet = (cards: object[], memberships: string[] = []) =>
+    withProfile(WalletSchema.parse({ cards, memberships }), 'flat')
+  const rateAt = (cardId: string, merchant: string) =>
+    entry(
+      recommend(
+        catalog,
+        wallet([{ id: cardId }]),
+        purchase(merchant, { amount: 100, channel: 'in_store' }),
+      ),
+      cardId,
+    ).rate
 
   goldenTest(
     '#30a Caltech EFCU Platinum Mastercard earns nothing, but has no foreign transaction fee',
@@ -1494,6 +1503,63 @@ describe('#30 credit union and fintech cards', () => {
       expect(entry(abroad, 'citi-double-cash').effectiveReturnPct).toBeCloseTo(
         2 - 3,
       )
+    },
+  )
+
+  goldenTest(
+    '#30b Smartly: 2% without a tier, 3% at the 50% tier on the first $10,000 a billing cycle',
+    () => {
+      const etsy = purchase('Etsy', { amount: 100, channel: 'online' })
+      const smartly = (cards: object[], memberships: string[] = []) =>
+        entry(
+          recommend(catalog, wallet(cards, memberships), etsy),
+          'usbank-smartly',
+        ).effectiveReturnPct
+      expect(smartly([{ id: 'usbank-smartly' }])).toBeCloseTo(2)
+      expect(
+        smartly([{ id: 'usbank-smartly' }], ['usbank-smartly-50']),
+      ).toBeCloseTo(3)
+      const nearCap = [
+        {
+          id: 'usbank-smartly',
+          cap_usage: {
+            'smartly-earning-bonus': { period: '2026-10', spent: 9950 },
+          },
+        },
+      ]
+      expect(smartly(nearCap, ['usbank-smartly-50'])).toBeCloseTo(
+        (50 * 3 + 50 * 2) / 100,
+      )
+    },
+  )
+
+  goldenTest(
+    '#30c Verizon Visa: 4% on gas, supermarkets, dining and Verizon devices; 1% on the Verizon bill',
+    () => {
+      expect(rateAt('verizon-visa-card', 'Shell')).toBe(4)
+      expect(rateAt('verizon-visa-card', 'Safeway')).toBe(4)
+      expect(rateAt('verizon-visa-card', 'Chipotle')).toBe(4)
+      expect(rateAt('verizon-visa-card', 'Verizon store')).toBe(4)
+      expect(rateAt('verizon-visa-card', 'Verizon')).toBe(1)
+    },
+  )
+
+  goldenTest(
+    '#30d Navy Federal More Rewards: 3X at supermarkets, gas and restaurants, 1X at Walmart',
+    () => {
+      expect(rateAt('navy-federal-more-rewards-amex', 'Safeway')).toBe(3)
+      expect(rateAt('navy-federal-more-rewards-amex', 'Shell')).toBe(3)
+      expect(rateAt('navy-federal-more-rewards-amex', 'Chipotle')).toBe(3)
+      expect(rateAt('navy-federal-more-rewards-amex', 'Walmart')).toBe(1)
+    },
+  )
+
+  goldenTest(
+    '#30e Venmo: 3% on dining and at movie theaters, 1% at supermarkets',
+    () => {
+      expect(rateAt('venmo-credit-card', 'Chipotle')).toBe(3)
+      expect(rateAt('venmo-credit-card', 'AMC Theatres')).toBe(3)
+      expect(rateAt('venmo-credit-card', 'Safeway')).toBe(1)
     },
   )
 })

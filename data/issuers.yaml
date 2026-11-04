@@ -38,6 +38,11 @@
   name: Discover
   color: '#e8751a'
   search: [discover it]
+- id: elan
+  # Elan Financial Services issues the Fidelity Rewards Visa Signature.
+  name: Elan Financial Services
+  color: '#1d3f6e'
+  search: [elan, elan financial]
 - id: navy-federal
   name: Navy Federal Credit Union
   color: '#1b3a6b'
