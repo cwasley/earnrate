@@ -1968,6 +1968,21 @@
         "dc0a0b50a5ecbf3e"
       ]
     },
+    "https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=8069&offerId=36672BDX52&sourceCode=87869&page=terms": {
+      "checked": "2026-11-04",
+      "lines": [
+        "1333d191f9ea0207",
+        "230293b17f5f9310",
+        "28f3a7958b0f39c6",
+        "2edb34d356e8170c",
+        "3fdd782f47591254",
+        "403e9aae49d25581",
+        "6726af04a091eae3",
+        "c8c409f3393e6def",
+        "cb8ec330be1ecde0",
+        "dc0a0b50a5ecbf3e"
+      ]
+    },
     "https://venmo.com/about/creditcard/": {
       "checked": "2026-11-04",
       "lines": [

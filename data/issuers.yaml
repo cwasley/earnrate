@@ -52,6 +52,10 @@
   name: Navy Federal Credit Union
   color: '#1b3a6b'
   search: [nfcu, navy federal, navy fed]
+- id: penfed
+  name: PenFed Credit Union
+  color: '#1f5c99'
+  search: [penfed, pentagon federal]
 - id: sofi
   name: SoFi
   color: '#2d2f36'

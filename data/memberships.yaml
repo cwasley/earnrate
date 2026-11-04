@@ -72,3 +72,7 @@
 - id: verizon-account
   name: Verizon wireless or Fios account
   annual_fee: 0
+# A PenFed checking account, or military service: raises the PenFed Power
+# Cash Rewards card from 1.5% to 2%.
+- id: penfed-honors-advantage
+  name: PenFed Honors Advantage

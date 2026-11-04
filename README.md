@@ -201,7 +201,7 @@ It totals what each card earned against the best card in your wallet for each pu
 
 ## Supported cards
 
-100 cards, each modeled from the issuer's own terms and checked weekly against them:
+101 cards, each modeled from the issuer's own terms and checked weekly against them:
 
 - **American Express:** Gold, Platinum, Blue Cash Preferred, Blue Cash Everyday, Business Gold, Business Platinum, Blue Business Plus
 - **American Express airline and hotel:** Delta SkyMiles Blue, Gold, Platinum, Reserve; Hilton Honors, Surpass, Aspire, Business; Marriott Bonvoy Brilliant, Bevy, Business
@@ -214,7 +214,7 @@ It totals what each card earned against the best card in your wallet for each pu
 - **TD Bank:** Target Circle Card, Nordstrom card, Nordstrom Visa
 - **U.S. Bank:** Cash+, Altitude Go, Altitude Connect, Smartly Visa Signature
 - **Bilt:** Blue, Obsidian, Palladium
-- **Credit unions:** Navy Federal cashRewards, cashRewards Plus, More Rewards American Express; Caltech EFCU Platinum Mastercard
+- **Credit unions:** Navy Federal cashRewards, cashRewards Plus, More Rewards American Express; PenFed Power Cash Rewards; Caltech EFCU Platinum Mastercard
 - **Others:** Apple Card (Goldman Sachs), Discover it Cash Back, SoFi Unlimited 2%, JetBlue Plus (Barclays), PayPal Cashback Mastercard, Sam's Club Mastercard, Venmo Credit Card and Verizon Visa Card (Synchrony), Fidelity Rewards Visa Signature (Elan)
 
 Store cards (Target, Kohl's, Nordstrom) only come up at their own stores. Airline and hotel cards count only what the card itself earns, not the points a program gives members however they pay, and their perks (bags, free nights, lounges) aren't counted.

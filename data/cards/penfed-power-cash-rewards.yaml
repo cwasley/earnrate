@@ -1,0 +1,47 @@
+id: penfed-power-cash-rewards
+name: PenFed Power Cash Rewards Visa Signature Card
+short_name: PenFed Power Cash
+color: '#1f5c99'
+# PenFed is a credit union; the 2% rate is for Honors Advantage members, who
+# have a PenFed checking account or serve (or served) in the military.
+issuer: penfed
+network: visa
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.penfed.org/credit-cards/power-cash-rewards-visa
+base_rate: 1.5
+annual_fee: 0
+foreign_transaction_fee: 0
+welcome_offer:
+  dollars: 100
+  spend: 1500
+  months: 3
+  note: The page says within 90 days of account opening, modeled as 3 months; one $100 statement credit per account.
+rules:
+  - id: honors-advantage
+    match: { any: true }
+    rate: 2
+    requires: { membership: penfed-honors-advantage }
+    note: 2% on all purchases for PenFed Honors Advantage members (a PenFed checking account, or military service); 1.5% for other members.
+todo:
+  - "penfed.org refuses plain fetches and the source check's headless browser (empty replies, HTTP 503), so the weekly check lists this page as unreachable. Its quotes were read 2026-11-04 in Chrome; the page draws the 2% and 1.5% as images, so the quotes come from its rewards calculator and footnotes. Re-read it by hand when the check flags it."
+  - "The card's pricing and full terms are PDFs (summary-of-terms-vcr-00.pdf, 1203-Pricing-List.pdf on penfed.org), not sources."
+  - 'Credit union membership: anyone can join PenFed, but no readable page says so in a quotable line, so `requires_membership` is left off.'
+evidence:
+  - rule: base_rate
+    url: https://www.penfed.org/credit-cards/power-cash-rewards-visa
+    quote: '1.5% For traditional accounts'
+  - rule: honors-advantage
+    url: https://www.penfed.org/credit-cards/power-cash-rewards-visa
+    quote: "If you have a checking account or you're in the military you can qualify for 2% cashback"
+  - rule: annual_fee
+    url: https://www.penfed.org/credit-cards/power-cash-rewards-visa
+    quote: 'Annual Fee: $0'
+  - rule: foreign_transaction_fee
+    url: https://www.penfed.org/credit-cards/power-cash-rewards-visa
+    quote: 'No Foreign Transaction Fees Use your PenFed credit card worldwide without any additional fees.'
+  - rule: welcome_offer
+    url: https://www.penfed.org/credit-cards/power-cash-rewards-visa
+    quote: 'will receive a $100 statement credit upon spending $1500 in purchase transactions within 90 days'

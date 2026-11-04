@@ -2,6 +2,11 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.04.14
+
+- **PenFed Power Cash Rewards Visa Signature** (`penfed-power-cash-rewards`, new issuer PenFed): 2% on everything for Honors Advantage members (a PenFed checking account or military service, new membership `penfed-honors-advantage`), 1.5% for other members; no annual fee, no foreign transaction fee; $100 after $1,500 in 90 days. Source: [the card page](https://www.penfed.org/credit-cards/power-cash-rewards-visa), read 2026-11-04 in Chrome (penfed.org refuses the source check).
+- `usbank-smartly`: foreign transaction fee 3%, from [its terms](https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=8069&offerId=36672BDX52&sourceCode=87869&page=terms) ("Foreign Transaction 3% of each foreign transaction"), read in Chrome.
+
 ## 2026.11.04.13
 
 Merchant statement credits (a new `credits:` list on cards). Three to start, each quoted from Amex's own benefit terms (read 2026-11-04); enrollment is required for all three:
