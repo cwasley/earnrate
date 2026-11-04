@@ -39,6 +39,7 @@ try {
   ) as {
     server: { mcp_config: { command: string; args: string[] } }
     tools: { name: string }[]
+    prompts: { name: string; arguments?: string[] }[]
   }
   const args = manifest.server.mcp_config.args.map((a) =>
     a.replace('${__dirname}', bundle),
@@ -65,6 +66,29 @@ try {
         .sort()
         .join(),
     `the bundle serves the ${String(manifest.tools.length)} tools its manifest lists`,
+  )
+  const { prompts } = await client.listPrompts()
+  const shape = (list: { name: string; arguments?: string[] }[]) =>
+    list
+      .map((p) => `${p.name}(${(p.arguments ?? []).join(',')})`)
+      .sort()
+      .join()
+  check(
+    shape(
+      prompts.map((p) => ({
+        name: p.name,
+        arguments: p.arguments?.map((a) => a.name) ?? [],
+      })),
+    ) === shape(manifest.prompts),
+    `the bundle serves the ${String(manifest.prompts.length)} prompts its manifest lists`,
+  )
+  const asked = await client.getPrompt({
+    name: 'which-card',
+    arguments: { store: 'Costco' },
+  })
+  check(
+    JSON.stringify(asked.messages).includes('best_card_for_purchase'),
+    'the which-card prompt names best_card_for_purchase',
   )
   const best = await client.callTool({
     name: 'best_cards_for',

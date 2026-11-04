@@ -95,6 +95,29 @@
       "description": "Saves what your points are worth to you, in cents per point."
     }
   ],
+  "prompts": [
+    {
+      "name": "which-card",
+      "description": "Which credit card should I use? The card that earns the most at a store or for a kind of purchase, with the reason.",
+      "arguments": ["store", "amount", "country"],
+      "text": "Which credit card should I use at ${arguments.store}?"
+    },
+    {
+      "name": "cheat-sheet",
+      "description": "Which card for everyday spending? The card to use for each everyday kind of purchase right now.",
+      "text": "Which card should I use for everyday spending?"
+    },
+    {
+      "name": "this-quarter",
+      "description": "What should I do with my cards this quarter? Bonuses to activate, categories to pick, caps and welcome bonuses.",
+      "text": "What should I do with my cards this quarter?"
+    },
+    {
+      "name": "set-up",
+      "description": "Set up my cards: save the cards you hold, by name, with their picks and memberships.",
+      "text": "Help me set up my cards in earnrate."
+    }
+  ],
   "keywords": [
     "credit cards",
     "rewards",
