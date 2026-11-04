@@ -55,6 +55,16 @@ milestones:
       - Centurion Lounge guest access for 2 guests
       - unlimited Delta Sky Club access
     note: 'Purchases by additional card members count. Both last the rest of that calendar year, all of the next and through the January 31 after. Sky Club visits still need a same-day Delta flight.'
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: lululemon
+    match: { merchants: [lululemon] }
+    amount: 75
+    period: quarter
+    enroll: true
+    note: U.S. lululemon stores, lululemon.com and the lululemon app. Not outlets, lululemon Studio, Like New, warehouse or event sales, gift cards, or orders shipped outside the U.S.
+todo:
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits", which may or may not take out benefit statement credits; it doesn''t say. The lululemon credit is modeled as earning the card''s rate on the whole purchase, with the credit on top.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -105,3 +115,12 @@ evidence:
   - rule: spend-75k
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
     quote: 'the total eligible purchases on the Eligible Platinum Card Account must equal or exceed $75,000'
+  - rule: lululemon
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'Enrolled Basic Card Members can receive up to $75 in statement credits each quarter'
+  - rule: lululemon
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'Eligible purchases are purchases made directly with lululemon at lululemon stores in the U.S.'
+  - rule: lululemon
+    url: https://www.americanexpress.com/us/credit-cards/card/platinum/
+    quote: 'U.S. lululemon retail stores (excluding outlets) and lululemon.com. Enrollment required.'

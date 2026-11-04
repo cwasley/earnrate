@@ -2,6 +2,18 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.04.9
+
+Merchant statement credits (a new `credits:` list on cards). Three to start, each quoted from Amex's own benefit terms (read 2026-11-04); enrollment is required for all three:
+
+| Card                     | Credit (`id`)      | Amount        | Where                                                          | Sources                                                                                                                                                                                                              |
+| ------------------------ | ------------------ | ------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| amex-platinum            | `lululemon`        | $75 a quarter | U.S. lululemon stores, lululemon.com and the app (not outlets) | [1](https://www.americanexpress.com/us/credit-cards/card/platinum/) · [2](https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms)                              |
+| amex-gold                | `dunkin`           | $7 a month    | U.S. Dunkin' locations                                         | [1](https://www.americanexpress.com/us/credit-cards/card/gold-card/) · [2](https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms)                                 |
+| amex-blue-cash-preferred | `disney-streaming` | $10 a month   | Subscriptions at DisneyPlus.com, Hulu.com or Stream.ESPN.com   | [1](https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/) · [2](https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms) |
+
+Amex's terms don't say whether the credited part of a purchase earns points or cash back (its rewards terms count "purchases for goods and services minus returns and other credits"), so each card earns its rate on the whole purchase and has a `todo` saying so. No rates changed.
+
 ## 2026.11.04.8
 
 Sam's Club Mastercard (`sams-club-mastercard`, Synchrony): 5% on gas and EV charging on the first $6,000 a year, then 1%; 3% on dining and takeout; 3% at Sam's Club for Plus members (1% for Club members); 1% on everything else. No annual fee and no foreign transaction fee; it needs a Sam's Club membership. New memberships: `sams-club` (Club, $60 a year) and `sams-club-plus`. Sources: [Synchrony's Sam's Club page](https://www.synchrony.com/partner/sams-club) and [Sam's Club membership prices](https://www.samsclub.com/join), read 2026-11-04 (synchrony.com refuses the source check's headless browser, so its quotes were read with a plain fetch and in Chrome).
