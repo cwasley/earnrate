@@ -1,0 +1,68 @@
+id: sams-club-mastercard
+name: Sam's Club Mastercard
+color: '#1f5fa8'
+# Issued by Synchrony Bank. Rewards are Sam's Cash, loaded onto the Sam's
+# Club membership; it spends like cash at Sam's Club and can be cashed out in
+# club.
+issuer: synchrony
+network: mastercard
+currency: cash
+last_verified: 2026-11-04
+verified_by: claude
+source_urls:
+  - https://www.synchrony.com/partner/sams-club
+  - https://www.samsclub.com/join
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 0
+requires_membership: sams-club # its fee is in data/memberships.yaml
+caps:
+  - id: gas-and-ev
+    amount: 6000
+    period: calendar_year
+    then_rate: 1
+rules:
+  - id: gas-and-ev-charging
+    match: { categories: [gas, ev_charging] }
+    rate: 5
+    cap: gas-and-ev
+    note: Gas anywhere Mastercard is accepted, Sam's Club's own included. Fuel sold at a grocery store's fuel station can code as the grocery store and earn 1%.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 3
+    note: Dining and takeout, including fast food.
+  - id: sams-club-plus
+    match: { merchants: [sams-club] }
+    rate: 3
+    requires: { membership: sams-club-plus }
+    note: Sam's Club purchases in club and at SamsClub.com for Plus members; Club members earn 1%. Tobacco, prescriptions, gift cards and prepaid cards earn nothing.
+todo:
+  - "synchrony.com answers the source check's headless browser with HTTP 403, so the weekly check lists the page as unreachable; its quotes were read 2026-11-04 with a plain fetch and in Chrome. Re-read it by hand when the check flags this card."
+  - "Sam's Cash earned on the card is capped at $5,000 a calendar year, about $100,000 of spending at 5%; earnrate doesn't model a cap on total rewards."
+  - "The rewards terms are a PDF (scene7.samsclub.com/is/content/samsclub/sams-cash-with-mastercard), read 2026-11-04 in a browser: 3% at restaurants worldwide, excluding warehouse clubs other than Sam's Club; gas stations and EV charging by MCC."
+  - "The site's card page offers a $60 statement credit after $30 at Sam's Club within 30 days (10/28–12/2/2026); too small to model as a welcome offer."
+evidence:
+  - rule: base_rate
+    url: https://www.synchrony.com/partner/sams-club
+    quote: 'Earn 1% back in Sam’s Cash on other purchases.'
+  - rule: gas-and-ev-charging
+    url: https://www.synchrony.com/partner/sams-club
+    quote: 'Earn 5% back on gas anywhere Mastercard is accepted (on first $6,000 per year, then 1%).'
+  - rule: dining
+    url: https://www.synchrony.com/partner/sams-club
+    quote: 'Earn 3% back on dining and takeout.'
+  - rule: sams-club-plus
+    url: https://www.synchrony.com/partner/sams-club
+    quote: 'Earn 3% back on Sam’s Club purchases for Plus members (Club members earn 1%).'
+  - rule: annual_fee
+    url: https://www.synchrony.com/partner/sams-club
+    quote: 'No annual fee.'
+  - rule: foreign_transaction_fee
+    url: https://www.synchrony.com/partner/sams-club
+    quote: 'No foreign transaction fees.'
+  - rule: requires_membership
+    url: https://www.synchrony.com/partner/sams-club
+    quote: 'Yes, you need to be a Sam’s Club member to apply for a Sam’s Club credit card.'
+  - rule: requires_membership
+    url: https://www.samsclub.com/join
+    quote: 'Best value Plus $120/year Club $60/year'

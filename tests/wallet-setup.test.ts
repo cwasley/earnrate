@@ -462,8 +462,8 @@ cards: []
       'amazon-prime',
       'bofa-rewards-premier',
     ])
-    expect(errorOf(await store(file).setMemberships(['sams-club']))).toMatch(
-      /'sams-club'.*amazon-prime/s,
+    expect(errorOf(await store(file).setMemberships(['bjs-club']))).toMatch(
+      /'bjs-club'.*amazon-prime/s,
     )
   })
 

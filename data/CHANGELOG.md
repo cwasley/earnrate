@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.04.8
+
+Sam's Club Mastercard (`sams-club-mastercard`, Synchrony): 5% on gas and EV charging on the first $6,000 a year, then 1%; 3% on dining and takeout; 3% at Sam's Club for Plus members (1% for Club members); 1% on everything else. No annual fee and no foreign transaction fee; it needs a Sam's Club membership. New memberships: `sams-club` (Club, $60 a year) and `sams-club-plus`. Sources: [Synchrony's Sam's Club page](https://www.synchrony.com/partner/sams-club) and [Sam's Club membership prices](https://www.samsclub.com/join), read 2026-11-04 (synchrony.com refuses the source check's headless browser, so its quotes were read with a plain fetch and in Chrome).
+
 ## 2026.11.04.7
 
 Nine new cards, each from the issuer's own pages, with a `color` for earnrate's drawing: Delta SkyMiles Blue, Hilton Honors Business and Marriott Bonvoy Business (Amex); Venture X Business and Spark Cash Plus (Capital One); Bilt Blue and Bilt Palladium (Bilt, issued by Column); JetBlue Plus (Barclays, a new issuer); and the PayPal Cashback Mastercard (Synchrony, a new issuer). New currency: JetBlue TrueBlue points (1.0¢, a conservative default since JetBlue publishes no cash value, up to TPG's 1.35¢). New merchants: Capital One Business Travel and its hotel, vacation rental, car rental and flight bookings, JetBlue Vacations and TrueBlue Travel. Not added: Citi Rewards+ (its page now redirects to Citi Strata and no readable Citi page states its terms), AAdvantage Aviator Red (Barclays no longer lists it; its page returns 404), Sam's Club Mastercard (samsclub.com's card page doesn't render for the source checker, and no readable page states the membership or foreign transaction fees) and the Robinhood Gold Card (waitlist only, its rewards rules are a PDF, and Robinhood states only a monthly price for the Gold membership the card requires).

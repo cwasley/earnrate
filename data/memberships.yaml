@@ -12,6 +12,16 @@
   # as Costco's own 2% reward, which earnrate doesn't model.
   annual_fee: 65
   members_shop_at: [costco, costco-gas, costco-travel]
+- id: sams-club
+  name: Sam's Club membership
+  ask: I have a Sam's Club membership
+  # Club, the basic tier ($60). Plus ($120) is its own entry below because it
+  # raises the Sam's Club Mastercard's rate at Sam's Club.
+  annual_fee: 60
+  members_shop_at: [sams-club, sams-club-gas]
+- id: sams-club-plus
+  name: Sam's Club Plus membership
+  ask: I have Sam's Club Plus
 - id: bank-of-america-account
   name: Bank of America checking or savings
   ask: I bank with Bank of America
