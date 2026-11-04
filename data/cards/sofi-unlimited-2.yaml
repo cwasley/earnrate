@@ -1,5 +1,6 @@
 id: sofi-unlimited-2
 name: SoFi Unlimited 2% Credit Card
+color: '#2d2f36'
 issuer: sofi
 network: mastercard
 currency: sofi-rewards

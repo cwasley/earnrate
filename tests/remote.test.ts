@@ -6,7 +6,7 @@ import {
 } from '@modelcontextprotocol/client'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { makeWorker, type Env } from '../remote/src/app.ts'
-import { ALIAS_RESOURCE, RESOURCE } from '../remote/src/auth.ts'
+import { ALIAS_RESOURCE, appKind, RESOURCE } from '../remote/src/auth.ts'
 import {
   keysFromCode,
   newRecoveryCode,
@@ -476,7 +476,7 @@ describe('remote connector', () => {
     expect(res.status).toBe(429)
   })
 
-  test('counts only the method and tool name, and refusals by tool, never arguments', async () => {
+  test('counts only the method and tool name, the kind of app and refusals by tool, never arguments', async () => {
     const points: { blobs?: string[]; indexes?: string[] }[] = []
     const d = deployment()
     const { token } = await startWallet(d)
@@ -489,21 +489,69 @@ describe('remote connector', () => {
     })
     expect(points.map((p) => p.blobs)).toContainEqual([
       'tool:best_card_for_purchase',
+      'claude',
+    ])
+    expect(points.map((p) => p.blobs)).toContainEqual([
+      'wallet-active',
+      'claude',
     ])
     await client
       .callTool({ name: 'Trader Joes at 123 Main St', arguments: {} })
       .catch(() => undefined)
-    expect(points.map((p) => p.blobs)).toContainEqual(['tool:other'])
+    expect(points.map((p) => p.blobs)).toContainEqual(['tool:other', 'claude'])
     await client.callTool({
       name: 'record_purchase',
       arguments: { cardId: 'amex-gold', merchant: 'Trader Joes', amount: 5 },
     })
     expect(points.map((p) => p.blobs)).toContainEqual([
       'tool-error:record_purchase',
+      'claude',
     ])
+    expect(points.filter((p) => p.blobs?.[0] === 'wallet-active')).toHaveLength(
+      1,
+    )
     const recorded = JSON.stringify(points)
     expect(recorded).not.toContain('Trader')
     expect(recorded).not.toContain('123')
+  })
+
+  test('a new wallet is counted by the kind of app, with nothing about it', async () => {
+    const points: { blobs?: string[]; indexes?: string[] }[] = []
+    const d = deployment()
+    d.env.USAGE = { writeDataPoint: (p) => points.push(p) }
+    const { code } = await startWallet(d)
+    expect(points.map((p) => p.blobs)).toContainEqual([
+      'wallet-created',
+      'claude',
+    ])
+    expect(JSON.stringify(points)).not.toContain(code)
+  })
+
+  test('the kind of app comes from where it signs in, never its own name', () => {
+    const kind = (
+      clientId: string,
+      redirectUris: string[],
+      clientName?: string,
+    ) =>
+      appKind({ clientId, redirectUris, ...(clientName ? { clientName } : {}) })
+    expect(kind('abc', ['https://claude.ai/api/mcp/auth_callback'])).toBe(
+      'claude',
+    )
+    expect(kind('abc', ['https://claude.com/api/mcp/auth_callback'])).toBe(
+      'claude',
+    )
+    expect(kind('https://chatgpt.com/oauth/client.json', [])).toBe('chatgpt')
+    expect(kind('abc', ['https://chatgpt.com/connector/oauth/cb_1'])).toBe(
+      'chatgpt',
+    )
+    expect(kind('abc', ['http://localhost:3118/callback'])).toBe('local')
+    expect(
+      kind('abc', ['http://127.0.0.1:53682/callback'], 'earnrate live check'),
+    ).toBe('check')
+    expect(kind('abc', ['https://evilclaude.ai/cb'], 'Claude')).toBe('other')
+    expect(kind('abc', ['cursor://anysphere.cursor-retrieval/oauth'])).toBe(
+      'other',
+    )
   })
 })
 
@@ -1380,7 +1428,10 @@ describe('anonymous saved wallets', () => {
       },
     )
     expect(res.status).toBeGreaterThanOrEqual(500)
-    expect(points.map((p) => p.blobs)).toContainEqual(['error:/oauth/register'])
+    expect(points.map((p) => p.blobs)).toContainEqual([
+      'error:/oauth/register',
+      'signed-out',
+    ])
   })
 
   test('cancel goes back to the app with access_denied', async () => {
@@ -1499,13 +1550,13 @@ describe('wallet vault', () => {
     expect(JSON.stringify(stored)).not.toContain('grant-')
     expect(Object.values(stored)).toContain(now + 90 * 24 * 60 * 60 * 1000)
 
-    expect(await vault.checkIn(false, 'grant-a')).toBe(false)
-    expect(await vault.checkIn(false, 'grant-b')).toBe(false)
-    expect(await vault.checkIn(false, 'grant-c')).toBe(true)
+    expect(await vault.checkIn(false, 'grant-a')).toBe('refused')
+    expect(await vault.checkIn(false, 'grant-b')).toBe('refused')
+    expect(await vault.checkIn(false, 'grant-c')).toBe('ok')
 
     now += 120_000
-    expect(await vault.checkIn(false, 'grant-a')).toBe(true)
-    expect(await vault.checkIn(false, 'grant-b')).toBe(false)
+    expect(await vault.checkIn(false, 'grant-a')).toBe('ok')
+    expect(await vault.checkIn(false, 'grant-b')).toBe('refused')
     expect(
       Object.keys(storage.values.get('signed-out') as object),
     ).toHaveLength(1)

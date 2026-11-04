@@ -1,5 +1,6 @@
 id: amex-blue-business-plus
 name: American Express Blue Business Plus Credit Card
+color: '#1f5fa8'
 issuer: amex
 network: amex
 currency: MR

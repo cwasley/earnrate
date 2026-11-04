@@ -1,6 +1,7 @@
 id: amex-marriott-bonvoy-bevy
 name: Marriott Bonvoy Bevy American Express Card
 short_name: Marriott Bonvoy Bevy
+color: '#6e6259'
 issuer: amex
 network: amex
 currency: marriott-bonvoy

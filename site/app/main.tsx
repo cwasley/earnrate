@@ -1,6 +1,10 @@
 import { render } from 'preact'
 import { App } from './App.tsx'
+import { copyButtons, trackClicks } from './track.ts'
 import './app.css'
+
+trackClicks()
+copyButtons()
 
 const root = document.getElementById('app')
 if (root) {

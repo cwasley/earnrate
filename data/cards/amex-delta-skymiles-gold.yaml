@@ -1,6 +1,7 @@
 id: amex-delta-skymiles-gold
 name: Delta SkyMiles Gold American Express Card
 short_name: Delta SkyMiles Gold
+color: '#c9a24f'
 issuer: amex
 network: amex
 currency: delta-skymiles

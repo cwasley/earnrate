@@ -1,5 +1,6 @@
 id: chase-united-club
 name: United Club Card
+color: '#1c2533'
 issuer: chase
 network: visa
 currency: united-miles

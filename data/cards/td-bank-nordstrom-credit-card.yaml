@@ -1,5 +1,6 @@
 id: td-bank-nordstrom-credit-card
 name: Nordstrom Credit Card
+color: '#1a1a1a'
 issuer: td-bank
 network: store
 only_at: [nordstrom, nordstrom-rack]

@@ -143,19 +143,21 @@ export class WalletVault {
   }
 
   // Any tool call counts as use, so a wallet used only for questions isn't
-  // deleted; an app's own setup requests don't. Written at most once a day.
-  // False when the wallet is gone or the request's grant was signed out.
-  checkIn(used: boolean, grantId: string | null): Promise<boolean> {
-    return this.serialized(async () => {
+  // deleted; an app's own setup requests don't. Written at most once a day,
+  // and that write is 'first-use-today', which the Worker counts with no id.
+  // 'refused' when the wallet is gone or the request's grant was signed out.
+  checkIn(used: boolean, grantId: string | null): Promise<CheckIn> {
+    return this.serialized(async (): Promise<CheckIn> => {
       const meta = await this.storage.get<Meta>('meta')
-      if (!meta) return false
+      if (!meta) return 'refused'
       const now = this.now()
       const signedOut = await this.storage.get<SignedOut>('signed-out')
       if (signedOut) {
         const kept = unexpired(signedOut, now)
         if (Object.keys(kept).length < Object.keys(signedOut).length)
           await this.storage.put('signed-out', kept)
-        if (grantId !== null && (await grantHash(grantId)) in kept) return false
+        if (grantId !== null && (await grantHash(grantId)) in kept)
+          return 'refused'
       }
       if (
         used &&
@@ -163,8 +165,9 @@ export class WalletVault {
       ) {
         await this.storage.put('meta', { ...meta, lastUsed: now })
         await this.storage.setAlarm(retentionEnd(now))
+        return 'first-use-today'
       }
-      return true
+      return 'ok'
     })
   }
 
@@ -261,6 +264,8 @@ export class WalletVault {
     })
   }
 }
+
+export type CheckIn = 'refused' | 'ok' | 'first-use-today'
 
 const failed = () => ({ ok: false as const, error: DELETED })
 

@@ -2,6 +2,8 @@ import type { ComponentChildren } from 'preact'
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import type { Picks } from '../../src/engine/explore.ts'
+import { CardArt } from './CardArt.tsx'
+import { track } from './track.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import {
   resolveSpendLines,
@@ -122,9 +124,10 @@ export function Spending({
                   min="0"
                   step="10"
                   value={r.monthly}
-                  onInput={(e) =>
+                  onInput={(e) => {
+                    track('spending-edit')
                     update(i, Math.max(0, Number(e.currentTarget.value) || 0))
-                  }
+                  }}
                 />
               </span>
               <button
@@ -189,6 +192,7 @@ export function Spending({
                   <li class="result" key={card.cardId}>
                     <div class="result-top">
                       <span class="rank">{i + 1}</span>
+                      <CardArt id={card.cardId} />
                       <div class="result-name">
                         <strong>{shortName(card.cardId)}</strong>
                         <span class="muted">
@@ -229,6 +233,11 @@ export function Spending({
                     >
                       <div class="result-top">
                         <span class="rank">{i + 1}</span>
+                        <span class="art-pair">
+                          {p.cards.map((c) => (
+                            <CardArt id={c.cardId} key={c.cardId} />
+                          ))}
+                        </span>
                         <div class="result-name">
                           <strong>
                             {p.cards

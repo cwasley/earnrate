@@ -1,5 +1,6 @@
 id: td-bank-target-circle-card
 name: Target Circle Card
+color: '#cc0000'
 issuer: td-bank
 network: store
 only_at: [target]

@@ -1,5 +1,6 @@
 id: chase-ink-business-preferred
 name: Ink Business Preferred
+color: '#1f2328'
 issuer: chase
 network: visa
 currency: UR

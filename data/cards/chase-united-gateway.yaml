@@ -1,5 +1,6 @@
 id: chase-united-gateway
 name: United Gateway Card
+color: '#4f7bbd'
 issuer: chase
 network: visa
 currency: united-miles

@@ -1,5 +1,6 @@
 id: citi-custom-cash
 name: Citi Custom Cash Card
+color: '#3a7d8c'
 issuer: citi
 network: mastercard
 currency: cash

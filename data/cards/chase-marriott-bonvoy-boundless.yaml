@@ -1,6 +1,7 @@
 id: chase-marriott-bonvoy-boundless
 name: Marriott Bonvoy Boundless Credit Card
 short_name: Bonvoy Boundless
+color: '#2e3742'
 issuer: chase
 network: visa
 currency: marriott-bonvoy

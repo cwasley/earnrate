@@ -13,6 +13,7 @@ import {
 } from './pass.ts'
 import { packPass, type Signer } from './sign.ts'
 import { STRIP, stripSvg } from './strip.ts'
+import { deviceOf } from '../../site/events.ts'
 
 // SVG in, PNG out at `width` pixels wide.
 export type RenderPng = (svg: string, width: number) => Promise<Uint8Array>
@@ -28,6 +29,10 @@ export type PassEnv = {
   PASS_KEY_PEM?: string
   WWDR_PEM?: string
   LIMITER?: RateLimit // per IP
+  // Counts 'pass-made' and refusals by status, with the kind of device.
+  USAGE?: {
+    writeDataPoint(point: { blobs?: string[]; indexes?: string[] }): void
+  }
 }
 
 const MAX_FORM = 16 * 1024
@@ -62,79 +67,91 @@ export function makePassWorker(deps: {
   const now = deps.now ?? (() => new Date())
   return {
     async fetch(request: Request, env: PassEnv): Promise<Response> {
-      const { pathname } = new URL(request.url)
-      if (pathname !== '/') return text(404, 'Not found.')
-      if (request.method === 'GET' || request.method === 'HEAD')
-        return Response.redirect(WALLET_PAGE, 302)
-      if (request.method !== 'POST')
-        return text(405, 'Use the button on earnrate.dev.')
-
-      const key = limitKey(request)
-      if (env.LIMITER && key !== null) {
-        const { success } = await env.LIMITER.limit({ key })
-        if (!success)
-          return text(429, 'Too many passes at once. Try again in a minute.')
+      const response = await make(request, env)
+      if (request.method === 'POST' && new URL(request.url).pathname === '/') {
+        const label =
+          response.status === 200
+            ? 'pass-made'
+            : `pass-refused:${String(response.status)}`
+        const device = deviceOf(request.headers.get('user-agent') ?? '')
+        env.USAGE?.writeDataPoint({ blobs: [label, device], indexes: [label] })
       }
-      const body = await readBody(request, MAX_FORM)
-      if (body === null)
-        return text(413, 'That wallet is too large for a pass.')
-      const form = new URLSearchParams(body)
-      let input: unknown
-      try {
-        input = JSON.parse(form.get('wallet') ?? '')
-      } catch {
-        return text(400, 'The wallet sent was not readable.')
-      }
-      const parsed = PassWalletSchema.safeParse(input)
-      if (!parsed.success)
-        return text(400, 'Add a card to your wallet on earnrate.dev first.')
-      const unknown = unknownCards(deps.catalog, parsed.data)
-      if (unknown.length > 0)
-        return text(400, `earnrate doesn't know ${unknown.join(', ')}.`)
-
-      const identity: PassIdentity | null =
-        env.PASS_TYPE_ID && env.TEAM_ID
-          ? {
-              passTypeIdentifier: env.PASS_TYPE_ID,
-              teamIdentifier: env.TEAM_ID,
-            }
-          : null
-      const signer: Signer | null =
-        env.PASS_CERT_PEM && env.PASS_KEY_PEM && env.WWDR_PEM
-          ? {
-              certificatePem: env.PASS_CERT_PEM,
-              privateKeyPem: env.PASS_KEY_PEM,
-              wwdrPem: env.WWDR_PEM,
-            }
-          : null
-      if (!identity || !signer)
-        return text(503, "Apple Wallet passes aren't set up yet.")
-
-      const date = passDate(form.get('date'), now())
-      const { pass, strip } = passContents(
-        deps.catalog,
-        parsed.data,
-        date,
-        identity,
-        crypto.randomUUID(),
-      )
-      const svg = stripSvg(strip)
-      const strips: Record<string, Uint8Array> = {}
-      for (const [scale, name] of [
-        [1, 'strip.png'],
-        [2, 'strip@2x.png'],
-        [3, 'strip@3x.png'],
-      ] as const)
-        strips[name] = await deps.renderPng(svg, STRIP.width * scale)
-      const bytes = await packPass(pass, { ...deps.images, ...strips }, signer)
-      return new Response(bytes, {
-        headers: {
-          'content-type': 'application/vnd.apple.pkpass',
-          'content-disposition': 'attachment; filename="earnrate.pkpass"',
-          'cache-control': 'no-store',
-          'x-content-type-options': 'nosniff',
-        },
-      })
+      return response
     },
+  }
+
+  async function make(request: Request, env: PassEnv): Promise<Response> {
+    const { pathname } = new URL(request.url)
+    if (pathname !== '/') return text(404, 'Not found.')
+    if (request.method === 'GET' || request.method === 'HEAD')
+      return Response.redirect(WALLET_PAGE, 302)
+    if (request.method !== 'POST')
+      return text(405, 'Use the button on earnrate.dev.')
+
+    const key = limitKey(request)
+    if (env.LIMITER && key !== null) {
+      const { success } = await env.LIMITER.limit({ key })
+      if (!success)
+        return text(429, 'Too many passes at once. Try again in a minute.')
+    }
+    const body = await readBody(request, MAX_FORM)
+    if (body === null) return text(413, 'That wallet is too large for a pass.')
+    const form = new URLSearchParams(body)
+    let input: unknown
+    try {
+      input = JSON.parse(form.get('wallet') ?? '')
+    } catch {
+      return text(400, 'The wallet sent was not readable.')
+    }
+    const parsed = PassWalletSchema.safeParse(input)
+    if (!parsed.success)
+      return text(400, 'Add a card to your wallet on earnrate.dev first.')
+    const unknown = unknownCards(deps.catalog, parsed.data)
+    if (unknown.length > 0)
+      return text(400, `earnrate doesn't know ${unknown.join(', ')}.`)
+
+    const identity: PassIdentity | null =
+      env.PASS_TYPE_ID && env.TEAM_ID
+        ? {
+            passTypeIdentifier: env.PASS_TYPE_ID,
+            teamIdentifier: env.TEAM_ID,
+          }
+        : null
+    const signer: Signer | null =
+      env.PASS_CERT_PEM && env.PASS_KEY_PEM && env.WWDR_PEM
+        ? {
+            certificatePem: env.PASS_CERT_PEM,
+            privateKeyPem: env.PASS_KEY_PEM,
+            wwdrPem: env.WWDR_PEM,
+          }
+        : null
+    if (!identity || !signer)
+      return text(503, "Apple Wallet passes aren't set up yet.")
+
+    const date = passDate(form.get('date'), now())
+    const { pass, strip } = passContents(
+      deps.catalog,
+      parsed.data,
+      date,
+      identity,
+      crypto.randomUUID(),
+    )
+    const svg = stripSvg(strip)
+    const strips: Record<string, Uint8Array> = {}
+    for (const [scale, name] of [
+      [1, 'strip.png'],
+      [2, 'strip@2x.png'],
+      [3, 'strip@3x.png'],
+    ] as const)
+      strips[name] = await deps.renderPng(svg, STRIP.width * scale)
+    const bytes = await packPass(pass, { ...deps.images, ...strips }, signer)
+    return new Response(bytes, {
+      headers: {
+        'content-type': 'application/vnd.apple.pkpass',
+        'content-disposition': 'attachment; filename="earnrate.pkpass"',
+        'cache-control': 'no-store',
+        'x-content-type-options': 'nosniff',
+      },
+    })
   }
 }

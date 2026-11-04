@@ -1,5 +1,6 @@
 id: chase-freedom-flex
 name: Chase Freedom Flex
+color: '#22314f'
 issuer: chase
 network: mastercard
 currency: cash

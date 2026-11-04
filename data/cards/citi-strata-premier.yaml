@@ -1,5 +1,6 @@
 id: citi-strata-premier
 name: Citi Strata Premier Card
+color: '#3b4250'
 issuer: citi
 network: mastercard
 currency: TYP

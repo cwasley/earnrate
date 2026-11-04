@@ -1,5 +1,6 @@
 id: amex-blue-cash-preferred
 name: American Express Blue Cash Preferred Card
+color: '#1d3f7a'
 issuer: amex
 network: amex
 currency: cash
