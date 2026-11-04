@@ -771,10 +771,11 @@ describe('ChatGPT', () => {
       readOnlyHint: true,
       destructiveHint: false,
     })
-    expect(byName('delete_wallet')?.annotations).toMatchObject({
-      readOnlyHint: false,
-      destructiveHint: true,
-    })
+    for (const name of ['delete_wallet', 'switch_wallet'])
+      expect(byName(name)?.annotations, name).toMatchObject({
+        readOnlyHint: false,
+        destructiveHint: true,
+      })
     const answer = await client.callTool({
       name: 'best_card_for_purchase',
       arguments: { merchant: 'Whole Foods', amount: 80 },

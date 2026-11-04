@@ -180,7 +180,9 @@ export function registerAccountTools(
       annotations: {
         title: 'Switch wallets',
         readOnlyHint: false,
-        destructiveHint: false,
+        // It signs out this app's other connections to the wallet, which only
+        // the recovery code undoes.
+        destructiveHint: true,
         idempotentHint: true,
         openWorldHint: false,
       },
