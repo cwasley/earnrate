@@ -21,6 +21,8 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn validate
       - run: yarn smoke:pack
+      # The site build draws the pages' social preview images in Chromium.
+      - run: yarn playwright install --with-deps chromium
       - run: yarn site:build
       - run: yarn remote:check
       - run: yarn monitor:check

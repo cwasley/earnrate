@@ -407,6 +407,18 @@ const costs = (s: Simulation) => s.annualFees + s.membershipFees
 const byNet = (a: Simulation, b: Simulation) =>
   b.net - a.net || costs(a) - costs(b)
 
+// Each card on its own with its best picks, best net first.
+export function simulateSingles(
+  catalog: Catalog,
+  cards: Card[],
+  lines: ResolvedLine[],
+  options: SimulateOptions,
+): Simulation[] {
+  return cards
+    .map((card) => bestSimulation(catalog, [], card, lines, options))
+    .sort(byNet)
+}
+
 export type PairSimulation = Simulation & {
   // Cards that could replace the second card for the same result.
   alternatives: string[]

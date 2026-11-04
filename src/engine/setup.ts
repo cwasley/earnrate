@@ -5,7 +5,7 @@ import { isActivated, pickedCategories } from './evaluate.ts'
 import { membership, membershipName, sameGroup } from './memberships.ts'
 import { milestoneWhat } from './milestones.ts'
 import { daysBetween } from './periods.ts'
-import { rotationGap } from './rotation.ts'
+import { rotationGap, rotationGapText } from './rotation.ts'
 import { creditName, introWhat } from './rule-text.ts'
 import { creditBack, ENROLL_FIRST, idList, listed } from './text.ts'
 
@@ -323,7 +323,7 @@ export function setupNotes(
   if (gap !== null) {
     notes.push({
       kind: 'rotation',
-      text: `${name}'s rotating categories for ${gap} aren't in earnrate's data yet. An earnrate update adds them once the issuer announces them.`,
+      text: rotationGapText(name, gap),
     })
   }
   return notes

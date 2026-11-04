@@ -17,3 +17,8 @@ export function rotationGap(card: Card, date: string): string | null {
   }
   return null
 }
+
+// What answers say about a gap: "Freedom Flex's rotating categories for
+// 2027-Q2 aren't in earnrate's data yet. ..."
+export const rotationGapText = (name: string, gap: string) =>
+  `${name}'s rotating categories for ${gap} aren't in earnrate's data yet. An earnrate update adds them once the issuer announces them.`
