@@ -251,7 +251,9 @@ function WalletPass({ wallet }: { wallet: Wallet }) {
     <form class="wallet-pass" method="post" action={PASS_URL}>
       <input type="hidden" name="wallet" value={sent} />
       <input type="hidden" name="date" value={localToday()} />
-      <button type="submit">Add to Apple Wallet</button>
+      <button type="submit" aria-label="Add to Apple Wallet">
+        <img src="/add-to-apple-wallet.svg" alt="" width="126" height="40" />
+      </button>
       <p class="muted">
         For iPhone: this cheat sheet in Apple Wallet, good until the quarter
         ends. This sends your card names and picks (no amounts) to earnrate's

@@ -394,6 +394,58 @@
         "771c52d24ec8dac8"
       ]
     },
+    "https://www.bankofamerica.com/credit-cards/products/premium-rewards-credit-card/": {
+      "checked": "2026-11-03",
+      "lines": [
+        "115a6db08ee046c4",
+        "26bb5ab3f73e608e",
+        "6d5c190f19d1e410",
+        "9fadb12a774380bf",
+        "e55b8da2fd0e1564"
+      ]
+    },
+    "https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US": {
+      "checked": "2026-11-03",
+      "lines": [
+        "45f48f31c96d2825",
+        "af29bb483066e7d7",
+        "b1931ad65ef5ce62",
+        "e556daaa52d7b0c2"
+      ]
+    },
+    "https://www.bankofamerica.com/credit-cards/products/travel-rewards-credit-card/": {
+      "checked": "2026-11-03",
+      "lines": [
+        "528e6ab4daa7ca5b",
+        "73b282676d6c0830",
+        "b142ef74ce6ca627"
+      ]
+    },
+    "https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US": {
+      "checked": "2026-11-03",
+      "lines": [
+        "2451df9c50623f39",
+        "45f48f31c96d2825",
+        "af29bb483066e7d7",
+        "e556daaa52d7b0c2"
+      ]
+    },
+    "https://www.bankofamerica.com/credit-cards/products/unlimited-cash-back-credit-card/": {
+      "checked": "2026-11-03",
+      "lines": [
+        "a2e2ef291f01b5f8"
+      ]
+    },
+    "https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4082058&productoffercode=6E&locale=en_US": {
+      "checked": "2026-11-03",
+      "lines": [
+        "2451df9c50623f39",
+        "410271495ece5353",
+        "45f48f31c96d2825",
+        "af29bb483066e7d7",
+        "e556daaa52d7b0c2"
+      ]
+    },
     "https://www.bilt.com/card/obsidian": {
       "checked": "2026-11-03",
       "lines": [
@@ -613,6 +665,24 @@
         "ee006cd120f5fd51"
       ]
     },
+    "https://creditcards.chase.com/cash-back-credit-cards/freedom/rise": {
+      "checked": "2026-11-03",
+      "lines": [
+        "3b2fd53e363814f0",
+        "64b637d68285804c"
+      ]
+    },
+    "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65397.html": {
+      "checked": "2026-11-03",
+      "lines": [
+        "1661d1dd310f3cb0",
+        "444f2a7b16b80787",
+        "502280aa5eceac64",
+        "749128751b4a132b",
+        "97e92c6357325306",
+        "e1dd23c3e5f832c9"
+      ]
+    },
     "https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited": {
       "checked": "2026-11-03",
       "lines": [
@@ -638,6 +708,7 @@
     "https://creditcards.chase.com/business-credit-cards/IHG/business": {
       "checked": "2026-11-03",
       "lines": [
+        "12bcf148c4a01c6e",
         "59c29fd1dce3a50a",
         "7e54fb78d4f32dca",
         "84cdd69d82f821c7",
@@ -660,11 +731,20 @@
     "https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select": {
       "checked": "2026-11-03",
       "lines": [
+        "0573bd68b29bab44",
         "0b0cee3df4a6021f",
+        "2247add08eeee45f",
+        "3bdbed2ed573c685",
+        "4fae4d0a5ecbf3c0",
+        "6b85b9383f2f29b7",
         "84cdd69d82f821c7",
+        "9cdc093f9e16d128",
+        "af2aa9d230f11fbd",
         "b1cd964c593027ca",
         "ca9b97237a3f5acc",
         "e02ac76f7db4d6ed",
+        "e1da552fe7015118",
+        "f30a6fc9e278a1f9",
         "fb5b86fce2e0a8c3"
       ]
     },
@@ -707,8 +787,7 @@
         "31ed9091bc25b31c",
         "688e7d2d1a9370d8",
         "99f426c28bdea280",
-        "a7e9b1401312bc81",
-        "ac2440db3dbc0430"
+        "a7e9b1401312bc81"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65295.html": {
@@ -761,6 +840,27 @@
         "749128751b4a132b",
         "9b2a50a10a0f0f76",
         "d1d4a9be87e5c788"
+      ]
+    },
+    "https://creditcards.chase.com/business-credit-cards/ink/unlimited": {
+      "checked": "2026-11-03",
+      "lines": [
+        "2ce9844322f05c1b",
+        "bfaa049f5a74f401",
+        "dc4219b910cda2d2"
+      ]
+    },
+    "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63749.html": {
+      "checked": "2026-11-03",
+      "lines": [
+        "29f2aac9a943305c",
+        "444f2a7b16b80787",
+        "749128751b4a132b",
+        "97e92c6357325306",
+        "9b2a50a10a0f0f76",
+        "b6dd52af6d6cced6",
+        "bb672f539571e9d5",
+        "cc281c73c3054ff0"
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold": {
@@ -1194,6 +1294,39 @@
         "f3fb994ae2102168"
       ]
     },
+    "https://www.citi.com/credit-cards/citi-strata-credit-card": {
+      "checked": "2026-11-03",
+      "lines": [
+        "02a380f3e13487b4",
+        "3b761d6e62c6b637",
+        "4aebf50d1abd755b",
+        "4db4d674fafc2348",
+        "88ff0402c38d83fb",
+        "a3401db3ba2a3b6d",
+        "b012bf2eb28be69e",
+        "d4ca9149b0768047",
+        "dea8fdaffd92e05b",
+        "deefb4f0bd251ef3"
+      ]
+    },
+    "https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f": {
+      "checked": "2026-11-03",
+      "lines": [
+        "0fa60f74ca00d844",
+        "1674cdbc90d39a25",
+        "21268d3258caae94",
+        "2357dbcf35eeef2e",
+        "2b7126848a9d162b",
+        "3dbf07e412c2aac6",
+        "4a4548352031071b",
+        "587e2b37b57198a3",
+        "85f158403d55f31b",
+        "d3d55e58cc78cd8b",
+        "e4db9bd185d4f3cb",
+        "f8c8b9d886292707",
+        "fd01ef60815fac11"
+      ]
+    },
     "https://www.discover.com/credit-cards/cash-back/it-card/": {
       "checked": "2026-11-03",
       "lines": [
@@ -1358,6 +1491,63 @@
         "aace3ef0cd2648e0"
       ]
     },
+    "https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html": {
+      "checked": "2026-11-03",
+      "lines": [
+        "00842af7ccbbf061",
+        "386263aa536e7495",
+        "c93f5ff24c14e214",
+        "ea189f0599727bb2",
+        "ef5d61e335fc38a4"
+      ]
+    },
+    "https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=8BB5BD89H1&sourceCode=88416&page=terms": {
+      "checked": "2026-11-03",
+      "lines": [
+        "28f3a7958b0f39c6",
+        "2edb34d356e8170c",
+        "6726af04a091eae3",
+        "cb8ec330be1ecde0",
+        "d5ab8e6a1c48eb08",
+        "ef5d61e335fc38a4"
+      ]
+    },
+    "https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules": {
+      "checked": "2026-11-03",
+      "lines": [
+        "0f432cc5f17b1e58",
+        "1dcb345b404fb068",
+        "85edd74f981f1a6f"
+      ]
+    },
+    "https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html": {
+      "checked": "2026-11-03",
+      "lines": [
+        "00842af7ccbbf061",
+        "22b654b83f1bd3cf",
+        "5642ed03c500d9d7",
+        "fa33e5df7ac6f1cd"
+      ]
+    },
+    "https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=HQWRM3D57Q&sourceCode=88268&page=terms": {
+      "checked": "2026-11-03",
+      "lines": [
+        "28f3a7958b0f39c6",
+        "2edb34d356e8170c",
+        "5642ed03c500d9d7",
+        "6726af04a091eae3",
+        "cb8ec330be1ecde0",
+        "d5ab8e6a1c48eb08"
+      ]
+    },
+    "https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules": {
+      "checked": "2026-11-03",
+      "lines": [
+        "1dcb345b404fb068",
+        "85edd74f981f1a6f",
+        "b19b2ab551e6d5e2"
+      ]
+    },
     "https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html": {
       "checked": "2026-11-03",
       "lines": [
@@ -1405,20 +1595,32 @@
       "checked": "2026-11-03",
       "lines": [
         "173b2661f632bfc9",
-        "2518f48920d4242a",
-        "53f9a1b6c962feb4",
         "701afb05e0726114",
         "91487a34a7e9c0b6",
         "c10ee79e86c8b607",
         "c35f2b4b28e4159a",
-        "c3a2e8d46b2de0aa",
-        "e0aa562f4269e188"
+        "c3a2e8d46b2de0aa"
       ]
     },
     "https://www.wellsfargo.com/credit-cards/active-cash/terms/": {
       "checked": "2026-11-03",
       "lines": [
         "8e909a3d61561885",
+        "bd3e1fe145104712"
+      ]
+    },
+    "https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/": {
+      "checked": "2026-11-03",
+      "lines": [
+        "26fd925d239c8a1d",
+        "331978af3d9014b6",
+        "ec4ade0ea696641b"
+      ]
+    },
+    "https://www.wellsfargo.com/credit-cards/autograph-journey-visa/terms/": {
+      "checked": "2026-11-03",
+      "lines": [
+        "5cff0c2c84f78cd5",
         "bd3e1fe145104712"
       ]
     },
