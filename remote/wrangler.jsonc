@@ -11,7 +11,8 @@
   "preview_urls": false,
   "observability": { "enabled": false },
   "routes": [{ "pattern": "mcp.earnrate.dev", "custom_domain": true }],
-  // Per IP, per Cloudflare location: generous for a person, tight for a script.
+  // Per Cloudflare location, per wallet once signed in (else per IP; see
+  // limitKey in src/requests.ts): generous for a person, tight for a script.
   "ratelimits": [
     {
       "name": "LIMITER",

@@ -19,7 +19,13 @@ import {
 } from './auth.ts'
 import { errorPage, FAVICON_SVG, html } from './pages.ts'
 import { RATE_LIMIT_SECONDS } from './policy.ts'
-import { limitKey, MAX_BODY, readBody } from './requests.ts'
+import {
+  claimedLimitKey,
+  limitKey,
+  MAX_BODY,
+  readBody,
+  walletLimitKey,
+} from './requests.ts'
 
 type RateLimit = {
   limit(options: { key: string }): Promise<{ success: boolean }>
@@ -29,8 +35,8 @@ type Dataset = {
 }
 
 export type Env = AuthEnv & {
-  LIMITER?: RateLimit // every request, per IP
-  SIGN_IN_LIMITER?: RateLimit // sign-in steps and rejected tokens, per IP
+  LIMITER?: RateLimit // every request: per wallet once signed in, else per IP
+  SIGN_IN_LIMITER?: RateLimit // sign-in steps and rejected tokens
   USAGE?: Dataset // counts only: the method or tool name, never arguments
 }
 
@@ -106,11 +112,21 @@ const tooMany = () =>
     headers: { 'retry-after': String(RATE_LIMIT_SECONDS) },
   })
 
-async function limited(limiter: RateLimit | undefined, request: Request) {
-  const key = limitKey(request)
-  if (!limiter || key === null) return false
-  return !(await limiter.limit({ key })).success
+// Counts against `key`, or the IP address without one. Anthropic's servers
+// are never limited.
+async function limited(
+  limiter: RateLimit | undefined,
+  request: Request,
+  key: string | null = null,
+) {
+  const ip = limitKey(request)
+  if (!limiter || ip === null) return false
+  return !(await limiter.limit({ key: key ?? ip })).success
 }
+
+const bearerToken = (request: Request) =>
+  /^Bearer (\S+)$/i.exec(request.headers.get('authorization') ?? '')?.[1] ??
+  null
 
 const unavailable = () =>
   Response.json(
@@ -179,7 +195,11 @@ export function makeWorker<E extends Env>(
     { maxRequestBodySize: MAX_BODY },
   )
 
-  async function mcp(request: Request, env: E): Promise<Response> {
+  async function mcp(
+    request: Request,
+    env: E,
+    token: string | null,
+  ): Promise<Response> {
     const resource = resourceFor(new URL(request.url).pathname)
     let parsedBody: unknown
     let forward = request
@@ -208,23 +228,27 @@ export function makeWorker<E extends Env>(
       (c) => c.tool !== null && SAVED_WALLET_TOOLS.includes(c.tool),
     )
 
-    const header = request.headers.get('authorization')
-    const token = /^Bearer (\S+)$/i.exec(header ?? '')?.[1]
     // Every request needs a connected wallet, so apps ask the user to sign
     // in when they add earnrate. Only while sign-in itself is down are
     // questions answered without one.
     if (!token) return challenge(resource)
+    const claimed = await claimedLimitKey(token)
     let found
     try {
       found = await auth.validate(env, token, resource)
     } catch {
+      if (await limited(env.LIMITER, request, claimed)) return tooMany()
       return wantsWallet ? unavailable() : signedOut()
     }
     if (!found) {
-      if (await limited(env.SIGN_IN_LIMITER, request)) return tooMany()
+      if (await limited(env.SIGN_IN_LIMITER, request, claimed)) return tooMany()
       return challenge(resource, true)
     }
     const { grant, clientId, grantId } = found
+    if (
+      await limited(env.LIMITER, request, await walletLimitKey(grant.walletId))
+    )
+      return tooMany()
     // Revoking grants goes through KV, which can lag; the wallet's own
     // storage is consistent, so a deleted wallet or a signed-out grant is
     // refused here at once.
@@ -287,16 +311,41 @@ export function makeWorker<E extends Env>(
         })
       if (pathname === '/favicon.ico')
         return Response.redirect('https://earnrate.dev/favicon.ico', 301)
-      if (await limited(env.LIMITER, request)) return tooMany()
+      // Fixed documents, the same for everyone and free to serve.
       if (pathname === '/.well-known/oauth-protected-resource')
         return protectedResourceMetadata(resourceFor('/'))
       if (pathname === '/.well-known/oauth-protected-resource/mcp')
         return protectedResourceMetadata(resourceFor('/mcp'))
-      if (pathname === '/' || pathname === '/mcp') return mcp(request, env)
+      if (pathname === '/.well-known/oauth-authorization-server')
+        return auth.fetch(request, env, ctx)
+
+      // A request with a credential counts against the wallet or grant it
+      // names, so users of one app don't share its servers' limit.
+      let key: string | null = null
+      if (pathname === '/oauth/token' && request.method === 'POST') {
+        const text = await readBody(request)
+        if (text === null)
+          return new Response('Request too large.', { status: 413 })
+        const form = new URLSearchParams(text)
+        key = await claimedLimitKey(
+          form.get('refresh_token') ?? form.get('code') ?? form.get('token'),
+        )
+        request = new Request(request.url, {
+          method: 'POST',
+          headers: request.headers,
+          body: text,
+        })
+      }
+      const isMcp = pathname === '/' || pathname === '/mcp'
+      const token = isMcp ? bearerToken(request) : null
+      // A signed-in MCP request is limited once its token is checked.
+      if (token === null && (await limited(env.LIMITER, request, key)))
+        return tooMany()
+      if (isMcp) return mcp(request, env, token)
       // Each of these writes to KV, whose daily writes are limited.
       if (
         SIGN_IN_PATHS.has(pathname) &&
-        (await limited(env.SIGN_IN_LIMITER, request))
+        (await limited(env.SIGN_IN_LIMITER, request, key))
       )
         return tooMany()
       const page =

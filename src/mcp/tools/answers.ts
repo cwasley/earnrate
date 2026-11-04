@@ -107,6 +107,7 @@ export function registerAnswerTools(
       annotations: {
         title: 'Best card for a purchase',
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: deps.llm !== null,
       },
     },
@@ -211,6 +212,7 @@ export function registerAnswerTools(
       annotations: {
         title: 'Resolve a merchant',
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: deps.llm !== null,
       },
     },
@@ -260,6 +262,7 @@ export function registerAnswerTools(
       annotations: {
         title: 'Compare welcome offers',
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: false,
       },
     },
@@ -326,6 +329,7 @@ export function registerAnswerTools(
       annotations: {
         title: 'Best cards for a purchase',
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: false,
       },
     },
@@ -393,6 +397,7 @@ export function registerAnswerTools(
       annotations: {
         title: 'Simulate a year of spending',
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: false,
       },
     },
@@ -492,6 +497,7 @@ export function registerAnswerTools(
       annotations: {
         title: 'Cheat sheet',
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: false,
       },
     },
@@ -549,6 +555,7 @@ export function registerAnswerTools(
       annotations: {
         title: 'Search cards',
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: false,
       },
     },
