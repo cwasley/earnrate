@@ -240,7 +240,7 @@ function table(shown: ExploreEntry[]): string {
         lines.push(
           `${pct(upgrade.effectiveReturnPct)} with ${membershipName(upgrade.membership)}`,
         )
-      return `<li><span class="rank">${String(i + 1)}</span>${art(e.cardId)}<div><strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a></strong> <span class="rate">${pct(e.effectiveReturnPct)}</span><br /><span class="muted">${esc(issuerName(e.issuer))} · ${esc(feeLabel(e.cardId))}</span>${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</div></li>`
+      return `<li><span class="rank">${String(i + 1)}</span>${art(e.cardId)}<div><span class="row-head"><strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a></strong> <span class="rate">${pct(e.effectiveReturnPct)}</span></span><span class="muted row-note">${esc(issuerName(e.issuer))} · ${esc(feeLabel(e.cardId))}</span>${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</div></li>`
     })
     .join('')
   return `<ol class="cards">${rows}</ol>`
@@ -497,12 +497,12 @@ function rulesList(card: Card): string {
   const rules = [...card.rules].sort((a, b) => b.rate - a.rate)
   const items = rules.map((rule) => {
     const lines = ruleConditions(card, rule)
-    return `<li><span class="rank">${esc(num(rule.rate))}</span><div><strong>${esc(ruleWhat(card, rule))}</strong> <span class="rate">${esc(earnText(catalog, rule.rate, card.currency))}</span>${rule.note ? `<br /><span class="muted">${esc(rule.note)}</span>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${evidenceFor(card, rule.id)}</div></li>`
+    return `<li><span class="rank">${esc(num(rule.rate))}</span><div><span class="row-head"><strong>${esc(ruleWhat(card, rule))}</strong> <span class="rate">${esc(earnText(catalog, rule.rate, card.currency))}</span></span>${rule.note ? `<span class="muted row-note">${esc(rule.note)}</span>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${evidenceFor(card, rule.id)}</div></li>`
   })
   items.push(
-    `<li><span class="rank">${esc(String(card.base_rate))}</span><div><strong>Everything else</strong> <span class="rate">${esc(earnText(catalog, card.base_rate, card.currency))}</span>${evidenceFor(card, 'base_rate')}</div></li>`,
+    `<li><span class="rank">${esc(String(card.base_rate))}</span><div><span class="row-head"><strong>Everything else</strong> <span class="rate">${esc(earnText(catalog, card.base_rate, card.currency))}</span></span>${evidenceFor(card, 'base_rate')}</div></li>`,
   )
-  return `<ol class="cards">${items.join('')}</ol>`
+  return `<ol class="cards rules">${items.join('')}</ol>`
 }
 
 function choicesText(card: Card): string {

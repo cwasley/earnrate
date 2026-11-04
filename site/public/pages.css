@@ -136,7 +136,35 @@ ol.cards ul {
 .rate {
   color: var(--accent);
   font-weight: 700;
-  float: right;
+}
+
+/* The rule or card, with its rate on the right; on a phone a card page's
+   long rates ("3x Amex Membership Rewards") go on their own line. */
+.row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+
+.row-head .rate {
+  flex: none;
+  text-align: right;
+}
+
+.row-note {
+  display: block;
+  margin-top: 2px;
+}
+
+@media (max-width: 479px) {
+  .rules .row-head {
+    flex-direction: column;
+  }
+
+  .rules .row-head .rate {
+    text-align: left;
+  }
 }
 
 .quotes li {
