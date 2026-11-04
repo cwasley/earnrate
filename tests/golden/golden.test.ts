@@ -963,7 +963,7 @@ describe('#26 new cards', () => {
   const wallet = (cards: object[]) =>
     withProfile(WalletSchema.parse({ cards }), 'flat')
 
-  goldenTest('#26a Hilton Surpass earns 12x at Hilton, 6% at 0.5¢', () => {
+  goldenTest('#26a Hilton Surpass earns 12x at Hilton, 4.8% at 0.4¢', () => {
     const rec = recommend(
       catalog,
       wallet([{ id: 'amex-hilton-honors-surpass' }, { id: 'amex-gold' }]),
@@ -972,7 +972,7 @@ describe('#26 new cards', () => {
     expect(rec.decision?.cardId).toBe('amex-hilton-honors-surpass')
     const surpass = entry(rec, 'amex-hilton-honors-surpass')
     expect(surpass.rate).toBe(12)
-    expect(surpass.effectiveReturnPct).toBeCloseTo(6)
+    expect(surpass.effectiveReturnPct).toBeCloseTo(4.8)
     expect(entry(rec, 'amex-gold').effectiveReturnPct).toBeCloseTo(1)
   })
 

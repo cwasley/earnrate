@@ -221,6 +221,13 @@ Use the connector (or plugin) or the local extension, not both: each keeps its o
 - `record_purchase`: books a purchase against its cap, any open welcome bonus and the card's yearly spend bonuses in your wallet file, keeping your comments
 - `search_cards`, `add_card`, `update_card`, `remove_card`, `set_memberships` and `set_point_values`: set up the wallet in conversation, including what your points are worth (memberships and point values need no cards)
 
+Both servers also offer four prompts, ready-made questions you can pick in Claude instead of typing one. None needs your cards:
+
+- `which-card`: which credit card to use at a store or for a kind of purchase, with an optional amount and country
+- `cheat-sheet`: the card for each everyday kind of purchase
+- `this-quarter`: what to do with your saved cards now (activations, picks, caps, welcome bonuses)
+- `set-up`: save your cards by name, with their picks and memberships
+
 Saving cards is optional: name them in the conversation for one answer, or ask the assistant to save them, and it finds them, adds them, and asks about anything a card needs, like this quarter's Cash+ picks.
 
 For a merchant earnrate doesn't know, the calling model can pass a `category` (e.g. `grocery.supermarket`). It's used only for unknown merchants and is labeled in the answer. The command line takes the same thing as `--category`.
@@ -279,7 +286,7 @@ Rotating categories (Freedom Flex) are added each quarter once the issuer posts 
 
 earnrate needs no account. The local version has no telemetry; the hosted server counts requests and errors by method, tool name or page only, never what was asked. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
 
-- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests and errors by method, tool name or page only. Connecting it starts an anonymous wallet (a recovery code, no email). It holds only what you save: card IDs and the details you gave, memberships and point values, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
+- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, country, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests and errors by method, tool name or page only. Connecting it starts an anonymous wallet (a recovery code, no email). It holds only what you save: card IDs and the details you gave, memberships and point values, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
 - **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product ID, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins. When you ask about a store earnrate doesn't recognize, its name goes in `~/.earnrate/missed-merchants.json` (`earnrate missed` lists them; `EARNRATE_MISSED_MERCHANTS=off` keeps no list).
 - **What the local version sends:** nothing, by default. The optional merchant lookup (off unless you turn it on with your own Anthropic API key) sends only the name of a store earnrate doesn't recognize to Anthropic's API, and saves the answer in `~/.earnrate/merchant-cache.json`.
 - **AI assistants:** when you use earnrate through Claude or another assistant, that assistant's provider sees the conversation, including earnrate's answers, under its own privacy policy.

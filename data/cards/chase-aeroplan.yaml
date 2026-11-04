@@ -55,6 +55,25 @@ rules:
   - id: gas
     match: { categories: [gas] }
     rate: 2
+milestones:
+  - id: spend-25k
+    spend: 25000
+    period: calendar_year
+    rewards:
+      - 10,000 Status Qualifying Credits
+    note: 'For the primary cardmember. All Aeroplan cards together give at most 25,000 SQC a calendar year. Allow 6-8 weeks for them to post.'
+  - id: spend-50k
+    spend: 50000
+    period: calendar_year
+    rewards:
+      - 10,000 more Status Qualifying Credits
+    note: 'For the primary cardmember. All Aeroplan cards together give at most 25,000 SQC a calendar year. Allow 6-8 weeks for them to post.'
+  - id: spend-75k
+    spend: 75000
+    period: calendar_year
+    rewards:
+      - Aeroplan 35K Status
+    note: 'For the primary cardmember, for the rest of that calendar year and all of the next.'
 todo:
   - 'Through December 31, 2026, the cardmember page creditcards.chase.com/aircanada lists 500 bonus points for each $2,000 spent per calendar month, up to 1,500 a month (+0.25x on the first $6,000). It is not on the product page, and the engine picks one rule rather than stacking, so it is not modeled.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
@@ -116,3 +135,12 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65070.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: spend-25k
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'will receive 10,000 Status Qualifying Credits (SQC) once you spend $25,000 in purchases'
+  - rule: spend-50k
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'an additional 10,000 SQC once you spend $50,000 in purchases'
+  - rule: spend-75k
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'Each calendar year you spend at least $75,000 in purchases on your Chase Air Canada Aeroplan Card account'

@@ -92,6 +92,13 @@ Spend milestones (`milestones:`) have no start date, so one the issuer announces
 - `chase-ihg-one-rewards`: starting in 2027, $5,000 of purchases in a calendar year unlocks the 4th Reward Night free benefit.
 - `chase-ihg-one-rewards-business`: starting January 1, 2027, $50,000 of purchases in a calendar year earns Diamond Elite status.
 
+### Milestone years on billing cycles
+
+A `cardmember_year` milestone runs from the account anniversary date. Citi counts AAdvantage spend milestones over a cardmembership year from the billing cycle after the anniversary month, so the wallet would need the statement date as well.
+
+- `citi-aadvantage-business`: $30,000 for the Companion Certificate.
+- `citi-aadvantage-platinum-select`: $20,000 for the $125 Flight Discount.
+
 ### Credits that offset the annual fee
 
 Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. It would need a per-card credit value with evidence, kept apart from earn rates (credits as rewards stay out of scope, below).

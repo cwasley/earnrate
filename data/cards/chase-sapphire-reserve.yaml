@@ -46,6 +46,17 @@ rules:
     valid_from: 2025-04-01
     valid_to: 2027-12-31
     note: Peloton equipment and accessory purchases over $150 bought directly from Peloton, on up to $5,000 in total purchases over the whole offer. Not memberships, apparel or gift cards.
+milestones:
+  - id: spend-75k
+    spend: 75000
+    period: calendar_year
+    rewards:
+      - IHG One Rewards Diamond Elite status
+      - Southwest A-List status
+      - World of Hyatt Explorist status
+      - up to $500 in Southwest credits on Chase Travel
+      - up to $250 in credits at The Shops at Chase
+    note: 'For the primary cardmember. Each lasts the rest of that calendar year and all of the next (Explorist through the following February). A-List needs your Rapid Rewards number linked on Chase.com.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -96,5 +107,23 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64842.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: spend-75k
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'Spend $75,000 each calendar year and unlock status and credits with leading travel and shopping brands.'
+  - rule: spend-75k
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: '$75,000 Spend Benefit – IHG One Rewards Diamond Elite Status'
+  - rule: spend-75k
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: '$75,000 Spend Benefit – Southwest Airlines Rapid Rewards A-List Status'
+  - rule: spend-75k
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: '$75,000 Spend Benefit – World of Hyatt Explorist Status'
+  - rule: spend-75k
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: '$75,000 Spend Benefit – $500 Southwest Airlines Chase Travel Credit'
+  - rule: spend-75k
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: '$75,000 Spend Benefit – $250 Credit for The Shops at Chase'
 todo:
   - "peloton: the $5,000 limit runs across the whole offer (4/1/2025 to 12/31/2027), which no cap period can express, and the $150 minimum per purchase isn't modeled."
