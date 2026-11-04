@@ -49,11 +49,16 @@ export function registerPrompts(
           .string()
           .optional()
           .describe('Where you are paying, if not the U.S.: FR, Japan'),
+        paying: z
+          .string()
+          .optional()
+          .describe('How you are paying, if you know: Apple Pay, PayPal'),
       }),
     },
     (args) => {
       const amount = args.amount?.trim() || null
       const country = args.country?.trim() || null
+      const paying = args.paying?.trim() || null
       const call = [
         `merchant ${JSON.stringify(args.store)}`,
         ...(amount === null
@@ -62,9 +67,12 @@ export function registerPrompts(
         ...(country === null
           ? []
           : [`country as the two-letter code for ${JSON.stringify(country)}`]),
+        ...(paying === null
+          ? []
+          : [`payment for paying with ${JSON.stringify(paying)}`]),
       ]
       return ask(
-        `Which credit card should I use at ${args.store}${amount === null ? '' : ` for ${dollars(amount)}`}${country === null ? '' : ` in ${country}`}?`,
+        `Which credit card should I use at ${args.store}${amount === null ? '' : ` for ${dollars(amount)}`}${country === null ? '' : ` in ${country}`}${paying === null ? '' : ` with ${paying}`}?`,
         [
           `Call earnrate's best_card_for_purchase with ${call.join(', ')}.`,
           `It answers from ${FROM_SAVED_OR_ALL}, so don't ask for their cards first.`,

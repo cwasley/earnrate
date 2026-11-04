@@ -1,5 +1,6 @@
 import {
   findMerchant,
+  merchantFamily,
   resolveMerchant,
   resolveMerchantById,
 } from '../merchants/resolve.ts'
@@ -9,6 +10,7 @@ import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
 import {
   evaluateCard,
+  paymentUpgrade,
   purchaseContext,
   usableAt,
   type CardEvaluation,
@@ -38,6 +40,8 @@ import {
   money,
   NETWORK_NAMES,
   num,
+  paidText,
+  paymentUnknownText,
   pct,
   pointValuesText,
   roundCents,
@@ -89,6 +93,13 @@ type Entry = {
   // With no opening date on file: what an intro rate would make this
   // purchase earn on a new account.
   ifNew: { rate: number; returnPct: number; days: number } | null
+  // With the purchase's payment unknown: a way of paying that a rule on the
+  // card asks for, and what this purchase would earn paid that way.
+  ifPaid: {
+    payment: NonNullable<Purchase['payment']>
+    rate: number
+    returnPct: number
+  } | null
 }
 
 const displayName = (e: Entry) => e.held.checkout_label ?? e.card.name
@@ -180,6 +191,7 @@ function rankEntries(
             days: (fresh.intro[0]?.intro ?? card.intro_rates[0])?.days ?? 365,
           }
         : null
+    const paid = paymentUpgrade(card, held, ctx, evaluation.best.rate)
     entries.push({
       card,
       held,
@@ -193,6 +205,16 @@ function rankEntries(
       upside:
         perDollar * (valuation.range?.[1] ?? valuation.centsPerUnit) - fee,
       ifNew,
+      ifPaid: paid
+        ? {
+            payment: paid.payment,
+            rate: paid.nominalRate,
+            returnPct:
+              (perDollar - evaluation.best.rate + paid.rate) *
+                valuation.centsPerUnit -
+              fee,
+          }
+        : null,
     })
   }
 
@@ -466,8 +488,9 @@ function assumptionsFor(
     const naming = entries.flatMap((e) => {
       const rule = e.evaluation.best.rule
       return rule &&
-        merchant.merchantId !== null &&
-        (rule.match.merchants ?? []).includes(merchant.merchantId)
+        merchantFamily(catalog, merchant.merchantId).some((id) =>
+          (rule.match.merchants ?? []).includes(id),
+        )
         ? [`${displayName(e)} (${ruleWhat(catalog, rule)})`]
         : []
     })
@@ -487,6 +510,11 @@ function assumptionsFor(
       `Assumes an in-store purchase. ${merchant.resolvedName} takes cards differently online.`,
     )
   }
+  if (merchant.channel === null && purchase.payment === 'paypal') {
+    assumptions.push(
+      'Assumes an online purchase, since PayPal checkout is online.',
+    )
+  }
   if (purchase.channel === null && merchant.channel === 'online') {
     assumptions.push(
       'Assumes an online purchase, since you gave a web address.',
@@ -498,7 +526,25 @@ function assumptionsFor(
   )
   if (values !== null) assumptions.push(values)
   if (isForeign(purchase)) assumptions.push(FOREIGN_ASSUMPTION)
+  if (purchase.payment) assumptions.push(paidText(purchase.payment))
   const winner = entries[0]
+  for (const e of entries) {
+    if (!e.ifPaid || !winner) continue
+    if (
+      e !== winner &&
+      e.ifPaid.returnPct <= winner.effectiveReturnPct + EPSILON
+    )
+      continue
+    const currency = e.valuation.currency
+    assumptions.push(
+      paymentUnknownText(
+        displayName(e),
+        e.ifPaid.payment,
+        earnText(catalog, e.ifPaid.rate, currency),
+        earnText(catalog, e.evaluation.best.nominalRate, currency),
+      ),
+    )
+  }
   for (const e of entries) {
     if (!e.ifNew || !winner) continue
     if (

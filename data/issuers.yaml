@@ -43,6 +43,11 @@
   name: Elan Financial Services
   color: '#1d3f6e'
   search: [elan, elan financial]
+- id: goldman-sachs
+  # Goldman Sachs Bank USA issues the Apple Card.
+  name: Goldman Sachs
+  color: '#6b8fbf'
+  search: [goldman, gs]
 - id: navy-federal
   name: Navy Federal Credit Union
   color: '#1b3a6b'

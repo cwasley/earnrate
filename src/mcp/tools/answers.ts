@@ -34,6 +34,7 @@ import { ALL_CARDS_NOTE, fail, type Context } from '../context.ts'
 import {
   ChannelInput,
   CountryInput,
+  PaymentInput,
   DateInput,
   Merchant,
   settings,
@@ -87,7 +88,7 @@ export function registerAnswerTools(
     {
       title: 'Best card for a purchase',
       description:
-        "Which credit card earns the most rewards for a purchase, and why. With no cards given and no saved wallet, it ranks every card earnrate knows (in `allCards`): a complete answer for anyone. With cards named in the conversation (`cards`) or a saved wallet, it picks the best of the user's own: `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout, with every usable card ranked with reasons, cards the merchant won't take, assumptions, warnings, and when a different point valuation would change the pick. For a business earnrate may not know, like a local restaurant, pass `category` when you can tell what kind of business it is. When the user is paying outside the U.S. or in another currency, pass `country`: abroad, each card is ranked after its foreign transaction fee. Never needs or returns card numbers.",
+        "Which credit card earns the most rewards for a purchase, and why. With no cards given and no saved wallet, it ranks every card earnrate knows (in `allCards`): a complete answer for anyone. With cards named in the conversation (`cards`) or a saved wallet, it picks the best of the user's own: `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout, with every usable card ranked with reasons, cards the merchant won't take, assumptions, warnings, and when a different point valuation would change the pick. For a business earnrate may not know, like a local restaurant, pass `category` when you can tell what kind of business it is. When the user is paying outside the U.S. or in another currency, pass `country`: abroad, each card is ranked after its foreign transaction fee. Pass `payment` only when the user says how they're paying, like Apple Pay or PayPal checkout. Never needs or returns card numbers.",
       inputSchema: z.object({
         merchant: Merchant,
         amount: z
@@ -98,6 +99,7 @@ export function registerAnswerTools(
         channel: ChannelInput,
         date: DateInput,
         country: CountryInput,
+        payment: PaymentInput,
         category: CategoryInput,
         cards: NamedCards,
         memberships: NamedMemberships,
@@ -117,6 +119,7 @@ export function registerAnswerTools(
       channel,
       date,
       country,
+      payment,
       category,
       cards,
       memberships,
@@ -134,6 +137,7 @@ export function registerAnswerTools(
         channel: channel ?? null,
         date: date ?? deps.today(),
         country: (country ?? 'US').toUpperCase(),
+        payment: payment ?? null,
       }
       const resolved = await ctx.resolve(
         merchant,
@@ -154,6 +158,7 @@ export function registerAnswerTools(
             channel: purchase.channel,
             date: purchase.date,
             country: purchase.country,
+            payment: purchase.payment,
           },
           settings({ memberships, valuation }, await ctx.saved()),
           resolved.merchant,
@@ -323,6 +328,7 @@ export function registerAnswerTools(
           .describe('Purchase amount in US dollars, if known.'),
         channel: ChannelInput,
         country: CountryInput,
+        payment: PaymentInput,
         ...CatalogFilters,
       }),
       outputSchema: ExplorationSchema,
@@ -346,6 +352,7 @@ export function registerAnswerTools(
           channel,
           date: deps.today(),
           country: (args.country ?? 'US').toUpperCase(),
+          payment: args.payment ?? null,
         },
         settings(args, await ctx.saved()),
         args.merchant === undefined

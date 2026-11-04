@@ -189,7 +189,7 @@ It totals what each card earned against the best card in your wallet for each pu
 
 ## Supported cards
 
-99 cards, each modeled from the issuer's own terms and checked weekly against them:
+100 cards, each modeled from the issuer's own terms and checked weekly against them:
 
 - **American Express:** Gold, Platinum, Blue Cash Preferred, Blue Cash Everyday, Business Gold, Business Platinum, Blue Business Plus
 - **American Express airline and hotel:** Delta SkyMiles Blue, Gold, Platinum, Reserve; Hilton Honors, Surpass, Aspire, Business; Marriott Bonvoy Brilliant, Bevy, Business
@@ -203,7 +203,7 @@ It totals what each card earned against the best card in your wallet for each pu
 - **U.S. Bank:** Cash+, Altitude Go, Altitude Connect, Smartly Visa Signature
 - **Bilt:** Blue, Obsidian, Palladium
 - **Credit unions:** Navy Federal cashRewards, cashRewards Plus, More Rewards American Express; Caltech EFCU Platinum Mastercard
-- **Others:** Discover it Cash Back, SoFi Unlimited 2%, JetBlue Plus (Barclays), PayPal Cashback Mastercard, Sam's Club Mastercard, Venmo Credit Card and Verizon Visa Card (Synchrony), Fidelity Rewards Visa Signature (Elan)
+- **Others:** Apple Card (Goldman Sachs), Discover it Cash Back, SoFi Unlimited 2%, JetBlue Plus (Barclays), PayPal Cashback Mastercard, Sam's Club Mastercard, Venmo Credit Card and Verizon Visa Card (Synchrony), Fidelity Rewards Visa Signature (Elan)
 
 Store cards (Target, Kohl's, Nordstrom) only come up at their own stores. Airline and hotel cards count only what the card itself earns, not the points a program gives members however they pay, and their perks (bags, free nights, lounges) aren't counted.
 
@@ -236,7 +236,7 @@ Use the connector (or plugin) or the local extension, not both: each keeps its o
 
 Both servers also offer four prompts, ready-made questions you can pick in Claude instead of typing one. None needs your cards:
 
-- `which-card`: which credit card to use at a store or for a kind of purchase, with an optional amount and country
+- `which-card`: which credit card to use at a store or for a kind of purchase, with an optional amount, country and way of paying
 - `cheat-sheet`: the card for each everyday kind of purchase
 - `this-quarter`: what to do with your saved cards now (activations, picks, caps, welcome bonuses)
 - `set-up`: save your cards by name, with their picks and memberships

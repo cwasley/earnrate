@@ -1,6 +1,8 @@
-import type { Cap, Card, Rule } from '../schema/card.ts'
+import type { Cap, Card, PaymentMethod, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
+import { merchantFamily } from '../merchants/resolve.ts'
+import { EPSILON } from './compare.ts'
 import {
   introCovers,
   introWindows,
@@ -12,34 +14,43 @@ import type { Channel, MerchantResolution, Purchase } from './types.ts'
 
 export type PurchaseContext = {
   category: string
-  merchantId: string | null
+  merchantIds: string[] // the merchant and, for a brand, its parent
   mcc: number | null
   channel: Channel | null
   country: string
   date: string
   amount: number | null
   memberships: Set<string>
+  payment: PaymentMethod | null
 }
+
+// PayPal checkout happens online, so paying through it says the channel.
+export const paymentChannel = (
+  channel: Channel | null,
+  payment: PaymentMethod | null,
+): Channel | null => channel ?? (payment === 'paypal' ? 'online' : null)
 
 export function purchaseContext(
   catalog: Catalog,
   wallet: Wallet,
   merchant: MerchantResolution,
   category: string,
-  purchase: Pick<Purchase, 'amount' | 'date' | 'country'>,
+  purchase: Pick<Purchase, 'amount' | 'date' | 'country' | 'payment'>,
 ): PurchaseContext {
+  const payment = purchase.payment ?? null
   return {
     category,
-    merchantId: merchant.merchantId,
+    merchantIds: merchantFamily(catalog, merchant.merchantId),
     mcc:
       category === merchant.category && merchant.likelyMcc !== null
         ? merchant.likelyMcc
         : singleMcc(catalog, category),
-    channel: merchant.channel,
+    channel: paymentChannel(merchant.channel, payment),
     country: purchase.country,
     date: purchase.date,
     amount: purchase.amount,
     memberships: new Set(wallet.memberships),
+    payment,
   }
 }
 
@@ -176,21 +187,16 @@ function applicability(
   const { match, exclude } = rule
   const inCategory = (cats: string[]) =>
     cats.some((c) => categoryMatches(c, ctx.category))
+  const named = (ids: string[] | undefined) =>
+    ids?.some((id) => ctx.merchantIds.includes(id)) ?? false
 
   if (match.categories?.length && !inCategory(match.categories)) return 'no'
-  if (
-    match.merchants?.length &&
-    !(ctx.merchantId !== null && match.merchants.includes(ctx.merchantId))
-  ) {
-    return 'no'
-  }
+  if (match.merchants?.length && !named(match.merchants)) return 'no'
   if (match.mccs?.length && !(ctx.mcc !== null && match.mccs.includes(ctx.mcc)))
     return 'no'
   if (match.choice !== undefined) {
     const covered = picked.get(match.choice)
-    const merchantPicked =
-      ctx.merchantId !== null &&
-      (covered?.merchants.includes(ctx.merchantId) ?? false)
+    const merchantPicked = named(covered?.merchants)
     const onlinePicked =
       ctx.channel === 'online' &&
       (covered?.online.some((o) => !inCategory(o.exclude)) ?? false)
@@ -203,14 +209,14 @@ function applicability(
   }
 
   if (exclude?.categories && inCategory(exclude.categories)) return 'no'
-  if (
-    exclude?.merchants &&
-    ctx.merchantId !== null &&
-    exclude.merchants.includes(ctx.merchantId)
-  ) {
-    return 'no'
-  }
+  if (named(exclude?.merchants)) return 'no'
   if (exclude?.mccs && ctx.mcc !== null && exclude.mccs.includes(ctx.mcc))
+    return 'no'
+  if (
+    exclude?.payment &&
+    ctx.payment !== null &&
+    exclude.payment.includes(ctx.payment)
+  )
     return 'no'
 
   if (rule.channel !== 'any' && rule.channel !== ctx.channel) return 'no'
@@ -219,6 +225,8 @@ function applicability(
   if (!inEffect(rule, ctx.date)) return 'no'
   const membership = rule.requires?.membership
   if (membership !== undefined && !ctx.memberships.has(membership)) return 'no'
+  const payment = rule.requires?.payment
+  if (payment !== undefined && ctx.payment !== payment) return 'no'
   if (rule.requires?.activation && !isActivated(card, held, rule.id))
     return 'needs-activation'
   return 'applies'
@@ -345,4 +353,36 @@ export function evaluateCard(
     needsActivation: blocked.filter((r) => rateOf(r) > best.rate),
     staleChoice,
   }
+}
+
+// The way of paying (one a rule on the card requires) that would earn the
+// most on this purchase, when that beats `rate`. Only while the purchase
+// doesn't say how it's paid.
+export function paymentUpgrade(
+  card: Card,
+  held: WalletCard,
+  ctx: PurchaseContext,
+  rate: number,
+): { payment: PaymentMethod; rate: number; nominalRate: number } | null {
+  if (ctx.payment !== null) return null
+  let best: {
+    payment: PaymentMethod
+    rate: number
+    nominalRate: number
+  } | null = null
+  const methods = new Set(
+    card.rules.flatMap((r) =>
+      r.requires?.payment === undefined ? [] : [r.requires.payment],
+    ),
+  )
+  for (const payment of methods) {
+    const paid = evaluateCard(card, held, {
+      ...ctx,
+      payment,
+      channel: paymentChannel(ctx.channel, payment),
+    }).best
+    if (paid.rate > (best?.rate ?? rate) + EPSILON)
+      best = { payment, rate: paid.rate, nominalRate: paid.nominalRate }
+  }
+  return best
 }

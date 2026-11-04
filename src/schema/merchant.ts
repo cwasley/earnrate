@@ -16,6 +16,9 @@ export const MerchantSchema = z.strictObject({
   aliases: z.array(z.string().min(1)).default([]),
   domains: z.array(z.string().min(1)).default([]),
   category: CategoryId,
+  // A brand of another merchant (Hampton Inn of Hilton): rules that name the
+  // parent's id also match the brand. One level only.
+  brand_of: KebabId.optional(),
   likely_mcc: Mcc.optional(),
   accepts: Accepts.optional(),
   in_store: ChannelOverride.optional(),

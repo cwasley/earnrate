@@ -338,6 +338,24 @@ function only(...cards: ReturnType<typeof syntheticCard>[]) {
   }
 }
 
+describe('hotel and other brands', () => {
+  const hiltonBusiness = WalletSchema.parse({
+    cards: [{ id: 'amex-hilton-honors-business' }],
+  })
+
+  test('a brand earns what its parent earns', () => {
+    for (const brand of ['Hampton Inn', 'Hilton', 'DoubleTree by Hilton']) {
+      const rec = recommend(realCatalog, hiltonBusiness, purchase(brand))
+      expect(rec.ranked[0]?.matchedRule, brand).toBe('hilton-purchases')
+    }
+  })
+
+  test('a rule that leaves out the parent leaves out its brands', () => {
+    const rec = recommend(realCatalog, hiltonBusiness, purchase('Hyatt Place'))
+    expect(rec.ranked[0]?.matchedRule).toBe('everyday-purchases')
+  })
+})
+
 describe('store cards', () => {
   const storeCard = (onlyAt: string[]) =>
     syntheticCard('test-store', [], {

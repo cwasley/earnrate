@@ -1,4 +1,5 @@
 import type { z } from 'zod'
+import type { PaymentMethod } from '../schema/card.ts'
 import type { Network } from '../schema/common.ts'
 
 export type Channel = 'online' | 'in_store'
@@ -9,6 +10,7 @@ export type Purchase = {
   channel: Channel | null // null when unknown
   date: string // YYYY-MM-DD, decides cap periods, chosen-category quarters and rule windows
   country: string // ISO code; anything but 'US' is a purchase abroad
+  payment?: PaymentMethod | null // null or absent when unknown
 }
 
 export type Confidence = 'high' | 'medium' | 'low'
