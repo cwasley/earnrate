@@ -206,7 +206,10 @@ describe('is the annual fee worth it', () => {
   }
   const noFee = catalog.cards.filter(
     (c) =>
-      c.annual_fee === 0 && !c.business && c.applications_closed === undefined,
+      c.annual_fee === 0 &&
+      !c.business &&
+      c.applications_closed === undefined &&
+      c.requires_membership === undefined,
   )
   const first = (wanted: (w: FeeWorth) => boolean) => {
     for (const card of personal) {

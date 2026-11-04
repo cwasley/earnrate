@@ -12,6 +12,7 @@ import {
   updateCardText,
 } from '../src/data/wallet-edit.ts'
 import { searchCards, setupNotes } from '../src/engine/setup.ts'
+import { resolveMerchant } from '../src/merchants/resolve.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 
 const catalog = await loadCatalog()
@@ -570,5 +571,113 @@ describe('opening dates', () => {
         ),
       ),
     ).toMatch(/differ/)
+  })
+})
+
+describe('merchant credits', () => {
+  test('enrollment and credit used are spliced in, replaced in place and recorded, keeping comments', async () => {
+    const file = await walletFile(COMMENTED)
+    const added = await store(file).addCard(
+      { id: 'amex-platinum', enrolled: ['lululemon'] },
+      TODAY,
+    )
+    if (!added.ok) throw new Error(added.error)
+    const updated = await store(file).updateCard(
+      { id: 'amex-platinum', creditUsed: { lululemon: 40 } },
+      TODAY,
+    )
+    if (!updated.ok) throw new Error(updated.error)
+    expect(await readFile(file, 'utf8')).toBe(
+      `${COMMENTED}  - id: amex-platinum\n    enrolled: [lululemon]\n    credit_usage:\n      lululemon: { period: 2026-Q4, used: 40 }\n`,
+    )
+
+    const recorded = await store(file).record(
+      {
+        cardId: 'amex-platinum',
+        merchant: 'Lululemon',
+        amount: 20,
+        date: TODAY,
+        channel: 'in_store',
+      },
+      resolveMerchant(catalog, 'Lululemon', 'in_store'),
+    )
+    if (!recorded.ok) throw new Error(recorded.error)
+    expect(recorded.credit).toMatchObject({ before: 40, after: 60 })
+    expect(await readFile(file, 'utf8')).toBe(
+      `${COMMENTED}  - id: amex-platinum\n    enrolled: [lululemon]\n    credit_usage:\n      lululemon: { period: 2026-Q4, used: 60 }\n    milestone_usage:\n      spend-75k: { period: "2026", spent: 20 }\n`,
+    )
+
+    const unenrolled = await store(file).updateCard(
+      { id: 'amex-platinum', enrolled: [] },
+      TODAY,
+    )
+    if (!unenrolled.ok) throw new Error(unenrolled.error)
+    const wallet = await loadWallet(file)
+    expect(wallet.cards.at(-1)).toMatchObject({
+      enrolled: [],
+      credit_usage: { lululemon: { period: '2026-Q4', used: 60 } },
+    })
+    expect(await readFile(file, 'utf8')).toContain('# paid off monthly')
+  })
+
+  test('a purchase on a credit that is not enrolled uses none of it', async () => {
+    const file = await walletFile(COMMENTED)
+    await store(file).addCard({ id: 'amex-platinum' }, TODAY)
+    const recorded = await store(file).record(
+      {
+        cardId: 'amex-platinum',
+        merchant: 'Lululemon',
+        amount: 20,
+        date: TODAY,
+        channel: 'in_store',
+      },
+      resolveMerchant(catalog, 'Lululemon', 'in_store'),
+    )
+    expect(recorded.ok && recorded.credit).toBeNull()
+    expect(await readFile(file, 'utf8')).not.toContain('credit_usage')
+  })
+
+  test('refuses an unknown credit and more than the credit is worth', async () => {
+    const file = await walletFile(COMMENTED)
+    expect(
+      errorOf(
+        await store(file).addCard(
+          { id: 'amex-platinum', enrolled: ['resy'] },
+          TODAY,
+        ),
+      ),
+    ).toMatch(
+      /'resy' isn't a amex-platinum credit that needs enrolling\. Those are: lululemon\./,
+    )
+    expect(
+      errorOf(
+        await store(file).addCard(
+          { id: 'amex-platinum', creditUsed: { lululemon: 80 } },
+          TODAY,
+        ),
+      ),
+    ).toMatch(/\$75 each quarter, so what's used must be \$0 to \$75/)
+    expect(
+      errorOf(
+        await store(file).updateCard(
+          { id: 'amex-gold', creditUsed: { lululemon: 10 } },
+          TODAY,
+        ),
+      ),
+    ).toMatch(/amex-gold has no credit 'lululemon'\. Its credits are: dunkin\./)
+  })
+
+  test('search_cards lists a card’s credits', () => {
+    const [card] = searchCards(catalog, 'amex platinum', null, TODAY).cards
+    expect(card?.credits).toEqual([
+      {
+        id: 'lululemon',
+        name: 'Lululemon',
+        amount: 75,
+        period: 'quarter',
+        enroll: true,
+        text: '$75 back each quarter at Lululemon, enroll first',
+      },
+    ])
   })
 })

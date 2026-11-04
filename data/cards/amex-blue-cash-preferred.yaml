@@ -80,8 +80,17 @@ rules:
     rate: 3
     geography: us_only
     note: Superstores, supermarkets and warehouse clubs that sell gas are not gas stations.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: disney-streaming
+    match: { merchants: [disney-plus, hulu, espn] }
+    amount: 10
+    period: month
+    enroll: true
+    note: Subscriptions bought at DisneyPlus.com, Hulu.com or Stream.ESPN.com, bundles included; an annual plan gets one $10 credit, in the month it's bought. Not through an app store or a device, or with cable.
 todo:
   - Amex's Select U.S. Streaming list also names AMC+, Britbox, iHeartRadio, Kindle Unlimited, Luminary and MGM+, which earnrate doesn't know as stores yet.
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits", which may or may not take out benefit statement credits; it doesn''t say. The disney-streaming credit is modeled as earning the card''s rate on the whole purchase, with the credit on top.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -129,3 +138,12 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction 2.7% of each transaction after conversion to US dollars'
+  - rule: disney-streaming
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'Basic Card Members can receive up to $10 in statement credits each month'
+  - rule: disney-streaming
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'made on their enrolled Card Account online at U.S. websites DisneyPlus.com, Hulu.com or Stream.ESPN.com'
+  - rule: disney-streaming
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
+    quote: 'Enrollment through American Express is required to receive the benefit.'

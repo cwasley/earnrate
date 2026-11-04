@@ -51,7 +51,8 @@ function cardLines(
       (c.earned === null ? '' : `  ${dollarsAndCents(c.earned)}`) +
       (c.milestoneBonus === null
         ? ''
-        : ` + ${money(c.milestoneBonus.dollars)} spend bonus`)
+        : ` + ${money(c.milestoneBonus.dollars)} spend bonus`) +
+      (c.credit?.dollars ? ` + ${money(c.credit.dollars)} credit` : '')
     const pick =
       c.cardId === bonusPick ? '  ← the pick, for its welcome bonus' : ''
     lines.push(
@@ -94,10 +95,13 @@ export function formatRecommendation(
       top.milestoneBonus === null
         ? ''
         : `, plus a spend bonus worth about ${money(top.milestoneBonus.dollars)}`
+    const credit = top.credit?.dollars
+      ? `, plus ${money(top.credit.dollars)} back from its ${top.credit.name} credit`
+      : ''
     const confidence = rec.decision.confidence
     const why = rec.bonus ? ' for its welcome bonus' : ''
     lines.push(
-      `${style('bold', `Use ${label(top)}${why}: ${pct(top.effectiveReturnPct)} back${earned}${milestone}.`)} ${capitalize(confidence)} confidence.`,
+      `${style('bold', `Use ${label(top)}${why}: ${pct(top.effectiveReturnPct)} back${earned}${milestone}${credit}.`)} ${capitalize(confidence)} confidence.`,
     )
     if (rec.bonus && rec.notes[0]) lines.push(rec.notes[0])
   } else {

@@ -710,3 +710,10 @@ describe('Amex Travel and Airbnb', () => {
     expect(atStadium.ranked.find((r) => r.cardId === 'amex-gold')?.rate).toBe(1)
   })
 })
+
+test('half years run January to June and July to December', () => {
+  expect(periodKey('half_year', '2026-06-30', null)).toBe('2026-H1')
+  expect(periodKey('half_year', '2026-07-01', null)).toBe('2026-H2')
+  expect(periodEnd('half_year', '2026-H1', null)).toBe('2026-06-30')
+  expect(periodEnd('half_year', '2026-H2', null)).toBe('2026-12-31')
+})

@@ -10,7 +10,12 @@ import {
   type MembershipCost,
 } from '../engine/memberships.ts'
 import {
+  capitalize,
   choiceName,
+  CREDIT_GROUP,
+  CREDITS_LEFT_OUT,
+  ENROLL_FIRST,
+  hostname,
   feeText,
   dollarsAndCents,
   pct,
@@ -41,7 +46,23 @@ export function formatExploration(
   if (r.ranked.length === 0) return `No cards match at ${title}.\n`
   const shown = all ? r.ranked : r.ranked.slice(0, TOP_BEST)
   const width = Math.max(...shown.map((e) => e.cardName.length))
-  const lines = [`Best cards for ${title}:`, '']
+  const lines = [
+    ...(r.credits.length === 0
+      ? []
+      : [
+          `${CREDIT_GROUP} at ${title}:`,
+          '',
+          ...r.credits.flatMap((c) => [
+            `- ${c.cardName}: ${c.text}${c.enroll ? ` (${ENROLL_FIRST})` : ''}. ${capitalize(feeText(c))}.`,
+            ...(c.evidence
+              ? [`    "${c.evidence.quote}" (${hostname(c.evidence.url)})`]
+              : []),
+          ]),
+          '',
+        ]),
+    `Best cards for ${title}${r.credits.length === 0 ? '' : ' by rate'}:`,
+    '',
+  ]
   shown.forEach((e: ExploreEntry, i) => {
     const earned = e.earned === null ? '' : `  ${dollarsAndCents(e.earned)}`
     lines.push(
@@ -136,7 +157,7 @@ export function formatCatalogSimulation(
   if (notes.size > 0) lines.push('', ...notes)
   lines.push(
     '',
-    "Assumes each card's best picks, activations done each quarter, and no welcome bonuses.",
+    `Assumes each card's best picks, activations done each quarter, and no welcome bonuses. ${CREDITS_LEFT_OUT}`,
   )
   return `${lines.join('\n')}\n`
 }
@@ -176,7 +197,7 @@ export function formatAdditions(
   if (notes.size > 0) lines.push('', ...notes)
   lines.push(
     '',
-    'Assumes your picks carry over, rotating categories get activated, and caps start fresh. Annual fees are counted in full: statement credits and perks that offset them are left out. Each kind of spending lists the card that earns the most on it over the whole year, so a one-quarter bonus may not show.',
+    `Assumes your picks carry over, rotating categories get activated, and caps start fresh. Annual fees are counted in full: statement credits and perks that offset them are left out. ${CREDITS_LEFT_OUT} Each kind of spending lists the card that earns the most on it over the whole year, so a one-quarter bonus may not show.`,
   )
   return `${lines.join('\n')}\n`
 }

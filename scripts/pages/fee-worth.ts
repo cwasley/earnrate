@@ -33,7 +33,12 @@ export type FeeWorth = {
 const scaled = (lines: ResolvedLine[], monthly: number) =>
   lines.map((l) => ({ ...l, monthly: l.monthly * monthly }))
 
-export function feeWorthKit(catalog: Catalog, today: string) {
+// `valuations` overrides point values, for the "if you transfer points" line.
+export function feeWorthKit(
+  catalog: Catalog,
+  today: string,
+  valuations: Record<string, number> = {},
+) {
   const typical = resolveSpendLines(catalog, typicalSpend(catalog))
   const cache = new Map<string, Simulation>()
 
@@ -46,14 +51,17 @@ export function feeWorthKit(catalog: Catalog, today: string) {
       includeClosed: false,
     },
     memberships: [],
-    valuations: {},
+    valuations,
     start: today,
   })
 
+  // Only cards anyone can get: one that needs a membership (a Verizon
+  // account, a credit union, Costco) isn't the no-fee alternative for most.
   const noFee = (card: Card) =>
     catalog.cards.filter(
       (c) =>
         c.annual_fee === 0 &&
+        c.requires_membership === undefined &&
         matchesFilters(c, { ...options(card).filters, noAnnualFee: true }),
     )
 
@@ -148,7 +156,11 @@ const lineWords = (l: ResolvedLine) =>
 
 const share = (l: ResolvedLine) => `${num(Math.round(l.monthly * 100))}%`
 
-export function feeWorthSection(ctx: PageContext, w: FeeWorth): string {
+export function feeWorthSection(
+  ctx: PageContext,
+  w: FeeWorth,
+  transfer?: { worth: FeeWorth | null; cents: number | undefined },
+): string {
   const { card } = w
   const name = ctx.shortName(card.id)
   const currency = ctx.catalog.currencies.find((c) => c.id === card.currency)
@@ -156,14 +168,21 @@ export function feeWorthSection(ctx: PageContext, w: FeeWorth): string {
     card.currency === 'cash'
       ? 'cash back at face value'
       : `${currency?.name ?? card.currency} at ${num(currency?.value_cents ?? 1)}¢ each, earnrate's default`
+  // The same math with points transferred to airlines and hotels.
+  const transferLine =
+    transfer === undefined || transfer.cents === undefined
+      ? ''
+      : transfer.worth?.breakEven == null
+        ? ` If you transfer ${esc(currency?.name ?? card.currency)} to airlines and hotels and count them at ${esc(num(transfer.cents))}¢ each, it still doesn't come out ahead within ${esc(wholeDollars(MAX_MONTHLY))} a month.`
+        : ` If you transfer ${esc(currency?.name ?? card.currency)} to airlines and hotels and count them at ${esc(num(transfer.cents))}¢ each, it comes out ahead from about <strong>${esc(wholeDollars(transfer.worth.breakEven))} a month</strong>.`
   const mix = listed(w.lines.map((l) => `${share(l)} ${lineWords(l)}`))
   const where = w.everywhere
     ? 'spending'
     : `spending on ${listed(w.lines.map(lineWords))}`
   const verdict =
     w.breakEven === null
-      ? `At these values the ${esc(name)} doesn't earn more than the best no-fee card after its ${esc(wholeDollars(card.annual_fee ?? 0))} fee, at any amount up to ${esc(wholeDollars(MAX_MONTHLY))} a month of ${esc(where)}.`
-      : `At these values the ${esc(name)} earns more than the best no-fee card, after its ${esc(wholeDollars(card.annual_fee ?? 0))} fee, from about <strong>${esc(wholeDollars(w.breakEven))} a month</strong> of ${esc(where)}${w.stopsAt === null ? '' : `, up to about ${esc(wholeDollars(w.stopsAt))} a month (past that, a spending cap ends its lead)`}.`
+      ? `On earning alone, the ${esc(name)} doesn't earn more than the best no-fee card after its ${esc(wholeDollars(card.annual_fee ?? 0))} fee, at any amount up to ${esc(wholeDollars(MAX_MONTHLY))} a month of ${esc(where)}.`
+      : `On earning alone, the ${esc(name)} earns more than the best no-fee card, after its ${esc(wholeDollars(card.annual_fee ?? 0))} fee, from about <strong>${esc(wholeDollars(w.breakEven))} a month</strong> of ${esc(where)}${w.stopsAt === null ? '' : `, up to about ${esc(wholeDollars(w.stopsAt))} a month (past that, a spending cap ends its lead)`}.`
   const rows = SHOWN_AMOUNTS.map((m) => {
     const r = w.at(m)
     const best = r.best.cards[0]?.cardId ?? ''
@@ -175,7 +194,7 @@ export function feeWorthSection(ctx: PageContext, w: FeeWorth): string {
       : null,
   ].filter((x) => x !== null)
   return `<h2 id="annual-fee">Is the annual fee worth it?</h2>
-      <p>${verdict}</p>
+      <p>${verdict}${transferLine} This counts only what the card earns: statement credits, lounge access and other benefits aren't included.</p>
       <table class="numbers"><thead><tr><th>A month</th><th>${esc(name)}, a year after fees</th><th>Best no-fee card</th></tr></thead><tbody>${rows}</tbody></table>
-      <p class="muted">Assumes ${esc(value)}; ${esc(w.everywhere ? `no typical category earns it a bonus, so the whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`)} (from earnrate's typical household: ${esc(TYPICAL_MONTHLY_SPEND.map((t) => `${t.what} ${money(t.monthly)}`).join(', '))}); the same spending every month for a year; the regular annual fee${extras.length > 0 ? `, ${esc(listed(extras))}` : ''}; no welcome bonus, first-year rate or credits. The no-fee side is the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards on the same spending, each with its best picks. Other spending, earned at each card's other rates, isn't included.</p>`
+      <p class="muted">Assumes ${esc(value)}; ${esc(w.everywhere ? `no typical category earns it a bonus, so the whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`)} (from earnrate's typical household: ${esc(TYPICAL_MONTHLY_SPEND.map((t) => `${t.what} ${money(t.monthly)}`).join(', '))}); the same spending every month for a year; the regular annual fee${extras.length > 0 ? `, ${esc(listed(extras))}` : ''}; no welcome bonus, first-year rate or credits. The no-fee side is the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards that need no membership, on the same spending, each with its best picks. Other spending, earned at each card's other rates, isn't included.</p>`
 }

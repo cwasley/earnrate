@@ -1,4 +1,4 @@
-import type { Card, Milestone } from '../schema/card.ts'
+import type { Card, Credit, Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { isActivated, pickedCategories } from './evaluate.ts'
@@ -6,8 +6,8 @@ import { membership, membershipName, sameGroup } from './memberships.ts'
 import { milestoneWhat } from './milestones.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap, rotationGapText } from './rotation.ts'
-import { introWhat } from './rule-text.ts'
-import { idList, listed } from './text.ts'
+import { creditName, introWhat } from './rule-text.ts'
+import { creditBack, ENROLL_FIRST, idList, listed } from './text.ts'
 
 export type CardChoiceInfo = {
   id: string
@@ -45,6 +45,15 @@ export type CardInfo = {
   }[]
   // Rates for a stretch after opening, which need the opening date.
   introRates: { id: string; days: number; text: string }[]
+  // Merchant statement credits: "$75 back each quarter at Lululemon".
+  credits: {
+    id: string
+    name: string
+    amount: number
+    period: Credit['period']
+    enroll: boolean
+    text: string
+  }[]
 }
 
 export type CardSearch = {
@@ -200,6 +209,17 @@ export function cardInfo(
       days: i.days,
       text: introWhat(catalog, card, i),
     })),
+    credits: card.credits.map((c) => {
+      const name = creditName(catalog, c)
+      return {
+        id: c.id,
+        name,
+        amount: c.amount,
+        period: c.period,
+        enroll: c.enroll === true,
+        text: `${creditBack(c)} at ${name}${c.enroll ? `, ${ENROLL_FIRST}` : ''}`,
+      }
+    }),
   }
 }
 

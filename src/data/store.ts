@@ -173,7 +173,12 @@ export class JsonWalletStore implements AccountStore {
       if (!wallet.cards.some((c) => c.id === purchase.cardId))
         return failed(`${purchase.cardId} isn't in the wallet.`)
       const booked = bookPurchase(this.catalog, wallet, purchase, merchant)
-      if (booked.cap || booked.bonus || booked.milestones.length > 0)
+      if (
+        booked.cap ||
+        booked.bonus ||
+        booked.milestones.length > 0 ||
+        booked.credit
+      )
         await this.backend.write(JSON.stringify(booked.wallet))
       return { ok: true, ...booked }
     })

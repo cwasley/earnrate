@@ -30,8 +30,8 @@ export const PeriodKey = z.preprocess(
   z
     .string()
     .regex(
-      /^\d{4}(-Q[1-4]|-(0[1-9]|1[0-2]))?$/,
-      'expected a period like 2026, 2026-Q4 or 2026-10',
+      /^\d{4}(-Q[1-4]|-H[12]|-(0[1-9]|1[0-2]))?$/,
+      'expected a period like 2026, 2026-Q4, 2026-H2 or 2026-10',
     ),
 )
 

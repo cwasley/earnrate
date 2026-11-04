@@ -124,6 +124,18 @@ const cardFields = {
     .describe(
       'Dollars already spent on the card this year, for its spend milestones (bonuses after a yearly spending total, as search_cards lists them): milestone id → dollars, e.g. {"spend-15k": 9000}. Every purchase on the card counts, so give each milestone the same total. Ask; recorded purchases add to it from then on.',
     ),
+  enrolled: z
+    .array(z.string())
+    .optional()
+    .describe(
+      'Merchant credit ids the user has enrolled in with the issuer (search_cards and list_wallet list each card\'s credits, e.g. "lululemon" on Amex Platinum). A credit that needs enrolling counts in answers only once it\'s here. Replaces the current list. Ask; never assume.',
+    ),
+  creditUsed: z
+    .record(z.string(), z.number().nonnegative())
+    .optional()
+    .describe(
+      'Dollars of a merchant credit already received this period: credit id → dollars, e.g. {"lululemon": 40}. Ask; recorded purchases add to it from then on.',
+    ),
   bonus: z
     .object({
       opened: IsoDate.describe('The day the account opened, YYYY-MM-DD.'),

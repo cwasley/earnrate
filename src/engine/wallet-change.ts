@@ -15,7 +15,7 @@ import {
   setupNotes,
   type SetupNote,
 } from './setup.ts'
-import { idList } from './text.ts'
+import { CREDIT_PERIODS, idList, money } from './text.ts'
 
 // Node-free: earnrate.dev runs these on the wallet it keeps in the browser.
 
@@ -32,6 +32,10 @@ export type CardInput = {
   capSpent?: Record<string, number>
   // Spend milestone id → dollars already spent on the card this period.
   milestoneSpent?: Record<string, number>
+  // Merchant credit ids the cardholder has enrolled in; replaces the list.
+  enrolled?: string[]
+  // Credit id → dollars of that credit already received this period.
+  creditUsed?: Record<string, number>
   // A welcome bonus in progress; null stops tracking it. Spend and deadline
   // default to the card's published offer.
   bonus?: {
@@ -59,6 +63,8 @@ export type CardFields = {
   activated?: string[]
   cap_usage?: Record<string, { period: string; spent: number }>
   milestone_usage?: Record<string, { period: string; spent: number }>
+  enrolled?: string[]
+  credit_usage?: Record<string, { period: string; used: number }>
   bonus?: BonusFields | null // null removes it
 }
 
@@ -246,6 +252,48 @@ export function cardFields(
     }
     fields.milestone_usage = usage
   }
+  if (input.enrolled !== undefined) {
+    const needing = card.credits
+      .filter((c) => c.enroll === true)
+      .map((c) => c.id)
+    for (const id of input.enrolled) {
+      if (!needing.includes(id))
+        problems.push(
+          needing.length > 0
+            ? `'${id}' isn't a ${card.id} credit that needs enrolling. Those are: ${idList(needing)}.`
+            : `${card.id} has no credits that need enrolling.`,
+        )
+    }
+    fields.enrolled = [...new Set(input.enrolled)]
+  }
+  if (input.creditUsed !== undefined) {
+    const usage = { ...held?.credit_usage }
+    const anniversary = fields.anniversary ?? held?.anniversary ?? null
+    for (const [id, used] of Object.entries(input.creditUsed)) {
+      const credit = card.credits.find((c) => c.id === id)
+      if (!credit) {
+        problems.push(
+          card.credits.length > 0
+            ? `${card.id} has no credit '${id}'. Its credits are: ${idList(card.credits.map((c) => c.id))}.`
+            : `${card.id} has no merchant credits.`,
+        )
+        continue
+      }
+      if (!(used >= 0 && used <= credit.amount))
+        problems.push(
+          `The '${id}' credit is ${money(credit.amount)} ${CREDIT_PERIODS[credit.period]}, so what's used must be $0 to ${money(credit.amount)}.`,
+        )
+      const period = periodKey(credit.period, today, anniversary)
+      if (period === null) {
+        problems.push(
+          `The '${id}' credit resets on the card's anniversary; give the anniversary (MM-DD) too.`,
+        )
+        continue
+      }
+      usage[id] = { period, used }
+    }
+    fields.credit_usage = usage
+  }
   if (input.bonus === null) fields.bonus = null
   else if (input.bonus !== undefined) {
     const b = input.bonus
@@ -325,6 +373,8 @@ const withFields = (
   ...(f.milestone_usage === undefined
     ? {}
     : { milestone_usage: f.milestone_usage }),
+  ...(f.enrolled === undefined ? {} : { enrolled: f.enrolled }),
+  ...(f.credit_usage === undefined ? {} : { credit_usage: f.credit_usage }),
   ...(f.bonus ? { bonus: f.bonus } : {}),
 })
 

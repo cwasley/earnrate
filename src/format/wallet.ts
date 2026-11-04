@@ -2,6 +2,7 @@ import type { ChecklistItem } from '../engine/checklist.ts'
 import type {
   BonusBooking,
   CapBooking,
+  CreditBooking,
   MilestoneBooking,
 } from '../engine/record.ts'
 import {
@@ -11,6 +12,7 @@ import {
   money,
   NETWORK_NAMES,
   periodPhrase,
+  roundCents,
   shortDate,
 } from '../engine/text.ts'
 import type { WalletSummary } from '../engine/wallet-summary.ts'
@@ -63,6 +65,8 @@ export function formatWalletSummary(summary: WalletSummary): string {
       )
     for (const m of c.milestones)
       lines.push(`  Spend bonus (${m.id}): ${m.text}`)
+    for (const credit of c.credits)
+      lines.push(`  Credit (${credit.id}): ${credit.text}`)
     if (c.anniversary !== null)
       lines.push(`  Account anniversary: ${c.anniversary}.`)
     if (c.intro?.state === 'active' && c.intro.until !== null)
@@ -99,8 +103,13 @@ export function formatBooking(
   cap: CapBooking | null,
   bonus: BonusBooking | null,
   milestones: MilestoneBooking[] = [],
+  credit: CreditBooking | null = null,
 ): string {
   const messages: string[] = []
+  if (credit)
+    messages.push(
+      `Used ${money(roundCents(credit.after - credit.before))} of ${cardId}'s ${credit.name} credit: ${money(credit.after)} of ${money(credit.amount)} ${periodPhrase(credit.periodKind, credit.period)}, ${money(roundCents(Math.max(0, credit.amount - credit.after)))} left.`,
+    )
   if (cap) {
     const left = Math.max(0, cap.capAmount - cap.after)
     messages.push(

@@ -24,12 +24,14 @@ import {
   type MilestoneHit,
 } from './milestones.ts'
 import { daysBetween } from './periods.ts'
+import { creditAt, creditDollars, type CreditState } from './credits.ts'
 import { ruleWhat } from './rule-text.ts'
 import { rotationGap } from './rotation.ts'
 import { EPSILON, isClose } from './compare.ts'
 import {
   CAP_ADJECTIVES,
   categoryPhrase,
+  creditAnswerText,
   codesAs,
   currencyLabel,
   currencyName,
@@ -88,7 +90,12 @@ type Entry = {
   // A milestone's points count toward the ranking but are shown on their own.
   rateReturnPct: number
   fee: number // foreign transaction fee percent on this purchase, else 0
-  effectiveReturnPct: number // net of `fee`
+  // The card's merchant credit here, and what it adds to this purchase's
+  // return: its dollars as a percent of the amount (0 without one).
+  credit: CreditState | null
+  creditDollars: number | null
+  creditPct: number
+  effectiveReturnPct: number // net of `fee`, with `creditPct`
   upside: number // return at the top of the currency's value range
   // With no opening date on file: what an intro rate would make this
   // purchase earn on a new account.
@@ -125,12 +132,18 @@ function compareEntries(a: Entry, b: Entry): number {
   return a.card.id.localeCompare(b.card.id)
 }
 
+export type RecommendOptions = {
+  // Simulations and the cheat sheet rank by rates alone.
+  credits?: boolean
+}
+
 function rankEntries(
   catalog: Catalog,
   wallet: Wallet,
   purchase: Purchase,
   merchant: MerchantResolution,
   category: string,
+  options: RecommendOptions = {},
 ): { entries: Entry[]; excluded: ExcludedCard[] } {
   const ctx = purchaseContext(catalog, wallet, merchant, category, purchase)
   const entries: Entry[] = []
@@ -192,6 +205,21 @@ function rankEntries(
           }
         : null
     const paid = paymentUpgrade(card, held, ctx, evaluation.best.rate)
+    const credit =
+      options.credits === false
+        ? null
+        : creditAt(
+            catalog,
+            card,
+            held,
+            { ...merchant, category },
+            purchase.date,
+          )
+    const back = credit ? creditDollars(credit, purchase.amount) : null
+    const creditPct =
+      back !== null && back > 0 && purchase.amount
+        ? (back / purchase.amount) * 100
+        : 0
     entries.push({
       card,
       held,
@@ -200,11 +228,16 @@ function rankEntries(
       milestones,
       perDollar,
       fee,
-      effectiveReturnPct: perDollar * valuation.centsPerUnit - fee,
+      credit,
+      creditDollars: back,
+      creditPct,
+      effectiveReturnPct: perDollar * valuation.centsPerUnit - fee + creditPct,
       rateReturnPct: evaluation.best.rate * valuation.centsPerUnit - fee,
       upside:
-        perDollar * (valuation.range?.[1] ?? valuation.centsPerUnit) - fee,
-      ifNew,
+        perDollar * (valuation.range?.[1] ?? valuation.centsPerUnit) -
+        fee +
+        creditPct,
+      ifNew: ifNew && { ...ifNew, returnPct: ifNew.returnPct + creditPct },
       ifPaid: paid
         ? {
             payment: paid.payment,
@@ -212,7 +245,8 @@ function rankEntries(
             returnPct:
               (perDollar - evaluation.best.rate + paid.rate) *
                 valuation.centsPerUnit -
-              fee,
+              fee +
+              creditPct,
           }
         : null,
     })
@@ -261,6 +295,8 @@ function reasoningFor(
 
   for (const hit of entry.milestones)
     lines.push(reachedText(card, hit, valuation.centsPerUnit))
+  if (entry.credit)
+    lines.push(creditAnswerText(entry.credit, entry.creditDollars))
 
   if (valuation.pooledFrom !== null) {
     const partners = card.pools_into?.when_wallet_has ?? []
@@ -394,6 +430,16 @@ function toRanked(
                 100,
             ),
           },
+    credit: entry.credit && {
+      id: entry.credit.credit.id,
+      name: entry.credit.name,
+      amount: entry.credit.amount,
+      period: entry.credit.period,
+      enrolled: entry.credit.enrolled,
+      left: entry.credit.left,
+      until: entry.credit.until,
+      dollars: entry.creditDollars,
+    },
     capped: evaluation.best.cap !== null,
     reasoning: reasoningFor(catalog, wallet, entry, purchase.amount),
     warnings: warningsFor(catalog, entry, purchase),
@@ -444,9 +490,11 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
     const wRate = winner.perDollar
     const oRate = other.perDollar
 
-    // Net return is rate × value − fee, so each flip point adds the fee back.
+    // Net return is rate × value − fee + credit, so each flip point adds the
+    // fee back and takes the credit off.
     if (w.range && wRate > 0) {
-      const threshold = (other.effectiveReturnPct + winner.fee) / wRate
+      const threshold =
+        (other.effectiveReturnPct + winner.fee - winner.creditPct) / wRate
       if (threshold < w.centsPerUnit && threshold >= w.range[0]) {
         consider(
           (w.centsPerUnit - threshold) / w.centsPerUnit,
@@ -455,7 +503,8 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
       }
     }
     if (o.range && oRate > 0) {
-      const threshold = (winner.effectiveReturnPct + other.fee) / oRate
+      const threshold =
+        (winner.effectiveReturnPct + other.fee - other.creditPct) / oRate
       if (threshold > o.centsPerUnit && threshold <= o.range[1]) {
         consider(
           (threshold - o.centsPerUnit) / o.centsPerUnit,
@@ -579,6 +628,7 @@ export function recommend(
     purchase.merchant,
     purchase.channel,
   ),
+  options: RecommendOptions = {},
 ): Recommendation {
   const { entries, excluded } = rankEntries(
     catalog,
@@ -586,6 +636,7 @@ export function recommend(
     purchase,
     merchant,
     merchant.category,
+    options,
   )
   const ranked = entries.map((e) => toRanked(catalog, wallet, e, purchase))
   const winner = entries[0]
@@ -630,6 +681,7 @@ export function recommend(
         purchase,
         merchant,
         category,
+        options,
       ).entries
       const alt = alts[0]
       if (!alt || !winner) continue
@@ -672,6 +724,7 @@ export function recommend(
           { ...purchase, channel: 'online' },
           online,
           online.category,
+          options,
         ).entries[0]
       : undefined
     if (alt)
@@ -705,8 +758,14 @@ export function recommend(
   for (const id of merchant.bookedVia) {
     const via = resolveMerchantById(catalog, id, purchase.channel)
     if (!via || !winner) continue
-    const alt = rankEntries(catalog, wallet, purchase, via, via.category)
-      .entries[0]
+    const alt = rankEntries(
+      catalog,
+      wallet,
+      purchase,
+      via,
+      via.category,
+      options,
+    ).entries[0]
     if (alt && alt.effectiveReturnPct > winner.effectiveReturnPct + EPSILON) {
       notes.push(
         `If you book it as ${via.resolvedName}, ${displayName(alt)} earns ${pct(alt.rateReturnPct)}.`,
@@ -749,8 +808,11 @@ export function recommend(
         ? null
         : roundCents(
             first.earned +
-              (first.milestoneBonus?.dollars ?? 0) -
-              (top.earned + (top.milestoneBonus?.dollars ?? 0)),
+              (first.milestoneBonus?.dollars ?? 0) +
+              (first.credit?.dollars ?? 0) -
+              (top.earned +
+                (top.milestoneBonus?.dollars ?? 0) +
+                (top.credit?.dollars ?? 0)),
           )
     bonusResult = {
       cardId: top.cardId,

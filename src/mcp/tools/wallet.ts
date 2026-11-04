@@ -84,6 +84,14 @@ function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
     out.push(
       `${money(spent)} spent toward ${id} this ${card?.milestones.find((m) => m.id === id)?.period === 'cardmember_year' ? 'cardmember year' : 'year'}`,
     )
+  if (args.enrolled !== undefined)
+    out.push(
+      args.enrolled.length === 0
+        ? 'no credits enrolled'
+        : `enrolled in: ${args.enrolled.join(', ')}`,
+    )
+  for (const [id, used] of Object.entries(args.creditUsed ?? {}))
+    out.push(`${money(used)} of the ${id} credit used this period`)
   if (args.bonus === null) out.push('welcome bonus no longer tracked')
   else if (args.bonus !== undefined)
     out.push(
@@ -105,7 +113,7 @@ export function registerWalletTools(
     'list_wallet',
     {
       title: 'List wallet',
-      description: `Starts with a to-do list for the user's cards right now (bonuses to activate and their deadlines, categories to pick or confirm, caps nearly used up, welcome bonuses to finish and the weekly pace, yearly spend bonuses at least 75% of the way); use it when the user asks what to do with their cards this quarter or what they're forgetting. Then lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, progress toward yearly spend bonuses, which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
+      description: `Starts with a to-do list for the user's cards right now (bonuses to activate and their deadlines, categories to pick or confirm, caps nearly used up, welcome bonuses to finish and the weekly pace, yearly spend bonuses at least 75% of the way, merchant credits to enroll in or use before they reset); use it when the user asks what to do with their cards this quarter or what they're forgetting. Then lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, progress toward yearly spend bonuses, merchant statement credits (enrolled or not, and what's left this period), which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
       outputSchema: WalletSummarySchema,
       annotations: {
         title: 'List wallet',
@@ -151,7 +159,7 @@ export function registerWalletTools(
     'record_purchase',
     {
       title: 'Record a purchase',
-      description: `Records a purchase the user has already made, so spending caps, welcome-bonus progress and yearly spend milestones stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap, no open welcome bonus and no spend milestone are acknowledged and nothing is written. For a merchant earnrate doesn't recognize it asks for category first, so caps aren't missed. ${ctx.walletUse}`,
+      description: `Records a purchase the user has already made, so spending caps, welcome-bonus progress, yearly spend milestones and merchant credits used stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap, no open welcome bonus, no spend milestone and no enrolled merchant credit are acknowledged and nothing is written. For a merchant earnrate doesn't recognize it asks for category first, so caps aren't missed. ${ctx.walletUse}`,
       inputSchema: z.object({
         cardId: z
           .string()
@@ -199,22 +207,24 @@ export function registerWalletTools(
         )
       const result = await store.record(purchase, resolved.merchant)
       if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
-      const { cap: booking, bonus, milestones } = result
+      const { cap: booking, bonus, milestones, credit } = result
       const output =
-        booking || bonus || milestones.length > 0
+        booking || bonus || milestones.length > 0 || credit
           ? {
               recorded: true,
               booking,
               bonus,
               milestones,
-              message: `${formatBooking(amount, cardId, booking, bonus, milestones)} Saved in ${ctx.walletName}.`,
+              credit,
+              message: `${formatBooking(amount, cardId, booking, bonus, milestones, credit)} Saved in ${ctx.walletName}.`,
             }
           : {
               recorded: false,
               booking: null,
               bonus: null,
               milestones: [],
-              message: `Nothing to track: ${cardId} has no spending cap, open welcome bonus or spend milestone for this purchase, so the wallet wasn't changed.`,
+              credit: null,
+              message: `Nothing to track: ${cardId} has no spending cap, open welcome bonus, spend milestone or enrolled merchant credit for this purchase, so the wallet wasn't changed.`,
             }
       return {
         content: [
@@ -261,7 +271,7 @@ export function registerWalletTools(
     'update_card',
     {
       title: 'Update a card',
-      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, opening date (optional; for first-year rates), activated categories, cap spending so far (capSpent), spending this year toward its spend milestones (milestoneSpent) or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
+      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, opening date (optional; for first-year rates), activated categories, cap spending so far (capSpent), spending this year toward its spend milestones (milestoneSpent), merchant credits enrolled in (enrolled) and used this period (creditUsed), or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
       inputSchema: CardChange,
       outputSchema: WalletChangeSchema,
       annotations: {

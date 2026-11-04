@@ -59,6 +59,16 @@ rules:
     note: Prepaid Airbnb stays booked through Amex Travel. Add-on fees such as pet or pool fees don't count.
 # Not modeled on purpose: the Venue Collection benefit (10% back at select
 # stadiums and arenas, with enrollment) is a statement credit, not points.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: dunkin
+    match: { merchants: [dunkin] }
+    amount: 7
+    period: month
+    enroll: true
+    note: "At U.S. Dunkin' locations, bought directly: not through a delivery app or caterer, or at a Dunkin' inside an airport or gas station. Not gift cards."
+todo:
+  - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits", which may or may not take out benefit statement credits; it doesn''t say. The dunkin credit is modeled as earning the card''s rate on the whole purchase, with the credit on top.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -118,3 +128,12 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'
+  - rule: dunkin
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: 'Enrolled Basic Card Members can earn up to $7 in statement credits per month'
+  - rule: dunkin
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms
+    quote: "Valid at Dunkin' locations in the U.S. that accept American Express® Cards."
+  - rule: dunkin
+    url: https://www.americanexpress.com/us/credit-cards/card/gold-card/
+    quote: "at U.S. Dunkin' locations. Enrollment required."

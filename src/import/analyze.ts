@@ -289,10 +289,13 @@ export function analyzeStatement(
       date: line.date,
       country: 'US',
     }
-    const used = recommend(catalog, actual, purchase, merchant).ranked.find(
-      (r) => r.cardId === cardId,
-    )
-    const top = recommend(catalog, simulated, purchase, merchant).ranked[0]
+    // Past statements don't say which credits were used, so they're left out.
+    const used = recommend(catalog, actual, purchase, merchant, {
+      credits: false,
+    }).ranked.find((r) => r.cardId === cardId)
+    const top = recommend(catalog, simulated, purchase, merchant, {
+      credits: false,
+    }).ranked[0]
     if (!used || !top) continue
     earned += used.earned ?? 0
     best += top.earned ?? 0
