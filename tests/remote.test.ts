@@ -694,7 +694,10 @@ async function chatgptSignIn(
   const page = await shown.text()
   expect(page).toContain('<strong>ChatGPT</strong>')
   expect(page).toContain('Reconnecting an app?')
-  if (registration === 'cimd') expect(page).toContain('chatgpt.com')
+  if (registration === 'cimd') {
+    expect(page).toContain('published by <strong>chatgpt.com</strong>')
+    expect(page).not.toContain('If someone sent you this link')
+  } else expect(page).toContain('If someone sent you this link')
   const handle = unescape(/name="handle" value="([^"]+)"/.exec(page)?.[1] ?? '')
   const cookie = shown.headers
     .getSetCookie()
@@ -1421,6 +1424,9 @@ describe('anonymous saved wallets', () => {
           expect(page).toContain(`<script>${PAGE_SCRIPT}</script>`)
           expect(page).toContain('&#60;script&#62;')
           expect(page).toContain("isn't verified")
+          expect(page).toContain(
+            'Continue only if you just started connecting earnrate from <strong>claude.ai</strong>. If someone sent you this link, close this page.',
+          )
           throw new Error('stop')
         },
         '<script>alert(1)</script>',

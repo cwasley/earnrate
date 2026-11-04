@@ -88,10 +88,14 @@ function whoIsAsking(client: ClientFacts): string {
   const origin = client.clientDomain
     ? `It's published by <strong>${escape(client.clientDomain)}</strong>.`
     : "This app registered itself, so its name isn't verified."
-  const loopback = client.redirectIsLoopback
+  // Anyone can register an app with any name, so an unverified one could be
+  // a link someone sent to get a recovery code typed in.
+  const warning = client.redirectIsLoopback
     ? '<p class="warn">This sends access to an app on your computer. Continue only if you just started connecting from it.</p>'
-    : ''
-  return `<p><strong>${name}</strong> wants to use a saved earnrate wallet. ${origin} Access goes to <strong>${escape(client.redirectHost)}</strong>.</p>${loopback}`
+    : client.clientDomain
+      ? ''
+      : `<p class="warn">Continue only if you just started connecting earnrate from <strong>${escape(client.redirectHost)}</strong>. If someone sent you this link, close this page.</p>`
+  return `<p><strong>${name}</strong> wants to use a saved earnrate wallet. ${origin} Access goes to <strong>${escape(client.redirectHost)}</strong>.</p>${warning}`
 }
 
 export function choosePage(
