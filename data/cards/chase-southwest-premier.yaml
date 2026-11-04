@@ -1,6 +1,7 @@
 id: chase-southwest-premier
 name: Southwest Rapid Rewards Premier Credit Card
 short_name: Southwest Premier
+color: '#304cb2'
 issuer: chase
 network: visa
 currency: southwest-rapid-rewards

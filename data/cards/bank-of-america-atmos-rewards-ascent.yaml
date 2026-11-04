@@ -1,5 +1,6 @@
 id: bank-of-america-atmos-rewards-ascent
 name: Atmos Rewards Ascent Visa Signature Credit Card
+color: '#1b3a5c'
 issuer: bank-of-america
 network: visa
 currency: atmos-points

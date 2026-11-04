@@ -1,6 +1,7 @@
 id: amex-delta-skymiles-reserve
 name: Delta SkyMiles Reserve American Express Card
 short_name: Delta SkyMiles Reserve
+color: '#2b2d33'
 issuer: amex
 network: amex
 currency: delta-skymiles

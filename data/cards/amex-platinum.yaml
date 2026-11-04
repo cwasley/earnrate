@@ -1,5 +1,6 @@
 id: amex-platinum
 name: The Platinum Card from American Express
+color: '#c7c9cc'
 issuer: amex
 network: amex
 currency: MR

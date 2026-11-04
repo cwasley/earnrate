@@ -1,6 +1,7 @@
 id: chase-southwest-priority
 name: Southwest Rapid Rewards Priority Credit Card
 short_name: Southwest Priority
+color: '#1e2f5e'
 issuer: chase
 network: visa
 currency: southwest-rapid-rewards

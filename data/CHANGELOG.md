@@ -2,8 +2,7 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
-## 2026.11.04.3
-
+## 2026.11.04.4
 The merchant directory grows from 399 to 640 entries (241 added), so each gets its own `/best/<store>` page. Names come from [NRF's 2025 Top 100 Retailers](https://nrf.com/research-insights/top-retailers/top-100-retailers/top-100-retailers-2025-list), the issuers' own merchant lists below, and well-known regional and national chains in each category; no merchant data was copied from another directory. No card rules or rates changed.
 
 Categories follow the issuers' definitions, read 2026-11-04: [Chase's rewards category FAQ](https://www.chase.com/personal/credit-cards/rewards-category-faq), [Amex's retail category terms](https://www.americanexpress.com/us/content/rewards-info/retail.html) and [U.S. Bank's Cash+ sample merchants](https://cashplus.usbank.com/cash-plus/samplemerchants). Merchants that code unexpectedly are in `overrides.yaml` with a note.
@@ -44,6 +43,9 @@ Amazon Prime Video moves to `overrides.yaml`: "Amazon Prime Video" used to match
 | Furniture                                     | American Furniture Warehouse, Room & Board, RC Willey, Nebraska Furniture Mart, Value City Furniture, Mattress Firm                                                                                                                                                                                                                                                                | U.S. Bank's furniture list (all but Mattress Firm; it lists Mattress Warehouse)                                                                                               |
 | Sporting goods                                | Orvis, Golf Galaxy, Sportsman's Warehouse, Play It Again Sports, Dunham's Sports                                                                                                                                                                                                                                                                                                   | U.S. Bank's sporting goods list (all but Dunham's)                                                                                                                            |
 | Everything else, online retail on their sites | O'Reilly Auto Parts, Advance Auto Parts, NAPA Auto Parts, Discount Tire, Bath & Body Works, Barnes & Noble, Guitar Center, DSW, Pet Supplies Plus (overrides)                                                                                                                                                                                                                      | Amex's online retail: "U.S. retail merchant that sells physical goods", including auto, book, footwear and pet stores                                                         |
+
+## 2026.11.04.3
+A `color` for every card (its card face's main color, roughly) and every issuer, for earnrate's own drawings of cards on earnrate.dev; never the issuer's card art. Display only; no rates changed.
 
 ## 2026.11.04.2
 

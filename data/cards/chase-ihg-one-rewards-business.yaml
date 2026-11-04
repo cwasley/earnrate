@@ -1,5 +1,6 @@
 id: chase-ihg-one-rewards-business
 name: IHG One Rewards Business Credit Card
+color: '#2c2c2c'
 issuer: chase
 network: mastercard
 currency: ihg-points

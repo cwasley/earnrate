@@ -1,6 +1,7 @@
 id: citi-aadvantage-executive
 name: Citi / AAdvantage Executive World Legend Mastercard
 short_name: AAdvantage Executive
+color: '#1e1e22'
 issuer: citi
 network: mastercard
 currency: aadvantage-miles

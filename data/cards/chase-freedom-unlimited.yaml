@@ -1,5 +1,6 @@
 id: chase-freedom-unlimited
 name: Chase Freedom Unlimited
+color: '#2a5fa8'
 issuer: chase
 network: visa
 currency: cash
