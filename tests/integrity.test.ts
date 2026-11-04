@@ -232,6 +232,39 @@ describe('catalogProblems', () => {
     ])
     expect(catalogProblems(c)).toEqual([
       "seed: 'costco' names both costco and costco-gas",
+      "merchant costco: 'Costco' resolves to costco-gas",
+    ])
+  })
+
+  test('catches an override whose name starts a seed merchant’s name', () => {
+    const c = catalog()
+    c.merchants.overrides = MerchantsFileSchema.parse([
+      { id: 'amazon', name: 'Amazon', category: 'other' },
+    ])
+    c.merchants.seed.push(
+      ...MerchantsFileSchema.parse([
+        { id: 'amazon-music', name: 'Amazon Music', category: 'streaming' },
+      ]),
+    )
+    expect(catalogProblems(c)).toEqual([
+      "merchant amazon-music: 'Amazon Music' resolves to amazon",
+    ])
+  })
+
+  test('catches a merchant named like a category', () => {
+    const c = catalog()
+    c.categories = CategoriesFileSchema.parse([
+      ...c.categories,
+      { id: 'gas', name: 'Gas stations', aliases: ['gas'] },
+    ])
+    c.merchants.seed.push(
+      ...MerchantsFileSchema.parse([
+        { id: 'gas-n-go', name: 'Gas', category: 'gas' },
+      ]),
+    )
+    expect(catalogProblems(c)).toEqual([
+      "category gas: 'Gas stations' resolves to gas-n-go",
+      "category gas: 'gas' resolves to gas-n-go",
     ])
   })
 })
