@@ -58,6 +58,13 @@
   sources:
     - https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
 
+- id: navy-federal-rewards
+  name: Navy Federal Rewards points
+  value_cents: 1.0
+  note: Each point is worth 1¢ redeemed for cash (20,000 points is "a $200 value", per Navy Federal). Points also go to gift cards, merchandise and travel through the Navy Federal Rewards Center.
+  sources:
+    - https://www.navyfederal.org/loans-cards/credit-cards/more-rewards.html
+
 - id: best-buy-rewards
   name: My Best Buy rewards
   value_cents: 2.0

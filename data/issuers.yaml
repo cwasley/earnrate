@@ -38,6 +38,10 @@
   name: Discover
   color: '#e8751a'
   search: [discover it]
+- id: navy-federal
+  name: Navy Federal Credit Union
+  color: '#1b3a6b'
+  search: [nfcu, navy federal, navy fed]
 - id: sofi
   name: SoFi
   color: '#2d2f36'

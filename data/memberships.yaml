@@ -42,7 +42,12 @@
 - id: nordy-club-ambassador
   name: Nordy Club Ambassador
 # Credit union memberships are by eligibility (employer, family, area), not
-# a yearly fee. Caltech EFCU's is a one-time $5 fee plus a $5 deposit.
+# a yearly fee. Caltech EFCU's is a one-time $5 fee plus a $5 deposit; Navy
+# Federal's (the armed forces, veterans, DoD civilians and their families) a
+# $5 minimum savings balance.
 - id: caltech-efcu
   name: Caltech Employees Federal Credit Union membership
+  annual_fee: 0
+- id: navy-federal
+  name: Navy Federal Credit Union membership
   annual_fee: 0
