@@ -131,6 +131,32 @@
   sources:
     - https://thepointsguy.com/loyalty-programs/monthly-valuations/
 
+- id: delta-skymiles
+  name: Delta SkyMiles
+  value_cents: 1.0
+  range: [1.0, 1.2]
+  note: Delta's Pay with Miles lets Delta Amex cardholders take $50 off a Delta fare for every 5,000 miles (1.0¢ a mile). 1.2¢ is TPG's November 2026 valuation.
+  sources:
+    - https://www.delta.com/paywithmiles
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: hilton-honors
+  name: Hilton Honors points
+  value_cents: 0.4
+  note: Hilton publishes no general cash value for points; its terms say rewards can't be redeemed for cash, and the only fixed rate is for Event Credits on group bills (25,000 points for $50, 0.2¢). 0.4¢ is TPG's November 2026 valuation, below the 0.5¢ default used for IHG, so it's the default here.
+  sources:
+    - https://www.hilton.com/en/hilton-honors/terms/
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
+- id: marriott-bonvoy
+  name: Marriott Bonvoy points
+  value_cents: 0.5
+  range: [0.5, 0.75]
+  note: Marriott publishes no general cash value for points. The only fixed rate is Chase's Pay Yourself Back on the Bonvoy Bold card, $100 for every 12,500 points (0.8¢), limited to airline and Marriott purchases on that card. 0.5¢ is the conservative default IHG uses too; 0.75¢ is TPG's November 2026 valuation.
+  sources:
+    - https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    - https://thepointsguy.com/loyalty-programs/monthly-valuations/
+
 - id: kohls-rewards
   name: Kohl's Rewards
   value_cents: 1.0

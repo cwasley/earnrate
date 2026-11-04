@@ -90,8 +90,8 @@ test('point values can be keyed the way people say them', () => {
   expect(keys({ 'Capital One miles': 1.7 })).toEqual(['C1'])
   expect(keys({ 'best buy': null })).toEqual(['best-buy-rewards'])
   expect(keys({ rewards: 1 })).toMatch(/could be .* give the currency id/)
-  expect(keys({ 'Hilton Honors': 0.5 })).toMatch(
-    /Unknown currency 'Hilton Honors'.*UR \(Chase Ultimate Rewards\)/,
+  expect(keys({ 'World of Hyatt': 0.5 })).toMatch(
+    /Unknown currency 'World of Hyatt'.*UR \(Chase Ultimate Rewards\)/,
   )
   expect(keys({ UR: 1.5, 'chase points': 1.6 })).toMatch(/More than one value/)
 })

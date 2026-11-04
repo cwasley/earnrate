@@ -212,6 +212,11 @@
     aliases: [capital one travel car rental],
     category: travel,
   }
+- id: capital-one-travel-activities
+  kind: booking
+  name: Activity through Capital One Travel
+  aliases: [capital one travel activity]
+  category: travel
 - {
     id: capital-one-travel-flights,
     kind: booking,
@@ -443,6 +448,17 @@
 - id: postmates
   name: Postmates
   domains: [postmates.com]
+  category: dining
+  note: A delivery app that codes as a restaurant for most issuers. Bonuses limited to buying directly from a restaurant don't count it.
+- id: caviar
+  name: Caviar
+  domains: [trycaviar.com]
+  category: dining
+  note: A delivery app that codes as a restaurant for most issuers. Bonuses limited to buying directly from a restaurant don't count it.
+- id: delivery-com
+  name: Delivery.com
+  aliases: [delivery com]
+  domains: [delivery.com]
   category: dining
   note: A delivery app that codes as a restaurant for most issuers. Bonuses limited to buying directly from a restaurant don't count it.
 

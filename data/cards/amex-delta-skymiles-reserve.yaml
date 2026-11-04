@@ -1,0 +1,80 @@
+id: amex-delta-skymiles-reserve
+name: Delta SkyMiles Reserve American Express Card
+issuer: amex
+network: amex
+currency: delta-skymiles
+last_verified: 2026-11-03
+verified_by: claude
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-reserve-american-express-card/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+base_rate: 1
+annual_fee: 650
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 50000
+  spend: 10000
+  months: 6
+  valid_to: 2026-11-04
+  note: 'Plus two Delta Comfort Flight Certificates after the same $10,000 in purchases: each is one round trip from the U.S. to the lower 48, Puerto Rico or the U.S. Virgin Islands, booked at least 21 days ahead, with up to $80 in taxes and fees, flown by January 15, 2028. Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card or previous versions of this Card." Amex may also decline based on your card history.'
+rules:
+  - id: delta
+    match: { merchants: [delta, delta-vacations, delta-stays] }
+    rate: 3
+    note: Charged directly with Delta as merchant of record (delta.com, the Fly Delta app, phone, ticket counters), including Basic Economy fares, upgrades, seats, Sky Club membership, Delta-operated in-flight food and drinks, Delta Vacations packages and new Delta Stays bookings. Not Delta gift cards, deltashop.com, the Delta Flight Museum or in-flight Wi-Fi.
+milestones:
+  - id: unlimited-sky-club-75k
+    spend: 75000
+    period: calendar_year
+    rewards:
+      - Unlimited Delta Sky Club access
+    note: Replaces the 15 yearly Visits for the Basic and Additional Reserve Card Members, for the rest of that calendar year, all of the next and through January 31 after it. Usually within a week of reaching the total, up to 12 weeks. Gift cards, prepaid cards and cash equivalents don't count.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: '1x Mile on eligible purchases: Basic Card Members will earn 1 mile for each dollar'
+  - rule: delta
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: '3x Miles on Delta Purchases: Basic Card Members will earn 2 additional miles'
+  - rule: delta
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'charged directly with Delta where Delta is the merchant of record'
+  - rule: delta
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'Delta Purchases do not include Delta Gift Cards and purchases made at deltashop.com'
+  - rule: delta
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'Delta Purchases include Delta Vacations® packages but not other all-inclusive packages.'
+  - rule: delta
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'Delta Purchases include new Delta Stays prepaid hotel or vacation rental bookings'
+  - rule: unlimited-sky-club-75k
+    url: https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-reserve-american-express-card/
+    quote: 'unlock Unlimited Delta Sky Club Access after spending $75,000 in purchases on your Card during a calendar year'
+  - rule: unlimited-sky-club-75k
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'must equal or exceed $75,000 (the "Purchase Requirement") in each calendar year'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'The annual fee for the Delta SkyMiles® Reserve American Express Card is $650.'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'Earn 50,000 Bonus Miles + 2 Delta Comfort Flight Certificates'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'after you make $10,000 or more (the "Threshold Amount") in eligible purchases'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'within your first 6 months of Card Membership'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'Offer ends 11/04/2026 at 23:59 MST.'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'
+todo:
+  - The welcome offer's two Delta Comfort Flight Certificates aren't valued.
+  - The welcome offer ends 11/04/2026; re-check the card page for the next one.
+  - MQD Boost ($1 Medallion Qualification Dollar per $10 of purchases each calendar year) can't be expressed, since it's a second per-dollar currency, not miles and not a one-time spend total.
+  - Not tied to spending, so not modeled as milestones the $2,500 MQD Headstart each Medallion Qualification Year and the Companion Certificate each year after renewal.
+  - Not modeled (statement credits and perks, not miles per dollar) the $200 Delta Stays credit, the $240 Resy credit and $120 rideshare credit (enrollment required), 15 Sky Club Visits and 4 guest passes a year, Centurion Lounge access, 20% back on Delta in-flight food and drinks, and TakeOff 15 (15% off Delta award flights).

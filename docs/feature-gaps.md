@@ -11,6 +11,13 @@ When a card's `todo:` says the schema or engine can't model something, add it he
 A rate that applies only for a stretch after account opening. The wallet would need an opening date per card; `bonus.opened` already records one while a welcome bonus is in progress.
 
 - `bank-of-america-customized-cash-rewards`: 6% in the choice category for the first 365 days (an extra 3% inside the same $2,500 quarterly cap, with no BofA Rewards bonus on the extra 3%).
+- `discover-it-cash-back`: Cashback Match, which matches all cash back earned in the first year (no limit), so every rate is doubled for the first 365 days.
+
+### Activation that isn't retroactive
+
+`activate_by` treats an activated bonus as covering its whole period. Some issuers pay the bonus only on purchases from the day you activate.
+
+- `discover-it-cash-back`: 5% applies "from 10/1/26 (or the date on which you activate 5%, whichever is later)". Activation is allowed through the quarter's last day, so `activate_by` is set to that day and the rule notes explain the rest.
 
 ### Rate after a shared cap that differs by rule
 
@@ -95,6 +102,9 @@ A `cardmember_year` milestone runs from the account anniversary date. Citi count
 ### Credits that offset the annual fee
 
 Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. It would need a per-card credit value with evidence, kept apart from earn rates (credits as rewards stay out of scope, below).
+
+- `amex-hilton-honors-surpass`: up to $200 a year in Hilton credits ($50 a quarter).
+- `amex-hilton-honors-aspire`: Hilton resort, flight, CLEAR+ and Waldorf Astoria or Conrad property credits, plus an Annual Free Night Reward with no spending needed.
 
 ## Not planned
 

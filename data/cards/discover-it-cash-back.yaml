@@ -1,0 +1,169 @@
+id: discover-it-cash-back
+name: Discover it Cash Back Credit Card
+# Discover merged into Capital One, N.A.; the application terms are headed
+# "Discover by Capital One" and served from disclosures.capitalone.com.
+issuer: discover
+network: discover
+currency: cash
+last_verified: 2026-11-03
+verified_by: claude
+source_urls:
+  - https://www.discover.com/credit-cards/cash-back/it-card/
+  # The card page's "See rates, rewards, fees, and other cost information"
+  # (pricing and rewards FAQ); the number is the page's offer id and changes
+  # when Capital One changes it.
+  - https://disclosures.capitalone.com/disclosure.42300.en-US.html
+  - https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+  - https://www.discover.com/credit-cards/cash-back/cashback-bonus.html
+  # The calendar page's "See our FAQs".
+  - https://www.discover.com/credit-cards/card-smarts/using-cashback-bonus/
+base_rate: 1
+annual_fee: 0
+# No page states it: the application terms' fee table lists no foreign
+# transaction fee row, but nothing says "None".
+foreign_transaction_fee: null
+welcome_offer:
+  dollars: 200
+  spend: 500
+  months: 3
+  note: One-time $200 statement credit, available by applying through the card page. Existing or previous cardmembers may not be eligible if they received a new cardmember bonus for this product in the past 48 months. New cardmembers also get Cashback Match (all cash back earned in the first year matched), which isn't counted here.
+caps:
+  # Discover's quarterly maximum on the rotating 5% categories.
+  - id: five-percent-quarterly
+    amount: 1500
+    period: quarter
+    then_rate: 1
+    rotating: true
+rules:
+  - id: capital-one-travel
+    match:
+      {
+        merchants:
+          [
+            capital-one-travel-hotels,
+            capital-one-travel-vacation-rentals,
+            capital-one-travel-car-rentals,
+            capital-one-travel-activities,
+          ],
+      }
+    rate: 5
+    note: Hotels, vacation rentals, rental cars and activities booked through Capital One Travel only. Flights booked there, and hotel incidentals or upgrades paid outside Capital One Travel, earn the base 1%.
+  - id: capital-one-entertainment
+    match: { merchants: [capital-one-entertainment] }
+    rate: 5
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales, tickets bought directly from Capital One Hall or Capital One Arena, and Capital One Dining are excluded.
+  # Rotating 5% categories. Activation is per quarter and isn't retroactive:
+  # only purchases from the day you activate earn 5%.
+  - id: q4-2026-restaurants
+    match: { categories: [dining] }
+    rate: 5
+    geography: us_only
+    cap: five-percent-quarterly
+    requires: { activation: true }
+    valid_from: 2026-10-01
+    valid_to: 2026-12-31
+    activate_by: 2026-12-31
+    note: Full-service restaurants, cafes, cafeterias, fast-food locations and caterers. Restaurants inside hotels or retail stores, and bakeries, may not qualify. Earns 5% only from the day you activate (any time through December 31, 2026).
+  - id: q4-2026-entertainment
+    match: { categories: [entertainment, movie_theaters] }
+    rate: 5
+    geography: us_only
+    cap: five-percent-quarterly
+    requires: { activation: true }
+    valid_from: 2026-10-01
+    valid_to: 2026-12-31
+    activate_by: 2026-12-31
+    note: Tickets at movie theaters, professional and semi-professional sports promoters, theatrical and concert promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls, record stores, video rental locations, pool halls and bowling alleys. Golf courses, country clubs, some collegiate sporting events, charitable events, cable and streaming subscriptions, amusement park tickets bought on third-party sites and packages coded as travel or hotel don't count. Earns 5% only from the day you activate.
+  - id: q4-2026-utilities
+    match: { categories: [utilities, tv_internet, phone] }
+    rate: 5
+    geography: us_only
+    cap: five-percent-quarterly
+    requires: { activation: true }
+    valid_from: 2026-10-01
+    valid_to: 2026-12-31
+    activate_by: 2026-12-31
+    note: Residential electricity, natural gas and water, plus internet, cable, satellite TV and mobile and landline phone service paid by phone or online. Paying for those at a physical store, through a landlord, property manager or HOA, home fuel delivery and standalone streaming services may not qualify. Earns 5% only from the day you activate.
+todo:
+  - 'Discover has published only 2026 on its 5% calendar (Oct-Dec 2026 is the last quarter shown). Add 2027 quarters when Discover posts them.'
+  - Discover's 5% activation isn't retroactive (5% applies "from 10/1/26 (or the date on which you activate 5%, whichever is later)"), and you can activate until the quarter's last day. The schema's activate_by can't say that purchases before activation earn 1%; it's set to the quarter's last day and the rule notes say so.
+  - Cashback Match (Discover matches all cash back a new cardmember earns in the first year, no limit) can't be expressed as a fixed welcome offer; it roughly doubles first-year earnings on every rule. Not modeled.
+  - The card page's Cashback Match terms say "through your first 365 days"; the Cashback Bonus page says "your first 12 consecutive billing periods or 365 days, whichever is longer". Which one current applicants get is unclear; it doesn't change any rate here.
+  - Foreign transaction fee isn't stated on any Discover page or in the application terms (their fee table has no foreign transaction row). Left null; confirm with the Cardmember Agreement or Capital One.
+  - Discover says 5% purchases "must be made with merchants in the U.S." The application terms put that sentence in the general earning paragraph, so it may also apply to the 1% base and Capital One Travel; only the rotating rules are marked us_only.
+  - Amusement parks, tourist attractions, aquariums, zoos, record stores, video rental, pool halls and bowling alleys earn 5% as Q4 2026 entertainment but have no earnrate category. Golf courses, country clubs and collegiate sporting events are excluded but can't be told apart from the entertainment category.
+  - Third-party payment accounts and digital wallet transactions may not earn 5% if they don't carry a qualifying MCC. Not modeled.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.discover.com/credit-cards/cash-back/it-card/
+    quote: 'Plus, earn 1% cash back on all other purchases.'
+  - rule: base_rate
+    url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
+    quote: 'There is no cap to the amount of 1% rewards you can earn on purchases.'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
+    quote: 'earn 5% cash back on purchases (hotels, vacation rentals, rental cars and activities only) made on Capital One Travel'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
+    quote: 'such as hotel incidentals, upgrades or other expenses, will not earn 5% cash back'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
+    quote: 'You will earn 5% cash back on Capital One Entertainment purchases.'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
+    quote: 'and dining reservations or purchases through Capital One Dining are excluded'
+  - rule: q4-2026-restaurants
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'Earn 5% Cashback Bonus at Restaurants, Entertainment and Utilities, now to December 31, 2026'
+  - rule: q4-2026-restaurants
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'from 10/1/26 (or the date on which you activate 5%, whichever is later) through 12/31/26'
+  - rule: q4-2026-restaurants
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'Restaurant purchases include those made at merchants classified as full-service restaurants, cafes, cafeterias, fast-food locations, and caterers.'
+  - rule: q4-2026-restaurants
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'Purchases must be made with merchants in the U.S.'
+  - rule: q4-2026-restaurants
+    url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
+    quote: '5% category purchases over the quarterly maximum, and all other purchases, except as noted below, earn 1% cash back.'
+  - rule: q4-2026-restaurants
+    url: https://www.discover.com/credit-cards/cash-back/cashback-bonus.html
+    quote: 'NOW: Earn 5% Cashback Bonus at Restaurants, Entertainment and Utilities'
+  - rule: q4-2026-entertainment
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'on up to $1,500 in purchases when you activate'
+  - rule: q4-2026-entertainment
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'Entertainment purchases include ticket purchases at movie theaters, sports promoters (professional and semi-professional live events)'
+  - rule: q4-2026-entertainment
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'Tickets for or fees at golf courses, country clubs, some collegiate sporting events, charitable events'
+  - rule: q4-2026-utilities
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'Utilities purchases include purchases for residential electricity, natural gas, and water service.'
+  - rule: q4-2026-utilities
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'purchases made over the phone or online for internet, cable, satellite TV, and mobile and landline phone service'
+  - rule: q4-2026-utilities
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'Purchases at physical retail stores for internet, cable, satellite, and mobile and landline phone service do not qualify.'
+  - rule: q4-2026-utilities
+    url: https://www.discover.com/credit-cards/card-smarts/using-cashback-bonus/
+    quote: 'you need to activate to earn each quarter'
+  - rule: annual_fee
+    url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
+    quote: 'Annual Fee None.'
+  - rule: annual_fee
+    url: https://www.discover.com/credit-cards/cash-back/it-card/
+    quote: 'No, there is no annual fee for the Discover it Card.'
+  - rule: welcome_offer
+    url: https://www.discover.com/credit-cards/cash-back/it-card/
+    quote: 'Earn a $200 bonus statement credit when you spend $500 in the first 3 months.'
+  - rule: welcome_offer
+    url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
+    quote: 'You will receive a $200 statement credit if you spend at least $500 within 3 months'
+  - rule: welcome_offer
+    url: https://www.discover.com/credit-cards/cash-back/it-card/
+    quote: 'Get an unlimited dollar-for-dollar match of all the cash back you earn at the end of your first year'

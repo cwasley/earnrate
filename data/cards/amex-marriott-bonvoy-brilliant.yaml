@@ -1,0 +1,91 @@
+id: amex-marriott-bonvoy-brilliant
+name: Marriott Bonvoy Brilliant American Express Card
+issuer: amex
+network: amex
+currency: marriott-bonvoy
+last_verified: 2026-11-03
+verified_by: claude
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-brilliant/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+base_rate: 2
+annual_fee: 650
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 100000
+  spend: 6000
+  months: 6
+  note: 'No end date given. Not available if you have or have had this Card, the Starwood Preferred Guest American Express Luxury Card or previous versions; Amex may also decline based on your card history. Also not available to anyone who had a Ritz-Carlton card from J.P. Morgan in the last 30 days, opened the Marriott Bonvoy Bountiful, Boundless or Bold card from Chase in the last 90 days, or got a new cardmember or upgrade bonus on one of those Chase cards in the last 24 months.'
+rules:
+  - id: marriott-hotels
+    match: { merchants: [marriott] }
+    rate: 6
+    note: Charged directly with participating Marriott Bonvoy hotels, standalone Marriott retail stores and Marriott online stores (including Marriott gift cards online). Marriott's own member and elite points for stays aren't card earnings.
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 3
+    note: Restaurants worldwide. Not nightclubs, convenience stores, grocery stores or supermarkets; a restaurant inside a hotel, casino or event venue may code as that place instead.
+  - id: flights
+    match: { categories: [travel.flights] }
+    rate: 3
+    note: Scheduled flights charged directly with the airline. Charter and private jet flights are excluded.
+milestones:
+  - id: earned-choice-60k
+    spend: 60000
+    period: calendar_year
+    rewards:
+      - 'Brilliant Earned Choice Award: pick five Nightly Upgrade Awards, a Free Night Award (up to 85,000 points) or 50,000 Bonvoy points'
+    note: One a calendar year, picked at choice-benefit.marriott.com/brilliant by February 1 of the next year, or it defaults to the Nightly Upgrade Awards. Basic Card Member only.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'You will receive 2 Marriott Bonvoy® points for each U.S. dollar of eligible purchases charged'
+  - rule: base_rate
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-brilliant/
+    quote: 'Spent on other eligible purchases.'
+  - rule: marriott-hotels
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-brilliant/
+    quote: '6X points at hotels participating in Marriott Bonvoy®'
+  - rule: marriott-hotels
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'when charged directly with participating Marriott Bonvoy properties, standalone Marriott branded retail establishments'
+  - rule: restaurants
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: '1 additional point (for a total of 3 points) for each dollar charged at restaurants worldwide'
+  - rule: restaurants
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'You will NOT earn 1 additional point for purchases at nightclubs, convenience stores, grocery stores or supermarkets.'
+  - rule: flights
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'for airfare on a scheduled flight charged directly with passenger airlines (charter flights and private jet flights are excluded)'
+  - rule: flights
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-brilliant/
+    quote: '3X points at restaurants worldwide & on flights booked directly with airlines'
+  - rule: earned-choice-60k
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'your total eligible purchases on your Marriott Bonvoy Brilliant® American Express® Card reach or exceed $60,000'
+  - rule: earned-choice-60k
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'Free Night Award with a redemption value up to 85K points• One-time deposit of 50K Marriott Bonvoy points'
+  - rule: earned-choice-60k
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'only one Brilliant Earned Choice Award may be earned each calendar year per Card Account'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-brilliant/
+    quote: 'Annual Fee: $650'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'Annual Fee $650 Transaction Fees'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-brilliant/
+    quote: 'Earn 100,000 Marriott Bonvoy® Bonus Points'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms
+    quote: 'eligible purchases on your Marriott Bonvoy Brilliant® American Express® Card within your first 6 months of Card Membership'
+todo:
+  - The Brilliant Earned Choice Award can be 50,000 points, but it's a pick among non-point awards too, so the milestone carries no points value.
+  - The $300 Brilliant Dining Credit (up to $25 a month at restaurants worldwide), the $100 property credit on two-night Ritz-Carlton or St. Regis stays, and the yearly Free Night Award (up to 85,000 points) after each renewal month aren't modeled.
+  - Complimentary Platinum Elite status and 25 Elite Night Credits each year aren't modeled; they don't depend on spending.

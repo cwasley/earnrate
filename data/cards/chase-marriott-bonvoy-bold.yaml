@@ -1,0 +1,123 @@
+id: chase-marriott-bonvoy-bold
+name: Marriott Bonvoy Bold Credit Card
+issuer: chase
+network: visa
+currency: marriott-bonvoy
+last_verified: 2026-11-03
+verified_by: claude
+source_urls:
+  - https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65105.html
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 45000
+  spend: 1000
+  months: 3
+  not_with: [chase-marriott-bonvoy-boundless]
+  note: 'No end date given. Chase: "This credit card is not available to you if (1) you currently have any of the following cards or (2) you received a new cardmember bonus for any of the following cards within the last 24 months" (Marriott Bonvoy Premier, Rewards Premier, Boundless, Rewards Premier Plus, Bold). The bonus also isn''t available to holders of the Marriott Bonvoy American Express Card in the last 30 days, or anyone approved for the Marriott Bonvoy Business, Brilliant or Bevy American Express cards in the last 90 days or paid their bonus in the last 24 months.'
+rules:
+  - id: marriott-hotels
+    match: { merchants: [marriott] }
+    rate: 3
+    note: Card points only, at hotels participating in Marriott Bonvoy. Chase advertises "up to 14X total", which adds up to 10X base points and 1X Silver Elite bonus that Marriott posts for stays; those aren't card earnings.
+  - id: grocery
+    match: { categories: [grocery.supermarket] }
+    rate: 2
+    note: Chase's grocery stores exclude warehouse clubs, discount stores, drugstores and gas at grocery-store stations; delivery services count only if they code as a grocery store.
+  - id: internet-cable-phone
+    match: { categories: [tv_internet, phone] }
+    rate: 2
+  - id: streaming
+    match:
+      {
+        merchants:
+          [
+            apple-music,
+            apple-tv,
+            disney-plus,
+            espn,
+            fubotv,
+            max,
+            hulu,
+            netflix,
+            pandora,
+            paramount-plus,
+            peacock,
+            showtime,
+            siriusxm,
+            sling-tv,
+            spotify,
+            youtube-premium,
+            youtube-tv,
+            fandango-at-home,
+          ],
+      }
+    rate: 2
+    note: Only the services on Chase's select streaming list, like Netflix, Hulu, Disney+ and Spotify.
+  - id: rideshare
+    match: { categories: [transit.rideshare] }
+    rate: 2
+    note: Taxis, limousines and rideshare. Not car rentals, car sharing or carpools.
+  - id: food-delivery
+    match:
+      {
+        merchants:
+          [doordash, caviar, uber-eats, postmates, grubhub, delivery-com],
+      }
+    rate: 2
+    note: Only orders placed directly through DoorDash, Caviar, Uber Eats, Postmates, Grubhub, Seamless or Delivery.com, on the website or app.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: "You'll earn 1 point for each $1 spent on all other purchases."
+  - rule: marriott-hotels
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: "You'll earn 3 points for each $1 spent on qualifying purchases made at hotels participating in Marriott Bonvoy"
+  - rule: marriott-hotels
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: 'You will only receive the accelerated earn of 3 points for each $1 spent from the credit card program.'
+  - rule: grocery
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: 'Earn 2X points for every $1 spent on purchases at grocery stores.'
+  - rule: grocery
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Delivery service merchants will be included if they classify as a grocery store merchant.'
+  - rule: internet-cable-phone
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: 'Earn 2X points for every $1 spent on select streaming, and internet, cable, and phone services.'
+  - rule: streaming
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: 'Earn 2X points for every $1 spent on select streaming, and internet, cable, and phone services.'
+  - rule: streaming
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Only subscriptions paid for, or purchases made with the following select merchants will qualify for this category'
+  - rule: rideshare
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: 'the following rideshare rewards category: taxicabs and limousines'
+  - rule: rideshare
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Merchants in this category include operators of taxi, limousine, and rideshare services.'
+  - rule: food-delivery
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: 'Earn 2X points for every $1 spent on rideshare and select food delivery.'
+  - rule: food-delivery
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Only purchases made with the following select food delivery merchants will qualify for this category'
+  - rule: annual_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65105.html
+    quote: 'Annual Membership Fee None'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65105.html
+    quote: 'Foreign Transactions None Penalty Fees'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: 'Earn 45,000 Bonus Points after spending $1,000 on eligible purchases within 3 months of account opening'
+  - rule: not_with
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: 'This credit card is not available to you if (1) you currently have any of the following cards'
+todo:
+  - Automatic Silver Elite status and 5 Elite Night Credits each calendar year aren't modeled; they don't depend on spending.
+  - 'Pay Yourself Back redeems Bonvoy points at "$100 for every 12,500 points" (0.8 cents) against airline tickets bought directly and Marriott hotel purchases on this card, up to $750 of redemptions a year. earnrate values the currency, not a per-card redemption, so this isn''t modeled.'

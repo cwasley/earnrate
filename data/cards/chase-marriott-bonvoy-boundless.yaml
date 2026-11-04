@@ -1,0 +1,76 @@
+id: chase-marriott-bonvoy-boundless
+name: Marriott Bonvoy Boundless Credit Card
+issuer: chase
+network: visa
+currency: marriott-bonvoy
+last_verified: 2026-11-03
+verified_by: claude
+source_urls:
+  - https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+  - https://www.chase.com/personal/credit-cards/rewards-category-faq
+  - https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65195.html
+base_rate: 2
+annual_fee: 95
+foreign_transaction_fee: 0
+rules:
+  - id: marriott-hotels
+    match: { merchants: [marriott] }
+    rate: 6
+    note: Card points only, at hotels participating in Marriott Bonvoy. Chase advertises "up to 17X total", which adds up to 10X base points and 1X Silver Elite bonus that Marriott posts for stays; those aren't card earnings.
+  - id: dining-grocery-gas
+    match: { categories: [dining, grocery.supermarket, gas] }
+    rate: 3
+    cap: { amount: 6000, period: calendar_year, then_rate: 2 }
+    note: On the first $6,000 of combined purchases a year. Chase's year runs from account opening (then each later year) through the December statement date, close to a calendar year. Dining includes takeout and eligible delivery services. Chase's grocery stores exclude warehouse clubs, discount stores, drugstores and gas at grocery-store stations; delivery services count only if they code as a grocery store.
+milestones:
+  - id: spend-35k
+    spend: 35000
+    period: calendar_year
+    rewards:
+      - Gold Elite status
+    note: January 1 through December 31; purchases that post in the next year count toward that year. Chase says to allow up to 8 weeks for status to post. One Boundless account per Marriott Bonvoy member qualifies.
+evidence:
+  - rule: base_rate
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: "You'll earn 2 points for each $1 spent on all other purchases."
+  - rule: marriott-hotels
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: "You'll earn 6 points for each $1 spent on qualifying purchases made at hotels participating in Marriott Bonvoy"
+  - rule: marriott-hotels
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: 'You will only receive the accelerated earn of 6 points for each $1 spent from the credit card program.'
+  - rule: dining-grocery-gas
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: 'first $6,000 spent annually on combined purchases in the following rewards categories: gas stations'
+  - rule: dining-grocery-gas
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: 'dining at restaurants including takeout and eligible delivery services'
+  - rule: dining-grocery-gas
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: 'After $6,000 is spent on combined purchases in these categories annually, you go back to earning 2 points'
+  - rule: dining-grocery-gas
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Delivery service merchants will be included if they classify as a grocery store merchant.'
+  - rule: dining-grocery-gas
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Delivery and takeout services will be included if they classify as a restaurant merchant'
+  - rule: spend-35k
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: 'Path to Gold Status when you spend $35,000 on purchases each calendar year.'
+  - rule: spend-35k
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: 'to spend $35,000 to earn Gold Elite Status will run from January 1 through December 31'
+  - rule: annual_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65195.html
+    quote: 'Annual Membership Fee $95'
+  - rule: annual_fee
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: 'ANNUAL FEE $95'
+  - rule: foreign_transaction_fee
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65195.html
+    quote: 'Foreign Transactions None Penalty Fees'
+todo:
+  - 'The welcome offer is 3 Free Night Awards (each up to 50,000 points a night) after $3,000 in purchases in the first 3 months, not points, so the schema can''t hold it. Chase: "This credit card is not available to you if (1) you currently have any of the following cards or (2) you received a new cardmember bonus for any of the following cards within the last 24 months" (Marriott Bonvoy Premier, Rewards Premier, Boundless, Rewards Premier Plus, Bold); the bonus also isn''t available to holders of the Marriott Bonvoy American Express Card in the last 30 days, or anyone approved for Brilliant or Bevy in the last 90 days or paid their bonus in the last 24 months.'
+  - 1 Elite Night Credit for every $5,000 in purchases, with no limit, isn't modeled (milestones are once a period).
+  - The yearly Free Night Award (up to 35,000 points) after each account anniversary, automatic Silver Elite status and 15 Elite Night Credits each calendar year aren't modeled; they don't depend on spending.
+  - "The airline statement credit isn't modeled: $50 after $250 on purchases directly with airlines June 4 to Dec 31, 2026, and another $50 after $250 Jan 1 to June 30, 2027."

@@ -1,0 +1,116 @@
+id: amex-marriott-bonvoy-bevy
+name: Marriott Bonvoy Bevy American Express Card
+issuer: amex
+network: amex
+currency: marriott-bonvoy
+last_verified: 2026-11-03
+verified_by: claude
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-bevy/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+base_rate: 2
+annual_fee: 250
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 85000
+  spend: 5000
+  months: 6
+  not_with:
+    [
+      amex-marriott-bonvoy-brilliant,
+      chase-marriott-bonvoy-boundless,
+      chase-marriott-bonvoy-bold,
+    ]
+  note: 'No end date given. Not available if you have or have had this Card, the Marriott Bonvoy Brilliant Card or previous versions; Amex may also decline based on your card history. Also not available to anyone who had a Ritz-Carlton card from J.P. Morgan or a Marriott card from Chase (including Bountiful, Boundless and Bold) in the last 30 days, opened Bountiful, Boundless or Bold in the last 90 days, or got a new cardmember or upgrade bonus on one of those in the last 24 months.'
+caps:
+  - {
+      id: dining-and-supermarkets,
+      amount: 15000,
+      period: calendar_year,
+      then_rate: 2,
+    }
+rules:
+  - id: marriott-hotels
+    match: { merchants: [marriott] }
+    rate: 6
+    note: Charged directly with participating Marriott Bonvoy hotels, standalone Marriott retail stores and Marriott online stores (including Marriott gift cards online). Marriott's own member and elite points for stays aren't card earnings.
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 4
+    cap: dining-and-supermarkets
+    note: Restaurants worldwide, including takeout and delivery in the U.S., on the first $15,000 a calendar year combined with U.S. supermarkets. Not nightclubs or convenience stores; a restaurant inside a hotel, casino or event venue may code as that place instead.
+  - id: us-supermarkets
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club, convenience_store] }
+    rate: 4
+    geography: us_only
+    cap: dining-and-supermarkets
+    note: On the first $15,000 a calendar year combined with restaurants. Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+milestones:
+  - id: free-night-15k
+    spend: 15000
+    period: calendar_year
+    rewards:
+      - Free Night Award (up to 50,000 points a night)
+    note: One a calendar year. Deposited 8-12 weeks after you reach the total; it expires a year after it's issued. Basic Card Member only.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'You will receive 2 Marriott Bonvoy® points for each U.S. dollar of eligible purchases charged'
+  - rule: base_rate
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-bevy/
+    quote: '2X points on all other eligible purchases.'
+  - rule: marriott-hotels
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-bevy/
+    quote: '6X points at hotels participating in Marriott Bonvoy®'
+  - rule: marriott-hotels
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'when charged directly with participating Marriott Bonvoy properties, standalone Marriott branded retail establishments'
+  - rule: restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-bevy/
+    quote: '4X points at restaurants worldwide including takeout and delivery in the U.S. and U.S. Supermarkets'
+  - rule: restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-bevy/
+    quote: 'on up to $15,000 in combined purchases at restaurants and U.S. supermarkets per calendar year, then 2X points'
+  - rule: restaurants
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'You will NOT earn 2 additional points for purchases at nightclubs or convenience stores.'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'for each dollar of eligible purchases charged at supermarkets located in the United States'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'superstores, convenience stores, warehouse clubs, and meal-kit delivery services are not considered supermarkets'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'Once you reach $15,000 in combined purchases at restaurants worldwide and U.S.'
+  - rule: free-night-15k
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'your total eligible purchases on your Marriott Bonvoy Bevy® American Express® Card reach $15,000'
+  - rule: free-night-15k
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'Limit one Free Night Award per calendar year.'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-bevy/
+    quote: 'Annual Fee: $250'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'Annual Fee $250 Transaction Fees'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-bevy/
+    quote: 'Earn 85,000 Marriott Bonvoy® Bonus Points'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'eligible purchases on your Marriott Bonvoy Bevy® American Express® Card within your first 6 months of Card Membership'
+  - rule: not_with
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'if you have or have had this Card, the Marriott Bonvoy Brilliant® American Express® Card'
+  - rule: not_with
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'the Marriott Bonvoy Bold® Credit Card from Chase, the Marriott Bonvoy® Premier Plus Business Credit Card'
+todo:
+  - 1,000 bonus points per paid eligible stay booked directly with Marriott is per stay, not per dollar, so it isn't modeled.
+  - Complimentary Gold Elite status and 15 Elite Night Credits each calendar year aren't modeled; they don't depend on spending.
