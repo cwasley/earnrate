@@ -28,10 +28,10 @@ requires_membership: navy-federal # eligibility-based, no yearly fee
 evidence:
   - rule: base_rate
     url: https://www.navyfederal.org/loans-cards/credit-cards/cash-rewards.html
-    quote: 'Unlimited 1.5% cash back on all purchases with cash Rewards'
+    quote: 'Unlimited 1.5% cash back on all purchases with cashRewards'
   - rule: base_rate
     url: https://www.navyfederal.org/loans-cards/credit-cards/cash-rewards.html
-    quote: 'You’ll get a cash Rewards card with 1.5% cash back if your credit limit is under $5,000'
+    quote: 'You’ll get a cashRewards card with 1.5% cash back if your credit limit is under $5,000'
   - rule: annual_fee
     url: https://www.navyfederal.org/loans-cards/credit-cards/cash-rewards.html
     quote: 'No annual fee'

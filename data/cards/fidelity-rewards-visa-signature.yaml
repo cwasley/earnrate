@@ -54,7 +54,7 @@ evidence:
     quote: 'Annual Fee Annual Membership Fee None'
   - rule: foreign_transaction_fee
     url: https://online1.elancard.com/pdap/terms?locationCode=24193&offerId=5W8QWVRP5M&sourceCode=88155&st=y
-    quote: 'Overdraft Protection 2 None Foreign Transaction None'
+    quote: 'Foreign Transaction None Penalty Fees'
   - rule: foreign_transaction_fee
     url: https://www.fidelity.com/spend-save/visa-signature-card
     quote: 'Plus no foreign transaction fees.'

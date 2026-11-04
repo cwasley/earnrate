@@ -9,6 +9,8 @@ Streaming rules for merchants that joined the directory in 2026.11.04.10:
 - `amex-blue-cash-preferred`'s 6% now covers Luminary, which is on Amex's [Select U.S. Streaming Subscriptions list](https://www.americanexpress.com/us/content/rewards-info/retail.html).
 - `usbank-altitude-go` and `usbank-altitude-connect` now earn their streaming rate at AMC+, FanDuel Sports Network, iHeartRadio, LiveOne, Luminary and YouTube Music, all named in their program rules ([Go](https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules), [Connect](https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules)).
 
+Quote fixes, no rate changes: Navy Federal's quotes say "cashRewards" as the page does, and Fidelity's foreign-fee quote matches Elan's table.
+
 All read 2026-11-04. "Delta Hotels" now means Marriott's brand (2026.11.04.10); Delta's own booking site is "Delta Stays".
 
 ## 2026.11.04.11
