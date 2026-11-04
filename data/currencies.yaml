@@ -134,7 +134,9 @@
 - id: delta-skymiles
   name: Delta SkyMiles
   value_cents: 1.0
-  note: TODO confirm a published redemption rate. Until then, 1.0¢ is the floor the other airline currencies use.
+  note: Delta's Pay with Miles lets Delta Amex cardholders take $50 off a Delta fare for every 5,000 miles (1.0¢ a mile).
+  sources:
+    - https://www.delta.com/paywithmiles
 
 - id: hilton-honors
   name: Hilton Honors points

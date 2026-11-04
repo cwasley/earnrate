@@ -1037,6 +1037,18 @@
     category: travel.flights,
   }
 - {
+    id: delta-vacations,
+    name: Delta Vacations,
+    domains: [deltavacations.com],
+    category: travel,
+  }
+- {
+    id: delta-stays,
+    name: Delta Stays,
+    aliases: [delta stays, delta hotels],
+    category: travel.hotels,
+  }
+- {
     id: united,
     name: United Airlines,
     aliases: [united],

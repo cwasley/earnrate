@@ -958,3 +958,95 @@ goldenTest(
     expect(id('bjs gas')).toBe('bjs-gas')
   },
 )
+
+describe('#26 new cards', () => {
+  const wallet = (cards: object[]) =>
+    withProfile(WalletSchema.parse({ cards }), 'flat')
+
+  goldenTest('#26a Hilton Surpass earns 12x at Hilton, 6% at 0.5¢', () => {
+    const rec = recommend(
+      catalog,
+      wallet([{ id: 'amex-hilton-honors-surpass' }, { id: 'amex-gold' }]),
+      purchase('Hilton', { amount: 200, channel: 'in_store' }),
+    )
+    expect(rec.decision?.cardId).toBe('amex-hilton-honors-surpass')
+    const surpass = entry(rec, 'amex-hilton-honors-surpass')
+    expect(surpass.rate).toBe(12)
+    expect(surpass.effectiveReturnPct).toBeCloseTo(6)
+    expect(entry(rec, 'amex-gold').effectiveReturnPct).toBeCloseTo(1)
+  })
+
+  goldenTest(
+    "#26b Bonvoy Bevy's 4x stops at $15,000 of restaurants and supermarkets",
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([
+          {
+            id: 'amex-marriott-bonvoy-bevy',
+            cap_usage: {
+              'dining-and-supermarkets': { period: '2026', spent: 14950 },
+            },
+          },
+        ]),
+        purchase('Chipotle', { amount: 100, channel: 'in_store' }),
+      )
+      const bevy = entry(rec, 'amex-marriott-bonvoy-bevy')
+      expect(bevy.rate).toBeCloseTo(3)
+      expect(bevy.effectiveReturnPct).toBeCloseTo(1.5)
+    },
+  )
+
+  goldenTest('#26c Delta SkyMiles Platinum earns 3x at Delta, Gold 2x', () => {
+    const delta = purchase('Delta', { amount: 400, channel: 'online' })
+    const platinum = recommend(
+      catalog,
+      wallet([{ id: 'amex-delta-skymiles-platinum' }]),
+      delta,
+    )
+    expect(entry(platinum, 'amex-delta-skymiles-platinum').rate).toBe(3)
+    expect(platinum.decision?.effectiveReturnPct).toBeCloseTo(3)
+    const gold = recommend(
+      catalog,
+      wallet([{ id: 'amex-delta-skymiles-gold' }]),
+      delta,
+    )
+    expect(entry(gold, 'amex-delta-skymiles-gold').rate).toBe(2)
+  })
+
+  goldenTest(
+    "#26d Discover it: Q4 2026's 5% at restaurants once activated, 1% before",
+    () => {
+      const dinner = purchase('Chipotle', { channel: 'in_store' })
+      const activated = recommend(
+        catalog,
+        wallet([
+          { id: 'discover-it-cash-back', activated: ['q4-2026-restaurants'] },
+        ]),
+        dinner,
+      )
+      expect(activated.decision?.effectiveReturnPct).toBeCloseTo(5)
+      const not = entry(
+        recommend(catalog, wallet([{ id: 'discover-it-cash-back' }]), dinner),
+        'discover-it-cash-back',
+      )
+      expect(not.effectiveReturnPct).toBeCloseTo(1)
+      expectSome(not.warnings, /Activate this bonus/)
+      const nextYear = recommend(
+        catalog,
+        wallet([{ id: 'discover-it-cash-back' }]),
+        purchase('Chipotle', { channel: 'in_store', date: '2027-01-15' }),
+      )
+      expectSome(nextYear.warnings, /rotating categories for 2027-Q1/)
+    },
+  )
+
+  goldenTest('#26e Quicksilver earns 1.5% everywhere else', () => {
+    const rec = recommend(
+      catalog,
+      wallet([{ id: 'capital-one-quicksilver' }]),
+      purchase("Joe's Hardware Santa Monica", { channel: 'in_store' }),
+    )
+    expect(rec.decision?.effectiveReturnPct).toBeCloseTo(1.5)
+  })
+})
