@@ -70,6 +70,8 @@ function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
     out.push(`checkout name "${args.checkoutLabel}"`)
   if (args.anniversary !== undefined)
     out.push(`anniversary ${args.anniversary}`)
+  if (args.opened === null) out.push('opening date cleared')
+  else if (args.opened !== undefined) out.push(`opened ${args.opened}`)
   if (args.activated !== undefined)
     out.push(
       args.activated.length === 0
@@ -259,7 +261,7 @@ export function registerWalletTools(
     'update_card',
     {
       title: 'Update a card',
-      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, activated categories, cap spending so far (capSpent), spending this year toward its spend milestones (milestoneSpent) or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
+      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, opening date (optional; for first-year rates), activated categories, cap spending so far (capSpent), spending this year toward its spend milestones (milestoneSpent) or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
       inputSchema: CardChange,
       outputSchema: WalletChangeSchema,
       annotations: {

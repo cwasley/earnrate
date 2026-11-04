@@ -26,7 +26,7 @@ welcome_offer:
   dollars: 200
   spend: 500
   months: 3
-  note: One-time $200 statement credit, available by applying through the card page. Existing or previous cardmembers may not be eligible if they received a new cardmember bonus for this product in the past 48 months. New cardmembers also get Cashback Match (all cash back earned in the first year matched), which isn't counted here.
+  note: One-time $200 statement credit, available by applying through the card page. Existing or previous cardmembers may not be eligible if they received a new cardmember bonus for this product in the past 48 months. New cardmembers also get Cashback Match, which is ranked as a first-year rate (intro_rates) rather than counted here.
 caps:
   # Discover's quarterly maximum on the rotating 5% categories.
   - id: five-percent-quarterly
@@ -84,11 +84,17 @@ rules:
     valid_to: 2026-12-31
     activate_by: 2026-12-31
     note: Residential electricity, natural gas and water, plus internet, cable, satellite TV and mobile and landline phone service paid by phone or online. Paying for those at a physical store, through a landlord, property manager or HOA, home fuel delivery and standalone streaming services may not qualify. Earns 5% only from the day you activate.
+intro_rates:
+  # Discover matches the cash back a new cardmember earns, paid after the
+  # match period, so every rate counts double for those 365 days.
+  - id: cashback-match
+    days: 365
+    multiply: 2
+    note: Cashback Match, for new cardmembers. Discover matches all the cash back earned from the day the account is approved through the first 365 days, with no limit, and adds it within two billing periods after; cash back processed after the match period isn't matched.
 todo:
   - 'Discover has published only 2026 on its 5% calendar (Oct-Dec 2026 is the last quarter shown). Add 2027 quarters when Discover posts them.'
   - Discover's 5% activation isn't retroactive (5% applies "from 10/1/26 (or the date on which you activate 5%, whichever is later)"), and you can activate until the quarter's last day. The schema's activate_by can't say that purchases before activation earn 1%; it's set to the quarter's last day and the rule notes say so.
-  - Cashback Match (Discover matches all cash back a new cardmember earns in the first year, no limit) can't be expressed as a fixed welcome offer; it roughly doubles first-year earnings on every rule. Not modeled.
-  - The card page's Cashback Match terms say "through your first 365 days"; the Cashback Bonus page says "your first 12 consecutive billing periods or 365 days, whichever is longer". Which one current applicants get is unclear; it doesn't change any rate here.
+  - The card page's and application terms' Cashback Match terms say "through your first 365 days"; the Cashback Bonus page says "your first 12 consecutive billing periods or 365 days, whichever is longer". Modeled as 365 days, the shorter. Cash back is matched only when processed within the period, so a purchase in its last days may post too late; earnrate goes by the purchase date.
   - Foreign transaction fee isn't stated on any Discover page or in the application terms (their fee table has no foreign transaction row). Left null; confirm with the Cardmember Agreement or Capital One.
   - Discover says 5% purchases "must be made with merchants in the U.S." The application terms put that sentence in the general earning paragraph, so it may also apply to the 1% base and Capital One Travel; only the rotating rules are marked us_only.
   - Amusement parks, tourist attractions, aquariums, zoos, record stores, video rental, pool halls and bowling alleys earn 5% as Q4 2026 entertainment but have no earnrate category. Golf courses, country clubs and collegiate sporting events are excluded but can't be told apart from the entertainment category.
@@ -167,3 +173,15 @@ evidence:
   - rule: welcome_offer
     url: https://www.discover.com/credit-cards/cash-back/it-card/
     quote: 'Get an unlimited dollar-for-dollar match of all the cash back you earn at the end of your first year'
+  - rule: cashback-match
+    url: https://www.discover.com/credit-cards/cash-back/it-card/
+    quote: 'Get an unlimited dollar-for-dollar match of all the cash back you earn'
+  - rule: cashback-match
+    url: https://www.discover.com/credit-cards/cash-back/it-card/
+    quote: 'There is no limit to how much we’ll match.'
+  - rule: cashback-match
+    url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
+    quote: 'from the day your new account is approved through your first 365 days'
+  - rule: cashback-match
+    url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
+    quote: 'We will not match: rewards that are processed after your match period ends'

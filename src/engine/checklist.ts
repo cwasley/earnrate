@@ -4,6 +4,7 @@ import { currentPeriodEnd, daysBetween } from './periods.ts'
 import {
   CAP_PERIODS,
   choiceName,
+  introEndsText,
   listed,
   money,
   shortDate,
@@ -20,7 +21,8 @@ import {
 // Node-free: earnrate.dev builds the same list from its browser wallet.
 
 export type ChecklistItem = {
-  kind: 'activate' | 'pick' | 'cap' | 'bonus' | 'milestone' | 'rotation'
+  kind:
+    'activate' | 'pick' | 'cap' | 'bonus' | 'milestone' | 'rotation' | 'intro'
   cardId: string
   text: string
   due: string | null // YYYY-MM-DD: the deadline, or when a cap resets
@@ -143,6 +145,20 @@ export function checklist(
         due: b.deadline,
       })
     }
+
+    const quarterEnd = currentPeriodEnd('quarter', today, null)
+    if (
+      s.intro?.state === 'active' &&
+      s.intro.until !== null &&
+      quarterEnd !== null &&
+      s.intro.until <= quarterEnd
+    )
+      items.push({
+        kind: 'intro',
+        cardId: card.id,
+        text: introEndsText(name, s.intro.days, s.intro.until),
+        due: s.intro.until,
+      })
 
     if (s.rotationGap !== null) {
       items.push({

@@ -1148,3 +1148,204 @@ describe('#27 new cards', () => {
     },
   )
 })
+
+describe('#28 first-year rates', () => {
+  const wallet = (cards: object[], memberships: string[] = []) =>
+    withProfile(WalletSchema.parse({ cards, memberships }), 'flat')
+  const discover = (extra: object = {}) => ({
+    id: 'discover-it-cash-back',
+    activated: ['q4-2026-restaurants'],
+    ...extra,
+  })
+  const customized = (extra: object = {}) => ({
+    id: 'bank-of-america-customized-cash-rewards',
+    chosen: { period: '2026', picks: { 'three-percent': ['dining'] } },
+    ...extra,
+  })
+  const dinner = purchase('Chipotle', { amount: 100, channel: 'in_store' })
+
+  goldenTest(
+    '#28a Discover it inside Cashback Match: every rate doubles, named with its end date',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([discover({ opened: '2026-03-04' })]),
+        dinner,
+      )
+      const it = entry(rec, 'discover-it-cash-back')
+      expect(it.rate).toBeCloseTo(10)
+      expect(it.earned).toBeCloseTo(10)
+      expectSome(
+        it.reasoning,
+        /^10% cash back in your first year, through Mar 3, 2027; 5% cash back after that\./,
+      )
+      const hardware = entry(
+        recommend(
+          catalog,
+          wallet([discover({ opened: '2026-03-04' })]),
+          purchase("Joe's Hardware Santa Monica", { channel: 'in_store' }),
+        ),
+        'discover-it-cash-back',
+      )
+      expect(hardware.rate).toBeCloseTo(2)
+      expectSome(hardware.reasoning, /^2% cash back, its base rate\./)
+    },
+  )
+
+  goldenTest(
+    '#28b Discover it: past the $1,500 quarterly cap the doubled 1% applies',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([discover({ opened: '2026-03-04' })]),
+        purchase('Chipotle', { amount: 2000, channel: 'in_store' }),
+      )
+      // $1,500 at 10%, $500 at 2%.
+      expect(entry(rec, 'discover-it-cash-back').rate).toBeCloseTo(8)
+    },
+  )
+
+  goldenTest(
+    '#28c Discover it after its first 365 days, and on the last day of them',
+    () => {
+      const last = recommend(
+        catalog,
+        wallet([discover({ opened: '2025-12-31' })]),
+        purchase('Chipotle', { channel: 'in_store', date: '2026-12-30' }),
+      )
+      expect(entry(last, 'discover-it-cash-back').rate).toBeCloseTo(10)
+      const after = recommend(
+        catalog,
+        wallet([discover({ opened: '2025-12-31' })]),
+        purchase('Chipotle', { channel: 'in_store', date: '2026-12-31' }),
+      )
+      const it = entry(after, 'discover-it-cash-back')
+      expect(it.rate).toBeCloseTo(5)
+      expect(it.reasoning.join(' ')).not.toMatch(/first year/)
+      expect(after.assumptions.join(' ')).not.toMatch(/first-year rate/)
+    },
+  )
+
+  goldenTest(
+    '#28d Discover it with no opening date: standard rates, and the date is asked for',
+    () => {
+      const rec = recommend(catalog, wallet([discover()]), dinner)
+      expect(entry(rec, 'discover-it-cash-back').rate).toBeCloseTo(5)
+      expectSome(
+        rec.assumptions,
+        /^A first-year rate may apply on Discover it Cash Back Credit Card: 10% cash back here in an account's first year, instead of the 5% cash back it's ranked at\. Give the card's opening date if it opened in the last year\.$/,
+      )
+    },
+  )
+
+  goldenTest("#28e a welcome bonus's opening date counts too", () => {
+    const rec = recommend(
+      catalog,
+      wallet([discover({ bonus: { opened: '2026-09-01', spent: 100 } })]),
+      dinner,
+    )
+    expect(entry(rec, 'discover-it-cash-back').rate).toBeCloseTo(10)
+  })
+
+  goldenTest(
+    '#28f Customized Cash inside its first year: 6% in the choice category',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([customized({ opened: '2026-03-04' })]),
+        dinner,
+      )
+      const it = entry(rec, 'bank-of-america-customized-cash-rewards')
+      expect(it.rate).toBeCloseTo(6)
+      expectSome(
+        it.reasoning,
+        /^6% cash back in your first year, through Mar 3, 2027; 3% cash back after that\./,
+      )
+      const grocery = recommend(
+        catalog,
+        wallet([customized({ opened: '2026-03-04' })]),
+        purchase('Safeway', { channel: 'in_store' }),
+      )
+      expect(
+        entry(grocery, 'bank-of-america-customized-cash-rewards').rate,
+      ).toBeCloseTo(2)
+    },
+  )
+
+  goldenTest(
+    '#28g Customized Cash: the extra 3% gets no BofA Rewards bonus',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([customized({ opened: '2026-03-04' })], ['bofa-rewards-member']),
+        dinner,
+      )
+      // 3% × 1.1 + 3%.
+      expect(
+        entry(rec, 'bank-of-america-customized-cash-rewards').rate,
+      ).toBeCloseTo(6.3)
+    },
+  )
+
+  goldenTest(
+    '#28h Customized Cash: the extra 3% stays inside the $2,500 quarterly cap',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([
+          customized({
+            opened: '2026-03-04',
+            cap_usage: {
+              'three-and-two-percent-combined': {
+                period: '2026-Q4',
+                spent: 2400,
+              },
+            },
+          }),
+        ]),
+        purchase('Chipotle', { amount: 200, channel: 'in_store' }),
+      )
+      // $100 at 6%, $100 at 1%.
+      expect(
+        entry(rec, 'bank-of-america-customized-cash-rewards').rate,
+      ).toBeCloseTo(3.5)
+    },
+  )
+
+  goldenTest('#28i Customized Cash after its first year: 3%', () => {
+    const rec = recommend(
+      catalog,
+      wallet([customized({ opened: '2025-10-01' })]),
+      dinner,
+    )
+    const it = entry(rec, 'bank-of-america-customized-cash-rewards')
+    expect(it.rate).toBeCloseTo(3)
+    expect(rec.assumptions.join(' ')).not.toMatch(/first-year rate/)
+  })
+
+  goldenTest(
+    '#28j Customized Cash with no opening date: 3%, and the date is asked for',
+    () => {
+      const rec = recommend(catalog, wallet([customized()]), dinner)
+      expect(
+        entry(rec, 'bank-of-america-customized-cash-rewards').rate,
+      ).toBeCloseTo(3)
+      expectSome(
+        rec.assumptions,
+        /^A first-year rate may apply on Bank of America Customized Cash Rewards Credit Card: 6% cash back here/,
+      )
+    },
+  )
+
+  goldenTest(
+    "#28k no date line for a first-year rate that wouldn't change the pick",
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([customized(), { id: 'citi-double-cash' }]),
+        purchase('Safeway', { channel: 'in_store' }),
+      )
+      expect(rec.assumptions.join(' ')).not.toMatch(/first-year rate/)
+    },
+  )
+})

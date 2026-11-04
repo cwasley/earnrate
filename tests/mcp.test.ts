@@ -1150,6 +1150,55 @@ describe('wallet setup', () => {
     expect(text(gas)).toMatch(/2% picks: gas stations and EV charging\./)
   })
 
+  test('add_card and update_card set an optional opening date', async () => {
+    const file = await walletCopy('cards:\n  - id: amex-gold # mine\n')
+    const client = await connect(file)
+    const added = await client.callTool({
+      name: 'add_card',
+      arguments: { cardId: 'bank-of-america-customized-cash-rewards' },
+    })
+    expect(added.isError).toBeFalsy()
+    const bad = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'bank-of-america-customized-cash-rewards',
+        opened: '2027-01-01',
+      },
+    })
+    expect(bad.isError).toBe(true)
+    const set = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'bank-of-america-customized-cash-rewards',
+        opened: '2026-03-04',
+        picks: { 'three-percent': ['dining'] },
+      },
+    })
+    expect(text(set)).toMatch(/opened 2026-03-04/)
+    expect(await readFile(file, 'utf8')).toContain(
+      '  - id: amex-gold # mine\n  - id: bank-of-america-customized-cash-rewards\n    opened: 2026-03-04\n',
+    )
+    const wallet = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(
+      (wallet.structuredContent as WalletSummary).cards.find(
+        (c) => c.cardId === 'bank-of-america-customized-cash-rewards',
+      ),
+    ).toMatchObject({
+      opened: '2026-03-04',
+      intro: { state: 'active', until: '2027-03-03', days: 365 },
+    })
+    expect(text(wallet)).toMatch(
+      /Opened 2026-03-04: first-year rates through Mar 3, 2027\./,
+    )
+    const best = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Chipotle', channel: 'in_store' },
+    })
+    expect(
+      (best.structuredContent as Recommendation).decision?.effectiveReturnPct,
+    ).toBeCloseTo(6)
+  })
+
   test('a wallet can hold memberships with no cards', async () => {
     const client = await connect(
       await walletCopy(
