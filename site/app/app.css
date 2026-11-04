@@ -23,7 +23,7 @@
   grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
   padding: 4px;
-  background: var(--accent-soft);
+  background: var(--tab-track);
   border-radius: 12px;
 }
 
@@ -1156,4 +1156,9 @@ input[type='number']::-webkit-outer-spin-button {
   .sheet-card .card-art {
     display: none;
   }
+}
+
+.app input::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
 }

@@ -645,7 +645,7 @@ function AddCard({
         id="card-search"
         class="search"
         type="search"
-        placeholder="Find a card: sapphire, amex gold, double cash…"
+        placeholder="Find a card, like Sapphire"
         autocomplete="off"
         value={query}
         onInput={(e) => setQuery(e.currentTarget.value)}
@@ -1178,7 +1178,7 @@ export function MyWallet({
             id="wallet-ask"
             type="search"
             list="suggestions"
-            placeholder="Whole Foods, Amazon, gas…"
+            placeholder="Which store?"
             autocomplete="off"
             enterkeyhint="search"
             value={query}

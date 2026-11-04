@@ -277,7 +277,7 @@ export function BestFor({
             id="best-for"
             type="search"
             list="suggestions"
-            placeholder="Whole Foods, Amazon, gas…"
+            placeholder="Store or category"
             autocomplete="off"
             enterkeyhint="search"
             value={text}
