@@ -63,7 +63,7 @@ import { SearchInput } from './SearchInput.tsx'
 import { load, loadList, save } from './settings.ts'
 import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
 import { offerTerms } from '../../src/engine/offers.ts'
-import { dollarsAndCents } from '../../src/engine/text.ts'
+import { capitalize, dollarsAndCents } from '../../src/engine/text.ts'
 
 // The first everyday purchases, as quick picks for one question.
 const QUICK = EVERYDAY_PURCHASES.slice(0, 6).map(quickPickText)
@@ -342,7 +342,8 @@ function CardEditor({
   const [activated, setActivated] = useState<string[]>(held.activated)
   const [anniversary, setAnniversary] = useState(held.anniversary ?? '')
   const [tracking, setTracking] = useState(held.bonus !== undefined)
-  const [opened, setOpened] = useState(held.bonus?.opened ?? '')
+  // One opening date serves the welcome bonus and any first-year rate.
+  const [opened, setOpened] = useState(held.opened ?? held.bonus?.opened ?? '')
   const [spent, setSpent] = useState(held.bonus ? String(held.bonus.spent) : '')
   const milestones = card ? milestoneSummaries(card, held, localToday()) : []
   const trackedSpend = milestones.find((m) => m.tracked)
@@ -359,6 +360,10 @@ function CardEditor({
     const input: CardInput = { id: held.id, activated }
     if (Object.keys(chosen).length > 0) input.picks = chosen
     if (anniversary !== '') input.anniversary = anniversary
+    if (info.introRates.length > 0) {
+      if (opened !== '') input.opened = opened
+      else if (held.opened !== undefined) input.opened = null
+    }
     if (tracking && opened !== '')
       input.bonus = { opened, spent: Math.max(0, Number(spent) || 0) }
     else if (!tracking && held.bonus) input.bonus = null
@@ -437,6 +442,25 @@ function CardEditor({
           ))}
         </fieldset>
       ) : null}
+      {info.introRates.length > 0 ? (
+        <fieldset>
+          <legend>First-year rate</legend>
+          <ul class="muted small">
+            {info.introRates.map((i) => (
+              <li key={i.id}>{capitalize(i.text)}.</li>
+            ))}
+          </ul>
+          <label class="field">
+            Account opened (leave blank if it's been more than a year)
+            <input
+              type="date"
+              value={opened}
+              max={localToday()}
+              onInput={(e) => setOpened(e.currentTarget.value)}
+            />
+          </label>
+        </fieldset>
+      ) : null}
       {offer || held.bonus ? (
         <fieldset>
           <legend>Welcome bonus</legend>
@@ -451,15 +475,17 @@ function CardEditor({
           </label>
           {tracking ? (
             <>
-              <label class="field">
-                Account opened
-                <input
-                  type="date"
-                  value={opened}
-                  max={localToday()}
-                  onInput={(e) => setOpened(e.currentTarget.value)}
-                />
-              </label>
+              {info.introRates.length === 0 ? (
+                <label class="field">
+                  Account opened
+                  <input
+                    type="date"
+                    value={opened}
+                    max={localToday()}
+                    onInput={(e) => setOpened(e.currentTarget.value)}
+                  />
+                </label>
+              ) : null}
               <label class="field">
                 Spent toward it so far
                 <input
