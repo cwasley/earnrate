@@ -179,17 +179,18 @@ It totals what each card earned against the best card in your wallet for each pu
 
 ## Supported cards
 
-57 cards, each modeled from the issuer's own terms and checked weekly against them:
+69 cards, each modeled from the issuer's own terms and checked weekly against them:
 
 - **American Express:** Gold, Platinum, Blue Cash Preferred, Blue Cash Everyday, Blue Business Plus
+- **American Express airline and hotel:** Delta SkyMiles Gold, Platinum, Reserve; Hilton Honors, Surpass, Aspire; Marriott Bonvoy Brilliant, Bevy
 - **Chase:** Sapphire Preferred, Sapphire Reserve, Freedom Unlimited, Freedom Flex, Ink Business Cash, Ink Business Preferred, Prime Visa
-- **Chase airline and hotel:** United Gateway, Explorer, Quest, Club, Business, Club Business; Southwest Plus, Premier, Priority, Premier Business, Performance Business; Aeroplan; IHG One Rewards, Premier, Premier Select, Business
+- **Chase airline and hotel:** United Gateway, Explorer, Quest, Club, Business, Club Business; Southwest Plus, Premier, Priority, Premier Business, Performance Business; Aeroplan; IHG One Rewards, Premier, Premier Select, Business; Marriott Bonvoy Boundless, Bold
 - **Citi:** Strata Elite, Strata Premier, Double Cash, Custom Cash, My Best Buy Visa, Costco Anywhere Visa (personal and business); AAdvantage MileUp, Platinum Select, Globe, Executive, Business
-- **Capital One:** Venture X, Venture, Savor, Kohl's Card, Kohl's Rewards Visa
+- **Capital One:** Venture X, Venture, Savor, Quicksilver, Kohl's Card, Kohl's Rewards Visa
 - **Wells Fargo:** Active Cash, Autograph
 - **Bank of America:** Atmos Rewards Ascent, Summit, Business; Customized Cash Rewards
 - **TD Bank:** Target Circle Card, Nordstrom card, Nordstrom Visa
-- **Others:** U.S. Bank Cash+, Bilt Obsidian, SoFi Unlimited 2%
+- **Others:** U.S. Bank Cash+, Discover it Cash Back, Bilt Obsidian, SoFi Unlimited 2%
 
 Store cards (Target, Kohl's, Nordstrom) only come up at their own stores. Airline and hotel cards count only what the card itself earns, not the points a program gives members however they pay, and their perks (bags, free nights, lounges) aren't counted.
 
@@ -219,6 +220,13 @@ Use the connector (or plugin) or the local extension, not both: each keeps its o
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have
 - `record_purchase`: books a purchase against its cap, any open welcome bonus and the card's yearly spend bonuses in your wallet file, keeping your comments
 - `search_cards`, `add_card`, `update_card`, `remove_card`, `set_memberships` and `set_point_values`: set up the wallet in conversation, including what your points are worth (memberships and point values need no cards)
+
+Both servers also offer four prompts, ready-made questions you can pick in Claude instead of typing one. None needs your cards:
+
+- `which-card`: which credit card to use at a store or for a kind of purchase, with an optional amount and country
+- `cheat-sheet`: the card for each everyday kind of purchase
+- `this-quarter`: what to do with your saved cards now (activations, picks, caps, welcome bonuses)
+- `set-up`: save your cards by name, with their picks and memberships
 
 Saving cards is optional: name them in the conversation for one answer, or ask the assistant to save them, and it finds them, adds them, and asks about anything a card needs, like this quarter's Cash+ picks.
 

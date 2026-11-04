@@ -1,0 +1,80 @@
+id: capital-one-quicksilver
+name: Capital One Quicksilver Cash Rewards Credit Card
+issuer: capital-one
+# The card page never names the network in visible text; its embedded
+# product data says MasterCard.
+network: mastercard
+currency: cash
+last_verified: 2026-11-03
+verified_by: claude
+source_urls:
+  - https://www.capitalone.com/credit-cards/quicksilver/
+  # The card page's "Important disclosures" (pricing and rewards FAQ, also
+  # where "Rewards terms" leads); the number is the page's offer id and
+  # changes when Capital One changes it.
+  - https://disclosures.capitalone.com/disclosure.42159.en-US.html
+base_rate: 1.5
+annual_fee: 0
+foreign_transaction_fee: 0
+welcome_offer:
+  dollars: 200
+  spend: 500
+  months: 3
+  note: One-time cash bonus, available by applying through the card page. Existing or previous cardmembers are not eligible if they received a new cardmember bonus for this product in the past 48 months.
+rules:
+  - id: capital-one-travel-hotels-vacation-rentals-car-rentals
+    match:
+      {
+        merchants:
+          [
+            capital-one-travel-hotels,
+            capital-one-travel-vacation-rentals,
+            capital-one-travel-car-rentals,
+          ],
+      }
+    rate: 5
+    note: Only when booked through Capital One Travel. Flights booked there, and hotel incidentals or upgrades paid outside Capital One Travel, earn the base 1.5%.
+  - id: capital-one-entertainment
+    match: { merchants: [capital-one-entertainment] }
+    rate: 5
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales and tickets bought directly from Capital One Hall or Capital One Arena are excluded.
+todo:
+  - Network isn't shown in the card page's visible text. Set to mastercard from the page's embedded product data (cardNetwork MasterCard); confirm against a current card or the Rates & Fees disclosure.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/credit-cards/quicksilver/
+    quote: 'Earn unlimited 1.5% cash back on every purchase, every day.'
+  - rule: base_rate
+    url: https://disclosures.capitalone.com/disclosure.42159.en-US.html
+    quote: 'and 1.5% cash back on all other purchases'
+  - rule: capital-one-travel-hotels-vacation-rentals-car-rentals
+    url: https://www.capitalone.com/credit-cards/quicksilver/
+    quote: 'Earn unlimited 5% cash back on hotels, vacation rentals and rental car bookings.'
+  - rule: capital-one-travel-hotels-vacation-rentals-car-rentals
+    url: https://disclosures.capitalone.com/disclosure.42159.en-US.html
+    quote: 'You will earn 5% cash back on hotels, vacation rentals and rental cars booked through Capital One Travel'
+  - rule: capital-one-travel-hotels-vacation-rentals-car-rentals
+    url: https://disclosures.capitalone.com/disclosure.42159.en-US.html
+    quote: 'will not earn the enhanced earn rate, but will receive the standard 1.5% cash back earn rate'
+  - rule: capital-one-entertainment
+    url: https://www.capitalone.com/credit-cards/quicksilver/
+    quote: 'Eligible Quicksilver cardholders will earn 5% cash back on Capital One Entertainment purchases.'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42159.en-US.html
+    quote: 'Tickets purchased through the Capital One cardholder exclusive pre-sales'
+  - rule: annual_fee
+    url: https://www.capitalone.com/credit-cards/quicksilver/
+    quote: 'Earn unlimited cash back with no annual, hidden or foreign transaction fees.'
+  - rule: annual_fee
+    url: https://disclosures.capitalone.com/disclosure.42159.en-US.html
+    quote: 'Annual Fee None.'
+  - rule: foreign_transaction_fee
+    url: https://www.capitalone.com/credit-cards/quicksilver/
+    quote: 'You won’t pay transaction fees when making purchases outside of the United States.'
+  - rule: welcome_offer
+    url: https://www.capitalone.com/credit-cards/quicksilver/
+    quote: 'Earn a one-time $200 cash bonus once you spend $500 on purchases within 3 months'
+  - rule: welcome_offer
+    url: https://disclosures.capitalone.com/disclosure.42159.en-US.html
+    quote: 'You will earn a $200 bonus if you spend at least $500 within 3 months'

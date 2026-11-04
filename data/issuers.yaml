@@ -19,6 +19,9 @@
   # Column N.A. issues the Bilt card; people know it as Bilt.
   name: Bilt
   search: [bilt]
+- id: discover
+  name: Discover
+  search: [discover it]
 - id: sofi
   name: SoFi
 - id: td-bank

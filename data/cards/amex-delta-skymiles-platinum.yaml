@@ -1,0 +1,118 @@
+id: amex-delta-skymiles-platinum
+name: Delta SkyMiles Platinum American Express Card
+issuer: amex
+network: amex
+currency: delta-skymiles
+last_verified: 2026-11-03
+verified_by: claude
+source_urls:
+  - https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-platinum-american-express-card/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+  - https://www.americanexpress.com/us/content/rewards-info/retail.html
+base_rate: 1
+annual_fee: 350
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 90000
+  spend: 4000
+  months: 6
+  valid_to: 2026-11-04
+  varies: true
+  not_with: [amex-delta-skymiles-reserve]
+  note: 'The public offer is "as high as" 90,000 bonus miles plus a $300 statement credit, both after the same $4,000 in purchases; Amex shows the exact miles (which may be lower, or no offer) after you apply and before you accept. Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card, the Delta SkyMiles® Reserve American Express Card or previous versions of these Cards." Amex may also decline based on your card history.'
+rules:
+  - id: delta
+    match: { merchants: [delta, delta-vacations, delta-stays] }
+    rate: 3
+    note: Charged directly with Delta as merchant of record (delta.com, the Fly Delta app, phone, ticket counters), including Basic Economy fares, upgrades, seats, Sky Club membership, Delta-operated in-flight food and drinks, Delta Vacations packages and new Delta Stays bookings. Not Delta gift cards, deltashop.com, the Delta Flight Museum or in-flight Wi-Fi.
+  - id: hotels
+    match: { categories: [travel.hotels] }
+    rate: 3
+    note: Worldwide, paid directly to the hotel, including paying at check-in or check-out for a stay reserved through a third party. Not hotels prepaid through an online travel agency or in a vacation package. Shops, spas and restaurants inside a hotel don't count unless charged to the room and paid at checkout.
+  - id: restaurants
+    match: { categories: [dining] }
+    exclude: { merchants: [dodger-stadium, bellagio], mccs: [5813] }
+    rate: 2
+    note: Worldwide, including takeout; third-party delivery counts only in the U.S. Not at restaurants inside hotels, casinos or event venues, or at bars, nightclubs, cafeterias and convenience stores.
+  - id: us-supermarkets
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club, convenience_store] }
+    rate: 2
+    geography: us_only
+    note: Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: '1x Mile on eligible purchases: Basic Card Members will earn 1 mile for each dollar'
+  - rule: delta
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: '3x Miles on Delta Purchases: Basic Card Members will earn 2 additional miles'
+  - rule: delta
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'charged directly with Delta where Delta is the merchant of record'
+  - rule: delta
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'Delta Purchases do not include Delta Gift Cards and purchases made at deltashop.com'
+  - rule: delta
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'Delta Purchases include Delta Vacations® packages but not other all-inclusive packages.'
+  - rule: delta
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'Delta Purchases include new Delta Stays prepaid hotel or vacation rental bookings'
+  - rule: hotels
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: '3x Miles at Hotels: Basic Card Members will earn 2 additional miles'
+  - rule: hotels
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'Card Account charged directly with hotels worldwide.'
+  - rule: hotels
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'will not earn additional miles if the hotel is prepaid with a third party'
+  - rule: restaurants
+    url: https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-platinum-american-express-card/
+    quote: 'At restaurants, including takeout and delivery in the U.S.'
+  - rule: restaurants
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: '2x Miles at Restaurants: Basic Card Members will earn 1 additional mile'
+  - rule: restaurants
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'Card Account charged at restaurants worldwide.'
+  - rule: restaurants
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'will not earn additional miles for purchases at bars, nightclubs, cafeterias, and convenience stores'
+  - rule: restaurants
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'fast food restaurants are included in the global restaurants rewards category'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: '2x Miles at U.S. Supermarkets: Basic Card Members will earn 1 additional mile'
+  - rule: us-supermarkets
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'warehouse clubs, and meal-kit delivery services are not considered supermarkets'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-platinum-american-express-card/
+    quote: 'The annual fee for the Delta SkyMiles® Platinum American Express Card is $350.'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'Annual Fee $350 Transaction Fees'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'As High As 90,000 Bonus Miles + Earn $300 Statement Credit'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-platinum-american-express-card/
+    quote: 'after you spend $4,000 in purchases on your new Card within the first 6 months'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'Offer ends 11/04/2026 at 23:59 MST.'
+  - rule: not_with
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'if you have or have had this Card, the Delta SkyMiles® Reserve American Express Card'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+    quote: 'Foreign Transaction None Penalty Fees'
+todo:
+  - The welcome offer's $300 statement credit (same $4,000 spend as the miles) isn't counted, since an offer is either miles or dollars.
+  - The welcome offer ends 11/04/2026; re-check the card page for the next one.
+  - MQD Boost ($1 Medallion Qualification Dollar per $20 of purchases each calendar year) can't be expressed, since it's a second per-dollar currency, not miles and not a one-time spend total.
+  - Not tied to spending, so not modeled as milestones the $2,500 MQD Headstart each Medallion Qualification Year and the Companion Certificate each year after renewal.
+  - Not modeled (statement credits and perks, not miles per dollar) the $150 Delta Stays credit, the $120 rideshare credit and $120 Resy credit (enrollment required), 20% back on Delta in-flight food and drinks, and TakeOff 15 (15% off Delta award flights).

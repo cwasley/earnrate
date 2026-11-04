@@ -16,6 +16,7 @@ import { JsonWalletStore, type WalletStore } from '../src/data/store.ts'
 import type { CheatSheet } from '../src/engine/cheat-sheet.ts'
 import type { Recommendation } from '../src/engine/types.ts'
 import type { WalletSummary } from '../src/engine/wallet-summary.ts'
+import { PROMPTS } from '../src/mcp/prompts.ts'
 import {
   ANSWER_TOOLS,
   createEarnrateServer,
@@ -389,6 +390,142 @@ describe('tools', () => {
     const result = await client.callTool({ name: 'list_wallet', arguments: {} })
     expect(result.isError).toBe(true)
     expect(text(result)).toMatch(/nope-card: not in the card catalog/)
+  })
+})
+
+describe('prompts', () => {
+  const promptText = (result: { messages: { content: unknown }[] }) =>
+    result.messages
+      .map((m) => (m.content as { text?: string }).text ?? '')
+      .join('\n')
+
+  test('lists the four, with titles and arguments', async () => {
+    const client = await connect(await walletCopy())
+    const { prompts } = await client.listPrompts()
+    expect(prompts.map((p) => p.name)).toEqual(PROMPTS)
+    for (const p of prompts) {
+      expect(p.title, p.name).toBeTruthy()
+      expect(p.description?.length, p.name).toBeGreaterThan(40)
+    }
+    expect(prompts.find((p) => p.name === 'which-card')?.arguments).toEqual([
+      expect.objectContaining({ name: 'store', required: true }),
+      expect.objectContaining({ name: 'amount', required: false }),
+      expect.objectContaining({ name: 'country', required: false }),
+    ])
+    for (const name of ['cheat-sheet', 'this-quarter', 'set-up'])
+      expect(prompts.find((p) => p.name === name)?.arguments ?? []).toEqual([])
+  })
+
+  test('which-card names the tool and the store, with or without an amount', async () => {
+    const client = await connect(await walletCopy())
+    const plain = promptText(
+      await client.getPrompt({
+        name: 'which-card',
+        arguments: { store: 'Whole Foods' },
+      }),
+    )
+    expect(plain).toMatch(/^Which credit card should I use at Whole Foods\?/)
+    expect(plain).toContain(
+      'best_card_for_purchase with merchant "Whole Foods".',
+    )
+    expect(plain).not.toMatch(/amount/)
+    expect(plain).toMatch(/paying abroad .* pass `country`/)
+
+    const priced = promptText(
+      await client.getPrompt({
+        name: 'which-card',
+        arguments: { store: 'Costco', amount: '120', country: 'France' },
+      }),
+    )
+    expect(priced).toMatch(
+      /^Which credit card should I use at Costco for \$120 in France\?/,
+    )
+    expect(priced).toContain('merchant "Costco", amount "120"')
+    expect(priced).toContain('country as the two-letter code for "France"')
+    expect(priced).not.toMatch(/paying abroad/)
+  })
+
+  test('no prompt asks for card numbers or restates a rate', async () => {
+    for (const saving of [
+      'file',
+      'account',
+    ] as const satisfies WalletSaving['savedWallets'][]) {
+      const client =
+        saving === 'file'
+          ? await connect(await walletCopy())
+          : await serve({
+              savedWallets: 'account',
+              store: new JsonWalletStore(
+                catalog,
+                memoryBackend(),
+                'your saved wallet',
+              ),
+            })
+      for (const name of PROMPTS) {
+        const got = promptText(
+          await client.getPrompt({
+            name,
+            arguments: name === 'which-card' ? { store: 'Target' } : {},
+          }),
+        )
+        expect(got, name).not.toMatch(/\d+(\.\d+)?(%|x\b| points)/)
+        expect(got, name).not.toMatch(/(give|tell|send) me .*card numbers/i)
+      }
+    }
+  })
+
+  test('set-up and this-quarter say which wallet they use', async () => {
+    const local = await connect(await walletCopy())
+    const hosted = await serve({
+      savedWallets: 'account',
+      store: new JsonWalletStore(catalog, memoryBackend(), 'your saved wallet'),
+    })
+    const get = async (client: Client, name: string) =>
+      promptText(await client.getPrompt({ name, arguments: {} }))
+    expect(await get(local, 'set-up')).toMatch(/wallet file on this computer/)
+    expect(await get(local, 'set-up')).not.toMatch(/recovery code/)
+    expect(await get(hosted, 'set-up')).toMatch(/hosted earnrate wallet/)
+    expect(await get(hosted, 'set-up')).toMatch(
+      /Never ask for the recovery code/,
+    )
+    expect(await get(hosted, 'this-quarter')).toMatch(
+      /list_wallet.*without pressing the user/s,
+    )
+  })
+
+  test('an unknown prompt or a missing store fails cleanly', async () => {
+    const client = await connect(await walletCopy())
+    await expect(
+      client.getPrompt({ name: 'best-card', arguments: {} }),
+    ).rejects.toThrow(/best-card/)
+    await expect(
+      client.getPrompt({ name: 'which-card', arguments: {} }),
+    ).rejects.toThrow(/store/)
+  })
+
+  test('the hosted server lists the same prompts', async () => {
+    const hosted = await serve({
+      savedWallets: 'account',
+      store: new JsonWalletStore(catalog, memoryBackend(), 'your saved wallet'),
+    })
+    const local = await connect(await walletCopy())
+    const names = async (client: Client) =>
+      (await client.listPrompts()).prompts.map((p) => [
+        p.name,
+        p.arguments?.map((a) => a.name) ?? [],
+      ])
+    expect(await names(hosted)).toEqual(await names(local))
+  })
+
+  test("the Claude Desktop bundle's manifest lists the same prompts", async () => {
+    const manifest = JSON.parse(
+      await readFile(path.join(ROOT, 'mcpb', 'manifest.json'), 'utf8'),
+    ) as { prompts: { name: string; arguments?: string[] }[] }
+    const client = await connect(await walletCopy())
+    const { prompts } = await client.listPrompts()
+    expect(manifest.prompts.map((p) => [p.name, p.arguments ?? []])).toEqual(
+      prompts.map((p) => [p.name, p.arguments?.map((a) => a.name) ?? []]),
+    )
   })
 })
 

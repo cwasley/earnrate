@@ -106,6 +106,7 @@ export function registerWalletTools(
       annotations: {
         title: 'List wallet',
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: false,
       },
     },

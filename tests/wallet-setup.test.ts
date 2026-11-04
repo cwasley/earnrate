@@ -151,7 +151,7 @@ describe('searchCards', () => {
       'chase-sapphire-preferred',
       'chase-sapphire-reserve',
     ])
-    expect(ids('amex gold')).toEqual(['amex-gold'])
+    expect(ids('amex gold')).toEqual(['amex-gold', 'amex-delta-skymiles-gold'])
     expect(ids('bofa customized')).toEqual([
       'bank-of-america-customized-cash-rewards',
     ])

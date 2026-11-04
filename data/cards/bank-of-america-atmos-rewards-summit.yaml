@@ -50,6 +50,13 @@ rules:
     rate: 1.1
     requires: { membership: bank-of-america-account }
     note: The 1x base rate plus the 10% rewards bonus for holding an eligible Bank of America account.
+milestones:
+  - id: spend-60k
+    spend: 60000
+    period: cardmember_year
+    rewards:
+      - a 100,000-point Global Companion Award
+    note: "Up to 100,000 points off a companion's award ticket when you book with points; it credits within 1-2 billing cycles and must be used within 12 months. Separate from the 25,000-point award every anniversary."
 evidence:
   - rule: base_rate
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
@@ -96,5 +103,14 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
     quote: 'Foreign Transaction None Penalty Fee'
+  - rule: spend-60k
+    url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+    quote: 'receive a 100,000-point Global Companion Award annually after spending $60,000 or more on purchases that year'
+  - rule: spend-60k
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
+    quote: 'Annual Global 100K Companion Award worth up to 100,000 points after you spend $60,000 or more'
+  - rule: spend-60k
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081112&productoffercode=S2&locale=en_US
+    quote: 'during your Card anniversary year (every 12 months from the open date anniversary)'
 todo:
   - "BofA's rewards page lists Atmos Rewards cards as not eligible for the BofA Rewards tier bonus (in a popup the source check can't read), so the 10% account bonus stands alone."
