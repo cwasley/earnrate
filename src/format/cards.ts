@@ -26,6 +26,9 @@ export function formatCardInfo(card: CardInfo): string {
       : []),
     ...(card.needsAnniversary ? ['cap resets on the card anniversary'] : []),
     ...card.milestones.map((m) => `spend bonus: ${m.text} (${m.id})`),
+    ...card.introRates.map(
+      (i) => `new accounts: ${i.text}; needs the opening date`,
+    ),
     ...(card.onlyAt ? [`works only at ${card.onlyAt.join(', ')}`] : []),
     foreignFeeText(card.foreignTransactionFee).toLowerCase(),
   ]

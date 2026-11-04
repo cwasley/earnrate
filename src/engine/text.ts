@@ -202,3 +202,34 @@ export const PICK_PERIODS: Record<Choice['period'], string> = {
   calendar_year: 'each year',
   until_changed: 'until you change it',
 }
+
+// Intro rates (a card's first 365 days): "first year", "first 90 days".
+export const introPeriod = (days: number) =>
+  days === 365 ? 'first year' : `first ${String(days)} days`
+export const introAdjective = (days: number) =>
+  days === 365 ? 'first-year' : `${String(days)}-day`
+// Asking for an opening date: "if it opened in the last year".
+export const introSince = (days: number) =>
+  days === 365 ? 'in the last year' : `in the last ${String(days)} days`
+
+// "6% cash back in your first year, through Mar 3, 2027; 3% cash back after
+// that."
+export const introRateText = (
+  earn: string,
+  standard: string,
+  days: number,
+  until: string,
+) =>
+  `${earn} in your ${introPeriod(days)}, through ${shortDate(until)}; ${standard} after that.`
+
+// For a card whose opening date isn't known: it's never assumed to be new.
+export const introUnknownText = (
+  name: string,
+  earn: string,
+  standard: string,
+  days: number,
+) =>
+  `A ${introAdjective(days)} rate may apply on ${name}: ${earn} here in an account's ${introPeriod(days)}, instead of the ${standard} it's ranked at. Give the card's opening date if it opened ${introSince(days)}.`
+
+export const introEndsText = (name: string, days: number, until: string) =>
+  `${name}'s ${introAdjective(days)} rate ends after ${shortDate(until)}; from then on it earns its standard rates.`

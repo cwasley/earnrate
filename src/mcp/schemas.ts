@@ -112,6 +112,7 @@ export const WalletSummarySchema = z.object({
           'bonus',
           'milestone',
           'rotation',
+          'intro',
         ]),
         cardId: z.string(),
         text: z.string(),
@@ -187,6 +188,14 @@ export const WalletSummarySchema = z.object({
       activated: z.array(z.string()),
       toActivate: z.array(z.string()),
       anniversary: z.string().nullable(),
+      opened: z.string().nullable(),
+      intro: z
+        .object({
+          state: z.enum(['active', 'ended', 'no-date']),
+          until: z.string().nullable(),
+          days: z.number(),
+        })
+        .nullable(),
     }),
   ),
 })
@@ -307,6 +316,9 @@ export const CardSearchSchema = z.object({
           rewards: z.array(z.string()),
           text: z.string(),
         }),
+      ),
+      introRates: z.array(
+        z.object({ id: z.string(), days: z.number(), text: z.string() }),
       ),
     }),
   ),

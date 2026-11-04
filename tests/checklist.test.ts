@@ -162,3 +162,27 @@ describe('spend milestones', () => {
       expect(milestones(w)).toEqual([])
   })
 })
+
+test('a first-year rate ending this quarter is on the list, one ending later is not', () => {
+  const items = checklist(
+    catalog,
+    WalletSchema.parse({
+      cards: [
+        { id: 'discover-it-cash-back', opened: '2025-12-01' },
+        {
+          id: 'bank-of-america-customized-cash-rewards',
+          opened: '2026-01-10',
+        },
+      ],
+    }),
+    TODAY,
+  ).filter((i) => i.kind === 'intro')
+  expect(items).toEqual([
+    {
+      kind: 'intro',
+      cardId: 'discover-it-cash-back',
+      text: "Discover it Cash Back Credit Card's first-year rate ends after Nov 30, 2026; from then on it earns its standard rates.",
+      due: '2026-11-30',
+    },
+  ])
+})

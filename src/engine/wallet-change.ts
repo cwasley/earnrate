@@ -24,6 +24,8 @@ export type CardInput = {
   checkoutLabel?: string | null // null goes back to the card's name
   picks?: Record<string, string[]> // choice id → option ids
   anniversary?: string // MM-DD
+  // YYYY-MM-DD the account opened, for intro rates; null removes it.
+  opened?: string | null
   activated?: string[] // replaces the list
   // Cap key → dollars already spent on it this period, e.g. on a card added
   // partway through a quarter.
@@ -52,6 +54,7 @@ type BonusFields = {
 export type CardFields = {
   checkout_label?: string | null // null removes it
   anniversary?: string
+  opened?: string | null // null removes it
   chosen?: { period: string; picks: Record<string, string[]> }
   activated?: string[]
   cap_usage?: Record<string, { period: string; spent: number }>
@@ -92,6 +95,10 @@ function isAnniversary(text: string): boolean {
   )
 }
 
+const isDate = (d: string) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(d) &&
+  new Date(`${d}T00:00:00Z`).toISOString().startsWith(d)
+
 function pickKey(card: Card, today: string): string | null {
   const period = choicePeriod(card)
   return period === null ? null : periodKey(period, today, null)
@@ -120,6 +127,14 @@ export function cardFields(
       )
     }
     fields.anniversary = input.anniversary
+  }
+  if (input.opened === null) fields.opened = null
+  else if (input.opened !== undefined) {
+    if (!isDate(input.opened))
+      problems.push(`"${input.opened}" isn't a date. Use YYYY-MM-DD.`)
+    else if (input.opened > today)
+      problems.push("The account's opening date is in the future.")
+    fields.opened = input.opened
   }
   if (input.activated !== undefined) {
     const needing = card.rules
@@ -234,9 +249,6 @@ export function cardFields(
   if (input.bonus === null) fields.bonus = null
   else if (input.bonus !== undefined) {
     const b = input.bonus
-    const isDate = (d: string) =>
-      /^\d{4}-\d{2}-\d{2}$/.test(d) &&
-      new Date(`${d}T00:00:00Z`).toISOString().startsWith(d)
     if (!isDate(b.opened))
       problems.push(`"${b.opened}" isn't a date. Use YYYY-MM-DD.`)
     else if (b.opened > today)
@@ -275,6 +287,16 @@ export function cardFields(
       ...(dollars === undefined ? {} : { dollars }),
     }
   }
+  const opened =
+    fields.opened === undefined ? (held?.opened ?? null) : fields.opened
+  const bonusOpened =
+    fields.bonus === undefined
+      ? (held?.bonus?.opened ?? null)
+      : fields.bonus?.opened
+  if (opened !== null && bonusOpened != null && opened !== bonusOpened)
+    problems.push(
+      `The card's opening date (${opened}) and its welcome bonus's (${bonusOpened}) differ; give the same date for both.`,
+    )
   return problems.length > 0 ? problems.join('\n') : fields
 }
 
@@ -285,10 +307,12 @@ const newHolding = (id: string): WalletCard => ({
 })
 
 const withFields = (
-  { bonus, checkout_label, ...held }: WalletCard,
+  { bonus, checkout_label, opened, ...held }: WalletCard,
   f: CardFields,
 ): WalletCard => ({
   ...held,
+  ...(opened !== undefined && f.opened === undefined ? { opened } : {}),
+  ...(f.opened ? { opened: f.opened } : {}),
   ...(bonus && f.bonus === undefined ? { bonus } : {}),
   ...(checkout_label !== undefined && f.checkout_label === undefined
     ? { checkout_label }

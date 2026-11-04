@@ -96,6 +96,11 @@ const cardFields = {
     .describe(
       "The account's anniversary as MM-DD, for cards whose cap resets on it.",
     ),
+  opened: IsoDate.nullable()
+    .optional()
+    .describe(
+      'Optional: the day the account opened, YYYY-MM-DD. Only for cards with a first-year rate (search_cards lists it), which applies only while a purchase falls in the window; without a date the card is ranked at its standard rates. Ask the user; never guess or assume a card is new. null removes it.',
+    ),
   activated: z
     .array(z.string())
     .optional()

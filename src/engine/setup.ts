@@ -6,6 +6,7 @@ import { membership, membershipName, sameGroup } from './memberships.ts'
 import { milestoneWhat } from './milestones.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap } from './rotation.ts'
+import { introWhat } from './rule-text.ts'
 import { idList, listed } from './text.ts'
 
 export type CardChoiceInfo = {
@@ -42,6 +43,8 @@ export type CardInfo = {
     rewards: string[]
     text: string
   }[]
+  // Rates for a stretch after opening, which need the opening date.
+  introRates: { id: string; days: number; text: string }[]
 }
 
 export type CardSearch = {
@@ -191,6 +194,11 @@ export function cardInfo(
       points: m.points ?? null,
       rewards: m.rewards ?? [],
       text: milestoneWhat(m).replace(/^the /, ''),
+    })),
+    introRates: card.intro_rates.map((i) => ({
+      id: i.id,
+      days: i.days,
+      text: introWhat(catalog, card, i),
     })),
   }
 }

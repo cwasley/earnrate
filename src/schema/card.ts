@@ -179,6 +179,25 @@ export const ChoiceSchema = z.strictObject({
   ),
 })
 
+// A rate for a stretch after the account opens, counted from the opening
+// day: Discover's Cashback Match doubles every rate for the first 365 days,
+// Customized Cash adds 3% to its choice category. With `rules`, it changes
+// only those rules' rates, inside their caps; past a cap they earn what they
+// always do. Without, it changes every rate on the card, past caps included.
+export const IntroRateSchema = z
+  .strictObject({
+    id: KebabId,
+    days: z.number().int().positive(),
+    rules: z.array(KebabId).min(1).optional(),
+    multiply: z.number().positive().optional(),
+    add: z.number().positive().optional(), // currency units per dollar
+    note: z.string().optional(),
+  })
+  .refine(
+    (i) => (i.multiply === undefined) !== (i.add === undefined),
+    'an intro rate needs multiply or add, not both',
+  )
+
 const HexColor = z.string().regex(/^#[0-9a-f]{6}$/)
 
 export const CardSchema = z
@@ -225,6 +244,7 @@ export const CardSchema = z
     choices: z.array(ChoiceSchema).default([]),
     rules: z.array(RuleSchema).default([]),
     milestones: z.array(MilestoneSchema).default([]),
+    intro_rates: z.array(IntroRateSchema).default([]),
     // A short quote from an issuer page for each rule (or `base_rate`). The
     // weekly source check fails a rule whose quote disappears from its page.
     evidence: z
@@ -249,3 +269,4 @@ export type Rule = z.output<typeof RuleSchema>
 export type Choice = z.output<typeof ChoiceSchema>
 export type Card = z.output<typeof CardSchema>
 export type Milestone = z.output<typeof MilestoneSchema>
+export type IntroRate = z.output<typeof IntroRateSchema>

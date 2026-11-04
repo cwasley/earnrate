@@ -21,6 +21,9 @@ const CARD_OPTIONS = `Options:
                              --pick five-percent=fast-food,movie-theaters.
                              Repeat for each choice.
   --anniversary <MM-DD>      Account anniversary, for caps that reset on it.
+  --opened <date>            Optional: the day the account opened (YYYY-MM-DD),
+                             for cards with a first-year rate. Without it the
+                             card is ranked at its standard rates.
   --activated <rules>        Rules you've activated with the issuer, comma
                              separated. Replaces the current list.
   --bonus-opened <date>      Track a welcome bonus: the day the account opened
@@ -52,7 +55,7 @@ ${CARD_OPTIONS}
   update: `Usage: ${CLI_NAME} update <card-id> [options]
 
 Changes a card in your wallet: picks for this period, label, anniversary,
-activations or welcome bonus. Picks for the current period are merged with
+opening date, activations or welcome bonus. Picks for the current period are merged with
 ones already set.
 
 ${CARD_OPTIONS}
@@ -153,6 +156,7 @@ export async function runWalletCommand(
         label: { type: 'string' },
         pick: { type: 'string', multiple: true },
         anniversary: { type: 'string' },
+        opened: { type: 'string' },
         activated: { type: 'string' },
         'bonus-opened': { type: 'string' },
         'bonus-spent': { type: 'string' },
@@ -183,6 +187,7 @@ export async function runWalletCommand(
     values.label !== undefined ||
     values.pick !== undefined ||
     values.anniversary !== undefined ||
+    values.opened !== undefined ||
     values.activated !== undefined
   if (command !== 'add' && command !== 'update' && cardOptionsGiven) {
     return usage(`${CLI_NAME} ${command} doesn't take card options.`)
@@ -293,6 +298,7 @@ export async function runWalletCommand(
   const input: CardInput = { id }
   if (values.label !== undefined) input.checkoutLabel = values.label
   if (values.anniversary !== undefined) input.anniversary = values.anniversary
+  if (values.opened !== undefined) input.opened = values.opened
   if (values.activated !== undefined) {
     input.activated = values.activated
       .split(',')

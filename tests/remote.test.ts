@@ -1131,6 +1131,34 @@ describe('anonymous saved wallets', () => {
     expect(storage?.alarm).toBeGreaterThan(Date.now() + 390 * 24 * 3600_000)
   })
 
+  test('add_card saves an opening date in the hosted wallet', async () => {
+    const d = deployment()
+    const { token } = await startWallet(d)
+    const client = await connect(d, token)
+    const added = await client.callTool({
+      name: 'add_card',
+      arguments: {
+        cardId: 'discover-it-cash-back',
+        opened: '2026-03-04',
+        activated: ['q4-2026-restaurants'],
+      },
+    })
+    expect(added.isError).toBeFalsy()
+    const best = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Chipotle', channel: 'in_store' },
+    })
+    expect(
+      (best.structuredContent as { decision: { effectiveReturnPct: number } })
+        .decision.effectiveReturnPct,
+    ).toBeCloseTo(10)
+    const cleared = await client.callTool({
+      name: 'update_card',
+      arguments: { cardId: 'discover-it-cash-back', opened: null },
+    })
+    expect(text(cleared)).toMatch(/opening date cleared/)
+  })
+
   test('the recovery code reconnects the wallet from another app', async () => {
     const d = deployment()
     const first = await startWallet(d)

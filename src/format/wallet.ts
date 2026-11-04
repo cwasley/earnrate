@@ -6,6 +6,8 @@ import type {
 } from '../engine/record.ts'
 import {
   CAP_PERIODS,
+  introAdjective,
+  introSince,
   money,
   NETWORK_NAMES,
   periodPhrase,
@@ -63,6 +65,15 @@ export function formatWalletSummary(summary: WalletSummary): string {
       lines.push(`  Spend bonus (${m.id}): ${m.text}`)
     if (c.anniversary !== null)
       lines.push(`  Account anniversary: ${c.anniversary}.`)
+    if (c.intro?.state === 'active' && c.intro.until !== null)
+      lines.push(
+        `  Opened ${c.opened ?? ''}: ${introAdjective(c.intro.days)} rates through ${shortDate(c.intro.until)}.`,
+      )
+    else if (c.intro?.state === 'no-date')
+      lines.push(
+        `  Has ${introAdjective(c.intro.days)} rates for new accounts; give its opening date if it opened ${introSince(c.intro.days)}.`,
+      )
+    else if (c.opened !== null) lines.push(`  Opened ${c.opened}.`)
     const b = c.bonus
     if (b?.state === 'open' && b.spend !== null)
       lines.push(

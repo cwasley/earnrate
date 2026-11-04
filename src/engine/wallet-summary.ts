@@ -8,6 +8,7 @@ import {
   isActivated,
   pickedCategories,
 } from './evaluate.ts'
+import { introUntil, introWindows, openedOn } from './intro.ts'
 import { membershipName } from './memberships.ts'
 import { milestoneSummaries, type MilestoneSummary } from './milestones.ts'
 import { optionName, ruleParts } from './rule-text.ts'
@@ -68,6 +69,14 @@ export type CardSummary = {
   activated: string[]
   toActivate: string[] // bonuses current or starting soon, not yet activated, in words
   anniversary: string | null
+  opened: string | null // YYYY-MM-DD
+  // For a card with intro rates: in effect today (through `until`), over, or
+  // unknown without an opening date.
+  intro: {
+    state: 'active' | 'ended' | 'no-date'
+    until: string | null
+    days: number
+  } | null
 }
 
 export type WalletSummary = {
@@ -358,6 +367,8 @@ export function walletSummary(
       activated: held.activated,
       toActivate: toActivate(catalog, card, held, today),
       anniversary: held.anniversary ?? null,
+      opened: openedOn(held),
+      intro: introSummary(card, held, today),
     })
   }
   return {
@@ -367,6 +378,22 @@ export function walletSummary(
     started: null,
     cards,
   }
+}
+
+function introSummary(
+  card: Card,
+  held: WalletCard,
+  today: string,
+): CardSummary['intro'] {
+  const [first] = card.intro_rates
+  if (!first) return null
+  const opened = openedOn(held)
+  if (opened === null)
+    return { state: 'no-date', until: null, days: first.days }
+  const [active] = introWindows(card, held, today)
+  if (active)
+    return { state: 'active', until: active.until, days: active.intro.days }
+  return { state: 'ended', until: introUntil(first, opened), days: first.days }
 }
 
 function pointValues(
