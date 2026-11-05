@@ -7,7 +7,7 @@ import { milestoneWhat } from './milestones.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap, rotationGapText } from './rotation.ts'
 import { creditName, creditWhere, introWhat } from './rule-text.ts'
-import { creditBack, ENROLL_FIRST, idList, listed } from './text.ts'
+import { creditBack, ENROLL_FIRST, idList, listed, possessive } from './text.ts'
 
 export type CardChoiceInfo = {
   id: string
@@ -280,7 +280,7 @@ export function setupNotes(
       kind: 'pick',
       text:
         choice.default && picked.has(choice.id)
-          ? `${name}'s ${choice.id} pick is assumed to be ${idList(choice.default)}, the default. Set it if a different one was picked (${String(choice.pick)} of: ${options}).`
+          ? `${possessive(name)} ${choice.id} pick is assumed to be ${idList(choice.default)}, the default. Set it if a different one was picked (${String(choice.pick)} of: ${options}).`
           : `${name} needs its ${choice.id} pick for this period (${String(choice.pick)} of: ${options}). Until then those categories earn the base rate.`,
     })
   }
@@ -295,7 +295,7 @@ export function setupNotes(
   if (missing.length > 0) {
     notes.push({
       kind: 'membership',
-      text: `Some of ${name}'s rates need ${listed(
+      text: `Some of ${possessive(name)} rates need ${listed(
         missing.map((m) => `${membershipName(catalog, m)} (${m})`),
         'or',
       )}; they're counted without it.`,

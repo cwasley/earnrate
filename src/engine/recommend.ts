@@ -49,6 +49,7 @@ import {
   roundCents,
   shortDate,
   wholeDollars,
+  possessive,
 } from './text.ts'
 import type {
   Confidence,
@@ -667,10 +668,19 @@ export function recommend(
   const winner = entries[0]
   const warnings: string[] = []
   const notes: string[] = []
-  const charging = entries.filter((e) => e.fee > 0)
+  const charging = entries.filter(
+    (e) => e.fee > 0 && e.card.foreign_transaction_fee !== null,
+  )
+  const assumed = entries.filter(
+    (e) => e.fee > 0 && e.card.foreign_transaction_fee === null,
+  )
   if (charging.length > 0 && entries.length > 1)
     notes.push(
       `${listed(charging.map((e) => `${displayName(e)} (${pct(e.fee)})`))} ${charging.length === 1 ? 'charges a foreign transaction fee' : 'charge foreign transaction fees'} here, already subtracted in the ranking.`,
+    )
+  if (assumed.length > 0 && entries.length > 1)
+    notes.push(
+      `${listed(assumed.map(displayName))} ${assumed.length === 1 ? 'has' : 'have'} no foreign transaction fee on file, so the usual ${pct(ASSUMED_FOREIGN_FEE)} is subtracted.`,
     )
 
   if (merchant.source === 'none') {
@@ -775,7 +785,7 @@ export function recommend(
     if (card && gap !== null) {
       const name = held.checkout_label ?? card.name
       warnings.push(
-        `${name}'s rotating categories for ${gap} aren't in earnrate's data yet, so it's ranked without them. If this purchase is in that period's categories, ${name} may earn more. An earnrate update adds them once the issuer announces them.`,
+        `${possessive(name)} rotating categories for ${gap} aren't in earnrate's data yet, so it's ranked without them. If this purchase is in that period's categories, ${name} may earn more. An earnrate update adds them once the issuer announces them.`,
       )
     }
   }
@@ -857,7 +867,7 @@ export function recommend(
     notes.unshift(
       ties
         ? `${displayName(bonus.entry)} earns as much here as any of your cards, so it's the pick: it helps its welcome bonus, ${money(remaining)} more to spend by ${deadline}${worth}.`
-        : `You're behind pace on ${displayName(bonus.entry)}'s welcome bonus: ${money(remaining)} more to spend by ${deadline}${pace}${worth}.${
+        : `You're behind pace on ${possessive(displayName(bonus.entry))} welcome bonus: ${money(remaining)} more to spend by ${deadline}${pace}${worth}.${
             isBest
               ? ''
               : costHere === null

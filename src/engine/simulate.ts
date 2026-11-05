@@ -23,7 +23,13 @@ import { choicePeriod, periodKey } from './periods.ts'
 import { applyBooking, capBooking } from './record.ts'
 import { milestoneWhat } from './milestones.ts'
 import { rotationGap } from './rotation.ts'
-import { money, paymentNote, roundCents, wholeDollars } from './text.ts'
+import {
+  money,
+  paymentNote,
+  roundCents,
+  wholeDollars,
+  possessive,
+} from './text.ts'
 import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
 import { EPSILON, HALF_CENT } from './compare.ts'
@@ -282,11 +288,11 @@ export function simulateWallet(
     ]
     if (gaps.length > 0)
       notes.push(
-        `${card.name}'s rotating categories for ${gaps.join(', ')} aren't in earnrate's data yet, so those quarters count at its everyday rates.`,
+        `${possessive(card.name)} rotating categories for ${gaps.join(', ')} aren't in earnrate's data yet, so those quarters count at its everyday rates.`,
       )
     if (card.annual_fee === undefined)
       notes.push(
-        `${card.name}'s annual fee isn't on file, so none is subtracted.`,
+        `${possessive(card.name)} annual fee isn't on file, so none is subtracted.`,
       )
     else if (
       !held.includes(card.id) &&
@@ -294,7 +300,7 @@ export function simulateWallet(
       card.first_year_fee !== card.annual_fee
     )
       notes.push(
-        `${card.name}'s fee is ${money(card.first_year_fee)} the first year; the yearly figure uses the ${money(card.annual_fee)} that follows.`,
+        `${possessive(card.name)} fee is ${money(card.first_year_fee)} the first year; the yearly figure uses the ${money(card.annual_fee)} that follows.`,
       )
   }
   return {

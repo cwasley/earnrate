@@ -230,9 +230,18 @@ describe('rule conditions', () => {
         { ...testCard, foreign_transaction_fee: null },
       ],
     }
-    const abroad = testEntry(
-      recommend(unknown, wallet(), purchase('Shell', { country: 'FR' })),
+    const rec = recommend(
+      unknown,
+      wallet(),
+      purchase('Shell', { country: 'FR' }),
     )
+    expect(rec.notes.join(' ')).toMatch(
+      /has no foreign transaction fee on file, so the usual 3% is subtracted/,
+    )
+    expect(rec.notes.join(' ')).not.toMatch(
+      /charges? foreign transaction fees?/,
+    )
+    const abroad = testEntry(rec)
     expect(abroad.effectiveReturnPct).toBeCloseTo(0)
     expect(abroad.foreignFee).toBe(3)
     expect(abroad.warnings[0]).toMatch(

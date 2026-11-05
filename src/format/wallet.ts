@@ -14,6 +14,7 @@ import {
   periodPhrase,
   roundCents,
   shortDate,
+  possessive,
 } from '../engine/text.ts'
 import type { WalletSummary } from '../engine/wallet-summary.ts'
 
@@ -108,7 +109,7 @@ export function formatBooking(
   const messages: string[] = []
   if (credit)
     messages.push(
-      `Used ${money(roundCents(credit.after - credit.before))} of ${name}'s ${credit.name} credit: ${money(credit.after)} of ${money(credit.amount)} ${periodPhrase(credit.periodKind, credit.period)}, ${money(roundCents(Math.max(0, credit.amount - credit.after)))} left.`,
+      `Used ${money(roundCents(credit.after - credit.before))} of ${possessive(name)} ${credit.name} credit: ${money(credit.after)} of ${money(credit.amount)} ${periodPhrase(credit.periodKind, credit.period)}, ${money(roundCents(Math.max(0, credit.amount - credit.after)))} left.`,
     )
   if (cap) {
     const left = Math.max(0, cap.capAmount - cap.after)

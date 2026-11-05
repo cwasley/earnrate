@@ -11,6 +11,7 @@ import {
   shortDate,
   useCreditText,
   wholeDollars,
+  possessive,
 } from './text.ts'
 import { milestonePays } from './milestones.ts'
 import { optionName } from './rule-text.ts'
@@ -67,7 +68,7 @@ export function checklist(
       items.push({
         kind: 'activate',
         cardId: card.id,
-        text: `Activate ${name}'s bonus ${a.preposition} ${a.what}${a.activateBy === null ? '' : ` by ${shortDate(a.activateBy)}`}${starts}.`,
+        text: `Activate ${possessive(name)} bonus ${a.preposition} ${a.what}${a.activateBy === null ? '' : ` by ${shortDate(a.activateBy)}`}${starts}.`,
         due:
           a.activateBy ?? (a.from !== null && a.from > today ? a.from : a.to),
       })
@@ -90,7 +91,7 @@ export function checklist(
       items.push({
         kind: 'pick',
         cardId: card.id,
-        text: `Pick ${name}'s ${listed(unpicked.map((c) => choiceName(c.id)))} categories for this ${first.period.replace('_', ' ')}; until then they earn the base rate.`,
+        text: `Pick ${possessive(name)} ${listed(unpicked.map((c) => choiceName(c.id)))} categories for this ${first.period.replace('_', ' ')}; until then they earn the base rate.`,
         due,
       })
     } else {
@@ -107,7 +108,7 @@ export function checklist(
         items.push({
           kind: 'pick',
           cardId: card.id,
-          text: `Pick ${name}'s categories for next ${ending.period.replace('_', ' ')}; this one ends ${shortDate(end)}.`,
+          text: `Pick ${possessive(name)} categories for next ${ending.period.replace('_', ' ')}; this one ends ${shortDate(end)}.`,
           due: end,
         })
     }
@@ -118,7 +119,7 @@ export function checklist(
       items.push({
         kind: 'pick',
         cardId: card.id,
-        text: `${name}'s ${listed(assumed.map((c) => choiceName(c.id)))} pick is assumed to be ${listed(assumed.flatMap((c) => (c.default ?? []).map((o) => optionName(catalog, card, c.id, o))))}; set it if you picked something else.`,
+        text: `${possessive(name)} ${listed(assumed.map((c) => choiceName(c.id)))} pick is assumed to be ${listed(assumed.flatMap((c) => (c.default ?? []).map((o) => optionName(catalog, card, c.id, o))))}; set it if you picked something else.`,
         due: null,
       })
 
@@ -131,7 +132,7 @@ export function checklist(
         cardId: card.id,
         text:
           cap.remaining === 0
-            ? `${name}'s ${cap.label} cap is used up${resets === null ? '' : ` until ${shortDate(resets)}`}; another card may earn more there.`
+            ? `${possessive(name)} ${cap.label} cap is used up${resets === null ? '' : ` until ${shortDate(resets)}`}; another card may earn more there.`
             : `${name}: ${money(cap.remaining)} left of ${money(cap.amount)} ${CAP_PERIODS[cap.period]} at the bonus rate on ${cap.label}.`,
         due: resets,
       })
@@ -180,7 +181,7 @@ export function checklist(
       items.push({
         kind: 'bonus',
         cardId: card.id,
-        text: `${name}'s welcome bonus: ${money(b.remaining)} to go by ${shortDate(b.deadline)}, about ${wholeDollars(b.remaining / weeks)} a week.`,
+        text: `${possessive(name)} welcome bonus: ${money(b.remaining)} to go by ${shortDate(b.deadline)}, about ${wholeDollars(b.remaining / weeks)} a week.`,
         due: b.deadline,
       })
     }
@@ -203,7 +204,7 @@ export function checklist(
       items.push({
         kind: 'rotation',
         cardId: card.id,
-        text: `${name}'s ${s.rotationGap} categories aren't out yet; earnrate adds them once the issuer posts them.`,
+        text: `${possessive(name)} ${s.rotationGap} categories aren't out yet; earnrate adds them once the issuer posts them.`,
         due: null,
       })
     }

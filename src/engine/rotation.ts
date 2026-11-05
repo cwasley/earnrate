@@ -1,5 +1,6 @@
 import type { Card } from '../schema/card.ts'
 import { periodKey } from './periods.ts'
+import { possessive } from './text.ts'
 
 // The period of the card's rotating categories that `date` falls in, when no
 // rule in the data covers it yet; null when it's covered or the card doesn't
@@ -21,4 +22,4 @@ export function rotationGap(card: Card, date: string): string | null {
 // What answers say about a gap: "Freedom Flex's rotating categories for
 // 2027-Q2 aren't in earnrate's data yet. ..."
 export const rotationGapText = (name: string, gap: string) =>
-  `${name}'s rotating categories for ${gap} aren't in earnrate's data yet. An earnrate update adds them once the issuer announces them.`
+  `${possessive(name)} rotating categories for ${gap} aren't in earnrate's data yet. An earnrate update adds them once the issuer announces them.`

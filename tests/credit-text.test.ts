@@ -50,3 +50,13 @@ describe('merchant credit wording', () => {
     )
   })
 })
+
+describe('possessive', () => {
+  test('a name ending in s takes only an apostrophe', async () => {
+    const { possessive } = await import('../src/engine/text.ts')
+    expect(possessive('Capital One Savor Rewards')).toBe(
+      "Capital One Savor Rewards'",
+    )
+    expect(possessive('Amex Platinum')).toBe("Amex Platinum's")
+  })
+})

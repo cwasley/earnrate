@@ -1959,7 +1959,7 @@ describe('#32 merchant statement credits', () => {
       expect(enroll).toHaveLength(1)
       expect(enroll[0]?.due).toBeNull()
       expect(enroll[0]?.text).toMatch(
-        /^Enroll in The Platinum Card from American Express's Lululemon, Resy, .* and YouTube TV credits with the issuer, then mark them enrolled\.$/,
+        /^Enroll in The Platinum Card from American Express' Lululemon, Resy, .* and YouTube TV credits with the issuer, then mark them enrolled\.$/,
       )
     },
   )

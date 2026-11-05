@@ -189,6 +189,10 @@ export function paymentNote(
 
 // A name with its own "and" ("drugstores and pharmacies") would run into the
 // list's: those lists use commas only, with those names last.
+// "Amex Platinum's", "Capital One Savor Rewards'".
+export const possessive = (name: string) =>
+  name.endsWith('s') ? `${name}'` : `${name}'s`
+
 export const listed = (parts: string[], joiner = 'and') => {
   const anded = parts.filter((p) => p.includes(' and '))
   if (anded.length > 0)
@@ -280,7 +284,7 @@ export const introUnknownText = (
   `A ${introAdjective(days)} rate may apply on ${name}: ${earn} here in an account's ${introPeriod(days)}, instead of the ${standard} it's ranked at. Give the card's opening date if it opened ${introSince(days)}.`
 
 export const introEndsText = (name: string, days: number, until: string) =>
-  `${name}'s ${introAdjective(days)} rate ends after ${shortDate(until)}; from then on it earns its standard rates.`
+  `${possessive(name)} ${introAdjective(days)} rate ends after ${shortDate(until)}; from then on it earns its standard rates.`
 
 // Merchant statement credits. Always dollars, never a percentage.
 export const CREDIT_PERIODS: Record<Credit['period'], string> = {
@@ -362,8 +366,8 @@ export const useCreditText = (card: string, c: CreditWords, left: number) =>
 
 export const enrollCreditText = (card: string, names: string[]) =>
   names.length === 1
-    ? `Enroll in ${card}'s ${names[0] ?? ''} credit with the issuer, then mark it enrolled.`
-    : `Enroll in ${card}'s ${listed(names)} credits with the issuer, then mark them enrolled.`
+    ? `Enroll in ${possessive(card)} ${names[0] ?? ''} credit with the issuer, then mark it enrolled.`
+    : `Enroll in ${possessive(card)} ${listed(names)} credits with the issuer, then mark them enrolled.`
 
 // Simulations, the cheat sheet and welcome-offer comparisons.
 export const CREDITS_LEFT_OUT =

@@ -19,6 +19,7 @@ import {
   money,
   paymentNote,
   shortDate,
+  possessive,
 } from './text.ts'
 import type { RankedCard } from './types.ts'
 
@@ -133,7 +134,7 @@ export function cheatSheet(
       ...(near.length > 0 ? [`comes within a point on ${listed(near)}`] : []),
     ]
     return [
-      `Working on ${name}'s welcome bonus: ${money(status.remaining ?? 0)} more by ${shortDate(status.deadline ?? date)}. ${
+      `Working on ${possessive(name)} welcome bonus: ${money(status.remaining ?? 0)} more by ${shortDate(status.deadline ?? date)}. ${
         where.length > 0
           ? `It ${where.join(' and ')}, so those are the places to use it.`
           : 'It trails the listed cards everywhere, so use it on everyday spending only as needed to reach the bonus.'
