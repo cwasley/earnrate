@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import { parse } from 'yaml'
 import { loadCatalog } from '../src/data/load.ts'
-import { parseWalletYaml } from '../src/format/wallet-yaml.ts'
+import { parseWalletYaml, walletYaml } from '../src/format/wallet-yaml.ts'
 import { CardSchema } from '../src/schema/card.ts'
-import { WalletSchema } from '../src/schema/wallet.ts'
+import { WalletCardSchema, WalletSchema } from '../src/schema/wallet.ts'
 
 const goldYaml = `
 id: amex-gold
@@ -119,6 +119,38 @@ cards: [{ id: amex-gold }]
 `),
     )
     expect(wallet.valuations['MR']).toBe(1.5)
+  })
+
+  test('an export keeps every wallet card field through an import', async () => {
+    const catalog = await loadCatalog()
+    const wallet = parseWalletYaml(
+      `
+version: 1
+valuations: { MR: 1.6 }
+memberships: [amazon-prime]
+cards:
+  - id: amex-platinum
+    checkout_label: Platinum
+    anniversary: '03-14'
+    opened: '2025-03-14'
+    cap_usage: { flights: { period: '2026', spent: 1200 } }
+    milestone_usage: { spend-75k: { period: '2026', spent: 14950 } }
+    enrolled: [lululemon]
+    credit_usage: { lululemon: { period: 2026-Q4, used: 75 } }
+    bonus: { opened: '2026-10-01', spent: 100 }
+  - id: usbank-cash-plus
+    chosen: { period: 2026-Q4, picks: { five-percent: [fast-food, cell-phone] } }
+  - id: discover-it-cash-back
+    activated: [q4-2026-restaurants]
+`,
+      catalog,
+    )
+    if (typeof wallet === 'string') throw new Error(wallet)
+    const set = new Set(wallet.cards.flatMap((c) => Object.keys(c)))
+    expect(
+      Object.keys(WalletCardSchema.shape).filter((k) => !set.has(k)),
+    ).toEqual([])
+    expect(parseWalletYaml(walletYaml(wallet), catalog)).toEqual(wallet)
   })
 
   test('an imported wallet with a card number says so', async () => {

@@ -5,10 +5,28 @@ import {
   CARD_NUMBER_LABEL,
   CARD_NUMBER_REDEMPTION,
 } from '../schema/card-number.ts'
-import { WALLET_VERSION, WalletSchema, type Wallet } from '../schema/wallet.ts'
+import {
+  WALLET_VERSION,
+  WalletCardSchema,
+  WalletSchema,
+  type Wallet,
+  type WalletCard,
+} from '../schema/wallet.ts'
 
 // A wallet as the YAML file the CLI reads, for moving it between the
 // website, the remote server and the command line. Node-free.
+
+// Every field the schema defines, in its order, so a new wallet field is
+// exported without anyone remembering to add it here.
+const CARD_FIELDS = Object.keys(WalletCardSchema.shape) as (keyof WalletCard)[]
+
+const isEmpty = (value: unknown) =>
+  value === undefined ||
+  (Array.isArray(value)
+    ? value.length === 0
+    : typeof value === 'object' &&
+      value !== null &&
+      Object.keys(value).length === 0)
 
 function compact(wallet: Wallet) {
   return {
@@ -19,20 +37,11 @@ function compact(wallet: Wallet) {
     ...(wallet.memberships.length > 0
       ? { memberships: wallet.memberships }
       : {}),
-    cards: wallet.cards.map((c) => ({
-      id: c.id,
-      ...(c.checkout_label === undefined
-        ? {}
-        : { checkout_label: c.checkout_label }),
-      ...(c.anniversary === undefined ? {} : { anniversary: c.anniversary }),
-      ...(c.opened === undefined ? {} : { opened: c.opened }),
-      ...(Object.keys(c.cap_usage).length > 0
-        ? { cap_usage: c.cap_usage }
-        : {}),
-      ...(c.chosen === undefined ? {} : { chosen: c.chosen }),
-      ...(c.activated.length > 0 ? { activated: c.activated } : {}),
-      ...(c.bonus === undefined ? {} : { bonus: c.bonus }),
-    })),
+    cards: wallet.cards.map((c) =>
+      Object.fromEntries(
+        CARD_FIELDS.flatMap((k) => (isEmpty(c[k]) ? [] : [[k, c[k]]])),
+      ),
+    ),
   }
 }
 
