@@ -5,7 +5,7 @@ color: '#c9a24f'
 issuer: amex
 network: amex
 currency: delta-skymiles
-last_verified: 2026-11-03
+last_verified: 2026-11-05
 verified_by: claude
 source_urls:
   - https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-gold-american-express-card/

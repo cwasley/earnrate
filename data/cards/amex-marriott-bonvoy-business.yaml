@@ -6,7 +6,7 @@ issuer: amex
 network: amex
 currency: marriott-bonvoy
 business: true
-last_verified: 2026-11-04
+last_verified: 2026-11-05
 verified_by: claude
 source_urls:
   - https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
