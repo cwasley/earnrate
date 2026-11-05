@@ -148,4 +148,4 @@ evidence:
     quote: 'Foreign Transaction Fee We will not charge you a foreign transaction fee.'
   - rule: foreign_transaction_fee
     url: https://venmo.com/about/creditcard/
-    quote: 'No foreign transaction fee 2 Spend when you travel.'
+    quote: 'No foreign transaction fee'

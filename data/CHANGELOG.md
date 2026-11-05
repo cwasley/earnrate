@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.05.2
+
+Evidence quotes only; no rates changed. `chase-ihg-one-rewards-business`'s Expensify credit quotes the page's "Enjoy up to $100 in statement credits towards Expensify purchases each calendar year." (a link now splits the old sentence), and `venmo-credit-card`'s foreign transaction fee quotes "No foreign transaction fee" on venmo.com (a footnote number now runs into the old one). Sources: [Chase](https://creditcards.chase.com/business-credit-cards/IHG/business), [Venmo](https://venmo.com/about/creditcard/).
+
 ## 2026.11.05.1
 
 Welcome offers replacing the four that ended 2026-11-04, read on Amex's pages 2026-11-05; none has an end date now. Discover it's foreign transaction fee, from a Discover page that states it.

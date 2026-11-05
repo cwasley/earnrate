@@ -141,7 +141,7 @@ evidence:
     quote: 'up to a maximum accumulation of $100 in a calendar year'
   - rule: expensify
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
-    quote: 'purchases made directly with Expensify through expensify.com and the Expensify app'
+    quote: 'Enjoy up to $100 in statement credits towards Expensify purchases each calendar year.'
 todo:
   - "Starting January 1, 2027, $50,000 of purchases in a calendar year earns Diamond Elite status. It isn't listed as a milestone yet, because a milestone has no start date."
   - The $100 airline statement credit (after $250 on flights bought directly each calendar year) isn't modeled.
