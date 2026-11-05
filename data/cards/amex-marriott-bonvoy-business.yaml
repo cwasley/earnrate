@@ -15,11 +15,10 @@ base_rate: 2
 annual_fee: 125
 foreign_transaction_fee: 0
 welcome_offer:
-  points: 100000
-  spend: 8000
+  points: 75000
+  spend: 6000
   months: 6
-  valid_to: 2026-11-04
-  note: 'Plus a Free Night Award (up to 50,000 points), which earnrate does not value. Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card or the Starwood Preferred Guest® Business Credit Card from American Express or previous versions of these Cards," and may also decline based on your card history. Also not available to anyone who had a Marriott business card from Chase in the last 30 days, opened the Marriott Bonvoy Bountiful, Boundless or Bold card from Chase in the last 90 days, or got a new Card Member bonus on one of those Chase cards in the last 24 months.'
+  note: 'Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card or the Starwood Preferred Guest® Business Credit Card from American Express or previous versions of these Cards," and may also decline based on your card history. Also not available to anyone who had a Marriott business card from Chase in the last 30 days, opened the Marriott Bonvoy Bountiful, Boundless or Bold card from Chase in the last 90 days, or got a new Card Member bonus on one of those Chase cards in the last 24 months.'
 rules:
   - id: marriott-hotels
     match: { merchants: [marriott] }
@@ -102,13 +101,13 @@ evidence:
     quote: 'Foreign Transaction None Penalty Fees'
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
-    quote: 'Earn 100,000 Marriott Bonvoy® Bonus Points and 1 Free Night Award'
+    quote: 'Earn 75,000 Marriott Bonvoy® Bonus Points'
   - rule: welcome_offer
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
-    quote: 'after you spend $8,000 or more (the “Threshold Amount”) in eligible purchases'
+    quote: 'You can earn 75,000 Marriott Bonvoy® bonus points after you complete $6,000 or more'
   - rule: welcome_offer
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
-    quote: 'Offer ends 11/4/2026 at 11:59 PM MST.'
+    quote: 'within your first 6 months of Card Membership'
 todo:
   - The welcome offer ends 11/04/2026; re-check the card page for the next one.
   - The welcome offer's Free Night Award isn't valued; a welcome offer holds only points.

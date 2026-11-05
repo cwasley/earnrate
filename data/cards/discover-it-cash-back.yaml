@@ -18,11 +18,12 @@ source_urls:
   - https://www.discover.com/credit-cards/cash-back/cashback-bonus.html
   # The calendar page's "See our FAQs".
   - https://www.discover.com/credit-cards/card-smarts/using-cashback-bonus/
+  # Discover's travel-card article: the only Discover page that states the
+  # foreign transaction fee (the application terms' fee table has no row).
+  - https://www.discover.com/credit-cards/card-smarts/best-international-travel-credit-card/
 base_rate: 1
 annual_fee: 0
-# No page states it: the application terms' fee table lists no foreign
-# transaction fee row, but nothing says "None".
-foreign_transaction_fee: null
+foreign_transaction_fee: 0
 welcome_offer:
   dollars: 200
   spend: 500
@@ -96,7 +97,6 @@ todo:
   - 'Discover has published only 2026 on its 5% calendar (Oct-Dec 2026 is the last quarter shown). Add 2027 quarters when Discover posts them.'
   - Discover's 5% activation isn't retroactive (5% applies "from 10/1/26 (or the date on which you activate 5%, whichever is later)"), and you can activate until the quarter's last day. The schema's activate_by can't say that purchases before activation earn 1%; it's set to the quarter's last day and the rule notes say so.
   - The card page's and application terms' Cashback Match terms say "through your first 365 days"; the Cashback Bonus page says "your first 12 consecutive billing periods or 365 days, whichever is longer". Modeled as 365 days, the shorter. Cash back is matched only when processed within the period, so a purchase in its last days may post too late; earnrate goes by the purchase date.
-  - Foreign transaction fee isn't stated on any Discover page or in the application terms (their fee table has no foreign transaction row). Left null; confirm with the Cardmember Agreement or Capital One.
   - Discover says 5% purchases "must be made with merchants in the U.S." The application terms put that sentence in the general earning paragraph, so it may also apply to the 1% base and Capital One Travel; only the rotating rules are marked us_only.
   - Amusement parks, tourist attractions, aquariums, zoos, record stores, video rental, pool halls and bowling alleys earn 5% as Q4 2026 entertainment but have no earnrate category. Golf courses, country clubs and collegiate sporting events are excluded but can't be told apart from the entertainment category.
   - Third-party payment accounts and digital wallet transactions may not earn 5% if they don't carry a qualifying MCC. Not modeled.
@@ -162,6 +162,9 @@ evidence:
   - rule: annual_fee
     url: https://disclosures.capitalone.com/disclosure.42300.en-US.html
     quote: 'Annual Fee None.'
+  - rule: foreign_transaction_fee
+    url: https://www.discover.com/credit-cards/card-smarts/best-international-travel-credit-card/
+    quote: 'Discover® has no foreign transaction fee'
   - rule: annual_fee
     url: https://www.discover.com/credit-cards/cash-back/it-card/
     quote: 'No, there is no annual fee for the Discover it Card.'

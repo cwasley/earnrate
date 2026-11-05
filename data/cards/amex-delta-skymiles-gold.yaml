@@ -17,12 +17,11 @@ first_year_fee: 0
 foreign_transaction_fee: 0
 welcome_offer:
   points: 80000
-  spend: 3000
+  spend: 2000
   months: 6
-  valid_to: 2026-11-04
   varies: true
   not_with: [amex-delta-skymiles-platinum, amex-delta-skymiles-reserve]
-  note: 'The public offer is "as high as" 80,000 bonus miles plus a $250 statement credit, both after the same $3,000 in purchases; Amex shows the exact miles (which may be lower, or no offer) after you apply and before you accept. Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card, the Delta SkyMiles® Platinum American Express Card, the Delta SkyMiles® Reserve American Express Card or previous versions of these Cards." Amex may also decline based on your card history.'
+  note: 'The public offer is "as high as" 80,000 bonus miles; Amex shows the exact miles (which may be lower, or no offer) after you apply and before you accept. Amex: "You may not be eligible for a welcome offer if you have or have had this Card or previous versions of this Card, or if you have or have had the Delta SkyMiles® Platinum American Express Card, the Delta SkyMiles® Reserve American Express Card or previous versions of these Cards." Amex may also decline based on your card history.'
 rules:
   - id: restaurants
     match: { categories: [dining] }
@@ -116,16 +115,16 @@ evidence:
     quote: 'will be $0 for the first year of Card Membership'
   - rule: welcome_offer
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
-    quote: 'As High As 80,000 Bonus Miles + $250 Statement Credit'
+    quote: 'As High As 80,000 Bonus Miles'
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-gold-american-express-card/
-    quote: 'after you spend $3,000 in purchases on your new Card within the first 6 months'
+    quote: 'after you spend $2,000 in purchases on your new Card within the first 6 months'
   - rule: welcome_offer
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
-    quote: 'Offer ends 11/04/2026 at 11:59pm MST.'
+    quote: 'You can earn these bonus miles after you make $2,000 or more'
   - rule: not_with
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
-    quote: 'if you have or have had this Card, the Delta SkyMiles® Platinum American Express Card'
+    quote: 'if you have or have had the Delta SkyMiles® Platinum American Express Card, the Delta SkyMiles® Reserve American Express Card'
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'
