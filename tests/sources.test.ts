@@ -11,6 +11,7 @@ import {
 import {
   containsQuote,
   earningLines,
+  errorPage,
   lineKey,
   normalizeText,
 } from '../src/sources/text.ts'
@@ -46,6 +47,15 @@ describe('text', () => {
     expect(
       containsQuote(['Amex Travel App ™ . Earn more'], 'Amex Travel App.'),
     ).toBe(true)
+  })
+
+  test("an issuer's error page is recognized", () => {
+    expect(
+      errorPage(
+        'Log In Loading Error Sorry, we are unable to load this page at this time. Please try again later.',
+      ),
+    ).toMatch(/unable to load this page/)
+    expect(errorPage(PAGE)).toBeNull()
   })
 
   test('earning lines skip APRs and short fragments', () => {
@@ -160,9 +170,48 @@ describe('compareSources', () => {
     )
     expect(hasChanges(report)).toBe(false)
     expect(report.unreachable).toEqual([
-      { url, reason: 'HTTP 403', cards: ['sofi-unlimited-2'] },
+      {
+        url,
+        reason: 'HTTP 403',
+        cards: ['sofi-unlimited-2'],
+        lastRead: '2026-10-24',
+        quotes: card.evidence.map((e) => ({
+          cardId: 'sofi-unlimited-2',
+          rule: e.rule,
+          quote: e.quote,
+        })),
+      },
     ])
     expect(nextLock.pages[url]?.checked).toBe('2026-10-24')
+    const text = formatReport(report, '2026-10-31')
+    expect(text).toMatch(/HTTP 403; last read 2026-10-24/)
+    expect(text).toContain(`"${card.evidence[0]?.quote ?? ''}"`)
+  })
+
+  test('only the named cards are checked; other pages keep their lock entries', () => {
+    const other = 'https://other.example.com/'
+    const lock = baseline(PAGE)
+    const withOther: SourcesLock = {
+      ...lock,
+      pages: { ...lock.pages, [other]: { checked: '2026-01-01', lines: [] } },
+    }
+    const twoCards = {
+      ...catalog,
+      cards: [
+        ...catalog.cards,
+        { ...card, id: 'someone-else', source_urls: [other], evidence: [] },
+      ],
+    }
+    const { report, nextLock } = compareSources(
+      twoCards,
+      new Map([[url, ok(PAGE)]]),
+      withOther,
+      '2026-10-31',
+      new Set(['sofi-unlimited-2']),
+    )
+    expect(report.unreachable).toEqual([])
+    expect(nextLock.pages[other]?.checked).toBe('2026-01-01')
+    expect(nextLock.pages[url]?.checked).toBe('2026-10-31')
   })
 
   test('pages that are no longer sources drop out of the lock', () => {

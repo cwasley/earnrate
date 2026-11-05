@@ -1,5 +1,6 @@
 import { chromium, type Browser } from 'playwright'
 import type { PageLoad, PageSnapshot } from './check.ts'
+import { errorPage } from './text.ts'
 
 // Headless Chrome's default user agent is often blocked outright.
 const USER_AGENT =
@@ -46,6 +47,19 @@ async function load(
         reason: `only ${String(size(text))} characters of text (likely blocked)`,
       }
     }
+    const shown = () => errorPage(`${text.innerText}\n${text.textContent}`)
+    if (shown() !== null) {
+      // A rate limit often lifts after a short wait.
+      await page.waitForTimeout(30_000)
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: 60_000 })
+      await page
+        .waitForLoadState('networkidle', { timeout: 5_000 })
+        .catch(() => undefined)
+      text = await read()
+    }
+    const error = shown()
+    if (error !== null)
+      return { ok: false, reason: `the issuer's error page ("${error}")` }
     return { ok: true, load: text }
   } catch (e) {
     return {

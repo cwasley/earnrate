@@ -23,6 +23,8 @@ const { values } = parseArgs({
     update: { type: 'boolean' },
     report: { type: 'string' },
     dump: { type: 'string' },
+    // Comma-separated card ids: check only their pages.
+    cards: { type: 'string' },
   },
 })
 
@@ -39,7 +41,23 @@ try {
 }
 
 const catalog = await loadCatalog()
-const urls = [...sourceUrls(catalog).keys()]
+const only =
+  values.cards === undefined
+    ? undefined
+    : new Set(
+        values.cards
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean),
+      )
+const unknown = [...(only ?? [])].filter(
+  (id) => !catalog.cards.some((c) => c.id === id),
+)
+if (unknown.length > 0) {
+  process.stderr.write(`Unknown card id: ${unknown.join(', ')}\n`)
+  process.exit(1)
+}
+const urls = [...sourceUrls(catalog, only).keys()]
 let started = Date.now()
 const snapshots = await fetchSnapshots(urls, (s) => {
   const seconds = Math.round((Date.now() - started) / 1000)
@@ -71,7 +89,13 @@ try {
   // No local copy yet (or in CI): removed lines are reported as counts.
 }
 
-const { report, nextLock } = compareSources(catalog, snapshots, lock, today)
+const { report, nextLock } = compareSources(
+  catalog,
+  snapshots,
+  lock,
+  today,
+  only,
+)
 const text = formatReport(report, today, previous)
 process.stdout.write(text)
 if (values.report) await writeFile(values.report, text)

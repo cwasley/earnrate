@@ -12,7 +12,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -30,8 +30,9 @@ jobs:
           [ -f report.md ] && cat report.md >> "$GITHUB_STEP_SUMMARY"
           # 0 nothing changed, 2 only unreachable pages, 3 changes; anything else is a crash.
           [ "$code" = 0 ] || [ "$code" = 2 ] || [ "$code" = 3 ]
+      # Pages it couldn't read get an issue too, so they're checked by hand.
       - name: Open or update the issue
-        if: steps.check.outputs.code == '3'
+        if: steps.check.outputs.code == '2' || steps.check.outputs.code == '3'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

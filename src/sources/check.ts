@@ -26,16 +26,27 @@ export type SourcesReport = {
   }[]
   newLines: { url: string; lines: string[] }[]
   removedLines: { url: string; keys: string[] }[]
-  unreachable: { url: string; reason: string; cards: string[] }[]
+  unreachable: {
+    url: string
+    reason: string
+    cards: string[]
+    lastRead: string | null // the last day the check read it
+    // What to look for when checking the page by hand.
+    quotes: { cardId: string; rule: string; quote: string }[]
+  }[]
   newPages: string[]
   // Offer text on some loads of a page but not others: an A/B test or a
   // targeted offer. Cards already marked `varies` aren't listed.
   varyingOffers: { cardId: string; url: string; quote: string }[]
 }
 
-export function sourceUrls(catalog: Catalog): Map<string, string[]> {
+export function sourceUrls(
+  catalog: Catalog,
+  only?: ReadonlySet<string>,
+): Map<string, string[]> {
   const pages = new Map<string, string[]>()
   for (const card of catalog.cards) {
+    if (only && !only.has(card.id)) continue
     for (const url of card.source_urls) {
       const key = pageKey(url)
       pages.set(key, [...new Set([...(pages.get(key) ?? []), card.id])])
@@ -47,11 +58,14 @@ export function sourceUrls(catalog: Catalog): Map<string, string[]> {
 // Each page is loaded more than once: a line counts as new only if every load
 // shows it, and as removed only if no load does, so copy that varies between
 // visits (A/B tests, rotating promos) isn't reported.
+// With `only`, just those cards' pages are compared, and every other page
+// keeps its lock entry.
 export function compareSources(
   catalog: Catalog,
   snapshots: Map<string, PageSnapshot>,
   lock: SourcesLock,
   today: string,
+  only?: ReadonlySet<string>,
 ): { report: SourcesReport; nextLock: SourcesLock } {
   const report: SourcesReport = {
     missingEvidence: [],
@@ -61,9 +75,12 @@ export function compareSources(
     newPages: [],
     varyingOffers: [],
   }
-  const nextLock: SourcesLock = { version: 1, pages: {} }
+  const nextLock: SourcesLock = {
+    version: 1,
+    pages: only ? { ...lock.pages } : {},
+  }
 
-  for (const [url, cards] of sourceUrls(catalog)) {
+  for (const [url, cards] of sourceUrls(catalog, only)) {
     const snap = snapshots.get(url)
     if (!snap || !snap.ok) {
       const kept = lock.pages[url]
@@ -72,6 +89,14 @@ export function compareSources(
         url,
         reason: snap?.ok === false ? snap.reason : 'not fetched',
         cards,
+        lastRead: kept?.checked ?? null,
+        quotes: catalog.cards
+          .filter((c) => cards.includes(c.id))
+          .flatMap((c) =>
+            c.evidence
+              .filter((e) => pageKey(e.url) === url)
+              .map((e) => ({ cardId: c.id, rule: e.rule, quote: e.quote })),
+          ),
       })
       continue
     }
@@ -94,6 +119,7 @@ export function compareSources(
   }
 
   for (const card of catalog.cards) {
+    if (only && !only.has(card.id)) continue
     for (const e of card.evidence) {
       const snap = snapshots.get(pageKey(e.url))
       if (!snap?.ok) continue
@@ -214,11 +240,17 @@ export function formatReport(
     out.push(
       "## Pages that couldn't be checked",
       '',
-      'Often bot protection on shared servers. Run `yarn check-sources` on your own machine to check these.',
+      "Open each in a regular browser and check that its quotes are still there; if one isn't, re-read the page and update the card. Some read fine from your own machine: `yarn check-sources --cards <ids>`.",
       '',
     )
     for (const u of report.unreachable) {
-      out.push(`- ${u.url} (${u.cards.join(', ')}): ${u.reason}`)
+      out.push(
+        `- ${u.url} (${u.cards.join(', ')}): ${u.reason}; ${u.lastRead === null ? 'never read by the check' : `last read ${u.lastRead}`}`,
+      )
+      for (const q of u.quotes)
+        out.push(
+          `  - **${q.cardId}** \`${q.rule}\`: "${truncate(q.quote, 220)}"`,
+        )
     }
     out.push('')
   }

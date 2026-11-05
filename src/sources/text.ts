@@ -15,6 +15,16 @@ export function normalizeText(text: string): string {
     .trim()
 }
 
+// What an issuer serves instead of the page while it's rate-limiting or down.
+// It comes with HTTP 200 and enough text to pass the length check, so without
+// this it would be read as the page and its hashes written to the lock.
+const ERROR_PAGES = ['Sorry, we are unable to load this page at this time']
+
+export function errorPage(text: string): string | null {
+  const page = normalizeText(text)
+  return ERROR_PAGES.find((p) => page.includes(normalizeText(p))) ?? null
+}
+
 export function containsQuote(pageTexts: string[], quote: string): boolean {
   const needle = normalizeText(quote)
   return pageTexts.some((t) => normalizeText(t).includes(needle))
