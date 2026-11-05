@@ -37,6 +37,9 @@ export const MerchantSchema = z.strictObject({
   // Costco Travel), or a booking made through one (booking: "Hotel through
   // Amex Travel").
   kind: z.enum(['portal', 'booking']).optional(),
+  // "on Walmart+ membership" rather than "at": a membership or subscription,
+  // not a store.
+  preposition: z.literal('on').optional(),
   note: z.string().optional(),
 })
 

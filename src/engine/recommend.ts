@@ -15,7 +15,7 @@ import {
   usableAt,
   type CardEvaluation,
 } from './evaluate.ts'
-import { openedOn } from './intro.ts'
+import { introWindows, openedOn, withIntro } from './intro.ts'
 import { membershipName } from './memberships.ts'
 import {
   milestonePoints,
@@ -68,6 +68,18 @@ export const FOREIGN_ASSUMPTION =
 
 export const isForeign = (purchase: Pick<Purchase, 'country'>) =>
   purchase.country !== 'US'
+
+// A fee that isn't on file counts as the usual 3%, so a card can't win
+// abroad on a guess that it charges none.
+export const ASSUMED_FOREIGN_FEE = 3
+
+export const foreignFeeFor = (
+  card: Pick<Card, 'foreign_transaction_fee'>,
+  purchase: Pick<Purchase, 'country'>,
+) =>
+  isForeign(purchase)
+    ? (card.foreign_transaction_fee ?? ASSUMED_FOREIGN_FEE)
+    : 0
 
 // Any purchase outside the U.S., when no country is named: ZZ is a code ISO
 // leaves unassigned, and nothing prints it.
@@ -187,8 +199,7 @@ function rankEntries(
     const perDollar =
       evaluation.best.rate +
       (bonusPoints > 0 && purchase.amount ? bonusPoints / purchase.amount : 0)
-    // An unknown fee isn't guessed: it's warned about instead.
-    const fee = isForeign(purchase) ? (card.foreign_transaction_fee ?? 0) : 0
+    const fee = foreignFeeFor(card, purchase)
     const fresh =
       card.intro_rates.length > 0 && openedOn(held) === null
         ? evaluateCard(card, { ...held, opened: purchase.date }, ctx).best
@@ -267,23 +278,31 @@ function reasoningFor(
   const lines: string[] = []
   const currency = valuation.currency
 
+  // The standard rate first; a first-year rate on top of it is its own line.
+  // The intro's terms stay in search_cards, not in every answer.
+  const [intro] = best.intro
+  const standard = earnText(
+    catalog,
+    intro ? best.standardRate : best.nominalRate,
+    currency,
+  )
   if (best.rule) {
     const note = best.rule.note ? ` ${best.rule.note}` : ''
     lines.push(
-      `${earnText(catalog, best.nominalRate, currency)} on ${ruleWhat(catalog, best.rule)}${best.rule.requires?.membership === undefined ? '' : `, with ${membershipName(catalog, best.rule.requires.membership)}`}.${note}`,
+      `${standard} on ${ruleWhat(catalog, best.rule)}${best.rule.requires?.membership === undefined ? '' : `, with ${membershipName(catalog, best.rule.requires.membership)}`}.${note}`,
     )
   } else {
-    lines.push(
-      `${earnText(catalog, best.nominalRate, currency)}, its base rate. No bonus category applies here.`,
-    )
+    lines.push(`${standard}, its base rate. No bonus category applies here.`)
   }
-  const [intro] = best.intro
-  if (intro) {
-    const note = intro.intro.note ? ` ${intro.intro.note}` : ''
+  if (intro)
     lines.push(
-      `${introRateText(earnText(catalog, best.nominalRate, currency), earnText(catalog, best.standardRate, currency), intro.intro.days, intro.until)}${note}`,
+      introRateText(
+        earnText(catalog, best.nominalRate, currency),
+        standard,
+        intro.intro.days,
+        intro.until,
+      ),
     )
-  }
 
   const cap = best.cap
   if (cap && amount !== null && amount > cap.remaining) {
@@ -329,13 +348,13 @@ function warningsFor(
   const { card, valuation, evaluation } = entry
   const { best, nominal } = evaluation
   const warnings: string[] = []
-  if (entry.fee > 0)
-    warnings.push(
-      `Charges a ${pct(entry.fee)} foreign transaction fee here, so it nets ${pct(entry.rateReturnPct)}.`,
-    )
   if (isForeign(purchase) && card.foreign_transaction_fee === null)
     warnings.push(
-      "Its foreign transaction fee isn't on file, so none is subtracted. Check the issuer's terms before using it abroad.",
+      `Its foreign transaction fee isn't on file, so earnrate assumes the usual ${pct(entry.fee)} and it nets ${pct(entry.rateReturnPct)}. Check the issuer's terms before using it abroad.`,
+    )
+  else if (entry.fee > 0)
+    warnings.push(
+      `Charges a ${pct(entry.fee)} foreign transaction fee here, so it nets ${pct(entry.rateReturnPct)}.`,
     )
   const capLabel = (e: typeof best) =>
     e.cap
@@ -384,15 +403,21 @@ function warningsFor(
       `Your chosen categories are set for ${evaluation.staleChoice}, not the current period, so chosen-category bonuses don't apply until you update them.`,
     )
   }
+  const windows = introWindows(card, entry.held, purchase.date)
   for (const rule of evaluation.needsActivation) {
+    const rate = earnText(
+      catalog,
+      withIntro(rule.rate, rule.id, windows),
+      valuation.currency,
+    )
     if (rule.activate_by !== undefined && rule.activate_by < purchase.date) {
       warnings.push(
-        `The bonus here (${earnText(catalog, rule.rate, valuation.currency)}) needed activating by ${shortDate(rule.activate_by)}.`,
+        `The bonus here (${rate}) needed activating by ${shortDate(rule.activate_by)}.`,
       )
       continue
     }
     warnings.push(
-      `Activate this bonus with the issuer (it's free)${rule.activate_by === undefined ? '' : ` by ${shortDate(rule.activate_by)}`} to earn ${earnText(catalog, rule.rate, valuation.currency)} here${rule.valid_to === undefined ? '' : ` through ${shortDate(rule.valid_to)}`}.`,
+      `Activate this bonus with the issuer (it's free)${rule.activate_by === undefined ? '' : ` by ${shortDate(rule.activate_by)}`} to earn ${rate} here${rule.valid_to === undefined ? '' : ` through ${shortDate(rule.valid_to)}`}.`,
     )
   }
   return warnings

@@ -148,18 +148,23 @@ export function checklist(
       })
     }
 
+    const toEnroll = s.credits.filter((c) => !c.enrolled)
+    if (toEnroll.length > 0)
+      items.push({
+        kind: 'enroll',
+        cardId: card.id,
+        ref: toEnroll.map((c) => c.id).join(','),
+        text: enrollCreditText(
+          name,
+          toEnroll.map((c) => c.name),
+        ),
+        due: null,
+      })
     for (const c of s.credits) {
-      if (!c.enrolled)
-        items.push({
-          kind: 'enroll',
-          cardId: card.id,
-          ref: c.id,
-          text: enrollCreditText(name, c.name),
-          due: null,
-        })
+      if (!c.enrolled) continue
       // One that needs no enrolling shows once the cardholder uses it, so a
       // card's every credit isn't a to-do for someone who never shops there.
-      else if (c.left !== null && c.left > 0 && (c.enroll || c.tracked))
+      if (c.left !== null && c.left > 0 && (c.enroll || c.tracked))
         items.push({
           kind: 'credit',
           cardId: card.id,

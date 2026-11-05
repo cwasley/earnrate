@@ -748,7 +748,7 @@
 
 # Transit
 - { id: uber, name: Uber, category: transit.rideshare }
-- { id: uber-one, name: Uber One, category: other }
+- { id: uber-one, name: Uber One, category: other, preposition: on }
 - { id: lyft, name: Lyft, category: transit.rideshare }
 - { id: amtrak, name: Amtrak, domains: [amtrak.com], category: transit }
 - {
@@ -3359,11 +3359,13 @@
   name: Walmart+ membership
   aliases: [walmart+, walmart+ membership fee]
   category: other
+  preposition: on
   note: The Walmart+ membership fee, not shopping at Walmart.
 - id: peloton-membership
   name: Peloton membership
   aliases: [peloton all-access, peloton app, peloton app one, peloton strength+]
   category: other
+  preposition: on
   note: A Peloton membership or app subscription, not equipment.
 - id: chatgpt
   name: ChatGPT

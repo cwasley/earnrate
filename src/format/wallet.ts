@@ -99,7 +99,7 @@ export function formatWalletSummary(summary: WalletSummary): string {
 
 export function formatBooking(
   amount: number,
-  cardId: string,
+  name: string, // the card's short name
   cap: CapBooking | null,
   bonus: BonusBooking | null,
   milestones: MilestoneBooking[] = [],
@@ -108,20 +108,20 @@ export function formatBooking(
   const messages: string[] = []
   if (credit)
     messages.push(
-      `Used ${money(roundCents(credit.after - credit.before))} of ${cardId}'s ${credit.name} credit: ${money(credit.after)} of ${money(credit.amount)} ${periodPhrase(credit.periodKind, credit.period)}, ${money(roundCents(Math.max(0, credit.amount - credit.after)))} left.`,
+      `Used ${money(roundCents(credit.after - credit.before))} of ${name}'s ${credit.name} credit: ${money(credit.after)} of ${money(credit.amount)} ${periodPhrase(credit.periodKind, credit.period)}, ${money(roundCents(Math.max(0, credit.amount - credit.after)))} left.`,
     )
   if (cap) {
     const left = Math.max(0, cap.capAmount - cap.after)
     messages.push(
-      `Recorded ${money(amount)} on ${cardId} against "${cap.capKey}": ${money(cap.before)} → ${money(cap.after)} of ${money(cap.capAmount)} ${periodPhrase(cap.periodKind, cap.period)}, ${money(left)} left.`,
+      `Recorded ${money(amount)} on ${name} against "${cap.capKey}": ${money(cap.before)} → ${money(cap.after)} of ${money(cap.capAmount)} ${periodPhrase(cap.periodKind, cap.period)}, ${money(left)} left.`,
     )
   }
   if (bonus) {
     const left = Math.max(0, bonus.spend - bonus.after)
     messages.push(
       left === 0
-        ? `Welcome bonus spend met on ${cardId}: ${money(bonus.after)} of ${money(bonus.spend)}.`
-        : `Welcome bonus on ${cardId}: ${money(bonus.after)} of ${money(bonus.spend)} spent, ${money(left)} to go by ${bonus.deadline ?? 'the deadline'}.`,
+        ? `Welcome bonus spend met on ${name}: ${money(bonus.after)} of ${money(bonus.spend)}.`
+        : `Welcome bonus on ${name}: ${money(bonus.after)} of ${money(bonus.spend)} spent, ${money(left)} to go by ${bonus.deadline ?? 'the deadline'}.`,
     )
   }
   // Every milestone counts the same purchases, so one line covers them.
@@ -131,13 +131,17 @@ export function formatBooking(
       (m) => m.before < m.spend && m.after >= m.spend,
     )
     const next = milestones.find((m) => m.after < m.spend)
+    const period =
+      first.periodKind === 'cardmember_year' ? 'cardmember year' : 'year'
     messages.push(
       [
-        `Spend on ${cardId} this ${first.periodKind === 'cardmember_year' ? 'cardmember year' : 'year'}: ${money(first.after)}.`,
+        first.started
+          ? `Started tracking spend on ${name} this ${period} with this purchase: ${money(first.after)}. Spending on it earlier this ${period} isn't counted; give the total so far (milestoneSpent) to include it.`
+          : `Spend on ${name} this ${period}: ${money(first.after)}.`,
         ...reached.map(
           (m) => `That reaches its ${money(m.spend)} spend bonus.`,
         ),
-        ...(next
+        ...(next && !first.started
           ? [
               `${money(next.spend - next.after)} to go for the ${money(next.spend)} spend bonus.`,
             ]

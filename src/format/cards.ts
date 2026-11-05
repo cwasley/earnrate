@@ -1,7 +1,9 @@
+import { membershipName } from '../engine/memberships.ts'
 import { foreignFeeText, money, NETWORK_NAMES } from '../engine/text.ts'
 import type { CardInfo, SetupNote } from '../engine/setup.ts'
+import type { Catalog } from '../schema/catalog.ts'
 
-export function formatCardInfo(card: CardInfo): string {
+export function formatCardInfo(catalog: Catalog, card: CardInfo): string {
   const fee =
     card.annualFee === null
       ? ''
@@ -19,7 +21,9 @@ export function formatCardInfo(card: CardInfo): string {
         ]
       : []),
     ...(card.memberships.length > 0
-      ? [`rates that need a membership: ${card.memberships.join(', ')}`]
+      ? [
+          `rates that need a membership: ${card.memberships.map((id) => `${membershipName(catalog, id)} (membership id ${id})`).join(', ')}`,
+        ]
       : []),
     ...(card.activation.length > 0
       ? [`activate with the issuer: ${card.activation.join(', ')}`]
@@ -29,6 +33,7 @@ export function formatCardInfo(card: CardInfo): string {
     ...card.introRates.map(
       (i) => `new accounts: ${i.text}; needs the opening date`,
     ),
+    ...card.credits.map((c) => `merchant credit ${c.id}: ${c.text}`),
     ...(card.onlyAt ? [`works only at ${card.onlyAt.join(', ')}`] : []),
     foreignFeeText(card.foreignTransactionFee).toLowerCase(),
   ]

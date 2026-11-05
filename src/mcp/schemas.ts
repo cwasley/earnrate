@@ -268,6 +268,7 @@ export const RecordResultSchema = z.object({
       spend: z.number(),
       before: z.number(),
       after: z.number(),
+      started: z.boolean(),
     }),
   ),
   credit: z

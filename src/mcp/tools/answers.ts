@@ -578,7 +578,9 @@ export function registerAnswerTools(
         content: [
           {
             type: 'text',
-            text: header + result.cards.map(formatCardInfo).join('\n'),
+            text:
+              header +
+              result.cards.map((c) => formatCardInfo(catalog, c)).join('\n'),
           },
         ],
         structuredContent: result,

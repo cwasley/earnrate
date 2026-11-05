@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.05
+
+Wording only; no rates changed. `walmart-plus`, `peloton-membership` and `uber-one` take `preposition: on`, so their credits read "on Walmart+ membership" rather than "at".
+
 ## 2026.11.04.15
 
 Merchant statement credits on every card whose issuer publishes them: 73 new credits on 31 cards, each quoted from the issuer's own pages (read 2026-11-04). With the three already entered, 76 credits on 32 cards. Credits a cardholder must pick a merchant for, ones once every several years, benefits that aren't spending, and the kinds `docs/feature-gaps.md` lists under "Merchant credits the schema can't express" aren't entered. No earn rates changed.

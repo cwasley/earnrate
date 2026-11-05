@@ -135,6 +135,7 @@ export type MilestoneBooking = {
   spend: number // the milestone's total
   before: number // tracked dollars this period before the purchase
   after: number
+  started: boolean // nothing was tracked toward it before this purchase
 }
 
 // Every purchase on a card counts toward each of its spend milestones. None
@@ -159,6 +160,7 @@ export function milestoneBookings(
             spend: p.milestone.spend,
             before: p.spent,
             after: roundCents(Math.max(0, p.spent + purchase.amount)),
+            started: !p.tracked,
           },
         ],
   )

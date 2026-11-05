@@ -1190,7 +1190,23 @@ describe('#28 first-year rates', () => {
         'discover-it-cash-back',
       )
       expect(hardware.rate).toBeCloseTo(2)
-      expectSome(hardware.reasoning, /^2% cash back, its base rate\./)
+      expectSome(hardware.reasoning, /^1% cash back, its base rate\./)
+      expectSome(
+        hardware.reasoning,
+        /^2% cash back in your first year, through Mar 3, 2027; 1% cash back after that\.$/,
+      )
+      const unactivated = entry(
+        recommend(
+          catalog,
+          wallet([discover({ opened: '2026-03-04', activated: [] })]),
+          dinner,
+        ),
+        'discover-it-cash-back',
+      )
+      expectSome(
+        unactivated.warnings,
+        /^Activate this bonus with the issuer \(it's free\) by Dec 31, 2026 to earn 10% cash back here/,
+      )
     },
   )
 
@@ -1939,10 +1955,12 @@ describe('#32 merchant statement credits', () => {
       const usedUp = checklist(catalog, wallet(enrolled(75)), TODAY)
       expect(usedUp.some((i) => i.kind === 'credit')).toBe(false)
       const todo = checklist(catalog, wallet(), TODAY)
-      expect(todo.find((i) => i.kind === 'enroll')).toMatchObject({
-        text: "Enroll in The Platinum Card from American Express's Lululemon credit with the issuer, then mark it enrolled.",
-        due: null,
-      })
+      const enroll = todo.filter((i) => i.kind === 'enroll')
+      expect(enroll).toHaveLength(1)
+      expect(enroll[0]?.due).toBeNull()
+      expect(enroll[0]?.text).toMatch(
+        /^Enroll in The Platinum Card from American Express's Lululemon, Resy, .* and YouTube TV credits with the issuer, then mark them enrolled\.$/,
+      )
     },
   )
 

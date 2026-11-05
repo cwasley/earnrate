@@ -222,7 +222,7 @@ describe('rule conditions', () => {
     ).toBe(3)
   })
 
-  test('an unknown foreign transaction fee is warned about abroad, not guessed', () => {
+  test('an unknown foreign transaction fee counts as 3% abroad, with a warning', () => {
     const unknown: Catalog = {
       ...realCatalog,
       cards: [
@@ -233,11 +233,12 @@ describe('rule conditions', () => {
     const abroad = testEntry(
       recommend(unknown, wallet(), purchase('Shell', { country: 'FR' })),
     )
-    expect(abroad.effectiveReturnPct).toBeCloseTo(3)
-    expect(abroad.foreignFee).toBeNull()
-    expect(abroad.warnings.join(' ')).toMatch(
-      /foreign transaction fee isn't on file/,
+    expect(abroad.effectiveReturnPct).toBeCloseTo(0)
+    expect(abroad.foreignFee).toBe(3)
+    expect(abroad.warnings[0]).toMatch(
+      /foreign transaction fee isn't on file, so earnrate assumes the usual 3% and it nets 0%/,
     )
+    expect(abroad.warnings.join(' ')).not.toMatch(/Charges a/)
     const home = testEntry(recommend(unknown, wallet(), purchase('Shell')))
     expect(home.warnings.join(' ')).not.toMatch(/foreign transaction fee/)
   })

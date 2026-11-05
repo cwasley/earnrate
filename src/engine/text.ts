@@ -360,8 +360,10 @@ export function creditShort(c: CreditWords, dollars: number | null): string {
 export const useCreditText = (card: string, c: CreditWords, left: number) =>
   `Use your ${money(c.amount)} ${c.name} credit on ${card}${c.until === null ? '' : ` by ${shortDate(c.until)}`}: ${money(left)} left.`
 
-export const enrollCreditText = (card: string, name: string) =>
-  `Enroll in ${card}'s ${name} credit with the issuer, then mark it enrolled.`
+export const enrollCreditText = (card: string, names: string[]) =>
+  names.length === 1
+    ? `Enroll in ${card}'s ${names[0] ?? ''} credit with the issuer, then mark it enrolled.`
+    : `Enroll in ${card}'s ${listed(names)} credits with the issuer, then mark them enrolled.`
 
 // Simulations, the cheat sheet and welcome-offer comparisons.
 export const CREDITS_LEFT_OUT =

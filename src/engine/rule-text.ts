@@ -17,14 +17,16 @@ import {
 
 // Travel-site bookings ("Flight through Amex Travel") read mid-sentence in
 // lower case and plural; brand names ("Airbnb through Amex Travel") keep theirs.
-const BOOKING = /^(Attraction|Car rental|Cruise|Flight|Hotel|Vacation rental)\b/
+const BOOKING =
+  /^(Activity|Attraction|Car rental|Cruise|Flight|Hotel|Vacation rental)\b/
+
+const plural = (kind: string) =>
+  kind === 'Activity' ? 'activities' : `${kind.toLowerCase()}s`
 
 function merchantName(catalog: Catalog, id: string): string {
   const merchant = findMerchant(catalog, id)
   const name = merchant?.name ?? words(id)
-  return merchant?.kind === 'booking'
-    ? name.replace(BOOKING, (kind) => `${kind.toLowerCase()}s`)
-    : name
+  return merchant?.kind === 'booking' ? name.replace(BOOKING, plural) : name
 }
 
 export function optionName(
@@ -105,12 +107,35 @@ export function introWhat(
 }
 
 // What a merchant credit is named for: "Lululemon", "Disney+, Hulu and ESPN".
-export const creditName = (catalog: Catalog, credit: Credit) =>
-  listed([
-    ...(credit.match.merchants ?? []).map((m) => merchantName(catalog, m)),
+// Bookings through a travel site the credit also names go without saying:
+// "Capital One Travel", not each kind of booking through it.
+export function creditName(catalog: Catalog, credit: Credit): string {
+  const ids = credit.match.merchants ?? []
+  const portals = ids
+    .map((m) => findMerchant(catalog, m))
+    .filter((m) => m?.kind === 'portal')
+    .map((m) => ` through ${m?.name ?? ''}`)
+  const merchants = ids.filter((m) => {
+    const merchant = findMerchant(catalog, m)
+    return !(
+      merchant?.kind === 'booking' &&
+      portals.some((p) => merchant.name.endsWith(p))
+    )
+  })
+  return listed([
+    ...merchants.map((m) => merchantName(catalog, m)),
     ...(credit.match.categories ?? []).map((c) => categoryPhrase(catalog, c)),
   ])
+}
 
-// "at Lululemon", "at restaurants", "on travel": a category's own preposition.
+// "at Lululemon", "at restaurants", "on travel", "on Walmart+ membership":
+// the category's or merchant's own preposition.
 export const creditWhere = (catalog: Catalog, credit: Credit) =>
-  `${(credit.match.categories ?? []).some((c) => categoryReadsOn(catalog, c)) ? 'on' : 'at'} ${creditName(catalog, credit)}`
+  `${
+    (credit.match.categories ?? []).some((c) => categoryReadsOn(catalog, c)) ||
+    (credit.match.merchants ?? []).some(
+      (m) => findMerchant(catalog, m)?.preposition === 'on',
+    )
+      ? 'on'
+      : 'at'
+  } ${creditName(catalog, credit)}`

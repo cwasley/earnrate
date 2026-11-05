@@ -221,7 +221,9 @@ export async function runWalletCommand(
       return RUNTIME_ERROR
     }
     const header = result.exact ? '' : 'No card matches every word. Closest:\n'
-    io.stdout(`${header}${result.cards.map(formatCardInfo).join('\n')}\n`)
+    io.stdout(
+      `${header}${result.cards.map((c) => formatCardInfo(catalog, c)).join('\n')}\n`,
+    )
     return 0
   }
 

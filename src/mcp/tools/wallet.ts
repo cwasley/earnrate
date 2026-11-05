@@ -216,7 +216,7 @@ export function registerWalletTools(
               bonus,
               milestones,
               credit,
-              message: `${formatBooking(amount, cardId, booking, bonus, milestones, credit)} Saved in ${ctx.walletName}.`,
+              message: `${formatBooking(amount, cardText(catalog).shortName(cardId), booking, bonus, milestones, credit)} Saved in ${ctx.walletName}.`,
             }
           : {
               recorded: false,
@@ -224,7 +224,7 @@ export function registerWalletTools(
               bonus: null,
               milestones: [],
               credit: null,
-              message: `Nothing to track: ${cardId} has no spending cap, open welcome bonus, spend milestone or enrolled merchant credit for this purchase, so the wallet wasn't changed.`,
+              message: `Nothing to track: ${cardText(catalog).shortName(cardId)} has no spending cap, open welcome bonus, spend milestone or enrolled merchant credit for this purchase, so the wallet wasn't changed.`,
             }
       return {
         content: [

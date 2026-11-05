@@ -11,7 +11,12 @@ import {
   paidMemberships,
 } from './memberships.ts'
 import { choicePeriod, periodKey } from './periods.ts'
-import { FOREIGN_ASSUMPTION, isForeign, recommend } from './recommend.ts'
+import {
+  FOREIGN_ASSUMPTION,
+  foreignFeeFor,
+  isForeign,
+  recommend,
+} from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
 import { optionName } from './rule-text.ts'
@@ -304,7 +309,7 @@ function membershipUpgrades(
       merchant.category,
       purchase,
     )
-    const fee = isForeign(purchase) ? (card.foreign_transaction_fee ?? 0) : 0
+    const fee = foreignFeeFor(card, purchase)
     const pct =
       evaluateCard(card, held, ctx).best.rate *
         cardValuation(catalog, wallet, card).centsPerUnit -

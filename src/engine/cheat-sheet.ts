@@ -202,8 +202,10 @@ function abroadRow(
     { credits: false },
   )
   const top = rec.decision ? rec.ranked[0] : undefined
+  const knownFee = (id: string) =>
+    catalog.cards.find((c) => c.id === id)?.foreign_transaction_fee ?? 0
   const allCharge =
-    rec.ranked.length > 0 && rec.ranked.every((r) => r.foreignFee !== null)
+    rec.ranked.length > 0 && rec.ranked.every((r) => knownFee(r.cardId) > 0)
   return {
     label: ABROAD_LABEL,
     cardId: top?.cardId ?? null,

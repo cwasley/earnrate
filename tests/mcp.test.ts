@@ -272,7 +272,7 @@ describe('tools', () => {
     })
     expect(recorded.isError, text(recorded)).toBeFalsy()
     expect(text(recorded)).toMatch(
-      /Spend on chase-ihg-one-rewards this year: \$15,050\. That reaches its \$15,000 spend bonus\./,
+      /Spend on IHG One Rewards this year: \$15,050\. That reaches its \$15,000 spend bonus\./,
     )
     expect(
       (recorded.structuredContent as { milestones: { after: number }[] })
@@ -822,7 +822,7 @@ describe('wallet setup', () => {
       },
     })
     expect(text(recorded)).toMatch(
-      /Welcome bonus on amex-blue-cash-preferred: \$100 of \$3,000/,
+      /Welcome bonus on Amex Blue Cash Preferred: \$100 of \$3,000/,
     )
     const saved = JSON.parse((await backend.read()) ?? '{}') as {
       cards: { bonus?: { spent: number } }[]
@@ -1284,8 +1284,12 @@ describe('wallet setup', () => {
       },
     })
     expect(text(recorded)).toMatch(
-      /Used \$35 of amex-platinum's Lululemon credit/,
+      /Used \$35 of Amex Platinum's Lululemon credit/,
     )
+    expect(text(recorded)).toMatch(
+      /Started tracking spend on Amex Platinum this year with this purchase: \$100\. Spending on it earlier this year isn't counted/,
+    )
+    expect(text(recorded)).not.toMatch(/to go for the/)
     expect(await readFile(file, 'utf8')).toContain(
       '    credit_usage:\n      lululemon: { period: 2026-Q4, used: 75 }\n',
     )
