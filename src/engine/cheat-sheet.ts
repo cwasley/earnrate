@@ -24,8 +24,14 @@ import {
 import type { RankedCard } from './types.ts'
 
 // `merchant` is a merchant id.
-export type CheatSheetItem =
+// `phrase` is the label mid-sentence, when lowercasing a category's label or
+// keeping a store's name isn't it.
+export type CheatSheetItem = { phrase?: string } & (
   { label: string; category: string } | { label: string; merchant: string }
+)
+
+const midSentence = (item: CheatSheetItem) =>
+  item.phrase ?? ('merchant' in item ? item.label : item.label.toLowerCase())
 
 // The everyday kinds of purchase: the cheat sheet's rows and the site's
 // quick picks.
@@ -36,7 +42,11 @@ export const EVERYDAY_PURCHASES: CheatSheetItem[] = [
   { label: 'Amazon', merchant: 'amazon' },
   { label: 'Costco', merchant: 'costco' },
   { label: 'Travel', category: 'travel' },
-  { label: 'Streaming (Netflix)', merchant: 'netflix' },
+  {
+    label: 'Streaming (Netflix)',
+    merchant: 'netflix',
+    phrase: 'streaming (Netflix)',
+  },
   { label: 'Drugstores', category: 'drugstore' },
   { label: 'Everything else', category: 'other' },
 ]
@@ -72,7 +82,7 @@ export function cheatSheet(
   date: string,
   items: CheatSheetItem[] = EVERYDAY_PURCHASES,
 ): CheatSheet {
-  const ranked: { label: string; cards: RankedCard[] }[] = []
+  const ranked: { phrase: string; cards: RankedCard[] }[] = []
   const rows = items.map((item): CheatSheetRow => {
     const merchant =
       'merchant' in item
@@ -98,7 +108,7 @@ export function cheatSheet(
     // The card that earns the most, even when a welcome bonus would take the
     // pick for one purchase: the sheet is for the whole quarter.
     const top = rec.decision ? rec.ranked[0] : undefined
-    ranked.push({ label: item.label, cards: rec.ranked })
+    ranked.push({ phrase: midSentence(item), cards: rec.ranked })
     return {
       label: item.label,
       cardId: top?.cardId ?? null,
@@ -120,12 +130,12 @@ export function cheatSheet(
     // (as single answers mention it).
     const matches: string[] = []
     const near: string[] = []
-    for (const { label, cards } of ranked) {
+    for (const { phrase, cards } of ranked) {
       const best = cards[0]?.effectiveReturnPct
       const own = cards.find((c) => c.cardId === held.id)?.effectiveReturnPct
       if (best === undefined || own === undefined) continue
-      if (best - own < EPSILON) matches.push(label.toLowerCase())
-      else if (isClose(own, best)) near.push(label.toLowerCase())
+      if (best - own < EPSILON) matches.push(phrase)
+      else if (isClose(own, best)) near.push(phrase)
     }
     const where = [
       ...(matches.length > 0

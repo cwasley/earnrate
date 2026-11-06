@@ -821,11 +821,17 @@ export function recommend(
   const ties = !isBest && gap <= EPSILON
   const bonus = open && (open.behind || ties) ? open : null
   const best = winner?.effectiveReturnPct ?? 0
-  if (open && !bonus && isClose(open.entry.effectiveReturnPct, best)) {
+  const toGo = open
+    ? `${money(open.status.remaining ?? 0)} more by ${open.status.deadline ?? ''}`
+    : ''
+  if (open && isBest && !bonus)
     notes.push(
-      `${displayName(open.entry)} earns ${pct(open.entry.rateReturnPct)} here, ${num(gap)} ${gap === 1 ? 'point' : 'points'} less than ${pct(best)}, and would help its welcome bonus (${money(open.status.remaining ?? 0)} more by ${open.status.deadline ?? ''}). You're on pace, so this uses the higher rate.`,
+      `${displayName(open.entry)} is the best card here anyway, and this counts toward its welcome bonus (${toGo}).`,
     )
-  }
+  else if (open && !bonus && isClose(open.entry.effectiveReturnPct, best))
+    notes.push(
+      `${displayName(open.entry)} earns ${pct(open.entry.rateReturnPct)} here, ${num(gap)} ${gap === 1 ? 'point' : 'points'} less than ${pct(best)}, and would help its welcome bonus (${toGo}). You're on pace, so this uses the higher rate.`,
+    )
   const chosen = bonus?.entry ?? winner
   // A tie among the top cards doesn't matter when a welcome bonus decides.
   const tie = bonus ? null : tieNote(entries)

@@ -129,3 +129,27 @@ test('an offer the issuer rules out for a held card is marked and listed last', 
   )
   expect(offers.at(-1)?.cardId).toBe('amex-blue-cash-everyday')
 })
+
+test('a bonus card that is already the best card says so plainly', () => {
+  const plain = WalletSchema.parse({ cards: onPace.cards.slice(1) })
+  const rec = recommend(
+    catalog,
+    plain,
+    {
+      merchant: 'Netflix',
+      amount: 20,
+      channel: null,
+      date: '2026-11-01',
+      country: 'US',
+    },
+    resolveMerchant(catalog, 'Netflix', null),
+  )
+  expect(rec.decision?.cardId).toBe('capital-one-savor')
+  const notes = rec.notes.join(' ')
+  expect(notes).toMatch(
+    /Savor.* is the best card here anyway, and this counts toward its welcome bonus \(\$300 more by/,
+  )
+  expect(notes).not.toMatch(/less than/)
+  const sheet = cheatSheet(catalog, plain, '2026-11-01')
+  expect(sheet.notes[0]).toMatch(/streaming \(Netflix\)/)
+})
