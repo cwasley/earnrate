@@ -4,7 +4,14 @@ import { capByKey, categoryMatches } from '../engine/evaluate.ts'
 import { milestoneProgress } from '../engine/milestones.ts'
 import { periodKey } from '../engine/periods.ts'
 import { recommend } from '../engine/recommend.ts'
-import { applyBooking, capBooking, type CapBooking } from '../engine/record.ts'
+import {
+  applyBooking,
+  applyCreditBooking,
+  capBooking,
+  creditBooking,
+  type CapBooking,
+  type CreditBooking,
+} from '../engine/record.ts'
 import { roundCents } from '../engine/text.ts'
 import type { MerchantResolution, Purchase } from '../engine/types.ts'
 import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
@@ -66,7 +73,7 @@ export type MilestoneImport = {
   entries: CardLine[]
 }
 
-export type RecordKind = 'cap' | 'bonus' | 'milestone'
+export type RecordKind = 'cap' | 'bonus' | 'milestone' | 'credit'
 
 export type StatementAnalysis = {
   from: string
@@ -80,6 +87,8 @@ export type StatementAnalysis = {
   missed: MissedRewards[]
   coding: CodingMismatch[]
   bookings: (CardLine & { booking: CapBooking })[]
+  // Enrolled statement credits used this period, like record_purchase books.
+  credits: (CardLine & { booking: CreditBooking })[]
   outsideCurrentPeriod: number // capped purchases from an earlier period
   alreadyImported: number // capped purchases an earlier import recorded
   bonuses: BonusProgress[]
@@ -150,6 +159,7 @@ export function analyzeStatement(
   const missed = new Map<string, MissedRewards>()
   const coding = new Map<string, CodingMismatch>()
   const bookings: StatementAnalysis['bookings'] = []
+  const credits: StatementAnalysis['credits'] = []
   let outsideCurrentPeriod = 0
   let alreadyImported = 0
   let purchases = 0
@@ -245,6 +255,19 @@ export function analyzeStatement(
         current = applyBooking(current, signed)
       } else {
         outsideCurrentPeriod++
+      }
+    }
+
+    if (line.amount > 0 && !alreadyRecorded(entry, 'credit')) {
+      const credit = creditBooking(catalog, current, recorded, merchant)
+      const held = current.cards.find((c) => c.id === cardId)
+      if (
+        credit &&
+        periodKey(credit.periodKind, today, held?.anniversary ?? null) ===
+          credit.period
+      ) {
+        credits.push({ ...entry, booking: credit })
+        current = applyCreditBooking(current, credit)
       }
     }
 
@@ -357,6 +380,7 @@ export function analyzeStatement(
       .sort((a, b) => b.best - b.earned - (a.best - a.earned)),
     coding: [...coding.values()].sort((a, b) => b.count - a.count),
     bookings,
+    credits,
     outsideCurrentPeriod,
     alreadyImported,
     bonuses: [...bonuses.values()].filter((b) => b.entries.length > 0),

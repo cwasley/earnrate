@@ -327,6 +327,7 @@ export const CardSearchSchema = z.object({
       network: CardNetwork,
       currency: z.string(),
       annualFee: z.number().nullable(),
+      firstYearFee: z.number().nullable(),
       foreignTransactionFee: z.number().nullable(),
       business: z.boolean(),
       onlyAt: z.array(z.string()).nullable(),

@@ -460,6 +460,46 @@ describe('earnrate import', () => {
     expect(await readFile(wallet, 'utf8')).toBe(after)
   })
 
+  test('uses up an enrolled statement credit in its current period, once', async () => {
+    const statement = [
+      HEADER,
+      row(
+        '07/02/2026',
+        'LULULEMON SANTA MONICA',
+        '60.00',
+        'Merchandise & Supplies-Clothing Stores',
+      ),
+      row(
+        '10/05/2026',
+        'LULULEMON SANTA MONICA',
+        '50.00',
+        'Merchandise & Supplies-Clothing Stores',
+      ),
+      row(
+        '10/12/2026',
+        'LULULEMON SANTA MONICA',
+        '40.00',
+        'Merchandise & Supplies-Clothing Stores',
+      ),
+    ].join('\n')
+    const { wallet, csv } = await setup(statement)
+    await writeFile(
+      wallet,
+      `${WALLET}  - id: amex-platinum
+    enrolled: [lululemon]
+`,
+    )
+    const dry = await cli([csv, '--card', 'amex-platinum'], wallet)
+    expect(dry.stdout).toMatch(/2 against statement credits/)
+
+    await cli([csv, '--card', 'amex-platinum', '--apply'], wallet)
+    const after = await readFile(wallet, 'utf8')
+    expect(after).toMatch(/lululemon: \{ period: 2026-Q4, used: 75 \}/)
+    const again = await cli([csv, '--card', 'amex-platinum', '--apply'], wallet)
+    expect(again.stdout).not.toMatch(/statement credits/)
+    expect(await readFile(wallet, 'utf8')).toBe(after)
+  })
+
   test('says so when the file is missing', async () => {
     const { dir, wallet } = await setup()
     const { code, stderr } = await cli(

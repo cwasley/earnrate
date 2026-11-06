@@ -122,7 +122,11 @@ export function passContents(
   })
 
   // One line on the front; the back has every item in full.
-  const todo = checklist(catalog, wallet, date)
+  // The pass knows only picks and activations, so its to-dos are those (and
+  // rotating categories not out yet); credits and caps need the wallet.
+  const todo = checklist(catalog, wallet, date).filter(
+    (i) => i.kind === 'activate' || i.kind === 'pick' || i.kind === 'rotation',
+  )
   const first = todo[0]
   const todoText = (item: ChecklistItem) => {
     const card = passName(item.cardId)

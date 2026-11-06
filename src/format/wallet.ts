@@ -78,11 +78,11 @@ export function formatWalletSummary(summary: WalletSummary): string {
       lines.push(
         `  Has ${introAdjective(c.intro.days)} rates for new accounts; give its opening date if it opened ${introSince(c.intro.days)}.`,
       )
-    else if (c.opened !== null) lines.push(`  Opened ${c.opened}.`)
+    else if (c.opened !== null) lines.push(`  Opened ${shortDate(c.opened)}.`)
     const b = c.bonus
     if (b?.state === 'open' && b.spend !== null)
       lines.push(
-        `  Welcome bonus: ${money(b.spent)} of ${money(b.spend)} spent, due ${b.deadline ?? ''}.`,
+        `  Welcome bonus: ${money(b.spent)} of ${money(b.spend)} spent, due ${b.deadline === null ? 'by its deadline' : shortDate(b.deadline)}.`,
       )
     else if (b) lines.push(`  Welcome bonus: ${b.state}.`)
     return lines.join('\n')
@@ -105,6 +105,7 @@ export function formatBooking(
   bonus: BonusBooking | null,
   milestones: MilestoneBooking[] = [],
   credit: CreditBooking | null = null,
+  capLabel: string | null = null, // what the cap covers, in words
 ): string {
   const messages: string[] = []
   if (credit)
@@ -114,7 +115,7 @@ export function formatBooking(
   if (cap) {
     const left = Math.max(0, cap.capAmount - cap.after)
     messages.push(
-      `Recorded ${money(amount)} on ${name} against "${cap.capKey}": ${money(cap.before)} → ${money(cap.after)} of ${money(cap.capAmount)} ${periodPhrase(cap.periodKind, cap.period)}, ${money(left)} left.`,
+      `Recorded ${money(amount)} on ${name} toward its ${capLabel ?? cap.capKey} cap: ${money(cap.before)} → ${money(cap.after)} of ${money(cap.capAmount)} ${periodPhrase(cap.periodKind, cap.period)}, ${money(left)} left.`,
     )
   }
   if (bonus) {
@@ -122,7 +123,7 @@ export function formatBooking(
     messages.push(
       left === 0
         ? `Welcome bonus spend met on ${name}: ${money(bonus.after)} of ${money(bonus.spend)}.`
-        : `Welcome bonus on ${name}: ${money(bonus.after)} of ${money(bonus.spend)} spent, ${money(left)} to go by ${bonus.deadline ?? 'the deadline'}.`,
+        : `Welcome bonus on ${name}: ${money(bonus.after)} of ${money(bonus.spend)} spent, ${money(left)} to go by ${bonus.deadline === null ? 'the deadline' : shortDate(bonus.deadline)}.`,
     )
   }
   // Every milestone counts the same purchases, so one line covers them.

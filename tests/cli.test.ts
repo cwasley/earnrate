@@ -251,6 +251,53 @@ describe('wallet setup commands', () => {
     )
   })
 
+  test('update sets cap and spend-bonus spending; memberships refuses card options', async () => {
+    const file = await newWalletPath()
+    await cli(['add', 'amex-blue-cash-preferred'], file)
+    await cli(['add', 'chase-ihg-one-rewards'], file)
+    expect(
+      (
+        await cli(
+          [
+            'update',
+            'amex-blue-cash-preferred',
+            '--cap-spent',
+            'us-supermarkets=1200',
+          ],
+          file,
+        )
+      ).code,
+    ).toBe(0)
+    expect(
+      (
+        await cli(
+          [
+            'update',
+            'chase-ihg-one-rewards',
+            '--milestone-spent',
+            'spend-15k=9000',
+          ],
+          file,
+        )
+      ).code,
+    ).toBe(0)
+    const text = await readFile(file, 'utf8')
+    expect(text).toMatch(/us-supermarkets: \{ period: "?2026"?, spent: 1200 \}/)
+    expect(text).toMatch(/spend-15k: \{ period: "?2026"?, spent: 9000 \}/)
+    const bad = await cli(
+      ['update', 'amex-blue-cash-preferred', '--cap-spent', 'groceries'],
+      file,
+    )
+    expect(bad.code).toBe(2)
+    expect(bad.stderr).toMatch(/--cap-spent takes <id>=<dollars>/)
+    const memberships = await cli(
+      ['memberships', 'amazon-prime', '--bonus-opened', '2026-10-01'],
+      file,
+    )
+    expect(memberships.code).toBe(2)
+    expect(memberships.stderr).toMatch(/doesn't take card options/)
+  })
+
   test('cards with no match exits 1', async () => {
     const { code, stderr } = await cli(['cards', 'zzzz'])
     expect(code).toBe(1)

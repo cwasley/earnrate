@@ -199,7 +199,7 @@ export type CreditBooking = {
 
 // The part of an enrolled merchant credit this purchase uses. None when the
 // card has no credit here, it isn't enrolled, or it's used up.
-function creditBooking(
+export function creditBooking(
   catalog: Catalog,
   wallet: Wallet,
   purchase: RecordedPurchase,

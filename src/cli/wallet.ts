@@ -32,6 +32,12 @@ const CARD_OPTIONS = `Options:
   --credit-used <credit>=<dollars>
                              How much of a credit you've received this period,
                              e.g. --credit-used lululemon=40. Repeat for each.
+  --cap-spent <cap>=<dollars>
+                             Spending toward a cap so far this period, e.g.
+                             --cap-spent us-supermarkets=1200. Repeat for each.
+  --milestone-spent <bonus>=<dollars>
+                             Spending this year toward a spend bonus, e.g.
+                             --milestone-spent spend-15k=9000. Repeat for each.
   --bonus-opened <date>      Track a welcome bonus: the day the account opened
                              (YYYY-MM-DD). Spending needed and the deadline
                              default to the card's published offer.
@@ -166,6 +172,8 @@ export async function runWalletCommand(
         activated: { type: 'string' },
         enrolled: { type: 'string' },
         'credit-used': { type: 'string', multiple: true },
+        'cap-spent': { type: 'string', multiple: true },
+        'milestone-spent': { type: 'string', multiple: true },
         'bonus-opened': { type: 'string' },
         'bonus-spent': { type: 'string' },
         'bonus-spend': { type: 'string' },
@@ -198,7 +206,14 @@ export async function runWalletCommand(
     values.opened !== undefined ||
     values.activated !== undefined ||
     values.enrolled !== undefined ||
-    values['credit-used'] !== undefined
+    values['credit-used'] !== undefined ||
+    values['cap-spent'] !== undefined ||
+    values['milestone-spent'] !== undefined ||
+    values['bonus-opened'] !== undefined ||
+    values['bonus-spent'] !== undefined ||
+    values['bonus-spend'] !== undefined ||
+    values['bonus-by'] !== undefined ||
+    values['no-bonus'] !== undefined
   if (command !== 'add' && command !== 'update' && cardOptionsGiven) {
     return usage(`${CLI_NAME} ${command} doesn't take card options.`)
   }
@@ -333,19 +348,31 @@ export async function runWalletCommand(
       .map((r) => r.trim())
       .filter((r) => r !== '')
   }
-  if (values['credit-used'] !== undefined) {
-    const used: Record<string, number> = {}
-    for (const pair of values['credit-used']) {
-      const [credit = '', dollars] = pair.split('=')
-      const n = dollarsFlag('credit-used', dollars)
-      if (credit.trim() === '' || n === undefined || typeof n === 'string')
-        return usage(
-          '--credit-used takes <credit>=<dollars>, like lululemon=40.',
-        )
-      used[credit.trim()] = n
+  // --credit-used, --cap-spent and --milestone-spent: <id>=<dollars>, repeated.
+  const dollarPairs = (
+    flag: 'credit-used' | 'cap-spent' | 'milestone-spent',
+    example: string,
+  ): Record<string, number> | string | undefined => {
+    const pairs = values[flag]
+    if (pairs === undefined) return undefined
+    const out: Record<string, number> = {}
+    for (const pair of pairs) {
+      const [id = '', dollars] = pair.split('=')
+      const n = dollarsFlag(flag, dollars)
+      if (id.trim() === '' || n === undefined || typeof n === 'string')
+        return `--${flag} takes <id>=<dollars>, like ${example}.`
+      out[id.trim()] = n
     }
-    input.creditUsed = used
+    return out
   }
+  const creditUsed = dollarPairs('credit-used', 'lululemon=40')
+  const capSpent = dollarPairs('cap-spent', 'us-supermarkets=1200')
+  const milestoneSpent = dollarPairs('milestone-spent', 'spend-15k=9000')
+  for (const result of [creditUsed, capSpent, milestoneSpent])
+    if (typeof result === 'string') return usage(result)
+  if (typeof creditUsed === 'object') input.creditUsed = creditUsed
+  if (typeof capSpent === 'object') input.capSpent = capSpent
+  if (typeof milestoneSpent === 'object') input.milestoneSpent = milestoneSpent
   if (values['no-bonus']) {
     input.bonus = null
   } else if (values['bonus-opened'] !== undefined) {

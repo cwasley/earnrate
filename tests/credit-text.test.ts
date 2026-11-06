@@ -41,6 +41,11 @@ describe('merchant credit wording', () => {
       cardInfo(catalog, card('amex-platinum'), null, '2026-11-05'),
     )
     expect(platinum).toMatch(/merchant credit lululemon: .* at Lululemon/)
+    const deltaGold = formatCardInfo(
+      catalog,
+      cardInfo(catalog, card('amex-delta-skymiles-gold'), null, '2026-11-05'),
+    )
+    expect(deltaGold).toMatch(/\$150 a year, waived the first year\)/)
     const penfed = formatCardInfo(
       catalog,
       cardInfo(catalog, card('penfed-power-cash-rewards'), null, '2026-11-05'),

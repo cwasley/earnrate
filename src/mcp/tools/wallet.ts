@@ -207,6 +207,11 @@ export function registerWalletTools(
       const result = await store.record(purchase, resolved.merchant)
       if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
       const { cap: booking, bonus, milestones, credit } = result
+      const capLabel = booking
+        ? (walletSummary(catalog, w, purchase.date)
+            .cards.find((c) => c.cardId === cardId)
+            ?.caps.find((c) => c.key === booking.capKey)?.label ?? null)
+        : null
       const output =
         booking || bonus || milestones.length > 0 || credit
           ? {
@@ -215,7 +220,7 @@ export function registerWalletTools(
               bonus,
               milestones,
               credit,
-              message: `${formatBooking(amount, cardText(catalog).shortName(cardId), booking, bonus, milestones, credit)} Saved in ${ctx.walletName}.`,
+              message: `${formatBooking(amount, cardText(catalog).shortName(cardId), booking, bonus, milestones, credit, capLabel)} Saved in ${ctx.walletName}.`,
             }
           : {
               recorded: false,

@@ -268,6 +268,20 @@ describe('the cheat-sheet pass', () => {
     )
   })
 
+  test("credits the pass can't see never become a to-do on it", () => {
+    const { pass } = passContents(
+      catalog,
+      {
+        memberships: [],
+        cards: [{ id: 'amex-platinum' }, { id: 'amex-gold' }],
+      },
+      '2026-11-03',
+      IDENTITY,
+      'serial-2',
+    )
+    expect(JSON.stringify(pass)).not.toMatch(/see pass details|[Ee]nroll/)
+  })
+
   test('a checkout label shows only when it reads as a card name', () => {
     for (const label of ['Amex Gold', 'BCP 1007', 'Costco card'])
       expect(plainLabel(label), label).toBe(true)

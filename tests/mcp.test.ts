@@ -823,6 +823,9 @@ describe('wallet setup', () => {
     expect(text(recorded)).toMatch(
       /Welcome bonus on Amex Blue Cash Preferred: \$100 of \$3,000/,
     )
+    expect(text(recorded)).toMatch(
+      /Recorded \$100 on Amex Blue Cash Preferred toward its supermarkets cap:/,
+    )
     const saved = JSON.parse((await backend.read()) ?? '{}') as {
       cards: { bonus?: { spent: number } }[]
     }
@@ -1754,7 +1757,7 @@ describe('welcome bonuses', () => {
       bonus: { before: 500, after: 750, spend: 4000 },
     })
     expect(text(result)).toMatch(
-      /\$750 of \$4,000 spent, \$3,250 to go by 2026-12-31/,
+      /\$750 of \$4,000 spent, \$3,250 to go by Dec 31, 2026/,
     )
     expect(await readFile(file, 'utf8')).toMatch(/spent: 750 \}/)
   })

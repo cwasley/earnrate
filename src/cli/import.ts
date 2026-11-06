@@ -340,6 +340,9 @@ export async function runImport(argv: string[], io: Io): Promise<number> {
     ...(milestoneEntries.length > 0
       ? [`${String(milestoneEntries.length)} toward spend bonuses`]
       : []),
+    ...(analysis.credits.length > 0
+      ? [`${String(analysis.credits.length)} against statement credits`]
+      : []),
   ]
   if (!values.apply || toRecord.length === 0) {
     io.stdout(
@@ -354,8 +357,11 @@ export async function runImport(argv: string[], io: Io): Promise<number> {
     analysis.bookings.map((e) => e.booking),
     analysis.bonuses,
     analysis.milestones,
+    analysis.credits.map((e) => e.booking),
   )
   for (const entry of analysis.bookings) recorded.add(fingerprint(entry))
+  for (const entry of analysis.credits)
+    recorded.add(fingerprint(entry, 'credit'))
   for (const entry of bonusEntries) recorded.add(fingerprint(entry, 'bonus'))
   for (const entry of milestoneEntries)
     recorded.add(fingerprint(entry, 'milestone'))

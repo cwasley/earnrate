@@ -9,7 +9,7 @@ export function formatCardInfo(catalog: Catalog, card: CardInfo): string {
       ? ''
       : card.annualFee === 0
         ? ', no annual fee'
-        : `, ${money(card.annualFee)} a year`
+        : `, ${money(card.annualFee)} a year${card.firstYearFee === null ? '' : `, ${card.firstYearFee === 0 ? 'waived' : money(card.firstYearFee)} the first year`}`
   const needs = [
     ...card.choices.map(
       (c) =>
