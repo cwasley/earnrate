@@ -47,7 +47,11 @@ import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
 import { milestoneWhat } from '../src/engine/milestones.ts'
-import { creditWhere, introWhat } from '../src/engine/rule-text.ts'
+import {
+  creditWhere,
+  introWhat,
+  rulePreposition,
+} from '../src/engine/rule-text.ts'
 import { changeDates, latest } from './lastmod.ts'
 import { pageContext, type GeneratedPage } from './pages/context.ts'
 import { categoryPageFor, categoryPages } from './pages/categories.ts'
@@ -594,12 +598,9 @@ function headlineFor(card: Card): string {
     .slice(0, 4)
   const byRate = new Map<number, string[]>()
   for (const r of everyday) {
-    const on =
-      r.match.choice !== undefined || (r.match.categories ?? []).every(readsOn)
-    byRate.set(r.rate, [
-      ...(byRate.get(r.rate) ?? []),
-      `${on ? 'on' : 'at'} ${ruleWhatRaw(card, r)}`,
-    ])
+    const phrase = `${rulePreposition(catalog, [r])} ${ruleWhatRaw(card, r)}`
+    const phrases = byRate.get(r.rate) ?? []
+    if (!phrases.includes(phrase)) byRate.set(r.rate, [...phrases, phrase])
   }
   const clauses = [...byRate].map(
     ([rate, whats]) =>

@@ -291,7 +291,7 @@ function reasoningFor(
   if (best.rule) {
     const note = best.rule.note ? ` ${best.rule.note}` : ''
     lines.push(
-      `${standard} on ${ruleWhat(catalog, best.rule)}${best.rule.requires?.membership === undefined ? '' : `, with ${membershipName(catalog, best.rule.requires.membership)}`}.${note}`,
+      `${standard} on ${ruleWhat(catalog, best.rule, card)}${best.rule.requires?.membership === undefined ? '' : `, with ${membershipName(catalog, best.rule.requires.membership)}`}.${note}`,
     )
   } else {
     lines.push(`${standard}, its base rate. No bonus category applies here.`)
@@ -366,11 +366,11 @@ function warningsFor(
       )
     } else if (purchase.amount !== null && purchase.amount > remaining) {
       warnings.push(
-        `This purchase crosses the ${capLabel(best)} on ${ruleWhat(catalog, best.rule)}: only ${money(remaining)} is left for ${period}.`,
+        `This purchase crosses the ${capLabel(best)} on ${ruleWhat(catalog, best.rule, card)}: only ${money(remaining)} is left for ${period}.`,
       )
     } else if (remaining < cap.amount * NEAR_CAP_SHARE) {
       warnings.push(
-        `Only ${money(remaining)} left of the ${capLabel(best)} on ${ruleWhat(catalog, best.rule)} for ${period}.`,
+        `Only ${money(remaining)} left of the ${capLabel(best)} on ${ruleWhat(catalog, best.rule, card)} for ${period}.`,
       )
     }
   }
@@ -381,7 +381,7 @@ function warningsFor(
     nominal.cap.remaining === 0
   ) {
     warnings.push(
-      `The ${capLabel(nominal)} on ${ruleWhat(catalog, nominal.rule)} is used up for ${nominal.cap.period ?? 'this period'}, so it earns ${earnText(catalog, nominal.afterCap ?? nominal.cap.cap.then_rate, valuation.currency)} until it resets.`,
+      `The ${capLabel(nominal)} on ${ruleWhat(catalog, nominal.rule, card)} is used up for ${nominal.cap.period ?? 'this period'}, so it earns ${earnText(catalog, nominal.afterCap ?? nominal.cap.cap.then_rate, valuation.currency)} until it resets.`,
     )
   }
   if (best.rule?.unverified !== undefined) {
@@ -562,7 +562,7 @@ function assumptionsFor(
         merchantFamily(catalog, merchant.merchantId).some((id) =>
           (rule.match.merchants ?? []).includes(id),
         )
-        ? [`${displayName(e)} (${ruleWhat(catalog, rule)})`]
+        ? [`${displayName(e)} (${ruleWhat(catalog, rule, e.card)})`]
         : []
     })
     assumptions.push(

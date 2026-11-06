@@ -85,3 +85,36 @@ describe('withArticle', () => {
       expect(withArticle(name), name).toBe(`${article} ${name}`)
   })
 })
+
+describe('rule wording', () => {
+  test('one rule picks "on" or "at" for every surface', async () => {
+    const { rulePreposition } = await import('../src/engine/rule-text.ts')
+    const rule = (cardId: string, ruleId: string) => {
+      const found = card(cardId).rules.find((r) => r.id === ruleId)
+      if (!found) throw new Error(ruleId)
+      return found
+    }
+    expect(rulePreposition(catalog, [rule('amex-gold', 'restaurants')])).toBe(
+      'at',
+    )
+    expect(
+      rulePreposition(catalog, [
+        rule('amex-blue-cash-preferred', 'us-streaming'),
+      ]),
+    ).toBe('on')
+    expect(
+      rulePreposition(catalog, [rule('usbank-cash-plus', 'five-percent')]),
+    ).toBe('on')
+  })
+
+  test('pages name every store a rule covers; answers may shorten', async () => {
+    const { ruleWhat } = await import('../src/engine/rule-text.ts')
+    const bcp = card('amex-blue-cash-preferred')
+    const streaming = bcp.rules.find((r) => r.id === 'us-streaming')
+    if (!streaming) throw new Error('streaming')
+    expect(ruleWhat(catalog, streaming, bcp)).toBe('select streaming services')
+    expect(ruleWhat(catalog, streaming, bcp, { everyStore: true })).toMatch(
+      /Netflix/,
+    )
+  })
+})

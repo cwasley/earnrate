@@ -9,15 +9,13 @@ import {
 import { idealHolding, type Picks } from '../../src/engine/explore.ts'
 import { inEffect } from '../../src/engine/periods.ts'
 import { categoryPhrase, earnText, listed } from '../../src/engine/text.ts'
-import {
-  findMerchant,
-  resolveMerchantById,
-} from '../../src/merchants/resolve.ts'
+import { resolveMerchantById } from '../../src/merchants/resolve.ts'
 import type { Card, Rule } from '../../src/schema/card.ts'
 import type { Merchant } from '../../src/schema/merchant.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
 import type { Quote } from './rules.ts'
 import { esc, fitDescription, fitTitle, SITE } from './site.ts'
+import { rulePreposition } from '../../src/engine/rule-text.ts'
 
 const EXCLUSION =
   /\bexclud|\bnot at\b|\bnot (be )?(included|eligible|count|qualify)|\bdo(es)? not\b|\bdon['’]t\b|\bisn['’]t\b|\baren['’]t\b|\bwon['’]t\b|\bexcept\b|\bmay not\b/i
@@ -286,7 +284,7 @@ export function howItCodes(
         rule.rate > card.base_rate
       )
         named.push(
-          `<li>${cardLink(ctx, card)}: ${esc(earnText(ctx.catalog, rule.rate, card.currency))} ${rule.match.merchants.every((id) => ctx.readsOn(findMerchant(ctx.catalog, id)?.category ?? '')) ? 'on' : 'at'} ${esc(ctx.ruleWhatRaw(card, rule))}${quote[0] ? `. ${ctx.quoteHtml(quote[0])}` : '.'}</li>`,
+          `<li>${cardLink(ctx, card)}: ${esc(earnText(ctx.catalog, rule.rate, card.currency))} ${rulePreposition(ctx.catalog, [rule])} ${esc(ctx.ruleWhatRaw(card, rule))}${quote[0] ? `. ${ctx.quoteHtml(quote[0])}` : '.'}</li>`,
         )
       const ex = rule.exclude
       const leftOut =

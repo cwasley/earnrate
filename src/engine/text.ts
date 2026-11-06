@@ -198,6 +198,15 @@ export function paymentNote(
 
 // A name with its own "and" ("drugstores and pharmacies") would run into the
 // list's: those lists use commas only, with those names last.
+// "Up to $1,500 of spending a quarter, then 1% cash back"
+export const capSentence = (
+  cap: { amount: number; period: keyof typeof CAP_PERIODS },
+  then: string,
+  of = 'spending',
+  aside = '', // " (shared with …)", after the period
+) =>
+  `Up to ${wholeDollars(cap.amount)} of ${of} ${CAP_PERIODS[cap.period]}${aside}, then ${then}`
+
 // "a Costco membership", "an Instacart credit", "an IHG card", "a Uber credit":
 // by sound, so a leading "you" or "won" takes "a" and a letter said with a
 // vowel sound ("an REI") takes "an".

@@ -12,14 +12,18 @@ import { introUntil, introWindows, openedOn } from './intro.ts'
 import { membershipName } from './memberships.ts'
 import { milestoneSummaries, type MilestoneSummary } from './milestones.ts'
 import { creditStates } from './credits.ts'
-import { creditWhere, optionName, ruleParts } from './rule-text.ts'
+import {
+  creditWhere,
+  optionName,
+  ruleParts,
+  rulePreposition,
+} from './rule-text.ts'
 import { choicePeriod, daysBetween, inEffect, periodEnd } from './periods.ts'
 import { STALE_AFTER_DAYS } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
 import { activationRules } from './setup.ts'
 import {
   CAP_PERIODS,
-  categoryReadsOn,
   creditBack,
   creditLeft,
   ENROLL_FIRST,
@@ -157,7 +161,7 @@ function headlineRates(
           wallet.memberships.includes(r.requires.membership)),
     )
     .sort((a, b) => b.rate - a.rate)
-  const lines = new Map<string, string[]>()
+  const lines = new Map<string, { at: string[]; on: string[] }>()
   for (const r of shown) {
     const keys = matchKeys(r)
     const higher = shown
@@ -184,21 +188,27 @@ function headlineRates(
     const pending = r.requires?.activation && !isActivated(card, held, r.id)
     const payment = r.requires?.payment
     const key = [
-      `${earnText(catalog, r.rate, currency)} on`,
+      earnText(catalog, r.rate, currency),
       capLimit(card, shown, r),
       pending ? ', once activated' : '',
       payment === undefined ? '' : ` ${PAYMENT_PHRASES[payment]}`,
     ].join('|')
-    const whats = lines.get(key) ?? []
-    for (const part of ruleParts(catalog, r))
+    const line = lines.get(key) ?? { at: [], on: [] }
+    const whats = line[rulePreposition(catalog, [r])]
+    for (const part of ruleParts(catalog, r, card))
       if (!whats.includes(part)) whats.push(part)
-    lines.set(key, whats)
+    lines.set(key, line)
   }
   return [
-    ...[...lines].map(([key, whats]) => {
+    ...[...lines].map(([key, { at, on }]) => {
       const [head = '', limit = '', activate = '', paid = ''] = key.split('|')
       const after = `${limit}${activate}`
-      return `${head} ${listed(whats)}${paid}${after === '' ? '' : ` (${after.replace(/^, /, '')})`}`
+      // "at gas stations and on transit" when one line mixes the two.
+      const where = [
+        ...(at.length > 0 ? [`at ${listed(at)}`] : []),
+        ...(on.length > 0 ? [`on ${listed(on)}`] : []),
+      ].join(at.length > 1 ? ', and ' : ' and ')
+      return `${head} ${where}${paid}${after === '' ? '' : ` (${after.replace(/^, /, '')})`}`
     }),
     ...(shown.some(
       (r) =>
@@ -236,14 +246,11 @@ export function activationsDue(
     for (const g of group) seen.add(g)
     const rules = card.rules.filter((r) => group.includes(r.id))
     const first = rules[0]
-    const categories = rules.flatMap((r) => r.match.categories ?? [])
-    const servicesOnly =
-      categories.length > 0 &&
-      rules.every((r) => (r.match.merchants ?? []).length === 0) &&
-      categories.every((c) => categoryReadsOn(catalog, c))
     out.push({
-      what: listed([...new Set(rules.flatMap((r) => ruleParts(catalog, r)))]),
-      preposition: servicesOnly ? 'on' : 'at',
+      what: listed([
+        ...new Set(rules.flatMap((r) => ruleParts(catalog, r, card))),
+      ]),
+      preposition: rulePreposition(catalog, rules),
       from: first?.valid_from ?? null,
       to: first?.valid_to ?? null,
       activateBy: first?.activate_by ?? null,
@@ -300,8 +307,9 @@ function capSummaries(
     const shared = card.caps.find((c) => c.id === key)
     const label = shared?.rotating
       ? 'the rotating bonus categories'
-      : listed([...new Set(covered.flatMap((r) => ruleParts(catalog, r)))]) ||
-        words(key)
+      : listed([
+          ...new Set(covered.flatMap((r) => ruleParts(catalog, r, card))),
+        ]) || words(key)
     return {
       key,
       label,

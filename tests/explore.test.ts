@@ -54,7 +54,7 @@ describe('best cards for a purchase', () => {
     expect(flat[0]?.cardId).toBe('amex-blue-cash-preferred')
     expect(flat[0]?.effectiveReturnPct).toBe(6)
     expect(flat[0]?.conditions).toEqual([
-      'Up to $6,000 a calendar year at this rate, then 1% cash back.',
+      'Up to $6,000 of spending a calendar year, then 1% cash back.',
     ])
     expect(flat[0]?.evidence?.url).toMatch(/americanexpress\.com/)
 
@@ -84,7 +84,7 @@ describe('best cards for a purchase', () => {
     expect(cashPlus?.picks).toEqual({ 'five-percent': ['fast-food'] })
     expect(cashPlus?.conditions).toEqual([
       'Needs fast food as its 5% pick (picked each quarter).',
-      'Up to $2,000 a quarter at this rate, then 1% cash back.',
+      'Up to $2,000 of spending a quarter, then 1% cash back.',
     ])
   })
 

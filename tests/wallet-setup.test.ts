@@ -537,7 +537,7 @@ describe('opening dates', () => {
       {
         id: 'first-year-choice-bonus',
         days: 365,
-        text: 'an extra 3% cash back on your 3% picks for the first year',
+        text: 'an extra 3% cash back on the category you pick for the first year',
       },
     ])
     expect(

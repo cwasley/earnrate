@@ -21,6 +21,7 @@
   mccs: [5812, 5813, 5814]
 - id: dining.fast_food
   name: Fast food
+  preposition: on
   aliases:
     [fast food restaurants, coffee shop, coffee shops, coffee, cafe, cafes]
   mccs: [5814]
@@ -35,6 +36,7 @@
   mccs: [5411]
 - id: grocery.online
   name: Online grocery and delivery
+  preposition: on
   aliases: [grocery delivery]
 
 - id: superstore
@@ -57,8 +59,10 @@
   mccs: [5541, 5542]
 - id: gas.grocery_store
   name: Gas at grocery stores
+  preposition: on
 - id: gas.superstore
   name: Gas at superstores and warehouse clubs
+  preposition: on
 - id: ev_charging
   preposition: on
   name: EV charging
@@ -72,6 +76,7 @@
   mccs: [4111, 4112, 4131, 4784, 7523]
 - id: transit.rideshare
   name: Rideshare and taxis
+  preposition: on
   aliases: [rideshare, taxi, taxis]
   mccs: [4121]
 
@@ -81,6 +86,7 @@
   mccs: [4722]
 - id: travel.flights
   name: Flights
+  preposition: on
   aliases: [flights, airfare, airlines, flight, plane tickets]
   mccs: [4511]
 - id: travel.hotels
@@ -89,10 +95,12 @@
   mccs: [7011]
 - id: travel.car_rental
   name: Car rental
+  preposition: on
   aliases: [car rentals, rental cars]
   mccs: [7512]
 - id: travel.cruise
   name: Cruises
+  preposition: on
   aliases: [cruise]
   mccs: [4411]
 
@@ -149,6 +157,7 @@
   mccs: [5941]
 - id: home_improvement
   name: Home improvement
+  preposition: on
   aliases: [hardware stores, hardware store, home improvement store]
   mccs: [5200, 5211]
 - id: furniture
@@ -171,4 +180,5 @@
 - id: other
   slug: everyday-spending
   name: Everything else
+  preposition: on
   aliases: [everything, everything else, other]

@@ -32,7 +32,7 @@ test('every bonus rate is listed, and an activated quarter says so', () => {
   const [flex] = walletSummary(catalog, wallet, '2026-11-01').cards
   const rates = flex?.rates.join('; ') ?? ''
   expect(rates).toMatch(
-    /3% cash back on restaurants, drugstores and pharmacies/,
+    /3% cash back at restaurants, drugstores and pharmacies/,
   )
   expect(rates).not.toMatch(/once activated/)
   expect(flex?.toActivate).toEqual([])
@@ -44,7 +44,7 @@ test('a capped rate says how much spending earns it', () => {
   })
   const [flex] = walletSummary(catalog, wallet, '2026-11-01').cards
   expect(flex?.rates).toContain(
-    '7% cash back on restaurants (first $1,500 a quarter, combined)',
+    '7% cash back at restaurants (first $1,500 a quarter, combined)',
   )
 })
 
@@ -72,7 +72,7 @@ test('a lower tier a held membership replaces is left out', () => {
   })
   const [prime] = walletSummary(catalog, wallet, '2026-11-01').cards
   const rates = prime?.rates.join('; ') ?? ''
-  expect(rates).toMatch(/^5% cash back on Amazon, /)
+  expect(rates).toMatch(/^5% cash back at Amazon, /)
   expect(rates).not.toMatch(/3% cash back/)
 })
 
@@ -96,8 +96,8 @@ test('a BofA Rewards tier shows only its own rates', () => {
   })
   const [ccr] = walletSummary(catalog, wallet, '2026-11-01').cards
   expect(ccr?.rates).toEqual([
-    '3.75% cash back on your 3% picks (first $2,500 a quarter, combined)',
-    '2.5% cash back on supermarkets and warehouse clubs (first $2,500 a quarter, combined)',
+    '3.75% cash back on the category you pick (first $2,500 a quarter, combined)',
+    '2.5% cash back at supermarkets and warehouse clubs (first $2,500 a quarter, combined)',
     '1.25% cash back on everything else',
   ])
 })

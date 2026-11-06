@@ -1,5 +1,4 @@
 import type { Requirements } from '../engine/explore.ts'
-import { earnText } from '../engine/text.ts'
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
@@ -8,7 +7,8 @@ import type { Catalog } from '../schema/catalog.ts'
 
 import { membershipName, membershipText } from '../engine/memberships.ts'
 import {
-  CAP_PERIODS,
+  capSentence,
+  earnText,
   PICK_PERIODS,
   wholeDollars,
   words,
@@ -69,7 +69,7 @@ export function cardText(catalog: Catalog) {
     if (until !== null) lines.push(`This rate runs through ${until}`)
     if (r.cap)
       lines.push(
-        `Up to ${wholeDollars(r.cap.amount)} of spending ${CAP_PERIODS[r.cap.period]}, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}`,
+        capSentence(r.cap, earnText(catalog, r.cap.thenRate, r.cap.currency)),
       )
     return lines
   }

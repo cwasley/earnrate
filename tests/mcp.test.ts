@@ -437,7 +437,7 @@ describe('tools', () => {
       /Picks for 2026-Q4, through Dec 31, 2026: 5%: /,
     )
     expect(text(result)).toMatch(
-      /Cap on your 5% picks: .* \(cap key five-percent-combined\)/,
+      /Cap on the 2 categories you pick each quarter: .* \(cap key five-percent-combined\)/,
     )
     expect(text(result)).toMatch(/^Memberships: /m)
     expect(text(result)).toMatch(

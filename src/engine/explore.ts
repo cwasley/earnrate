@@ -21,7 +21,6 @@ import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
 import { optionName } from './rule-text.ts'
 import {
-  CAP_PERIODS,
   categoryPhrase,
   choiceName,
   codesAs,
@@ -29,12 +28,12 @@ import {
   creditThen,
   earnText,
   listed,
-  money,
   PAYMENT_PHRASES,
   paidText,
   paymentUnknownText,
   PICK_PERIODS,
   pointValuesText,
+  capSentence,
 } from './text.ts'
 import type {
   Channel,
@@ -280,7 +279,7 @@ function conditionsText(
     conditions.push(`With your ${membershipName(catalog, r.membership)}.`)
   if (r.cap) {
     conditions.push(
-      `Up to ${money(r.cap.amount)} ${CAP_PERIODS[r.cap.period]} at this rate, then ${earnText(catalog, r.cap.thenRate, r.cap.currency)}.`,
+      `${capSentence(r.cap, earnText(catalog, r.cap.thenRate, r.cap.currency))}.`,
     )
   }
   return conditions

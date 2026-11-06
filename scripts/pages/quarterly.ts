@@ -16,6 +16,7 @@ import {
   pct,
   shortDate,
   words,
+  capSentence,
 } from '../../src/engine/text.ts'
 import { findMerchant } from '../../src/merchants/resolve.ts'
 import { optionName } from '../../src/engine/rule-text.ts'
@@ -242,10 +243,11 @@ function ruleItems(
   const items = [...rules]
     .sort((a, b) => b.rate - a.rate)
     .map((rule) => {
+      // The card's summary line says the cap and activation once for all
+      // its categories.
       const lines = ctx
-        .ruleConditions(card, rule)
-        // The card's summary line says these once for all its categories.
-        .filter((l) => !/^Activate it|^Up to \$/.test(l) && !said.has(l))
+        .ruleConditions(card, rule, { cap: true, activation: true })
+        .filter((l) => !said.has(l))
       const quotes = ctx
         .quotesFor(card, rule.id)
         .filter((q) => !said.has(q.quote))
@@ -302,7 +304,7 @@ function cardSection(ctx: PageContext, q: Quarter, qc: QuarterCard): string {
     `${shortDate(from)} to ${shortDate(to)}`,
     ...quotes.map((e) => e.quote),
   ])
-  return `<section class="quarter-card">${head}<p class="answer">${esc(shortDate(from))} to ${esc(shortDate(to))}. Up to ${esc(`$${cap.amount.toLocaleString('en-US')}`)} of combined purchases in these categories a quarter at the bonus rate, then ${esc(earnText(ctx.catalog, cap.then_rate, card.currency))}. ${esc(activation)}</p>${quotes.length > 0 ? `<p><strong>How to activate:</strong></p><ul class="quotes">${quotes.map((e) => `<li>${ctx.quoteHtml(e)}</li>`).join('')}</ul>` : ''}${ruleItems(ctx, card, qc.rules, said)}</section>`
+  return `<section class="quarter-card">${head}<p class="answer">${esc(shortDate(from))} to ${esc(shortDate(to))}. ${esc(capSentence(cap, earnText(ctx.catalog, cap.then_rate, card.currency), 'combined purchases in these categories'))}. ${esc(activation)}</p>${quotes.length > 0 ? `<p><strong>How to activate:</strong></p><ul class="quotes">${quotes.map((e) => `<li>${ctx.quoteHtml(e)}</li>`).join('')}</ul>` : ''}${ruleItems(ctx, card, qc.rules, said)}</section>`
 }
 
 function topSection(ctx: PageContext, q: Quarter, slugs: BestSlugs): string {

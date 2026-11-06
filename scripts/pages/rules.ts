@@ -1,19 +1,17 @@
 // A card rule in words, as the card pages and the pages built on them show
 // it: what it covers, its conditions, and the issuer's quote.
 import {
-  CAP_PERIODS,
   capitalize,
   categoryPhrase,
   categoryReadsOn,
   earnText,
   hostname,
   listed,
-  PAYMENT_PHRASES,
-  PICK_PERIODS,
   shortDate,
-  wholeDollars,
   words,
+  capSentence,
 } from '../../src/engine/text.ts'
+import { ruleWhat as engineRuleWhat } from '../../src/engine/rule-text.ts'
 import { cardText } from '../../src/format/card-text.ts'
 import { findMerchant } from '../../src/merchants/resolve.ts'
 import type { Card, Rule } from '../../src/schema/card.ts'
@@ -27,34 +25,10 @@ export function ruleKit(catalog: Catalog) {
   const merchantName = (id: string) => findMerchant(catalog, id)?.name
   const readsOn = (id: string) => categoryReadsOn(catalog, id)
 
-  function ruleWhatRaw(card: Card, rule: Rule): string {
-    const payment = rule.requires?.payment
-    const what = ruleScope(card, rule)
-    return payment === undefined ? what : `${what} ${PAYMENT_PHRASES[payment]}`
-  }
-
-  function ruleScope(card: Card, rule: Rule): string {
-    const m = rule.match
-    if (m.any) return 'every purchase'
-    const parts: string[] = []
-    if (m.choice !== undefined) {
-      const choice = card.choices.find((c) => c.id === m.choice)
-      parts.push(
-        choice
-          ? `${choice.pick === 1 ? 'one category' : `${String(choice.pick)} categories`} you pick${choice.period === 'until_changed' ? '' : ` ${PICK_PERIODS[choice.period]}`}`
-          : 'the category you pick',
-      )
-    }
-    if (m.merchants?.length)
-      parts.push(listed(m.merchants.map((id) => merchantName(id) ?? words(id))))
-    if (m.categories?.length) {
-      const cats = listed(m.categories.map((id) => categoryPhrase(catalog, id)))
-      parts.push(m.merchants?.length ? `when it codes as ${cats}` : cats)
-    }
-    if (m.mccs?.length)
-      parts.push(`purchases coded MCC ${m.mccs.map(String).join(', ')}`)
-    return parts.join(' ')
-  }
+  // The engine's wording, so a card page and an answer say the same thing;
+  // a page names every store a rule covers.
+  const ruleWhatRaw = (card: Card, rule: Rule) =>
+    engineRuleWhat(catalog, rule, card, { everyStore: true })
 
   const ruleWhat = (card: Card, rule: Rule) =>
     capitalize(ruleWhatRaw(card, rule))
@@ -67,7 +41,14 @@ export function ruleKit(catalog: Catalog) {
   function capLine(card: Card, rule: Rule): string | null {
     const cap = capOf(card, rule)
     if (!cap) return null
-    return `Up to ${wholeDollars(cap.amount)} of spending ${CAP_PERIODS[cap.period]}${typeof rule.cap === 'string' ? ' (shared with its other bonus categories on this cap)' : ''}, then ${earnText(catalog, cap.then_rate, card.currency)}`
+    return capSentence(
+      cap,
+      earnText(catalog, cap.then_rate, card.currency),
+      'spending',
+      typeof rule.cap === 'string'
+        ? ' (shared with its other bonus categories on this cap)'
+        : '',
+    )
   }
 
   function exclusionLine(rule: Rule): string | null {
@@ -80,7 +61,12 @@ export function ruleKit(catalog: Catalog) {
     return names.length > 0 ? `Not at ${listed(names, 'or')}` : null
   }
 
-  function ruleConditions(card: Card, rule: Rule): string[] {
+  // `omit` leaves out lines a page already says once for all of a card's rules.
+  function ruleConditions(
+    card: Card,
+    rule: Rule,
+    omit: { cap?: boolean; activation?: boolean } = {},
+  ): string[] {
     const lines: string[] = []
     const excluded = exclusionLine(rule)
     if (excluded) lines.push(excluded)
@@ -91,7 +77,7 @@ export function ruleKit(catalog: Catalog) {
       lines.push('Purchases outside the U.S. only')
     if (rule.requires?.membership !== undefined)
       lines.push(`With ${membershipName(rule.requires.membership)}`)
-    if (rule.requires?.activation === true)
+    if (rule.requires?.activation === true && omit.activation !== true)
       lines.push(`Activate it with ${issuerName(card.issuer)} first`)
     if (rule.valid_from !== undefined || rule.valid_to !== undefined)
       lines.push(
@@ -101,7 +87,7 @@ export function ruleKit(catalog: Catalog) {
             ? `Through ${shortDate(rule.valid_to)}`
             : `From ${shortDate(rule.valid_from ?? '')}`,
       )
-    const cap = capLine(card, rule)
+    const cap = omit.cap === true ? null : capLine(card, rule)
     if (cap) lines.push(cap)
     if (rule.unverified !== undefined)
       lines.push("Not yet confirmed against the issuer's terms")

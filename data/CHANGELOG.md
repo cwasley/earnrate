@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.06.1
+
+Wording only; no rates changed. Ten categories take `preposition: on`, so answers and pages say "on flights" rather than "at flights": `dining.fast_food`, `grocery.online`, `gas.grocery_store`, `gas.superstore`, `transit.rideshare`, `travel.flights`, `travel.car_rental`, `travel.cruise`, `home_improvement` and `other`.
+
 ## 2026.11.06
 
 Wording only; no rates changed. `discover-it-cash-back`'s welcome-offer note says Cashback Match doubles every rate for the first year, instead of naming the data field it's stored in.

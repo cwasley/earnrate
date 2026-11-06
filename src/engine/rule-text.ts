@@ -10,6 +10,7 @@ import {
   listed,
   num,
   PAYMENT_PHRASES,
+  PICK_PERIODS,
   words,
 } from './text.ts'
 
@@ -45,44 +46,110 @@ export function optionName(
   return parts.length > 0 ? listed(parts) : words(option)
 }
 
-// What a rule covers, as a list of phrases.
-export function ruleParts(catalog: Catalog, rule: Rule): string[] {
-  if (rule.match.any)
+// What a rule covers, as a list of phrases. With the card, a pick reads
+// "the 2 categories you pick each quarter" and a rule for every purchase reads
+// "every purchase" when it's the card's only one.
+export function ruleParts(
+  catalog: Catalog,
+  rule: Rule,
+  card?: Pick<Card, 'rules' | 'choices'>,
+  { everyStore = false }: { everyStore?: boolean } = {},
+): string[] {
+  const m = rule.match
+  if (m.any)
     return [
       rule.geography === 'foreign_only'
         ? 'purchases outside the U.S.'
         : rule.requires?.payment !== undefined
           ? 'purchases'
-          : 'everything else',
+          : card?.rules.every((r) => r.match.any)
+            ? 'every purchase'
+            : 'everything else',
     ]
-  if (rule.match.choice !== undefined)
-    return [`your ${choiceName(rule.match.choice)} picks`]
-  const merchants = rule.match.merchants ?? []
-  // A long list of mostly one kind of store reads as "select streaming
-  // services": Amex's streaming list also names Audible, which isn't one.
+  if (m.choice !== undefined) {
+    const choice = card?.choices.find((c) => c.id === m.choice)
+    if (!choice) return [`your ${choiceName(m.choice)} picks`]
+    const which =
+      choice.pick === 1
+        ? 'the category'
+        : `the ${String(choice.pick)} categories`
+    return [
+      `${which} you pick${choice.period === 'until_changed' ? '' : ` ${PICK_PERIODS[choice.period]}`}`,
+    ]
+  }
+  const merchants = m.merchants ?? []
+  const categories = (m.categories ?? []).map((c) => categoryPhrase(catalog, c))
+  const merchantParts =
+    (everyStore ? null : shortenedMerchants(catalog, merchants)) ??
+    merchants.map((id) => merchantName(catalog, id))
+  // A rule naming both matches a purchase that is both.
+  if (merchants.length > 0 && categories.length > 0)
+    return [`${listed(merchantParts)} when it codes as ${listed(categories)}`]
+  const parts = [...categories, ...(merchants.length > 0 ? merchantParts : [])]
+  if (parts.length > 0) return parts
+  return m.mccs?.length
+    ? [`purchases coded MCC ${m.mccs.map(String).join(', ')}`]
+    : [words(rule.id)]
+}
+
+// A long list of mostly one kind of store reads as "select streaming
+// services": Amex's streaming list also names Audible, which isn't one.
+// Null when the list is read out in full.
+function shortenedKind(catalog: Catalog, merchants: string[]): string | null {
   const counts = new Map<string, number>()
-  for (const m of merchants) {
-    const category = findMerchant(catalog, m)?.category
+  for (const id of merchants) {
+    const category = findMerchant(catalog, id)?.category
     if (category) counts.set(category, (counts.get(category) ?? 0) + 1)
   }
   const [kind, count = 0] = [...counts].sort((a, b) => b[1] - a[1])[0] ?? []
-  const merchantParts =
-    merchants.length > 4 &&
+  return merchants.length > 4 &&
     kind !== undefined &&
     count >= merchants.length * 0.75
-      ? [`select ${categoryPhrase(catalog, kind)}`]
-      : merchants.map((m) => merchantName(catalog, m))
-  const parts = [
-    ...(rule.match.categories ?? []).map((c) => categoryPhrase(catalog, c)),
-    ...merchantParts,
-  ]
-  return parts.length > 0 ? parts : [words(rule.id)]
+    ? kind
+    : null
 }
 
-export function ruleWhat(catalog: Catalog, rule: Rule): string {
+export function shortenedMerchants(
+  catalog: Catalog,
+  merchants: string[],
+): string[] | null {
+  const kind = shortenedKind(catalog, merchants)
+  return kind === null ? null : [`select ${categoryPhrase(catalog, kind)}`]
+}
+
+export function ruleWhat(
+  catalog: Catalog,
+  rule: Rule,
+  card?: Pick<Card, 'rules' | 'choices'>,
+  options: { everyStore?: boolean } = {},
+): string {
   const payment = rule.requires?.payment
-  const what = listed(ruleParts(catalog, rule))
+  const what = listed(ruleParts(catalog, rule, card, options))
   return payment === undefined ? what : `${what} ${PAYMENT_PHRASES[payment]}`
+}
+
+// "on dining", "on your picks", "at Costco", "on Walmart+ membership": a
+// category's own preposition, "at" for a store unless its data says "on" or
+// it's a booking through a travel site ("on hotels through Amex Travel"), and
+// a shortened list ("select streaming services") reads like its kind.
+export function rulePreposition(catalog: Catalog, rules: Rule[]): 'on' | 'at' {
+  const readsOn = (r: Rule) => {
+    if (r.match.any === true || r.match.choice !== undefined) return true
+    const merchants = r.match.merchants ?? []
+    const kind = shortenedKind(catalog, merchants)
+    return (
+      (r.match.categories ?? []).every((c) => categoryReadsOn(catalog, c)) &&
+      (kind !== null
+        ? categoryReadsOn(catalog, kind)
+        : merchants.every((id) => {
+            const merchant = findMerchant(catalog, id)
+            return (
+              merchant?.preposition === 'on' || merchant?.kind === 'booking'
+            )
+          }))
+    )
+  }
+  return rules.length > 0 && rules.every(readsOn) ? 'on' : 'at'
 }
 
 // "double every rate for the first year", "an extra 3% cash back on your 3%
@@ -96,7 +163,7 @@ export function introWhat(
   const on =
     intro.rules === undefined
       ? 'every rate'
-      : [...new Set(covered.map((r) => ruleWhat(catalog, r)))].join('; ')
+      : [...new Set(covered.map((r) => ruleWhat(catalog, r, card)))].join('; ')
   const change =
     intro.multiply === undefined
       ? `an extra ${earnText(catalog, intro.add ?? 0, card.currency)} on ${on}`
