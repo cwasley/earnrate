@@ -67,15 +67,17 @@ ${CARD_OPTIONS}
   update: `Usage: ${CLI_NAME} update <card-id> [options]
 
 Changes a card in your wallet: picks for this period, label, anniversary,
-opening date, activations, statement credits or welcome bonus. Picks for the
-current period are merged with ones already set.
+opening date, activations, spending toward caps and spend bonuses, statement
+credits or welcome bonus. Picks for the current period are merged with ones
+already set.
 
 ${CARD_OPTIONS}
 `,
   remove: `Usage: ${CLI_NAME} remove <card-id>
 
-Removes a card from your wallet, with its tracked cap usage and bonus
-progress. Your memberships and point values stay.
+Removes a card from your wallet, with its tracked cap usage, welcome-bonus
+progress, spend-bonus spending and statement credits used. Your memberships
+and point values stay.
 `,
   memberships: `Usage: ${CLI_NAME} memberships [<membership>...] [--none]
 

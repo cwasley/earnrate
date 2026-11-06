@@ -62,7 +62,7 @@ Options: `--online` or `--in-store`, `--paying card|apple-pay|google-pay|paypal`
 
 `earnrate cheatsheet` prints the card to use for each everyday kind of purchase this quarter (groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores, everything else), with your caps, picks and activations as they are now. `--cards` uses cards you name instead, and `--every-card` picks from every card to show what's worth getting. It's also in the My wallet tab on [earnrate.dev](https://earnrate.dev).
 
-`earnrate todo` lists what your saved cards need this quarter, soonest first: bonuses to activate (with Chase's deadline), categories to pick, caps running low and welcome bonuses to finish. `--ics earnrate.ics` also writes the dates as a calendar file with reminders. My wallet on earnrate.dev shows the same list as "To do now", with an "Add the dates to your calendar" button.
+`earnrate todo` lists what your saved cards need this quarter, soonest first: bonuses to activate (with Chase's deadline), categories to pick, caps running low, welcome bonuses to finish, spend bonuses you're close to, statement credits to enroll in or use, and first-year rates ending. `--ics earnrate.ics` also writes the dates as a calendar file with reminders. My wallet on earnrate.dev shows the same list as "To do now", with an "Add the dates to your calendar" button.
 
 `earnrate missed` lists the stores earnrate didn't recognize when you asked here, most asked about first. They're kept only on your computer; [open an issue](https://github.com/cwasley/earnrate/issues) to suggest one for the data.
 

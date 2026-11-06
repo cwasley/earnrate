@@ -39,13 +39,14 @@ const IMPORT_HELP = `Usage: ${CLI_NAME} import <statement.csv> --card <card-id> 
 Reads card statements (Amex and Chase activity CSVs) and reports:
   - what the same purchases would have earned on earnrate's picks
   - where the issuer coded a merchant differently than earnrate assumes
-  - the cap usage it would record for the current period
+  - the cap usage, welcome-bonus and spend-bonus spending, and statement
+    credits used that it would record for the current period
 
 Name several statements, each with its card, to see one report across them.
 
 Nothing is written unless you pass --apply, and then only cap totals,
-welcome-bonus spending and a fingerprint of each recorded purchase, so
-importing twice never counts twice.
+welcome-bonus and spend-bonus spending, statement credits used and a
+fingerprint of each recorded purchase, so importing twice never counts twice.
 The statements themselves are never stored.
 
 Options:

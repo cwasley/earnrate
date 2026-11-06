@@ -48,7 +48,7 @@
     },
     {
       "name": "list_wallet",
-      "description": "A to-do list for your cards right now, then your cards, caps left, picked categories, statement credits left, welcome-bonus progress and point values."
+      "description": "A to-do list for your cards right now, then your cards, caps left, picked categories, statement credits left, welcome-bonus and spend-bonus progress, and point values."
     },
     {
       "name": "cheat_sheet",
@@ -80,7 +80,7 @@
     },
     {
       "name": "update_card",
-      "description": "Sets a card's picks, activations, checkout name, anniversary, opening date, cap spending, statement credits or welcome bonus."
+      "description": "Sets a card's picks, activations, checkout name, anniversary, opening date, cap spending, spend-bonus spending, statement credits or welcome bonus."
     },
     {
       "name": "remove_card",
