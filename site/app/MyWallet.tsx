@@ -626,14 +626,18 @@ function CardEditor({
 
 function CardList({
   wallet,
+  open,
+  setOpen,
   onChange,
   onRemove,
 }: {
   wallet: Wallet
+  // The card whose Settings are showing; the to-do list can open one.
+  open: string | null
+  setOpen: (cardId: string | null) => void
   onChange: (change: WalletChange, cardId: string) => void
   onRemove: (cardId: string) => void
 }) {
-  const [open, setOpen] = useState<string | null>(null)
   const today = localToday()
   const untracked = wallet.cards.some(
     (h) => h.bonus === undefined && cards.get(h.id)?.welcome_offer,
@@ -649,7 +653,7 @@ function CardList({
           )
           const note = bonusLine(wallet, held) ?? milestoneLine(held)
           return (
-            <li key={held.id}>
+            <li key={held.id} id={`held-${held.id}`}>
               <button
                 type="button"
                 class="held-row"
@@ -947,9 +951,33 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
   )
 }
 
+function EnrollText({ text, onOpen }: { text: string; onOpen: () => void }) {
+  const match = MARK_ENROLLED.exec(text)
+  if (!match) return <>{text}</>
+  return (
+    <>
+      {text.slice(0, match.index)}
+      <button type="button" class="link" onClick={onOpen}>
+        {match[0]}
+      </button>
+      {text.slice(match.index + match[0].length)}
+    </>
+  )
+}
+
 // What the cards need this period, with a calendar file of the dates. The
 // file is built here and saved by the browser; nothing is sent anywhere.
-function ThisQuarter({ wallet }: { wallet: Wallet }) {
+// "mark them enrolled" in an enroll item opens that card's Settings, where
+// the enrolled boxes are.
+const MARK_ENROLLED = /mark (?:it|them) enrolled/
+
+function ThisQuarter({
+  wallet,
+  onOpenCard,
+}: {
+  wallet: Wallet
+  onOpenCard: (cardId: string) => void
+}) {
   const items = useMemo(
     () => checklist(catalog, wallet, localToday(), undefined, shortName),
     [wallet],
@@ -963,7 +991,18 @@ function ThisQuarter({ wallet }: { wallet: Wallet }) {
       <h3>To do now</h3>
       <ul class="todo">
         {items.map((i) => (
-          <li key={`${i.kind}-${i.cardId}`}>{i.text}</li>
+          <li key={`${i.kind}-${i.cardId}`}>
+            {i.kind === 'enroll' && MARK_ENROLLED.test(i.text) ? (
+              <EnrollText
+                text={i.text}
+                onOpen={() => {
+                  onOpenCard(i.cardId)
+                }}
+              />
+            ) : (
+              i.text
+            )}
+          </li>
         ))}
       </ul>
       {dated ? (
@@ -1136,6 +1175,7 @@ export function MyWallet({
   const [amount, setAmount] = useState('')
   const [abroad, setAbroad] = useState(false)
   const [payment, setPayment] = useState<PaymentMethod | null>(null)
+  const [openCard, setOpenCard] = useState<string | null>(null)
   const [asked, setAsked] = useState<{
     text: string
     amount: number | null
@@ -1213,7 +1253,13 @@ export function MyWallet({
     <div class="panels">
       <section class="panel first">
         <h3>Your cards</h3>
-        <CardList wallet={wallet} onChange={apply} onRemove={remove} />
+        <CardList
+          wallet={wallet}
+          open={openCard}
+          setOpen={setOpenCard}
+          onChange={apply}
+          onRemove={remove}
+        />
         <AddCard wallet={wallet} onChange={apply} />
         {message ? (
           <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
@@ -1321,7 +1367,17 @@ export function MyWallet({
         </div>
       </section>
 
-      <ThisQuarter wallet={wallet} />
+      <ThisQuarter
+        wallet={wallet}
+        onOpenCard={(cardId) => {
+          setOpenCard(cardId)
+          requestAnimationFrame(() => {
+            document
+              .getElementById(`held-${cardId}`)
+              ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          })
+        }}
+      />
       <CheatSheet wallet={wallet} />
       <Memberships wallet={wallet} onChange={apply} />
       <PointValues wallet={wallet} onChange={apply} />

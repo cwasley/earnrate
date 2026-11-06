@@ -1129,7 +1129,8 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .next-steps .link,
-.pass-hint .link {
+.pass-hint .link,
+.todo .link {
   border: 0;
   background: none;
   padding: 0;
