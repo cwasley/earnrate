@@ -1515,7 +1515,6 @@ describe('#30 how a purchase is paid', () => {
       expect(checkout.rate).toBe(3)
       expect(checkout.earned).toBeCloseTo(3)
       expect(checkout.matchedRule).toBe('paypal-checkout')
-      // PayPal checkout is online, so an unknown channel counts as online.
       expect(rateAt(PAYPAL, 'Etsy', { payment: 'paypal' }).rate).toBe(3)
       expect(rateAt(PAYPAL, 'etsy.com', { payment: 'card' }).rate).toBe(1.5)
       expect(

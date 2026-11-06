@@ -757,7 +757,6 @@ async function chatgptSignIn(
     body: new URLSearchParams({ handle, choice: 'new' }).toString(),
   })
   expect(started.status).toBe(200)
-  // The page links back to ChatGPT; nothing in its policy limits navigation.
   const csp = started.headers.get('content-security-policy') ?? ''
   expect(csp).not.toMatch(/form-action|navigate-to/)
   const html = await started.text()
@@ -979,7 +978,6 @@ describe('rate limits', () => {
     expect(a).toBe(c)
     expect(b).not.toBe(a)
     expect(signIn.keys).toEqual([])
-    // The key is a hash: neither the wallet id nor the token is in it.
     for (const token of [one, two])
       for (const part of token.split(':'))
         expect(general.keys.join(' ')).not.toContain(part)

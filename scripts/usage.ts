@@ -1,7 +1,3 @@
-// What got used, from earnrate's own tallies: the site's event counts and
-// the pass signer's (earnrate_site_usage, by device kind), the hosted
-// server's (earnrate_mcp_usage, by kind of app), plus npm and Desktop
-// bundle downloads. Counts of actions, never people.
 // Needs a Cloudflare API token with "Account Analytics: Read", from
 // CLOUDFLARE_API_TOKEN or the macOS Keychain item earnrate-cloudflare-analytics,
 // and the account ID from CLOUDFLARE_ACCOUNT_ID (or the token's only account).

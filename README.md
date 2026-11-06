@@ -58,7 +58,7 @@ Assumes Whole Foods Market codes as supermarkets (MCC 5411).
 Values points at: Amex Membership Rewards (MR) at 1¢, SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢.
 ```
 
-Options: `--online` or `--in-store`, `--valuation flat|points-heavy`, `--all`, `--json`, `--date`, `--country`. Run `earnrate --help` for details. To keep the wallet somewhere else, set `EARNRATE_WALLET` to its path.
+Options: `--online` or `--in-store`, `--paying card|apple-pay|google-pay|paypal`, `--valuation flat|points-heavy`, `--cards`, `--member`, `--category`, `--all`, `--json`, `--date`, `--country`. Run `earnrate --help` for details. To keep the wallet somewhere else, set `EARNRATE_WALLET` to its path.
 
 `earnrate cheatsheet` prints the card to use for each everyday kind of purchase this quarter (groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores, everything else), with your caps, picks and activations as they are now. `--cards` uses cards you name instead, and `--every-card` picks from every card to show what's worth getting. It's also in the My wallet tab on [earnrate.dev](https://earnrate.dev).
 
@@ -303,19 +303,19 @@ Every rule in `data/cards/` carries a short quote from the issuer's own page. In
 - rules whose quote is no longer on the page, which usually means the rule changed
 - earning lines that appeared or disappeared since the last baseline, such as a new perk
 
-A GitHub Action runs it every Monday and opens a "Card source changes" issue when something moved. After updating a card file, run `yarn check-sources --update` to record the new baseline. Some issuers block headless browsers on shared servers; those pages are listed as "couldn't check", and running the command locally covers them. The first run needs `yarn playwright install chromium`.
+A GitHub Action runs it every Monday and opens a "Card source changes" issue when something moved or a page couldn't be read. After updating a card file, run `yarn check-sources --update --cards <ids>` to record the new baseline for those cards' pages. Some issuers block headless browsers on shared servers; those pages are listed as "couldn't check", and running the command locally covers them. The first run needs `yarn playwright install chromium`.
 
 Rotating categories (Freedom Flex) are added each quarter once the issuer posts them. Until then, answers say that quarter's categories are missing rather than guessing.
 
 ## Privacy Policy
 
-earnrate needs no account. The local version has no telemetry; the hosted server counts requests and errors by method, tool name or page only, never what was asked. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
+earnrate needs no account. The local version has no telemetry; the hosted server counts requests and errors by tool or page, with the kind of app they came from, and how many wallets are started and used each day, never what was asked. The full policy is at [earnrate.dev/privacy](https://earnrate.dev/privacy); in short:
 
-- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, country, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests and errors by method, tool name or page only. Connecting it starts an anonymous wallet (a recovery code, no email). It holds only what you save: card IDs and the details you gave, memberships and point values, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
+- **The Claude connector:** earnrate's server at mcp.earnrate.dev receives each question Claude asks it (a store or kind of purchase, and any amount, country, spending or cards you gave) and answers without keeping it; request logging is off. It counts requests and errors by tool or page, with the kind of app they came from, and how many wallets are started and used each day. Connecting it starts an anonymous wallet (a recovery code, no email). It holds only what you save: card IDs and the details you gave, memberships and point values, never card numbers, and is encrypted with its own key that only your recovery code or your connected apps can unlock. Delete it any time; it's deleted automatically after 13 months unused, or a week if it's never used.
 - **What it stores locally:** your wallet, a YAML file on your computer (`~/.earnrate/wallet.yaml` unless you set `EARNRATE_WALLET`). It lists cards by product ID, like `amex-gold`, plus your category picks, activations and how much you've spent toward caps. earnrate never asks for or stores card numbers, expiry dates, security codes or bank logins. When you ask about a store earnrate doesn't recognize, its name goes in `~/.earnrate/missed-merchants.json` (`earnrate missed` lists them; `EARNRATE_MISSED_MERCHANTS=off` keeps no list).
 - **What the local version sends:** nothing, by default. The optional merchant lookup (off unless you turn it on with your own Anthropic API key) sends only the name of a store earnrate doesn't recognize to Anthropic's API, and saves the answer in `~/.earnrate/merchant-cache.json`.
 - **AI assistants:** when you use earnrate through Claude or another assistant, that assistant's provider sees the conversation, including earnrate's answers, under its own privacy policy.
-- **earnrate.dev:** everything you enter on the site stays in your browser. The site counts visits with Cloudflare Web Analytics, without cookies.
+- **earnrate.dev:** everything you enter on the site stays in your browser, except when you add the cheat sheet to Apple Wallet: then pass.earnrate.dev receives what the pass needs (card IDs, picks, activations, checkout names, memberships and the date) and keeps none of it. The site counts which of its parts get used, by name only, and counts visits with Cloudflare Web Analytics, without cookies.
 - **Retention:** locally, your data lives only in files you control, for as long as you keep them. Delete the wallet file, or clear the site's data in your browser, to remove it. A saved wallet on mcp.earnrate.dev lasts until you delete it or leave it unused for 13 months (a week, if it's never used); the record that an app is connected goes after 90 days unused.
 - **Terms:** [earnrate.dev/terms](https://earnrate.dev/terms).
 - **Contact:** [hello@earnrate.dev](mailto:hello@earnrate.dev).

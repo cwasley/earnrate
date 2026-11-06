@@ -1,8 +1,6 @@
-// pass.earnrate.dev: earnrate.dev's "Add to Apple Wallet" form posts the
-// browser wallet's card ids, picks, activations, checkout labels and
-// memberships here; the Worker builds a signed cheat-sheet pass and returns
-// it. It stores nothing and logs nothing (observability is off), and the
-// request never reaches any other service.
+// Stores and logs nothing (observability is off), and the request never
+// reaches any other service.
+import { daysBetween } from '../../src/engine/periods.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import { limitKey, readBody } from '../../remote/src/requests.ts'
 import {
@@ -54,8 +52,7 @@ const text = (status: number, body: string) =>
 function passDate(sent: string | null, now: Date): string {
   const server = now.toISOString().slice(0, 10)
   if (sent === null || !/^\d{4}-\d{2}-\d{2}$/.test(sent)) return server
-  const days = Math.abs(Date.parse(sent) - Date.parse(server)) / 86_400_000
-  return days <= 1 ? sent : server
+  return Math.abs(daysBetween(sent, server)) <= 1 ? sent : server
 }
 
 export function makePassWorker(deps: {

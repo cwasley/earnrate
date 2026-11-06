@@ -1,8 +1,6 @@
-// Recovery codes and wallet encryption, with Web Crypto only (Workers and
-// Node). A wallet is AES-GCM encrypted with its own random key. That key is
-// stored wrapped by a key derived from the recovery code, and otherwise
-// travels only inside the sign-in grant, which the OAuth library encrypts
-// for the token holder. Storage alone can't decrypt a wallet.
+// Web Crypto only (Workers and Node). A wallet's key is stored only wrapped
+// by the recovery code, and otherwise travels only inside the sign-in grant,
+// which the OAuth library encrypts: storage alone can't decrypt a wallet.
 
 const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 const CODE_LENGTH = 25 // 125 bits

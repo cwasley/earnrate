@@ -36,10 +36,10 @@ export function creditCovers(
 }
 
 // A credit that needs enrolling counts only once the wallet says it's done.
-export const isEnrolled = (credit: Credit, held: WalletCard) =>
+const isEnrolled = (credit: Credit, held: WalletCard) =>
   credit.enroll !== true || (held.enrolled ?? []).includes(credit.id)
 
-export function creditState(
+function creditState(
   catalog: Catalog,
   credit: Credit,
   held: WalletCard,

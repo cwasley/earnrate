@@ -1,6 +1,5 @@
-// pass.earnrate.dev: signs the Apple Wallet cheat-sheet pass. Deploy with
-// `yarn pass:deploy`. Stateless: no storage bindings and no request logs;
-// it counts passes made, with the kind of device, in the site's dataset.
+// Stateless: no storage bindings and no request logs; it counts passes made,
+// with the kind of device, in the site's dataset.
 // Secrets (wrangler secret put … --config pass/wrangler.jsonc): PASS_TYPE_ID,
 // TEAM_ID, PASS_CERT_PEM, PASS_KEY_PEM, WWDR_PEM.
 {

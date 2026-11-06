@@ -101,7 +101,7 @@ export type VaultFor<Env> = (env: Env, walletId: string) => VaultApi
 
 // The OAuth library's tokens are "{userId}:{grantId}:{secret}". Only the
 // grant id is read from one, to refuse a signed-out grant in the vault.
-export function grantIdOf(token: string): string | null {
+function grantIdOf(token: string): string | null {
   const parts = token.split(':')
   return parts.length === 3 && parts[1] ? parts[1] : null
 }

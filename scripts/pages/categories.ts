@@ -2,14 +2,19 @@
 // leaves out, side by side, quoted from the card files' evidence.
 import { categoryMatches } from '../../src/engine/evaluate.ts'
 import { optionName } from '../../src/engine/rule-text.ts'
-import { earnText, listed, PICK_PERIODS } from '../../src/engine/text.ts'
+import {
+  capitalize,
+  earnText,
+  listed,
+  PICK_PERIODS,
+} from '../../src/engine/text.ts'
 import { findMerchant } from '../../src/merchants/resolve.ts'
 import type { Card, Rule } from '../../src/schema/card.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
 import { esc, fitDescription, fitTitle, SITE } from './site.ts'
 
 // The categories people search definitions for, by the word they use.
-export const CATEGORY_PAGES: { slug: string; category: string }[] = [
+const CATEGORY_PAGES: { slug: string; category: string }[] = [
   { slug: 'dining', category: 'dining' },
   { slug: 'groceries', category: 'grocery' },
   { slug: 'gas', category: 'gas' },
@@ -136,7 +141,7 @@ function definitionBlock(ctx: PageContext, defs: Definition[]): string {
         `<a href="/cards/${d.card.id}">${esc(ctx.shortName(d.card.id))}</a> (${esc(rateOf(d))})`,
     ),
   )
-  return `<div class="definition"><p><strong>${esc(what.charAt(0).toUpperCase() + what.slice(1))}</strong>: ${cardsLine}</p>${rule.note ? `<p class="muted">${esc(rule.note)}</p>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${quotes.length > 0 ? `<ul class="quotes">${quotes.map((q) => `<li>${ctx.quoteHtml(q)}</li>`).join('')}</ul>` : ''}</div>`
+  return `<div class="definition"><p><strong>${esc(capitalize(what))}</strong>: ${cardsLine}</p>${rule.note ? `<p class="muted">${esc(rule.note)}</p>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${quotes.length > 0 ? `<ul class="quotes">${quotes.map((q) => `<li>${ctx.quoteHtml(q)}</li>`).join('')}</ul>` : ''}</div>`
 }
 
 export function categoryPages(
@@ -208,7 +213,7 @@ export function categoryPages(
         body,
         crumbs: [
           { name: 'Categories', path: '/categories/' },
-          { name: label.charAt(0).toUpperCase() + label.slice(1), path },
+          { name: capitalize(label), path },
         ],
         jsonLd: {
           '@context': 'https://schema.org',
@@ -254,7 +259,7 @@ export function categoryPages(
       <h1>What each category covers</h1>
       <p class="updated">Updated ${esc(ctx.todayWords)}</p>
       <p>The same word means different things to different issuers. Each page puts their definitions and exclusions side by side, from the cards' terms.</p>
-      <ul>${built.map((b) => `<li><a href="/categories/${b.page.path.split('/').at(-1) ?? ''}">${esc(b.label.charAt(0).toUpperCase() + b.label.slice(1))}</a>: ${String(b.rules)} bonus rules from ${String(b.issuers)} issuers</li>`).join('')}</ul>`,
+      <ul>${built.map((b) => `<li><a href="/categories/${b.page.path.split('/').at(-1) ?? ''}">${esc(capitalize(b.label))}</a>: ${String(b.rules)} bonus rules from ${String(b.issuers)} issuers</li>`).join('')}</ul>`,
       jsonLd: {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',

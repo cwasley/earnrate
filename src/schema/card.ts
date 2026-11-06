@@ -193,11 +193,9 @@ export const ChoiceSchema = z.strictObject({
   ),
 })
 
-// A rate for a stretch after the account opens, counted from the opening
-// day: Discover's Cashback Match doubles every rate for the first 365 days,
-// Customized Cash adds 3% to its choice category. With `rules`, it changes
-// only those rules' rates, inside their caps; past a cap they earn what they
-// always do. Without, it changes every rate on the card, past caps included.
+// Counted from the opening day. With `rules`, it changes only those rules'
+// rates, inside their caps; past a cap they earn what they always do.
+// Without, it changes every rate on the card, past caps included.
 export const IntroRateSchema = z
   .strictObject({
     id: KebabId,
@@ -212,11 +210,9 @@ export const IntroRateSchema = z
     'an intro rate needs multiply or add, not both',
   )
 
-// Merchant statement credits: dollars back for spending at named merchants
-// (or a category) up to `amount` each period, like Amex Platinum's $75 a
-// quarter at lululemon. They're separate from earn rates: the purchase still
-// earns the card's rate on its whole amount, and the credit comes on top.
-// `half_year` runs January to June and July to December.
+// Separate from earn rates: the purchase still earns the card's rate on its
+// whole amount, and the credit comes on top. `half_year` runs January to June
+// and July to December.
 export const CreditPeriod = z.enum([...CapPeriod.options, 'half_year'])
 
 export const CreditSchema = z.strictObject({

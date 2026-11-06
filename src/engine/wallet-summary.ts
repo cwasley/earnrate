@@ -137,11 +137,9 @@ function capLimit(card: Card, shown: Rule[], rule: Rule): string {
   return `first ${wholeDollars(cap.amount)} ${CAP_PERIODS[cap.period]}${shared ? ', combined' : ''}`
 }
 
-// Every bonus rate the cardholder gets now, best first, so none reads as the
-// base rate. Rates behind a membership the wallet lacks are left out, and so
-// is a lower tier that an uncapped, always-on higher rate fully covers (Prime
-// Visa's 3% without Prime, once Prime is held). Rules at the same rate share
-// a line.
+// Best first. Leaves out rates behind a membership the wallet lacks and a
+// lower tier an uncapped, always-on higher rate fully covers (Prime Visa's 3%
+// without Prime, once Prime is held). Rules at the same rate share a line.
 function headlineRates(
   catalog: Catalog,
   wallet: Wallet,

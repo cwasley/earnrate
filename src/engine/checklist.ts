@@ -1,6 +1,6 @@
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
-import { currentPeriodEnd, daysBetween } from './periods.ts'
+import { addDays, currentPeriodEnd, daysBetween } from './periods.ts'
 import {
   CAP_PERIODS,
   choiceName,
@@ -217,8 +217,8 @@ export function checklist(
 }
 
 // An all-day calendar event for each dated action (activations, picks,
-// welcome-bonus deadlines, credits to use), with a reminder two days before. Built on the
-// device: nothing is sent anywhere.
+// welcome-bonus deadlines, credits to use), with a reminder two days before.
+// Built on the device: nothing is sent anywhere.
 export function checklistCalendar(
   items: ChecklistItem[],
   stamp: string, // YYYYMMDDTHHMMSSZ
@@ -231,11 +231,6 @@ export function checklistCalendar(
     return parts.join('\r\n ')
   }
   const day = (d: string) => d.replace(/-/g, '')
-  const next = (d: string) => {
-    const t = new Date(`${d}T00:00:00Z`)
-    t.setUTCDate(t.getUTCDate() + 1)
-    return t.toISOString().slice(0, 10)
-  }
   const events = items
     .filter((i) => i.due !== null && i.kind !== 'cap' && i.kind !== 'rotation')
     .flatMap((i) => {
@@ -245,7 +240,7 @@ export function checklistCalendar(
         `UID:${i.kind}-${i.cardId}${i.ref === undefined ? '' : `-${i.ref}`}-${due}@earnrate.dev`,
         `DTSTAMP:${stamp}`,
         `DTSTART;VALUE=DATE:${day(due)}`,
-        `DTEND;VALUE=DATE:${day(next(due))}`,
+        `DTEND;VALUE=DATE:${day(addDays(due, 1))}`,
         fold(`SUMMARY:${escape(i.text)}`),
         'BEGIN:VALARM',
         'TRIGGER:-P2D',

@@ -33,6 +33,12 @@ export function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000)
 }
 
+export function addDays(date: string, days: number): string {
+  const t = new Date(`${date}T00:00:00Z`)
+  t.setUTCDate(t.getUTCDate() + days)
+  return t.toISOString().slice(0, 10)
+}
+
 // The user's local calendar date, not UTC: a purchase at 9pm in Los Angeles
 // belongs to that day.
 export function localToday(now = new Date()): string {

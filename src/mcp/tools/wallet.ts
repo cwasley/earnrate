@@ -100,7 +100,6 @@ function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
   return out
 }
 
-// The tools that read or change a saved wallet.
 export function registerWalletTools(
   server: McpServer,
   deps: ServerDeps,

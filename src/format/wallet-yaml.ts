@@ -45,8 +45,8 @@ function compact(wallet: Wallet) {
   }
 }
 
-// Dates, periods and anniversaries are quoted: YAML 1.1 parsers read a bare 2026-10-15 as a
-// date, not a string.
+// Dates, periods and anniversaries are quoted: YAML 1.1 parsers read a bare
+// 2026-10-15 as a date, not a string.
 function quotedYaml(value: unknown): string {
   const doc = new Document(value)
   visit(doc, {

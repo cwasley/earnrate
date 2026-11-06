@@ -15,6 +15,7 @@ export default defineConfig([
     '.wrangler/**',
     '.mcpb-build/**',
     'private/**',
+    '.claude/**',
   ]),
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,

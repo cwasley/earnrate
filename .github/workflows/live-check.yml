@@ -1,13 +1,8 @@
 name: Live check
 
-# Hourly: a quick check of earnrate.dev and mcp.earnrate.dev (no wallets).
-# Daily: the full check, with a browser and a sign-in that saves and deletes
-# an anonymous wallet, plus the server's error counts. A failure opens an
-# issue assigned to the repo owner, so GitHub emails them; it closes when the
-# same kind of check passes again.
-# The earnrate-monitor Worker (monitor/) dispatches these on time, and a quick
-# check within minutes of an outage; GitHub's own schedule, often hours late,
-# stays as the backup.
+# monitor/ dispatches these on time; GitHub's own schedule, often hours late,
+# is the backup. A failure opens an issue assigned to the repo owner, and the
+# next passing check of the same kind closes it.
 on:
   schedule:
     - cron: '7 * * * *' # every hour

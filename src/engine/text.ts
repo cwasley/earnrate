@@ -7,6 +7,7 @@ import type {
   PaymentMethod,
 } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
+import type { WalletCard } from '../schema/wallet.ts'
 import { singleMcc } from './evaluate.ts'
 import type { MerchantResolution } from './types.ts'
 
@@ -74,6 +75,14 @@ export function feeText(fees: {
   if (firstYearFee !== null && firstYearFee !== annualFee)
     return `${money(annualFee)} annual fee (${firstYearFee === 0 ? 'waived' : money(firstYearFee)} the first year)`
   return `${money(annualFee)} annual fee`
+}
+
+export function heldName(catalog: Catalog, held: WalletCard): string {
+  return (
+    held.checkout_label ??
+    catalog.cards.find((c) => c.id === held.id)?.name ??
+    held.id
+  )
 }
 
 export function currencyName(catalog: Catalog, id: string): string {

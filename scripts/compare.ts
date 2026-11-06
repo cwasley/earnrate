@@ -24,7 +24,7 @@ import type { Catalog } from '../src/schema/catalog.ts'
 
 // The everyday categories the pair rule compares. Travel counts a bonus on
 // travel in general, flights or hotels.
-export const PAIR_CATEGORIES: { label: string; categories: string[] }[] = [
+const PAIR_CATEGORIES: { label: string; categories: string[] }[] = [
   { label: 'groceries', categories: ['grocery.supermarket'] },
   { label: 'dining', categories: ['dining'] },
   { label: 'gas', categories: ['gas'] },
@@ -33,9 +33,6 @@ export const PAIR_CATEGORIES: { label: string; categories: string[] }[] = [
     categories: ['travel', 'travel.flights', 'travel.hotels'],
   },
 ]
-
-export const PAIR_RULE =
-  'Two open, non-store cards from different issuers, both personal or both business, both cash back or both points, either both without an annual fee or both with fees within $250 of each other, that each earn a lasting bonus in at least two of the same everyday categories (groceries, dining, gas, travel); plus each card and the card from its own issuer, earning the same rewards, whose annual fee is closest to its own.'
 
 export type ComparePair = {
   slug: string // "<a>-vs-<b>", ids in alphabetical order

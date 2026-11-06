@@ -59,7 +59,7 @@ function choicePicks(
 
 // Whether this one rule pays at the merchant, if it codes as `category`,
 // with the card set up for it (picked, activated, any membership it asks).
-export function rulePays(
+function rulePays(
   ctx: PageContext,
   card: Card,
   rule: Rule,
@@ -162,7 +162,7 @@ function topicWords(
   ]
 }
 
-export function treatments(
+function treatments(
   ctx: PageContext,
   merchant: Merchant,
   category: string,
@@ -198,7 +198,7 @@ export function treatments(
 const cardLink = (ctx: PageContext, card: Card) =>
   `<a href="/cards/${card.id}">${esc(ctx.shortName(card.id))}</a>`
 
-function namedList(ctx: PageContext, items: string[]): string {
+function namedList(items: string[]): string {
   if (items.length <= SHOWN + 1) return listed(items)
   return `${items.slice(0, SHOWN).join(', ')} and ${String(items.length - SHOWN)} more`
 }
@@ -221,7 +221,6 @@ function treatmentItems(
   if (paying.length > 0)
     items.push(
       `<strong>Counts</strong> for ${namedList(
-        ctx,
         paying.map(
           (t) =>
             `${cardLink(ctx, t.card)} (${esc(earnText(ctx.catalog, t.pays?.rate ?? 0, t.card.currency))}${t.pays?.requires?.membership ? ` with ${esc(ctx.membershipName(t.pays.requires.membership))}` : ''})`,
@@ -239,7 +238,6 @@ function treatmentItems(
   else if (silent.length > 0)
     items.push(
       `<strong>Doesn't count</strong> for ${namedList(
-        ctx,
         silent.map((t) => cardLink(ctx, t.card)),
       )}: ${silent.length === 1 ? 'its' : 'their'} bonus on ${esc(familyWords)} doesn't pay when it codes as ${esc(codesAs)}.`,
     )
@@ -337,7 +335,6 @@ export function howItCodes(
     if (paying.length === 0) continue
     parts.push(
       `<p>${way === merchant.category ? 'Coded' : 'If it codes'} as ${esc(codesText(ctx, way))}, ${String(paying.length)} ${paying.length === 1 ? 'card pays' : 'cards pay'} a category bonus here: ${namedList(
-        ctx,
         paying.map(
           (p) =>
             `${cardLink(ctx, p.card)} (${esc(earnText(ctx.catalog, p.rule.rate, p.card.currency))})`,

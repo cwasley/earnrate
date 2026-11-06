@@ -1,6 +1,7 @@
 // "Is the annual fee worth it?" on a card page: the monthly spending in the
 // card's bonus categories at which it nets more than the best no-fee card on
 // the same spending, from the engine's year-long simulation.
+import { EPSILON } from '../../src/engine/compare.ts'
 import { matchesFilters } from '../../src/engine/explore.ts'
 import {
   resolveSpendLines,
@@ -10,7 +11,7 @@ import {
   type ResolvedLine,
   type Simulation,
 } from '../../src/engine/simulate.ts'
-import { listed, money, num, wholeDollars } from '../../src/engine/text.ts'
+import { listed, money, num, pct, wholeDollars } from '../../src/engine/text.ts'
 import type { Card } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { PageContext } from './context.ts'
@@ -91,7 +92,7 @@ export function feeWorthKit(
         [{ ...line, monthly: 100 }],
         options(card),
       )
-      return (sim?.lines[0]?.returnPct ?? 0) > card.base_rate * cents + 1e-9
+      return (sim?.lines[0]?.returnPct ?? 0) > card.base_rate * cents + EPSILON
     })
   }
 
@@ -154,7 +155,7 @@ export function feeWorthKit(
 const lineWords = (l: ResolvedLine) =>
   l.merchant.source === 'category' ? l.label.toLowerCase() : l.label
 
-const share = (l: ResolvedLine) => `${num(Math.round(l.monthly * 100))}%`
+const share = (l: ResolvedLine) => pct(Math.round(l.monthly * 100))
 
 export function feeWorthSection(
   ctx: PageContext,

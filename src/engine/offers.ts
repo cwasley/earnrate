@@ -4,7 +4,7 @@ import { bonusDollars } from './bonus.ts'
 import { matchesFilters } from './explore.ts'
 import { membershipCosts, paidMemberships } from './memberships.ts'
 import { inEffect } from './periods.ts'
-import { CREDITS_LEFT_OUT, money, roundCents } from './text.ts'
+import { CREDITS_LEFT_OUT, heldName, money, roundCents } from './text.ts'
 import { cardValuation } from './valuation.ts'
 
 export type OfferFilters = {
@@ -54,12 +54,7 @@ function ineligibleText(
 ): string | null {
   const held = wallet.cards
     .filter((c) => notWith.includes(c.id))
-    .map(
-      (c) =>
-        c.checkout_label ??
-        catalog.cards.find((k) => k.id === c.id)?.name ??
-        c.id,
-    )
+    .map((c) => heldName(catalog, c))
   return held.length === 0
     ? null
     : `Likely not eligible: you hold ${held.join(' and ')}, and the issuer's terms rule out its cardholders.`

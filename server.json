@@ -51,6 +51,12 @@
           "isSecret": false
         },
         {
+          "name": "EARNRATE_MISSED_MERCHANTS",
+          "description": "Where stores earnrate didn't recognize are listed. Default: ~/.earnrate/missed-merchants.json; off keeps no list.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
           "name": "ANTHROPIC_API_KEY",
           "description": "Your own Anthropic key, used only when EARNRATE_LLM is on.",
           "isRequired": false,

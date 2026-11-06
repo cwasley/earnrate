@@ -1,10 +1,7 @@
-// Marks a hosted saved wallet as used, so it lasts 13 months instead of being
-// deleted a week after it was started. For wallets that only a health checker
-// connects to (Glama lists tools but never calls one).
-// Usage: node scripts/touch-wallet.ts <file holding the recovery code>
-//   [--cards amex-gold,chase-freedom-flex]
-// --cards also saves those cards, for a reviewer's demo wallet. The code is
-// read from the file and never printed.
+// For wallets only a health checker connects to (Glama never calls a tool),
+// which would otherwise be deleted a week after they were started. The code
+// is read from the file and never printed.
+// Usage: node scripts/touch-wallet.ts <code file> [--cards amex-gold,...]
 import { readFile } from 'node:fs/promises'
 import { parseArgs } from 'node:util'
 

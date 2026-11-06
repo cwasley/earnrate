@@ -103,9 +103,8 @@ export function makeContext(deps: ServerDeps) {
 
   // Cards named in the conversation come first, then the saved wallet; with
   // neither (null), answers cover every card earnrate knows.
-  // The point values and memberships the user saved apply to every answer,
-  // not just ones from their saved cards. A wallet that can't be read has
-  // none.
+  // Saved point values and memberships apply to every answer, not just ones
+  // from saved cards. A wallet that can't be read has none.
   async function saved(): Promise<Pick<Wallet, 'valuations' | 'memberships'>> {
     try {
       const wallet = await deps.store.load()

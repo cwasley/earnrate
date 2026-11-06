@@ -36,6 +36,7 @@ import {
   currencyLabel,
   currencyName,
   earnText,
+  heldName,
   introRateText,
   introUnknownText,
   listed,
@@ -72,7 +73,7 @@ export const isForeign = (purchase: Pick<Purchase, 'country'>) =>
 
 // A fee that isn't on file counts as the usual 3%, so a card can't win
 // abroad on a guess that it charges none.
-export const ASSUMED_FOREIGN_FEE = 3
+const ASSUMED_FOREIGN_FEE = 3
 
 export const foreignFeeFor = (
   card: Pick<Card, 'foreign_transaction_fee'>,
@@ -322,12 +323,7 @@ function reasoningFor(
     const partners = card.pools_into?.when_wallet_has ?? []
     const heldPartners = wallet.cards
       .filter((h) => partners.includes(h.id))
-      .map(
-        (h) =>
-          h.checkout_label ??
-          catalog.cards.find((c) => c.id === h.id)?.name ??
-          h.id,
-      )
+      .map((h) => heldName(catalog, h))
     lines.push(
       `Pools into ${currencyName(catalog, currency)} because you hold ${heldPartners.join(' and ')}.`,
     )
@@ -493,13 +489,13 @@ function tieNote(entries: Entry[]): string | null {
   return `${names} also ${verb} ${pct(winner.rateReturnPct)} here. ${displayName(winner)} wins the tie ${why}.`
 }
 
-// Finds the closest point inside a currency's value range where the winner
-// stops winning, varying one currency at a time. Returns are linear in the
-// cents-per-point value, so each pair of cards flips at most once.
 // "Chase Ultimate Rewards points", but not "IHG One Rewards points points".
 const pointsName = (label: string) =>
   /\b(points|miles)$/i.test(label) ? label : `${label} points`
 
+// Finds the closest point inside a currency's value range where the winner
+// stops winning, varying one currency at a time. Returns are linear in the
+// cents-per-point value, so each pair of cards flips at most once.
 function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
   const [winner, ...rest] = entries
   if (!winner) return null

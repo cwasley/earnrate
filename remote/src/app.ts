@@ -49,7 +49,6 @@ export type Bundle = { catalog: Catalog; version: string }
 
 // Quarters, caps and rule dates follow the user's calendar; with no user
 // location, U.S. Eastern is the closest single choice.
-// The hosted server's calendar is US Eastern, for "today".
 const easternToday = () =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(
     new Date(),
@@ -333,7 +332,6 @@ export function makeWorker<E extends Env>(
       ctx: ExecutionContextLike,
     ): Promise<Response> {
       const { pathname } = new URL(request.url)
-      // A person opening the address in a browser gets the website.
       const browsing =
         request.method === 'GET' &&
         (request.headers.get('accept') ?? '').includes('text/html')
@@ -348,7 +346,6 @@ export function makeWorker<E extends Env>(
         })
       if (pathname === '/favicon.ico')
         return Response.redirect('https://earnrate.dev/favicon.ico', 301)
-      // Fixed documents, the same for everyone and free to serve.
       if (pathname === '/.well-known/oauth-protected-resource')
         return protectedResourceMetadata(resourceFor('/'))
       if (pathname === '/.well-known/oauth-protected-resource/mcp')

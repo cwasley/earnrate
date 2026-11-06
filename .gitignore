@@ -45,3 +45,6 @@ remote/catalog.gen.json
 pass/bundle.gen.json
 remote/dist/
 monitor/dist/
+
+# Parallel sessions' git worktrees (EnterWorktree)
+.claude/worktrees/

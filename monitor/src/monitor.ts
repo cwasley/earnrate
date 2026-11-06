@@ -1,5 +1,5 @@
-export const REPO = 'cwasley/earnrate'
-export const WORKFLOW = 'live-check.yml'
+const REPO = 'cwasley/earnrate'
+const WORKFLOW = 'live-check.yml'
 
 // Keep in step with `triggers.crons` in monitor/wrangler.jsonc.
 export const CRONS = {
@@ -20,11 +20,11 @@ export const PROBES = [
 
 // A failed probe dispatches a quick check at most this often; the check
 // opens the uptime issue, which emails Collin.
-export const DISPATCH_GAP_MINUTES = 30
+const DISPATCH_GAP_MINUTES = 30
 
 type Fetch = typeof fetch
 
-export async function failedProbes(fetcher: Fetch): Promise<string[]> {
+async function failedProbes(fetcher: Fetch): Promise<string[]> {
   const failed: string[] = []
   for (const p of PROBES) {
     let ok = false
@@ -53,7 +53,7 @@ const github = (token: string) => ({
 const workflowUrl = `https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}`
 
 // Marks the runs a failed probe starts, so only those hold back the next one.
-export const PROBE_FAILED = 'probe failed'
+const PROBE_FAILED = 'probe failed'
 
 export async function dispatch(
   fetcher: Fetch,

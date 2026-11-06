@@ -1,12 +1,6 @@
-// Checks the live site and hosted server. Every run: earnrate.dev's pages,
-// its offline files and the server's sign-in gate. The full run (the
-// default) also loads earnrate.dev in a browser and fails on any page error,
-// signs in to mcp.earnrate.dev as a new client, asks a question, saves a
-// card and deletes the wallet, and reads the server's error counts from
-// Cloudflare when CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are set.
-// It sends no personal data; the wallet it starts is anonymous and deleted
-// at the end. Exits 1 when a check fails, printing a Markdown report.
-//
+// Sends no personal data: the wallet the full run starts is anonymous and
+// deleted at the end. Server error counts need CLOUDFLARE_API_TOKEN and
+// CLOUDFLARE_ACCOUNT_ID.
 //   node scripts/live-check.ts [--quick] [--report report.md]
 
 import { writeFile } from 'node:fs/promises'

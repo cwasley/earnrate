@@ -15,6 +15,7 @@ import {
   capitalize,
   CREDITS_LEFT_OUT,
   feeText,
+  heldName,
   listed,
   money,
   paymentNote,
@@ -122,10 +123,7 @@ export function cheatSheet(
   const bonuses = wallet.cards.flatMap((held) => {
     const status = bonusStatus(catalog, wallet, held, date)
     if (status?.state !== 'open') return []
-    const name =
-      held.checkout_label ??
-      catalog.cards.find((c) => c.id === held.id)?.name ??
-      held.id
+    const name = heldName(catalog, held)
     // Rows where the bonus card matches the row's card, or is close to it
     // (as single answers mention it).
     const matches: string[] = []

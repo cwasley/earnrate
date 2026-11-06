@@ -27,7 +27,6 @@ export type ServerDeps = {
   missed?: MissLog | null
 } & WalletSaving
 
-// The tools that answer without a saved wallet.
 export const ANSWER_TOOLS = [
   'best_card_for_purchase',
   'best_cards_for',
@@ -38,7 +37,6 @@ export const ANSWER_TOOLS = [
   'search_cards',
 ]
 
-// The tools that read or change a saved wallet.
 export const SAVED_WALLET_TOOLS = [
   'list_wallet',
   'record_purchase',

@@ -25,7 +25,7 @@ export type PurchaseContext = {
 }
 
 // PayPal checkout happens online, so paying through it says the channel.
-export const paymentChannel = (
+const paymentChannel = (
   channel: Channel | null,
   payment: PaymentMethod | null,
 ): Channel | null => channel ?? (payment === 'paypal' ? 'online' : null)

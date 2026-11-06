@@ -29,7 +29,7 @@ async function sha1Hex(bytes: Uint8Array): Promise<string> {
     .join('')
 }
 
-export function signManifest(manifest: Uint8Array, signer: Signer): Uint8Array {
+function signManifest(manifest: Uint8Array, signer: Signer): Uint8Array {
   const p7 = forge.pkcs7.createSignedData()
   p7.content = forge.util.createBuffer(forge.util.binary.raw.encode(manifest))
   const certificate = forge.pki.certificateFromPem(signer.certificatePem)

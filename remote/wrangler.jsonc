@@ -25,7 +25,8 @@
       "simple": { "limit": 10, "period": 60 },
     },
   ],
-  // Daily totals by method and tool name only (Workers Analytics Engine).
+  // Counts by method, tool or path and kind of app, never content
+  // (Workers Analytics Engine).
   "analytics_engine_datasets": [
     { "binding": "USAGE", "dataset": "earnrate_mcp_usage" },
   ],

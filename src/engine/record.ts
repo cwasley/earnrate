@@ -140,7 +140,7 @@ export type MilestoneBooking = {
 
 // Every purchase on a card counts toward each of its spend milestones. None
 // for a cardmember-year milestone on a card with no anniversary.
-export function milestoneBookings(
+function milestoneBookings(
   catalog: Catalog,
   wallet: Wallet,
   purchase: RecordedPurchase,
@@ -199,7 +199,7 @@ export type CreditBooking = {
 
 // The part of an enrolled merchant credit this purchase uses. None when the
 // card has no credit here, it isn't enrolled, or it's used up.
-export function creditBooking(
+function creditBooking(
   catalog: Catalog,
   wallet: Wallet,
   purchase: RecordedPurchase,
