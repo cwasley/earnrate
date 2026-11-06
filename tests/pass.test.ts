@@ -9,6 +9,7 @@ import { makePassWorker, type PassEnv } from '../pass/src/app.ts'
 import {
   PASS_NAME_MAX,
   passContents,
+  plainLabel,
   type PassWallet,
 } from '../pass/src/pass.ts'
 import { makeRenderer } from '../pass/src/render.ts'
@@ -265,6 +266,43 @@ describe('the cheat-sheet pass', () => {
       ],
       { stdio: 'pipe' },
     )
+  })
+
+  test('a checkout label shows only when it reads as a card name', () => {
+    for (const label of ['Amex Gold', 'BCP 1007', 'Costco card'])
+      expect(plainLabel(label), label).toBe(true)
+    for (const label of [
+      'Call 18005550100',
+      'www.example.com',
+      'example.co/x',
+      'help@example.com',
+      'https://x',
+      'A label far too long for the strip',
+    ])
+      expect(plainLabel(label), label).toBe(false)
+  })
+
+  test("Anthropic's addresses are limited like any other", async () => {
+    const keys: string[] = []
+    const limited: PassEnv = {
+      ...env,
+      LIMITER: {
+        limit: ({ key }: { key: string }) => {
+          keys.push(key)
+          return Promise.resolve({ success: false })
+        },
+      },
+    }
+    const res = await worker().fetch(
+      new Request('https://pass.earnrate.dev/', {
+        method: 'POST',
+        headers: { 'cf-connecting-ip': '160.79.105.20' },
+        body: 'wallet=%7B%7D',
+      }),
+      limited,
+    )
+    expect(res.status).toBe(429)
+    expect(keys).toEqual(['160.79.105.20'])
   })
 
   test('the Worker refuses what it can’t make a pass from', async () => {

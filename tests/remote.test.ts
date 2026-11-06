@@ -1099,6 +1099,20 @@ describe('rate limits', () => {
     expect(general.keys).toEqual([])
     expect(signIn.keys).toEqual([])
   })
+
+  test("pages a person's browser loads are limited even from Anthropic's addresses", async () => {
+    const d = deployment()
+    const general = recording(false)
+    const signIn = recording(false)
+    const env = { LIMITER: general.limiter, SIGN_IN_LIMITER: signIn.limiter }
+    for (const path of ['/authorize', '/change-code'])
+      expect(
+        (await from(d, ANTHROPIC_IP, path, { method: 'POST', body: '' }, env))
+          .status,
+        path,
+      ).toBe(429)
+    expect(general.keys).toEqual([ANTHROPIC_IP, ANTHROPIC_IP])
+  })
 })
 
 describe('anonymous saved wallets', () => {

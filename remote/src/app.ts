@@ -124,13 +124,14 @@ const tooMany = () =>
   })
 
 // Counts against `key`, or the IP address without one. Anthropic's servers
-// are never limited.
+// are exempt only where Claude itself calls (see limitKey).
 async function limited(
   limiter: RateLimit | undefined,
   request: Request,
-  key: string | null = null,
+  key: string | null,
+  exemptAnthropic: boolean,
 ) {
-  const ip = limitKey(request)
+  const ip = limitKey(request, exemptAnthropic)
   if (!limiter || ip === null) return false
   return !(await limiter.limit({ key: key ?? ip })).success
 }
@@ -181,6 +182,9 @@ const SIGN_IN_PATHS = new Set([
   '/oauth/register',
   '/oauth/token',
 ])
+
+// Sign-in steps an app's servers call, not the person's browser.
+const CLAUDE_CALLS = new Set(['/oauth/register', '/oauth/token'])
 
 export function makeWorker<E extends Env>(
   bundle: Bundle,
@@ -271,17 +275,23 @@ export function makeWorker<E extends Env>(
     try {
       found = await auth.validate(env, token, resource)
     } catch {
-      if (await limited(env.LIMITER, request, claimed)) return tooMany()
+      if (await limited(env.LIMITER, request, claimed, true)) return tooMany()
       return wantsWallet ? unavailable() : signedOut()
     }
     if (!found) {
-      if (await limited(env.SIGN_IN_LIMITER, request, claimed)) return tooMany()
+      if (await limited(env.SIGN_IN_LIMITER, request, claimed, true))
+        return tooMany()
       return challenge(resource, true)
     }
     const { grant, clientId, grantId } = found
     tally.kind = await auth.clientKind(env, clientId)
     if (
-      await limited(env.LIMITER, request, await walletLimitKey(grant.walletId))
+      await limited(
+        env.LIMITER,
+        request,
+        await walletLimitKey(grant.walletId),
+        true,
+      )
     )
       return tooMany()
     // Revoking grants goes through KV, which can lag; the wallet's own
@@ -378,14 +388,18 @@ export function makeWorker<E extends Env>(
       }
       const isMcp = pathname === '/' || pathname === '/mcp'
       const token = isMcp ? bearerToken(request) : null
+      const fromClaude = isMcp || CLAUDE_CALLS.has(pathname)
       // A signed-in MCP request is limited once its token is checked.
-      if (token === null && (await limited(env.LIMITER, request, key)))
+      if (
+        token === null &&
+        (await limited(env.LIMITER, request, key, fromClaude))
+      )
         return tooMany()
       if (isMcp) return mcp(request, env, token)
       // Each of these writes to KV, whose daily writes are limited.
       if (
         SIGN_IN_PATHS.has(pathname) &&
-        (await limited(env.SIGN_IN_LIMITER, request, key))
+        (await limited(env.SIGN_IN_LIMITER, request, key, fromClaude))
       )
         return tooMany()
       const page =

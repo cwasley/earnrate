@@ -62,15 +62,20 @@ function ipv6Network(ip: string): string {
     .join(':')
 }
 
-// What a per-IP rate limit counts against, or null for Anthropic's servers.
-// Apps that call from their own servers share those servers' addresses, so
-// a request that carries a credential is limited by what it names instead.
-export function limitKey(request: Request): string | null {
+// What a per-IP rate limit counts against. With `exemptAnthropic`, null for
+// Anthropic's servers: every Claude user's MCP and token requests come from
+// them. Only those server-to-server paths may pass it; pages a person's own
+// browser loads, and the pass signer, never do.
+export function limitKey(
+  request: Request,
+  exemptAnthropic = false,
+): string | null {
   const ip = request.headers.get('cf-connecting-ip')
   if (!ip) return 'unknown'
   if (ip.includes(':')) return `${ipv6Network(ip)}::/64`
   const n = ipv4(ip)
   if (
+    exemptAnthropic &&
     n !== null &&
     n - ANTHROPIC_START >= 0 &&
     n - ANTHROPIC_START < ANTHROPIC_SIZE

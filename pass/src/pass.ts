@@ -51,6 +51,12 @@ const REFRESH_URL = 'https://earnrate.dev/#wallet'
 // What fits the strip's card column at full size (see strip.ts).
 export const PASS_NAME_MAX = 24
 
+// A pass is signed as earnrate's, so a label it shows must read as a card's
+// name: short, with no web address, email or phone number in it.
+export const plainLabel = (label: string) =>
+  label.length <= PASS_NAME_MAX &&
+  !/:\/\/|www\.|@|\.[a-z]{2,}\b|\d{5}/i.test(label)
+
 type Field = {
   key: string
   label: string
@@ -91,7 +97,7 @@ export function passContents(
   // else the card's short name. Every one fits the strip at full size.
   const passName = (cardId: string) => {
     const label = labels.get(cardId)
-    if (label !== undefined && label.length <= PASS_NAME_MAX) return label
+    if (label !== undefined && plainLabel(label)) return label
     const card = catalog.cards.find((c) => c.id === cardId)
     return card?.short_name ?? text.shortName(cardId)
   }
