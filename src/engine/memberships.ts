@@ -1,7 +1,7 @@
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Membership } from '../schema/membership.ts'
-import { money, words } from './text.ts'
+import { listed, money, withArticle, words } from './text.ts'
 
 export type MembershipCost = {
   id: string
@@ -19,11 +19,6 @@ export function membership(
 
 export function membershipName(catalog: Catalog, id: string): string {
   return membership(catalog, id)?.name ?? words(id)
-}
-
-// "a Costco membership", for a sentence.
-function withArticle(name: string): string {
-  return `${/^[aeiou]/i.test(name) ? 'an' : 'a'} ${name}`
 }
 
 // Tiers of one membership: holding one, the others in its group aren't
@@ -108,5 +103,5 @@ export function membershipNote(catalog: Catalog, m: MembershipCost): string {
   const names = m.cardIds.map(
     (id) => catalog.cards.find((c) => c.id === id)?.name ?? id,
   )
-  return `${names.join(' and ')} ${names.length === 1 ? 'needs' : 'need'} ${withArticle(m.name)}, ${money(m.annualFee)} a year, counted here like an annual fee. If you're already a member, add it to your memberships.`
+  return `${listed(names)} ${names.length === 1 ? 'needs' : 'need'} ${withArticle(m.name)}, ${money(m.annualFee)} a year, counted here like an annual fee. If you're already a member, add it to your memberships.`
 }

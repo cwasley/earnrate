@@ -26,7 +26,12 @@ import {
   USAGE_ERROR,
   type Io,
 } from './run.ts'
-import { currencyName, dollarsAndCents, periodPhrase } from '../engine/text.ts'
+import {
+  currencyName,
+  dollarsAndCents,
+  listed,
+  periodPhrase,
+} from '../engine/text.ts'
 
 const IMPORT_HELP = `Usage: ${CLI_NAME} import <statement.csv> --card <card-id> [--apply]
        ${CLI_NAME} import <statement.csv>:<card-id> [<statement.csv>:<card-id> ...]
@@ -92,11 +97,7 @@ function valuationNote(
   const parts = [...values].map(
     ([id, cents]) => `${String(cents)}¢ for ${currencyName(catalog, id)}`,
   )
-  const list =
-    parts.length > 1
-      ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1) ?? ''}`
-      : (parts[0] ?? '')
-  return `Points valued at ${list}${profile ? ` (the ${profile} profile)` : ', as in your wallet'}.`
+  return `Points valued at ${listed(parts)}${profile ? ` (the ${profile} profile)` : ', as in your wallet'}.`
 }
 
 function formatAnalysis(
@@ -348,7 +349,7 @@ export async function runImport(argv: string[], io: Io): Promise<number> {
     io.stdout(
       values.apply || toRecord.length === 0
         ? 'Nothing was written.\n'
-        : `Nothing was written. Run again with --apply to record ${toRecord.join(' and ')}.\n`,
+        : `Nothing was written. Run again with --apply to record ${listed(toRecord)}.\n`,
     )
     return 0
   }
@@ -369,8 +370,6 @@ export async function runImport(argv: string[], io: Io): Promise<number> {
     ledgerFile,
     `${JSON.stringify({ version: 1, recorded: [...recorded] }, null, 2)}\n`,
   )
-  io.stdout(
-    `Recorded ${toRecord.join(' and ')} in ${displayPath(walletFile)}.\n`,
-  )
+  io.stdout(`Recorded ${listed(toRecord)} in ${displayPath(walletFile)}.\n`)
   return 0
 }

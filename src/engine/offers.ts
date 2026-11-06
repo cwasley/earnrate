@@ -4,7 +4,13 @@ import { bonusDollars } from './bonus.ts'
 import { matchesFilters } from './explore.ts'
 import { membershipCosts, paidMemberships } from './memberships.ts'
 import { inEffect } from './periods.ts'
-import { CREDITS_LEFT_OUT, heldName, money, roundCents } from './text.ts'
+import {
+  CREDITS_LEFT_OUT,
+  heldName,
+  listed,
+  money,
+  roundCents,
+} from './text.ts'
 import { cardValuation } from './valuation.ts'
 
 export type OfferFilters = {
@@ -57,7 +63,7 @@ function ineligibleText(
     .map((c) => heldName(catalog, c))
   return held.length === 0
     ? null
-    : `Likely not eligible: you hold ${held.join(' and ')}, and the issuer's terms rule out its cardholders.`
+    : `Likely not eligible: you hold ${listed(held)}, and the issuer's terms rule out its cardholders.`
 }
 
 export const OFFERS_MAY_DIFFER =

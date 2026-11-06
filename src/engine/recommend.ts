@@ -325,7 +325,7 @@ function reasoningFor(
       .filter((h) => partners.includes(h.id))
       .map((h) => heldName(catalog, h))
     lines.push(
-      `Pools into ${currencyName(catalog, currency)} because you hold ${heldPartners.join(' and ')}.`,
+      `Pools into ${currencyName(catalog, currency)} because you hold ${listed(heldPartners)}.`,
     )
   }
 
@@ -477,7 +477,7 @@ function tieNote(entries: Entry[]): string | null {
   )
   const first = tied[0]
   if (!first) return null
-  const names = tied.map(displayName).join(' and ')
+  const names = listed(tied.map(displayName))
   const verb = tied.length === 1 ? 'earns' : 'earn'
   const why =
     winner.upside - first.upside > EPSILON

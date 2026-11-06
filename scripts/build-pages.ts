@@ -39,6 +39,7 @@ import {
   wholeDollars,
   words,
   foreignFeeText,
+  possessive,
 } from '../src/engine/text.ts'
 import { cardColor } from '../src/format/card-art.ts'
 import type { Card } from '../src/schema/card.ts'
@@ -678,20 +679,20 @@ function renderCard(
   ])
   const firstClause = headline.split('; ')[0] ?? headline
   const description = fitDescription([
-    `${card.name}: ${headline}. ${feeLabel(card.id)}. Every earning rule quoted from ${issuer}'s terms, and the stores where it beats other cards. No affiliate links.`,
+    `${card.name}: ${headline}. ${feeLabel(card.id)}. Every earning rule quoted from ${possessive(issuer)} terms, and the stores where it beats other cards. No affiliate links.`,
     `${card.name}: ${headline}. ${feeLabel(card.id)}.`,
     `${name}: ${headline}. ${feeLabel(card.id)}.`,
-    `${name}: ${firstClause}. ${feeLabel(card.id)}. Every rule quoted from ${issuer}'s terms.`,
+    `${name}: ${firstClause}. ${feeLabel(card.id)}. Every rule quoted from ${possessive(issuer)} terms.`,
     `${name}: ${firstClause}. ${feeLabel(card.id)}.`,
-    `${name}: every earning rate, cap and fee, quoted from ${issuer}'s terms. ${feeLabel(card.id)}.`,
-    `${name}: every earning rate, cap and fee, from ${issuer}'s terms.`,
+    `${name}: every earning rate, cap and fee, quoted from ${possessive(issuer)} terms. ${feeLabel(card.id)}.`,
+    `${name}: every earning rate, cap and fee, from ${possessive(issuer)} terms.`,
   ])
   const canonical = `${SITE}/cards/${card.id}`
   const worth = feeWorth(card)
   const rotates = quarterly.has(card.id)
   const body = `
       <div class="card-head">${art(card.id, 112)}<h1>${esc(card.name)}</h1></div>
-      <p class="updated">${esc(issuer)} · ${esc(card.business ? 'Business card' : 'Personal card')} · Checked against ${esc(issuer)}'s terms ${esc(shortDate(card.last_verified))}</p>
+      <p class="updated">${esc(issuer)} · ${esc(card.business ? 'Business card' : 'Personal card')} · Checked against ${esc(possessive(issuer))} terms ${esc(shortDate(card.last_verified))}</p>
       <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeLabel(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listed(card.only_at.map((id) => merchantName(id) ?? words(id))))}.` : ''}</p>
       <p><a class="button" href="/#wallet">Add it to your wallet</a></p>
       ${
@@ -729,7 +730,7 @@ function renderCard(
       ${comparedWith(card, comparisons)}
       <h2>Sources</h2>
       <ul>${card.source_urls.map((u) => `<li><a href="${esc(u)}" rel="nofollow noopener">${esc(hostname(u) + new URL(u).pathname)}</a></li>`).join('')}</ul>
-      <p class="muted">Rankings compare ${card.business ? 'business' : 'personal'} cards, each set up at its best for the purchase, with points at earnrate's default value. Rates change; check ${esc(issuer)}'s terms before you apply.</p>`
+      <p class="muted">Rankings compare ${card.business ? 'business' : 'personal'} cards, each set up at its best for the purchase, with points at earnrate's default value. Rates change; check ${esc(possessive(issuer))} terms before you apply.</p>`
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CreditCard',
@@ -820,9 +821,11 @@ function costText(sim: Simulation): string {
     sim.annualFees === 0
       ? 'with no annual fee'
       : `after its ${wholeDollars(sim.annualFees)} annual fee`
-  const m = sim.memberships
-    .map((x) => `the ${wholeDollars(x.annualFee)} ${x.name} it needs`)
-    .join(' and ')
+  const m = listed(
+    sim.memberships.map(
+      (x) => `the ${wholeDollars(x.annualFee)} ${x.name} it needs`,
+    ),
+  )
   return m === ''
     ? fee
     : sim.annualFees === 0
@@ -1003,7 +1006,7 @@ function compareQuotes(c: Comparison): string {
       ).values(),
     ]
     const issuer = issuerName(card.issuer)
-    return `<h3><a href="/cards/${card.id}">${esc(card.name)}</a></h3><p class="muted">Checked against ${esc(issuer)}'s terms ${esc(shortDate(card.last_verified))}.</p><ul class="quotes">${quotes
+    return `<h3><a href="/cards/${card.id}">${esc(card.name)}</a></h3><p class="muted">Checked against ${esc(possessive(issuer))} terms ${esc(shortDate(card.last_verified))}.</p><ul class="quotes">${quotes
       .map(
         (e) =>
           `<li>“${esc(e.quote)}” <a href="${esc(e.url)}" rel="nofollow noopener">${esc(hostname(e.url))}</a></li>`,

@@ -21,6 +21,7 @@ import {
   pct,
   wholeDollars,
   words,
+  listed,
 } from '../engine/text.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
@@ -88,7 +89,7 @@ export function formatExploration(
 function picksText(picks: Picks): string {
   const parts = Object.entries(picks).map(
     ([choice, options]) =>
-      `${options.map(words).join(' and ')} as its ${choiceName(choice)} ${options.length === 1 ? 'pick' : 'picks'}`,
+      `${listed(options.map(words))} as its ${choiceName(choice)} ${options.length === 1 ? 'pick' : 'picks'}`,
   )
   return parts.length === 0 ? '' : ` (with ${parts.join('; ')})`
 }

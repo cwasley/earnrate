@@ -369,7 +369,7 @@ function descriptionFor(ctx: PageContext, q: Quarter): string {
   const tail = 'Caps, activation deadlines and issuer terms.'
   return fitDescription([
     `${q.label}: ${parts.join('; ')}. ${tail}`,
-    `${q.label}: ${parts.map((p) => p.split(':')[0]).join(' and ')} quarterly bonus categories, rates, caps, activation deadlines and issuer terms.`,
+    `${q.label}: ${listed(parts.map((p) => p.split(':')[0] ?? ''))} quarterly bonus categories, rates, caps, activation deadlines and issuer terms.`,
     `${q.label} rotating bonus categories, rates, caps and activation deadlines, from issuer terms.`,
   ])
 }

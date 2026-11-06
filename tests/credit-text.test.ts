@@ -65,3 +65,23 @@ describe('possessive', () => {
     expect(possessive('Amex Platinum')).toBe("Amex Platinum's")
   })
 })
+
+describe('withArticle', () => {
+  test('goes by sound, not the first letter', async () => {
+    const { withArticle } = await import('../src/engine/text.ts')
+    const cases: [string, string][] = [
+      ['Air Canada credit', 'an'],
+      ['Instacart credit', 'an'],
+      ['Uber and Uber Eats credit', 'a'],
+      ['U.S. Bank card', 'a'],
+      ['One Key membership', 'a'],
+      ['IHG card', 'an'],
+      ['REI Co-op membership', 'an'],
+      ['CLEAR credit', 'a'],
+      ['Costco membership', 'a'],
+      ['Equinox credit', 'an'],
+    ]
+    for (const [name, article] of cases)
+      expect(withArticle(name), name).toBe(`${article} ${name}`)
+  })
+})

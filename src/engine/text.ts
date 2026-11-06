@@ -198,6 +198,17 @@ export function paymentNote(
 
 // A name with its own "and" ("drugstores and pharmacies") would run into the
 // list's: those lists use commas only, with those names last.
+// "a Costco membership", "an Instacart credit", "an IHG card", "a Uber credit":
+// by sound, so a leading "you" or "won" takes "a" and a letter said with a
+// vowel sound ("an REI") takes "an".
+export function withArticle(name: string): string {
+  const initialism = /^[A-Z][A-Z&.-]{1,5}(?![a-z])/.test(name)
+  const an = initialism
+    ? /^[AEFHILMNORSX]/.test(name)
+    : /^[aeiou]/i.test(name) && !/^(u[bnst]|u\.s\.|eu|one\b|once\b)/i.test(name)
+  return `${an ? 'an' : 'a'} ${name}`
+}
+
 // "Amex Platinum's", "Capital One Savor Rewards'".
 export const possessive = (name: string) =>
   name.endsWith('s') ? `${name}'` : `${name}'s`
@@ -344,9 +355,9 @@ export type CreditWords = {
 export function creditAnswerText(c: CreditWords, dollars: number | null) {
   const credit = `${c.name} credit (${creditBack(c)})`
   if (!c.enrolled)
-    return `Has a ${credit} here; ${ENROLL_FIRST} with the issuer, then mark it enrolled in your wallet. It isn't counted until then.`
+    return `Has ${withArticle(credit)} here; ${ENROLL_FIRST} with the issuer, then mark it enrolled in your wallet. It isn't counted until then.`
   if (c.left === null)
-    return `Has a ${credit} here; give the card's anniversary to track it.`
+    return `Has ${withArticle(credit)} here; give the card's anniversary to track it.`
   if (c.left <= 0)
     return `Its ${c.name} credit is used up ${CREDIT_THIS_PERIOD[c.period]}${c.until === null ? '' : `; it renews after ${shortDate(c.until)}`}.`
   if (dollars === null)
