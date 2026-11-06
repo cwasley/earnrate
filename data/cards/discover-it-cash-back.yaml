@@ -28,7 +28,7 @@ welcome_offer:
   dollars: 200
   spend: 500
   months: 3
-  note: One-time $200 statement credit, available by applying through the card page. Existing or previous cardmembers may not be eligible if they received a new cardmember bonus for this product in the past 48 months. New cardmembers also get Cashback Match, which is ranked as a first-year rate (intro_rates) rather than counted here.
+  note: One-time $200 statement credit, available by applying through the card page. Existing or previous cardmembers may not be eligible if they received a new cardmember bonus for this product in the past 48 months. New cardmembers also get Cashback Match, which doubles every rate for the first year; earnrate ranks it as a first-year rate, not as part of this offer.
 caps:
   # Discover's quarterly maximum on the rotating 5% categories.
   - id: five-percent-quarterly

@@ -47,7 +47,7 @@ import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
 import { milestoneWhat } from '../src/engine/milestones.ts'
-import { creditWhere } from '../src/engine/rule-text.ts'
+import { creditWhere, introWhat } from '../src/engine/rule-text.ts'
 import { changeDates, latest } from './lastmod.ts'
 import { pageContext, type GeneratedPage } from './pages/context.ts'
 import { categoryPageFor, categoryPages } from './pages/categories.ts'
@@ -517,6 +517,15 @@ function creditsText(card: Card): string {
   return `<h2>Statement credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that.</p><ul>${items.join('')}</ul>`
 }
 
+function introRatesText(card: Card): string {
+  if (card.intro_rates.length === 0) return ''
+  const items = card.intro_rates.map(
+    (i) =>
+      `<li><strong>${esc(capitalize(introWhat(catalog, card, i)))}</strong>${i.note ? `<br /><span class="muted">${esc(i.note)}</span>` : ''}${evidenceFor(card, i.id)}</li>`,
+  )
+  return `<h2>For new accounts</h2><p>Rates that apply only for a stretch after the account opens. Give earnrate the card's opening date and it ranks the card at them; without one, answers mention them instead.</p><ul>${items.join('')}</ul>`
+}
+
 function foreignFeeSection(card: Card): string {
   const fee = card.foreign_transaction_fee
   const usOnly = [
@@ -724,6 +733,7 @@ function renderCard(
             )
           : ''
       }
+      ${introRatesText(card)}
       ${creditsText(card)}
       ${foreignFeeSection(card)}
       ${offerText(card)}
