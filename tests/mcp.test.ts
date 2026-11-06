@@ -130,6 +130,36 @@ describe('tools', () => {
     })
   })
 
+  test('named cards can carry credits enrolled in and an opening date', async () => {
+    const client = await connect(await walletCopy())
+    const credit = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: {
+        merchant: 'Lululemon',
+        amount: 100,
+        cards: [{ cardId: 'amex-platinum', enrolled: ['lululemon'] }],
+      },
+    })
+    expect(credit.isError, text(credit)).toBeFalsy()
+    expect(text(credit)).toMatch(/\$75 back from its Lululemon credit/)
+    const intro = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: {
+        merchant: 'Chipotle',
+        cards: [{ cardId: 'discover-it-cash-back', opened: '2026-03-04' }],
+      },
+    })
+    expect(text(intro)).toMatch(/in your first year/)
+    const bad = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: {
+        merchant: 'Chipotle',
+        cards: [{ cardId: 'discover-it-cash-back', opened: 'March' }],
+      },
+    })
+    expect(bad.isError).toBe(true)
+  })
+
   test('compare_welcome_offers takes the memberships the user names', async () => {
     const client = await connect(await walletCopy())
     const known = await client.callTool({

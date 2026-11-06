@@ -593,3 +593,37 @@ describe('paying abroad', () => {
     expect(gold.stdout).toMatch(/no foreign transaction fee/)
   })
 })
+
+describe('named cards with credits and opening dates', () => {
+  test('--enrolled counts a credit and --opened a first-year rate', async () => {
+    const plain = await cli(['lululemon', '100', '--cards', 'amex-platinum'])
+    expect(plain.stdout).not.toMatch(/back from its Lululemon credit/)
+    const enrolled = await cli([
+      'lululemon',
+      '100',
+      '--cards',
+      'amex-platinum',
+      '--enrolled',
+      'amex-platinum=lululemon',
+    ])
+    expect(enrolled.code).toBe(0)
+    expect(enrolled.stdout).toMatch(/\$75 back from its Lululemon credit/)
+    const opened = await cli([
+      'chipotle',
+      '--cards',
+      'discover-it-cash-back',
+      '--opened',
+      'discover-it-cash-back=2026-03-04',
+    ])
+    expect(opened.stdout).toMatch(/in your first year/)
+    const stray = await cli([
+      'chipotle',
+      '--cards',
+      'amex-gold',
+      '--opened',
+      'discover-it-cash-back=2026-03-04',
+    ])
+    expect(stray.code).toBe(2)
+    expect(stray.stderr).toMatch(/isn't one/)
+  })
+})

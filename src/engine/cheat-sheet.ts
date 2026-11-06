@@ -144,7 +144,7 @@ export function cheatSheet(
     return [
       `Working on ${possessive(name)} welcome bonus: ${money(status.remaining ?? 0)} more by ${shortDate(status.deadline ?? date)}. ${
         where.length > 0
-          ? `It ${where.join(' and ')}, so those are the places to use it.`
+          ? `It ${where.join(' and ')}, so ${matches.length + near.length === 1 ? "that's the place" : 'those are the places'} to use it.`
           : 'It trails the listed cards everywhere, so use it on everyday spending only as needed to reach the bonus.'
       }`,
     ]

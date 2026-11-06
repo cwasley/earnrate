@@ -23,6 +23,9 @@ export type CliOptions = {
   llm: boolean | null // null: follow the environment
   cards: string[] | null // card ids named for this answer instead of the wallet
   members: string[]
+  // For named cards: credits enrolled in and opening dates, by card id.
+  enrolled: Record<string, string[]>
+  opened: Record<string, string>
 }
 
 type ParsedArgs =
@@ -141,6 +144,8 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
         llm: { type: 'boolean' },
         cards: { type: 'string' },
         member: { type: 'string', multiple: true },
+        enrolled: { type: 'string', multiple: true },
+        opened: { type: 'string', multiple: true },
         help: { type: 'boolean', short: 'h' },
       },
     })
@@ -176,6 +181,24 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
   const paying = paymentOf(values.paying)
   if ('problem' in paying) return { kind: 'error', message: paying.problem }
 
+  const cards = cardList(values.cards)
+  const perCard = (flag: 'enrolled' | 'opened', example: string) => {
+    const out: Record<string, string> = {}
+    for (const pair of values[flag] ?? []) {
+      const [id = '', value = ''] = pair.split('=')
+      if (id.trim() === '' || value.trim() === '')
+        return `--${flag} takes <card>=<${flag === 'opened' ? 'date' : 'credits'}>, like ${example}.`
+      if (!cards?.includes(id.trim()))
+        return `--${flag} is for a card named with --cards; ${id.trim()} isn't one.`
+      out[id.trim()] = value.trim()
+    }
+    return out
+  }
+  const enrolled = perCard('enrolled', 'amex-platinum=lululemon')
+  if (typeof enrolled === 'string') return { kind: 'error', message: enrolled }
+  const opened = perCard('opened', 'discover-it-cash-back=2026-03-04')
+  if (typeof opened === 'string') return { kind: 'error', message: opened }
+
   return {
     kind: 'run',
     options: {
@@ -190,8 +213,18 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
       all: values.all ?? false,
       category: values.category ?? null,
       llm: values.llm ?? null,
-      cards: cardList(values.cards),
+      cards,
       members: values.member ?? [],
+      enrolled: Object.fromEntries(
+        Object.entries(enrolled).map(([id, list]) => [
+          id,
+          list
+            .split(',')
+            .map((c) => c.trim())
+            .filter(Boolean),
+        ]),
+      ),
+      opened,
     },
   }
 }

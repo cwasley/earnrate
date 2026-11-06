@@ -100,6 +100,11 @@ Options:
   ${PAYING_HELP}
   --cards <ids>          Answer for these cards instead of your wallet, comma
                          separated: --cards amex-gold,chase-prime-visa.
+  --enrolled <card>=<credits>
+                         For a named card, statement credits you've enrolled
+                         in: --enrolled amex-platinum=lululemon. Repeat per card.
+  --opened <card>=<date> For a named card, the day it opened (YYYY-MM-DD), for
+                         a first-year rate. Repeat per card.
   --member <name>        A membership you have, in place of the saved ones.
   --category <id>        For a merchant earnrate doesn't know: its category,
                          e.g. grocery.supermarket. Ignored for known merchants.
@@ -137,7 +142,12 @@ export async function cardsToUse(
   catalog: Catalog,
   file: string,
   io: Io,
-  named: { cards: string[] | null; members: string[] },
+  named: {
+    cards: string[] | null
+    members: string[]
+    enrolled?: Record<string, string[]>
+    opened?: Record<string, string>
+  },
 ): Promise<Wallet | 'none' | null> {
   const problem = membershipProblem(catalog, named.members)
   if (problem !== null) {
@@ -149,7 +159,11 @@ export async function cardsToUse(
     const wallet = walletFromCards(
       catalog,
       {
-        cards: named.cards.map((id) => ({ id })),
+        cards: named.cards.map((id) => ({
+          id,
+          ...(named.enrolled?.[id] ? { enrolled: named.enrolled[id] } : {}),
+          ...(named.opened?.[id] ? { opened: named.opened[id] } : {}),
+        })),
         memberships:
           named.members.length > 0 ? named.members : saved.memberships,
       },

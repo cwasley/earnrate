@@ -76,6 +76,18 @@ const NamedCard = z.object({
     .describe(
       'Bonuses the user has activated with the issuer, as rule ids from search_cards.',
     ),
+  enrolled: z
+    .array(z.string())
+    .optional()
+    .describe(
+      "Statement credits the user has enrolled in with the issuer, as credit ids from search_cards. A credit that needs enrolling counts only when it's here. Ask; never assume.",
+    ),
+  opened: z
+    .string()
+    .optional()
+    .describe(
+      'The day the account opened (YYYY-MM-DD), for a card with a first-year rate. Optional; without it the card is ranked at its standard rates.',
+    ),
 })
 export type NamedCard = z.infer<typeof NamedCard>
 

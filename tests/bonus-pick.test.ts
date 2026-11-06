@@ -106,6 +106,28 @@ test("a cheat sheet keeps each row's best card and names where the bonus card fi
   expect(sheet.notes[0]).toMatch(
     /Savor.*welcome bonus: \$300 more by Jan 15, 2027\. It matches the listed card on .*dining/,
   )
+  const one = cheatSheet(
+    catalog,
+    WalletSchema.parse({
+      cards: [
+        { id: 'amex-blue-cash-preferred' },
+        { id: 'wells-fargo-active-cash' },
+        {
+          id: 'capital-one-savor',
+          bonus: {
+            opened: '2026-10-15',
+            spent: 200,
+            spend: 500,
+            by: '2027-01-15',
+          },
+        },
+      ],
+    }),
+    '2026-11-01',
+  )
+  expect(one.notes.find((n) => /Savor/.test(n))).toMatch(
+    /on dining, so that's the place to use it\./,
+  )
 })
 
 test('an offer the issuer rules out for a held card is marked and listed last', () => {

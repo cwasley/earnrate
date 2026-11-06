@@ -197,3 +197,101 @@ test("the hosted server's favicon is the site's", async () => {
   )
   expect(FAVICON_SVG).toBe(site.trim())
 })
+
+test('SECURITY.md and the terms name every hosted domain', async () => {
+  const read = (file: string) => readFile(path.join(ROOT, file), 'utf8')
+  const domains = new Set<string>()
+  for (const config of [
+    'wrangler.jsonc',
+    'remote/wrangler.jsonc',
+    'pass/wrangler.jsonc',
+  ])
+    for (const m of (await read(config)).matchAll(/"pattern": "([^"]+)"/g))
+      if (m[1] && !m[1].startsWith('www.')) domains.add(m[1])
+  expect(domains.size).toBeGreaterThanOrEqual(3)
+  const security = await read('SECURITY.md')
+  const terms = await read('site/terms.html')
+  for (const d of domains) {
+    expect(security, `SECURITY.md: ${d}`).toContain(d)
+    expect(terms, `terms: ${d}`).toContain(d)
+  }
+})
+
+test('server.json lists every environment variable the package reads', async () => {
+  const brand = await import('../src/brand.ts')
+  const read = await readJson('server.json')
+  const listed = (
+    read as {
+      packages: { environmentVariables: { name: string }[] }[]
+    }
+  ).packages[0]?.environmentVariables.map((v) => v.name)
+  const vars = Object.entries(brand)
+    .filter(([k]) => k.endsWith('_ENV_VAR'))
+    .map(([, v]) => v as string)
+  expect(new Set(listed)).toEqual(new Set([...vars, 'ANTHROPIC_API_KEY']))
+})
+
+test("the privacy page says everything a saved wallet's card can hold", async () => {
+  const { WalletCardSchema } = await import('../src/schema/wallet.ts')
+  const privacy = await readFile(path.join(ROOT, 'site/privacy.html'), 'utf8')
+  const said = privacy.replace(/\s+/g, ' ')
+  // A new wallet field needs a phrase here and on the privacy page.
+  const phrases: Record<string, string> = {
+    id: 'by product',
+    checkout_label: 'checkout name',
+    anniversary: 'anniversary',
+    opened: 'opening date',
+    cap_usage: 'spending cap',
+    chosen: 'bonus picks',
+    activated: 'activated offers',
+    milestone_usage: 'yearly spend bonus',
+    enrolled: "statement credits you've enrolled in",
+    credit_usage: "how much of each you've used",
+    bonus: 'welcome bonus',
+  }
+  for (const key of Object.keys(WalletCardSchema.shape)) {
+    const phrase = phrases[key]
+    expect(phrase, `no privacy phrase for ${key}`).toBeDefined()
+    expect(said, key).toContain(phrase)
+  }
+})
+
+test("search_cards' description names what it returns", async () => {
+  const { cardInfo } = await import('../src/engine/setup.ts')
+  const catalog = await loadCatalog()
+  const source = await readFile(
+    path.join(ROOT, 'src/mcp/tools/answers.ts'),
+    'utf8',
+  )
+  const at = source.indexOf("'search_cards'")
+  const description = source.slice(at, source.indexOf('inputSchema', at))
+  const card = catalog.cards[0]
+  if (!card) throw new Error('no cards')
+  // null: plain from the name of the tool, so not worth a phrase.
+  const phrases: Record<string, string | null> = {
+    id: 'id',
+    name: null,
+    issuer: null,
+    network: 'network',
+    currency: null,
+    annualFee: 'annual fee',
+    firstYearFee: 'first-year waiver',
+    foreignTransactionFee: 'foreign transaction fee',
+    business: null,
+    onlyAt: null,
+    held: 'already in the wallet',
+    choices: 'category picks',
+    memberships: 'memberships',
+    requiresMembership: 'memberships',
+    activation: 'activations',
+    needsAnniversary: null,
+    milestones: 'spend bonuses',
+    introRates: 'first-year rates',
+    credits: 'statement credits',
+  }
+  for (const key of Object.keys(cardInfo(catalog, card, null, '2026-11-06'))) {
+    expect(key in phrases, `no phrase decided for ${key}`).toBe(true)
+    const phrase = phrases[key]
+    if (phrase) expect(description, key).toContain(phrase)
+  }
+})
