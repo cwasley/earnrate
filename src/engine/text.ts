@@ -262,7 +262,7 @@ export const CAP_ADJECTIVES: Record<Cap['period'], string> = {
   cardmember_year: 'cardmember-year',
 }
 
-// "the $15,000 calendar-year spend", for a spend milestone.
+// "the $15,000 calendar-year spend", for a spend bonus.
 export const MILESTONE_PERIODS: Record<Milestone['period'], string> = {
   calendar_year: 'calendar-year',
   cardmember_year: 'cardmember-year',
@@ -306,7 +306,7 @@ export const introUnknownText = (
 export const introEndsText = (name: string, days: number, until: string) =>
   `${possessive(name)} ${introAdjective(days)} rate ends after ${shortDate(until)}; from then on it earns its standard rates.`
 
-// Merchant statement credits. Always dollars, never a percentage.
+// Statement credits. Always dollars, never a percentage.
 export const CREDIT_PERIODS: Record<Credit['period'], string> = {
   month: 'each month',
   quarter: 'each quarter',
@@ -326,7 +326,7 @@ export const CREDIT_THIS_PERIOD: Record<Credit['period'], string> = {
 export const ENROLL_FIRST = 'enroll first'
 
 // The group of cards with a credit at the store, shown before the ranking.
-export const CREDIT_GROUP = 'With a store credit'
+export const CREDIT_GROUP = 'With a statement credit'
 
 // "$75 back each quarter"
 export const creditBack = (c: Pick<Credit, 'amount' | 'period'>) =>
@@ -391,4 +391,4 @@ export const enrollCreditText = (card: string, names: string[]) =>
 
 // Simulations, the cheat sheet and welcome-offer comparisons.
 export const CREDITS_LEFT_OUT =
-  'Merchant statement credits (dollars back at a named store) are left out.'
+  'Statement credits (dollars back at a named store) are left out.'

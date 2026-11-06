@@ -290,7 +290,7 @@ describe('tools', () => {
         milestoneSpent: { 'spend-99k': 1 },
       },
     })
-    expect(text(wrong)).toMatch(/no spend milestone 'spend-99k'.*spend-15k/)
+    expect(text(wrong)).toMatch(/no spend bonus 'spend-99k'.*spend-15k/)
   })
 
   test('country: abroad, cards rank after their foreign transaction fees', async () => {
@@ -1308,7 +1308,7 @@ describe('wallet setup', () => {
       (result.structuredContent as { credits: { cardId: string }[] }).credits,
     ).toEqual([expect.objectContaining({ cardId: 'amex-platinum' })])
     expect(text(result)).toMatch(
-      /^With a store credit at Lululemon:\n\n- The Platinum Card from American Express: \$75 back each quarter, then 1x Amex Membership Rewards \(enroll first\)/,
+      /^With a statement credit at Lululemon:\n\n- The Platinum Card from American Express: \$75 back each quarter, then 1x Amex Membership Rewards \(enroll first\)/,
     )
   })
 

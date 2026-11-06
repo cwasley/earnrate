@@ -1968,7 +1968,7 @@ describe('#32 merchant statement credits', () => {
     () => {
       const sheet = cheatSheet(catalog, wallet(enrolled()), TODAY)
       expect(sheet.assumptions.join(' ')).toMatch(
-        /Merchant statement credits .* are left out/,
+        /Statement credits .* are left out/,
       )
     },
   )

@@ -188,7 +188,7 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   const parts = [
     ...(credit
       ? [
-          `<strong><a href="/cards/${credit.cardId}">${esc(shortName(credit.cardId))}</a></strong> gives ${esc(credit.back)} ${where} with its store credit${credit.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}.`,
+          `<strong><a href="/cards/${credit.cardId}">${esc(shortName(credit.cardId))}</a></strong> gives ${esc(credit.back)} ${where} with its statement credit${credit.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}.`,
         ]
       : []),
     `<strong><a href="/cards/${top.cardId}">${esc(shortName(top.cardId))}</a></strong> earns the most ${where}${credit ? ' by rate' : ''}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ` in points at ${num(top.centsPerUnit)}¢ each`}.${codes}`,
@@ -514,7 +514,7 @@ function creditsText(card: Card): string {
   const items = card.credits.map((c) => {
     return `<li><strong>${esc(capitalize(`${creditBack(c)} ${creditWhere(catalog, c)}`))}</strong>${c.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}${c.note ? `<br /><span class="muted">${esc(c.note)}</span>` : ''}${evidenceFor(card, c.id)}</li>`
   })
-  return `<h2>Store credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that.</p><ul>${items.join('')}</ul>`
+  return `<h2>Statement credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that.</p><ul>${items.join('')}</ul>`
 }
 
 function foreignFeeSection(card: Card): string {

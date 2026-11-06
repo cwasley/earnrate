@@ -32,7 +32,7 @@ export type CardInput = {
   capSpent?: Record<string, number>
   // Spend milestone id → dollars already spent on the card this period.
   milestoneSpent?: Record<string, number>
-  // Merchant credit ids the cardholder has enrolled in; replaces the list.
+  // Statement credit ids the cardholder has enrolled in; replaces the list.
   enrolled?: string[]
   // Credit id → dollars of that credit already received this period.
   creditUsed?: Record<string, number>
@@ -234,17 +234,17 @@ export function cardFields(
       if (!milestone) {
         problems.push(
           card.milestones.length > 0
-            ? `${card.id} has no spend milestone '${id}'. Its milestones are: ${idList(card.milestones.map((m) => m.id))}.`
-            : `${card.id} has no spend milestones.`,
+            ? `${card.id} has no spend bonus '${id}'. Its milestones are: ${idList(card.milestones.map((m) => m.id))}.`
+            : `${card.id} has no spend bonuses.`,
         )
         continue
       }
       if (!(spent >= 0))
-        problems.push('Spending toward a milestone must be $0 or more.')
+        problems.push('Spending toward a spend bonus must be $0 or more.')
       const period = periodKey(milestone.period, today, anniversary)
       if (period === null) {
         problems.push(
-          `The '${id}' milestone resets on the card's anniversary; give the anniversary (MM-DD) too.`,
+          `The '${id}' spend bonus resets on the card's anniversary; give the anniversary (MM-DD) too.`,
         )
         continue
       }
@@ -275,7 +275,7 @@ export function cardFields(
         problems.push(
           card.credits.length > 0
             ? `${card.id} has no credit '${id}'. Its credits are: ${idList(card.credits.map((c) => c.id))}.`
-            : `${card.id} has no merchant credits.`,
+            : `${card.id} has no statement credits.`,
         )
         continue
       }

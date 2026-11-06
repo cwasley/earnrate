@@ -40,7 +40,7 @@ describe('merchant credit wording', () => {
       catalog,
       cardInfo(catalog, card('amex-platinum'), null, '2026-11-05'),
     )
-    expect(platinum).toMatch(/merchant credit lululemon: .* at Lululemon/)
+    expect(platinum).toMatch(/statement credit lululemon: .* at Lululemon/)
     const deltaGold = formatCardInfo(
       catalog,
       cardInfo(catalog, card('amex-delta-skymiles-gold'), null, '2026-11-05'),

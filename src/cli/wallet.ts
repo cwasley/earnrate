@@ -26,7 +26,7 @@ const CARD_OPTIONS = `Options:
                              card is ranked at its standard rates.
   --activated <rules>        Rules you've activated with the issuer, comma
                              separated. Replaces the current list.
-  --enrolled <credits>       Merchant credits you've enrolled in with the
+  --enrolled <credits>       Statement credits you've enrolled in with the
                              issuer, comma separated, e.g. --enrolled lululemon.
                              Replaces the current list.
   --credit-used <credit>=<dollars>
@@ -67,7 +67,7 @@ ${CARD_OPTIONS}
   update: `Usage: ${CLI_NAME} update <card-id> [options]
 
 Changes a card in your wallet: picks for this period, label, anniversary,
-opening date, activations, merchant credits or welcome bonus. Picks for the
+opening date, activations, statement credits or welcome bonus. Picks for the
 current period are merged with ones already set.
 
 ${CARD_OPTIONS}
