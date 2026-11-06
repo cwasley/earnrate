@@ -281,6 +281,12 @@
         color: var(--muted);
         margin-top: 14px;
       }
+      main > section h3.decide {
+        margin-top: 36px;
+      }
+      .decide + .intro {
+        margin-bottom: 0;
+      }
 
       /* The example chat */
       .chat {
@@ -758,7 +764,7 @@
         </div>
         <ul class="stats">
           <li>
-            <b><!--earnrate:cards--></b>cards, checked weekly
+            <b><!--earnrate:cards--></b>cards, re-checked automatically
           </li>
           <li>
             <b><!--earnrate:stores--></b>stores it recognizes
@@ -815,7 +821,8 @@
         <p class="intro">
           Ask about a store, or a kind of place like a coffee shop. earnrate
           answers from every card it knows, or from yours, and shows the rule
-          behind it.
+          behind it. If you transfer points to airlines, value them higher, like
+          1.7¢ each, and the answer changes with it.
         </p>
         <ul class="tiles">
           <li class="tile">
@@ -828,8 +835,9 @@
             </div>
             <h3>It remembers what you've spent</h3>
             <p>
-              Many bonus rates stop at a cap. earnrate keeps track, so the
-              answer changes when it should.
+              Many bonus rates stop at a cap, and some cards add a bonus once
+              you spend enough in a year, like IHG's and Delta's. earnrate keeps
+              track, so the answer changes when it should.
             </p>
           </li>
           <li class="tile">
@@ -840,7 +848,11 @@
             <h3>It reads the fine print</h3>
             <p>
               Costco takes only Visa. DoorDash isn't dining on Custom Cash.
-              Stadium food may not count as a restaurant.
+              Abroad, each card's foreign transaction fee comes off.
+              <!--earnrate:apple_pay-->
+              needs Apple Pay, and
+              <!--earnrate:paypal-->
+              needs PayPal checkout.
             </p>
           </li>
           <li class="tile">
@@ -853,8 +865,28 @@
             </div>
             <h3>It keeps your welcome bonus on track</h3>
             <p>
-              It counts spending toward a sign-up bonus, shows the weekly pace,
+              It counts spending toward a welcome bonus, shows the weekly pace,
               and sends purchases there when you're behind.
+            </p>
+          </li>
+          <li class="tile">
+            <div class="viz" aria-hidden="true">
+              <div class="row">
+                <span><!--earnrate:credit_viz_name--></span
+                ><span class="dim"><!--earnrate:credit_viz_back--></span>
+              </div>
+              <span class="todo-item"><!--earnrate:credit_viz_todo--></span>
+            </div>
+            <h3>It counts statement credits</h3>
+            <p>
+              It knows
+              <!--earnrate:credit_count-->
+              merchant credits on
+              <!--earnrate:credit_cards-->
+              cards, like
+              <!--earnrate:credit_example-->. Once you've enrolled, give an
+              amount and the credit counts toward the pick. The to-do list says
+              what's left before it resets.
             </p>
           </li>
           <li class="tile">
@@ -876,7 +908,8 @@
             <h3>It finds your next card</h3>
             <p>
               It runs a year of your spending through every card and every pair,
-              and ranks welcome offers by their first-year value.
+              and ranks welcome offers by their first-year value. Answers point
+              out first-year rates too, like Discover's Cashback Match.
             </p>
           </li>
           <li class="tile">
@@ -887,8 +920,8 @@
             </div>
             <h3>It makes you a cheat sheet</h3>
             <p>
-              Which card for groceries, dining, gas and more this quarter. Save
-              it as an image for your phone.
+              Which card for groceries, dining, gas and more this quarter. Put
+              it in Apple Wallet, or save it as an image.
             </p>
           </li>
           <li class="tile">
@@ -926,7 +959,8 @@
             <h3>It's on your phone</h3>
             <p>
               Add earnrate.dev to your Home Screen. It opens to your wallet and
-              works offline, for the checkout line.
+              works offline, and your cheat sheet can go in Apple Wallet, for
+              the checkout line.
             </p>
           </li>
         </ul>
@@ -990,8 +1024,10 @@
             <cite
               >From
               <a href="<!--earnrate:receipt_url-->"
-                ><!--earnrate:receipt_source-->'s terms</a
-              >. Every issuer page is checked weekly for changes.</cite
+                ><!--earnrate:receipt_source-->
+                terms</a
+              >. Every issuer page is re-checked automatically for
+              changes.</cite
             >
           </blockquote>
         </div>
@@ -1037,7 +1073,7 @@
               <h3>The issuer's own words</h3>
               <p>
                 Every rate, cap and exclusion is quoted from the issuer's pages,
-                and a weekly check flags anything that changes.
+                and an automatic check flags anything that changes.
               </p>
             </div>
           </li>
@@ -1228,6 +1264,35 @@
           <!--earnrate:issuers-->
         </ul>
         <p class="aside"><a href="/cards/">See every card →</a></p>
+        <h3 class="decide">Deciding on a card?</h3>
+        <p class="intro">
+          Each card with an annual fee has a page that works out when the fee
+          pays off, and similar cards are compared side by side.
+        </p>
+        <ul class="popular-links" aria-label="Help choosing a card">
+          <li>
+            <a href="<!--earnrate:decide_fee_href-->" data-count="decide-fee"
+              ><!--earnrate:decide_fee--></a
+            >
+          </li>
+          <li>
+            <a
+              href="<!--earnrate:decide_compare_href-->"
+              data-count="decide-compare"
+              ><!--earnrate:decide_compare--></a
+            >
+          </li>
+          <li>
+            <a href="/quarterly/" data-count="decide-quarterly"
+              >This quarter's 5% categories</a
+            >
+          </li>
+          <li>
+            <a href="/best/" data-count="decide-best"
+              >Best card for every store</a
+            >
+          </li>
+        </ul>
       </section>
 
       <section>
@@ -1264,8 +1329,8 @@
             <summary>How do you check the rates?</summary>
             <p>
               Every rule comes from the issuer's own pages and carries a short
-              quote from them. A check reloads those pages every week and flags
-              any change, so the fine print is watched too.
+              quote from them. A check reloads those pages automatically and
+              flags any change, so the fine print is watched too.
             </p>
           </details>
           <details>

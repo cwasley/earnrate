@@ -23,6 +23,11 @@ export const EVENTS = [
   'cta-save-cards',
   'cta-pass-hint',
   'cta-bottom',
+  // Links for choosing a card
+  'decide-fee',
+  'decide-compare',
+  'decide-quarterly',
+  'decide-best',
   // The setup section
   'setup-code',
   'setup-desktop',

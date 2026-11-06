@@ -404,17 +404,54 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   })
 }
 
+// Narrows the lists as you type, matching names and aliases. It runs only in
+// the page: nothing typed is sent anywhere, and without it the lists still work.
+const FILTER_SCRIPT = `(() => {
+  const input = document.getElementById('filter')
+  const wrap = input.closest('.filter')
+  const none = document.getElementById('no-match')
+  const ask = none.querySelector('a')
+  const sections = [...document.querySelectorAll('[data-section]')]
+  wrap.hidden = false
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase()
+    let total = 0
+    for (const s of sections) {
+      let shown = 0
+      for (const li of s.querySelectorAll('li')) {
+        const hit = q === '' || li.dataset.q.includes(q)
+        li.hidden = !hit
+        if (hit) shown++
+      }
+      s.hidden = shown === 0
+      s.querySelector('.count').textContent = q === '' ? '' : ' (' + shown + ')'
+      total += shown
+    }
+    none.hidden = total > 0
+    ask.href = '/#best=' + encodeURIComponent(input.value.trim())
+    ask.textContent = 'Ask earnrate.dev about \u201c' + input.value.trim() + '\u201d'
+  })
+})()`
+
 function renderIndex(all: Page[]): string {
   const section = (heading: string, list: Page[]) =>
-    `<h2>${heading}</h2><p class="links">${list
+    `<section data-section><h2>${heading}<span class="count"></span></h2><ul class="link-list">${list
       .slice()
       .sort((a, b) => a.label.localeCompare(b.label))
-      .map((p) => `<a href="/best/${p.slug}">${esc(p.label)}</a>`)
-      .join(' · ')}</p>`
+      .map(
+        (p) =>
+          `<li data-q="${esc([p.label, ...(p.merchant?.aliases ?? [])].join(' ').toLowerCase())}"><a href="/best/${p.slug}">${esc(p.label)}</a></li>`,
+      )
+      .join('')}</ul></section>`
   const body = `
       <h1>Best credit card for every store and category</h1>
       <p class="updated">Updated ${esc(todayWords)}</p>
       <p>Which of ${String(catalog.cards.length)} U.S. credit cards earns the most, store by store, from each issuer's own terms. No affiliate links.</p>
+      <div class="filter" hidden>
+        <label for="filter">Find a store or category</label>
+        <input id="filter" type="search" placeholder="Costco, gas, Netflix…" autocomplete="off" spellcheck="false" />
+      </div>
+      <p id="no-match" class="next" hidden>No page for that yet. <a href="/">Ask earnrate.dev</a>, which also knows stores without a page.</p>
       ${section(
         'Categories',
         all.filter((p) => p.merchant === null),
@@ -422,7 +459,8 @@ function renderIndex(all: Page[]): string {
       ${section(
         'Stores',
         all.filter((p) => p.merchant !== null),
-      )}`
+      )}
+      <script>${FILTER_SCRIPT}</script>`
   return layout({
     title: fitTitle(['Best credit card for every store and category']),
     description: `Which credit card earns the most at ${String(all.filter((p) => p.merchant).length)} stores and ${String(all.filter((p) => !p.merchant).length)} spending categories, from issuer terms. No affiliate links.`,

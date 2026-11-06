@@ -176,6 +176,55 @@ ol.cards ul {
   line-height: 1.9;
 }
 
+.link-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: 1.6;
+}
+.link-list li[hidden],
+[data-section][hidden] {
+  display: none;
+}
+.filter {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 20px -4px 0;
+  padding: 10px 4px;
+  background: var(--bg);
+}
+.filter[hidden] {
+  display: none;
+}
+.filter label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.filter input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+}
+.filter input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.count {
+  color: var(--muted);
+  font-weight: 400;
+}
+
 .next {
   margin-top: 40px;
   padding: 16px 18px;

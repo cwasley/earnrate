@@ -8,10 +8,21 @@ import {
   type Simulation,
   typicalSpendLines,
 } from '../src/engine/simulate.ts'
-import { pct, wholeDollars } from '../src/engine/text.ts'
+import { creditName } from '../src/engine/rule-text.ts'
+import {
+  creditBack,
+  enrollCreditText,
+  listed,
+  pct,
+  possessive,
+  wholeDollars,
+} from '../src/engine/text.ts'
 import { cardText } from '../src/format/card-text.ts'
+import { findMerchant } from '../src/merchants/resolve.ts'
+import type { Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Wallet } from '../src/schema/wallet.ts'
+import { comparePairs, compareSlug } from './compare.ts'
 
 const esc = (text: string) =>
   text.replace(/[&<>"']/g, (c) => `&#${String(c.charCodeAt(0))};`)
@@ -33,6 +44,70 @@ export type LandingFacts = {
     source: string
     url: string
   }
+  credits: {
+    count: number
+    cards: number
+    example: string // "Amex Gold's $7 back each month at Dunkin'"
+    viz: { name: string; back: string; todo: string }
+  }
+  pays: { applePay: string; paypal: string }
+  decide: {
+    fee: { href: string; label: string }
+    compare: { href: string; label: string }
+  }
+}
+
+// The cards the home page uses as examples. Their facts come from the data;
+// the build fails if one of them stops saying what the page needs.
+const EXAMPLES = {
+  credit: { card: 'amex-gold', credit: 'dunkin' },
+  creditViz: { card: 'amex-platinum', credit: 'lululemon' },
+  applePay: {
+    card: 'apple-card',
+    rule: 'apple-pay-merchants',
+    merchants: ['nike', 'walgreens'],
+  },
+  paypal: { card: 'paypal-cashback-mastercard', rule: 'paypal-checkout' },
+  firstYear: { card: 'discover-it-cash-back', intro: 'cashback-match' },
+  fee: 'amex-gold',
+  compare: ['amex-gold', 'chase-sapphire-preferred'],
+} as const
+
+function cardById(catalog: Catalog, id: string): Card {
+  const card = catalog.cards.find((c) => c.id === id)
+  if (!card) throw new Error(`landing: no card ${id}`)
+  return card
+}
+
+function creditOf(catalog: Catalog, cardId: string, creditId: string) {
+  const credit = cardById(catalog, cardId).credits.find(
+    (c) => c.id === creditId,
+  )
+  if (!credit) throw new Error(`landing: no ${creditId} credit on ${cardId}`)
+  return credit
+}
+
+// "Apple Card's 3% at Nike and Walgreens": a cash rule that needs a way to pay.
+function paidRate(
+  catalog: Catalog,
+  name: (id: string) => string,
+  ex: { card: string; rule: string; merchants?: readonly string[] },
+  payment: string,
+): string {
+  const card = cardById(catalog, ex.card)
+  const rule = card.rules.find((r) => r.id === ex.rule)
+  const named = rule?.match.merchants ?? []
+  if (
+    !rule ||
+    card.currency !== 'cash' ||
+    rule.requires?.payment !== payment ||
+    !(ex.merchants ?? []).every((m) => named.includes(m))
+  )
+    throw new Error(`landing: ${ex.card} ${ex.rule} no longer needs ${payment}`)
+  const where = (ex.merchants ?? []).map(
+    (m) => findMerchant(catalog, m)?.name ?? m,
+  )
+  return `${possessive(name(card.id))} ${pct(rule.rate)}${where.length > 0 ? ` at ${listed(where)}` : ''}`
 }
 
 export function landingFacts(
@@ -97,6 +172,33 @@ export function landingFacts(
   if (!top || !card || !quote)
     throw new Error(`landing: no quoted answer for ${store}`)
   const second = rec.ranked[1]
+
+  const withCredits = catalog.cards.filter((c) => c.credits.length > 0)
+  const example = creditOf(
+    catalog,
+    EXAMPLES.credit.card,
+    EXAMPLES.credit.credit,
+  )
+  const shown = creditOf(
+    catalog,
+    EXAMPLES.creditViz.card,
+    EXAMPLES.creditViz.credit,
+  )
+  if (shown.enroll !== true)
+    throw new Error('landing: the credit shown needs no enrolling')
+  const shownName = creditName(catalog, shown)
+
+  const firstYear = cardById(catalog, EXAMPLES.firstYear.card)
+  if (!firstYear.intro_rates.some((i) => i.id === EXAMPLES.firstYear.intro))
+    throw new Error('landing: Cashback Match is gone')
+
+  const feeCard = cardById(catalog, EXAMPLES.fee)
+  if (!feeCard.annual_fee) throw new Error(`landing: ${feeCard.id} has no fee`)
+  const [x, y] = [...EXAMPLES.compare].sort()
+  const slug = compareSlug(x ?? '', y ?? '')
+  if (!comparePairs(catalog, today).some((p) => p.slug === slug))
+    throw new Error(`landing: no comparison page ${slug}`)
+
   return {
     cards: catalog.cards.length,
     stores,
@@ -114,6 +216,30 @@ export function landingFacts(
       quote: quote.quote,
       source: catalog.issuers.find((i) => i.id === card.issuer)?.name ?? '',
       url: quote.url,
+    },
+    credits: {
+      count: withCredits.reduce((n, c) => n + c.credits.length, 0),
+      cards: withCredits.length,
+      example: `${possessive(name(EXAMPLES.credit.card))} ${creditBack(example)} at ${creditName(catalog, example)}`,
+      viz: {
+        name: `${shownName} credit`,
+        back: creditBack(shown),
+        todo: enrollCreditText(name(EXAMPLES.creditViz.card), [shownName]),
+      },
+    },
+    pays: {
+      applePay: paidRate(catalog, name, EXAMPLES.applePay, 'apple-pay'),
+      paypal: paidRate(catalog, name, EXAMPLES.paypal, 'paypal'),
+    },
+    decide: {
+      fee: {
+        href: `/cards/${feeCard.id}#annual-fee`,
+        label: `Is ${possessive(name(feeCard.id))} annual fee worth it?`,
+      },
+      compare: {
+        href: `/compare/${slug}`,
+        label: EXAMPLES.compare.map(name).join(' vs. '),
+      },
     },
   }
 }
@@ -144,8 +270,20 @@ export function renderLanding(html: string, f: LandingFacts): string {
     receipt_pct: esc(f.receipt.pct),
     receipt_next: esc(f.receipt.next ?? ''),
     receipt_quote: esc(f.receipt.quote),
-    receipt_source: esc(f.receipt.source),
+    receipt_source: esc(possessive(f.receipt.source)),
     receipt_url: esc(f.receipt.url),
+    credit_count: String(f.credits.count),
+    credit_cards: String(f.credits.cards),
+    credit_example: esc(f.credits.example),
+    credit_viz_name: esc(f.credits.viz.name),
+    credit_viz_back: esc(f.credits.viz.back),
+    credit_viz_todo: esc(f.credits.viz.todo),
+    apple_pay: esc(f.pays.applePay),
+    paypal: esc(f.pays.paypal),
+    decide_fee_href: esc(f.decide.fee.href),
+    decide_fee: esc(f.decide.fee.label),
+    decide_compare_href: esc(f.decide.compare.href),
+    decide_compare: esc(f.decide.compare.label),
   }
   return html.replace(/<!--earnrate:(\w+)-->/g, (whole, key: string) => {
     const value = parts[key]
