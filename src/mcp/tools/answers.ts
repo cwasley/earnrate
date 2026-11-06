@@ -262,6 +262,7 @@ export function registerAnswerTools(
           .optional()
           .describe('Include cards already in the wallet.'),
         cards: NamedCards,
+        memberships: NamedMemberships,
       }),
       outputSchema: OfferComparisonSchema,
       annotations: {
@@ -272,9 +273,12 @@ export function registerAnswerTools(
       },
     },
     async (args) => {
-      const wallet = await ctx.cardsFor(args.cards, undefined)
+      const wallet = await ctx.cardsFor(args.cards, args.memberships)
       if (typeof wallet === 'string') return fail(wallet)
-      const base = wallet ?? { ...EMPTY_WALLET, ...(await ctx.saved()) }
+      const found = wallet ?? { ...EMPTY_WALLET, ...(await ctx.saved()) }
+      const base = args.memberships
+        ? { ...found, memberships: args.memberships }
+        : found
       const comparison = compareOffers(
         catalog,
         args.valuation ? withValuationProfile(base, args.valuation) : base,

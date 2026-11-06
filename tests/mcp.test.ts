@@ -130,6 +130,20 @@ describe('tools', () => {
     })
   })
 
+  test('compare_welcome_offers takes the memberships the user names', async () => {
+    const client = await connect(await walletCopy())
+    const known = await client.callTool({
+      name: 'compare_welcome_offers',
+      arguments: { memberships: ['costco'] },
+    })
+    expect(known.isError, text(known)).toBeFalsy()
+    const unknown = await client.callTool({
+      name: 'compare_welcome_offers',
+      arguments: { memberships: ['not-a-membership'] },
+    })
+    expect(unknown.isError).toBe(true)
+  })
+
   test('best_card_for_purchase returns the decision and readable text', async () => {
     const client = await connect(await walletCopy())
     const result = await client.callTool({
