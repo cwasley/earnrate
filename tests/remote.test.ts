@@ -5,7 +5,7 @@ import {
   StreamableHTTPClientTransport,
 } from '@modelcontextprotocol/client'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { makeWorker, type Env } from '../remote/src/app.ts'
+import type { Env } from '../remote/src/app.ts'
 import { ALIAS_RESOURCE, appKind, RESOURCE } from '../remote/src/auth.ts'
 import {
   keysFromCode,
@@ -15,113 +15,26 @@ import {
   unwrapWalletKey,
   wrapWalletKey,
 } from '../remote/src/vault-crypto.ts'
-import { WalletVault, type VaultStorage } from '../remote/src/vault.ts'
+import { WalletVault } from '../remote/src/vault.ts'
 import { PAGE_SCRIPT, PAGE_SCRIPT_HASH } from '../remote/src/pages.ts'
 import { claimedLimitKey } from '../remote/src/requests.ts'
-import { loadCatalog } from '../src/data/load.ts'
+import {
+  SITE_CALLBACKS,
+  SITE_CLIENT_ID,
+  withSiteClient,
+} from '../remote/src/site-client.ts'
 import { SAVED_WALLET_TOOLS } from '../src/mcp/server.ts'
 import { TODAY } from './golden/fixtures.ts'
 import { text } from './helpers.ts'
+import {
+  catalog,
+  deployment,
+  memoryKv,
+  memoryStorage,
+  ORIGIN,
+} from './remote-helpers.ts'
 
-const ORIGIN = 'https://mcp.earnrate.dev'
 const CALLBACK = 'https://claude.ai/api/mcp/auth_callback'
-const catalog = await loadCatalog()
-
-function memoryStorage(): VaultStorage & {
-  values: Map<string, unknown>
-  alarm: number | null
-} {
-  const values = new Map<string, unknown>()
-  const storage = {
-    values,
-    alarm: null as number | null,
-    get: <T>(key: string) => Promise.resolve(values.get(key) as T | undefined),
-    put: (key: string, value: unknown) => {
-      values.set(key, structuredClone(value))
-      return Promise.resolve()
-    },
-    delete: (key: string) => Promise.resolve(values.delete(key)),
-    deleteAll: () => {
-      values.clear()
-      return Promise.resolve()
-    },
-    setAlarm: (at: number) => {
-      storage.alarm = at
-      return Promise.resolve()
-    },
-    deleteAlarm: () => {
-      storage.alarm = null
-      return Promise.resolve()
-    },
-  }
-  return storage
-}
-
-// `lag` keeps deleted keys readable, like a revocation that hasn't reached
-// every location yet.
-function memoryKv(lag = false) {
-  const entries = new Map<string, { value: string; metadata?: unknown }>()
-  return {
-    get(key: string, options?: { type?: string } | string) {
-      const found = entries.get(key)?.value ?? null
-      const type = typeof options === 'string' ? options : options?.type
-      return Promise.resolve(
-        found !== null && type === 'json'
-          ? (JSON.parse(found) as unknown)
-          : found,
-      )
-    },
-    put(key: string, value: string, options?: { metadata?: unknown }) {
-      entries.set(key, { value, metadata: options?.metadata })
-      return Promise.resolve()
-    },
-    delete(key: string) {
-      if (!lag) entries.delete(key)
-      return Promise.resolve()
-    },
-    list(options: { prefix?: string } = {}) {
-      const keys = [...entries]
-        .filter(([k]) => k.startsWith(options.prefix ?? ''))
-        .map(([name, e]) => ({ name, metadata: e.metadata }))
-      return Promise.resolve({ keys, list_complete: true, cacheStatus: null })
-    },
-  }
-}
-
-// One Worker with its own KV and wallet storage, like a fresh deploy.
-function deployment({ kvLag = false } = {}) {
-  const storages = new Map<string, ReturnType<typeof memoryStorage>>()
-  const vaults = new Map<string, WalletVault>()
-  const worker = makeWorker<Env>(
-    { catalog, version: '0.0.0-test' },
-    (_env, walletId) => {
-      let vault = vaults.get(walletId)
-      if (!vault) {
-        const storage = memoryStorage()
-        storages.set(walletId, storage)
-        vault = new WalletVault(storage, catalog)
-        vaults.set(walletId, vault)
-      }
-      return vault
-    },
-    () => TODAY,
-  )
-  const env: Env = { OAUTH_KV: memoryKv(kvLag) }
-  const ctx = { waitUntil: () => undefined }
-  const fetch = (
-    input: string | Request,
-    init?: RequestInit,
-    extra: Partial<Env> = {},
-  ) =>
-    worker.fetch(
-      typeof input === 'string'
-        ? new Request(`${ORIGIN}${input}`, init)
-        : input,
-      { ...env, ...extra },
-      ctx,
-    )
-  return { worker, env, fetch, storages }
-}
 
 test('serves the OpenAI domain-verification token as plain text', async () => {
   const d = deployment()
@@ -464,7 +377,7 @@ describe('remote connector', () => {
     const root = await d.fetch('/', { headers: { accept: 'text/html' } })
     expect(root.status).toBe(302)
     expect(root.headers.get('location')).toBe('https://earnrate.dev/')
-    expect((await d.fetch('/wallet')).status).toBe(404)
+    expect((await d.fetch('/wallets')).status).toBe(404)
   })
 
   test('refuses requests over the rate limit', async () => {
@@ -1600,5 +1513,514 @@ describe('wallet vault', () => {
     expect(
       Object.keys(storage.values.get('signed-out') as object),
     ).toHaveLength(1)
+  })
+})
+
+type SiteTokens = { access_token: string; refresh_token: string }
+
+// What earnrate.dev's Worker does: send the browser to /authorize with the
+// site's fixed client id, then trade the code. No registration.
+async function siteSignIn(
+  d: ReturnType<typeof deployment>,
+  choose: (
+    page: string,
+    post: (fields: Record<string, string>) => Promise<Response>,
+  ) => Promise<string>,
+  callback = SITE_CALLBACKS[0] ?? '',
+): Promise<SiteTokens> {
+  const verifier = base64url(crypto.getRandomValues(new Uint8Array(32)))
+  const challenge = base64url(
+    new Uint8Array(
+      await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)),
+    ),
+  )
+  const query = new URLSearchParams({
+    response_type: 'code',
+    client_id: SITE_CLIENT_ID,
+    redirect_uri: callback,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+    state: 'site-state',
+    scope: 'wallet',
+    resource: RESOURCE,
+  })
+  const path = `/authorize?${query.toString()}`
+  const shown = await d.fetch(path)
+  expect(shown.status).toBe(200)
+  const cookie = shown.headers
+    .getSetCookie()
+    .map((c) => c.split(';')[0])
+    .join('; ')
+  const page = await shown.text()
+  const handle = unescape(/name="handle" value="([^"]+)"/.exec(page)?.[1] ?? '')
+  const post = (fields: Record<string, string>) =>
+    d.fetch(path, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        cookie,
+      },
+      body: new URLSearchParams({ handle, ...fields }).toString(),
+      redirect: 'manual',
+    })
+  const back = new URL(await choose(page, post))
+  expect(back.origin + back.pathname).toBe(callback)
+  expect(back.searchParams.get('state')).toBe('site-state')
+  const tokens = await d.fetch('/oauth/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: back.searchParams.get('code') ?? '',
+      redirect_uri: callback,
+      client_id: SITE_CLIENT_ID,
+      code_verifier: verifier,
+      resource: RESOURCE,
+    }).toString(),
+  })
+  expect(tokens.status).toBe(200)
+  return (await tokens.json()) as SiteTokens
+}
+
+type Post = (fields: Record<string, string>) => Promise<Response>
+
+const newWallet = async (_page: string, post: Post) => {
+  const html = await (await post({ choice: 'new' })).text()
+  return unescape(/class="button" href="([^"]+)"/.exec(html)?.[1] ?? '')
+}
+
+const recover = (code: string) => async (_page: string, post: Post) =>
+  (await post({ choice: 'recover', code })).headers.get('location') ?? ''
+
+type WalletBody = {
+  wallet?: { cards: { id: string }[]; memberships: string[] }
+  summary?: { checklist: unknown; started: string | null }
+  message?: string
+  error?: string
+}
+
+const getWallet = async (
+  d: ReturnType<typeof deployment>,
+  token?: string,
+  extra: Partial<Env> = {},
+) => {
+  const res = await d.fetch(
+    '/wallet',
+    { headers: token ? { authorization: `Bearer ${token}` } : {} },
+    extra,
+  )
+  const body = (
+    res.headers.get('content-type')?.includes('json') ? await res.json() : {}
+  ) as WalletBody
+  return { status: res.status, res, body }
+}
+
+const changeWallet = async (
+  d: ReturnType<typeof deployment>,
+  token: string | undefined,
+  tool: string,
+  input: Record<string, unknown> = {},
+) => {
+  const res = await d.fetch('/wallet/changes', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ tool, input }),
+  })
+  return { status: res.status, res, body: (await res.json()) as WalletBody }
+}
+
+// The site and Claude connected to one wallet, as after "Start a wallet" on
+// earnrate.dev and the recovery code typed in Claude.
+async function siteAndClaude(d: ReturnType<typeof deployment>) {
+  let code = ''
+  const site = await siteSignIn(d, async (_page, post) => {
+    const html = await (await post({ choice: 'new' })).text()
+    code = /<div class="code">([^<]+)<\/div>/.exec(html)?.[1] ?? ''
+    return unescape(/class="button" href="([^"]+)"/.exec(html)?.[1] ?? '')
+  })
+  const claudeToken = await signIn(d, recover(code))
+  return { site, code, claude: await connect(d, claudeToken), claudeToken }
+}
+
+describe('earnrate.dev sync', () => {
+  test('the site signs in with its fixed client, named as earnrate.dev on the page', async () => {
+    const d = deployment()
+    let shown = ''
+    const site = await siteSignIn(d, async (page, post) => {
+      shown = page
+      return newWallet(page, post)
+    })
+    expect(shown).toContain('published by <strong>earnrate.dev</strong>')
+    expect(shown).not.toContain('class="warn"')
+    const { status, body } = await getWallet(d, site.access_token)
+    expect(status).toBe(200)
+    expect(body.wallet?.cards).toEqual([])
+    expect(body.summary?.started).toMatch(/^\d{4}-/)
+
+    const preview = await siteSignIn(d, newWallet, SITE_CALLBACKS[1])
+    expect((await getWallet(d, preview.access_token)).status).toBe(200)
+  })
+
+  test('a redirect URI the site client does not have is refused', async () => {
+    const d = deployment()
+    for (const redirect of [
+      'https://evil.example/api/callback',
+      'https://earnrate.dev/api/callback/../steal',
+      'https://earnrate.dev/other',
+      'http://earnrate.dev/api/callback',
+    ]) {
+      const query = new URLSearchParams({
+        response_type: 'code',
+        client_id: SITE_CLIENT_ID,
+        redirect_uri: redirect,
+        code_challenge: 'x'.repeat(43),
+        code_challenge_method: 'S256',
+        state: 's',
+        scope: 'wallet',
+      })
+      const res = await d.fetch(`/authorize?${query.toString()}`, {
+        redirect: 'manual',
+      })
+      expect(res.status, redirect).toBe(400)
+      expect(res.headers.get('location'), redirect).toBeNull()
+    }
+  })
+
+  test('no other app may register a callback on earnrate.dev', async () => {
+    const d = deployment()
+    for (const uri of [
+      'https://earnrate.dev/api/callback',
+      'https://preview.earnrate.dev/api/callback',
+    ]) {
+      const res = await d.fetch('/oauth/register', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          client_name: 'earnrate.dev',
+          redirect_uris: [uri],
+          token_endpoint_auth_method: 'none',
+        }),
+      })
+      expect(res.status, uri).toBe(400)
+    }
+  })
+
+  test("the site's registration can't be changed through storage", async () => {
+    const kv = memoryKv()
+    const wrapped = withSiteClient(kv) as typeof kv
+    await wrapped.put(`client:${SITE_CLIENT_ID}`, '{"redirectUris":[]}')
+    await wrapped.delete(`client:${SITE_CLIENT_ID}`)
+    const record = (await wrapped.get(`client:${SITE_CLIENT_ID}`, {
+      type: 'json',
+    })) as { redirectUris: string[] }
+    expect(record.redirectUris).toEqual(SITE_CALLBACKS)
+    expect(await kv.get(`client:${SITE_CLIENT_ID}`)).toBeNull()
+    await wrapped.put('other', 'kept')
+    expect(await kv.get('other')).toBe('kept')
+  })
+
+  test('the wallet API asks for sign-in without a token or with a bad one', async () => {
+    const d = deployment()
+    for (const token of [undefined, 'not-a-token', 'a:b:c']) {
+      const read = await getWallet(d, token)
+      expect(read.status).toBe(401)
+      expect(read.res.headers.get('www-authenticate')).toContain(
+        'resource_metadata=',
+      )
+      const changed = await changeWallet(d, token, 'add_card', {
+        cardId: 'amex-gold',
+      })
+      expect(changed.status).toBe(401)
+    }
+    const { site } = await siteAndClaude(d)
+    expect((await getWallet(d, site.access_token)).status).toBe(200)
+    const wrong = await d.fetch('/wallet/changes', {
+      headers: { authorization: `Bearer ${site.access_token}` },
+    })
+    expect(wrong.status).toBe(404)
+  })
+
+  test('GET /wallet gives what list_wallet gives', async () => {
+    const d = deployment()
+    const { site, claude } = await siteAndClaude(d)
+    await claude.callTool({
+      name: 'add_card',
+      arguments: { cardId: 'chase-freedom-flex' },
+    })
+    const { body } = await getWallet(d, site.access_token)
+    const listed = await claude.callTool({ name: 'list_wallet', arguments: {} })
+    expect(body.wallet?.cards.map((c) => c.id)).toEqual(['chase-freedom-flex'])
+    expect(body.summary).toEqual(listed.structuredContent)
+    expect(body.summary?.checklist).toBeDefined()
+  })
+
+  test('each change goes through the MCP tool, with its words and refusals', async () => {
+    const d = deployment()
+    const { site, claude } = await siteAndClaude(d)
+    const token = site.access_token
+
+    const added = await changeWallet(d, token, 'add_card', {
+      cardId: 'amex-gold',
+    })
+    expect(added.status).toBe(200)
+    expect(added.body.message).toMatch(/^Added .*\(amex-gold\)/)
+    expect(added.body.wallet?.cards.map((c) => c.id)).toEqual(['amex-gold'])
+
+    const refusals: [string, Record<string, unknown>][] = [
+      ['add_card', { cardId: 'not-a-card' }],
+      ['update_card', { cardId: 'chase-freedom-flex', checkoutLabel: 'x' }],
+      ['remove_card', { cardId: 'chase-freedom-flex' }],
+      ['set_point_values', { values: { NOPE: 1 } }],
+      ['set_point_values', {}],
+      [
+        'record_purchase',
+        { cardId: 'citi-double-cash', merchant: 'Costco', amount: 5 },
+      ],
+      [
+        'record_purchase',
+        { cardId: 'amex-gold', merchant: 'Zzyzx Qorp', amount: 5 },
+      ],
+      ['import_wallet', { yaml: 'cards:\n  - id: citi-double-cash\n' }],
+      ['import_wallet', { yaml: 'not: [a wallet' }],
+    ]
+    for (const [tool, input] of refusals) {
+      const api = await changeWallet(d, token, tool, input)
+      const mcp = await claude.callTool({ name: tool, arguments: input })
+      expect(api.status, tool).toBe(422)
+      expect(mcp.isError, tool).toBe(true)
+      expect(api.body.error, tool).toBe(text(mcp))
+    }
+
+    const updated = await changeWallet(d, token, 'update_card', {
+      cardId: 'amex-gold',
+      checkoutLabel: 'Gold',
+    })
+    expect(updated.body.message).toContain('checkout name "Gold"')
+    const members = await changeWallet(d, token, 'set_memberships', {
+      memberships: ['costco'],
+    })
+    expect(members.body.wallet?.memberships).toEqual(['costco'])
+    const values = await changeWallet(d, token, 'set_point_values', {
+      values: { MR: 1.8 },
+    })
+    expect(values.status).toBe(200)
+    const recorded = await changeWallet(d, token, 'record_purchase', {
+      cardId: 'amex-gold',
+      merchant: 'Whole Foods',
+      amount: 100,
+    })
+    expect(recorded.status).toBe(200)
+    expect(recorded.body.message).toBeDefined()
+    const removed = await changeWallet(d, token, 'remove_card', {
+      cardId: 'amex-gold',
+    })
+    expect(removed.body.wallet?.cards).toEqual([])
+
+    const replaced = await changeWallet(d, token, 'import_wallet', {
+      yaml: 'cards:\n  - id: citi-double-cash\n',
+      replace: true,
+    })
+    expect(replaced.status).toBe(200)
+    expect(replaced.body.message).toMatch(/^Replaced what was saved/)
+    expect(replaced.body.wallet?.cards.map((c) => c.id)).toEqual([
+      'citi-double-cash',
+    ])
+    const listed = await claude.callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(listed)).toContain('citi-double-cash')
+  })
+
+  test('a malformed change is refused before it reaches the wallet', async () => {
+    const d = deployment()
+    const { site } = await siteAndClaude(d)
+    const token = site.access_token
+    expect((await changeWallet(d, token, 'delete_wallet')).status).toBe(400)
+    expect((await changeWallet(d, token, 'switch_wallet')).status).toBe(400)
+    const bad = await changeWallet(d, token, 'add_card', { cardId: 5 })
+    expect(bad.status).toBe(400)
+    expect(bad.body.error).toMatch(/^Invalid input for add_card/)
+    const notJson = await d.fetch('/wallet/changes', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}` },
+      body: '{',
+    })
+    expect(notJson.status).toBe(400)
+    const big = await d.fetch('/wallet/changes', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        tool: 'add_card',
+        input: { x: 'a'.repeat(70_000) },
+      }),
+    })
+    expect(big.status).toBe(413)
+    expect((await getWallet(d, token)).body.wallet?.cards).toEqual([])
+  })
+
+  test('two changes at once both land', async () => {
+    const d = deployment()
+    const { site, claude } = await siteAndClaude(d)
+    await Promise.all([
+      changeWallet(d, site.access_token, 'add_card', { cardId: 'amex-gold' }),
+      changeWallet(d, site.access_token, 'add_card', {
+        cardId: 'citi-double-cash',
+      }),
+      claude.callTool({
+        name: 'add_card',
+        arguments: { cardId: 'chase-freedom-flex' },
+      }),
+    ])
+    const { body } = await getWallet(d, site.access_token)
+    expect(body.wallet?.cards.map((c) => c.id).sort()).toEqual([
+      'amex-gold',
+      'chase-freedom-flex',
+      'citi-double-cash',
+    ])
+  })
+
+  test('deleting the wallet in Claude signs the site out', async () => {
+    const d = deployment()
+    const { site, claude } = await siteAndClaude(d)
+    const deleted = await claude.callTool({
+      name: 'delete_wallet',
+      arguments: { confirm: true, cards: 0 },
+    })
+    expect(deleted.isError).toBeFalsy()
+    expect((await getWallet(d, site.access_token)).status).toBe(401)
+    const refreshed = await d.fetch('/oauth/token', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: site.refresh_token,
+        client_id: SITE_CLIENT_ID,
+      }).toString(),
+    })
+    expect(refreshed.status).toBe(400)
+  })
+
+  test('changing the recovery code signs the site out', async () => {
+    const d = deployment()
+    const { site, code } = await siteAndClaude(d)
+    const changed = await d.fetch('/change-code', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ code }).toString(),
+    })
+    expect(changed.status).toBe(200)
+    expect((await getWallet(d, site.access_token)).status).toBe(401)
+  })
+
+  test("switch_wallet in Claude leaves the site's connection alone", async () => {
+    const d = deployment()
+    const { site, claude, claudeToken } = await siteAndClaude(d)
+    await claude.callTool({ name: 'switch_wallet', arguments: {} })
+    expect(
+      (await post(d, '/', callTool('list_wallet'), claudeToken)).status,
+    ).toBe(401)
+    expect((await getWallet(d, site.access_token)).status).toBe(200)
+  })
+
+  test("signing out one browser ends only that browser's connection, at once", async () => {
+    const d = deployment({ kvLag: true })
+    const { site, code, claudeToken } = await siteAndClaude(d)
+    const phone = await siteSignIn(d, recover(code))
+    const out = await d.fetch('/wallet/sign-out', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${site.access_token}` },
+    })
+    expect(out.status).toBe(204)
+    expect((await getWallet(d, site.access_token)).status).toBe(401)
+    expect((await getWallet(d, phone.access_token)).status).toBe(200)
+    expect(
+      (await post(d, '/', callTool('list_wallet'), claudeToken)).status,
+    ).toBe(200)
+  })
+
+  test('the wallet API is limited per wallet, and per address without a token', async () => {
+    const d = deployment()
+    const { site } = await siteAndClaude(d)
+    const keys: string[] = []
+    const limiter = (success: boolean) => ({
+      limit: ({ key }: { key: string }) => {
+        keys.push(key)
+        return Promise.resolve({ success })
+      },
+    })
+    const ip = { 'cf-connecting-ip': '203.0.113.7' }
+    const ok = await d.fetch(
+      '/wallet',
+      { headers: { authorization: `Bearer ${site.access_token}`, ...ip } },
+      { LIMITER: limiter(true) },
+    )
+    expect(ok.status).toBe(200)
+    expect(keys).toEqual([expect.stringMatching(/^wallet:/)])
+    const over = await getWallet(d, site.access_token, {
+      LIMITER: limiter(false),
+    })
+    expect(over.status).toBe(429)
+    keys.length = 0
+    const anonymous = await d.fetch(
+      '/wallet',
+      { headers: ip },
+      { LIMITER: limiter(false) },
+    )
+    expect(anonymous.status).toBe(429)
+    expect(keys).toEqual(['203.0.113.7'])
+    keys.length = 0
+    const bad = await d.fetch(
+      '/wallet',
+      { headers: { authorization: 'Bearer w:g:s', ...ip } },
+      { SIGN_IN_LIMITER: limiter(false) },
+    )
+    expect(bad.status).toBe(429)
+    expect(keys).toEqual([expect.stringMatching(/^grant:/)])
+  })
+
+  test('the site is counted as its own kind of app, never with wallet contents', async () => {
+    const points: { blobs?: string[]; indexes?: string[] }[] = []
+    const d = deployment()
+    d.env.USAGE = { writeDataPoint: (p) => points.push(p) }
+    const site = await siteSignIn(d, newWallet)
+    await changeWallet(d, site.access_token, 'add_card', {
+      cardId: 'amex-gold',
+      checkoutLabel: 'Secret Label',
+    })
+    await changeWallet(d, site.access_token, 'record_purchase', {
+      cardId: 'amex-gold',
+      merchant: 'Zzyzx Qorp',
+      amount: 77.77,
+    })
+    await getWallet(d, site.access_token)
+    const blobs = points.map((p) => p.blobs)
+    expect(blobs).toContainEqual(['wallet-created', 'site'])
+    expect(blobs).toContainEqual(['wallet-active', 'site'])
+    expect(blobs).toContainEqual(['tool:add_card', 'site'])
+    expect(blobs).toContainEqual(['tool:list_wallet', 'site'])
+    expect(blobs).toContainEqual(['tool-error:record_purchase', 'site'])
+    const recorded = JSON.stringify(points)
+    for (const secret of ['Secret', 'Zzyzx', '77.77', 'amex-gold'])
+      expect(recorded).not.toContain(secret)
+  })
+
+  test("only earnrate's own client and callbacks count as the site", () => {
+    expect(
+      appKind({ clientId: SITE_CLIENT_ID, redirectUris: SITE_CALLBACKS }),
+    ).toBe('site')
+    expect(
+      appKind({
+        clientId: 'abc',
+        redirectUris: ['https://earnrate.dev/api/callback'],
+        clientName: 'earnrate.dev',
+      }),
+    ).toBe('other')
+    expect(
+      appKind({
+        clientId: SITE_CLIENT_ID,
+        redirectUris: ['https://evil.example/api/callback'],
+      }),
+    ).toBe('other')
   })
 })

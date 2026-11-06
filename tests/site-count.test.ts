@@ -76,16 +76,23 @@ describe('earnrate.dev counts', () => {
     for (const event of EVENTS) expect(privacy, event).toContain(event)
   })
 
-  test('the site Worker keeps no logs and runs only for /count', async () => {
+  test('the site Worker keeps no logs, stores nothing, and runs only for /count and /api/*', async () => {
+    for (const file of ['../wrangler.jsonc', '../wrangler.preview.jsonc']) {
+      const config = await readFile(new URL(file, import.meta.url), 'utf8')
+      expect(config, file).toContain('"observability": { "enabled": false }')
+      expect(config, file).not.toMatch(
+        /kv_namespaces|durable_objects|d1_databases|r2_buckets|queues|vectorize|hyperdrive|secrets_store/,
+      )
+      // Its one binding beyond the files and counts: the hosted server.
+      expect(config, file).toContain(
+        '"services": [{ "binding": "MCP", "service": "earnrate-mcp" }]',
+      )
+    }
     const config = await readFile(
       new URL('../wrangler.jsonc', import.meta.url),
       'utf8',
     )
-    expect(config).toContain('"observability": { "enabled": false }')
-    expect(config).toContain('"run_worker_first": ["/count"]')
-    expect(config).not.toMatch(
-      /kv_namespaces|durable_objects|d1_databases|r2_buckets/,
-    )
+    expect(config).toContain('"run_worker_first": ["/count", "/api/*"]')
   })
 })
 

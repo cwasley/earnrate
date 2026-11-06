@@ -23,6 +23,7 @@ import {
   wrapWalletKey,
 } from './vault-crypto.ts'
 import type { VaultApi } from './vault.ts'
+import { onSiteHost, SITE_CLIENT_ID, withSiteClient } from './site-client.ts'
 
 export const ORIGIN = 'https://mcp.earnrate.dev'
 export const SCOPE = 'wallet'
@@ -49,6 +50,8 @@ function registrationProblem(metadata: Record<string, unknown>) {
     return { description: 'Too many redirect URIs.' }
   if (typeof name === 'string' && name.length > 100)
     return { description: 'The client name is too long.' }
+  if (Array.isArray(uris) && uris.some(onSiteHost))
+    return { description: "Redirect URIs on earnrate.dev are earnrate's own." }
   return undefined
 }
 
@@ -71,7 +74,8 @@ export type AuthEnv = { OAUTH_KV: unknown }
 
 // Which kind of app a connection comes from, the only thing usage counts
 // say about who asked. Never an app's own name, which it chooses itself.
-export type AppKind = 'claude' | 'chatgpt' | 'check' | 'local' | 'other'
+export type AppKind =
+  'claude' | 'chatgpt' | 'site' | 'check' | 'local' | 'other'
 export const LIVE_CHECK_CLIENT = 'earnrate live check'
 const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]'])
 
@@ -93,6 +97,12 @@ export function appKind(client: {
   if (under('claude.ai') || under('claude.com') || under('anthropic.com'))
     return 'claude'
   if (under('chatgpt.com') || under('openai.com')) return 'chatgpt'
+  if (
+    client.clientId === SITE_CLIENT_ID &&
+    client.redirectUris.length > 0 &&
+    client.redirectUris.every(onSiteHost)
+  )
+    return 'site'
   if (hosts.length > 0 && hosts.every((h) => LOOPBACK.has(h))) return 'local'
   return 'other'
 }
@@ -141,6 +151,22 @@ export function challenge(resource: string, invalidToken = false): Response {
   )
 }
 
+// The env the OAuth library sees: its KV also holds earnrate.dev's client.
+const withClients = <Env extends AuthEnv>(env: Env): Env => ({
+  ...env,
+  OAUTH_KV: withSiteClient(env.OAUTH_KV),
+})
+
+// earnrate.dev's client is known, not self-registered, so the sign-in page
+// names it as verified.
+const verified = <T extends { clientName: string }>(
+  clientId: string,
+  facts: T,
+): T & { clientDomain?: string } =>
+  clientId === SITE_CLIENT_ID
+    ? { ...facts, clientDomain: 'earnrate.dev' }
+    : facts
+
 export function makeAuth<Env extends AuthEnv>(
   vaultFor: VaultFor<Env>,
   onWalletCreated: (env: Env, kind: AppKind) => void = () => undefined,
@@ -172,7 +198,11 @@ export function makeAuth<Env extends AuthEnv>(
     grantId: string | null
   } | null> {
     for (const resource of [first, ...RESOURCES.filter((r) => r !== first)]) {
-      const found = await server.validateToken<Grant>(resource, token, env)
+      const found = await server.validateToken<Grant>(
+        resource,
+        token,
+        withClients(env),
+      )
       if (found)
         return found.scope.includes(SCOPE)
           ? {
@@ -195,7 +225,7 @@ export function makeAuth<Env extends AuthEnv>(
       // A client metadata document's id is its URL; no need to fetch it.
       const client = /^https:\/\//.test(clientId)
         ? { clientId, redirectUris: [] }
-        : await server.getOAuthApi(env).lookupClient(clientId)
+        : await server.getOAuthApi(withClients(env)).lookupClient(clientId)
       if (client) kind = appKind(client)
     } catch {
       // counted as 'other'
@@ -214,7 +244,7 @@ export function makeAuth<Env extends AuthEnv>(
     walletId: string,
     clientId: string | null = null,
   ): Promise<RevokedGrant[]> {
-    const oauth = server.getOAuthApi(env)
+    const oauth = server.getOAuthApi(withClients(env))
     const revoked: RevokedGrant[] = []
     let cursor: string | undefined
     do {
@@ -234,6 +264,16 @@ export function makeAuth<Env extends AuthEnv>(
       cursor = page.cursor
     } while (cursor)
     return revoked
+  }
+
+  // Ends one connection, such as one browser's, and leaves the wallet's
+  // other connections alone, even the same app's.
+  async function signOutGrant(
+    env: Env,
+    walletId: string,
+    grantId: string,
+  ): Promise<void> {
+    await server.getOAuthApi(withClients(env)).revokeGrant(grantId, walletId)
   }
 
   function connect(
@@ -261,21 +301,28 @@ export function makeAuth<Env extends AuthEnv>(
     handle: string,
     error: string,
   ): Promise<Response> {
-    const oauth = server.getOAuthApi(env)
+    const oauth = server.getOAuthApi(withClients(env))
     const again = await oauth.parseAuthRequest(
       new Request(request.url, { method: 'GET' }),
     )
     return html(
-      choosePage(await oauth.describeConsent(again), handle, error),
+      choosePage(
+        verified(again.clientId, await oauth.describeConsent(again)),
+        handle,
+        error,
+      ),
       400,
     )
   }
 
   async function authorizePage(request: Request, env: Env): Promise<Response> {
-    const oauth = server.getOAuthApi(env)
+    const oauth = server.getOAuthApi(withClients(env))
     if (request.method === 'GET') {
       const parsed = await oauth.parseAuthRequest(request)
-      const details = await oauth.describeConsent(parsed)
+      const details = verified(
+        parsed.clientId,
+        await oauth.describeConsent(parsed),
+      )
       const consent = await oauth.beginConsent(parsed)
       return html(choosePage(details, consent.handle), 200, consent.headers)
     }
@@ -397,8 +444,9 @@ export function makeAuth<Env extends AuthEnv>(
     validate,
     clientKind,
     signOutEverywhere,
+    signOutGrant,
     fetch: (request: Request, env: Env, ctx: ExecutionContextLike) =>
-      server.fetch(request, env, ctx as never),
+      server.fetch(request, withClients(env), ctx as never),
   }
 }
 

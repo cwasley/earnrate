@@ -100,88 +100,85 @@ function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
   return out
 }
 
-export function registerWalletTools(
-  server: McpServer,
+export type ToolResult = {
+  content: { type: 'text'; text: string }[]
+  structuredContent?: Record<string, unknown>
+  isError?: boolean
+}
+
+// A tool's input and what it does, shared by the MCP tool and the hosted
+// server's wallet API, so both give the same answers and refusals.
+export type Handler<S extends z.ZodType> = {
+  input: S
+  run: (args: z.infer<S>) => Promise<ToolResult>
+}
+
+// The saved wallet with its summary and to-do list, as list_wallet shows it.
+export async function walletListing(deps: ServerDeps, ctx: Context) {
+  const read = await ctx.readableWallet()
+  if (typeof read === 'string') return read
+  const started =
+    deps.savedWallets === 'account' ? await deps.store.started() : null
+  const base = walletSummary(deps.catalog, read.wallet, deps.today())
+  const summary = {
+    ...base,
+    started,
+    checklist: checklist(
+      deps.catalog,
+      read.wallet,
+      deps.today(),
+      base,
+      cardText(deps.catalog).shortName,
+    ),
+  }
+  return { ...read, summary }
+}
+
+export function walletHandlers(
   deps: ServerDeps,
   ctx: Context,
   inputs: ReturnType<typeof makeInputs>,
 ) {
   const { catalog, store } = deps
 
-  server.registerTool(
-    'list_wallet',
-    {
-      title: 'List wallet',
-      description: `Starts with a to-do list for the user's cards right now (bonuses to activate and their deadlines, categories to pick or confirm, caps nearly used up, welcome bonuses to finish and the weekly pace, yearly spend bonuses at least 75% of the way, statement credits to enroll in or use before they reset); use it when the user asks what to do with their cards this quarter or what they're forgetting. Then lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, progress toward yearly spend bonuses, statement credits (enrolled or not, and what's left this period), which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
-      outputSchema: WalletSummarySchema,
-      annotations: {
-        title: 'List wallet',
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
-      },
-    },
-    async () => {
-      const read = await ctx.readableWallet()
-      if (typeof read === 'string') return fail(read)
-      const started =
-        deps.savedWallets === 'account' ? await deps.store.started() : null
-      const base = walletSummary(catalog, read.wallet, deps.today())
-      const summary = {
-        ...base,
-        started,
-        checklist: checklist(
-          catalog,
-          read.wallet,
-          deps.today(),
-          base,
-          cardText(catalog).shortName,
-        ),
-      }
+  const listWallet = {
+    input: z.object({}),
+    run: async (): Promise<ToolResult> => {
+      const found = await walletListing(deps, ctx)
+      if (typeof found === 'string') return fail(found)
+      const { start, summary } = found
       const when =
-        started === null
+        summary.started === null
           ? `This is ${ctx.walletName}.\n`
-          : `This is ${ctx.walletName}. ${startedText(started, Date.now())}\n`
+          : `This is ${ctx.walletName}. ${startedText(summary.started, Date.now())}\n`
       return {
         content: [
           {
             type: 'text',
-            text: `${when}${read.start === null ? '' : `${read.start}\n`}${formatChecklist(summary.checklist)}${formatWalletSummary(summary)}`,
+            text: `${when}${start === null ? '' : `${start}\n`}${formatChecklist(summary.checklist)}${formatWalletSummary(summary)}`,
           },
         ],
         structuredContent: summary,
       }
     },
-  )
+  }
 
-  server.registerTool(
-    'record_purchase',
-    {
-      title: 'Record a purchase',
-      description: `Records a purchase the user has already made, so spending caps, welcome-bonus progress, yearly spend bonuses and statement credits used stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap, no open welcome bonus, no spend bonus and no enrolled statement credit are acknowledged and nothing is written. For a merchant earnrate doesn't recognize it asks for category first, so caps aren't missed. ${ctx.walletUse}`,
-      inputSchema: z.object({
-        cardId: z
-          .string()
-          .min(1)
-          .describe(
-            'The card used, as a cardId from list_wallet or best_card_for_purchase.',
-          ),
-        merchant: Merchant,
-        amount: z.number().positive().describe('Amount spent in US dollars.'),
-        channel: ChannelInput,
-        date: DateInput,
-        category: inputs.RecordCategoryInput,
-      }),
-      outputSchema: RecordResultSchema,
-      annotations: {
-        title: 'Record a purchase',
-        ...WRITE,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: deps.llm !== null,
-      },
-    },
-    async ({ cardId, merchant, amount, channel, date, category }) => {
+  const RecordInput = z.object({
+    cardId: z
+      .string()
+      .min(1)
+      .describe(
+        'The card used, as a cardId from list_wallet or best_card_for_purchase.',
+      ),
+    merchant: Merchant,
+    amount: z.number().positive().describe('Amount spent in US dollars.'),
+    channel: ChannelInput,
+    date: DateInput,
+    category: inputs.RecordCategoryInput,
+  })
+  const recordPurchase: Handler<typeof RecordInput> = {
+    input: RecordInput,
+    run: async ({ cardId, merchant, amount, channel, date, category }) => {
       const w = await ctx.wallet()
       if (typeof w === 'string') return fail(w)
       if (!w.cards.some((c) => c.id === cardId))
@@ -240,23 +237,11 @@ export function registerWalletTools(
         structuredContent: output,
       }
     },
-  )
+  }
 
-  server.registerTool(
-    'add_card',
-    {
-      title: 'Add a card',
-      description: `Adds a card the user holds to their wallet by its id from search_cards, creating the wallet if there isn't one. The reply says what the card still needs (category picks, memberships, activations); ask the user about those. Stores only the card's product id and settings, never card numbers. ${ctx.walletUse}`,
-      inputSchema: CardChange,
-      outputSchema: WalletChangeSchema,
-      annotations: {
-        title: 'Add a card',
-        ...WRITE,
-        destructiveHint: false,
-        idempotentHint: false,
-      },
-    },
-    async (args) => {
+  const addCard: Handler<typeof CardChange> = {
+    input: CardChange,
+    run: async (args) => {
       const result = await store.addCard(cardInput(args), deps.today())
       const started =
         !result.ok || !result.created
@@ -269,23 +254,11 @@ export function registerWalletTools(
         `Added ${ctx.cardName(args.cardId)} (${args.cardId})${started}.`,
       )
     },
-  )
+  }
 
-  server.registerTool(
-    'update_card',
-    {
-      title: 'Update a card',
-      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, opening date (optional; for first-year rates), activated categories, cap spending so far (capSpent), spending this year toward its spend bonuses (milestoneSpent), statement credits enrolled in (enrolled) and used this period (creditUsed), or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
-      inputSchema: CardChange,
-      outputSchema: WalletChangeSchema,
-      annotations: {
-        title: 'Update a card',
-        ...WRITE,
-        destructiveHint: true,
-        idempotentHint: true,
-      },
-    },
-    async (args) => {
+  const updateCard: Handler<typeof CardChange> = {
+    input: CardChange,
+    run: async (args) => {
       const what = changes(catalog, args)
       const card = catalog.cards.find((c) => c.id === args.cardId)
       const unused =
@@ -297,45 +270,23 @@ export function registerWalletTools(
         `Updated ${ctx.cardName(args.cardId)} (${args.cardId})${what.length > 0 ? `: ${what.join('; ')}` : ''}.${unused}`,
       )
     },
-  )
+  }
 
-  server.registerTool(
-    'remove_card',
-    {
-      title: 'Remove a card',
-      description: `Removes a card from the wallet, with its tracked cap usage, bonus progress and yearly spending. Memberships and point values stay, even when the last card goes. Only when the user says they no longer have it or don't want it considered. ${ctx.walletUse}`,
-      inputSchema: z.object({ cardId: CardId }),
-      outputSchema: WalletChangeSchema,
-      annotations: {
-        title: 'Remove a card',
-        ...WRITE,
-        destructiveHint: true,
-        idempotentHint: true,
-      },
-    },
-    async ({ cardId }) =>
+  const RemoveInput = z.object({ cardId: CardId })
+  const removeCard: Handler<typeof RemoveInput> = {
+    input: RemoveInput,
+    run: async ({ cardId }) =>
       ctx.changed(
         await store.removeCard(cardId),
         `Removed ${ctx.cardName(cardId)} (${cardId}).`,
         { notes: false },
       ),
-  )
+  }
 
-  server.registerTool(
-    'set_memberships',
-    {
-      title: 'Set memberships',
-      description: `Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep. It saves them even with no cards saved, and every answer then uses them. ${ctx.walletUse}`,
-      inputSchema: z.object({ memberships: inputs.AllMemberships }),
-      outputSchema: WalletChangeSchema,
-      annotations: {
-        title: 'Set memberships',
-        ...WRITE,
-        destructiveHint: true,
-        idempotentHint: true,
-      },
-    },
-    async ({ memberships }) => {
+  const MembershipsInput = z.object({ memberships: inputs.AllMemberships })
+  const setMemberships: Handler<typeof MembershipsInput> = {
+    input: MembershipsInput,
+    run: async ({ memberships }) => {
       const result = await store.setMemberships(memberships)
       const used = new Set(
         (result.ok ? result.wallet.cards : []).flatMap((held) => {
@@ -354,36 +305,25 @@ export function registerWalletTools(
         { notes: false },
       )
     },
-  )
+  }
 
-  server.registerTool(
-    'set_point_values',
-    {
-      title: 'Set point values',
-      description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. No saved cards are needed. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies by id: ${catalog.currencies.map((c) => `${c.id} (${c.name})`).join(', ')}. ${ctx.walletUse}`,
-      inputSchema: z.object({
-        values: z
-          .record(z.string(), z.number().nullable())
-          .optional()
-          .describe(
-            'Cents per point by currency id, e.g. {"UR": 1.5, "MR": 1.6}. null goes back to the default.',
-          ),
-        profile: z
-          .enum(['flat', 'points-heavy'])
-          .optional()
-          .describe(
-            `A preset: flat (${profileText('flat')}) or points-heavy (${profileText('points-heavy')}). Values given too win over it.`,
-          ),
-      }),
-      outputSchema: WalletChangeSchema,
-      annotations: {
-        title: 'Set point values',
-        ...WRITE,
-        destructiveHint: true,
-        idempotentHint: true,
-      },
-    },
-    async ({ values, profile }) => {
+  const PointValuesInput = z.object({
+    values: z
+      .record(z.string(), z.number().nullable())
+      .optional()
+      .describe(
+        'Cents per point by currency id, e.g. {"UR": 1.5, "MR": 1.6}. null goes back to the default.',
+      ),
+    profile: z
+      .enum(['flat', 'points-heavy'])
+      .optional()
+      .describe(
+        `A preset: flat (${profileText('flat')}) or points-heavy (${profileText('points-heavy')}). Values given too win over it.`,
+      ),
+  })
+  const setPointValues: Handler<typeof PointValuesInput> = {
+    input: PointValuesInput,
+    run: async ({ values, profile }) => {
       const given = currencyChanges(catalog, values ?? {})
       if (!given.ok) return fail(given.error)
       const changes: Record<string, number | null> = {
@@ -402,5 +342,144 @@ export function registerWalletTools(
         notes: false,
       })
     },
+  }
+
+  return {
+    list_wallet: listWallet,
+    record_purchase: recordPurchase,
+    add_card: addCard,
+    update_card: updateCard,
+    remove_card: removeCard,
+    set_memberships: setMemberships,
+    set_point_values: setPointValues,
+  }
+}
+
+export function registerWalletTools(
+  server: McpServer,
+  deps: ServerDeps,
+  ctx: Context,
+  inputs: ReturnType<typeof makeInputs>,
+) {
+  const { catalog } = deps
+  const tools = walletHandlers(deps, ctx, inputs)
+
+  server.registerTool(
+    'list_wallet',
+    {
+      title: 'List wallet',
+      description: `Starts with a to-do list for the user's cards right now (bonuses to activate and their deadlines, categories to pick or confirm, caps nearly used up, welcome bonuses to finish and the weekly pace, yearly spend bonuses at least 75% of the way, statement credits to enroll in or use before they reset); use it when the user asks what to do with their cards this quarter or what they're forgetting. Then lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, progress toward yearly spend bonuses, statement credits (enrolled or not, and what's left this period), which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
+      outputSchema: WalletSummarySchema,
+      annotations: {
+        title: 'List wallet',
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+    },
+    () => tools.list_wallet.run(),
+  )
+
+  server.registerTool(
+    'record_purchase',
+    {
+      title: 'Record a purchase',
+      description: `Records a purchase the user has already made, so spending caps, welcome-bonus progress, yearly spend bonuses and statement credits used stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap, no open welcome bonus, no spend bonus and no enrolled statement credit are acknowledged and nothing is written. For a merchant earnrate doesn't recognize it asks for category first, so caps aren't missed. ${ctx.walletUse}`,
+      inputSchema: tools.record_purchase.input,
+      outputSchema: RecordResultSchema,
+      annotations: {
+        title: 'Record a purchase',
+        ...WRITE,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: deps.llm !== null,
+      },
+    },
+    (args) => tools.record_purchase.run(args),
+  )
+
+  server.registerTool(
+    'add_card',
+    {
+      title: 'Add a card',
+      description: `Adds a card the user holds to their wallet by its id from search_cards, creating the wallet if there isn't one. The reply says what the card still needs (category picks, memberships, activations); ask the user about those. Stores only the card's product id and settings, never card numbers. ${ctx.walletUse}`,
+      inputSchema: tools.add_card.input,
+      outputSchema: WalletChangeSchema,
+      annotations: {
+        title: 'Add a card',
+        ...WRITE,
+        destructiveHint: false,
+        idempotentHint: false,
+      },
+    },
+    (args) => tools.add_card.run(args),
+  )
+
+  server.registerTool(
+    'update_card',
+    {
+      title: 'Update a card',
+      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, opening date (optional; for first-year rates), activated categories, cap spending so far (capSpent), spending this year toward its spend bonuses (milestoneSpent), statement credits enrolled in (enrolled) and used this period (creditUsed), or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
+      inputSchema: tools.update_card.input,
+      outputSchema: WalletChangeSchema,
+      annotations: {
+        title: 'Update a card',
+        ...WRITE,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
+    },
+    (args) => tools.update_card.run(args),
+  )
+
+  server.registerTool(
+    'remove_card',
+    {
+      title: 'Remove a card',
+      description: `Removes a card from the wallet, with its tracked cap usage, bonus progress and yearly spending. Memberships and point values stay, even when the last card goes. Only when the user says they no longer have it or don't want it considered. ${ctx.walletUse}`,
+      inputSchema: tools.remove_card.input,
+      outputSchema: WalletChangeSchema,
+      annotations: {
+        title: 'Remove a card',
+        ...WRITE,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
+    },
+    (args) => tools.remove_card.run(args),
+  )
+
+  server.registerTool(
+    'set_memberships',
+    {
+      title: 'Set memberships',
+      description: `Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep. It saves them even with no cards saved, and every answer then uses them. ${ctx.walletUse}`,
+      inputSchema: tools.set_memberships.input,
+      outputSchema: WalletChangeSchema,
+      annotations: {
+        title: 'Set memberships',
+        ...WRITE,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
+    },
+    (args) => tools.set_memberships.run(args),
+  )
+
+  server.registerTool(
+    'set_point_values',
+    {
+      title: 'Set point values',
+      description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. No saved cards are needed. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies by id: ${catalog.currencies.map((c) => `${c.id} (${c.name})`).join(', ')}. ${ctx.walletUse}`,
+      inputSchema: tools.set_point_values.input,
+      outputSchema: WalletChangeSchema,
+      annotations: {
+        title: 'Set point values',
+        ...WRITE,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
+    },
+    (args) => tools.set_point_values.run(args),
   )
 }

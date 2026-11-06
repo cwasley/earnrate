@@ -6,7 +6,7 @@ In scope:
 
 - The hosted server at mcp.earnrate.dev: sign-in, saved wallets and their encryption, and anything that lets one person reach another's wallet.
 - The `earnrate` npm package: the CLI and the local MCP server, including how they edit your wallet file.
-- earnrate.dev, which runs in your browser.
+- earnrate.dev, which runs in your browser, and its opt-in wallet sync with Claude (`earnrate.dev/api/*`): the sign-in cookie, which page scripts must never read, and anything that lets another site or script change a synced wallet.
 - pass.earnrate.dev, which signs the Apple Wallet cheat-sheet pass.
 
 earnrate never handles card numbers, bank logins or payments, so reports about those don't apply. The [privacy page](https://earnrate.dev/privacy) describes what each part keeps.

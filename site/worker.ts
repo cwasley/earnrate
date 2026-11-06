@@ -1,7 +1,9 @@
-// earnrate.dev is static files; this Worker runs only for /count, where
-// the page's beacon tallies an event name from EVENTS. It keeps no logs and
-// writes only the event and the kind of device to Analytics Engine: no IP
-// address, user agent, cookie or id.
+// earnrate.dev is static files; this Worker runs only for /count and
+// /api/*. At /count the page's beacon tallies an event name from EVENTS: it
+// keeps no logs and writes only the event and the kind of device to
+// Analytics Engine, no IP address, user agent, cookie or id. /api/* is
+// opt-in wallet sync with Claude (api.ts), and stores nothing here.
+import { api, type ApiEnv } from './api.ts'
 import { deviceOf, isEvent } from './events.ts'
 
 type Dataset = {
@@ -12,7 +14,7 @@ type RateLimit = {
 }
 type Assets = { fetch(request: Request): Promise<Response> }
 
-export type SiteEnv = {
+export type SiteEnv = ApiEnv & {
   ASSETS: Assets
   USAGE?: Dataset
   LIMITER?: RateLimit // per IP, so one script can't skew the counts
@@ -35,8 +37,9 @@ export async function count(request: Request, env: SiteEnv): Promise<Response> {
 
 export default {
   fetch(request: Request, env: SiteEnv): Promise<Response> {
-    return new URL(request.url).pathname === '/count'
-      ? count(request, env)
-      : env.ASSETS.fetch(request)
+    const { pathname } = new URL(request.url)
+    if (pathname === '/count') return count(request, env)
+    if (pathname.startsWith('/api/')) return api(request, env)
+    return env.ASSETS.fetch(request)
   },
 }

@@ -1,6 +1,6 @@
 {
   "name": "earnrate",
-  // Static files; the Worker runs only for /count (site/worker.ts).
+  // Static files; the Worker runs only for /count and /api/* (site/worker.ts).
   "main": "site/worker.ts",
   "compatibility_date": "2026-10-01",
   "observability": { "enabled": false },
@@ -11,8 +11,11 @@
     "directory": "./site-dist",
     "not_found_handling": "404-page",
     "binding": "ASSETS",
-    "run_worker_first": ["/count"],
+    "run_worker_first": ["/count", "/api/*"],
   },
+  // Opt-in wallet sync: /api/* reaches the hosted server (remote/) directly.
+  // No storage of its own; the tokens stay in the visitor's cookie.
+  "services": [{ "binding": "MCP", "service": "earnrate-mcp" }],
   // Event names and device kinds only (site/events.ts).
   "analytics_engine_datasets": [
     { "binding": "USAGE", "dataset": "earnrate_site_usage" },

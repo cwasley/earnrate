@@ -8,6 +8,68 @@ import type { Catalog } from '../../schema/catalog.ts'
 import type { Wallet } from '../../schema/wallet.ts'
 import { fail, type Context } from '../context.ts'
 import { WalletChangeSchema } from '../schemas.ts'
+import type { Handler } from './wallet.ts'
+
+const cardsText = (n: number) => `${String(n)} ${n === 1 ? 'card' : 'cards'}`
+
+// Everything a saved wallet holds, in words; empty when there's nothing.
+const contentsOf = (catalog: Catalog, w: Wallet) => [
+  ...(w.cards.length > 0
+    ? [`${cardsText(w.cards.length)} (${w.cards.map((c) => c.id).join(', ')})`]
+    : []),
+  ...savedSettingsText(catalog, w),
+]
+
+const ImportInput = z.object({
+  yaml: z
+    .string()
+    .min(1)
+    .max(100_000)
+    .describe('The wallet.yaml text, as the user gave it.'),
+  replace: z
+    .boolean()
+    .optional()
+    .describe(
+      'true to replace what the wallet already holds, after the user confirms.',
+    ),
+})
+
+export function importHandler(
+  catalog: Catalog,
+  store: AccountStore,
+  ctx: Context,
+): Handler<typeof ImportInput> {
+  const contents = (w: Wallet) => contentsOf(catalog, w)
+  return {
+    input: ImportInput,
+    run: async ({ yaml, replace }) => {
+      const parsed = parseWalletYaml(yaml, catalog)
+      if (typeof parsed === 'string') return fail(parsed)
+      let current
+      try {
+        current = await store.load()
+      } catch (e) {
+        if (replace !== true)
+          return fail(
+            `Couldn't read the saved wallet to check what it holds (${e instanceof Error ? e.message : String(e)}). Ask the user, then call again with replace: true to overwrite it.`,
+          )
+        current = null
+      }
+      const before = current === null ? [] : contents(current)
+      if (before.length > 0 && replace !== true)
+        return fail(
+          `This would replace what's saved: ${listed(before)}. Ask the user, then call again with replace: true.`,
+        )
+      return ctx.changed(
+        await store.replace(parsed),
+        before.length > 0
+          ? `Replaced what was saved (${listed(before)}) with the imported wallet: ${listed(contents(parsed))}.`
+          : `Imported a wallet with ${listed(contents(parsed)) || 'nothing in it'}.`,
+        { notes: false },
+      )
+    },
+  }
+}
 
 // A saved wallet on the hosted server has no file to copy or delete, so
 // these do it.
@@ -17,16 +79,8 @@ export function registerAccountTools(
   store: AccountStore,
   ctx: Context,
 ) {
-  const cardsText = (n: number) => `${String(n)} ${n === 1 ? 'card' : 'cards'}`
-  // Everything a saved wallet holds, in words; empty when there's nothing.
-  const contents = (w: Wallet) => [
-    ...(w.cards.length > 0
-      ? [
-          `${cardsText(w.cards.length)} (${w.cards.map((c) => c.id).join(', ')})`,
-        ]
-      : []),
-    ...savedSettingsText(catalog, w),
-  ]
+  const contents = (w: Wallet) => contentsOf(catalog, w)
+  const importWallet = importHandler(catalog, store, ctx)
 
   server.registerTool(
     'export_wallet',
@@ -60,19 +114,7 @@ export function registerAccountTools(
       title: 'Import a wallet',
       description:
         'Replaces the saved wallet with a wallet.yaml from the earnrate command line or earnrate.dev, when the user pastes or attaches one. Wallet files only: never statements or card numbers. If anything is already saved (cards, memberships or point values), it refuses unless replace is true: confirm with the user first.',
-      inputSchema: z.object({
-        yaml: z
-          .string()
-          .min(1)
-          .max(100_000)
-          .describe('The wallet.yaml text, as the user gave it.'),
-        replace: z
-          .boolean()
-          .optional()
-          .describe(
-            'true to replace what the wallet already holds, after the user confirms.',
-          ),
-      }),
+      inputSchema: importWallet.input,
       outputSchema: WalletChangeSchema,
       annotations: {
         title: 'Import a wallet',
@@ -82,32 +124,7 @@ export function registerAccountTools(
         openWorldHint: false,
       },
     },
-    async ({ yaml, replace }) => {
-      const parsed = parseWalletYaml(yaml, catalog)
-      if (typeof parsed === 'string') return fail(parsed)
-      let current
-      try {
-        current = await store.load()
-      } catch (e) {
-        if (replace !== true)
-          return fail(
-            `Couldn't read the saved wallet to check what it holds (${e instanceof Error ? e.message : String(e)}). Ask the user, then call again with replace: true to overwrite it.`,
-          )
-        current = null
-      }
-      const before = current === null ? [] : contents(current)
-      if (before.length > 0 && replace !== true)
-        return fail(
-          `This would replace what's saved: ${listed(before)}. Ask the user, then call again with replace: true.`,
-        )
-      return ctx.changed(
-        await store.replace(parsed),
-        before.length > 0
-          ? `Replaced what was saved (${listed(before)}) with the imported wallet: ${listed(contents(parsed))}.`
-          : `Imported a wallet with ${listed(contents(parsed)) || 'nothing in it'}.`,
-        { notes: false },
-      )
-    },
+    (args) => importWallet.run(args),
   )
 
   server.registerTool(

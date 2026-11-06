@@ -13,5 +13,8 @@
     "binding": "ASSETS",
     "run_worker_first": true,
   },
+  // The same wallet sync as earnrate.dev, against the live hosted server:
+  // try it with a test wallet.
+  "services": [{ "binding": "MCP", "service": "earnrate-mcp" }],
   "routes": [{ "pattern": "preview.earnrate.dev", "custom_domain": true }],
 }

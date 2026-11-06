@@ -5,6 +5,7 @@ import {
   createEarnrateServer,
   SAVED_WALLET_TOOLS,
 } from '../../src/mcp/server.ts'
+import { walletApi } from '../../src/mcp/wallet-api.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import { signedOutStore, VaultWalletStore } from './account-store.ts'
 import {
@@ -12,6 +13,7 @@ import {
   makeAuth,
   type AppKind,
   protectedResourceMetadata,
+  RESOURCE,
   resourceFor,
   SCOPE,
   type AuthEnv,
@@ -136,6 +138,14 @@ async function limited(
   return !(await limiter.limit({ key: key ?? ip })).success
 }
 
+type Connection = {
+  store: VaultWalletStore
+  signOutThis: () => Promise<void>
+}
+
+const json = (body: unknown, status = 200) =>
+  Response.json(body, { status, headers: { 'cache-control': 'no-store' } })
+
 const bearerToken = (request: Request) =>
   /^Bearer (\S+)$/i.exec(request.headers.get('authorization') ?? '')?.[1] ??
   null
@@ -250,36 +260,30 @@ export function makeWorker<E extends Env>(
     }
   }
 
-  async function answer(
+  // Checks a token and its wallet, for MCP and the wallet API alike. A
+  // Response means the request goes no further; `whenDown` answers while
+  // sign-in or the wallet can't be reached.
+  async function connection(
     request: Request,
     env: E,
-    token: string | null,
+    token: string,
     resource: string,
-    calls: Call[],
-    forward: Request,
-    parsedBody: unknown,
+    used: boolean, // counts as use of the wallet, for retention
+    fromClaude: boolean,
     tally: { kind: Kind },
-  ): Promise<Response> {
-    const options = parsedBody === undefined ? {} : { parsedBody }
-    const signedOut = () => handler.fetch(forward, options)
-    const wantsWallet = calls.some(
-      (c) => c.tool !== null && SAVED_WALLET_TOOLS.includes(c.tool),
-    )
-
-    // Every request needs a connected wallet, so apps ask the user to sign
-    // in when they add earnrate. Only while sign-in itself is down are
-    // questions answered without one.
-    if (!token) return challenge(resource)
+    whenDown: () => Promise<Response> | Response,
+  ): Promise<Response | Connection> {
     const claimed = await claimedLimitKey(token)
     let found
     try {
       found = await auth.validate(env, token, resource)
     } catch {
-      if (await limited(env.LIMITER, request, claimed, true)) return tooMany()
-      return wantsWallet ? unavailable() : signedOut()
+      if (await limited(env.LIMITER, request, claimed, fromClaude))
+        return tooMany()
+      return whenDown()
     }
     if (!found) {
-      if (await limited(env.SIGN_IN_LIMITER, request, claimed, true))
+      if (await limited(env.SIGN_IN_LIMITER, request, claimed, fromClaude))
         return tooMany()
       return challenge(resource, true)
     }
@@ -290,7 +294,7 @@ export function makeWorker<E extends Env>(
         env.LIMITER,
         request,
         await walletLimitKey(grant.walletId),
-        true,
+        fromClaude,
       )
     )
       return tooMany()
@@ -300,12 +304,9 @@ export function makeWorker<E extends Env>(
     const vault = vaultFor(env, grant.walletId)
     let checked
     try {
-      checked = await vault.checkIn(
-        calls.some((c) => c.tool !== null),
-        grantId,
-      )
+      checked = await vault.checkIn(used, grantId)
     } catch {
-      return wantsWallet ? unavailable() : signedOut()
+      return whenDown()
     }
     if (checked === 'refused') return challenge(resource, true)
     if (checked === 'first-use-today') count(env, 'wallet-active', tally.kind)
@@ -327,12 +328,122 @@ export function makeWorker<E extends Env>(
         await vault.signOutGrants(revoked)
       },
     )
+    // Just this grant, for a browser that stops syncing.
+    const signOutThis = async () => {
+      if (grantId === null) return
+      await vault.signOutGrants([{ id: grantId, expiresAt: null }])
+      await auth.signOutGrant(env, grant.walletId, grantId)
+    }
+    return { store, signOutThis }
+  }
+
+  async function answer(
+    request: Request,
+    env: E,
+    token: string | null,
+    resource: string,
+    calls: Call[],
+    forward: Request,
+    parsedBody: unknown,
+    tally: { kind: Kind },
+  ): Promise<Response> {
+    const options = parsedBody === undefined ? {} : { parsedBody }
+    const signedOut = () => handler.fetch(forward, options)
+    const wantsWallet = calls.some(
+      (c) => c.tool !== null && SAVED_WALLET_TOOLS.includes(c.tool),
+    )
+
+    // Every request needs a connected wallet, so apps ask the user to sign
+    // in when they add earnrate. Only while sign-in itself is down are
+    // questions answered without one.
+    if (!token) return challenge(resource)
+    const connected = await connection(
+      request,
+      env,
+      token,
+      resource,
+      calls.some((c) => c.tool !== null),
+      true,
+      tally,
+      () => (wantsWallet ? unavailable() : signedOut()),
+    )
+    if (connected instanceof Response) return connected
     const response = await handler.fetch(forward, {
       ...options,
-      authInfo: { token, clientId: '', scopes: [SCOPE], extra: { store } },
+      authInfo: {
+        token,
+        clientId: '',
+        scopes: [SCOPE],
+        extra: { store: connected.store },
+      },
     })
     await countRefusals(env, calls, response, tally.kind)
     return response
+  }
+
+  // earnrate.dev's synced wallet, reached through its own Worker: GET
+  // /wallet reads it, POST /wallet/changes makes one change with the MCP
+  // tools' rules, POST /wallet/sign-out ends this connection only.
+  async function walletRequest(
+    request: Request,
+    env: E,
+    token: string | null,
+    pathname: string,
+  ): Promise<Response> {
+    const route = `${request.method} ${pathname}`
+    if (
+      route !== 'GET /wallet' &&
+      route !== 'POST /wallet/changes' &&
+      route !== 'POST /wallet/sign-out'
+    )
+      return json({ error: 'Not found.' }, 404)
+    if (!token) return challenge(RESOURCE)
+    let body: unknown
+    if (request.method === 'POST') {
+      const text = await readBody(request)
+      if (text === null) return json({ error: 'Request too large.' }, 413)
+      try {
+        body = text === '' ? {} : JSON.parse(text)
+      } catch {
+        return json({ error: 'The body must be JSON.' }, 400)
+      }
+    }
+    const tally = { kind: 'signed-out' as Kind }
+    let label: string | null = null
+    try {
+      const connected = await connection(
+        request,
+        env,
+        token,
+        RESOURCE,
+        route !== 'POST /wallet/sign-out',
+        false,
+        tally,
+        unavailable,
+      )
+      if (connected instanceof Response) return connected
+      if (route === 'POST /wallet/sign-out') {
+        await connected.signOutThis()
+        return new Response(null, { status: 204 })
+      }
+      const api = walletApi({
+        catalog: bundle.catalog,
+        store: connected.store,
+        today,
+      })
+      if (route === 'GET /wallet') {
+        label = 'tool:list_wallet'
+        const read = await api.read()
+        return json(read.body, read.status)
+      }
+      const changed = await api.change(body)
+      if (changed.tool !== undefined) label = `tool:${changed.tool}`
+      if (changed.tool !== undefined && changed.status === 422)
+        count(env, `tool-error:${changed.tool}`, tally.kind)
+      return json(changed.body, changed.status)
+    } finally {
+      if (label !== null) count(env, label, tally.kind)
+    }
   }
 
   return {
@@ -387,7 +498,8 @@ export function makeWorker<E extends Env>(
         })
       }
       const isMcp = pathname === '/' || pathname === '/mcp'
-      const token = isMcp ? bearerToken(request) : null
+      const isWallet = pathname === '/wallet' || pathname.startsWith('/wallet/')
+      const token = isMcp || isWallet ? bearerToken(request) : null
       const fromClaude = isMcp || CLAUDE_CALLS.has(pathname)
       // A signed-in MCP request is limited once its token is checked.
       if (
@@ -396,6 +508,7 @@ export function makeWorker<E extends Env>(
       )
         return tooMany()
       if (isMcp) return mcp(request, env, token)
+      if (isWallet) return walletRequest(request, env, token, pathname)
       // Each of these writes to KV, whose daily writes are limited.
       if (
         SIGN_IN_PATHS.has(pathname) &&

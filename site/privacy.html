@@ -56,7 +56,7 @@
           only your recovery code or the apps you connect can open it. Here's
           where your data goes, and where it doesn't.
         </p>
-        <p class="updated">Updated November 4, 2026.</p>
+        <p class="updated">Updated November 6, 2026.</p>
       </header>
 
       <section>
@@ -65,13 +65,13 @@
           Everything on earnrate.dev runs in your browser: the card comparison,
           the spending simulator and your wallet. The card data loads with the
           page, and the stores, amounts, cards and settings you enter are never
-          sent anywhere, except when you add the cheat sheet to Apple Wallet
-          (below). The site does count which of its parts get used, by name only
-          (also below). Your wallet, your spending amounts and your settings are
-          saved in your browser's storage on that device, so they're there next
-          time. Deleting the wallet on the page, or clearing the site's data in
-          your browser, removes them. An exported wallet file goes only where
-          you save it.
+          sent anywhere, except when you add the cheat sheet to Apple Wallet or
+          turn on syncing your wallet with Claude (both below). The site does
+          count which of its parts get used, by name only (also below). Your
+          wallet, your spending amounts and your settings are saved in your
+          browser's storage on that device, so they're there next time. Deleting
+          the wallet on the page, or clearing the site's data in your browser,
+          removes them. An exported wallet file goes only where you save it.
         </p>
         <p>
           A store you search for appears in the address after a #. Browsers
@@ -102,6 +102,30 @@
           The pass then lives in Apple Wallet on your device, under Apple's
           privacy terms. It doesn't check back with earnrate for updates: when
           the quarter ends it expires, and you make a new one.
+        </p>
+        <h3>If you sync with Claude</h3>
+        <p>
+          Syncing is off unless you turn it on in My wallet. With it on,
+          earnrate.dev uses the same saved wallet as earnrate in Claude. You
+          sign in on earnrate's sign-in page, the one Claude opens, by starting
+          a wallet or typing your recovery code there. Your wallet then goes to
+          earnrate's server at mcp.earnrate.dev and is stored encrypted, like
+          the connector's (see Your saved wallet, below): your cards, their
+          picks and activations, memberships, point values, cap and spending
+          totals, statement credits used, and opening dates. A purchase you
+          record is sent so its totals can be updated; only the totals are kept.
+          Searches, stores and amounts you ask about still never leave your
+          browser: answers are still worked out on the page.
+        </p>
+        <p>
+          The sign-in is kept in a cookie that your browser sends only to
+          earnrate.dev's own sync addresses (under /api) and that the page's
+          scripts can't read. earnrate.dev's server uses it to pass your wallet
+          and its changes to mcp.earnrate.dev, and stores nothing itself.
+          Stopping syncing signs this browser out and keeps a copy of the wallet
+          here; changing your recovery code or deleting the wallet signs it out
+          too. Using the wallet from the site counts as use, so a synced wallet
+          is still deleted only after 13 months unused.
         </p>
         <h3>What the site counts</h3>
         <p>
@@ -173,14 +197,14 @@
           It counts how often each kind of request is made, like "best card for
           a purchase," and how often one fails, by tool or page, without what
           was asked. Each count also notes the kind of app it came from: Claude,
-          ChatGPT, an app on your own computer, or another, judged from the
-          address the app signs in through. It also counts how many wallets are
-          started and how many are used each day, without saying which. To stop
-          abuse, Cloudflare, which runs the server, limits how many requests one
-          IP address can make per minute, and once you're signed in, how many
-          your wallet's connections can make per minute. That limit counts under
-          a one-way hash of the wallet's ID, not the ID itself. earnrate doesn't
-          store IP addresses or those hashes.
+          ChatGPT, earnrate.dev, an app on your own computer, or another, judged
+          from the address the app signs in through. It also counts how many
+          wallets are started and how many are used each day, without saying
+          which. To stop abuse, Cloudflare, which runs the server, limits how
+          many requests one IP address can make per minute, and once you're
+          signed in, how many your wallet's connections can make per minute.
+          That limit counts under a one-way hash of the wallet's ID, not the ID
+          itself. earnrate doesn't store IP addresses or those hashes.
         </p>
       </section>
 
@@ -306,15 +330,17 @@
       <section>
         <h2>This website</h2>
         <p>
-          earnrate.dev is a static site with no cookies. Its only server code
-          adds up the counts described above. It counts visits with Cloudflare
-          Web Analytics, a small script that records which page you opened, the
-          site that linked you here, how fast the page loaded, and your country,
-          browser and device type. It doesn't recognize you from one visit to
-          the next. Cloudflare hosts the site and, like any host, handles your
-          IP address and request details to serve the page and block abuse. Its
-          dashboard shows me aggregate counts, not who visited. Logging is off.
-          The sign-in pages on mcp.earnrate.dev don't load the analytics script.
+          earnrate.dev is a static site. Its only server code adds up the counts
+          described above and, if you turn on syncing with Claude, passes your
+          wallet to earnrate's server; that sign-in cookie is its only cookie.
+          It counts visits with Cloudflare Web Analytics, a small script that
+          records which page you opened, the site that linked you here, how fast
+          the page loaded, and your country, browser and device type. It doesn't
+          recognize you from one visit to the next. Cloudflare hosts the site
+          and, like any host, handles your IP address and request details to
+          serve the page and block abuse. Its dashboard shows me aggregate
+          counts, not who visited. Logging is off. The sign-in pages on
+          mcp.earnrate.dev don't load the analytics script.
         </p>
       </section>
 
@@ -341,6 +367,9 @@
           November 4, 2026: earnrate.dev counts which of its parts are used, by
           name only; the server's counts note the kind of app and count wallets
           started and used each day; and the pass server counts passes made.
+          November 6, 2026: earnrate.dev can sync your wallet with earnrate in
+          Claude, if you turn it on, which stores the wallet encrypted on
+          earnrate's server.
         </p>
       </section>
 

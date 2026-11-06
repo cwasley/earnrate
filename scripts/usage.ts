@@ -132,7 +132,16 @@ table(
       r.label.startsWith('wallet-') ||
       r.label.startsWith('error:'),
   ),
-  ['claude', 'chatgpt', 'local', 'other', 'check', 'signed-out', 'unknown'],
+  [
+    'claude',
+    'chatgpt',
+    'site',
+    'local',
+    'other',
+    'check',
+    'signed-out',
+    'unknown',
+  ],
 )
 
 // Public download counts; npm's include mirrors and bots.
