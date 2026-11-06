@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, expect, test } from 'vitest'
 import { deviceOf, EVENTS } from '../site/events.ts'
+import preview from '../site/preview-worker.ts'
 import worker, { type SiteEnv } from '../site/worker.ts'
 
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 19_1 like Mac OS X) Safari'
@@ -85,5 +86,48 @@ describe('earnrate.dev counts', () => {
     expect(config).not.toMatch(
       /kv_namespaces|durable_objects|d1_databases|r2_buckets/,
     )
+  })
+})
+
+describe('preview.earnrate.dev', () => {
+  const env = {
+    ASSETS: {
+      fetch: () =>
+        Promise.resolve(
+          new Response('<p>page</p>', {
+            headers: { 'content-type': 'text/html' },
+          }),
+        ),
+    },
+  }
+
+  test('pages are marked noindex and robots.txt blocks everything', async () => {
+    const page = await preview.fetch(
+      new Request('https://preview.earnrate.dev/'),
+      env,
+    )
+    expect(page.headers.get('x-robots-tag')).toBe('noindex, nofollow')
+    expect(await page.text()).toBe('<p>page</p>')
+    const robots = await preview.fetch(
+      new Request('https://preview.earnrate.dev/robots.txt'),
+      env,
+    )
+    expect(await robots.text()).toBe('User-agent: *\nDisallow: /\n')
+  })
+
+  test('nothing is counted', async () => {
+    const config = await readFile(
+      new URL('../wrangler.preview.jsonc', import.meta.url),
+      'utf8',
+    )
+    expect(config).not.toMatch(/analytics_engine|kv_namespaces|durable_objects/)
+    const count = await preview.fetch(
+      new Request('https://preview.earnrate.dev/count', {
+        method: 'POST',
+        body: 'search',
+      }),
+      env,
+    )
+    expect(count.status).toBe(204)
   })
 })
