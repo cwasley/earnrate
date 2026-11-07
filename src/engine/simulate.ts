@@ -6,6 +6,7 @@ import {
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
+import { allCreditsYear, usedCreditsYear, type CreditsYear } from './credits.ts'
 import { evaluateCard, purchaseContext, usableAt } from './evaluate.ts'
 import {
   idealHolding,
@@ -24,6 +25,7 @@ import { applyBooking, capBooking } from './record.ts'
 import { milestoneWhat } from './milestones.ts'
 import { rotationGap } from './rotation.ts'
 import {
+  creditsCountedText,
   money,
   paymentNote,
   roundCents,
@@ -68,12 +70,24 @@ export type Simulation = {
   // counted like annual fees.
   memberships: MembershipCost[]
   membershipFees: number
-  net: number // rewards minus annual fees and membership fees
+  // Statement credits a cardholder uses on cards they already hold, at
+  // face value each period: counted against the fees, so in `net`.
+  heldCredits: number
+  net: number // rewards plus heldCredits, minus annual fees and membership fees
+  // Statement credits on the cards not held, a year at face value. Left out
+  // of `net`: they're worth it only to someone who'd spend there anyway.
+  otherCredits: number
+  netIfCreditsUsed: number // net plus otherCredits
+  credits: SimulatedCredits[] // each card with credits
   lines: LineResult[]
   // Spend milestones the year's spending on a card reaches; their points
   // are in `rewards`.
   milestones: SimulatedMilestone[]
   notes: string[]
+}
+
+export type SimulatedCredits = CreditsYear & {
+  held: boolean // counted in net: the person holds the card and uses these
 }
 
 export type SimulatedMilestone = {
@@ -263,6 +277,23 @@ export function simulateWallet(
       milestones.reduce((sum, m) => sum + m.value, 0),
   )
   const annualFees = cards.reduce((sum, c) => sum + (c.card.annual_fee ?? 0), 0)
+  const credits: SimulatedCredits[] = cards.flatMap(({ card }) => {
+    const holding = held.includes(card.id)
+    const raw = wallet.cards.find((h) => h.id === card.id)
+    const year =
+      holding && raw
+        ? usedCreditsYear(catalog, card, raw)
+        : allCreditsYear(catalog, card)
+    return year.creditIds.length === 0 ? [] : [{ ...year, held: holding }]
+  })
+  const creditSum = (heldOnes: boolean) =>
+    roundCents(
+      credits
+        .filter((c) => c.held === heldOnes)
+        .reduce((sum, c) => sum + c.yearly, 0),
+    )
+  const heldCredits = creditSum(true)
+  const otherCredits = creditSum(false)
   const paid = paidMemberships(catalog, {
     memberships: wallet.memberships,
     heldCards: held,
@@ -276,6 +307,13 @@ export function simulateWallet(
   const membershipFees = memberships.reduce((sum, m) => sum + m.annualFee, 0)
   const notes: string[] = [...milestoneNotes]
   for (const m of memberships) notes.push(membershipNote(catalog, m))
+  for (const c of credits.filter((c) => c.held)) {
+    const card = cards.find((x) => x.card.id === c.cardId)?.card
+    if (card)
+      notes.push(
+        creditsCountedText(shortCardName(card.name), card.annual_fee ?? 0, c),
+      )
+  }
   const paying = paymentNote(
     cards.map(({ card }) => ({ name: shortCardName(card.name), card })),
   )
@@ -314,7 +352,13 @@ export function simulateWallet(
     annualFees,
     memberships,
     membershipFees,
-    net: roundCents(rewards - annualFees - membershipFees),
+    heldCredits,
+    net: roundCents(rewards + heldCredits - annualFees - membershipFees),
+    otherCredits,
+    netIfCreditsUsed: roundCents(
+      rewards + heldCredits + otherCredits - annualFees - membershipFees,
+    ),
+    credits,
     lines: lineResults,
     milestones,
     notes,
@@ -509,6 +553,8 @@ export type Addition = {
   annualFee: number
   membershipFee: number // a membership it needs that the wallet doesn't pay for
   gain: number // extra rewards minus the annual fee and membership
+  credits: number // its statement credits, a year at face value; not in gain
+  gainIfCreditsUsed: number // gain plus credits
   simulation: Simulation
 }
 
@@ -538,6 +584,10 @@ function projectedWallet(
           : {}),
         ...(held.anniversary !== undefined
           ? { anniversary: held.anniversary }
+          : {}),
+        ...(held.enrolled !== undefined ? { enrolled: held.enrolled } : {}),
+        ...(held.skipped_credits !== undefined
+          ? { skipped_credits: held.skipped_credits }
           : {}),
       }
     }),
@@ -574,13 +624,17 @@ export function simulateAdditions(
     const membershipFee = roundCents(
       simulation.membershipFees - current.membershipFees,
     )
+    const gain = roundCents(extraRewards - annualFee - membershipFee)
+    const credits = allCreditsYear(catalog, card).yearly
     additions.push({
       cardId: card.id,
       picks: simulation.cards.at(-1)?.picks ?? {},
       extraRewards,
       annualFee,
       membershipFee,
-      gain: roundCents(extraRewards - annualFee - membershipFee),
+      gain,
+      credits,
+      gainIfCreditsUsed: roundCents(gain + credits),
       simulation,
     })
   }

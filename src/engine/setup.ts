@@ -2,7 +2,12 @@ import type { Card, Credit, Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { isActivated, pickedCategories } from './evaluate.ts'
-import { membership, membershipName, sameGroup } from './memberships.ts'
+import {
+  effectiveMemberships,
+  membership,
+  membershipName,
+  sameGroup,
+} from './memberships.ts'
 import { milestoneWhat } from './milestones.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap, rotationGapText } from './rotation.ts'
@@ -292,11 +297,13 @@ export function setupNotes(
   }
 
   // With one tier of a group saved, the others aren't missing.
+  const has = effectiveMemberships(
+    catalog,
+    wallet.memberships,
+    wallet.cards.map((c) => c.id),
+  )
   const missing = membershipsUsed(card).filter(
-    (m) =>
-      !wallet.memberships.some(
-        (held) => held === m || sameGroup(catalog, held, m),
-      ),
+    (m) => !has.some((held) => held === m || sameGroup(catalog, held, m)),
   )
   if (missing.length > 0) {
     notes.push({

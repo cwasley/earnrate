@@ -14,7 +14,8 @@ import {
 } from '../../src/engine/simulate.ts'
 import {
   categoryPhrase,
-  CREDITS_LEFT_OUT,
+  CREDITS_APART,
+  ifCreditsUsedText,
   listed,
 } from '../../src/engine/text.ts'
 import { feeLabel, shortName, wholeDollars, words } from './format.ts'
@@ -218,6 +219,13 @@ export function Spending({
                       </span>
                     </div>
                     {picks ? <p class="muted">{picks}</p> : null}
+                    {s.credits
+                      .filter((c) => !c.held)
+                      .map((c) => (
+                        <p class="muted" key={c.cardId}>
+                          {ifCreditsUsedText(c, s.netIfCreditsUsed)}
+                        </p>
+                      ))}
                   </li>
                 )
               })}
@@ -288,7 +296,7 @@ export function Spending({
                 Each card uses its best category picks, with any bonus
                 activations done.
               </li>
-              <li>{CREDITS_LEFT_OUT}</li>
+              <li>{CREDITS_APART}</li>
               {notes.map((n) => (
                 <li key={n}>{n}</li>
               ))}

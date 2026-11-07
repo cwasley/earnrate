@@ -1,16 +1,11 @@
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { bonusDollars } from './bonus.ts'
+import { allCreditsYear } from './credits.ts'
 import { matchesFilters } from './explore.ts'
 import { membershipCosts, paidMemberships } from './memberships.ts'
 import { inEffect } from './periods.ts'
-import {
-  CREDITS_LEFT_OUT,
-  heldName,
-  listed,
-  money,
-  roundCents,
-} from './text.ts'
+import { CREDITS_APART, heldName, listed, money, roundCents } from './text.ts'
 import { cardValuation } from './valuation.ts'
 
 export type OfferFilters = {
@@ -42,6 +37,10 @@ export type OfferSummary = {
   // Why the issuer may not give this offer to this wallet's holder, if so.
   ineligible: string | null
   firstYearValue: number // bonus value minus the first year's fee and membership
+  // Its statement credits, a year at face value, and firstYearValue with
+  // them all used: shown apart, never ranked on.
+  credits: number
+  firstYearValueIfCreditsUsed: number
   held: boolean
   lastVerified: string
   verifiedBy: string
@@ -124,6 +123,10 @@ export function compareOffers(
     const firstYearFee = card.first_year_fee ?? card.annual_fee ?? null
     const membershipFee =
       membershipCosts(catalog, [card], paid)[0]?.annualFee ?? 0
+    const firstYearValue = roundCents(
+      value - (firstYearFee ?? 0) - membershipFee,
+    )
+    const credits = allCreditsYear(catalog, card).yearly
     offers.push({
       cardId: card.id,
       cardName: card.name,
@@ -143,7 +146,9 @@ export function compareOffers(
       bonusValue: roundCents(value),
       membershipFee,
       ineligible: ineligibleText(catalog, wallet, offer.not_with ?? []),
-      firstYearValue: roundCents(value - (firstYearFee ?? 0) - membershipFee),
+      firstYearValue,
+      credits,
+      firstYearValueIfCreditsUsed: roundCents(firstYearValue + credits),
       held: held.has(card.id),
       lastVerified: card.last_verified,
       verifiedBy: card.verified_by,
@@ -159,8 +164,8 @@ export function compareOffers(
   const notes = [
     `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`,
     `Each offer is the public one on the issuer's page on the date shown, checked weekly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how.`,
-    "First-year value is the bonus at your point values minus the first year's annual fee and any membership the card needs that you don't have. It leaves out what the card earns on your spending and any credits or perks.",
-    CREDITS_LEFT_OUT,
+    "First-year value is the bonus at your point values minus the first year's annual fee and any membership the card needs that you don't have. It leaves out what the card earns on your spending and its perks.",
+    CREDITS_APART,
   ]
   return { offers, withoutOffer, notes }
 }

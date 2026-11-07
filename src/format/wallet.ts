@@ -68,6 +68,7 @@ export function formatWalletSummary(summary: WalletSummary): string {
       lines.push(`  Spend bonus (${m.id}): ${m.text}`)
     for (const credit of c.credits)
       lines.push(`  Credit (${credit.id}): ${credit.text}`)
+    if (c.usedCreditsText !== null) lines.push(`  ${c.usedCreditsText}`)
     if (c.anniversary !== null)
       lines.push(`  Account anniversary: ${c.anniversary}.`)
     if (c.intro?.state === 'active' && c.intro.until !== null)

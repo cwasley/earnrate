@@ -32,6 +32,11 @@ const CARD_OPTIONS = `Options:
   --credit-used <credit>=<dollars>
                              How much of a credit you've received this period,
                              e.g. --credit-used lululemon=40. Repeat for each.
+  --skipped-credits <credits>
+                             Statement credits you don't use, comma separated,
+                             e.g. --skipped-credits dunkin. They're left out of
+                             picks, the to-do list and annual-fee math.
+                             Replaces the current list.
   --cap-spent <cap>=<dollars>
                              Spending toward a cap so far this period, e.g.
                              --cap-spent us-supermarkets=1200. Repeat for each.
@@ -173,6 +178,7 @@ export async function runWalletCommand(
         opened: { type: 'string' },
         activated: { type: 'string' },
         enrolled: { type: 'string' },
+        'skipped-credits': { type: 'string' },
         'credit-used': { type: 'string', multiple: true },
         'cap-spent': { type: 'string', multiple: true },
         'milestone-spent': { type: 'string', multiple: true },
@@ -208,6 +214,7 @@ export async function runWalletCommand(
     values.opened !== undefined ||
     values.activated !== undefined ||
     values.enrolled !== undefined ||
+    values['skipped-credits'] !== undefined ||
     values['credit-used'] !== undefined ||
     values['cap-spent'] !== undefined ||
     values['milestone-spent'] !== undefined ||
@@ -344,12 +351,14 @@ export async function runWalletCommand(
     const n = Number(text.replace(/[$,]/g, ''))
     return Number.isFinite(n) ? n : `--${flag} takes dollars, like 1200.`
   }
-  if (values.enrolled !== undefined) {
-    input.enrolled = values.enrolled
+  const idList = (text: string) =>
+    text
       .split(',')
       .map((r) => r.trim())
       .filter((r) => r !== '')
-  }
+  if (values.enrolled !== undefined) input.enrolled = idList(values.enrolled)
+  if (values['skipped-credits'] !== undefined)
+    input.skippedCredits = idList(values['skipped-credits'])
   // --credit-used, --cap-spent and --milestone-spent: <id>=<dollars>, repeated.
   const dollarPairs = (
     flag: 'credit-used' | 'cap-spent' | 'milestone-spent',

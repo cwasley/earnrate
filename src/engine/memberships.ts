@@ -28,6 +28,23 @@ export function sameGroup(catalog: Catalog, a: string, b: string): boolean {
   return group !== undefined && group === membership(catalog, b)?.group
 }
 
+// The memberships a person has: the ones they've said, plus the one each of
+// their cards can't be held without (a Costco membership for Costco
+// Anywhere). Gates a rule's `requires.membership` as well as fees. Only the
+// person's own cards (or those named for an answer) belong in `cardIds`.
+export function effectiveMemberships(
+  catalog: Catalog,
+  memberships: string[],
+  cardIds: string[],
+): string[] {
+  const out = new Set(memberships)
+  for (const card of catalog.cards) {
+    const id = card.requires_membership
+    if (id !== undefined && cardIds.includes(card.id)) out.add(id)
+  }
+  return [...out]
+}
+
 // Memberships the person already pays for: the ones they've said, the ones a
 // card they hold needs, and the ones their spending shows (only members shop
 // at Costco).
@@ -43,11 +60,7 @@ export function paidMemberships(
     merchantIds?: (string | null)[]
   },
 ): Set<string> {
-  const paid = new Set(memberships)
-  for (const card of catalog.cards) {
-    const id = card.requires_membership
-    if (id !== undefined && heldCards.includes(card.id)) paid.add(id)
-  }
+  const paid = new Set(effectiveMemberships(catalog, memberships, heldCards))
   for (const m of catalog.memberships)
     if (m.members_shop_at.some((id) => merchantIds.includes(id))) paid.add(m.id)
   return paid

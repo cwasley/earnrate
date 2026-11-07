@@ -198,6 +198,7 @@ export const WalletSummarySchema = z.object({
           period: CreditPeriod,
           enroll: z.boolean(),
           enrolled: z.boolean(),
+          skipped: z.boolean(), // the user doesn't use it: not counted anywhere
           currentPeriod: z.string().nullable(),
           until: z.string().nullable(),
           used: z.number(),
@@ -206,6 +207,8 @@ export const WalletSummarySchema = z.object({
           text: z.string(),
         }),
       ),
+      usedCredits: z.number(), // a year, counted against the annual fee
+      usedCreditsText: z.string().nullable(),
       chosen: z
         .object({
           period: z.string(),
@@ -308,6 +311,10 @@ export const OfferComparisonSchema = z.object({
       ineligible: z.string().nullable(),
       bonusValue: z.number(),
       firstYearValue: z.number(),
+      // Statement credits, a year at face value, and the first-year value
+      // if all were used. Not ranked on.
+      credits: z.number(),
+      firstYearValueIfCreditsUsed: z.number(),
       held: z.boolean(),
       lastVerified: z.string(),
       verifiedBy: z.string(),
@@ -484,7 +491,21 @@ const SimulationSchema = z.object({
     }),
   ),
   membershipFees: z.number(),
+  // Credits the user uses on cards they hold, a year: counted in net.
+  heldCredits: z.number(),
   net: z.number(),
+  // Credits on cards not held, a year at face value: not in net.
+  otherCredits: z.number(),
+  netIfCreditsUsed: z.number(),
+  credits: z.array(
+    z.object({
+      cardId: z.string(),
+      yearly: z.number(),
+      creditIds: z.array(z.string()),
+      names: z.array(z.string()),
+      held: z.boolean(),
+    }),
+  ),
   lines: z.array(
     z.object({
       label: z.string(),
@@ -520,6 +541,8 @@ export const SpendingSimulationSchema = z.object({
       annualFee: z.number(),
       membershipFee: z.number(),
       gain: z.number(),
+      credits: z.number(), // its statement credits, a year: not in gain
+      gainIfCreditsUsed: z.number(),
     }),
   ),
 })

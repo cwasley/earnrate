@@ -82,6 +82,12 @@ const NamedCard = z.object({
     .describe(
       "Statement credits the user has enrolled in with the issuer, as credit ids from search_cards. A credit that needs enrolling counts only when it's here. Ask; never assume.",
     ),
+  skippedCredits: z
+    .array(z.string())
+    .optional()
+    .describe(
+      "Statement credit ids the user says they don't use. They don't count toward a pick or against the card's annual fee.",
+    ),
   opened: z
     .string()
     .optional()
@@ -147,6 +153,12 @@ const cardFields = {
     .optional()
     .describe(
       'Dollars of a statement credit already received this period: credit id → dollars, e.g. {"lululemon": 40}. Ask; recorded purchases add to it from then on.',
+    ),
+  skippedCredits: z
+    .array(z.string())
+    .optional()
+    .describe(
+      'Statement credit ids the user doesn\'t use, e.g. ["dunkin"] on Amex Gold. They\'re left out of picks, the to-do list and the annual-fee math; every other credit on the card counts against its fee once enrolled (or always, for one that needs no enrolling). Replaces the current list; [] counts them all again.',
     ),
   bonus: z
     .object({

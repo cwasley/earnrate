@@ -137,6 +137,7 @@ cards:
     milestone_usage: { spend-75k: { period: '2026', spent: 14950 } }
     enrolled: [lululemon]
     credit_usage: { lululemon: { period: 2026-Q4, used: 75 } }
+    skipped_credits: [equinox, oura]
     bonus: { opened: '2026-10-01', spent: 100 }
   - id: usbank-cash-plus
     chosen: { period: 2026-Q4, picks: { five-percent: [fast-food, cell-phone] } }

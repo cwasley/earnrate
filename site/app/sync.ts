@@ -170,6 +170,10 @@ export function heldToInput(
   })
   if (credits.length > 0)
     input.creditUsed = Object.fromEntries(credits.map(([k, u]) => [k, u.used]))
+  const skipped = (held.skipped_credits ?? []).filter((id) =>
+    card.credits.some((c) => c.id === id),
+  )
+  if (skipped.length > 0) input.skippedCredits = skipped
   return input
 }
 

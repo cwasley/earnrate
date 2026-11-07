@@ -25,7 +25,7 @@ export function formatOffers(
     const pace =
       o.spend > 0 ? ` (about ${wholeDollars(o.spend / weeks)} a week)` : ''
     lines.push(
-      `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  about ${wholeDollars(o.firstYearValue)} the first year`,
+      `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  about ${wholeDollars(o.firstYearValue)} the first year${o.credits > 0 ? `, ${wholeDollars(o.firstYearValueIfCreditsUsed)} if you'd use all its credits (${wholeDollars(o.credits)} a year)` : ''}`,
       `    ${offerTerms(o, currencyName(o.currency))}${pace}. ${capitalize(feeText(o))}.${o.membershipFee > 0 ? ` Needs a ${money(o.membershipFee)} membership, counted in the first year.` : ''}${o.held ? ' In your wallet.' : ''}`,
     )
     lines.push(

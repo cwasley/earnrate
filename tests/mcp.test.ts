@@ -1342,6 +1342,41 @@ describe('wallet setup', () => {
     expect(await readFile(file, 'utf8')).toContain('# mine')
   })
 
+  test("credits the user doesn't use: set through update_card, listed, and out of the fee math", async () => {
+    const file = await walletCopy('cards:\n  - id: amex-gold # mine\n')
+    const client = await connect(file)
+    const set = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'amex-gold',
+        enrolled: ['dunkin'],
+        skippedCredits: ['uber-cash'],
+      },
+    })
+    expect(text(set)).toMatch(/credits not used: uber-cash/)
+    const wallet = await client.callTool({ name: 'list_wallet', arguments: {} })
+    const gold = (wallet.structuredContent as WalletSummary).cards[0]
+    expect(gold?.credits).toContainEqual(
+      expect.objectContaining({ id: 'uber-cash', skipped: true }),
+    )
+    expect(gold?.usedCredits).toBe(84)
+    expect(text(wallet)).toMatch(
+      /Amex Gold's credits you use \(Dunkin'\) count against its fee: \$84 a year\./,
+    )
+    const sim = await client.callTool({
+      name: 'simulate_spending',
+      arguments: { compareToWallet: true },
+    })
+    expect(sim.isError).toBeFalsy()
+    expect(
+      (sim.structuredContent as { current: { heldCredits: number } }).current
+        .heldCredits,
+    ).toBe(84)
+    expect(await readFile(file, 'utf8')).toContain(
+      '    skipped_credits: [uber-cash]\n',
+    )
+  })
+
   test('best_cards_for puts cards with a store credit first', async () => {
     const client = await connect(await walletCopy())
     const result = await client.callTool({

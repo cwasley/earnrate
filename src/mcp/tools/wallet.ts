@@ -92,6 +92,12 @@ function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
     )
   for (const [id, used] of Object.entries(args.creditUsed ?? {}))
     out.push(`${money(used)} of the ${id} credit used this period`)
+  if (args.skippedCredits !== undefined)
+    out.push(
+      args.skippedCredits.length === 0
+        ? 'every credit counted'
+        : `credits not used: ${args.skippedCredits.join(', ')}`,
+    )
   if (args.bonus === null) out.push('welcome bonus no longer tracked')
   else if (args.bonus !== undefined)
     out.push(
@@ -419,7 +425,7 @@ export function registerWalletTools(
     'update_card',
     {
       title: 'Update a card',
-      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, opening date (optional; for first-year rates), activated categories, cap spending so far (capSpent), spending this year toward its spend bonuses (milestoneSpent), statement credits enrolled in (enrolled) and used this period (creditUsed), or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
+      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, opening date (optional; for first-year rates), activated categories, cap spending so far (capSpent), spending this year toward its spend bonuses (milestoneSpent), statement credits enrolled in (enrolled), used this period (creditUsed) or not used at all (skippedCredits), or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
       inputSchema: tools.update_card.input,
       outputSchema: WalletChangeSchema,
       annotations: {

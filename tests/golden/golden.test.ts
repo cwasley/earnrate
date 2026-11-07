@@ -6,7 +6,14 @@ import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
 import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../../src/engine/explore.ts'
-import { resolveSpendLines, simulateWallet } from '../../src/engine/simulate.ts'
+import { compareOffers } from '../../src/engine/offers.ts'
+import {
+  resolveSpendLines,
+  simulateAdditions,
+  simulateCatalog,
+  simulateWallet,
+  typicalSpendLines,
+} from '../../src/engine/simulate.ts'
 import type {
   Purchase,
   RankedCard,
@@ -1963,15 +1970,12 @@ describe('#32 merchant statement credits', () => {
     },
   )
 
-  goldenTest(
-    '#32i the cheat sheet and simulations leave credits out and say so',
-    () => {
-      const sheet = cheatSheet(catalog, wallet(enrolled()), TODAY)
-      expect(sheet.assumptions.join(' ')).toMatch(
-        /Statement credits .* are left out/,
-      )
-    },
-  )
+  goldenTest('#32i the cheat sheet leaves credits out and says so', () => {
+    const sheet = cheatSheet(catalog, wallet(enrolled()), TODAY)
+    expect(sheet.assumptions.join(' ')).toMatch(
+      /Statement credits .* are left out/,
+    )
+  })
 })
 
 describe('#33 merchant credits across issuers', () => {
@@ -2110,6 +2114,116 @@ describe('#33 merchant credits across issuers', () => {
       )
       expect(cards).not.toContain('chase-united-explorer')
       for (const c of credits) expect(c.text).not.toMatch(/%/)
+    },
+  )
+})
+
+describe('#34 statement credits against the annual fee', () => {
+  const gold = (fields: object = {}) =>
+    WalletSchema.parse({ cards: [{ id: 'amex-gold', ...fields }] })
+  const typical = typicalSpendLines(catalog)
+  const options = {
+    filters: ALL_PERSONAL_CARDS,
+    memberships: [],
+    valuations: {},
+    start: TODAY,
+  }
+
+  goldenTest(
+    '#34a a held card: the credits you use come off its fee, and it says which',
+    () => {
+      const { current } = simulateAdditions(
+        catalog,
+        gold({ enrolled: ['dunkin'] }),
+        typical,
+        options,
+      )
+      expect(current.heldCredits).toBe(204)
+      expect(current.net).toBeCloseTo(current.rewards + 204 - 325)
+      expect(current.otherCredits).toBe(0)
+      expect(current.notes).toContain(
+        "Amex Gold's credits you use (Dunkin' and Uber) count against its fee: $204 a year.",
+      )
+    },
+  )
+
+  goldenTest(
+    '#34b a card you do not hold: ranked without its credits, with them shown apart',
+    () => {
+      const { singles } = simulateCatalog(catalog, typical, options)
+      const it = singles.find((s) => s.cards[0]?.cardId === 'amex-gold')
+      expect(it?.heldCredits).toBe(0)
+      expect(it?.net).toBeCloseTo((it?.rewards ?? 0) - 325)
+      expect(it?.otherCredits).toBe(424)
+      expect(it?.netIfCreditsUsed).toBeCloseTo((it?.net ?? 0) + 424)
+      expect(it?.credits).toEqual([
+        {
+          cardId: 'amex-gold',
+          yearly: 424,
+          creditIds: ['dunkin', 'uber-cash', 'dining', 'resy'],
+          names: ["Dunkin'", 'Uber', 'Grubhub', 'Resy'],
+          held: false,
+        },
+      ])
+    },
+  )
+
+  goldenTest(
+    '#34c a credit you do not use: off the to-do list, out of the pick and the fee',
+    () => {
+      const skipped = gold({
+        enrolled: ['resy'],
+        skipped_credits: ['dunkin', 'dining', 'resy'],
+        credit_usage: { 'uber-cash': { period: '2026-10', used: 4 } },
+      })
+      const before = checklist(
+        catalog,
+        gold({
+          enrolled: ['resy'],
+          credit_usage: { 'uber-cash': { period: '2026-10', used: 4 } },
+        }),
+        TODAY,
+      )
+      expect(before.map((i) => i.kind)).toEqual(
+        expect.arrayContaining(['enroll', 'credit']),
+      )
+      expect(before.filter((i) => i.kind === 'credit')).toHaveLength(2)
+      const after = checklist(catalog, skipped, TODAY)
+      expect(after.some((i) => i.kind === 'enroll')).toBe(false)
+      expect(after.filter((i) => i.kind === 'credit')).toEqual([
+        expect.objectContaining({ ref: 'uber-cash' }),
+      ])
+      const rec = recommend(
+        catalog,
+        skipped,
+        purchase('Resy', { amount: 80, channel: 'in_store' }),
+      )
+      expect(entry(rec, 'amex-gold').credit).toBeNull()
+      const sim = simulateWallet(catalog, skipped, typical, TODAY, [
+        'amex-gold',
+      ])
+      expect(sim.heldCredits).toBe(120)
+    },
+  )
+
+  goldenTest(
+    '#34d welcome offers rank on first-year value and add the credits apart',
+    () => {
+      const { offers } = compareOffers(
+        catalog,
+        { valuations: {}, memberships: [], cards: [] },
+        { kind: 'any', business: false, noAnnualFee: false, includeHeld: true },
+        TODAY,
+      )
+      const it = offers.find((o) => o.cardId === 'amex-gold')
+      expect(it?.credits).toBe(424)
+      expect(it?.firstYearValueIfCreditsUsed).toBeCloseTo(
+        (it?.firstYearValue ?? 0) + 424,
+      )
+      const values = offers
+        .filter((o) => o.ineligible === null)
+        .map((o) => o.firstYearValue)
+      expect(values).toEqual([...values].sort((a, b) => b - a))
     },
   )
 })

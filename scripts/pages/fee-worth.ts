@@ -2,6 +2,7 @@
 // card's bonus categories at which it nets more than the best no-fee card on
 // the same spending, from the engine's year-long simulation.
 import { EPSILON } from '../../src/engine/compare.ts'
+import { allCreditsYear, type CreditsYear } from '../../src/engine/credits.ts'
 import { matchesFilters } from '../../src/engine/explore.ts'
 import {
   resolveSpendLines,
@@ -11,7 +12,15 @@ import {
   type ResolvedLine,
   type Simulation,
 } from '../../src/engine/simulate.ts'
-import { listed, money, num, pct, wholeDollars } from '../../src/engine/text.ts'
+import {
+  creditsYearText,
+  CREDITS_ONLY_IF,
+  listed,
+  money,
+  num,
+  pct,
+  wholeDollars,
+} from '../../src/engine/text.ts'
 import type { Card } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { PageContext } from './context.ts'
@@ -27,6 +36,11 @@ export type FeeWorth = {
   everywhere: boolean // no typical line is a bonus category: the whole mix
   breakEven: number | null // dollars a month in those lines
   stopsAt: number | null // past this a cap ends its lead
+  // The same with every statement credit used in full: 0 when the credits
+  // alone outweigh the fee. Null without credits.
+  credits: CreditsYear | null
+  creditsBreakEven: number | null
+  creditsStopAt: number | null
   rivals: number // no-fee cards it was compared with
   at: (monthly: number) => { card: Simulation; best: Simulation }
 }
@@ -104,7 +118,10 @@ export function feeWorthKit(
     const chosen = everywhere ? typical : bonus
     const total = chosen.reduce((s, l) => s + l.monthly, 0)
     const lines = chosen.map((l) => ({ ...l, monthly: l.monthly / total }))
+    const runs = new Map<number, { card: Simulation; best: Simulation }>()
     const at = (monthly: number) => {
+      const hit = runs.get(monthly)
+      if (hit) return hit
       const [own] = simulateSingles(
         catalog,
         [card],
@@ -112,43 +129,60 @@ export function feeWorthKit(
         options(card),
       )
       if (!own) throw new Error(`no simulation for ${card.id}`)
-      return { card: own, best: bestNoFee(card, lines, monthly) }
+      const run = { card: own, best: bestNoFee(card, lines, monthly) }
+      runs.set(monthly, run)
+      return run
     }
-    const ahead = (monthly: number) => {
-      const r = at(monthly)
-      return r.card.net > r.best.net
-    }
-    let breakEven: number | null = null
-    let stopsAt: number | null = null
-    for (let m = STEP; m <= MAX_MONTHLY; m += STEP) {
-      const lead = ahead(m)
-      if (breakEven === null && lead) {
-        let lo = m - STEP
-        let hi = m
-        while (hi - lo > 10) {
-          const mid = Math.round((lo + hi) / 20) * 10
-          if (mid <= lo || mid >= hi) break
-          if (ahead(mid)) hi = mid
-          else lo = mid
-        }
-        breakEven = hi
-      } else if (breakEven !== null && !lead) {
-        stopsAt = m - STEP
-        break
-      }
-    }
+    const { breakEven, stopsAt } = firstLead(
+      (m) => at(m).card.net > at(m).best.net,
+      STEP,
+    )
+    const year = allCreditsYear(catalog, card)
+    const credits = year.creditIds.length > 0 ? year : null
+    const withCredits =
+      credits === null
+        ? { breakEven: null, stopsAt: null }
+        : firstLead((m) => at(m).card.netIfCreditsUsed > at(m).best.net, 0)
     return {
       card,
       lines,
       everywhere,
       breakEven,
       stopsAt,
+      credits,
+      creditsBreakEven: withCredits.breakEven,
+      creditsStopAt: withCredits.stopsAt,
       rivals: noFee(card).length,
       at,
     }
   }
 
   return { feeWorth }
+}
+
+// The first monthly amount, from `from` up, at which `ahead` holds (to the
+// nearest $10), and the amount past which it stops holding, if it does.
+function firstLead(ahead: (monthly: number) => boolean, from: number) {
+  let breakEven: number | null = null
+  let stopsAt: number | null = null
+  for (let m = from; m <= MAX_MONTHLY; m += STEP) {
+    const lead = ahead(m)
+    if (breakEven === null && lead) {
+      let lo = m - STEP
+      let hi = m
+      while (m > 0 && hi - lo > 10) {
+        const mid = Math.round((lo + hi) / 20) * 10
+        if (mid <= lo || mid >= hi) break
+        if (ahead(mid)) hi = mid
+        else lo = mid
+      }
+      breakEven = hi
+    } else if (breakEven !== null && !lead) {
+      stopsAt = m - STEP
+      break
+    }
+  }
+  return { breakEven, stopsAt }
 }
 
 // "supermarkets" mid-sentence, but "Amazon" keeps its capital.
@@ -189,13 +223,28 @@ export function feeWorthSection(
     const best = r.best.cards[0]?.cardId ?? ''
     return `<tr><td>${esc(wholeDollars(m))}</td><td>${esc(money(r.card.net))}</td><td>${esc(money(r.best.net))} <span class="muted">(<a href="/cards/${best}">${esc(ctx.shortName(best))}</a>)</span></td></tr>`
   }).join('')
+  const fee = wholeDollars(card.annual_fee ?? 0)
+  const pastThat =
+    w.creditsStopAt === null
+      ? ''
+      : `; past about ${esc(wholeDollars(w.creditsStopAt))} a month, the best no-fee card earns more`
+  const creditsLine =
+    w.credits === null
+      ? ''
+      : ` ${
+          w.creditsBreakEven === null
+            ? `Even if you'd use all its statement credits (${esc(creditsYearText(w.credits))}), it doesn't come out ahead within ${esc(wholeDollars(MAX_MONTHLY))} a month.`
+            : w.creditsBreakEven === 0
+              ? `If you'd use all its statement credits (${esc(creditsYearText(w.credits))}), they're worth more than its ${esc(fee)} fee, so it comes out ahead ${w.creditsStopAt === null ? 'at any amount' : `up to about ${esc(wholeDollars(w.creditsStopAt))} a month; past that, the best no-fee card earns more`}.`
+              : `If you'd use all its statement credits (${esc(creditsYearText(w.credits))}), the fee pays off from about <strong>${esc(wholeDollars(w.creditsBreakEven))} a month</strong>${pastThat}.`
+        } ${esc(CREDITS_ONLY_IF)}`
   const extras = [
     w.at(SHOWN_AMOUNTS[0] ?? 500).card.membershipFees > 0
       ? 'the membership it needs, counted like a fee'
       : null,
   ].filter((x) => x !== null)
   return `<h2 id="annual-fee">Is the annual fee worth it?</h2>
-      <p>${verdict}${transferLine} This counts only what the card earns: statement credits, lounge access and other benefits aren't included.</p>
+      <p>${verdict}${transferLine} This counts only what the card earns, not lounge access or other benefits.${creditsLine}</p>
       <table class="numbers"><thead><tr><th>A month</th><th>${esc(name)}, a year after fees</th><th>Best no-fee card</th></tr></thead><tbody>${rows}</tbody></table>
       <p class="muted">Assumes ${esc(value)}; ${esc(w.everywhere ? `no typical category earns it a bonus, so the whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`)} (from earnrate's typical household: ${esc(TYPICAL_MONTHLY_SPEND.map((t) => `${t.what} ${money(t.monthly)}`).join(', '))}); the same spending every month for a year; the regular annual fee${extras.length > 0 ? `, ${esc(listed(extras))}` : ''}; no welcome bonus, first-year rate or credits. The no-fee side is the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards that need no membership, on the same spending, each with its best picks. Other spending, earned at each card's other rates, isn't included.</p>`
 }

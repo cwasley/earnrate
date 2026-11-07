@@ -4,7 +4,7 @@ import type { Catalog } from '../schema/catalog.ts'
 import type { WalletCard } from '../schema/wallet.ts'
 import { categoryMatches } from './evaluate.ts'
 import { periodEnd, periodKey } from './periods.ts'
-import { creditName } from './rule-text.ts'
+import { creditLabel, creditName } from './rule-text.ts'
 import { roundCents, type CreditWords } from './text.ts'
 import type { MerchantResolution } from './types.ts'
 
@@ -12,6 +12,7 @@ import type { MerchantResolution } from './types.ts'
 
 export type CreditState = CreditWords & {
   credit: Credit
+  skipped: boolean // the cardholder doesn't use it
   key: string | null // the period, like 2026-Q4; null for a cardmember year without an anniversary
   used: number // dollars of credit received this period
 }
@@ -39,6 +40,14 @@ export function creditCovers(
 const isEnrolled = (credit: Credit, held: WalletCard) =>
   credit.enroll !== true || (held.enrolled ?? []).includes(credit.id)
 
+// The cardholder said they don't use it: it counts nowhere, enrolled or not.
+export const isSkipped = (credit: Credit, held: WalletCard) =>
+  (held.skipped_credits ?? []).includes(credit.id)
+
+// A credit the cardholder uses: enrolled (or automatic) and not skipped.
+export const creditInUse = (credit: Credit, held: WalletCard) =>
+  isEnrolled(credit, held) && !isSkipped(credit, held)
+
 function creditState(
   catalog: Catalog,
   credit: Credit,
@@ -59,6 +68,7 @@ function creditState(
     amount: credit.amount,
     period: credit.period,
     enrolled: isEnrolled(credit, held),
+    skipped: isSkipped(credit, held),
     used,
     left:
       period === null ? null : roundCents(Math.max(0, credit.amount - used)),
@@ -75,10 +85,10 @@ export const creditStates = (
 ) => card.credits.map((c) => creditState(catalog, c, held, date))
 
 export const counts = (s: CreditState) =>
-  s.enrolled && s.left !== null && s.left > 0
+  s.enrolled && !s.skipped && s.left !== null && s.left > 0
 
 // The card's credit at this merchant, if any: one that counts first, then
-// the one with the most left.
+// the one with the most left. A skipped credit isn't mentioned at all.
 export function creditAt(
   catalog: Catalog,
   card: Card,
@@ -87,7 +97,7 @@ export function creditAt(
   date: string,
 ): CreditState | null {
   const here = card.credits
-    .filter((c) => creditCovers(catalog, c, merchant))
+    .filter((c) => !isSkipped(c, held) && creditCovers(catalog, c, merchant))
     .map((c) => creditState(catalog, c, held, date))
     .sort(
       (a, b) =>
@@ -117,3 +127,42 @@ const PER_YEAR: Record<Credit['period'], number> = {
 
 export const creditPerYear = (c: Pick<Credit, 'amount' | 'period'>) =>
   c.amount * PER_YEAR[c.period]
+
+// A card's credits added up over a year, at face value.
+export type CreditsYear = {
+  cardId: string
+  yearly: number // dollars a year
+  creditIds: string[]
+  names: string[] // creditLabel of each
+}
+
+function creditsYear(
+  catalog: Catalog,
+  card: Card,
+  credits: Credit[],
+): CreditsYear {
+  return {
+    cardId: card.id,
+    yearly: roundCents(credits.reduce((sum, c) => sum + creditPerYear(c), 0)),
+    creditIds: credits.map((c) => c.id),
+    names: credits.map((c) => creditLabel(catalog, c)),
+  }
+}
+
+// Every credit on the card, as if each were used in full: for a card the
+// person doesn't hold.
+export const allCreditsYear = (catalog: Catalog, card: Card) =>
+  creditsYear(catalog, card, card.credits)
+
+// The credits a cardholder uses, in full each period: what counts against
+// the fee of a card they hold.
+export const usedCreditsYear = (
+  catalog: Catalog,
+  card: Card,
+  held: WalletCard,
+) =>
+  creditsYear(
+    catalog,
+    card,
+    card.credits.filter((c) => creditInUse(c, held)),
+  )

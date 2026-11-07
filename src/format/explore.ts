@@ -13,8 +13,9 @@ import {
   capitalize,
   choiceName,
   CREDIT_GROUP,
-  CREDITS_LEFT_OUT,
+  CREDITS_APART,
   ENROLL_FIRST,
+  HELD_CREDITS_COUNTED,
   hostname,
   feeText,
   dollarsAndCents,
@@ -31,6 +32,12 @@ const membershipFees = (memberships: MembershipCost[]) =>
     .join('')
 
 const TOP_BEST = 10
+
+// " · $X if you'd use all its credits ($424 a year)"
+const ifCredits = (credits: number, net: number, sign = '', its = 'its') =>
+  credits > 0
+    ? ` · ${sign}${wholeDollars(net)} if you'd use all ${its} credits (${wholeDollars(credits)} a year)`
+    : ''
 
 export function formatExploration(
   r: Exploration,
@@ -128,7 +135,7 @@ export function formatCatalogSimulation(
     const card = s.cards[0]
     if (!card) return
     lines.push(
-      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeDollars(s.net)}  (${wholeDollars(s.rewards)} rewards, ${wholeDollars(s.annualFees)} fee${membershipFees(s.memberships)})${picksText(card.picks)}`,
+      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeDollars(s.net)}  (${wholeDollars(s.rewards)} rewards, ${wholeDollars(s.annualFees)} fee${membershipFees(s.memberships)})${ifCredits(s.otherCredits, s.netIfCreditsUsed)}${picksText(card.picks)}`,
     )
   })
   const pairs = r.pairs.slice(0, top)
@@ -136,7 +143,7 @@ export function formatCatalogSimulation(
     lines.push('', 'Best two-card pairs:')
     pairs.forEach((s, i) => {
       lines.push(
-        `${String(i + 1).padStart(2)}. ${s.cards.map((c) => `${name(c.cardId)}${picksText(c.picks)}`).join(' + ')}  ${wholeDollars(s.net)}`,
+        `${String(i + 1).padStart(2)}. ${s.cards.map((c) => `${name(c.cardId)}${picksText(c.picks)}`).join(' + ')}  ${wholeDollars(s.net)}${ifCredits(s.otherCredits, s.netIfCreditsUsed, '', 'their')}`,
       )
       if (s.alternatives.length > 0)
         lines.push(
@@ -158,7 +165,7 @@ export function formatCatalogSimulation(
   if (notes.size > 0) lines.push('', ...notes)
   lines.push(
     '',
-    `Assumes each card's best picks, activations done each quarter, and no welcome bonuses. ${CREDITS_LEFT_OUT}`,
+    `Assumes each card's best picks, activations done each quarter, and no welcome bonuses. ${CREDITS_APART}`,
   )
   return `${lines.join('\n')}\n`
 }
@@ -170,7 +177,7 @@ export function formatAdditions(
 ): string {
   const name = cardNamer(catalog)
   const lines = [
-    `Your wallet earns about ${wholeDollars(r.current.rewards)} a year on this spending${r.current.annualFees > 0 ? `, with ${wholeDollars(r.current.annualFees)} in annual fees: ${wholeDollars(r.current.net)} after fees` : ''}.`,
+    `Your wallet earns about ${wholeDollars(r.current.rewards)} a year on this spending${r.current.annualFees > 0 ? `, with ${wholeDollars(r.current.annualFees)} in annual fees${r.current.heldCredits > 0 ? ` and ${wholeDollars(r.current.heldCredits)} of credits you use` : ''}: ${wholeDollars(r.current.net)} after fees` : ''}.`,
   ]
   for (const split of splitText(r.current, name)) lines.push(`  ${split}`)
   const gains = r.additions.filter((a) => a.gain > 0)
@@ -183,7 +190,7 @@ export function formatAdditions(
     )
     gains.slice(0, all ? 20 : TOP_SIMULATED).forEach((a, i) => {
       lines.push(
-        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeDollars(a.gain)} a year  (+${wholeDollars(a.extraRewards)} rewards, ${wholeDollars(a.annualFee)} fee${membershipFees(a.simulation.memberships.filter((m) => m.cardIds.includes(a.cardId)))})${picksText(a.picks)}`,
+        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeDollars(a.gain)} a year  (+${wholeDollars(a.extraRewards)} rewards, ${wholeDollars(a.annualFee)} fee${membershipFees(a.simulation.memberships.filter((m) => m.cardIds.includes(a.cardId)))})${ifCredits(a.credits, a.gainIfCreditsUsed, '+')}${picksText(a.picks)}`,
       )
     })
   }
@@ -198,7 +205,7 @@ export function formatAdditions(
   if (notes.size > 0) lines.push('', ...notes)
   lines.push(
     '',
-    `Assumes your picks carry over, rotating categories get activated, and caps start fresh. Annual fees are counted in full: statement credits and perks that offset them are left out. ${CREDITS_LEFT_OUT} Each kind of spending lists the card that earns the most on it over the whole year, so a one-quarter bonus may not show.`,
+    `Assumes your picks carry over, rotating categories get activated, and caps start fresh. ${r.current.heldCredits > 0 ? `${HELD_CREDITS_COUNTED} ` : ''}${CREDITS_APART} Perks like lounge access aren't counted. Each kind of spending lists the card that earns the most on it over the whole year, so a one-quarter bonus may not show.`,
   )
   return `${lines.join('\n')}\n`
 }

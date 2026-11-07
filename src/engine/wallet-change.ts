@@ -36,6 +36,8 @@ export type CardInput = {
   enrolled?: string[]
   // Credit id → dollars of that credit already received this period.
   creditUsed?: Record<string, number>
+  // Statement credit ids the cardholder doesn't use; replaces the list.
+  skippedCredits?: string[]
   // A welcome bonus in progress; null stops tracking it. Spend and deadline
   // default to the card's published offer.
   bonus?: {
@@ -65,6 +67,7 @@ export type CardFields = {
   milestone_usage?: Record<string, { period: string; spent: number }>
   enrolled?: string[]
   credit_usage?: Record<string, { period: string; used: number }>
+  skipped_credits?: string[]
   bonus?: BonusFields | null // null removes it
 }
 
@@ -266,6 +269,18 @@ export function cardFields(
     }
     fields.enrolled = [...new Set(input.enrolled)]
   }
+  if (input.skippedCredits !== undefined) {
+    const ids = card.credits.map((c) => c.id)
+    for (const id of input.skippedCredits) {
+      if (!ids.includes(id))
+        problems.push(
+          ids.length > 0
+            ? `${card.id} has no credit '${id}'. Its credits are: ${idList(ids)}.`
+            : `${card.id} has no statement credits.`,
+        )
+    }
+    fields.skipped_credits = [...new Set(input.skippedCredits)]
+  }
   if (input.creditUsed !== undefined) {
     const usage = { ...held?.credit_usage }
     const anniversary = fields.anniversary ?? held?.anniversary ?? null
@@ -375,6 +390,9 @@ const withFields = (
     : { milestone_usage: f.milestone_usage }),
   ...(f.enrolled === undefined ? {} : { enrolled: f.enrolled }),
   ...(f.credit_usage === undefined ? {} : { credit_usage: f.credit_usage }),
+  ...(f.skipped_credits === undefined
+    ? {}
+    : { skipped_credits: f.skipped_credits }),
   ...(f.bonus ? { bonus: f.bonus } : {}),
 })
 

@@ -9,6 +9,7 @@ import {
   withIntro,
   type IntroWindow,
 } from './intro.ts'
+import { effectiveMemberships } from './memberships.ts'
 import { inEffect, periodKey } from './periods.ts'
 import type { Channel, MerchantResolution, Purchase } from './types.ts'
 
@@ -49,7 +50,13 @@ export function purchaseContext(
     country: purchase.country,
     date: purchase.date,
     amount: purchase.amount,
-    memberships: new Set(wallet.memberships),
+    memberships: new Set(
+      effectiveMemberships(
+        catalog,
+        wallet.memberships,
+        wallet.cards.map((c) => c.id),
+      ),
+    ),
     payment,
   }
 }

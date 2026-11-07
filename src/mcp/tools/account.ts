@@ -87,7 +87,7 @@ export function registerAccountTools(
     {
       title: 'Export the wallet',
       description:
-        'The saved wallet as a wallet.yaml file: card ids, checkout labels, picks, activations, opening dates and anniversaries, memberships, point values, cap usage, welcome-bonus progress, yearly spending toward spend bonuses, and statement credits enrolled in and used. earnrate.dev imports it, and the earnrate command line reads it saved as ~/.earnrate/wallet.yaml. Never card numbers.',
+        'The saved wallet as a wallet.yaml file: card ids, checkout labels, picks, activations, opening dates and anniversaries, memberships, point values, cap usage, welcome-bonus progress, yearly spending toward spend bonuses, and statement credits enrolled in, used and not used. earnrate.dev imports it, and the earnrate command line reads it saved as ~/.earnrate/wallet.yaml. Never card numbers.',
       inputSchema: z.object({}),
       outputSchema: z.object({ yaml: z.string() }),
       annotations: {

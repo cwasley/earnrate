@@ -350,6 +350,9 @@ export const ENROLL_FIRST = 'enroll first'
 // The group of cards with a credit at the store, shown before the ranking.
 export const CREDIT_GROUP = 'With a statement credit'
 
+// A credit the cardholder said they don't use, in list_wallet.
+export const CREDIT_SKIPPED = "marked as one you don't use, so it isn't counted"
+
 // "$75 back each quarter"
 export const creditBack = (c: Pick<Credit, 'amount' | 'period'>) =>
   `${money(c.amount)} back ${CREDIT_PERIODS[c.period]}`
@@ -411,6 +414,44 @@ export const enrollCreditText = (card: string, names: string[]) =>
     ? `Enroll in ${possessive(card)} ${names[0] ?? ''} credit with the issuer, then mark it enrolled.`
     : `Enroll in ${possessive(card)} ${listed(names)} credits with the issuer, then mark them enrolled.`
 
-// Simulations, the cheat sheet and welcome-offer comparisons.
+// The cheat sheet: its picks are by rate alone.
 export const CREDITS_LEFT_OUT =
   'Statement credits (dollars back at a named store) are left out.'
+
+type CreditsTotal = { yearly: number; names: string[] }
+
+// "$424 a year: Dunkin', Uber, Grubhub and Resy"
+export const creditsYearText = (c: CreditsTotal) =>
+  `${wholeDollars(c.yearly)} a year: ${listed(c.names)}`
+
+// A held card's credits the cardholder uses, counted against its fee:
+// "Amex Gold's credits you use (Dunkin' and Uber) count against its fee: $204 a year."
+export const creditsCountedText = (
+  card: string,
+  fee: number,
+  c: CreditsTotal,
+) =>
+  fee > 0
+    ? `${possessive(card)} credits you use (${listed(c.names)}) count against its fee: ${wholeDollars(c.yearly)} a year.`
+    : `${possessive(card)} credits you use (${listed(c.names)}) add ${wholeDollars(c.yearly)} a year.`
+
+// Rankings of cards the person doesn't hold: the honest figure leaves
+// credits out, and the one with them is shown beside it.
+export const CREDITS_APART =
+  "Statement credits (dollars back at named stores) aren't in the ranking: they're worth it only if you'd spend at those places anyway. Where a card has them, what it nets if you'd use them all is shown apart."
+
+export const HELD_CREDITS_COUNTED =
+  "Statement credits on your own cards count against their fees when you use them: once you've marked them enrolled, or right away for ones that need no enrolling, unless you've marked them as credits you don't use."
+
+export const CREDITS_ONLY_IF =
+  "They're worth that only if you'd spend at those places anyway."
+
+// "If you'd use all its statement credits ($424 a year: …), it nets $X a
+// year." `adds` for a card beside the ones already held.
+export const ifCreditsUsedText = (
+  c: CreditsTotal,
+  dollars: number,
+  verb: 'nets' | 'adds' = 'nets',
+  owner = 'its', // "the Amex Gold's" beside another card
+) =>
+  `If you'd use all ${owner} statement credits (${creditsYearText(c)}), it ${verb} ${wholeDollars(dollars)} a year.`

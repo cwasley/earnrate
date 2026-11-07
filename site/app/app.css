@@ -781,6 +781,10 @@ input::-webkit-list-button {
   padding: 0 4px;
 }
 
+.app .editor .credit-use {
+  margin: 0 0 10px;
+}
+
 .field {
   display: grid;
   gap: 4px;

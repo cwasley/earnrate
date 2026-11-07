@@ -24,10 +24,12 @@ import {
   categoryPhrase,
   creditBack,
   CREDIT_GROUP,
+  CREDITS_ONLY_IF,
   currencyName,
   earnText,
   ENROLL_FIRST,
   hostname,
+  ifCreditsUsedText,
   listed,
   longDate,
   money,
@@ -41,6 +43,7 @@ import {
   foreignFeeText,
   possessive,
 } from '../src/engine/text.ts'
+import { allCreditsYear } from '../src/engine/credits.ts'
 import { cardColor } from '../src/format/card-art.ts'
 import type { Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
@@ -518,7 +521,8 @@ function creditsText(card: Card): string {
   const items = card.credits.map((c) => {
     return `<li><strong>${esc(capitalize(`${creditBack(c)} ${creditWhere(catalog, c)}`))}</strong>${c.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}${c.note ? `<br /><span class="muted">${esc(c.note)}</span>` : ''}${evidenceFor(card, c.id)}</li>`
   })
-  return `<h2>Statement credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that.</p><ul>${items.join('')}</ul>`
+  const year = allCreditsYear(catalog, card).yearly
+  return `<h2>Statement credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns: ${esc(wholeDollars(year))} a year if you'd use them all. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that, and counts the ones you use against the annual fee. You can mark any you don't use.</p><ul>${items.join('')}</ul>`
 }
 
 function introRatesText(card: Card): string {
@@ -875,7 +879,23 @@ function compareAnswer(c: Comparison): string {
     (t) =>
       `${findCategory(catalog, t.what) === null ? t.what : t.what.toLowerCase()} ${wholeDollars(t.monthly)}`,
   ).join(', ')
-  return `<p class="answer">${lead} Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks. ${esc(valueText(c))}</p>`
+  const credits = [x, y].flatMap((s) =>
+    s.sim.credits
+      .filter((k) => !k.held)
+      .map((k) =>
+        ifCreditsUsedText(
+          k,
+          s.sim.netIfCreditsUsed,
+          'nets',
+          `the ${possessive(shortName(s.card.id))}`,
+        ),
+      ),
+  )
+  const creditsText =
+    credits.length === 0
+      ? ''
+      : ` ${esc([...credits, CREDITS_ONLY_IF].join(' '))}`
+  return `<p class="answer">${lead} Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks. ${esc(valueText(c))}${creditsText}</p>`
 }
 
 const unverifiedEntry = (e: ExploreEntry | null) =>

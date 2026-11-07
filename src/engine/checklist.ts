@@ -158,7 +158,7 @@ export function checklist(
       })
     }
 
-    const toEnroll = s.credits.filter((c) => !c.enrolled)
+    const toEnroll = s.credits.filter((c) => !c.enrolled && !c.skipped)
     if (toEnroll.length > 0)
       items.push({
         kind: 'enroll',
@@ -171,7 +171,7 @@ export function checklist(
         due: null,
       })
     for (const c of s.credits) {
-      if (!c.enrolled) continue
+      if (!c.enrolled || c.skipped) continue
       // One that needs no enrolling shows once the cardholder uses it, so a
       // card's every credit isn't a to-do for someone who never shops there.
       if (c.left !== null && c.left > 0 && (c.enroll || c.tracked))

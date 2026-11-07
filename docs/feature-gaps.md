@@ -96,12 +96,6 @@ A welcome offer has one spend threshold and one bonus.
 
 - `bank-of-america-atmos-rewards-business`: $25 a year per card on top of the $70 per-company fee.
 
-### Memberships a card implies
-
-Holding some cards means holding a membership, but the wallet asks for memberships separately, so a rate gated on one stays off until the user adds it.
-
-- `chase-prime-visa`: needs Amazon Prime for its Amazon and Whole Foods rates.
-
 ### Memberships without a yearly price
 
 `requires_membership` needs a membership with an `annual_fee`. Some cards need a membership you qualify for, or a service you already pay for, rather than one you buy each year, so these have `annual_fee: 0` and answers can't say who may join.
@@ -129,12 +123,11 @@ A `cardmember_year` milestone runs from the account anniversary date. Citi count
 - `citi-aadvantage-business`: $30,000 for the Companion Certificate.
 - `citi-aadvantage-platinum-select`: $20,000 for the $125 Flight Discount.
 
-### Credits that offset the annual fee
+### Perks that offset the annual fee
 
-Welcome-offer comparisons subtract the whole first-year fee. Cards with fixed yearly credits look worse than they are to someone who uses them. Merchant credits are on cards (`credits:`), but they don't count toward annual-fee math.
+Merchant credits (`credits:`) count against a held card's fee once used, and are shown apart for cards not held. Perks that aren't dollars at a store don't count anywhere.
 
-- Every card with `credits:`, such as `amex-hilton-honors-surpass` ($50 a quarter at Hilton) and `amex-platinum`.
-- `amex-hilton-honors-aspire`: also an Annual Free Night Reward with no spending needed.
+- `amex-hilton-honors-aspire`: an Annual Free Night Reward with no spending needed.
 
 ### Merchant credits the schema can't express
 

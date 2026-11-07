@@ -9,9 +9,9 @@ import {
   pickedCategories,
 } from './evaluate.ts'
 import { introUntil, introWindows, openedOn } from './intro.ts'
-import { membershipName } from './memberships.ts'
+import { effectiveMemberships, membershipName } from './memberships.ts'
 import { milestoneSummaries, type MilestoneSummary } from './milestones.ts'
-import { creditStates } from './credits.ts'
+import { creditStates, usedCreditsYear } from './credits.ts'
 import {
   creditWhere,
   optionName,
@@ -25,13 +25,16 @@ import { activationRules } from './setup.ts'
 import {
   CAP_PERIODS,
   creditBack,
+  creditsCountedText,
   creditLeft,
   ENROLL_FIRST,
   choiceName,
   currencyLabel,
+  CREDIT_SKIPPED,
   earnText,
   listed,
   PAYMENT_PHRASES,
+  shortCardName,
   shortDate,
   wholeDollars,
   words,
@@ -57,6 +60,7 @@ export type CreditSummary = {
   period: Credit['period']
   enroll: boolean // the cardholder must enroll first
   enrolled: boolean // enrolled, or no enrollment needed
+  skipped: boolean // the cardholder doesn't use it: counted nowhere
   currentPeriod: string | null // null for a cardmember year without an anniversary
   until: string | null // the period's last day, YYYY-MM-DD
   used: number
@@ -83,6 +87,10 @@ export type CardSummary = {
   caps: CapSummary[]
   milestones: MilestoneSummary[] // spend milestones and progress toward them
   credits: CreditSummary[] // merchant statement credits and what's left
+  // The credits the cardholder uses, a year at face value: what counts
+  // against the annual fee, and that in words.
+  usedCredits: number
+  usedCreditsText: string | null
   chosen: {
     period: string
     current: boolean
@@ -152,13 +160,18 @@ function headlineRates(
   currency: string,
   today: string,
 ): string[] {
+  const has = effectiveMemberships(
+    catalog,
+    wallet.memberships,
+    wallet.cards.map((c) => c.id),
+  )
   const shown = card.rules
     .filter(
       (r) =>
         inEffect(r, today) &&
         r.rate > card.base_rate &&
         (r.requires?.membership === undefined ||
-          wallet.memberships.includes(r.requires.membership)),
+          has.includes(r.requires.membership)),
     )
     .sort((a, b) => b.rate - a.rate)
   const lines = new Map<string, Rule[]>()
@@ -384,6 +397,7 @@ export function walletSummary(
       caps: capSummaries(catalog, card, held, today),
       milestones: milestoneSummaries(card, held, today),
       credits: creditSummaries(catalog, card, held, today),
+      ...usedCredits(catalog, card, held),
       chosen: held.chosen
         ? {
             period: held.chosen.period,
@@ -423,6 +437,25 @@ export function walletSummary(
   }
 }
 
+function usedCredits(
+  catalog: Catalog,
+  card: Card,
+  held: WalletCard,
+): Pick<CardSummary, 'usedCredits' | 'usedCreditsText'> {
+  const used = usedCreditsYear(catalog, card, held)
+  return {
+    usedCredits: used.yearly,
+    usedCreditsText:
+      used.creditIds.length === 0
+        ? null
+        : creditsCountedText(
+            shortCardName(card.name),
+            card.annual_fee ?? 0,
+            used,
+          ),
+  }
+}
+
 function creditSummaries(
   catalog: Catalog,
   card: Card,
@@ -430,11 +463,13 @@ function creditSummaries(
   today: string,
 ): CreditSummary[] {
   return creditStates(catalog, card, held, today).map((s) => {
-    const status = !s.enrolled
-      ? `${ENROLL_FIRST}, then mark it enrolled`
-      : s.left === null
-        ? "give the card's anniversary to track it"
-        : `${creditLeft(s.left, s.period)}${s.until === null ? '' : `, through ${shortDate(s.until)}`}`
+    const status = s.skipped
+      ? CREDIT_SKIPPED
+      : !s.enrolled
+        ? `${ENROLL_FIRST}, then mark it enrolled`
+        : s.left === null
+          ? "give the card's anniversary to track it"
+          : `${creditLeft(s.left, s.period)}${s.until === null ? '' : `, through ${shortDate(s.until)}`}`
     return {
       id: s.credit.id,
       name: s.name,
@@ -442,6 +477,7 @@ function creditSummaries(
       period: s.period,
       enroll: s.credit.enroll === true,
       enrolled: s.enrolled,
+      skipped: s.skipped,
       currentPeriod: s.key,
       until: s.until,
       used: s.used,

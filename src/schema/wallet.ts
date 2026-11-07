@@ -65,6 +65,9 @@ export const WalletCardSchema = z.strictObject({
   // by credit id, and the dollars of each credit already received this period.
   enrolled: z.array(KebabId).optional(),
   credit_usage: z.record(KebabId, CreditUsage).optional(),
+  // Credits the cardholder doesn't use: left out of the pick, the to-do
+  // list and the fee math, even if enrolled.
+  skipped_credits: z.array(KebabId).optional(),
   // A welcome bonus in progress. Terms default to the card's published
   // offer; set spend, by, points or dollars when yours was different.
   bonus: z

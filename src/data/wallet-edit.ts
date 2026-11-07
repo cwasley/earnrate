@@ -66,6 +66,10 @@ function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
       return f.enrolled === undefined
         ? ''
         : `${indent}enrolled: ${flowList(f.enrolled)}\n`
+    case 'skipped_credits':
+      return f.skipped_credits === undefined
+        ? ''
+        : `${indent}skipped_credits: ${flowList(f.skipped_credits)}\n`
     case 'credit_usage': {
       if (f.credit_usage === undefined) return ''
       const entries = Object.entries(f.credit_usage)
@@ -133,6 +137,7 @@ const FIELDS = [
   'milestone_usage',
   'enrolled',
   'credit_usage',
+  'skipped_credits',
   'bonus',
 ] as const
 

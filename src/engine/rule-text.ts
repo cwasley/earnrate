@@ -195,6 +195,15 @@ export function creditName(catalog: Catalog, credit: Credit): string {
   ])
 }
 
+// A short name for a list of credits: the first store a credit names
+// ("Grubhub" for the dining credit at five chains); creditName has them all.
+export function creditLabel(catalog: Catalog, credit: Credit): string {
+  const [first, ...more] = credit.match.merchants ?? []
+  return first === undefined || more.length === 0
+    ? creditName(catalog, credit)
+    : merchantName(catalog, first)
+}
+
 // "at Lululemon", "at restaurants", "on travel", "on Walmart+ membership":
 // the category's or merchant's own preposition.
 export const creditWhere = (catalog: Catalog, credit: Credit) =>

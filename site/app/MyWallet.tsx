@@ -24,12 +24,16 @@ import {
   resolveSpendLines,
   simulateAdditions,
   TYPICAL_MONTHLY_SPEND,
+  type Addition,
 } from '../../src/engine/simulate.ts'
 import {
   categoryPhrase,
+  creditsCountedText,
+  CREDITS_ONLY_IF,
   currencyLabel,
   currencyName,
   choiceName,
+  ifCreditsUsedText,
 } from '../../src/engine/text.ts'
 import { cardValuation } from '../../src/engine/valuation.ts'
 import type { Recommendation } from '../../src/engine/types.ts'
@@ -363,6 +367,20 @@ function milestoneLine(held: WalletCard): string | null {
     : `Spend bonus: ${wholeDollars(next.spent)} of ${wholeDollars(next.spend)}`
 }
 
+type CreditUse = 'using' | 'not-yet' | 'skipped'
+
+// Enrolled is what the issuer calls it; a credit that needs no enrolling is
+// in use until the cardholder says otherwise.
+const ENROLL_CHOICES: { use: CreditUse; label: string }[] = [
+  { use: 'using', label: 'Enrolled' },
+  { use: 'not-yet', label: 'Not yet' },
+  { use: 'skipped', label: "I don't use this" },
+]
+const AUTOMATIC_CHOICES: { use: CreditUse; label: string }[] = [
+  { use: 'using', label: 'Using it' },
+  { use: 'skipped', label: "I don't use this" },
+]
+
 function CardEditor({
   wallet,
   held,
@@ -391,7 +409,14 @@ function CardEditor({
     trackedSpend ? String(trackedSpend.spent) : '',
   )
   const credits = card ? creditStates(catalog, card, held, localToday()) : []
-  const [enrolled, setEnrolled] = useState<string[]>(held.enrolled ?? [])
+  const [creditUse, setCreditUse] = useState<Record<string, CreditUse>>(() =>
+    Object.fromEntries(
+      credits.map((c) => [
+        c.credit.id,
+        c.skipped ? 'skipped' : c.enrolled ? 'using' : 'not-yet',
+      ]),
+    ),
+  )
   const [creditUsed, setCreditUsed] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       credits
@@ -423,7 +448,15 @@ function CardEditor({
         milestones.map((m) => [m.id, dollars]),
       )
     }
-    if (credits.some((c) => c.credit.enroll)) input.enrolled = enrolled
+    const withUse = (use: CreditUse) =>
+      credits
+        .filter((c) => creditUse[c.credit.id] === use)
+        .map((c) => c.credit.id)
+    if (credits.some((c) => c.credit.enroll))
+      input.enrolled = withUse('using').filter((id) =>
+        credits.some((c) => c.credit.id === id && c.credit.enroll),
+      )
+    if (credits.length > 0) input.skippedCredits = withUse('skipped')
     const used = Object.entries(creditUsed).filter(([, v]) => v !== '')
     if (used.length > 0)
       input.creditUsed = Object.fromEntries(
@@ -589,38 +622,54 @@ function CardEditor({
               : `; this one runs through ${shortDate(c.until)}`}
             .
           </p>
-          {c.credit.enroll ? (
-            <label class="check">
+          <div
+            class="segments credit-use"
+            role="radiogroup"
+            aria-label={`${c.name} credit`}
+          >
+            {(c.credit.enroll ? ENROLL_CHOICES : AUTOMATIC_CHOICES).map(
+              (choice) => {
+                const on = creditUse[c.credit.id] === choice.use
+                return (
+                  <label key={choice.use} class={on ? 'on' : undefined}>
+                    <input
+                      type="radio"
+                      name={`credit-${held.id}-${c.credit.id}`}
+                      checked={on}
+                      onChange={() =>
+                        setCreditUse((prev) => ({
+                          ...prev,
+                          [c.credit.id]: choice.use,
+                        }))
+                      }
+                    />
+                    {choice.label}
+                  </label>
+                )
+              },
+            )}
+          </div>
+          {creditUse[c.credit.id] === 'skipped' ? (
+            <p class="muted small">
+              Left out of picks, the to-do list and the annual-fee math.
+            </p>
+          ) : (
+            <label class="field">
+              Used so far {CREDIT_THIS_PERIOD[c.period]}
               <input
-                type="checkbox"
-                checked={enrolled.includes(c.credit.id)}
-                onChange={(e) => {
-                  const checked = e.currentTarget.checked
-                  setEnrolled((prev) =>
-                    checked
-                      ? [...prev, c.credit.id]
-                      : prev.filter((id) => id !== c.credit.id),
-                  )
+                type="number"
+                inputMode="decimal"
+                min="0"
+                max={String(c.amount)}
+                placeholder="0"
+                value={creditUsed[c.credit.id] ?? ''}
+                onInput={(e) => {
+                  const value = e.currentTarget.value
+                  setCreditUsed((prev) => ({ ...prev, [c.credit.id]: value }))
                 }}
               />
-              I've enrolled with {issuerName(info.issuer)}
             </label>
-          ) : null}
-          <label class="field">
-            Used so far {CREDIT_THIS_PERIOD[c.period]}
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              max={String(c.amount)}
-              placeholder="0"
-              value={creditUsed[c.credit.id] ?? ''}
-              onInput={(e) => {
-                const value = e.currentTarget.value
-                setCreditUsed((prev) => ({ ...prev, [c.credit.id]: value }))
-              }}
-            />
-          </label>
+          )}
         </fieldset>
       ))}
       {info.needsAnniversary ? (
@@ -924,6 +973,19 @@ function PointValues({
   )
 }
 
+function AdditionCredits({ addition }: { addition: Addition }) {
+  const credits = addition.simulation.credits.find(
+    (c) => c.cardId === addition.cardId && !c.held,
+  )
+  if (!credits) return null
+  return (
+    <p class="muted">
+      {ifCreditsUsedText(credits, addition.gainIfCreditsUsed, 'adds')}{' '}
+      {CREDITS_ONLY_IF}
+    </p>
+  )
+}
+
 function WhatIf({
   wallet,
   locked,
@@ -958,6 +1020,17 @@ function WhatIf({
         On your spending from the My spending tab, your cards earn about{' '}
         {wholeDollars(result.current.rewards)} a year.
       </p>
+      {result.current.credits
+        .filter((c) => c.held)
+        .map((c) => (
+          <p class="muted" key={c.cardId}>
+            {creditsCountedText(
+              shortName(c.cardId),
+              cards.get(c.cardId)?.annual_fee ?? 0,
+              c,
+            )}
+          </p>
+        ))}
       {gains.length === 0 ? (
         <p>No card would add more than its annual fee costs.</p>
       ) : (
@@ -983,6 +1056,7 @@ function WhatIf({
                   <small>/yr</small>
                 </span>
               </button>
+              {open === a.cardId ? <AdditionCredits addition={a} /> : null}
               {open === a.cardId ? (
                 <div class="row-buttons">
                   <a class="row-link" href={`/cards/${a.cardId}`}>
