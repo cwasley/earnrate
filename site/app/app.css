@@ -834,7 +834,8 @@ input::-webkit-list-button {
   cursor: pointer;
 }
 
-.row-buttons button.primary {
+.row-buttons button.primary,
+.row-buttons .row-link.primary {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--surface);
@@ -1012,7 +1013,9 @@ button:disabled:active {
   }
   details::details-content {
     height: 0;
-    overflow: clip;
+    /* hidden, not clip: it contains the last child's margin, so the height
+       it grows to is the final one and doesn't jump when the transition ends. */
+    overflow: hidden;
     opacity: 0;
     transition:
       height var(--arrive) var(--ease-out),

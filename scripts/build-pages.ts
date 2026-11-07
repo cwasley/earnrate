@@ -1210,9 +1210,9 @@ function renderCompareIndex(pairs: ComparePair[]): string {
               .filter((p) => p.a === card.id || p.b === card.id)
               .map(
                 (p) =>
-                  `<a href="/compare/${p.slug}">${esc(shortName(p.a === card.id ? p.b : p.a))}</a>`,
+                  `<a href="/compare/${p.slug}">vs ${esc(shortName(p.a === card.id ? p.b : p.a))}</a>`,
               )
-            return `<li>${art(card.id, 36)}<div><strong><a href="/cards/${card.id}">${esc(shortName(card.id))}</a></strong> vs${chipLinks(links)}</div></li>`
+            return `<li>${art(card.id, 36)}<div><strong>${esc(shortName(card.id))}</strong>${chipLinks(links)}</div></li>`
           })
           .join('')}</ul>`,
     )

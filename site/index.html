@@ -765,6 +765,36 @@
         color: var(--muted);
         font-size: 14px;
       }
+      /* The shared footer (siteFooter in scripts/pages/site.ts). */
+      .footer-cols {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px 24px;
+        margin: 4px 0 20px;
+      }
+      .footer-head {
+        margin: 0 0 8px;
+        color: var(--text);
+        font-weight: 600;
+      }
+      .footer-cols ul {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .footer-cols a {
+        color: var(--muted);
+        text-decoration: none;
+      }
+      .footer-cols a:hover {
+        color: var(--accent);
+        text-decoration: underline;
+      }
+      .footer-intro {
+        margin: 0 0 20px;
+      }
     </style>
   </head>
   <body>
@@ -1450,24 +1480,7 @@
         </p>
       </section>
 
-      <footer>
-        <p>
-          The code is MIT licensed. The card data is CC BY-NC 4.0, free for
-          personal use; for commercial use, email
-          <a href="mailto:licensing@earnrate.dev">licensing@earnrate.dev</a>.
-        </p>
-        <p>
-          <a href="/best/">Best card for every store</a> ·
-          <a href="/cards/">All cards</a> ·
-          <a href="/compare/">Card comparisons</a> ·
-          <a href="/quarterly/">5% categories this quarter</a> ·
-          <a href="/categories/">What each category covers</a> ·
-          <a href="/how-stores-code">How stores code</a> ·
-          <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> ·
-          <a href="/companies">For companies</a> ·
-          <a href="/support">Support</a>
-        </p>
-      </footer>
+      <!--earnrate:footer-->
     </main>
     <script type="module" src="/app/main.tsx"></script>
   </body>

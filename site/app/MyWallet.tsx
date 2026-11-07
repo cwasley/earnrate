@@ -1352,6 +1352,7 @@ function Transfer({
 
 export function MyWallet({
   initialQuery,
+  focusAsk,
   wallet,
   perform,
   onDelete,
@@ -1362,6 +1363,7 @@ export function MyWallet({
   connect,
 }: {
   initialQuery: string
+  focusAsk: boolean
   wallet: Wallet | null
   perform: (op: WalletOp) => Promise<Outcome>
   onDelete: () => void
@@ -1393,8 +1395,7 @@ export function MyWallet({
   // the answer, not the top of the wallet.
   const askSection = useRef<HTMLElement>(null)
   useEffect(() => {
-    if (initialQuery.trim() !== '')
-      askSection.current?.scrollIntoView({ block: 'start' })
+    if (focusAsk) askSection.current?.scrollIntoView({ block: 'start' })
   }, [])
 
   // One change: refused, or done with what the card still needs.
@@ -1670,7 +1671,9 @@ export function MyWallet({
           {rec ? (
             <div
               class="results"
-              key={`${asked?.text ?? ''} ${String(asked?.amount ?? '')} ${String(abroad)} ${payment ?? ''}`}
+              // A new question arrives; an amount, country or way of paying
+              // updates it in place.
+              key={asked?.text ?? ''}
             >
               <h4>
                 {rec.merchant.source === 'category'

@@ -258,6 +258,37 @@ footer {
   font-size: 14px;
 }
 
+/* The shared footer (siteFooter in scripts/pages/site.ts). */
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px 24px;
+  margin: 4px 0 20px;
+}
+.footer-head {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-weight: 600;
+}
+.footer-cols ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.footer-cols a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.footer-cols a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.footer-intro {
+  margin: 0 0 20px;
+}
+
 /* earnrate's drawings of cards (src/format/card-art.ts) */
 .card-art {
   display: inline-flex;
@@ -703,7 +734,9 @@ a.button,
   }
   details::details-content {
     height: 0;
-    overflow: clip;
+    /* hidden, not clip: it contains the last child's margin, so the height
+       it grows to is the final one and doesn't jump when the transition ends. */
+    overflow: hidden;
     opacity: 0;
     transition:
       height var(--arrive) var(--ease-out),

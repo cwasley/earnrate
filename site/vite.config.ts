@@ -3,6 +3,7 @@ import { defineConfig, type Plugin } from 'vite'
 import { DATA_DIR, loadCatalog, loadWallet } from '../src/data/load.ts'
 import { localToday } from '../src/engine/periods.ts'
 import { landingFacts, renderLanding } from '../scripts/landing.ts'
+import { siteFooter } from '../scripts/pages/site.ts'
 
 const CATALOG = 'virtual:catalog'
 
@@ -28,13 +29,15 @@ function catalogModule(): Plugin {
 
 const FILLED = ['/index.html', '/companies.html']
 
-// The home page's counts, sample cheat sheet and quoted answer, and the
+// Every page's shared footer (renderLanding fills it too, for the pages it
+// fills). The home page's counts, sample cheat sheet and quoted answer, and the
 // companies page's counts, come from the card data and the example wallet,
 // filled in when the page is built.
 function landingPage(): Plugin {
   return {
     name: 'earnrate-landing',
-    async transformIndexHtml(html, ctx) {
+    async transformIndexHtml(source, ctx) {
+      const html = source.replace('<!--earnrate:footer-->', siteFooter())
       if (!FILLED.some((f) => ctx.filename.endsWith(f))) return html
       const [catalog, sample] = await Promise.all([
         loadCatalog(),

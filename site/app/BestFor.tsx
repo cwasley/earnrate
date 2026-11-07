@@ -390,7 +390,8 @@ export function BestFor({
         {result ? (
           <section
             class="results"
-            key={`${query} ${String(abroad)} ${payment ?? ''}`}
+            // A new question arrives; changing how you pay updates it in place.
+            key={query}
           >
             <h3>
               Best cards for {title(result)}

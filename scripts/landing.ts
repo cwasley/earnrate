@@ -19,6 +19,7 @@ import {
 } from '../src/engine/text.ts'
 import { cardText } from '../src/format/card-text.ts'
 import { findMerchant } from '../src/merchants/resolve.ts'
+import { siteFooter } from './pages/site.ts'
 import type { Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Wallet } from '../src/schema/wallet.ts'
@@ -284,6 +285,7 @@ export function renderLanding(html: string, f: LandingFacts): string {
     decide_fee: esc(f.decide.fee.label),
     decide_compare_href: esc(f.decide.compare.href),
     decide_compare: esc(f.decide.compare.label),
+    footer: siteFooter(),
   }
   return html.replace(/<!--earnrate:(\w+)-->/g, (whole, key: string) => {
     const value = parts[key]

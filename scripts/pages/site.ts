@@ -7,6 +7,47 @@ import { cardArtSvg, cardColor } from '../../src/format/card-art.ts'
 export const SITE = 'https://earnrate.dev'
 const ICON = '/favicon.svg?v=2'
 
+// The footer every page shares, the home page and the policy pages
+// included (site/vite.config.ts fills their <!--earnrate:footer-->).
+// `before` is a page's own line above it, like the data version.
+const FOOTER_GROUPS: [string, [string, string][]][] = [
+  [
+    'Find a card',
+    [
+      ['/best/', 'Best card for every store'],
+      ['/cards/', 'All cards'],
+      ['/compare/', 'Card comparisons'],
+      ['/quarterly/', "This quarter's 5% categories"],
+    ],
+  ],
+  [
+    'How it works',
+    [
+      ['/categories/', 'What each category covers'],
+      ['/how-stores-code', 'How stores code'],
+      ['/#claude', 'Use it in Claude'],
+      ['https://github.com/cwasley/earnrate', 'Source code'],
+    ],
+  ],
+  [
+    'earnrate',
+    [
+      ['/support', 'Support'],
+      ['/companies', 'For companies'],
+      ['/privacy', 'Privacy'],
+      ['/terms', 'Terms'],
+    ],
+  ],
+]
+
+export const siteFooter = (before = '') =>
+  `<footer>${before}<nav class="footer-cols" aria-label="More from earnrate">${FOOTER_GROUPS.map(
+    ([head, links]) =>
+      `<div><p class="footer-head">${head}</p><ul>${links.map(([href, label]) => `<li><a href="${href}">${esc(label)}</a></li>`).join('')}</ul></div>`,
+  ).join(
+    '',
+  )}</nav><p>No affiliate links, ever. The code is MIT licensed; the card data is CC BY-NC 4.0, free for personal use, and <a href="mailto:licensing@earnrate.dev">licensed</a> for commercial use.</p></footer>`
+
 // Search results cut titles and descriptions past about these lengths;
 // tests/pages.test.ts holds every page to them.
 export const TITLE_MAX = 60
@@ -132,10 +173,7 @@ ${page.body}
         <p><a href="/#wallet">Add your cards on earnrate.dev</a> and it picks the best one anywhere, tracking your spending caps and quarterly picks. It runs in your browser, with no sign-up.</p>
         <p>Or <a href="/#claude">use it in Claude</a>: ask on claude.ai, in the desktop app, in Claude Code or in Cowork.</p>
       </aside>
-      <footer>
-        <p>earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms. No affiliate links, ever: rankings depend only on those terms. Card data ${esc(context.dataVersion)}, updated ${esc(context.todayWords)}. Rates change, so check the issuer's terms before you apply. Wrong rate? <a href="/support">Tell us</a>.</p>
-        <p><a href="/">earnrate.dev</a> · <a href="/best/">Best card for every store</a> · <a href="/cards/">All cards</a> · <a href="/compare/">Card comparisons</a> · <a href="/quarterly/">5% categories this quarter</a> · <a href="/categories/">What each category covers</a> · <a href="/how-stores-code">How stores code</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/companies">For companies</a> · <a href="/support">Support</a></p>
-      </footer>
+      ${siteFooter(`<p class="footer-intro">earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms; rankings depend only on those terms. Card data ${esc(context.dataVersion)}, updated ${esc(context.todayWords)}. Rates change, so check the issuer's terms before you apply. Wrong rate? <a href="/support">Tell us</a>.</p>`)}
     </main>
   </body>
 </html>

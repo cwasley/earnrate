@@ -37,6 +37,8 @@ function picksText(picks: Picks): string | null {
   return all.length === 0 ? null : `Picks: ${all.map(words).join(', ')}`
 }
 
+const pairKey = (sim: Simulation) => sim.cards.map((c) => c.cardId).join('+')
+
 // "Everything else" reads last in a card's list.
 const OTHER = catalog.categories.find((c) => c.id === 'other')?.name
 
@@ -82,6 +84,9 @@ export function Spending({
     loadList<Row>('spending', TYPICAL_MONTHLY_SPEND),
   )
   const [adding, setAdding] = useState('')
+  // The open row: a card id, or a pair's ids joined with "+".
+  const [open, setOpen] = useState<string | null>(null)
+  const toggle = (key: string) => setOpen(open === key ? null : key)
   useEffect(() => save('spending', rows), [rows])
 
   const lines = useMemo(
@@ -203,21 +208,26 @@ export function Spending({
                 const picks = picksText(card.picks)
                 return (
                   <li class="result" key={card.cardId}>
-                    <div class="result-top">
+                    <button
+                      type="button"
+                      class="result-top result-toggle"
+                      aria-expanded={open === card.cardId}
+                      onClick={() => toggle(card.cardId)}
+                    >
                       <span class="rank">{i + 1}</span>
                       <CardArt id={card.cardId} />
-                      <div class="result-name">
+                      <span class="result-name">
                         <strong>{shortName(card.cardId)}</strong>
                         <span class="muted">
                           {wholeDollars(s.rewards)} back ·{' '}
                           {feeLabel(card.cardId)}
                         </span>
-                      </div>
+                      </span>
                       <span class="rate">
                         {wholeDollars(s.net)}
                         <small>/yr</small>
                       </span>
-                    </div>
+                    </button>
                     {picks ? <p class="muted">{picks}</p> : null}
                     {s.credits
                       .filter((c) => !c.held)
@@ -226,6 +236,19 @@ export function Spending({
                           {ifCreditsUsedText(c, s.netIfCreditsUsed)}
                         </p>
                       ))}
+                    {open === card.cardId ? (
+                      <div class="row-buttons">
+                        <a class="row-link" href={`/cards/${card.cardId}`}>
+                          See card details
+                        </a>
+                        <a
+                          class="row-link primary"
+                          href={`#wallet&add=${card.cardId}`}
+                        >
+                          Add to my wallet
+                        </a>
+                      </div>
+                    ) : null}
                   </li>
                 )
               })}
@@ -251,14 +274,19 @@ export function Spending({
                       class="result"
                       key={p.cards.map((c) => c.cardId).join('+')}
                     >
-                      <div class="result-top">
+                      <button
+                        type="button"
+                        class="result-top result-toggle"
+                        aria-expanded={open === pairKey(p)}
+                        onClick={() => toggle(pairKey(p))}
+                      >
                         <span class="rank">{i + 1}</span>
                         <span class="art-pair">
                           {p.cards.map((c) => (
                             <CardArt id={c.cardId} key={c.cardId} />
                           ))}
                         </span>
-                        <div class="result-name">
+                        <span class="result-name">
                           <strong>
                             {p.cards
                               .map((c) => shortName(c.cardId))
@@ -269,18 +297,31 @@ export function Spending({
                             {wholeDollars(p.annualFees + p.membershipFees)} in
                             fees
                           </span>
-                        </div>
+                        </span>
                         <span class="rate">
                           {wholeDollars(p.net)}
                           <small>/yr</small>
                         </span>
-                      </div>
+                      </button>
                       <Split sim={p} />
                       {p.alternatives.length > 0 ? (
                         <p class="muted">
                           Same result with{' '}
                           {listed(p.alternatives.map(shortName), 'or')} instead.
                         </p>
+                      ) : null}
+                      {open === pairKey(p) ? (
+                        <div class="row-buttons">
+                          {p.cards.map((c) => (
+                            <a
+                              class="row-link"
+                              href={`/cards/${c.cardId}`}
+                              key={c.cardId}
+                            >
+                              See {shortName(c.cardId)}
+                            </a>
+                          ))}
+                        </div>
                       ) : null}
                     </li>
                   ))}

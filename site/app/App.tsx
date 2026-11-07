@@ -46,7 +46,9 @@ import type { Wallet } from '../../src/schema/wallet.ts'
 type Tab = 'best' | 'spending' | 'wallet'
 
 // State lives in the URL fragment, which browsers never send to a server.
-function readHash(): { tab: Tab; query: string } {
+// `focus`: a link sent a store to My wallet ("Check with your own cards"),
+// so it opens at the answer rather than the top of the wallet.
+function readHash(): { tab: Tab; query: string; focus?: boolean } {
   const hash = new URLSearchParams(location.hash.slice(1))
   if (hash.has('spending')) return { tab: 'spending', query: '' }
   if (hash.has('wallet')) {
@@ -54,7 +56,9 @@ function readHash(): { tab: Tab; query: string } {
     // all-cards ranking answers it instead.
     const query = hash.get('wallet') ?? ''
     const saved = (loadWallet()?.cards.length ?? 0) > 0
-    return { tab: saved || query === '' ? 'wallet' : 'best', query }
+    return saved || query === ''
+      ? { tab: 'wallet', query, focus: query !== '' }
+      : { tab: 'best', query }
   }
   return { tab: 'best', query: hash.get('best') ?? '' }
 }
@@ -304,7 +308,11 @@ async function yamlOf(wallet: Wallet): Promise<string> {
 }
 
 export function App() {
-  const [{ tab, query }, setView] = useState(readHash)
+  const [{ tab, query, focus }, setView] = useState<{
+    tab: Tab
+    query: string
+    focus?: boolean
+  }>(readHash)
   const [initial] = useState(loadState)
   const [settings, setSettings] = useState<Settings>(initial.settings)
   const [wallet, setWallet] = useState<Wallet | null>(initial.wallet)
@@ -656,6 +664,7 @@ export function App() {
         ) : (
           <MyWallet
             initialQuery={query}
+            focusAsk={focus === true}
             wallet={wallet}
             perform={perform}
             onDelete={() => replaceWallet(null)}
