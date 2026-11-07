@@ -161,6 +161,10 @@ export const ChoiceSchema = z.strictObject({
   // `until_changed`: the pick carries over until the cardholder changes it,
   // so a pick made in an earlier period is still current.
   period: z.enum(['month', 'quarter', 'calendar_year', 'until_changed']),
+  // The issuer applies the bonus to the options with the most spending each
+  // period (Citi Custom Cash). A wallet's pick is the one the cardholder
+  // expects, and wording never says the cardholder picks.
+  automatic: z.literal(true).optional(),
   // Option ids that apply when the wallet hasn't picked, e.g. Bilt's dining.
   default: z.array(KebabId).min(1).optional(),
   // Option id → what that option covers: a list of categories; or, when the

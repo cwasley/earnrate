@@ -145,7 +145,7 @@ export function pageKit(
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${esc(page.title)}</title>
-${page.noindex ? '    <meta name="robots" content="noindex" />\n' : ''}    <meta name="description" content="${esc(page.description)}" />
+${page.noindex ? '    <meta name="robots" content="noindex, follow" />\n' : ''}    <meta name="description" content="${esc(page.description)}" />
     <meta name="color-scheme" content="light dark" />
     <link rel="canonical" href="${canonical}" />
     <meta property="og:type" content="article" />
@@ -174,7 +174,7 @@ ${page.body}
         <p><a href="/#wallet">Add your cards on earnrate.dev</a> and it picks the best one anywhere, tracking your spending caps and quarterly picks. It runs in your browser, with no sign-up.</p>
         <p>Or <a href="/#claude">use it in Claude</a>: ask on claude.ai, in the desktop app, in Claude Code or in Cowork.</p>
       </aside>
-      ${siteFooter(`<p class="footer-intro">earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms; rankings depend only on those terms. Card data ${esc(context.dataVersion)}, updated ${esc(context.todayWords)}. Rates change, so check the issuer's terms before you apply. Wrong rate? <a href="/support">Tell us</a>.</p>`)}
+      ${siteFooter(`<p class="footer-intro">earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms; rankings depend only on those terms. Card data ${esc(context.dataVersion)}. Rates change, so check the issuer's terms before you apply. Wrong rate? <a href="/support">Tell us</a>.</p>`)}
     </main>
   </body>
 </html>

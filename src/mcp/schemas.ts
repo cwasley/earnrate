@@ -365,6 +365,7 @@ export const CardSearchSchema = z.object({
             'calendar_year',
             'until_changed',
           ]),
+          automatic: z.boolean(),
           options: z.array(z.string()),
           default: z.array(z.string()).nullable(),
         }),
@@ -468,6 +469,7 @@ export const ExplorationSchema = z.object({
             choice: z.string(),
             options: z.array(z.string()),
             period: z.string(),
+            automatic: z.boolean(),
           })
           .nullable(),
         activation: z.string().nullable(),

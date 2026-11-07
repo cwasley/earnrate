@@ -10,6 +10,7 @@ import {
   capSentence,
   earnText,
   PICK_PERIODS,
+  pickCondition,
   shortCardName,
   wholeDollars,
   words,
@@ -48,7 +49,19 @@ export function cardText(catalog: Catalog) {
     const lines: string[] = []
     if (r.pick)
       lines.push(
-        `Pick ${r.pick.options.map(words).join(' or ')} as a bonus category (${PICK_PERIODS[r.pick.period]})`,
+        r.pick.automatic
+          ? pickCondition(
+              {
+                pick:
+                  cards
+                    .get(cardId)
+                    ?.choices.find((c) => c.id === r.pick?.choice)?.pick ?? 1,
+                ...r.pick,
+              },
+              r.pick.options.map(words).join(' or '),
+              '',
+            )
+          : `Pick ${r.pick.options.map(words).join(' or ')} as a bonus category (${PICK_PERIODS[r.pick.period]})`,
       )
     if (r.activation !== null)
       lines.push(

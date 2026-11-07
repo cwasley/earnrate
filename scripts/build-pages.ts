@@ -18,7 +18,7 @@ import {
   paidMemberships,
 } from '../src/engine/memberships.ts'
 import { findCategory, findMerchant } from '../src/merchants/resolve.ts'
-import { inEffect, localToday } from '../src/engine/periods.ts'
+import { addDays, inEffect, localToday } from '../src/engine/periods.ts'
 import {
   capitalize,
   categoryPhrase,
@@ -70,7 +70,8 @@ import {
   howStoresCodePage,
 } from './pages/coding.ts'
 import { feeWorthKit, feeWorthSection } from './pages/fee-worth.ts'
-import { VALUATION_PROFILES } from '../src/engine/profiles.ts'
+import { button, pageActions, textLink, type Visitor } from './pages/actions.ts'
+import { storeIndexReasons } from './pages/indexing.ts'
 import { drawImages, type OgImage } from './pages/og.ts'
 import { quarterlyCardIds, quarterlyPages } from './pages/quarterly.ts'
 import {
@@ -84,6 +85,7 @@ import {
 import {
   comparePairs,
   comparer,
+  TRANSFER_VALUES,
   type CompareCell,
   type ComparePair,
   type CompareRow,
@@ -105,7 +107,7 @@ const releases = await loadChanges()
 const dataVersion = (await readFile(`${DATA_DIR}VERSION`, 'utf8')).trim()
 const today = process.env.EARNRATE_PAGES_TODAY ?? localToday()
 const ctx = pageContext(catalog, { today, dataVersion })
-const { thisMonth, todayWords, art, layout } = ctx
+const { thisQuarter, dayWords, art, layout } = ctx
 const { ruleWhat, ruleWhatRaw, ruleConditions, evidenceFor } = ctx
 const { merchantName, readsOn } = ctx
 const {
@@ -197,9 +199,47 @@ const options = {
   valuations: {},
 }
 
+// The cards that earn as much as the first, in ranking order.
+const tiedAtTop = (r: Exploration) => {
+  const list = r.ranked.filter((e) => !isUnverified(e))
+  const [top] = list
+  return top
+    ? list.filter(
+        (e) =>
+          Math.abs(e.effectiveReturnPct - top.effectiveReturnPct) < EPSILON,
+      )
+    : []
+}
+
+const TIED_NAMED = 3
+
+// "6 cards tie for the most at Gap: 2% cash back. Citi Double Cash,
+// Fidelity Rewards, SoFi Unlimited 2% and 3 more, all with no annual fee."
+function tieText(tied: ExploreEntry[], where: string): string {
+  const [top] = tied
+  if (!top) return ''
+  const cash = tied.every((e) => e.currency === 'cash')
+  const names = tied
+    .slice(0, TIED_NAMED)
+    .map(
+      (e) =>
+        `<strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a></strong>`,
+    )
+  const rest = tied.length - names.length
+  const free = tied.filter((e) => e.annualFee === 0).length
+  const fees =
+    free === tied.length
+      ? ', all with no annual fee'
+      : free > 0
+        ? `; ${String(free)} of them have no annual fee`
+        : ''
+  return `${String(tied.length)} cards tie for the most ${where}: ${pct(top.effectiveReturnPct)}${cash ? ' cash back' : ' back'}. ${rest > 0 ? `${names.join(', ')} and ${String(rest)} more` : listed(names)}${fees}.`
+}
+
 function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   const [top] = shown
   if (!top) return `<p>No card in earnrate's data earns a bonus here.</p>`
+  const tied = tiedAtTop(r)
   const where = `${page.merchant === null && (page.categoryId === 'other' || readsOn(page.categoryId)) ? 'on' : 'at'} ${esc(page.label)}`
   const codes =
     page.merchant === null || r.merchant.source === 'none'
@@ -212,7 +252,9 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
           `<strong><a href="/cards/${credit.cardId}">${esc(shortName(credit.cardId))}</a></strong> gives ${esc(credit.back)} ${where} with its statement credit${credit.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}.`,
         ]
       : []),
-    `<strong><a href="/cards/${top.cardId}">${esc(shortName(top.cardId))}</a></strong> earns the most ${where}${credit ? ' by rate' : ''}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ` in points at ${num(top.centsPerUnit)}¢ each`}.${codes}`,
+    tied.length > 1
+      ? `${tieText(tied, `${where}${credit ? ' by rate' : ''}`)}${codes}`
+      : `<strong><a href="/cards/${top.cardId}">${esc(shortName(top.cardId))}</a></strong> earns the most ${where}${credit ? ' by rate' : ''}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ` in points at ${num(top.centsPerUnit)}¢ each`}.${codes}`,
   ]
   const topCard = cards.get(top.cardId)
   const needs = topCard
@@ -230,11 +272,12 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
     // "Needs a Costco membership", except where buying means being a member.
     ...needs.map((c) => c.replace(/\.$/, '')),
   ]
-  if (first.length > 0) parts.push(`${first.join('. ')}.`)
+  // With a tie, each card's conditions are in the table below.
+  if (first.length > 0 && tied.length < 2) parts.push(`${first.join('. ')}.`)
   const noFee = shown.find(
     (e) => e.annualFee === 0 && !cards.get(e.cardId)?.requires_membership,
   )
-  if (noFee && noFee !== top)
+  if (noFee && noFee !== top && !tied.includes(noFee))
     parts.push(
       `With no annual fee, <strong>${esc(shortName(noFee.cardId))}</strong> earns ${pct(noFee.effectiveReturnPct)}.`,
     )
@@ -252,9 +295,15 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   return `<p class="answer">${parts.join(' ')}</p>`
 }
 
-function gotchas(r: Exploration): string {
+function gotchas(r: Exploration, merchant: Merchant | null): string {
+  // "How it codes" below already gives the store's own notes.
+  const coding = merchant !== null && hasCodingNotes(merchant)
+  const shownBelow = [merchant?.note, merchant?.ambiguity?.note].filter(
+    (n) => n !== undefined,
+  )
   const items: string[] = []
-  for (const w of r.warnings) items.push(esc(w))
+  for (const w of r.warnings)
+    if (!coding || !shownBelow.some((n) => w.includes(n))) items.push(esc(w))
   const reasons = new Map<string, number>()
   for (const e of r.excluded)
     reasons.set(e.reason, (reasons.get(e.reason) ?? 0) + 1)
@@ -262,7 +311,7 @@ function gotchas(r: Exploration): string {
     items.push(
       `${esc(reason)} ${count === 1 ? 'One card is' : `${String(count)} cards are`} left out.`,
     )
-  if (r.merchant.merchantId !== null) {
+  if (r.merchant.merchantId !== null && !coding) {
     const note = findMerchant(catalog, r.merchant.merchantId)?.note
     if (note) items.push(esc(note))
   }
@@ -303,7 +352,26 @@ function sources(shown: ExploreEntry[]): string {
     : `<h2>From the issuers' terms</h2><ul class="quotes">${items}</ul>`
 }
 
+// A category page lists every store that usually codes as it, so it can
+// answer for stores whose own pages aren't indexed.
+const STORES_OPEN = 24
+
+function categoryStores(page: Page, all: Page[]): string {
+  const stores = all
+    .filter((p) => p.merchant !== null && p.categoryId === page.categoryId)
+    .sort((a, b) => a.label.localeCompare(b.label))
+  if (stores.length === 0) return ''
+  const heading = `${String(stores.length)} ${stores.length === 1 ? 'store' : 'stores'} that usually code as ${esc(page.label)}`
+  const chips = chipLinks(
+    stores.map((p) => `<a href="/best/${p.slug}">${esc(p.label)}</a>`),
+  )
+  return stores.length > STORES_OPEN
+    ? `<h2>Stores</h2><details class="group"><summary><span>${heading}</span></summary>${chips}</details>`
+    : `<h2>${capitalize(heading)}</h2>${chips}`
+}
+
 function related(page: Page, all: Page[]): string {
+  if (page.merchant === null) return categoryStores(page, all)
   const category = all.find(
     (p) => p.merchant === null && p.categoryId === page.categoryId,
   )
@@ -345,36 +413,55 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   const subject = page.label
   const lead = page.merchant === null ? 'for' : 'to use at'
   const title = fitTitle([
-    `Best credit card ${lead} ${subject} (${thisMonth})`,
+    `Best credit card ${lead} ${subject} (${thisQuarter})`,
     `Best credit card ${lead} ${subject}`,
     `Best card ${page.merchant === null ? 'for' : 'at'} ${subject}`,
   ])
   const where = page.merchant === null ? 'on' : 'at'
+  const tied = tiedAtTop(r)
   const description = fitDescription(
-    top
+    top && tied.length > 1
       ? [
-          `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}. Compare ${String(r.ranked.length)} cards by rate, annual fee and conditions, quoted from issuer terms. No affiliate links.`,
-          `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}. ${String(r.ranked.length)} cards compared from issuer terms. No affiliate links.`,
-          `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}, of ${String(r.ranked.length)} cards compared.`,
+          `${shortName(top.cardId)} and ${String(tied.length - 1)} other ${tied.length === 2 ? 'card' : 'cards'} earn ${pct(top.effectiveReturnPct)} ${where} ${subject}, the most of any card. Compare ${String(r.ranked.length)} cards by rate, annual fee and conditions, quoted from issuer terms. No affiliate links.`,
+          `${shortName(top.cardId)} and ${String(tied.length - 1)} other ${tied.length === 2 ? 'card' : 'cards'} earn ${pct(top.effectiveReturnPct)} ${where} ${subject}, the most of any card. ${String(r.ranked.length)} cards compared from issuer terms.`,
+          `${String(tied.length)} cards tie for the most ${where} ${subject}: ${pct(top.effectiveReturnPct)}.`,
         ]
-      : [
-          `Which credit card earns the most ${where} ${subject}, compared across ${String(catalog.cards.length)} cards from issuer terms.`,
-          `Which credit card earns the most ${where} ${subject}.`,
-        ],
+      : top
+        ? [
+            `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}. Compare ${String(r.ranked.length)} cards by rate, annual fee and conditions, quoted from issuer terms. No affiliate links.`,
+            `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}. ${String(r.ranked.length)} cards compared from issuer terms. No affiliate links.`,
+            `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}, of ${String(r.ranked.length)} cards compared.`,
+          ]
+        : [
+            `Which credit card earns the most ${where} ${subject}, compared across ${String(catalog.cards.length)} cards from issuer terms.`,
+            `Which credit card earns the most ${where} ${subject}.`,
+          ],
   )
   const canonical = `${SITE}/best/${page.slug}`
   const definitions = categoryPageFor(page.categoryId)
   const appLink = `/#wallet=${encodeURIComponent(page.merchant?.name ?? catalog.categories.find((c) => c.id === page.categoryId)?.name ?? page.label).replace(/%20/g, '+')}`
   const body = `
       <h1>Best credit card ${page.merchant === null ? 'for' : 'to use at'} ${esc(subject)}</h1>
-      <p class="updated">Updated ${esc(todayWords)}</p>
+      <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
       ${answer(page, r, shown)}
-      <p><a class="button" href="${appLink}">Check with your own cards</a></p>
+      ${pageActions([
+        {
+          when: ['none'],
+          html: button(
+            appLink,
+            `Add your cards to see which to use ${page.merchant === null ? 'for these' : 'here'}`,
+          ),
+        },
+        {
+          when: ['other', 'holds'],
+          html: button(appLink, 'Check with your own cards'),
+        },
+      ])}
       ${creditGroup(r)}
       <h2>Top ${String(shown.length)} cards${r.credits.length > 0 ? ' by rate' : ''} ${page.merchant === null ? 'for' : 'at'} ${esc(subject)}</h2>
       ${table(shown)}
       ${hidden.length > 0 ? `<p class="muted">Not ranked: ${hidden.map((e) => esc(shortName(e.cardId))).join(', ')}, whose rate here isn't confirmed against the issuer's terms yet.</p>` : ''}
-      ${gotchas(r)}
+      ${gotchas(r, page.merchant)}
       ${page.merchant ? howItCodes(ctx, page.merchant, categoryPageFor) : ''}
       ${sources(shown)}
       <h2>How this is ranked</h2>
@@ -387,7 +474,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
     name: title,
     description,
     url: canonical,
-    dateModified: today,
+    dateModified: dataDate,
     mainEntity: {
       '@type': 'ItemList',
       name: `Best credit cards ${page.merchant === null ? 'for' : 'at'} ${subject}`,
@@ -421,6 +508,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       },
     ],
     ...(top ? { image: `/og/best/${page.slug}.jpg` } : {}),
+    noindex: !isIndexed(page),
   })
 }
 
@@ -465,7 +553,7 @@ function renderIndex(all: Page[]): string {
       .join('')}</ul></section>`
   const body = `
       <h1>Best credit card for every store and category</h1>
-      <p class="updated">Updated ${esc(todayWords)}</p>
+      <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
       <p>Which of ${String(catalog.cards.length)} U.S. credit cards earns the most, store by store, from each issuer's own terms. No affiliate links.</p>
       <div class="filter" hidden>
         <label for="filter">Find a store or category</label>
@@ -512,9 +600,14 @@ function choicesText(card: Card): string {
   const items = card.choices.map((c) => {
     const options = Object.keys(c.options).map(words)
     const when = PICK_PERIODS[c.period]
-    return `<li>Pick ${String(c.pick)} of: ${esc(listed(options))} (${esc(when)})${c.default ? `. If you don't pick, it's ${esc(listed(c.default.map(words)))}` : ''}.</li>`
+    return c.automatic
+      ? `<li>${esc(capitalize(`${issuerName(card.issuer)} applies it to ${c.pick === 1 ? 'the one' : `the ${String(c.pick)}`} with the most spending ${when}`))}, of: ${esc(listed(options))}. Set the one you expect in your wallet.</li>`
+      : `<li>Pick ${String(c.pick)} of: ${esc(listed(options))} (${esc(when)})${c.default ? `. If you don't pick, it's ${esc(listed(c.default.map(words)))}` : ''}.</li>`
   })
-  return `<h2>Categories you choose</h2><ul>${items.join('')}</ul>`
+  const heading = card.choices.every((c) => c.automatic)
+    ? 'Categories chosen by your spending'
+    : 'Categories you choose'
+  return `<h2>${heading}</h2><ul>${items.join('')}</ul>`
 }
 
 // Bonuses paid once a year after a spending total. Only the points count in
@@ -642,7 +735,7 @@ function placementGroups(list: Placement[], all: Page[]): string {
     })
   const stores = list.filter((w) => w.page.merchant !== null).length
   const count =
-    list.length > 8
+    list.length > 8 && rows.length > 1
       ? `<p class="muted">${String(stores)} stores in ${String(rows.length)} kinds of purchase.</p>`
       : ''
   const rest = rows.slice(SHOWN_GROUPS)
@@ -735,28 +828,160 @@ function headlineFor(card: Card): string {
   return clauses.length > 0 ? `${clauses.join('; ')}; and ${base}` : base
 }
 
+// Where its everyday rate is the most any card earns: a flat 2% card at
+// stores where no card pays a bonus.
+function topAtBase(
+  card: Card,
+  all: Page[],
+  byPage: Map<string, Exploration>,
+): Page[] {
+  return all.filter((page) => {
+    const r = byPage.get(page.slug)
+    const entry = r && tiedAtTop(r).find((e) => e.cardId === card.id)
+    return (
+      entry !== undefined &&
+      entry.effectiveReturnPct <= card.base_rate * entry.centsPerUnit + EPSILON
+    )
+  })
+}
+
+// Kinds of purchase first, then stores.
+const pageLinks = (list: Page[], n: number) =>
+  [
+    ...list.filter((p) => p.merchant === null),
+    ...list.filter((p) => p.merchant !== null),
+  ]
+    .slice(0, n)
+    .map((p) => `<a href="/best/${p.slug}">${esc(p.label)}</a>`)
+
+// Where it's the best card and in the top 3 at earnrate's default point
+// values; for Amex and Chase points, the same at their transfer value; and
+// where a flat rate ties for the most any card earns.
+function rankSection(
+  card: Card,
+  all: Page[],
+  byPage: Map<string, Exploration>,
+  transferByPage: Map<string, Exploration>,
+): string {
+  const kind = card.business ? 'business card' : 'personal card'
+  const where = placements(card, all, byPage)
+  const firsts = where.filter((w) => w.rank === 1)
+  const others = where.filter((w) => w.rank > 1)
+  const parts: string[] = []
+  if (firsts.length > 0)
+    parts.push(
+      `<h2>Where it's the best ${kind}</h2>${placementGroups(firsts, all)}`,
+    )
+  if (others.length > 0)
+    parts.push(
+      `<h2>Where it's in the top 3</h2>${placementGroups(others, all)}`,
+    )
+
+  const flat = topAtBase(card, all, byPage)
+  const flatText =
+    flat.length > 0
+      ? `Its ${esc(earnText(catalog, card.base_rate, card.currency))} on everything ties for the most any ${kind} earns at ${String(flat.length)} ${flat.length === 1 ? 'store or kind of purchase' : 'stores and kinds of purchase'}, including ${listed(pageLinks(flat, 3))}.`
+      : ''
+
+  const cents = TRANSFER_VALUES[card.currency]
+  const moved = cents === undefined ? [] : placements(card, all, transferByPage)
+  const movedFirsts = moved.filter((w) => w.rank === 1)
+  const gains =
+    movedFirsts.length > firsts.length || moved.length > where.length
+  const program = currencyName(catalog, card.currency)
+  const defaultCents =
+    catalog.currencies.find((c) => c.id === card.currency)?.value_cents ?? 1
+
+  if (where.length === 0)
+    parts.push(
+      `<h2>Where it ranks</h2><p>${
+        flatText !== ''
+          ? flatText
+          : `At earnrate's default of ${num(defaultCents)}¢ a point, other ${kind}s earn as much or more at every store and kind of purchase earnrate ranks.${gains ? ` Counted at the ${String(cents)}¢ transfer value, below, it moves up.` : ' Its bonus rates are below.'}`
+      }</p>`,
+    )
+  else if (flatText !== '') parts.push(`<p>${flatText}</p>`)
+
+  if (gains && cents !== undefined) {
+    const up = moved.filter((w) => w.rank > 1)
+    parts.push(
+      `<h2>If you transfer ${esc(program)} at ${String(cents)}¢</h2><p>Counting ${esc(program)} at ${String(cents)}¢ each, what transferring them to airlines and hotels can be worth, with other Amex and Chase points counted the same way:</p>${
+        movedFirsts.length > 0
+          ? `<h3>Where it's the best ${kind}</h3>${placementGroups(movedFirsts, all)}`
+          : ''
+      }${up.length > 0 ? `<h3>Where it's in the top 3</h3>${placementGroups(up, all)}` : ''}`,
+    )
+  }
+  return parts.join('')
+}
+
+// What a visitor does next from a card page, by what their browser has
+// saved: someone researching the card sees it on their spending, someone
+// with cards sees what it adds, and someone who holds it opens it. A card
+// closed to applicants can only be added.
+function cardActions(card: Card): string {
+  const id = card.id
+  const add = `/#wallet&add=${id}`
+  const open = {
+    when: ['holds'] as Visitor[],
+    html: button(`/#wallet&card=${id}`, 'Open it in your wallet'),
+  }
+  if (card.applications_closed !== undefined)
+    return pageActions(
+      [
+        {
+          when: ['none', 'other'],
+          html: button(add, 'Have it? Add it to your wallet'),
+        },
+        open,
+      ],
+      id,
+    )
+  return pageActions(
+    [
+      {
+        when: ['none'],
+        html: `${button(`/#spending&card=${id}`, 'See it on your spending')} ${textLink(add, 'Already have it? Add it to your wallet')}`,
+      },
+      {
+        when: ['other'],
+        html: `${button(`/#wallet&whatif=${id}`, 'See what it adds to your cards')} ${textLink(add, 'Add it to your wallet')}`,
+      },
+      open,
+    ],
+    id,
+  )
+}
+
 function renderCard(
   card: Card,
   all: Page[],
   byPage: Map<string, Exploration>,
+  transferByPage: Map<string, Exploration>,
 ): string {
   const name = shortName(card.id)
   const issuer = issuerName(card.issuer)
   const currency = catalog.currencies.find((c) => c.id === card.currency)
   const headline = headlineFor(card)
   const closed = card.applications_closed !== undefined && !card.only_at
-  const where = closed ? [] : placements(card, all, byPage)
-  const firsts = where.filter((w) => w.rank === 1)
-  const others = where.filter((w) => w.rank > 1)
-  const kind = card.business ? 'business card' : 'personal card'
   const value =
     currency && card.currency !== 'cash'
       ? ` earnrate counts ${esc(currency.name)} at ${String(currency.value_cents)}¢ each${currency.range ? `; transferring to airlines or hotels can be worth up to about ${String(currency.range[1])}¢` : ''}.`
       : ''
   // "Fidelity Rewards rates", not "Fidelity Rewards rewards rates".
   const rates = /rewards$/i.test(name) ? 'rates' : 'rewards rates'
+  const worth = feeWorth(card)
+  // A card with a fee whose page weighs it answers "is it worth it".
+  const fee = worth && card.annual_fee ? wholeDollars(card.annual_fee) : null
   const title = fitTitle([
-    `${name} ${rates} and annual fee (${thisMonth})`,
+    ...(fee
+      ? [
+          `${name}: earning rates and is the ${fee} fee worth it?`,
+          `${name}: rates and is the ${fee} fee worth it?`,
+          `${name}: is the ${fee} fee worth it?`,
+        ]
+      : []),
+    `${name} ${rates} and annual fee (${thisQuarter})`,
     `${name} ${rates} and annual fee`,
     `${name} ${rates} and fee`,
     name,
@@ -772,28 +997,13 @@ function renderCard(
     `${name}: every earning rate, cap and fee, from ${possessive(issuer)} terms.`,
   ])
   const canonical = `${SITE}/cards/${card.id}`
-  const worth = feeWorth(card)
   const rotates = quarterly.has(card.id)
   const body = `
       <div class="card-head">${art(card.id, 112)}<h1>${esc(card.name)}</h1></div>
       <p class="updated">${esc(issuer)} · ${esc(card.business ? 'Business card' : 'Personal card')} · Checked against ${esc(possessive(issuer))} terms ${esc(shortDate(card.last_verified))}</p>
       <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeLabel(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listed(card.only_at.map((id) => merchantName(id) ?? words(id))))}.` : ''}</p>
-      <p><a class="button" href="/#wallet&add=${card.id}">Add it to your wallet</a></p>
-      ${
-        firsts.length > 0
-          ? `<h2>Where it's the best ${kind}</h2>${placementGroups(firsts, all)}`
-          : ''
-      }
-      ${
-        others.length > 0
-          ? `<h2>Where it's in the top 3</h2>${placementGroups(others, all)}`
-          : ''
-      }
-      ${
-        !closed && where.length === 0
-          ? `<h2>Where it ranks</h2><p>At earnrate's default point values, it isn't one of the top 3 ${kind}s at any store or kind of purchase earnrate ranks: other cards earn as much or more. Its bonus rates are below.</p>`
-          : ''
-      }
+      ${cardActions(card)}
+      ${closed ? '' : rankSection(card, all, byPage, transferByPage)}
       <h2>Earning rates</h2>
       ${rulesList(card)}
       ${choicesText(card)}
@@ -875,7 +1085,7 @@ function renderCardIndex(): string {
     crumbs: [{ name: 'Cards', path: '/cards/' }],
     body: `
       <h1>Credit cards earnrate tracks</h1>
-      <p class="updated">Updated ${esc(todayWords)}</p>
+      <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
       <p>Every earning rule for ${String(catalog.cards.length)} U.S. cards, quoted from the issuer's own terms, and where each card beats the others.</p>
       ${sections}
       <p class="muted">The card pictures are earnrate's drawings in each card's color, not the issuers' designs.</p>`,
@@ -890,8 +1100,6 @@ function renderCardIndex(): string {
 const images: OgImage[] = []
 const { feeWorth } = feeWorthKit(catalog, today)
 // The fee math again with points valued as transfers ("I transfer points").
-const TRANSFER_VALUES: Record<string, number> =
-  VALUATION_PROFILES['points-heavy']
 const { feeWorth: feeWorthTransferred } = feeWorthKit(
   catalog,
   today,
@@ -937,6 +1145,30 @@ function valueText(c: Comparison): string {
   return `Points are counted at ${listed(programs.map((v) => `${num(v.centsPerUnit)}¢ each for ${currencyName(catalog, v.currency)}`))}, what they're worth as cash or travel credit; transferring them to airlines or hotels can be worth more.`
 }
 
+// "Counting Amex Membership Rewards at 1.7¢, … the Amex Gold comes out
+// ahead instead", when either card earns Amex or Chase points.
+function transferText(c: Comparison): string {
+  const t = c.transfer
+  if (!t) return ''
+  const n = (id: string) => esc(shortName(id))
+  const programs = [
+    ...new Set(
+      [c.a, c.b]
+        .filter((k) => TRANSFER_VALUES[k.currency] !== undefined)
+        .map((k) => currencyName(catalog, k.currency)),
+    ),
+  ]
+  const before = Math.round(c.typical.a.net) - Math.round(c.typical.b.net)
+  const gap = Math.round(t.a.net) - Math.round(t.b.net)
+  const [win, lose] = gap >= 0 ? [t.a, t.b] : [t.b, t.a]
+  const [winId, loseId] = gap >= 0 ? [c.a.id, c.b.id] : [c.b.id, c.a.id]
+  const counting = `Counting ${esc(listed(programs))} at ${String(t.cents)}¢ a point, what transferring to airlines and hotels can be worth`
+  if (gap === 0)
+    return ` ${counting}, they come out even: about ${wholeDollars(t.a.net)} a year each.`
+  const flips = Math.sign(gap) !== Math.sign(before)
+  return ` ${counting}, the <strong>${n(winId)}</strong> ${flips ? 'comes out ahead instead' : 'still earns more'}: about ${wholeDollars(win.net)} a year against ${wholeDollars(lose.net)} for the ${n(loseId)}.`
+}
+
 function compareAnswer(c: Comparison): string {
   const [x, y] = (['a', 'b'] as const).map((s) => sideOf(c, s)) as [
     ReturnType<typeof sideOf>,
@@ -949,6 +1181,16 @@ function compareAnswer(c: Comparison): string {
     gap === 0
       ? `At typical U.S. spending, the ${n(x)} and the ${n(y)} come out even: about ${wholeDollars(x.sim.net)} a year each after fees.`
       : `At typical U.S. spending, the <strong>${n(win)}</strong> earns more: about ${wholeDollars(win.sim.net)} a year ${esc(costText(win.sim))}, against ${wholeDollars(lose.sim.net)} for the ${n(lose)} ${esc(costText(lose.sim))}. That's ${wholeDollars(Math.abs(gap))} a year more.`
+  return `<p class="answer">${lead}${transferText(c)}</p>`
+}
+
+// How the verdict is figured, below the rates: the spending, point values
+// and what credits would add.
+function compareBasis(c: Comparison): string {
+  const [x, y] = (['a', 'b'] as const).map((s) => sideOf(c, s)) as [
+    ReturnType<typeof sideOf>,
+    ReturnType<typeof sideOf>,
+  ]
   const spend = TYPICAL_MONTHLY_SPEND.map(
     (t) =>
       `${findCategory(catalog, t.what) === null ? t.what : t.what.toLowerCase()} ${wholeDollars(t.monthly)}`,
@@ -969,7 +1211,7 @@ function compareAnswer(c: Comparison): string {
     credits.length === 0
       ? ''
       : ` ${esc([...credits, CREDITS_ONLY_IF].join(' '))}`
-  return `<p class="answer">${lead} Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks. ${esc(valueText(c))}${creditsText}</p>`
+  return `<h2>How this is figured</h2><p>Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks. ${esc(valueText(c))}${creditsText}</p>`
 }
 
 const unverifiedEntry = (e: ExploreEntry | null) =>
@@ -1009,14 +1251,23 @@ function suits(c: Comparison): string {
   for (const side of ['a', 'b'] as const) {
     const me = c[side]
     const them = c[side === 'a' ? 'b' : 'a']
+    // Only where its rate is a bonus: winning at 1% because the other card
+    // isn't taken suits no one.
+    const bonus = (r: CompareRow) => {
+      const e = r[side].entry
+      return (
+        e !== null &&
+        e.effectiveReturnPct > me.base_rate * e.centsPerUnit + EPSILON
+      )
+    }
     const wins = c.rows
-      .filter((r) => r.winner === side)
+      .filter((r) => r.winner === side && bonus(r))
       .map((r) => {
         const mine = r[side].entry?.effectiveReturnPct ?? 0
         const theirs = (side === 'a' ? r.b : r.a).entry?.effectiveReturnPct
         return { r, mine, theirs, margin: mine - (theirs ?? 0) }
       })
-      .sort((x, y) => y.margin - x.margin)
+      .sort((x, y) => y.r.weight - x.r.weight || y.margin - x.margin)
       .slice(0, 3)
     if (wins.length === 0) continue
     const where = listed(
@@ -1126,7 +1377,7 @@ function compareQuotes(c: Comparison): string {
 function renderCompare(c: Comparison): string {
   const [na, nb] = [shortName(c.a.id), shortName(c.b.id)]
   const title = fitTitle([
-    `${na} vs ${nb}: rewards, fees and which earns more (${thisMonth})`,
+    `${na} vs ${nb}: rewards, fees and which earns more (${thisQuarter})`,
     `${na} vs ${nb}: rewards, fees and which earns more`,
     `${na} vs ${nb}: which earns more`,
     `${na} vs ${nb}`,
@@ -1151,11 +1402,24 @@ function renderCompare(c: Comparison): string {
   const body = `
       <div class="vs-head">${art(c.a.id, 96)}<span class="vs">vs</span>${art(c.b.id, 96)}</div>
       <h1>${esc(na)} vs ${esc(nb)}</h1>
-      <p class="updated">Updated ${esc(todayWords)} · ${esc(issuerName(c.a.issuer))} and ${esc(issuerName(c.b.issuer))} · ${c.a.business ? 'Business cards' : 'Personal cards'}</p>
+      <p class="updated">Updated ${esc(dayWords(compareDate(c.pair)))} · ${esc(issuerName(c.a.issuer))} and ${esc(issuerName(c.b.issuer))} · ${c.a.business ? 'Business cards' : 'Personal cards'}</p>
       ${compareAnswer(c)}
-      <p><a class="button" href="/#wallet">Check with your own cards</a></p>
+      ${pageActions([
+        {
+          when: ['none'],
+          html: button(
+            `/#spending&card=${c.a.id}&card=${c.b.id}`,
+            'Compare them on your spending',
+          ),
+        },
+        {
+          when: ['other', 'holds'],
+          html: `${button(`/#spending&card=${c.a.id}&card=${c.b.id}`, 'Compare them on your spending')} ${textLink(`/#wallet&whatif=${c.a.id}&whatif=${c.b.id}`, 'See what each adds to your cards')}`,
+        },
+      ])}
       <h2>Rates by purchase</h2>
       ${compareTable(c)}
+      ${compareBasis(c)}
       ${suits(c)}
       ${feesTable(c)}
       ${compareOffers(c)}
@@ -1176,7 +1440,7 @@ function renderCompare(c: Comparison): string {
     name: title,
     description,
     url: canonical,
-    dateModified: today,
+    dateModified: compareDate(c.pair),
     about: [cardLd(c.a), cardLd(c.b)],
   }
   return layout({
@@ -1235,7 +1499,7 @@ function renderCompareIndex(pairs: ComparePair[]): string {
     crumbs: [{ name: 'Comparisons', path: '/compare/' }],
     body: `
       <h1>Credit cards compared</h1>
-      <p class="updated">Updated ${esc(todayWords)}</p>
+      <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
       <p>${String(pairs.length)} side-by-side comparisons, each from the issuers' own terms. Each pairs cards from different issuers that earn bonuses in at least two of the same everyday categories with similar fees, or two of one issuer's cards that earn the same points. Business cards are compared only with business cards.</p>
       ${sections}`,
     jsonLd: {
@@ -1246,16 +1510,99 @@ function renderCompareIndex(pairs: ComparePair[]): string {
   })
 }
 
+// lastmod is when a page's facts last changed, not when it was built: a
+// card page follows its card file, the rankings follow all of data/, and
+// the static pages their own source. A dated rule, credit or offer that
+// started or ended changes the pages on that day though no file did. Pages
+// show it as their "Updated" date too.
+const changed = changeDates(ROOT, ['data', 'site'], today)
+function datedChange(card: Card): string {
+  const dates = [
+    ...card.rules,
+    ...card.credits,
+    ...(card.welcome_offer ? [card.welcome_offer] : []),
+  ].flatMap((t) => [
+    ...('valid_from' in t && t.valid_from ? [t.valid_from] : []),
+    ...(t.valid_to ? [addDays(t.valid_to, 1)] : []),
+  ])
+  return latest(dates.filter((d) => d <= today))
+}
+const changedOn = (file: string) => {
+  const id = /^data\/cards\/(.+)\.yaml$/.exec(file)?.[1]
+  const card = id === undefined ? undefined : cards.get(id)
+  return latest([changed(file), card ? datedChange(card) : ''])
+}
+const dataFiles = (await readdir(DATA_DIR, { recursive: true }))
+  .filter((f) => /\.ya?ml$/.test(f))
+  .map((f) => path.join('data', f))
+const dataDate = latest(dataFiles.map(changedOn))
+const filesDate = (files: string[]) => latest(files.map(changedOn))
+const merchantsDate = filesDate(
+  dataFiles.filter((f) => f.startsWith('data/merchants/')),
+)
+const noFeeFiles = catalog.cards
+  .filter((c) => c.annual_fee === 0)
+  .map((c) => `data/cards/${c.id}.yaml`)
+const cardDate = (c: Card) =>
+  latest([
+    changedOn(`data/cards/${c.id}.yaml`),
+    changed('data/currencies.yaml'),
+    // Its annual-fee section compares it with every no-fee card.
+    ...(c.annual_fee ? noFeeFiles.map(changedOn) : []),
+  ])
+const compareDate = (p: ComparePair) =>
+  latest([
+    changedOn(`data/cards/${p.a}.yaml`),
+    changedOn(`data/cards/${p.b}.yaml`),
+    changed('data/currencies.yaml'),
+  ])
+
 const comparisons = comparePairs(catalog, today)
 const all = pages(catalog)
 const results = new Map(
   all.map((p) => [p.slug, exploreCards(catalog, p.query, options)]),
 )
+const categoryPageOf = (p: Page) =>
+  all.find((c) => c.merchant === null && c.categoryId === p.categoryId)
+const indexReasons = new Map(
+  all.map((p) => {
+    const r = results.get(p.slug)
+    const category = categoryPageOf(p)
+    return [
+      p.slug,
+      p.merchant === null || !r
+        ? ['a category']
+        : storeIndexReasons(
+            catalog,
+            p.merchant,
+            r,
+            category && results.get(category.slug),
+            ranked,
+          ),
+    ]
+  }),
+)
+const isIndexed = (p: Page) => (indexReasons.get(p.slug)?.length ?? 0) > 0
 const businessResults = new Map(
   all.map((p) => [
     p.slug,
     exploreCards(catalog, p.query, {
       ...options,
+      filters: { ...ALL_PERSONAL_CARDS, business: true },
+    }),
+  ]),
+)
+// The same rankings with Amex and Chase points at their transfer value, for
+// card pages' "If you transfer" placements.
+const transferOptions = { ...options, valuations: TRANSFER_VALUES }
+const transferResults = new Map(
+  all.map((p) => [p.slug, exploreCards(catalog, p.query, transferOptions)]),
+)
+const businessTransfer = new Map(
+  all.map((p) => [
+    p.slug,
+    exploreCards(catalog, p.query, {
+      ...transferOptions,
       filters: { ...ALL_PERSONAL_CARDS, business: true },
     }),
   ]),
@@ -1274,7 +1621,12 @@ await writeFile(path.join(OUT, 'best', 'index.html'), renderIndex(all))
 for (const card of catalog.cards) {
   await writeFile(
     path.join(OUT, 'cards', `${card.id}.html`),
-    renderCard(card, all, card.business ? businessResults : results),
+    renderCard(
+      card,
+      all,
+      card.business ? businessResults : results,
+      card.business ? businessTransfer : transferResults,
+    ),
   )
 }
 await writeFile(path.join(OUT, 'cards', 'index.html'), renderCardIndex())
@@ -1311,18 +1663,6 @@ await writeFile(
   }),
 )
 
-// lastmod is when a page's facts last changed, not when it was built: a
-// card page follows its card file, the rankings follow all of data/, and
-// the static pages their own source.
-const changed = changeDates(ROOT, ['data', 'site'], today)
-const dataFiles = (await readdir(DATA_DIR, { recursive: true }))
-  .filter((f) => /\.ya?ml$/.test(f))
-  .map((f) => path.join('data', f))
-const dataDate = latest(dataFiles.map(changed))
-const filesDate = (files: string[]) => latest(files.map(changed))
-const merchantsDate = filesDate(
-  dataFiles.filter((f) => f.startsWith('data/merchants/')),
-)
 const bestSlug = (merchantId: string) =>
   all.find((p) => p.merchant?.id === merchantId)?.slug ?? null
 const categorySlug = (id: string) =>
@@ -1350,13 +1690,10 @@ for (const page of generated) {
 }
 await writeFile(path.join(OUT, 'changes.xml'), changesFeed(catalog, releases))
 const changesDate = generated.find((g) => g.path === '/changes')?.lastmod ?? ''
-const noFeeFiles = catalog.cards
-  .filter((c) => c.annual_fee === 0)
-  .map((c) => `data/cards/${c.id}.yaml`)
 const urls: [string, string][] = [
   [`${SITE}/`, latest([dataDate, changed('site/index.html')])],
   [`${SITE}/best/`, dataDate],
-  ...all.map((p): [string, string] => [
+  ...all.filter(isIndexed).map((p): [string, string] => [
     `${SITE}/best/${p.slug}`,
     // A store's "How it codes" follows the merchant files, already in data/.
     p.merchant && hasCodingNotes(p.merchant)
@@ -1366,22 +1703,13 @@ const urls: [string, string][] = [
   [`${SITE}/cards/`, dataDate],
   ...catalog.cards.map((c): [string, string] => [
     `${SITE}/cards/${c.id}`,
-    latest([
-      changed(`data/cards/${c.id}.yaml`),
-      changed('data/currencies.yaml'),
-      // Its annual-fee section compares it with every no-fee card.
-      ...(c.annual_fee ? noFeeFiles.map(changed) : []),
-    ]),
+    cardDate(c),
   ]),
   ...generated.map((g): [string, string] => [`${SITE}${g.path}`, g.lastmod]),
   [`${SITE}/compare/`, dataDate],
   ...comparisons.map((p): [string, string] => [
     `${SITE}/compare/${p.slug}`,
-    latest([
-      changed(`data/cards/${p.a}.yaml`),
-      changed(`data/cards/${p.b}.yaml`),
-      changed('data/currencies.yaml'),
-    ]),
+    compareDate(p),
   ]),
   ...['privacy', 'terms', 'support'].map((page): [string, string] => [
     `${SITE}/${page}`,
@@ -1410,5 +1738,5 @@ Sitemap: ${SITE}/sitemap.xml
 const drawn =
   process.env.EARNRATE_OG === 'off' ? null : await drawImages(ROOT, OUT, images)
 console.log(
-  `Wrote ${String(all.length)} search pages, ${String(catalog.cards.length)} card pages, ${String(comparisons.length)} card comparisons, ${String(generated.length)} other pages, sitemap.xml, _redirects and robots.txt.${drawn ? ` ${String(images.length)} preview images (${String(drawn.drawn)} redrawn), ${(drawn.bytes / 1e6).toFixed(1)} MB.` : ''}`,
+  `Wrote ${String(all.length)} search pages (${String(all.filter((p) => !isIndexed(p)).length)} stores noindex), ${String(catalog.cards.length)} card pages, ${String(comparisons.length)} card comparisons, ${String(generated.length)} other pages, sitemap.xml, _redirects and robots.txt.${drawn ? ` ${String(images.length)} preview images (${String(drawn.drawn)} redrawn), ${(drawn.bytes / 1e6).toFixed(1)} MB.` : ''}`,
 )

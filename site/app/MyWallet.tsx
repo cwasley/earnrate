@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
+import { Fragment } from 'preact'
 import { catalog } from 'virtual:catalog'
 import { walletProblems } from '../../src/data/integrity.ts'
 import { bonusStatus } from '../../src/engine/bonus.ts'
@@ -479,8 +480,10 @@ function CardEditor({
           <fieldset key={choice.id}>
             <legend>
               {choiceName(choice.id)}{' '}
-              {choice.pick === 1 ? 'category' : 'categories'}: pick{' '}
-              {choice.pick}
+              {choice.pick === 1 ? 'category' : 'categories'}:{' '}
+              {choice.automatic
+                ? `the ${choice.pick === 1 ? 'one' : String(choice.pick)} you expect to spend the most in`
+                : `pick ${String(choice.pick)}`}
               {choice.period === 'quarter' ? ' this quarter' : ''}
             </legend>
             {choice.options.map((option) => {
@@ -1039,12 +1042,26 @@ function WhatIf({
   wallet,
   locked,
   onAdd,
+  focus,
 }: {
   wallet: Wallet
   locked: boolean
   onAdd: (cardId: string) => void
+  // A card or comparison page's "See what it adds to your cards": shown,
+  // and the first one open, even when they aren't in the top 3.
+  focus: string[]
 }) {
-  const [open, setOpen] = useState<string | null>(null)
+  const [open, setOpen] = useState<string | null>(focus[0] ?? null)
+  useEffect(() => {
+    const [first] = focus
+    if (first === undefined) return
+    setOpen(first)
+    requestAnimationFrame(() => {
+      document
+        .getElementById(`whatif-${first}`)
+        ?.scrollIntoView({ block: 'center' })
+    })
+  }, [focus])
   const result = useMemo(() => {
     const { lines } = spending(false)
     if (lines.length === 0) return null
@@ -1058,8 +1075,54 @@ function WhatIf({
   }, [wallet])
   if (!result) return null
   const gains = result.additions.filter((a) => a.gain > 0).slice(0, 3)
+  const focused = focus
+    .filter((id) => !gains.some((a) => a.cardId === id))
+    .flatMap((id) => result.additions.filter((a) => a.cardId === id))
+  const row = (a: (typeof result.additions)[number], rank: number) => (
+    <li class="result" key={a.cardId} id={`whatif-${a.cardId}`}>
+      <button
+        type="button"
+        class="result-top result-toggle"
+        aria-expanded={open === a.cardId}
+        onClick={() => setOpen(open === a.cardId ? null : a.cardId)}
+      >
+        <span class="rank">{rank}</span>
+        <CardArt id={a.cardId} />
+        <span class="result-name">
+          <strong>{shortName(a.cardId)}</strong>
+          <span class="muted">
+            +{wholeDollars(a.extraRewards)} back · {feeLabel(a.cardId)}
+          </span>
+        </span>
+        <span class="rate">
+          {a.gain > 0 ? '+' : ''}
+          {wholeDollars(a.gain)}
+          <small>/yr</small>
+        </span>
+      </button>
+      {open === a.cardId ? <AdditionCredits addition={a} /> : null}
+      {open === a.cardId ? (
+        <div class="row-buttons">
+          <a class="row-link" href={`/cards/${a.cardId}`}>
+            See card details
+          </a>
+          <button
+            type="button"
+            class="primary"
+            disabled={locked}
+            onClick={() => {
+              setOpen(null)
+              onAdd(a.cardId)
+            }}
+          >
+            Add to my wallet
+          </button>
+        </div>
+      ) : null}
+    </li>
+  )
   return (
-    <section class="panel">
+    <section class="panel" id="whatif">
       <h3>Would another card help?</h3>
       <p class="muted">
         On your spending from the My spending tab, your cards earn about{' '}
@@ -1079,51 +1142,24 @@ function WhatIf({
       {gains.length === 0 ? (
         <p>No card would add more than its annual fee costs.</p>
       ) : (
-        <ol class="result-list">
-          {gains.map((a, i) => (
-            <li class="result" key={a.cardId}>
-              <button
-                type="button"
-                class="result-top result-toggle"
-                aria-expanded={open === a.cardId}
-                onClick={() => setOpen(open === a.cardId ? null : a.cardId)}
-              >
-                <span class="rank">{i + 1}</span>
-                <CardArt id={a.cardId} />
-                <span class="result-name">
-                  <strong>{shortName(a.cardId)}</strong>
-                  <span class="muted">
-                    +{wholeDollars(a.extraRewards)} back · {feeLabel(a.cardId)}
-                  </span>
-                </span>
-                <span class="rate">
-                  +{wholeDollars(a.gain)}
-                  <small>/yr</small>
-                </span>
-              </button>
-              {open === a.cardId ? <AdditionCredits addition={a} /> : null}
-              {open === a.cardId ? (
-                <div class="row-buttons">
-                  <a class="row-link" href={`/cards/${a.cardId}`}>
-                    See card details
-                  </a>
-                  <button
-                    type="button"
-                    class="primary"
-                    disabled={locked}
-                    onClick={() => {
-                      setOpen(null)
-                      onAdd(a.cardId)
-                    }}
-                  >
-                    Add to my wallet
-                  </button>
-                </div>
-              ) : null}
-            </li>
-          ))}
-        </ol>
+        <ol class="result-list">{gains.map((a, i) => row(a, i + 1))}</ol>
       )}
+      {focused.map((f) => (
+        <Fragment key={f.cardId}>
+          <p class="muted">
+            {shortName(f.cardId)}{' '}
+            {f.gain > 0
+              ? 'would add this much, after its annual fee:'
+              : 'would add less than its annual fee costs:'}
+          </p>
+          <ol class="result-list">
+            {row(
+              f,
+              result.additions.findIndex((a) => a.cardId === f.cardId) + 1,
+            )}
+          </ol>
+        </Fragment>
+      ))}
     </section>
   )
 }
@@ -1446,7 +1482,9 @@ export function MyWallet({
   // the answer, not the top of the wallet.
   const askSection = useRef<HTMLElement>(null)
   useEffect(() => {
-    if (focusAsk) askSection.current?.scrollIntoView({ block: 'start' })
+    if (!focusAsk) return
+    track('page-check')
+    askSection.current?.scrollIntoView({ block: 'start' })
   }, [])
 
   // One change: refused, or done with what the card still needs.
@@ -1520,15 +1558,38 @@ export function MyWallet({
 
   // A card page's "Add it to your wallet" arrives as #wallet&add=<card id>,
   // on load or as a change to the address. The id is read once and cleared.
+  // `whatif=<card>` opens "Would another card help?" at that card, and
+  // `card=<card>` opens a held card's Settings, both from a card page.
+  const [whatIf, setWhatIf] = useState<string[]>([])
   const addFromAddress = () => {
     const params = new URLSearchParams(location.hash.slice(1))
-    const cardId = params.get('add')
-    if (cardId === null) return
-    params.delete('add')
+    const param = (['add', 'whatif', 'card'] as const).find((k) =>
+      params.has(k),
+    )
+    if (param === undefined) return
+    const ids = params
+      .getAll(param)
+      .filter((id) => catalog.cards.some((c) => c.id === id))
+    for (const k of ['add', 'whatif', 'card']) params.delete(k)
     const rest = params.toString().replace(/=(?=&|$)/g, '')
     history.replaceState(null, '', `#${rest || 'wallet'}`)
-    if (!catalog.cards.some((c) => c.id === cardId)) return
-    void addAndOpen(cardId)
+    const [cardId] = ids
+    if (cardId === undefined) return
+    if (param === 'add') {
+      track('page-add')
+      void addAndOpen(cardId)
+    } else if (param === 'whatif') {
+      track('page-whatif')
+      setWhatIf(ids)
+    } else {
+      track('page-settings')
+      if (wallet?.cards.some((c) => c.id === cardId)) openCardSettings(cardId)
+      else
+        setMessage({
+          text: `${shortName(cardId)} isn't in your wallet.`,
+          error: false,
+        })
+    }
   }
   const addFromAddressRef = useRef(addFromAddress)
   addFromAddressRef.current = addFromAddress
@@ -1600,6 +1661,11 @@ export function MyWallet({
               ? "Add the cards you have, and earnrate tells you which one to use anywhere. They're saved in your Claude wallet too: never a card number."
               : 'Add the cards you have, and earnrate tells you which one to use anywhere. Your wallet is saved only in this browser: no account, and never a card number.'}
           </p>
+          {asked ? (
+            <p>
+              Add yours, and earnrate says which one to use at {asked.text}.
+            </p>
+          ) : null}
           <fieldset class="lock" disabled={locked}>
             <AddCard wallet={wallet} onChange={apply} />
           </fieldset>
@@ -1749,6 +1815,7 @@ export function MyWallet({
         wallet={wallet}
         locked={locked}
         onAdd={(cardId) => void addAndOpen(cardId)}
+        focus={whatIf}
       />
       {connect}
       {transfer}

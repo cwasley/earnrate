@@ -1,6 +1,6 @@
 // Everything a page module needs, built once from the catalog, so a test
 // can render a page from the same data the build uses.
-import { longDate, monthYear } from '../../src/engine/text.ts'
+import { longDate, quarterYear } from '../../src/engine/text.ts'
 import { cardText } from '../../src/format/card-text.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import { ruleKit } from './rules.ts'
@@ -22,7 +22,9 @@ export function pageContext(
     catalog,
     today: options.today,
     todayWords,
-    thisMonth: monthYear(options.today),
+    // "November 4, 2026": a page's "Updated" date, from its lastmod.
+    dayWords: longDate,
+    thisQuarter: quarterYear(options.today),
     ...cardText(catalog),
     ...pageKit(catalog, { dataVersion: options.dataVersion, todayWords }),
     ...ruleKit(catalog),

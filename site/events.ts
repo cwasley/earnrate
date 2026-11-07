@@ -25,6 +25,12 @@ export const EVENTS = [
   'cta-save-cards',
   'cta-pass-hint',
   'cta-bottom',
+  // Arrivals from the static pages' buttons
+  'page-spending',
+  'page-whatif',
+  'page-settings',
+  'page-add',
+  'page-check',
   // Links for choosing a card
   'decide-fee',
   'decide-compare',

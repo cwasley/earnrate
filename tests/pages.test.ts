@@ -122,10 +122,65 @@ describe('the built static pages', () => {
       const rel = path.relative(out, file).split(path.sep).join('/')
       if (rel === '404.html') continue
       const url = `/${rel.replace(/index\.html$/, '').replace(/\.html$/, '')}`
-      if (!listed.has(url)) missing.push(`${url} not in the sitemap`)
+      const noindex = readFileSync(file, 'utf8').includes(
+        '<meta name="robots" content="noindex, follow" />',
+      )
+      if (noindex && listed.has(url))
+        missing.push(`${url} is noindex but in the sitemap`)
+      if (!noindex && !listed.has(url))
+        missing.push(`${url} not in the sitemap`)
       if (!linked.has(url)) missing.push(`${url} not linked from any page`)
     }
     expect(missing).toEqual([])
+  })
+
+  test("a category page gives a shared pick rule's terms for that category only", () => {
+    const dining = readFileSync(
+      path.join(out, 'categories', 'dining.html'),
+      'utf8',
+    )
+    const gold = dining.slice(dining.indexOf('/cards/amex-business-gold'))
+    const block = gold.slice(0, gold.indexOf('</div>'))
+    expect(block).toContain('restaurants located in the U.S')
+    expect(block).not.toMatch(
+      /Any purchases from Google Fi|gas at grocery|When transit/,
+    )
+    // Personal cards come before business cards within an issuer.
+    expect(dining.indexOf('/cards/amex-gold"')).toBeLessThan(
+      dining.indexOf('/cards/amex-business-gold'),
+    )
+  })
+
+  test("a card page's next step follows what the visitor has saved", () => {
+    const html = readFileSync(path.join(out, 'cards', 'amex-gold.html'), 'utf8')
+    const actions = /<div class="page-actions"[\s\S]*?<\/script>/.exec(
+      html,
+    )?.[0]
+    expect(actions).toContain(
+      'data-when="none"><a class="button" href="/#spending&amp;card=amex-gold"',
+    )
+    expect(actions).toContain(
+      'data-when="other" hidden><a class="button" href="/#wallet&amp;whatif=amex-gold"',
+    )
+    expect(actions).toContain(
+      'data-when="holds" hidden><a class="button" href="/#wallet&amp;card=amex-gold"',
+    )
+    // It reads the wallet saved in this browser and sends nothing.
+    expect(actions).toContain("localStorage.getItem('earnrate:wallet')")
+    expect(actions).not.toMatch(/fetch|sendBeacon|XMLHttpRequest/)
+  })
+
+  test('only store pages with something of their own are indexed', () => {
+    const page = (slug: string) =>
+      readFileSync(path.join(out, 'best', `${slug}.html`), 'utf8')
+    const noindex = (slug: string) => page(slug).includes('content="noindex')
+    // Notes on how it codes, a credit there, a ranking of its own.
+    for (const slug of ['costco', 'lululemon', 'amazon', 'groceries'])
+      expect(noindex(slug), slug).toBe(false)
+    // Ranked exactly like supermarkets, with nothing about Aldi itself.
+    expect(noindex('aldi')).toBe(true)
+    // Its category page lists it, so it's still reachable and answerable.
+    expect(page('groceries')).toContain('href="/best/aldi"')
   })
 
   test('pages carry breadcrumbs and no review, rating or FAQ markup', () => {

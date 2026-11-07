@@ -45,6 +45,10 @@ export const longDate = (date: string) =>
 export const monthYear = (date: string) =>
   dateWords(date, { month: 'long', year: 'numeric' })
 
+// "Q4 2026", from an ISO date.
+export const quarterYear = (date: string) =>
+  `Q${String(Math.floor((Number(date.slice(5, 7)) - 1) / 3) + 1)} ${date.slice(0, 4)}`
+
 // Always cents ($4.00), for what one purchase earns. A loss reads −$4.00.
 export const dollarsAndCents = (n: number) =>
   `${n < 0 ? '−' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -303,6 +307,47 @@ export const PICK_PERIODS: Record<Choice['period'], string> = {
   quarter: 'each quarter',
   calendar_year: 'each year',
   until_changed: 'until you change it',
+}
+
+type ChoiceWording = Pick<Choice, 'pick' | 'period'> & {
+  automatic?: boolean | undefined
+}
+
+// "the 2 categories you pick each quarter", or for a card whose issuer
+// applies the bonus itself, "the category you spend the most in each month".
+// `oneOf` reads as one option of several: "one of the 2 categories …".
+export function choicePhrase(c: ChoiceWording, oneOf = false): string {
+  const which =
+    c.pick === 1
+      ? 'the category'
+      : `${oneOf ? 'one of ' : ''}the ${String(c.pick)} categories`
+  const when = c.period === 'until_changed' ? '' : ` ${PICK_PERIODS[c.period]}`
+  return c.automatic
+    ? `${which} you spend the most in${when}`
+    : `${which} you pick${when}`
+}
+
+// What earning a picked rate takes, for an answer's conditions: "Needs
+// dining as its top-category pick (picked each month)", or for an automatic
+// choice, "Counts when dining is the category you spend the most in that
+// month".
+export function pickCondition(
+  c: ChoiceWording,
+  options: string,
+  name: string,
+): string {
+  if (c.automatic) {
+    const period = {
+      month: ' that month',
+      quarter: ' that quarter',
+      calendar_year: ' that year',
+      until_changed: '',
+    }[c.period]
+    return c.pick === 1
+      ? `Counts when ${options} is the category you spend the most in${period}`
+      : `Counts when ${options} is one of the ${String(c.pick)} categories you spend the most in${period}`
+  }
+  return `Needs ${options} as its ${name} pick (${c.period === 'until_changed' ? '' : 'picked '}${PICK_PERIODS[c.period]})`
 }
 
 // Intro rates (a card's first 365 days): "first year", "first 90 days".

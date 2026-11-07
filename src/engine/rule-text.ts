@@ -10,7 +10,7 @@ import {
   listed,
   num,
   PAYMENT_PHRASES,
-  PICK_PERIODS,
+  choicePhrase,
   wholeDollars,
   words,
 } from './text.ts'
@@ -72,13 +72,7 @@ export function ruleParts(
   if (m.choice !== undefined) {
     const choice = card?.choices.find((c) => c.id === m.choice)
     if (!choice) return [`your ${choiceName(m.choice)} picks`]
-    const which =
-      choice.pick === 1
-        ? 'the category'
-        : `the ${String(choice.pick)} categories`
-    return [
-      `${which} you pick${choice.period === 'until_changed' ? '' : ` ${PICK_PERIODS[choice.period]}`}`,
-    ]
+    return [choicePhrase(choice)]
   }
   const merchants = m.merchants ?? []
   const categories = (m.categories ?? []).map((c) => categoryPhrase(catalog, c))

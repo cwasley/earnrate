@@ -335,7 +335,7 @@ export function howItCodes(
       `<p>${way === merchant.category ? 'Coded' : 'If it codes'} as ${esc(codesText(ctx, way))}, ${String(paying.length)} ${paying.length === 1 ? 'card pays' : 'cards pay'} a category bonus here: ${namedList(
         paying.map(
           (p) =>
-            `${cardLink(ctx, p.card)} (${esc(earnText(ctx.catalog, p.rule.rate, p.card.currency))})`,
+            `${cardLink(ctx, p.card)} (${esc(earnText(ctx.catalog, p.rule.rate, p.card.currency))}${p.rule.requires?.membership ? ` with ${esc(ctx.membershipName(p.rule.requires.membership))}` : ''})`,
         ),
       )}.</p>`,
     )
@@ -485,7 +485,7 @@ export function howStoresCodePage(
   const path = '/how-stores-code'
   const body = `
       <h1>How stores code</h1>
-      <p class="updated">Updated ${esc(ctx.todayWords)}</p>
+      <p class="updated">Updated ${esc(ctx.dayWords(lastmod))}</p>
       <p>A card's bonus depends on how the store's charge is coded (its merchant category code), not on what you bought. These answers come from earnrate's notes on each store and from each card's own rules, checked by earnrate's engine. A store's page shows every card's rate there.</p>
       <ul>${answers.map((a) => `<li><a href="#${questionId(a.q.heading)}">${esc(a.q.heading)}</a></li>`).join('')}</ul>
       ${answers.map((a) => a.html).join('')}

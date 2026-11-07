@@ -13,6 +13,7 @@ import { daysBetween } from './periods.ts'
 import { rotationGap, rotationGapText } from './rotation.ts'
 import { creditName, creditWhere, introWhat } from './rule-text.ts'
 import {
+  choicePhrase,
   creditBack,
   creditTerms,
   ENROLL_FIRST,
@@ -25,6 +26,7 @@ export type CardChoiceInfo = {
   id: string
   pick: number // how many options the cardholder picks
   period: Card['choices'][number]['period']
+  automatic: boolean // the issuer applies it to the most-spent options
   options: string[]
   default: string[] | null
 }
@@ -199,6 +201,7 @@ export function cardInfo(
       id: c.id,
       pick: c.pick,
       period: c.period,
+      automatic: c.automatic === true,
       options: Object.keys(c.options),
       default: c.default ?? null,
     })),
@@ -298,8 +301,10 @@ export function setupNotes(
       kind: 'pick',
       text:
         choice.default && picked.has(choice.id)
-          ? `${possessive(name)} ${choice.id} pick is assumed to be ${idList(choice.default)}, the default. Set it if a different one was picked (${String(choice.pick)} of: ${options}).`
-          : `${name} needs its ${choice.id} pick for this period (${String(choice.pick)} of: ${options}). Until then those categories earn the base rate.`,
+          ? `${possessive(name)} ${choice.id} pick is assumed to be ${idList(choice.default)}, the default. Set it if ${choice.automatic ? 'you expect a different one to have the most spending' : 'a different one was picked'} (${String(choice.pick)} of: ${options}).`
+          : choice.automatic
+            ? `${name} applies its bonus to ${choicePhrase(choice)}; set its ${choice.id} pick to the one you expect (${String(choice.pick)} of: ${options}). Until then those categories earn the base rate.`
+            : `${name} needs its ${choice.id} pick for this period (${String(choice.pick)} of: ${options}). Until then those categories earn the base rate.`,
     })
   }
 

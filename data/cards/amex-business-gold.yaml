@@ -25,6 +25,7 @@ choices:
   - id: top-two
     pick: 2
     period: month
+    automatic: true
     options:
       us-advertising: [online_advertising]
       us-electronics-software-cloud: [electronics]

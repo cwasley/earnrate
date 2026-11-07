@@ -99,6 +99,18 @@ a {
   padding: 14px 16px;
 }
 
+/* A page's next step: one button and, beside it, a plain link. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.actions[hidden] {
+  display: none;
+}
+
 .button {
   display: inline-block;
   background: var(--accent);

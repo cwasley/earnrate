@@ -9,6 +9,7 @@ import {
   type ExploreQuery,
 } from '../src/engine/explore.ts'
 import { VALUATION_PROFILES } from '../src/engine/profiles.ts'
+import { ruleParts } from '../src/engine/rule-text.ts'
 import { findCategory } from '../src/merchants/resolve.ts'
 import {
   resolveSpendLines,
@@ -443,4 +444,29 @@ test('abroad: tier rates are net of the fee, and the answer says it was treated 
       ' ',
     ),
   ).not.toMatch(/outside the U\.S\./)
+})
+
+describe('categories the issuer applies by spending', () => {
+  test('never say the cardholder picks', () => {
+    for (const id of ['citi-custom-cash', 'amex-business-gold']) {
+      const card = catalog.cards.find((c) => c.id === id)
+      const rule = card?.rules.find((r) => r.match.choice !== undefined)
+      if (!card || !rule) throw new Error(`no choice rule on ${id}`)
+      const what = ruleParts(catalog, rule, card).join(' ')
+      expect(what).toMatch(/you spend the most in each month/)
+      expect(what).not.toMatch(/you pick/)
+    }
+  })
+
+  test('a ranking says the bonus follows spending', () => {
+    const r = exploreCards(catalog, query({ category: 'dining' }), {
+      ...casual,
+      filters: { ...ALL_PERSONAL_CARDS, business: true },
+    })
+    const gold = r.ranked.find((e) => e.cardId === 'amex-business-gold')
+    expect(gold?.requirements.pick?.automatic).toBe(true)
+    expect(gold?.conditions.join(' ')).toMatch(
+      /Counts when restaurants is one of the 2 categories you spend the most in that month/,
+    )
+  })
 })

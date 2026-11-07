@@ -1,4 +1,4 @@
-import type { ComponentChildren } from 'preact'
+import { Fragment, type ComponentChildren } from 'preact'
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import type { Picks } from '../../src/engine/explore.ts'
@@ -85,8 +85,24 @@ export function Spending({
     loadList<Row>('spending', TYPICAL_MONTHLY_SPEND),
   )
   const [adding, setAdding] = useState('')
+  // Cards a card or comparison page asked about (#spending&card=<id>):
+  // shown with their rank even below the top 5, the first one open.
+  const [focus] = useState(() =>
+    new URLSearchParams(location.hash.slice(1))
+      .getAll('card')
+      .filter((id) => catalog.cards.some((c) => c.id === id)),
+  )
+  useEffect(() => {
+    if (focus.length === 0) return
+    track('page-spending')
+    requestAnimationFrame(() => {
+      document
+        .getElementById(`single-${focus[0] ?? ''}`)
+        ?.scrollIntoView({ block: 'center' })
+    })
+  }, [focus])
   // The open row: a card id, or a pair's ids joined with "+".
-  const [open, setOpen] = useState<string | null>(null)
+  const [open, setOpen] = useState<string | null>(focus[0] ?? null)
   const toggle = (key: string) => setOpen(open === key ? null : key)
   useEffect(() => save('spending', rows), [rows])
 
@@ -119,6 +135,53 @@ export function Spending({
         ]),
       ]
     : []
+
+  const singleRow = (s: Simulation, rank: number) => {
+    const card = s.cards[0]
+    if (!card) return null
+    const picks = picksText(card.picks)
+    return (
+      <li class="result" key={card.cardId} id={`single-${card.cardId}`}>
+        <button
+          type="button"
+          class="result-top result-toggle"
+          aria-expanded={open === card.cardId}
+          onClick={() => toggle(card.cardId)}
+        >
+          <span class="rank">{rank}</span>
+          <CardArt id={card.cardId} />
+          <span class="result-name">
+            <strong>{shortName(card.cardId)}</strong>
+            <span class="muted">
+              {wholeDollars(s.rewards)} back · {feeLabel(card.cardId)}
+            </span>
+          </span>
+          <span class="rate">
+            {wholeDollars(s.net)}
+            <small>/yr</small>
+          </span>
+        </button>
+        {picks ? <p class="muted">{picks}</p> : null}
+        {s.credits
+          .filter((c) => !c.held)
+          .map((c) => (
+            <p class="muted" key={c.cardId}>
+              {ifCreditsUsedText(c, s.netIfCreditsUsed)}
+            </p>
+          ))}
+        {open === card.cardId ? (
+          <div class="row-buttons">
+            <a class="row-link" href={`/cards/${card.cardId}`}>
+              See card details
+            </a>
+            <a class="row-link primary" href={`#wallet&add=${card.cardId}`}>
+              Add to my wallet
+            </a>
+          </div>
+        ) : null}
+      </li>
+    )
+  }
 
   const update = (i: number, monthly: number) =>
     setRows(rows.map((r, j) => (j === i ? { ...r, monthly } : r)))
@@ -203,57 +266,35 @@ export function Spending({
           <section class="results">
             <h3>Best single cards</h3>
             <ol class="result-list">
-              {result.singles.slice(0, 5).map((s, i) => {
-                const card = s.cards[0]
-                if (!card) return null
-                const picks = picksText(card.picks)
-                return (
-                  <li class="result" key={card.cardId}>
-                    <button
-                      type="button"
-                      class="result-top result-toggle"
-                      aria-expanded={open === card.cardId}
-                      onClick={() => toggle(card.cardId)}
-                    >
-                      <span class="rank">{i + 1}</span>
-                      <CardArt id={card.cardId} />
-                      <span class="result-name">
-                        <strong>{shortName(card.cardId)}</strong>
-                        <span class="muted">
-                          {wholeDollars(s.rewards)} back ·{' '}
-                          {feeLabel(card.cardId)}
-                        </span>
-                      </span>
-                      <span class="rate">
-                        {wholeDollars(s.net)}
-                        <small>/yr</small>
-                      </span>
-                    </button>
-                    {picks ? <p class="muted">{picks}</p> : null}
-                    {s.credits
-                      .filter((c) => !c.held)
-                      .map((c) => (
-                        <p class="muted" key={c.cardId}>
-                          {ifCreditsUsedText(c, s.netIfCreditsUsed)}
-                        </p>
-                      ))}
-                    {open === card.cardId ? (
-                      <div class="row-buttons">
-                        <a class="row-link" href={`/cards/${card.cardId}`}>
-                          See card details
-                        </a>
-                        <a
-                          class="row-link primary"
-                          href={`#wallet&add=${card.cardId}`}
-                        >
-                          Add to my wallet
-                        </a>
-                      </div>
-                    ) : null}
-                  </li>
+              {result.singles.slice(0, 5).map((s, i) => singleRow(s, i + 1))}
+            </ol>
+            {focus
+              .filter(
+                (id) =>
+                  !result.singles
+                    .slice(0, 5)
+                    .some((s) => s.cards[0]?.cardId === id),
+              )
+              .map((id) => {
+                const rank = result.singles.findIndex(
+                  (s) => s.cards[0]?.cardId === id,
+                )
+                const s = result.singles[rank]
+                return s ? (
+                  <Fragment key={id}>
+                    <p class="muted">
+                      Where the {shortName(id)} ranks on this spending:
+                    </p>
+                    <ol class="result-list">{singleRow(s, rank + 1)}</ol>
+                  </Fragment>
+                ) : (
+                  <p class="muted" key={id}>
+                    {catalog.cards.find((c) => c.id === id)?.business
+                      ? `${shortName(id)} is a business card: choose Business cards instead in Filters to see it.`
+                      : `${shortName(id)} isn't among the cards your Filters compare.`}
+                  </p>
                 )
               })}
-            </ol>
 
             {pair ? (
               <>

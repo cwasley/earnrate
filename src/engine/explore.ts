@@ -39,7 +39,7 @@ import {
   paidText,
   PAYMENT_PHRASES,
   paymentUnknownText,
-  PICK_PERIODS,
+  pickCondition,
   pointValuesText,
 } from './text.ts'
 import type {
@@ -126,6 +126,7 @@ export type Requirements = {
     choice: string
     options: string[]
     period: Card['choices'][number]['period']
+    automatic: boolean
   } | null
   activation: string | null // the rule id to activate
   membership: string | null
@@ -259,7 +260,12 @@ function requirementsFor(
   return {
     pick:
       choice && picked
-        ? { choice: choice.id, options: picked, period: choice.period }
+        ? {
+            choice: choice.id,
+            options: picked,
+            period: choice.period,
+            automatic: choice.automatic === true,
+          }
         : null,
     activation: rule.requires?.activation === true ? rule.id : null,
     membership: rule.requires?.membership ?? null,
@@ -282,7 +288,7 @@ function conditionsText(
   const conditions: string[] = []
   if (r.pick) {
     conditions.push(
-      `Needs ${r.pick.options.map((o) => optionName(catalog, card, r.pick?.choice ?? '', o)).join(' or ')} as its ${choiceName(r.pick.choice)} pick (${r.pick.period === 'until_changed' ? '' : 'picked '}${PICK_PERIODS[r.pick.period]}).`,
+      `${pickCondition({ pick: card.choices.find((c) => c.id === r.pick?.choice)?.pick ?? 1, ...r.pick }, r.pick.options.map((o) => optionName(catalog, card, r.pick?.choice ?? '', o)).join(' or '), choiceName(r.pick.choice))}.`,
     )
   }
   if (r.activation !== null)

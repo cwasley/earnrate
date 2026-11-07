@@ -137,7 +137,7 @@ export function checklist(
       items.push({
         kind: 'pick',
         cardId: card.id,
-        text: `${possessive(name)} ${listed(assumed.map((c) => choiceName(c.id)))} pick is assumed to be ${listed(assumed.flatMap((c) => (c.default ?? []).map((o) => optionName(catalog, card, c.id, o))))}; set it if you picked something else.`,
+        text: `${possessive(name)} ${listed(assumed.map((c) => choiceName(c.id)))} pick is assumed to be ${listed(assumed.flatMap((c) => (c.default ?? []).map((o) => optionName(catalog, card, c.id, o))))}; set it if ${assumed.every((c) => c.automatic) ? 'you expect another to have the most spending' : 'you picked something else'}.`,
         due: null,
       })
 

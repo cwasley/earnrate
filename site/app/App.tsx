@@ -5,14 +5,7 @@ import { MyWallet } from './MyWallet.tsx'
 import { Spending } from './Spending.tsx'
 import { track } from './track.ts'
 import { issuerName, issuers } from './format.ts'
-import {
-  load,
-  loadState,
-  loadWallet,
-  save,
-  saveWallet,
-  type Settings,
-} from './settings.ts'
+import { load, loadState, save, saveWallet, type Settings } from './settings.ts'
 import {
   applyLocally,
   combineOps,
@@ -53,13 +46,11 @@ function readHash(): { tab: Tab; query: string; focus?: boolean } {
   const hash = new URLSearchParams(location.hash.slice(1))
   if (hash.has('spending')) return { tab: 'spending', query: '' }
   if (hash.has('wallet')) {
-    // A store sent here from a search page: with no saved cards, the
-    // all-cards ranking answers it instead.
+    // A store sent here from a search page. With no saved cards, My wallet
+    // keeps it and answers once a card is added: the page already gave the
+    // all-cards ranking.
     const query = hash.get('wallet') ?? ''
-    const saved = (loadWallet()?.cards.length ?? 0) > 0
-    return saved || query === ''
-      ? { tab: 'wallet', query, focus: query !== '' }
-      : { tab: 'best', query }
+    return { tab: 'wallet', query, focus: query !== '' }
   }
   return { tab: 'best', query: hash.get('best') ?? '' }
 }

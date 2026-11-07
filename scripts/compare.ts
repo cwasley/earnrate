@@ -11,6 +11,7 @@ import {
   type ExploreQuery,
 } from '../src/engine/explore.ts'
 import { inEffect } from '../src/engine/periods.ts'
+import { VALUATION_PROFILES } from '../src/engine/profiles.ts'
 import {
   simulateCatalog,
   typicalSpendLines,
@@ -185,6 +186,9 @@ export type CompareRow = {
   a: CompareCell
   b: CompareCell
   winner: 'a' | 'b' | null
+  // 2 for the everyday rows every comparison has, 1 for another category,
+  // 0 for a single store: what "who each card suits" leads with.
+  weight: number
 }
 
 export type Comparison = {
@@ -196,7 +200,15 @@ export type Comparison = {
   typical: { a: Simulation; b: Simulation; spend: number }
   // What one point is counted at, in cents.
   value: { a: Valuation; b: Valuation }
+  // The typical year again with Amex and Chase points at their transfer
+  // value, when either card earns them.
+  transfer: { a: Simulation; b: Simulation; cents: number } | null
 }
+
+// Amex Membership Rewards and Chase Ultimate Rewards at what transferring
+// them can be worth, as the card pages' annual-fee section counts them.
+export const TRANSFER_VALUES: Record<string, number> =
+  VALUATION_PROFILES['points-heavy']
 
 type RowQuery = {
   key: string
@@ -318,6 +330,17 @@ export function comparer(catalog: Catalog, today: string) {
       if (id) singles.set(id, s)
     }
   const spend = lines.reduce((sum, l) => sum + l.monthly * 12, 0)
+  const transferred = new Map<string, Simulation>()
+  for (const business of [false, true])
+    for (const s of simulateCatalog(catalog, lines, {
+      filters: filtersFor(business),
+      memberships: [],
+      valuations: TRANSFER_VALUES,
+      start: today,
+    }).singles) {
+      const id = s.cards[0]?.cardId
+      if (id) transferred.set(id, s)
+    }
 
   const cell = (r: Exploration, id: string): CompareCell => ({
     entry: r.ranked.find((e) => e.cardId === id) ?? null,
@@ -353,6 +376,7 @@ export function comparer(catalog: Catalog, today: string) {
         a: ca,
         b: cb,
         winner: ra > rb + EPSILON ? 'a' : rb > ra + EPSILON ? 'b' : null,
+        weight: fixed.includes(row) ? 2 : row.key.startsWith('c:') ? 1 : 0,
       }
     })
     const sa = singles.get(a.id)
@@ -364,6 +388,9 @@ export function comparer(catalog: Catalog, today: string) {
         { valuations: {}, memberships: [], cards: [idealHolding(card, today)] },
         card,
       )
+    const ta = transferred.get(a.id)
+    const tb = transferred.get(b.id)
+    const cents = TRANSFER_VALUES[a.currency] ?? TRANSFER_VALUES[b.currency]
     return {
       pair,
       a,
@@ -371,6 +398,8 @@ export function comparer(catalog: Catalog, today: string) {
       rows,
       typical: { a: sa, b: sb, spend },
       value: { a: worth(a), b: worth(b) },
+      transfer:
+        cents !== undefined && ta && tb ? { a: ta, b: tb, cents } : null,
     }
   }
 }

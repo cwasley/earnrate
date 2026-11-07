@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.07.2
+
+- `citi-custom-cash` and `amex-business-gold`: their bonus categories are marked `automatic: true`, since the issuer applies the bonus to the categories with the most spending each billing period; the cardholder doesn't pick. Answers and pages now say "the category you spend the most in each month" instead of "the category you pick". No rate changes. Sources: [Citi ThankYou terms](https://www.thankyou.com/ccterms), [Amex offer terms](https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms).
+
 ## 2026.11.07.1
 
 Evidence quotes only; no rates, fees, offers or credits changed. No issuer changes.

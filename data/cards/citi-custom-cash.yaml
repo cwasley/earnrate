@@ -28,6 +28,7 @@ choices:
   - id: top-category
     pick: 1
     period: month
+    automatic: true
     options:
       restaurants: [dining]
       gas-stations: [gas]

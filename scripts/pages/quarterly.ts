@@ -300,11 +300,17 @@ function cardSection(ctx: PageContext, q: Quarter, qc: QuarterCard): string {
       : `Activate with ${issuer} first; it's free. ${issuer} hasn't given a deadline in the pages earnrate reads.`
     : 'No activation needed.'
   const quotes = activationQuotes(card, qc.rules)
+  // The issuer's page that says how to activate, for the next step.
+  const page = (quotes.find((e) => /activat/i.test(e.quote)) ?? quotes[0])?.url
+  const go =
+    needsActivation && page
+      ? ` <a href="${esc(page)}" rel="nofollow noopener">${esc(issuer)}'s activation details</a>.`
+      : ''
   const said = new Set([
     `${shortDate(from)} to ${shortDate(to)}`,
     ...quotes.map((e) => e.quote),
   ])
-  return `<section class="quarter-card">${head}<p class="answer">${esc(shortDate(from))} to ${esc(shortDate(to))}. ${esc(capSentence(cap, earnText(ctx.catalog, cap.then_rate, card.currency), 'combined purchases in these categories'))}. ${esc(activation)}</p>${quotes.length > 0 ? `<p><strong>How to activate:</strong></p><ul class="quotes">${quotes.map((e) => `<li>${ctx.quoteHtml(e)}</li>`).join('')}</ul>` : ''}${ruleItems(ctx, card, qc.rules, said)}</section>`
+  return `<section class="quarter-card">${head}<p class="answer">${esc(shortDate(from))} to ${esc(shortDate(to))}. ${esc(capSentence(cap, earnText(ctx.catalog, cap.then_rate, card.currency), 'combined purchases in these categories'))}. ${esc(activation)}${go}</p>${quotes.length > 0 ? `<p><strong>From ${esc(issuer)}'s terms:</strong></p><ul class="quotes">${quotes.map((e) => `<li>${ctx.quoteHtml(e)}</li>`).join('')}</ul>` : ''}${ruleItems(ctx, card, qc.rules, said)}</section>`
 }
 
 function topSection(ctx: PageContext, q: Quarter, slugs: BestSlugs): string {
@@ -382,6 +388,7 @@ function renderQuarter(
   all: Quarter[],
   slugs: BestSlugs,
   hub: boolean,
+  updated: string,
 ): { title: string; description: string; body: string } {
   const title = titleFor(ctx, q, hub)
   const description = descriptionFor(ctx, q)
@@ -401,7 +408,7 @@ function renderQuarter(
   const h1 = title.replace(/ \| earnrate$/, '')
   const body = `
       <h1>${esc(h1)}</h1>
-      <p class="updated">${esc(shortDate(q.start))} to ${esc(shortDate(q.end))} · Updated ${esc(ctx.todayWords)}</p>
+      <p class="updated">${esc(shortDate(q.start))} to ${esc(shortDate(q.end))} · Updated ${esc(ctx.dayWords(updated))}</p>
       ${hub ? `<p>This page always shows the current quarter. For a link that stays on ${esc(q.label)}, use <a href="/quarterly/${q.slug}">/quarterly/${q.slug}</a>.</p>` : ''}
       <h2>Rotating categories</h2>
       ${rotating.map((c) => cardSection(ctx, q, c)).join('')}
@@ -423,7 +430,14 @@ export function quarterlyPages(
   )
   const current = periodKey('quarter', ctx.today, null)
   const page = (q: Quarter, hub: boolean): GeneratedPage => {
-    const { title, description, body } = renderQuarter(ctx, q, all, slugs, hub)
+    const { title, description, body } = renderQuarter(
+      ctx,
+      q,
+      all,
+      slugs,
+      hub,
+      date,
+    )
     const path = hub ? '/quarterly/' : `/quarterly/${q.slug}`
     return {
       file: hub ? 'quarterly/index.html' : `quarterly/${q.slug}.html`,

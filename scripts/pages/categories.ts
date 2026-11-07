@@ -4,9 +4,10 @@ import { categoryMatches } from '../../src/engine/evaluate.ts'
 import { optionName } from '../../src/engine/rule-text.ts'
 import {
   capitalize,
+  choicePhrase,
   earnText,
   listed,
-  PICK_PERIODS,
+  words,
 } from '../../src/engine/text.ts'
 import { findMerchant } from '../../src/merchants/resolve.ts'
 import type { Card, Rule } from '../../src/schema/card.ts'
@@ -76,6 +77,60 @@ function definingQuotes(ctx: PageContext, card: Card, rule: Rule) {
   return defining.length > 0 ? defining : all.slice(0, 1)
 }
 
+// Words that name a pick's option: its categories' names and aliases and
+// its stores, to tell which of a shared rule's quotes are about it.
+function optionWords(
+  ctx: PageContext,
+  card: Card,
+  choiceId: string,
+  option: string,
+) {
+  const o = card.choices.find((c) => c.id === choiceId)?.options[option]
+  const names = [
+    ...words(option).split(' '),
+    ...(o?.categories ?? []).flatMap((id) => {
+      const cat = ctx.catalog.categories.find((c) => c.id === id)
+      return cat ? [cat.name, ...cat.aliases] : []
+    }),
+    ...(o?.merchants ?? []).map(
+      (id) => findMerchant(ctx.catalog, id)?.name ?? id,
+    ),
+  ]
+  return [
+    ...new Set(
+      names
+        // "stations" matches "station"; "gas" and "wireless" stay whole.
+        .map((n) => n.toLowerCase().replace(/(?<=\w{3}[^s])s$/, ''))
+        .filter((n) => n.length >= 3 && n !== 'the' && n !== 'and'),
+    ),
+  ]
+}
+
+// For a pick, what's said only about its other options (Business Gold's gas
+// and advertising terms on the dining page) is left out.
+function aboutOption(
+  ctx: PageContext,
+  card: Card,
+  rule: Rule,
+  option: string | null,
+): (text: string, strict?: boolean) => boolean {
+  const choice = card.choices.find((c) => c.id === rule.match.choice)
+  if (option === null || !choice) return () => true
+  const mine = optionWords(ctx, card, choice.id, option)
+  const theirs = Object.keys(choice.options)
+    .filter((o) => o !== option)
+    .flatMap((o) => optionWords(ctx, card, choice.id, o))
+    .filter((w) => !mine.includes(w))
+  const has = (text: string, list: string[]) =>
+    list.some((w) =>
+      new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(
+        text,
+      ),
+    )
+  return (text, strict = false) =>
+    has(text, mine) || (strict ? /\bcategor/i.test(text) : !has(text, theirs))
+}
+
 function definitions(ctx: PageContext, family: string): Definition[] {
   const found: Definition[] = []
   for (const card of ctx.catalog.cards) {
@@ -85,6 +140,9 @@ function definitions(ctx: PageContext, family: string): Definition[] {
       if (rule.valid_to !== undefined && rule.valid_to < ctx.today) continue
       const m = rule.match
       if (m.choice !== undefined) {
+        // A pick rule that names its categories pays only on those.
+        if (m.categories && !m.categories.some((c) => related(c, family)))
+          continue
         const choice = card.choices.find((c) => c.id === m.choice)
         const option = Object.entries(choice?.options ?? {}).find(([, o]) =>
           o.categories.some((c) => related(c, family)),
@@ -121,12 +179,16 @@ function definitionBlock(ctx: PageContext, defs: Definition[]): string {
   const choice = card.choices.find((c) => c.id === rule.match.choice)
   const what =
     option && choice
-      ? `${optionName(ctx.catalog, card, choice.id, option)} (${choice.pick === 1 ? 'the category' : `one of the ${String(choice.pick)} categories`} you pick${choice.period === 'until_changed' ? '' : ` ${PICK_PERIODS[choice.period]}`})`
+      ? `${optionName(ctx.catalog, card, choice.id, option)} (${choicePhrase(choice, true)})`
       : ctx.ruleWhatRaw(card, rule)
+  const about = aboutOption(ctx, card, rule, option)
   const lines = ctx
     .ruleConditions(card, rule)
-    .filter((l) => !/^Up to \$/.test(l))
-  const quotes = definingQuotes(ctx, card, rule)
+    .filter((l) => !/^Up to \$/.test(l) && about(l))
+  // A quote stays when it names this option or how the categories work.
+  const quotes = definingQuotes(ctx, card, rule).filter((q) =>
+    about(q.quote, true),
+  )
   const rateOf = (d: Definition) => {
     const top = [...d.tiers].sort((a, b) => b.rate - a.rate)[0]
     const earn = earnText(ctx.catalog, d.rule.rate, d.card.currency)
@@ -150,7 +212,10 @@ export function categoryPages(
   lastmod: (files: string[]) => string,
 ): GeneratedPage[] {
   const built = CATEGORY_PAGES.flatMap((p) => {
-    const defs = definitions(ctx, p.category)
+    // Personal cards first within each issuer; most readers hold those.
+    const defs = definitions(ctx, p.category).sort(
+      (a, b) => Number(a.card.business) - Number(b.card.business),
+    )
     if (defs.length === 0) return []
     const byIssuer = new Map<string, Map<string, Definition[]>>()
     for (const d of defs) {
@@ -183,9 +248,13 @@ export function categoryPages(
     ])
     const ranking = bestSlug(p.category)
     const path = `/categories/${p.slug}`
+    const cardFiles = [
+      ...new Set(defs.map((d) => `data/cards/${d.card.id}.yaml`)),
+    ]
+    const date = lastmod([...cardFiles, 'data/categories.yaml'])
     const body = `
       <h1>What counts as ${esc(label)}</h1>
-      <p class="updated">${String(defs.length)} bonus rules from ${String(issuers.length)} issuers · Updated ${esc(ctx.todayWords)}</p>
+      <p class="updated">${String(defs.length)} bonus rules from ${String(issuers.length)} issuers · Updated ${esc(ctx.dayWords(date))}</p>
       <p>Each issuer decides what its ${esc(label)} bonus covers, mostly by how the store's charge is coded. Here is every bonus on ${esc(label)} in earnrate's data, grouped by issuer, with the issuer's own words.${ranking ? ` For which card earns the most, see the <a href="/best/${ranking}">${esc(label)} ranking</a>.` : ''}</p>
       <div class="issuers">${issuers
         .map(
@@ -200,10 +269,6 @@ export function categoryPages(
           (o) => `<a href="/categories/${o.slug}">${esc(o.slug)}</a>`,
         ),
       )}`
-    const cardFiles = [
-      ...new Set(defs.map((d) => `data/cards/${d.card.id}.yaml`)),
-    ]
-    const date = lastmod([...cardFiles, 'data/categories.yaml'])
     const page: GeneratedPage = {
       file: `categories/${p.slug}.html`,
       path,
@@ -259,7 +324,7 @@ export function categoryPages(
       crumbs: [{ name: 'Categories', path: '/categories/' }],
       body: `
       <h1>What each category covers</h1>
-      <p class="updated">Updated ${esc(ctx.todayWords)}</p>
+      <p class="updated">Updated ${esc(ctx.dayWords(indexDate))}</p>
       <p>The same word means different things to different issuers. Each page puts their definitions and exclusions side by side, from the cards' terms.</p>
       <ul>${built.map((b) => `<li><a href="/categories/${b.page.path.split('/').at(-1) ?? ''}">${esc(capitalize(b.label))}</a>: ${String(b.rules)} bonus rules from ${String(b.issuers)} issuers</li>`).join('')}</ul>`,
       jsonLd: {

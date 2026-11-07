@@ -3,6 +3,14 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.07.2'
+  date: 2026-11-07
+  changes:
+    - cause: correction
+      cards: [citi-custom-cash, amex-business-gold]
+      field: choices
+      summary: The bonus categories are marked automatic, since the issuer applies the bonus to the categories with the most spending each billing period; answers no longer say the cardholder picks.
+
 - version: '2026.11.07.1'
   date: 2026-11-07
   changes:
