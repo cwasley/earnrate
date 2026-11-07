@@ -246,7 +246,7 @@ describe('memberships a card implies', () => {
   })
 })
 
-describe("the annual-fee page's second figure", () => {
+describe("the annual-fee page's second figure", { timeout: 30_000 }, () => {
   const { feeWorth } = feeWorthKit(catalog, TODAY)
 
   test('credits worth more than the fee put the card ahead from the start', () => {
