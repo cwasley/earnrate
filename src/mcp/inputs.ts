@@ -117,7 +117,7 @@ const cardFields = {
     .regex(/^\d{2}-\d{2}$/)
     .optional()
     .describe(
-      "The account's anniversary as MM-DD, for cards whose cap resets on it.",
+      "The account's anniversary as MM-DD: for cards whose cap resets on it, and for a fee card's renewal check (whether it still pays for itself before the fee comes due). Optional; the opening date stands in. Ask; don't guess.",
     ),
   opened: IsoDate.nullable()
     .optional()

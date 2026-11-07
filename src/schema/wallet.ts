@@ -42,7 +42,8 @@ export const WalletCardSchema = z.strictObject({
     .min(1)
     .refine((t) => !labelHasCardNumber(t), CARD_NUMBER_LABEL)
     .optional(),
-  // MM-DD, needed only for cardmember_year caps.
+  // MM-DD: for cardmember_year caps and a fee card's renewal check. The
+  // opening date stands in for the renewal check when this isn't set.
   anniversary: z
     .string()
     .regex(/^\d{2}-\d{2}$/)

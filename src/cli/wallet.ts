@@ -20,7 +20,8 @@ const CARD_OPTIONS = `Options:
   --pick <choice>=<options>  Bonus categories you picked for this period, e.g.
                              --pick five-percent=fast-food,movie-theaters.
                              Repeat for each choice.
-  --anniversary <MM-DD>      Account anniversary, for caps that reset on it.
+  --anniversary <MM-DD>      Account anniversary, for caps that reset on it
+                             and a fee card's renewal check.
   --opened <date>            Optional: the day the account opened (YYYY-MM-DD),
                              for cards with a first-year rate. Without it the
                              card is ranked at its standard rates.

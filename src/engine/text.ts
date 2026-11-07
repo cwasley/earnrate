@@ -493,3 +493,44 @@ export const ifCreditsUsedText = (
   owner = 'its', // "the Amex Gold's" beside another card
 ) =>
   `If you'd use all ${owner} statement credits (${creditsYearText(c)}), it ${verb} ${wholeDollars(dollars)} a year.`
+
+// The renewal check on the to-do list. A card well ahead gets one short
+// line; one that's close or behind gets the parts of the math.
+export function renewalText(
+  name: string,
+  issuer: string,
+  r: {
+    due: string
+    fee: number
+    firstYearFee: number | null
+    rewardsAdded: number
+    credits: number
+    net: number
+    against: string | null
+    typical: boolean
+  },
+): string {
+  const fee =
+    r.firstYearFee === null
+      ? `${money(r.fee)} fee`
+      : `${money(r.fee)} fee, up from ${money(r.firstYearFee)} the first year`
+  const when = `${name} renews around ${shortDate(r.due)} (${fee})`
+  if (r.net >= r.fee)
+    return `${when}: it's paying for itself, about ${wholeDollars(r.net)} a year ahead after the fee.`
+  const basis = r.typical ? 'At typical spending' : 'On your spending'
+  const over =
+    r.against === null ? 'your other cards would' : `${r.against} would`
+  const earns =
+    Math.round(r.rewardsAdded) > 0
+      ? `it earns about ${wholeDollars(r.rewardsAdded)} a year more than ${over}`
+      : Math.round(r.rewardsAdded) < 0
+        ? `it earns about ${wholeDollars(-r.rewardsAdded)} a year less than ${over}`
+        : `it earns about the same as ${over}`
+  const credits =
+    r.credits > 0 ? `, plus ${wholeDollars(r.credits)} in credits you use` : ''
+  const result =
+    r.net >= 0
+      ? `about ${wholeDollars(r.net)} a year ahead after the fee.`
+      : `about ${wholeDollars(-r.net)} a year short of the fee. Check with ${issuer} before the fee posts.`
+  return `${when}. ${basis}, ${earns}${credits}: ${result}`
+}

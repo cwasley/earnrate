@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../../src/data/load.ts'
 import { recommend } from '../../src/engine/recommend.ts'
 import { cardInfo } from '../../src/engine/setup.ts'
+import type { Spending } from '../../src/engine/renewal.ts'
 import { resolveMerchant } from '../../src/merchants/resolve.ts'
 import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
@@ -13,6 +14,7 @@ import {
   simulateAdditions,
   simulateCatalog,
   simulateWallet,
+  spendLineFor,
   typicalSpendLines,
 } from '../../src/engine/simulate.ts'
 import type {
@@ -2345,4 +2347,126 @@ describe('#35 terms with a size or a date', () => {
       )
     },
   )
+})
+
+describe('#36 the renewal check', () => {
+  const wallet = (cards: object[]) =>
+    withProfile(WalletSchema.parse({ cards }), 'flat')
+  const renewals = (w: Wallet, today: string, spending?: Spending) =>
+    checklist(catalog, w, today, undefined, undefined, spending).filter(
+      (i) => i.kind === 'renewal',
+    )
+  const platinum = (fields: object = {}) =>
+    wallet([
+      { id: 'amex-platinum', anniversary: '12-01', ...fields },
+      { id: 'citi-double-cash' },
+    ])
+
+  goldenTest(
+    '#36a a card short of its fee says by how much, from the wallet without it',
+    () => {
+      const [item] = renewals(
+        platinum({ enrolled: ['lululemon'] }),
+        '2026-11-07',
+      )
+      expect(item).toMatchObject({ cardId: 'amex-platinum', due: '2026-12-01' })
+      expect(item?.text).toMatch(
+        /^The Platinum Card from American Express renews around Dec 1, 2026 \(\$895 fee\)\. At typical spending, it earns about .+ (than|as) your other cards would, plus \$300 in credits you use: about \$[\d,]+ a year short of the fee\. Check with American Express before the fee posts\.$/,
+      )
+    },
+  )
+
+  goldenTest('#36b a card well ahead of its fee gets one short line', () => {
+    const [item] = renewals(
+      wallet([
+        { id: 'amex-blue-cash-preferred', anniversary: '11-25' },
+        { id: 'citi-double-cash' },
+      ]),
+      '2026-11-07',
+      {
+        lines: resolveSpendLines(catalog, [
+          spendLineFor(catalog, 'groceries', 1_000),
+        ]),
+        typical: false,
+      },
+    )
+    expect(item?.text).toMatch(
+      /^American Express Blue Cash Preferred Card renews around Nov 25, 2026 \(\$95 fee\): it's paying for itself, about \$[\d,]+ a year ahead after the fee\.$/,
+    )
+  })
+
+  goldenTest(
+    '#36c it shows from 30 days before the anniversary to 15 after',
+    () => {
+      const w = platinum()
+      expect(renewals(w, '2026-10-31')).toHaveLength(0)
+      expect(renewals(w, '2026-11-01')).toHaveLength(1)
+      expect(renewals(w, '2026-12-16')).toHaveLength(1)
+      expect(renewals(w, '2026-12-17')).toHaveLength(0)
+    },
+  )
+
+  goldenTest(
+    '#36d the opening date stands in for the anniversary, but not in the first months',
+    () => {
+      expect(
+        renewals(wallet([{ id: 'amex-platinum' }]), '2026-11-07'),
+      ).toHaveLength(0)
+      expect(
+        renewals(
+          wallet([{ id: 'amex-platinum', opened: '2024-11-20' }]),
+          '2026-11-07',
+        )[0]?.due,
+      ).toBe('2026-11-20')
+      expect(
+        renewals(
+          wallet([{ id: 'amex-platinum', opened: '2026-11-01' }]),
+          '2026-11-07',
+        ),
+      ).toHaveLength(0)
+    },
+  )
+
+  goldenTest(
+    '#36e the first renewal after a lower first-year fee says so',
+    () => {
+      const [item] = renewals(
+        wallet([
+          { id: 'amex-blue-cash-preferred', opened: '2025-11-20' },
+          { id: 'citi-double-cash' },
+        ]),
+        '2026-11-07',
+      )
+      expect(item?.text).toContain('($95 fee, up from $0 the first year)')
+    },
+  )
+
+  goldenTest(
+    '#36f a card held alone is weighed against the best no-fee card, and your own spending says so',
+    () => {
+      const [item] = renewals(
+        wallet([{ id: 'chase-sapphire-preferred', anniversary: '11-10' }]),
+        '2026-11-07',
+        {
+          lines: resolveSpendLines(catalog, [
+            spendLineFor(catalog, 'dining', 50),
+          ]),
+          typical: false,
+        },
+      )
+      expect(item?.text).toMatch(
+        /\. On your spending, it earns about \$[\d,]+ a year (more|less) than U\.S\. Bank Altitude Go would: about \$[\d,]+ a year short of the fee\. Check with Chase before the fee posts\.$/,
+      )
+      expect(item?.text).not.toMatch(/your other cards/)
+    },
+  )
+
+  goldenTest('#36g no-fee cards never get one', () => {
+    expect(
+      renewals(
+        wallet([{ id: 'citi-double-cash', anniversary: '11-10' }]),
+        '2026-11-07',
+      ),
+    ).toHaveLength(0)
+  })
 })

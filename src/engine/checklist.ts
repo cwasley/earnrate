@@ -10,11 +10,13 @@ import {
   listed,
   money,
   shortDate,
+  renewalText,
   useCreditText,
   wholeDollars,
   possessive,
 } from './text.ts'
 import { milestonePays } from './milestones.ts'
+import { renewalCheck, renewalDue, type Spending } from './renewal.ts'
 import { creditLabel, optionName } from './rule-text.ts'
 import {
   activationsDue,
@@ -23,6 +25,9 @@ import {
 } from './wallet-summary.ts'
 
 // Node-free: earnrate.dev builds the same list from its browser wallet.
+
+const issuerLabel = (catalog: Catalog, id: string) =>
+  catalog.issuers.find((i) => i.id === id)?.name ?? id
 
 export type ChecklistItem = {
   kind:
@@ -35,6 +40,7 @@ export type ChecklistItem = {
     | 'intro'
     | 'credit'
     | 'enroll'
+    | 'renewal'
   cardId: string
   // Tells apart a card's items of the same kind and date (two credits).
   ref?: string
@@ -62,6 +68,8 @@ export function checklist(
   summary: WalletSummary = walletSummary(catalog, wallet, today),
   // A shorter card name than the issuer's full one, where the caller has it.
   shortName?: (cardId: string) => string,
+  // For the renewal check; typical amounts when not given.
+  spending?: Spending,
 ): ChecklistItem[] {
   const items: ChecklistItem[] = []
   for (const held of wallet.cards) {
@@ -226,6 +234,17 @@ export function checklist(
         text: introEndsText(name, s.intro.days, s.intro.until),
         due: s.intro.until,
       })
+
+    const due = (card.annual_fee ?? 0) > 0 ? renewalDue(held, today) : null
+    if (due !== null) {
+      const r = renewalCheck(catalog, wallet, card, due, spending)
+      items.push({
+        kind: 'renewal',
+        cardId: card.id,
+        text: renewalText(name, issuerLabel(catalog, card.issuer), r),
+        due,
+      })
+    }
 
     if (s.rotationGap !== null) {
       items.push({

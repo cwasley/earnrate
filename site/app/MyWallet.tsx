@@ -40,6 +40,7 @@ import type { Recommendation } from '../../src/engine/types.ts'
 import type { CardInput } from '../../src/engine/wallet-change.ts'
 import { resolvePlace } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
+import { anniversaryOf, type Spending } from '../../src/engine/renewal.ts'
 import { CardArt } from './CardArt.tsx'
 import { Logo } from './Logo.tsx'
 import { track } from './track.ts'
@@ -684,9 +685,14 @@ function CardEditor({
           )}
         </fieldset>
       ))}
-      {info.needsAnniversary ? (
+      {info.needsAnniversary || renewalAsks(held) ? (
         <label class="field">
-          Account anniversary (MM-DD), for its yearly cap
+          Account anniversary (MM-DD), for its{' '}
+          {info.needsAnniversary && renewalAsks(held)
+            ? 'yearly cap and renewal check'
+            : info.needsAnniversary
+              ? 'yearly cap'
+              : 'renewal check before the fee'}
           <input
             type="text"
             inputMode="numeric"
@@ -707,6 +713,25 @@ function CardEditor({
     </div>
   )
 }
+
+// The My spending tab's rows, and whether they're still its typical amounts.
+function spending(): Spending {
+  const rows = loadList<Row>('spending', TYPICAL_MONTHLY_SPEND)
+  const typical =
+    rows.length === TYPICAL_MONTHLY_SPEND.length &&
+    TYPICAL_MONTHLY_SPEND.every(
+      (t, i) => rows[i]?.what === t.what && rows[i].monthly === t.monthly,
+    )
+  const lines = resolveSpendLines(
+    catalog,
+    rows.map((r) => lineFor(r.what, r.monthly)),
+  ).filter((l) => l.merchant.source !== 'none')
+  return { lines, typical }
+}
+
+// A fee card with no date to tell when it renews.
+const renewalAsks = (held: WalletCard) =>
+  (cards.get(held.id)?.annual_fee ?? 0) > 0 && anniversaryOf(held) === null
 
 function CardList({
   wallet,
@@ -779,6 +804,12 @@ function CardList({
           )
         })}
       </ul>
+      {wallet.cards.some((h) => renewalAsks(h) && !h.anniversary) ? (
+        <p class="muted small">
+          Add a fee card's anniversary in its Settings, and earnrate checks
+          whether it still pays for itself before the fee comes due.
+        </p>
+      ) : null}
       {untracked ? (
         <p class="muted small">
           {wallet.cards.length === 1 ? 'Opened it' : 'Opened one of these'}{' '}
@@ -1009,11 +1040,7 @@ function WhatIf({
 }) {
   const [open, setOpen] = useState<string | null>(null)
   const result = useMemo(() => {
-    const rows = loadList<Row>('spending', TYPICAL_MONTHLY_SPEND)
-    const lines = resolveSpendLines(
-      catalog,
-      rows.map((r) => lineFor(r.what, r.monthly)),
-    ).filter((l) => l.merchant.source !== 'none')
+    const { lines } = spending()
     if (lines.length === 0) return null
     return simulateAdditions(catalog, wallet, lines, {
       filters: ALL_PERSONAL_CARDS,
@@ -1144,7 +1171,16 @@ function ThisQuarter({
   onOpenCard: (cardId: string) => void
 }) {
   const items = useMemo(
-    () => checklist(catalog, wallet, localToday(), undefined, shortName),
+    () =>
+      checklist(
+        catalog,
+        wallet,
+        localToday(),
+        undefined,
+        shortName,
+        spending(),
+      ),
+    // The spending rows come from storage and change only on the other tab.
     [wallet],
   )
   if (items.length === 0) return null

@@ -567,7 +567,7 @@ export type WalletWhatIf = {
 
 // The person's own wallet, set up as it would run all year: their picks carry
 // over, rotating categories get activated, caps start fresh.
-function projectedWallet(
+export function projectedWallet(
   wallet: Wallet,
   catalog: Catalog,
   start: string,
