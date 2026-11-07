@@ -82,6 +82,7 @@ import { offerTerms } from '../../src/engine/offers.ts'
 import {
   capitalize,
   creditBack,
+  creditTerms,
   creditShort,
   CREDIT_THIS_PERIOD,
   dollarsAndCents,
@@ -620,10 +621,18 @@ function CardEditor({
           <legend>{c.name} credit</legend>
           <p class="muted small">
             {capitalize(creditBack(c))}
+            {creditTerms(
+              c.credit.min_amount === undefined
+                ? {}
+                : { min_amount: c.credit.min_amount },
+            )}
             {c.until === null
               ? ''
               : `; this one runs through ${shortDate(c.until)}`}
             .
+            {c.credit.valid_to === undefined
+              ? ''
+              : ` It ends after ${shortDate(c.credit.valid_to)}.`}
           </p>
           <div
             class="segments credit-use"

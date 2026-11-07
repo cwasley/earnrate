@@ -8,11 +8,18 @@ import {
   membershipName,
   sameGroup,
 } from './memberships.ts'
-import { milestoneWhat } from './milestones.ts'
+import { milestoneStarts, milestoneWhat } from './milestones.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap, rotationGapText } from './rotation.ts'
 import { creditName, creditWhere, introWhat } from './rule-text.ts'
-import { creditBack, ENROLL_FIRST, idList, listed, possessive } from './text.ts'
+import {
+  creditBack,
+  creditTerms,
+  ENROLL_FIRST,
+  idList,
+  listed,
+  possessive,
+} from './text.ts'
 
 export type CardChoiceInfo = {
   id: string
@@ -213,7 +220,7 @@ export function cardInfo(
       period: m.period,
       points: m.points ?? null,
       rewards: m.rewards ?? [],
-      text: milestoneWhat(m).replace(/^the /, ''),
+      text: `${milestoneWhat(m).replace(/^the /, '')}${milestoneStarts(m, today)}`,
     })),
     introRates: card.intro_rates.map((i) => ({
       id: i.id,
@@ -228,7 +235,7 @@ export function cardInfo(
         amount: c.amount,
         period: c.period,
         enroll: c.enroll === true,
-        text: `${creditBack(c)} ${creditWhere(catalog, c)}${c.enroll ? `, ${ENROLL_FIRST}` : ''}`,
+        text: `${creditBack(c)} ${creditWhere(catalog, c)}${creditTerms(c)}${c.enroll ? `, ${ENROLL_FIRST}` : ''}`,
       }
     }),
   }

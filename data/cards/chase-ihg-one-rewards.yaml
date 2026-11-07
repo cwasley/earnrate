@@ -70,7 +70,20 @@ milestones:
     rewards:
       - Gold Elite status
     note: "Every purchase on the card counts, by transaction date; balance transfers, cash advances and cash-like transactions don't. Status lasts through the end of the next calendar year. Chase says to allow 6-8 weeks for it to post."
+  - id: fourth-night-free
+    spend: 5000
+    period: calendar_year
+    rewards:
+      - a 4th Reward Night free on four-night award stays
+    valid_from: 2027-01-01
+    note: 'From 2027 the benefit needs this spending; through 2026 it comes with the card. It lasts the rest of the year you qualify and the next, on consecutive four-night standard-room Reward Night stays at one hotel (not paid or Points & Cash stays). Chase says to allow 6-8 weeks for it to be turned on.'
 evidence:
+  - rule: fourth-night-free
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards
+    quote: 'Starting in 2027, spend $5,000 on purchases in a calendar year and unlock a 4th Reward Night free'
+  - rule: fourth-night-free
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards
+    quote: 'After December 31, 2026: You will have to meet an annual spend requirement to enjoy this benefit.'
   - rule: base_rate
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards
     quote: 'Earn 2X points per $1 spent on all other purchases.'
@@ -122,5 +135,3 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65295.html
     quote: 'Foreign Transactions None Penalty Fees'
-todo:
-  - "Starting in 2027, $5,000 of purchases in a calendar year unlocks a 4th Reward Night free on four-night award stays. It isn't listed as a milestone yet, because a milestone has no start date."

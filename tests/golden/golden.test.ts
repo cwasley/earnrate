@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../../src/data/load.ts'
 import { recommend } from '../../src/engine/recommend.ts'
+import { cardInfo } from '../../src/engine/setup.ts'
 import { resolveMerchant } from '../../src/merchants/resolve.ts'
 import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
@@ -2227,6 +2228,107 @@ describe('#34 statement credits against the annual fee', () => {
         .filter((o) => o.ineligible === null)
         .map((o) => o.firstYearValue)
       expect(values).toEqual([...values].sort((a, b) => b - a))
+    },
+  )
+})
+
+describe('#35 terms with a size or a date', () => {
+  const cardById = (c: Catalog, id: string) => {
+    const card = c.cards.find((x) => x.id === id)
+    if (!card) throw new Error(`no ${id}`)
+    return card
+  }
+  const only = (id: string) =>
+    withProfile(WalletSchema.parse({ cards: [{ id }] }), 'flat')
+
+  goldenTest(
+    '#35a Amex Business Platinum: 2X on one purchase of $5,000 or more, and says so without an amount',
+    () => {
+      const at = (amount: number | null) =>
+        entry(
+          recommend(
+            catalog,
+            only('amex-business-platinum'),
+            purchase('Staples', { amount, channel: 'in_store' }),
+          ),
+          'amex-business-platinum',
+        )
+      expect(at(6_000).rate).toBe(2)
+      expect(at(5_000).rate).toBe(2)
+      expect(at(4_999).rate).toBe(1)
+      const unknown = recommend(
+        catalog,
+        only('amex-business-platinum'),
+        purchase('Staples', { channel: 'in_store' }),
+      )
+      expect(entry(unknown, 'amex-business-platinum').rate).toBe(1)
+      expectSome(
+        unknown.assumptions,
+        /^On a purchase of \$5,000 or more, The Business Platinum Card from American Express would earn 2x Amex Membership Rewards here, instead of the 1x Amex Membership Rewards it's ranked at\. Give the amount to count it\.$/,
+      )
+    },
+  )
+
+  goldenTest(
+    "#35b Citi Strata Premier's hotel benefit pays only on a stay of $500 or more",
+    () => {
+      const stay = (amount: number) =>
+        entry(
+          recommend(
+            catalog,
+            only('citi-strata-premier'),
+            purchase('citi travel hotel', { amount }),
+          ),
+          'citi-strata-premier',
+        )
+      expect(stay(600).credit).toMatchObject({ dollars: 100 })
+      const small = stay(300)
+      expect(small.credit).toMatchObject({ dollars: 0 })
+      expectSome(
+        small.reasoning,
+        /needs a purchase of \$500 or more, so it doesn't count here\.$/,
+      )
+    },
+  )
+
+  goldenTest(
+    "#35c Sapphire Reserve's Lyft credit stops after Sep 30, 2027",
+    () => {
+      const ride = (date: string) =>
+        entry(
+          recommend(
+            catalog,
+            only('chase-sapphire-reserve'),
+            purchase('Lyft', { amount: 20, date }),
+          ),
+          'chase-sapphire-reserve',
+        )
+      expect(ride('2027-09-15').credit).toMatchObject({ dollars: 10 })
+      expect(ride('2027-10-05').credit).toBeNull()
+    },
+  )
+
+  goldenTest(
+    "#35d IHG's 2027 spend bonuses are listed with their start date",
+    () => {
+      const business = cardInfo(
+        catalog,
+        cardById(catalog, 'chase-ihg-one-rewards-business'),
+        null,
+        TODAY,
+      )
+      expect(business.milestones.map((m) => m.text)).toContain(
+        '$50,000 calendar-year spend for Diamond Elite status starting Jan 1, 2027',
+      )
+      const personal = cardInfo(
+        catalog,
+        cardById(catalog, 'chase-ihg-one-rewards'),
+        null,
+        TODAY,
+      )
+      expect(personal.milestones.map((m) => m.text)).toContain(
+        '$5,000 calendar-year spend for a 4th Reward Night free on four-night award stays starting Jan 1, 2027',
+      )
     },
   )
 })

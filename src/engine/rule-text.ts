@@ -11,6 +11,7 @@ import {
   num,
   PAYMENT_PHRASES,
   PICK_PERIODS,
+  wholeDollars,
   words,
 } from './text.ts'
 
@@ -60,11 +61,13 @@ export function ruleParts(
     return [
       rule.geography === 'foreign_only'
         ? 'purchases outside the U.S.'
-        : rule.requires?.payment !== undefined
-          ? 'purchases'
-          : card?.rules.every((r) => r.match.any)
-            ? 'every purchase'
-            : 'everything else',
+        : rule.min_amount !== undefined
+          ? `purchases of ${wholeDollars(rule.min_amount)} or more`
+          : rule.requires?.payment !== undefined
+            ? 'purchases'
+            : card?.rules.every((r) => r.match.any)
+              ? 'every purchase'
+              : 'everything else',
     ]
   if (m.choice !== undefined) {
     const choice = card?.choices.find((c) => c.id === m.choice)
@@ -124,7 +127,11 @@ export function ruleWhat(
   options: { everyStore?: boolean } = {},
 ): string {
   const payment = rule.requires?.payment
-  const what = listed(ruleParts(catalog, rule, card, options))
+  const parts = listed(ruleParts(catalog, rule, card, options))
+  const what =
+    rule.min_amount === undefined || rule.match.any
+      ? parts
+      : `${parts}, on purchases of ${wholeDollars(rule.min_amount)} or more`
   return payment === undefined ? what : `${what} ${PAYMENT_PHRASES[payment]}`
 }
 

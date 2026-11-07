@@ -165,7 +165,9 @@ earnrate update amex-platinum --enrolled lululemon --credit-used lululemon=40
 
 In the wallet file that's `enrolled: [lululemon]` and `credit_usage: { lululemon: { period: 2026-Q4, used: 40 } }` on the card. On earnrate.dev it's in the card's settings, where each credit is "Enrolled", "Not yet" or "I don't use this" (or "Using it" for one that needs no enrolling).
 
-A credit you don't use can be marked so: `earnrate update amex-gold --skipped-credits dunkin`, `skipped_credits: [dunkin]` in the file. It then counts nowhere: not toward a pick, not against the fee, and not on the to-do list.
+A credit you don't use can be marked so: `earnrate update amex-gold --skipped-credits dunkin`, `skipped_credits: [dunkin]` in the file. It then counts nowhere: not toward a pick, not against the fee, and not on the to-do list. For cards named with `--cards`, `--enrolled amex-platinum=lululemon` and `--skipped-credits amex-gold=dunkin` do the same for one answer.
+
+Some credits pay only on a purchase of a certain size (Citi Strata Premier's $100 off a Citi Travel hotel stay of $500 or more), and some end on a date the issuer sets (Sapphire Reserve's Lyft credit, through Sep 30, 2027). Card listings say so; a purchase too small earns no credit, and after the end date the credit counts nowhere. Rules work the same way: Amex Business Platinum's 2x on a purchase of $5,000 or more applies only when the amount is given, and an answer without one says what it would earn.
 
 Annual-fee math counts the credits you use on cards you hold, a full period's worth each period: simulating spending with your own cards says "Amex Gold's fee counts $204 a year of credits you use: Dunkin' and Uber." For a card you don't hold, the ranking leaves its credits out, since they're worth it only if you'd spend at those places anyway, and shows what it would net if you used them all beside it: in `simulate`, `offers`, the annual-fee math on each card's page and the site's spending tab. The cheat sheet picks by rate alone and leaves credits out.
 

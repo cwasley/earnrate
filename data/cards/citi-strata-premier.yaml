@@ -54,9 +54,22 @@ rules:
     exclude: { categories: [gas.superstore] }
     rate: 3
     note: Only merchants coded as gas stations or EV charging. Excludes warehouse clubs, discount stores, department stores and convenience stores.
-# Not modeled: the $100 Annual Hotel Benefit.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: annual-hotel-benefit
+    match: { merchants: [citi-travel-hotels] }
+    amount: 100
+    period: calendar_year
+    min_amount: 500
+    note: "$100 off one hotel stay of $500 or more before taxes and fees, booked with Citi Travel (cititravel.com or 1-833-737-1288) and prepaid with the card, ThankYou points or both. Applied at booking. Air-and-hotel and hotel-and-car packages don't count. The $100 earns no points."
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
+  - rule: annual-hotel-benefit
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: 'Once per calendar year, enjoy $100 off a single hotel stay of $500 or more (excluding taxes and fees)'
+  - rule: annual-hotel-benefit
+    url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    quote: 'when booked through cititravel.com or 1-833-737-1288'
   - rule: base_rate
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: '1 point per dollar spent on All Other Purchases'

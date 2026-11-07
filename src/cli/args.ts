@@ -23,8 +23,10 @@ export type CliOptions = {
   llm: boolean | null // null: follow the environment
   cards: string[] | null // card ids named for this answer instead of the wallet
   members: string[]
-  // For named cards: credits enrolled in and opening dates, by card id.
+  // For named cards: credits enrolled in, credits not used and opening
+  // dates, by card id.
   enrolled: Record<string, string[]>
+  skipped: Record<string, string[]>
   opened: Record<string, string>
 }
 
@@ -145,6 +147,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
         cards: { type: 'string' },
         member: { type: 'string', multiple: true },
         enrolled: { type: 'string', multiple: true },
+        'skipped-credits': { type: 'string', multiple: true },
         opened: { type: 'string', multiple: true },
         help: { type: 'boolean', short: 'h' },
       },
@@ -182,7 +185,10 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
   if ('problem' in paying) return { kind: 'error', message: paying.problem }
 
   const cards = cardList(values.cards)
-  const perCard = (flag: 'enrolled' | 'opened', example: string) => {
+  const perCard = (
+    flag: 'enrolled' | 'skipped-credits' | 'opened',
+    example: string,
+  ) => {
     const out: Record<string, string> = {}
     for (const pair of values[flag] ?? []) {
       const [id = '', value = ''] = pair.split('=')
@@ -196,6 +202,8 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
   }
   const enrolled = perCard('enrolled', 'amex-platinum=lululemon')
   if (typeof enrolled === 'string') return { kind: 'error', message: enrolled }
+  const skipped = perCard('skipped-credits', 'amex-gold=dunkin')
+  if (typeof skipped === 'string') return { kind: 'error', message: skipped }
   const opened = perCard('opened', 'discover-it-cash-back=2026-03-04')
   if (typeof opened === 'string') return { kind: 'error', message: opened }
 
@@ -215,16 +223,20 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
       llm: values.llm ?? null,
       cards,
       members: values.member ?? [],
-      enrolled: Object.fromEntries(
-        Object.entries(enrolled).map(([id, list]) => [
-          id,
-          list
-            .split(',')
-            .map((c) => c.trim())
-            .filter(Boolean),
-        ]),
-      ),
+      enrolled: creditLists(enrolled),
+      skipped: creditLists(skipped),
       opened,
     },
   }
 }
+
+const creditLists = (byCard: Record<string, string>) =>
+  Object.fromEntries(
+    Object.entries(byCard).map(([id, list]) => [
+      id,
+      list
+        .split(',')
+        .map((c) => c.trim())
+        .filter(Boolean),
+    ]),
+  )

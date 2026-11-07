@@ -230,6 +230,11 @@ function applicability(
   if (rule.geography === 'us_only' && ctx.country !== 'US') return 'no'
   if (rule.geography === 'foreign_only' && ctx.country === 'US') return 'no'
   if (!inEffect(rule, ctx.date)) return 'no'
+  if (
+    rule.min_amount !== undefined &&
+    (ctx.amount === null || ctx.amount < rule.min_amount)
+  )
+    return 'no'
   const membership = rule.requires?.membership
   if (membership !== undefined && !ctx.memberships.has(membership)) return 'no'
   const payment = rule.requires?.payment
@@ -392,4 +397,25 @@ export function paymentUpgrade(
       best = { payment, rate: paid.rate, nominalRate: paid.nominalRate }
   }
   return best
+}
+
+// The smallest purchase amount (one a rule on the card asks for) that would
+// earn more than `rate`, and what it would earn. Only while the purchase has
+// no amount.
+export function amountUpgrade(
+  card: Card,
+  held: WalletCard,
+  ctx: PurchaseContext,
+  rate: number,
+): { amount: number; rate: number; nominalRate: number } | null {
+  if (ctx.amount !== null) return null
+  const amounts = [
+    ...new Set(card.rules.flatMap((r) => r.min_amount ?? [])),
+  ].sort((a, b) => a - b)
+  for (const amount of amounts) {
+    const larger = evaluateCard(card, held, { ...ctx, amount }).best
+    if (larger.rate > rate + EPSILON)
+      return { amount, rate: larger.rate, nominalRate: larger.nominalRate }
+  }
+  return null
 }

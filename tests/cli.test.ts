@@ -595,6 +595,29 @@ describe('paying abroad', () => {
 })
 
 describe('named cards with credits and opening dates', () => {
+  test('--skipped-credits leaves a credit out of the answer', async () => {
+    const plain = await cli(['uber', '30', '--cards', 'amex-gold'])
+    expect(plain.stdout).toMatch(/\$10 back from its Uber and Uber Eats credit/)
+    const skipped = await cli([
+      'uber',
+      '30',
+      '--cards',
+      'amex-gold',
+      '--skipped-credits',
+      'amex-gold=uber-cash',
+    ])
+    expect(skipped.code).toBe(0)
+    expect(skipped.stdout).not.toMatch(/credit/)
+    const wrong = await cli([
+      'uber',
+      '--cards',
+      'amex-gold',
+      '--skipped-credits',
+      'amex-gold=lululemon',
+    ])
+    expect(wrong.stderr).toMatch(/amex-gold has no credit 'lululemon'/)
+  })
+
   test('--enrolled counts a credit and --opened a first-year rate', async () => {
     const plain = await cli(['lululemon', '100', '--cards', 'amex-platinum'])
     expect(plain.stdout).not.toMatch(/back from its Lululemon credit/)

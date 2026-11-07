@@ -103,6 +103,9 @@ Options:
   --enrolled <card>=<credits>
                          For a named card, statement credits you've enrolled
                          in: --enrolled amex-platinum=lululemon. Repeat per card.
+  --skipped-credits <card>=<credits>
+                         For a named card, statement credits you don't use:
+                         --skipped-credits amex-gold=dunkin. Repeat per card.
   --opened <card>=<date> For a named card, the day it opened (YYYY-MM-DD), for
                          a first-year rate. Repeat per card.
   --member <name>        A membership you have, in place of the saved ones.
@@ -146,6 +149,7 @@ export async function cardsToUse(
     cards: string[] | null
     members: string[]
     enrolled?: Record<string, string[]>
+    skipped?: Record<string, string[]>
     opened?: Record<string, string>
   },
 ): Promise<Wallet | 'none' | null> {
@@ -162,6 +166,7 @@ export async function cardsToUse(
         cards: named.cards.map((id) => ({
           id,
           ...(named.enrolled?.[id] ? { enrolled: named.enrolled[id] } : {}),
+          ...(named.skipped?.[id] ? { skippedCredits: named.skipped[id] } : {}),
           ...(named.opened?.[id] ? { opened: named.opened[id] } : {}),
         })),
         memberships:

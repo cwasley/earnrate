@@ -3,6 +3,7 @@ import { loadCatalog } from '../src/data/load.ts'
 import { creditWhere } from '../src/engine/rule-text.ts'
 import { cardInfo } from '../src/engine/setup.ts'
 import { formatCardInfo } from '../src/format/cards.ts'
+import { creditTerms, pairCreditsUsedText } from '../src/engine/text.ts'
 
 const catalog = await loadCatalog()
 const card = (id: string) => {
@@ -115,6 +116,23 @@ describe('rule wording', () => {
     expect(ruleWhat(catalog, streaming, bcp)).toBe('select streaming services')
     expect(ruleWhat(catalog, streaming, bcp, { everyStore: true })).toMatch(
       /Netflix/,
+    )
+  })
+})
+
+describe('credit limits and pairs', () => {
+  test('a minimum purchase and an end date follow the store', () => {
+    expect(creditTerms({ min_amount: 500, valid_to: '2027-12-31' })).toBe(
+      ' with a purchase of $500 or more through Dec 31, 2027',
+    )
+    expect(creditTerms({})).toBe('')
+  })
+
+  test('a pair names the cards whose credits it would add', () => {
+    expect(
+      pairCreditsUsedText(['Amex Gold', 'Sapphire Reserve'], 724, 1310),
+    ).toBe(
+      "If you'd use all the statement credits on Amex Gold and Sapphire Reserve ($724 a year), the pair nets $1,310 a year.",
     )
   })
 })

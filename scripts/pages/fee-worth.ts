@@ -137,7 +137,7 @@ export function feeWorthKit(
       (m) => at(m).card.net > at(m).best.net,
       STEP,
     )
-    const year = allCreditsYear(catalog, card)
+    const year = allCreditsYear(catalog, card, today)
     const credits = year.creditIds.length > 0 ? year : null
     const withCredits =
       credits === null

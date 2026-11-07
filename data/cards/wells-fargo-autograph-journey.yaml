@@ -35,9 +35,22 @@ rules:
     match: { categories: [travel] }
     rate: 3
     note: Car rentals, cruise lines, travel agencies, discount travel sites, timeshares and campgrounds.
-# Not modeled: the $50 yearly statement credit after a $50 airline purchase.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: airline-credit
+    match: { categories: [travel.flights] }
+    amount: 50
+    period: cardmember_year
+    min_amount: 50
+    note: "Applied automatically on the first purchase of $50 or more each year at a merchant coded as an airline (not charter or private jets). The first year runs from account opening; after that each year starts the first of the month after the annual fee is charged, modeled as the card's anniversary."
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
+  - rule: airline-credit
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'Plus a $50 annual statement credit with $50 minimum airline purchase'
+  - rule: airline-credit
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'when your card is used for your first airline purchase of at least $50'
   - rule: base_rate
     url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
     quote: '1 rewards point will be earned per $1 spent on other net purchases'
@@ -71,3 +84,5 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.wellsfargo.com/credit-cards/autograph-journey-visa/terms/
     quote: 'Foreign Transaction None'
+todo:
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

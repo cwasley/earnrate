@@ -3,7 +3,7 @@ import type { Card, Credit } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { WalletCard } from '../schema/wallet.ts'
 import { categoryMatches } from './evaluate.ts'
-import { periodEnd, periodKey } from './periods.ts'
+import { inEffect, periodEnd, periodKey } from './periods.ts'
 import { creditLabel, creditName } from './rule-text.ts'
 import { roundCents, type CreditWords } from './text.ts'
 import type { MerchantResolution } from './types.ts'
@@ -79,6 +79,7 @@ function creditState(
     skipped: isSkipped(credit, held),
     confirmed: creditConfirmed(credit, held),
     used,
+    minAmount: credit.min_amount ?? null,
     left:
       period === null ? null : roundCents(Math.max(0, credit.amount - used)),
     until:
@@ -86,12 +87,16 @@ function creditState(
   }
 }
 
+// The card's credits the issuer still offers on `date`.
+export const liveCredits = (card: Card, date: string) =>
+  card.credits.filter((c) => inEffect(c, date))
+
 export const creditStates = (
   catalog: Catalog,
   card: Card,
   held: WalletCard,
   date: string,
-) => card.credits.map((c) => creditState(catalog, c, held, date))
+) => liveCredits(card, date).map((c) => creditState(catalog, c, held, date))
 
 export const counts = (s: CreditState) =>
   s.enrolled && !s.skipped && s.left !== null && s.left > 0
@@ -105,7 +110,7 @@ export function creditAt(
   merchant: Pick<MerchantResolution, 'merchantId' | 'category' | 'source'>,
   date: string,
 ): CreditState | null {
-  const here = card.credits
+  const here = liveCredits(card, date)
     .filter((c) => !isSkipped(c, held) && creditCovers(catalog, c, merchant))
     .map((c) => creditState(catalog, c, held, date))
     .sort(
@@ -123,6 +128,8 @@ export function creditDollars(
 ): number | null {
   if (amount === null) return null
   if (!counts(s) || amount <= 0) return 0
+  if (s.credit.min_amount !== undefined && amount < s.credit.min_amount)
+    return 0
   return roundCents(Math.min(amount, s.left ?? 0))
 }
 
@@ -134,10 +141,28 @@ const PER_YEAR: Record<Credit['period'], number> = {
   cardmember_year: 1,
 }
 
+const monthIndex = (date: string) =>
+  Number(date.slice(0, 4)) * 12 + Number(date.slice(5, 7)) - 1
+
+// How many times the credit pays in the 12 months from `date`, counting the
+// period `date` is in: every period's, or for a credit that ends, those that
+// start by its last day.
+function payoutsAYear(credit: Credit, date: string): number {
+  const all = PER_YEAR[credit.period]
+  if (credit.valid_to === undefined) return all
+  if (!inEffect(credit, date)) return 0
+  if (all === 1) return 1
+  const step = 12 / all
+  const first = monthIndex(date) - (monthIndex(date) % step)
+  const starts = Math.floor((monthIndex(credit.valid_to) - first) / step) + 1
+  return Math.min(all, starts)
+}
+
+// Dollars a year at face value, the most first: for ordering cards by credit.
 export const creditPerYear = (c: Pick<Credit, 'amount' | 'period'>) =>
   c.amount * PER_YEAR[c.period]
 
-// A card's credits added up over a year, at face value.
+// A card's credits added up over the 12 months from a date, at face value.
 export type CreditsYear = {
   cardId: string
   yearly: number // dollars a year
@@ -149,19 +174,23 @@ function creditsYear(
   catalog: Catalog,
   card: Card,
   credits: Credit[],
+  date: string,
 ): CreditsYear {
+  const live = credits.filter((c) => inEffect(c, date))
   return {
     cardId: card.id,
-    yearly: roundCents(credits.reduce((sum, c) => sum + creditPerYear(c), 0)),
-    creditIds: credits.map((c) => c.id),
-    names: credits.map((c) => creditLabel(catalog, c)),
+    yearly: roundCents(
+      live.reduce((sum, c) => sum + c.amount * payoutsAYear(c, date), 0),
+    ),
+    creditIds: live.map((c) => c.id),
+    names: live.map((c) => creditLabel(catalog, c)),
   }
 }
 
 // Every credit on the card, as if each were used in full: for a card the
 // person doesn't hold.
-export const allCreditsYear = (catalog: Catalog, card: Card) =>
-  creditsYear(catalog, card, card.credits)
+export const allCreditsYear = (catalog: Catalog, card: Card, date: string) =>
+  creditsYear(catalog, card, card.credits, date)
 
 // The credits a cardholder uses, in full each period: what counts against
 // the fee of a card they hold.
@@ -169,9 +198,11 @@ export const usedCreditsYear = (
   catalog: Catalog,
   card: Card,
   held: WalletCard,
+  date: string,
 ) =>
   creditsYear(
     catalog,
     card,
     card.credits.filter((c) => creditInUse(c, held)),
+    date,
   )

@@ -17,6 +17,7 @@ import {
   CREDITS_APART,
   ifCreditsUsedText,
   listed,
+  pairCreditsUsedText,
 } from '../../src/engine/text.ts'
 import { feeLabel, shortName, wholeDollars, words } from './format.ts'
 import {
@@ -304,6 +305,17 @@ export function Spending({
                         </span>
                       </button>
                       <Split sim={p} />
+                      {p.otherCredits > 0 ? (
+                        <p class="muted">
+                          {pairCreditsUsedText(
+                            p.credits
+                              .filter((c) => !c.held)
+                              .map((c) => shortName(c.cardId)),
+                            p.otherCredits,
+                            p.netIfCreditsUsed,
+                          )}
+                        </p>
+                      ) : null}
                       {p.alternatives.length > 0 ? (
                         <p class="muted">
                           Same result with{' '}

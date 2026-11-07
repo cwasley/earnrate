@@ -22,7 +22,7 @@ import {
 } from './memberships.ts'
 import { choicePeriod, periodKey } from './periods.ts'
 import { applyBooking, capBooking } from './record.ts'
-import { milestoneWhat } from './milestones.ts'
+import { liveMilestones, milestoneStarts, milestoneWhat } from './milestones.ts'
 import { rotationGap } from './rotation.ts'
 import {
   creditsCountedText,
@@ -253,12 +253,14 @@ export function simulateWallet(
   // cardmember-year total is the same twelve months' spending.
   const milestones: SimulatedMilestone[] = []
   const milestoneNotes: string[] = []
+  const lastMonth = monthDates(start).at(-1) ?? start
   for (const { card, cents } of cards) {
     const spent = results.reduce(
       (sum, r) => sum + (r.byCard.get(card.id) ?? 0),
       0,
     )
-    for (const m of card.milestones) {
+    // One that starts during the year counts, as it will the year after.
+    for (const m of liveMilestones(card, lastMonth)) {
       if (spent + EPSILON < m.spend) continue
       const value = roundCents(((m.points ?? 0) * cents) / 100)
       milestones.push({
@@ -268,7 +270,7 @@ export function simulateWallet(
         value,
       })
       milestoneNotes.push(
-        `${shortCardName(card.name)}: ${wholeDollars(spent)} a year on it reaches ${milestoneWhat(m)}${m.points === undefined ? '' : ` (about ${money(value)}, counted in its rewards)`}, assuming the same spending each year.`,
+        `${shortCardName(card.name)}: ${wholeDollars(spent)} a year on it reaches ${milestoneWhat(m)}${milestoneStarts(m, start)}${m.points === undefined ? '' : ` (about ${money(value)}, counted in its rewards)`}, assuming the same spending each year.`,
       )
     }
   }
@@ -282,8 +284,8 @@ export function simulateWallet(
     const raw = wallet.cards.find((h) => h.id === card.id)
     const year =
       holding && raw
-        ? usedCreditsYear(catalog, card, raw)
-        : allCreditsYear(catalog, card)
+        ? usedCreditsYear(catalog, card, raw, start)
+        : allCreditsYear(catalog, card, start)
     return year.creditIds.length === 0 ? [] : [{ ...year, held: holding }]
   })
   const creditSum = (heldOnes: boolean) =>
@@ -625,7 +627,7 @@ export function simulateAdditions(
       simulation.membershipFees - current.membershipFees,
     )
     const gain = roundCents(extraRewards - annualFee - membershipFee)
-    const credits = allCreditsYear(catalog, card).yearly
+    const credits = allCreditsYear(catalog, card, options.start).yearly
     additions.push({
       cardId: card.id,
       picks: simulation.cards.at(-1)?.picks ?? {},

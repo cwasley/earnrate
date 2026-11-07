@@ -56,20 +56,37 @@ milestones:
     rewards:
       - a free night at IHG hotels (up to 50,000 points)
     note: 'Use it within 12 months.'
-# Merchant statement credits, on top of what the purchase earns.
+  # Merchant statement credits, on top of what the purchase earns.
+  - id: diamond-status
+    spend: 50000
+    period: calendar_year
+    rewards:
+      - Diamond Elite status
+    valid_from: 2027-01-01
+    note: For the primary cardmember only. Status lasts the rest of the calendar year you qualify and the next.
 credits:
   - id: instacart
     match: { merchants: [instacart] }
     amount: 10
     period: month
     enroll: true
-    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Through December 31, 2027."
+    valid_to: 2027-12-31
+    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card."
   - id: expensify
     match: { merchants: [expensify] }
     amount: 100
     period: calendar_year
     note: 'Bought directly from Expensify on expensify.com or in its app, applied automatically.'
 evidence:
+  - rule: diamond-status
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'Starting January 1, 2027, after spending $50,000 with your IHG One Rewards Business Credit Card'
+  - rule: diamond-status
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'will qualify for IHG One Rewards Diamond Elite Status for the remainder of the calendar year'
+  - rule: instacart
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'from 5/1/2025 through 12/31/2027'
   - rule: base_rate
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
     quote: 'Earn 3X points per $1 spent on all other purchases.'
@@ -143,6 +160,5 @@ evidence:
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
     quote: 'Enjoy up to $100 in statement credits towards Expensify purchases each calendar year.'
 todo:
-  - "Starting January 1, 2027, $50,000 of purchases in a calendar year earns Diamond Elite status. It isn't listed as a milestone yet, because a milestone has no start date."
   - The $100 airline statement credit (after $250 on flights bought directly each calendar year) isn't modeled.
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

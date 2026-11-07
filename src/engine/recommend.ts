@@ -9,6 +9,7 @@ import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { bonusStatus, type BonusStatus } from './bonus.ts'
 import {
+  amountUpgrade,
   evaluateCard,
   paymentUpgrade,
   purchaseContext,
@@ -29,10 +30,11 @@ import { ruleWhat } from './rule-text.ts'
 import { rotationGap } from './rotation.ts'
 import { EPSILON, isClose } from './compare.ts'
 import {
+  amountUnknownText,
   CAP_ADJECTIVES,
   categoryPhrase,
-  creditAnswerText,
   codesAs,
+  creditAnswerText,
   currencyLabel,
   currencyName,
   earnText,
@@ -47,10 +49,10 @@ import {
   paymentUnknownText,
   pct,
   pointValuesText,
+  possessive,
   roundCents,
   shortDate,
   wholeDollars,
-  possessive,
 } from './text.ts'
 import type {
   Confidence,
@@ -121,6 +123,9 @@ type Entry = {
     rate: number
     returnPct: number
   } | null
+  // With no amount: the smallest one a rule on the card asks for, and what
+  // the purchase would earn at that size.
+  ifLarger: { amount: number; rate: number; returnPct: number } | null
 }
 
 const displayName = (e: Entry) => e.held.checkout_label ?? e.card.name
@@ -218,6 +223,7 @@ function rankEntries(
           }
         : null
     const paid = paymentUpgrade(card, held, ctx, evaluation.best.rate)
+    const larger = amountUpgrade(card, held, ctx, evaluation.best.rate)
     const credit =
       options.credits === false
         ? null
@@ -260,6 +266,16 @@ function rankEntries(
                 valuation.centsPerUnit -
               fee +
               creditPct,
+          }
+        : null,
+      ifLarger: larger
+        ? {
+            amount: larger.amount,
+            rate: larger.nominalRate,
+            returnPct:
+              (perDollar - evaluation.best.rate + larger.rate) *
+                valuation.centsPerUnit -
+              fee,
           }
         : null,
     })
@@ -612,6 +628,23 @@ function assumptionsFor(
         displayName(e),
         e.ifPaid.payment,
         earnText(catalog, e.ifPaid.rate, currency),
+        earnText(catalog, e.evaluation.best.nominalRate, currency),
+      ),
+    )
+  }
+  for (const e of entries) {
+    if (!e.ifLarger || !winner) continue
+    if (
+      e !== winner &&
+      e.ifLarger.returnPct <= winner.effectiveReturnPct + EPSILON
+    )
+      continue
+    const currency = e.valuation.currency
+    assumptions.push(
+      amountUnknownText(
+        displayName(e),
+        e.ifLarger.amount,
+        earnText(catalog, e.ifLarger.rate, currency),
         earnText(catalog, e.evaluation.best.nominalRate, currency),
       ),
     )

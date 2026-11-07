@@ -33,6 +33,9 @@ export const MilestoneSchema = z
     period: z.enum(['calendar_year', 'cardmember_year']),
     points: z.number().positive().optional(), // in the card's currency
     rewards: z.array(z.string().min(1)).min(1).optional(),
+    // The day the issuer starts it, for one announced ahead: spending counts
+    // from then.
+    valid_from: IsoDate.optional(),
     note: z.string().optional(),
   })
   .refine(
@@ -97,6 +100,9 @@ export const RuleSchema = z
     geography: z
       .enum(['us_only', 'foreign_only', 'worldwide'])
       .default('worldwide'),
+    // Only a purchase of at least this many dollars. Unknown without an
+    // amount, so then it never applies by assumption.
+    min_amount: z.number().positive().optional(),
     // Inline cap, or the id of a shared cap in the card's `caps`.
     cap: z.union([CapSchema, KebabId]).optional(),
     requires: z
@@ -230,6 +236,11 @@ export const CreditSchema = z.strictObject({
   period: CreditPeriod,
   // The cardholder must enroll with the issuer before it pays.
   enroll: z.literal(true).optional(),
+  // It pays only on a purchase of at least this many dollars.
+  min_amount: z.number().positive().optional(),
+  // The issuer's last day for it. Past it the credit counts nowhere, and a
+  // year's worth counts only the periods that start by then.
+  valid_to: IsoDate.optional(),
   note: z.string().optional(),
 })
 

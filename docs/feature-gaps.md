@@ -53,12 +53,6 @@ A choice option is a list of categories, a list of merchants, or "any online pur
 - `chase-sapphire-reserve`: the Peloton $5,000 limit runs across the whole offer (2025-04-01 to 2027-12-31), and each purchase must be at least $150.
 - `chase-sapphire-preferred`: the same Peloton offer and limits.
 
-### Minimum purchase size
-
-A rule that applies only to purchases above an amount. The engine has the purchase amount when one is given, but no rule condition on it.
-
-- `amex-business-platinum`: 2X on any eligible purchase of $5,000 or more, inside the $2 million yearly cap shared with its 2X categories.
-
 ### Payment-method exclusions
 
 A purchase can say how it's paid (`card`, `apple-pay`, `google-pay` or `paypal`), and a rule can require one (`requires: { payment: apple-pay }`) or exclude some (`exclude: { payment: [paypal] }`). Apple Card and PayPal Cashback use it. What's left are exclusions the issuers word too loosely to model, or that the source check can't re-read:
@@ -109,13 +103,6 @@ A welcome offer has one spend threshold and one bonus.
 
 - `navy-federal-cash-rewards`, `navy-federal-cash-rewards-plus`: one cashRewards application issues cashRewards (1.5%) below a $5,000 credit limit or cashRewards Plus (2%) at $5,000 or more, on Visa or Mastercard. earnrate lists two Visa cards and can't say an applicant may get either.
 
-### Spend milestones that start later
-
-Spend milestones (`milestones:`) have no start date, so one the issuer announces ahead of time isn't listed until it begins.
-
-- `chase-ihg-one-rewards`: starting in 2027, $5,000 of purchases in a calendar year unlocks the 4th Reward Night free benefit.
-- `chase-ihg-one-rewards-business`: starting January 1, 2027, $50,000 of purchases in a calendar year earns Diamond Elite status.
-
 ### Milestone years on billing cycles
 
 A `cardmember_year` milestone runs from the account anniversary date. Citi counts AAdvantage spend milestones over a cardmembership year from the billing cycle after the anniversary month, so the wallet would need the statement date as well.
@@ -133,12 +120,11 @@ Merchant credits (`credits:`) count against a held card's fee once used, and are
 
 A credit (`credits:`) is a fixed dollar amount each period at named merchants or a category, counted on top of the card's rate. These credits don't fit:
 
-- Ending on a date. A credit has no `valid_to`, so these are entered with the end date in their note and will need removing: `chase-sapphire-reserve` StubHub and Peloton (through 2027-12-31) and Lyft (through 2027-09-30); the Instacart credits on `chase-united-*`, `chase-ihg-one-rewards-*` and `chase-ink-business-cash`/`-unlimited` (through 2027-12-31).
 - A different amount in one month. Modeled at the usual amount: `amex-platinum` Uber Cash ($20 more in December); the rideshare credits on `chase-united-quest`, `chase-united-club`, `chase-united-business` and `chase-united-club-business` (more in December).
 - Starting a while after the account opens. `amex-delta-skymiles-gold`'s rideshare credit opens 12 months after the account does; the note says so.
-- Purchases the credit pays for earning nothing. earnrate counts the card's rate on the whole purchase: `chase-sapphire-reserve` ($300 travel credit, and The Edit, not entered), `capital-one-venture-x` and `capital-one-venture-x-business` (travel credits).
+- Purchases the credit pays for earning nothing. earnrate counts the card's rate on the whole purchase: `chase-sapphire-reserve` ($300 travel credit, and The Edit, not entered), `capital-one-venture-x` and `capital-one-venture-x-business` (travel credits), `citi-strata-premier` (the $100 Annual Hotel Benefit).
 - Excluding part of a category. `chase-sapphire-reserve`'s travel credit covers Chase's travel category, which includes trains, buses, taxis, tolls and parking but not rideshare; earnrate's `transit` includes rideshare, so the credit matches `travel` only.
-- After a spending total, or only on a purchase above an amount. Not entered: `amex-business-platinum` Adobe ($250 after $600) and Dell's extra $1,000 (after $5,000), `amex-delta-skymiles-gold` Delta flight credit (after $10,000 in a year), `chase-marriott-bonvoy-boundless` airline credit (after $500), `chase-ihg-one-rewards-premier` and `-business` airline credit (after $250), `chase-united-business` $125 (after five flights of $100 or more), `citi-aadvantage-executive` Lyft (after three rides a month), `citi-strata-premier` hotel ($100 off a stay of $500 or more), `wells-fargo-autograph-journey` ($50 on an airline purchase of $50 or more), `barclays-jetblue-plus` ($100 on a JetBlue Vacations package of $100 or more), `usbank-altitude-go` (after 11 months of streaming).
+- After a spending total. Not entered: `amex-business-platinum` Adobe ($250 after $600) and Dell's extra $1,000 (after $5,000), `amex-delta-skymiles-gold` Delta flight credit (after $10,000 in a year), `chase-marriott-bonvoy-boundless` airline credit (after $500), `chase-ihg-one-rewards-premier` and `-business` airline credit (after $250), `chase-united-business` $125 (after five flights of $100 or more), `citi-aadvantage-executive` Lyft (after three rides a month), `usbank-altitude-go` (after 11 months of streaming).
 - A limit per purchase, booking or stay rather than per period. Not entered: `chase-sapphire-reserve` The Edit ($250 a booking), `chase-united-explorer` and `chase-united-business` United Hotels ($50 on each of the first two stays), the Capital One Premier and Lifestyle Collection experience credits, `amex-hilton-honors-aspire` and `amex-marriott-bonvoy-brilliant` property credits (per stay), `citi-aadvantage-globe` Turo ($30 a trip). The Instacart credits on `chase-united-quest`, `chase-united-club` and `chase-united-club-business` are two credits a month, one per order; they're entered as one monthly amount.
 - Merchants and a category together. Not entered: `amex-business-gold`'s $20 a month at Grubhub, UPS.com and office supply stores.
 - Only some of a merchant's sales. Not entered: the Fine Hotels + Resorts and The Hotel Collection credits (`amex-platinum`, `amex-business-platinum`), Airbnb Luxe through Amex Travel, `amex-hilton-honors-aspire`'s participating Hilton Resorts, `chase-sapphire-reserve`'s Exclusive Tables on OpenTable, `citi-aadvantage-executive`'s inKind restaurants, inflight and Admirals Club purchases (`citi-aadvantage-executive`, `-globe`), United FareLock (`chase-united-business`, `-club-business`) and `bank-of-america-premium-rewards` airline incidentals.

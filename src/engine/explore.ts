@@ -2,8 +2,13 @@ import { categoryResolution, resolvePlace } from '../merchants/resolve.ts'
 import type { Cap, Card, Credit, PaymentMethod } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
-import { creditCovers, creditPerYear } from './credits.ts'
-import { evaluateCard, paymentUpgrade, purchaseContext } from './evaluate.ts'
+import { creditCovers, creditPerYear, liveCredits } from './credits.ts'
+import {
+  amountUpgrade,
+  evaluateCard,
+  paymentUpgrade,
+  purchaseContext,
+} from './evaluate.ts'
 import { creditName } from './rule-text.ts'
 import {
   membershipName,
@@ -21,19 +26,21 @@ import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
 import { optionName } from './rule-text.ts'
 import {
+  amountUnknownText,
+  capSentence,
   categoryPhrase,
   choiceName,
   codesAs,
   creditBack,
   creditThen,
+  creditTerms,
   earnText,
   listed,
-  PAYMENT_PHRASES,
   paidText,
+  PAYMENT_PHRASES,
   paymentUnknownText,
   PICK_PERIODS,
   pointValuesText,
-  capSentence,
 } from './text.ts'
 import type {
   Channel,
@@ -355,6 +362,7 @@ export function exploreCards(
   }
   const ranked: ExploreEntry[] = []
   const ifPaid = new Map<string, PaidUpgrade>()
+  const ifLarger = new Map<string, LargerUpgrade>()
   const excluded: ExcludedCard[] = []
   // A Costco purchase means a Costco member: no membership to point out.
   const members = paidMemberships(catalog, {
@@ -396,6 +404,19 @@ export function exploreCards(
       purchaseContext(catalog, wallet, merchant, merchant.category, purchase),
       top.rate,
     )
+    const larger = amountUpgrade(
+      card,
+      held,
+      purchaseContext(catalog, wallet, merchant, merchant.category, purchase),
+      top.rate,
+    )
+    if (larger)
+      ifLarger.set(card.id, {
+        amount: larger.amount,
+        earn: earnText(catalog, larger.nominalRate, top.currency),
+        standard: earnText(catalog, top.rate, top.currency),
+        returnPct: larger.rate * top.centsPerUnit - (top.foreignFee ?? 0),
+      })
     if (paid)
       ifPaid.set(card.id, {
         payment: paid.payment,
@@ -448,7 +469,7 @@ export function exploreCards(
 
   return {
     merchant,
-    credits: creditPicks(catalog, merchant, ranked),
+    credits: creditPicks(catalog, merchant, ranked, query.date),
     ranked,
     excluded,
     assumptions: exploreAssumptions(
@@ -458,6 +479,7 @@ export function exploreCards(
       options,
       purchase,
       ifPaid,
+      ifLarger,
     ),
     warnings: exploreWarnings(catalog, merchant),
   }
@@ -467,11 +489,12 @@ function creditPicks(
   catalog: Catalog,
   merchant: MerchantResolution,
   ranked: ExploreEntry[],
+  date: string,
 ): CreditPick[] {
   const picks = ranked.flatMap((entry) => {
     const card = catalog.cards.find((c) => c.id === entry.cardId)
     return (
-      (card?.credits ?? [])
+      (card ? liveCredits(card, date) : [])
         // A credit for a whole category (every restaurant) isn't a store's.
         .filter(
           (c) =>
@@ -494,7 +517,7 @@ function creditPicks(
             period: credit.period,
             enroll: credit.enroll === true,
             note: credit.note ?? null,
-            back: creditBack(credit),
+            back: `${creditBack(credit)}${creditTerms(credit)}`,
             earn,
             text: creditThen(credit, earn),
             evidence: evidence
@@ -517,6 +540,8 @@ type PaidUpgrade = {
   returnPct: number
 }
 
+type LargerUpgrade = Omit<PaidUpgrade, 'payment'> & { amount: number }
+
 function exploreAssumptions(
   catalog: Catalog,
   merchant: MerchantResolution,
@@ -524,6 +549,7 @@ function exploreAssumptions(
   options: ExploreOptions,
   purchase: Purchase,
   ifPaid: Map<string, PaidUpgrade>,
+  ifLarger: Map<string, LargerUpgrade>,
 ): string[] {
   const assumptions: string[] = []
   if (merchant.source === 'category') {
@@ -557,6 +583,20 @@ function exploreAssumptions(
         paid.payment,
         paid.earn,
         paid.standard,
+      ),
+    )
+  }
+  for (const entry of ranked) {
+    const larger = ifLarger.get(entry.cardId)
+    if (!larger || !top) continue
+    if (entry !== top && larger.returnPct <= top.effectiveReturnPct + EPSILON)
+      continue
+    assumptions.push(
+      amountUnknownText(
+        entry.cardName,
+        larger.amount,
+        larger.earn,
+        larger.standard,
       ),
     )
   }

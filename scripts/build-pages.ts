@@ -23,6 +23,7 @@ import {
   capitalize,
   categoryPhrase,
   creditBack,
+  creditTerms,
   CREDIT_GROUP,
   CREDITS_ONLY_IF,
   currencyName,
@@ -49,7 +50,7 @@ import type { Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
-import { milestoneWhat } from '../src/engine/milestones.ts'
+import { milestoneStarts, milestoneWhat } from '../src/engine/milestones.ts'
 import {
   creditWhere,
   introWhat,
@@ -516,7 +517,7 @@ function milestonesText(card: Card): string {
   if (card.milestones.length === 0) return ''
   const items = card.milestones.map(
     (m) =>
-      `<li><strong>${esc(capitalize(milestoneWhat(m).replace(/^the /, '')))}</strong>${m.note ? `<br /><span class="muted">${esc(m.note)}</span>` : ''}${evidenceFor(card, m.id)}</li>`,
+      `<li><strong>${esc(capitalize(`${milestoneWhat(m).replace(/^the /, '')}${milestoneStarts(m, today)}`))}</strong>${m.note ? `<br /><span class="muted">${esc(m.note)}</span>` : ''}${evidenceFor(card, m.id)}</li>`,
   )
   return `<h2>Spend bonuses</h2><p>Every purchase on the card counts. earnrate adds the bonus points to the purchase that reaches the total, once you track your spending on earnrate.dev, in Claude or with the command line; status, night credits and free nights aren't given a value.</p><ul>${items.join('')}</ul>`
 }
@@ -524,9 +525,9 @@ function milestonesText(card: Card): string {
 function creditsText(card: Card): string {
   if (card.credits.length === 0) return ''
   const items = card.credits.map((c) => {
-    return `<li><strong>${esc(capitalize(`${creditBack(c)} ${creditWhere(catalog, c)}`))}</strong>${c.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}${c.note ? `<br /><span class="muted">${esc(c.note)}</span>` : ''}${evidenceFor(card, c.id)}</li>`
+    return `<li><strong>${esc(capitalize(`${creditBack(c)} ${creditWhere(catalog, c)}${creditTerms(c)}`))}</strong>${c.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}${c.note ? `<br /><span class="muted">${esc(c.note)}</span>` : ''}${evidenceFor(card, c.id)}</li>`
   })
-  const year = allCreditsYear(catalog, card).yearly
+  const year = allCreditsYear(catalog, card, today).yearly
   return `<h2>Statement credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns: ${esc(wholeDollars(year))} a year if you'd use them all. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that, and counts the ones you use against the annual fee. You can mark any you don't use.</p><ul>${items.join('')}</ul>`
 }
 

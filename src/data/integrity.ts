@@ -197,6 +197,20 @@ function cardProblems(
     ...card.intro_rates.map((i) => i.id),
     ...card.credits.map((c) => c.id),
   ])
+  // An end or start date has to come from the issuer, so a quote names its
+  // year ("through 12/31/2027", "Starting in 2027").
+  for (const [id, date] of [
+    ...card.credits.map((c) => [c.id, c.valid_to] as const),
+    ...card.milestones.map((m) => [m.id, m.valid_from] as const),
+  ]) {
+    if (date === undefined) continue
+    const year = date.slice(0, 4)
+    const named = new RegExp(
+      `(^|\\D)(${year}|\\d{1,2}/\\d{1,2}/${year.slice(2)})(\\D|$)`,
+    )
+    if (!card.evidence.some((e) => e.rule === id && named.test(e.quote)))
+      problems.push(`${where} ${id}: no evidence quote names its date's year`)
+  }
   const sourcePages = new Set(card.source_urls.map((u) => u.split('#')[0]))
   const backed = new Set(card.evidence.map((e) => e.rule))
   for (const e of card.evidence) {

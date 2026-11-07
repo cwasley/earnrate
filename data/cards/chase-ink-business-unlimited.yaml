@@ -43,11 +43,15 @@ credits:
     amount: 20
     period: month
     enroll: true
-    note: "Instacart credits in an Instacart Business account, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Through December 31, 2027."
+    valid_to: 2027-12-31
+    note: "Instacart credits in an Instacart Business account, which need an active Instacart+ membership: activate Chase's complimentary one with the card."
 todo:
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
+  - rule: instacart
+    url: https://creditcards.chase.com/business-credit-cards/ink/unlimited
+    quote: 'from 5/1/2025 through 12/31/2027'
   - rule: base_rate
     url: https://creditcards.chase.com/business-credit-cards/ink/unlimited
     quote: 'Earn unlimited 1.5% Cash Back rewards on every purchase made for your business.'

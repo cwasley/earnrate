@@ -1,9 +1,10 @@
 import type { Card, Milestone } from '../schema/card.ts'
 import type { WalletCard } from '../schema/wallet.ts'
-import { periodEnd, periodKey } from './periods.ts'
+import { inEffect, periodEnd, periodKey } from './periods.ts'
 import {
   listed,
   MILESTONE_PERIODS,
+  shortDate,
   money,
   roundCents,
   wholeDollars,
@@ -11,6 +12,10 @@ import {
 
 // Spend milestones: a bonus paid once a period after a spending total. Only
 // spending the wallet tracks counts; earnrate never assumes the rest.
+
+// The card's milestones the issuer runs on `date`.
+export const liveMilestones = (card: Card, date: string) =>
+  card.milestones.filter((m) => inEffect(m, date))
 
 export type MilestoneProgress = {
   milestone: Milestone
@@ -24,7 +29,7 @@ export function milestoneProgress(
   held: WalletCard,
   date: string,
 ): MilestoneProgress[] {
-  return card.milestones.map((milestone) => {
+  return liveMilestones(card, date).map((milestone) => {
     const period = periodKey(milestone.period, date, held.anniversary ?? null)
     const usage = held.milestone_usage?.[milestone.id]
     return {
@@ -95,6 +100,15 @@ export const milestoneWhat = (
   m: Pick<Milestone, 'spend' | 'period' | 'points' | 'rewards'>,
 ) =>
   `the ${wholeDollars(m.spend)} ${MILESTONE_PERIODS[m.period]} spend for ${milestonePays(m)}`
+
+// " starting Jan 1, 2027" for a milestone that hasn't started by `today`.
+export const milestoneStarts = (
+  m: Pick<Milestone, 'valid_from'>,
+  today: string,
+) =>
+  m.valid_from === undefined || m.valid_from <= today
+    ? ''
+    : ` starting ${shortDate(m.valid_from)}`
 
 export function reachedText(
   card: Card,

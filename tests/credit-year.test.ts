@@ -6,10 +6,13 @@ import { FileWalletStore } from '../src/data/file-store.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import {
   allCreditsYear,
+  creditAt,
   creditPerYear,
+  creditStates,
   usedCreditsYear,
 } from '../src/engine/credits.ts'
 import { checklist } from '../src/engine/checklist.ts'
+import { cardInfo } from '../src/engine/setup.ts'
 import { ALL_PERSONAL_CARDS } from '../src/engine/explore.ts'
 import { effectiveMemberships } from '../src/engine/memberships.ts'
 import { recommend } from '../src/engine/recommend.ts'
@@ -53,7 +56,7 @@ describe('a credit over a year', () => {
   })
 
   test("a card's credits add up, each named by its first store", () => {
-    const year = allCreditsYear(catalog, cardOf(catalog, 'amex-gold'))
+    const year = allCreditsYear(catalog, cardOf(catalog, 'amex-gold'), TODAY)
     expect(year.yearly).toBe(424)
     expect(year.names).toEqual(["Dunkin'", 'Uber', 'Grubhub', 'Resy'])
     expect(creditsYearText(year)).toBe(
@@ -63,15 +66,19 @@ describe('a credit over a year', () => {
 
   test('a held card counts credits said in use, but none marked unused', () => {
     const gold = cardOf(catalog, 'amex-gold')
-    expect(usedCreditsYear(catalog, gold, held({})).creditIds).toEqual([])
+    expect(usedCreditsYear(catalog, gold, held({}), TODAY).creditIds).toEqual(
+      [],
+    )
     expect(
-      usedCreditsYear(catalog, gold, held({ enrolled: ['dunkin'] })).yearly,
+      usedCreditsYear(catalog, gold, held({ enrolled: ['dunkin'] }), TODAY)
+        .yearly,
     ).toBe(84)
     expect(
       usedCreditsYear(
         catalog,
         gold,
         held({ enrolled: ['dunkin', 'uber-cash'] }),
+        TODAY,
       ).yearly,
     ).toBe(204)
     expect(
@@ -81,6 +88,7 @@ describe('a credit over a year', () => {
         held({
           credit_usage: { 'uber-cash': { period: '2026-11', used: 10 } },
         }),
+        TODAY,
       ).creditIds,
     ).toEqual(['uber-cash'])
     expect(
@@ -91,8 +99,64 @@ describe('a credit over a year', () => {
           enrolled: ['dunkin', 'resy'],
           skipped_credits: ['dunkin', 'uber-cash'],
         }),
+        TODAY,
       ),
     ).toMatchObject({ yearly: 100, creditIds: ['resy'] })
+  })
+})
+
+describe('a credit that ends on a date', () => {
+  const ending = (credits: Card['credits']): Card => ({
+    ...cardOf(catalog, 'amex-gold'),
+    credits,
+  })
+  const lyft = { id: 'lyft', match: { merchants: ['lyft'] }, amount: 10 }
+
+  test("a year counts only the periods that start by the credit's last day", () => {
+    const card = ending([
+      { ...lyft, period: 'month', valid_to: '2027-09-30' },
+      {
+        id: 'stubhub',
+        match: { merchants: ['stubhub'] },
+        amount: 150,
+        period: 'half_year',
+        valid_to: '2027-12-31',
+      },
+    ])
+    expect(allCreditsYear(catalog, card, '2026-11-07').yearly).toBe(110 + 300)
+    expect(allCreditsYear(catalog, card, '2027-08-15').yearly).toBe(20 + 150)
+    expect(allCreditsYear(catalog, card, '2027-10-01')).toMatchObject({
+      yearly: 150,
+      creditIds: ['stubhub'],
+    })
+  })
+
+  test('is gone from the wallet and the answers after it ends', () => {
+    const card = ending([{ ...lyft, period: 'month', valid_to: '2027-09-30' }])
+    const holding = held({ enrolled: ['lyft'] })
+    expect(creditStates(catalog, card, holding, '2027-09-30')).toHaveLength(1)
+    expect(creditStates(catalog, card, holding, '2027-10-01')).toEqual([])
+    const lyftRide = {
+      merchantId: 'lyft',
+      category: 'transit.rideshare',
+      source: 'seed' as const,
+    }
+    expect(creditAt(catalog, card, holding, lyftRide, '2027-09-30')).not.toBe(
+      null,
+    )
+    expect(creditAt(catalog, card, holding, lyftRide, '2027-10-01')).toBe(null)
+  })
+
+  test("says when it ends wherever the card's credits are listed", () => {
+    const reserve = cardInfo(
+      catalog,
+      cardOf(catalog, 'chase-sapphire-reserve'),
+      null,
+      TODAY,
+    )
+    expect(reserve.credits.find((c) => c.id === 'lyft-credit')?.text).toBe(
+      '$10 back each month at Lyft through Sep 30, 2027',
+    )
   })
 })
 
@@ -260,7 +324,7 @@ describe("the annual-fee page's second figure", { timeout: 30_000 }, () => {
     const ventureX = feeWorth(cardOf(catalog, 'capital-one-venture-x'))
     expect(ventureX?.credits?.yearly).toBe(300)
     expect(ventureX?.creditsBreakEven).toBeNull()
-    const noCredits = feeWorth(cardOf(catalog, 'citi-strata-premier'))
+    const noCredits = feeWorth(cardOf(catalog, 'capital-one-venture'))
     expect(noCredits?.credits).toBeNull()
     expect(noCredits?.creditsBreakEven).toBeNull()
   })

@@ -59,8 +59,12 @@ credits:
     amount: 10
     period: month
     enroll: true
-    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Through December 31, 2027."
+    valid_to: 2027-12-31
+    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card."
 evidence:
+  - rule: instacart
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
+    quote: 'from 5/1/2025 through 12/31/2027'
   - rule: base_rate
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
     quote: 'Earn 3X points per $1 spent on all other purchases.'

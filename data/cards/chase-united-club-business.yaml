@@ -50,7 +50,8 @@ credits:
     amount: 20
     period: month
     enroll: true
-    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Through December 31, 2027. Each credit applies to one order."
+    valid_to: 2027-12-31
+    note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card. Each credit applies to one order."
   - id: rideshare
     match: { categories: [transit.rideshare] }
     amount: 12
@@ -69,6 +70,9 @@ credits:
     note: 'Hotel stays prepaid through Renowned Hotels and Resorts for United cardmembers.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
+  - rule: instacart
+    url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
+    quote: 'from 3/23/2025 through 12/31/2027'
   - rule: annual_fee
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'ANNUAL FEE $695'

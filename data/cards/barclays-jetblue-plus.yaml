@@ -32,7 +32,24 @@ rules:
     exclude: { categories: [superstore, warehouse_club] }
     rate: 2
     note: Grocery stores and supermarkets, by merchant category code. Warehouse-type stores like Target and Walmart generally don't count.
+# Merchant statement credits, on top of what the purchase earns.
+credits:
+  - id: jetblue-vacations
+    match: { merchants: [jetblue-vacations] }
+    amount: 100
+    period: calendar_year
+    min_amount: 100
+    note: One $100 credit a calendar year on a JetBlue Vacations package of $100 or more (after returns and credits), booked at jetbluevacations.com or 844-JB-VACAY. It posts 6-8 weeks after the purchase.
 evidence:
+  - rule: jetblue-vacations
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'For each calendar year that you purchase a JetBlue Vacations package of $100 or more with your Card Account'
+  - rule: jetblue-vacations
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'Limit of one $100 statement credit per calendar year per Card Account.'
+  - rule: jetblue-vacations
+    url: https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+    quote: 'after you purchase a JetBlue Vacations package of $100 or more with your JetBlue Plus Card.'
   - rule: base_rate
     url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
     quote: 'You earn 1 TrueBlue point for every $1 spent on all other Net Purchases'
@@ -82,5 +99,6 @@ evidence:
     url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
     quote: 'Foreign Transaction 0% of each transaction in U.S. dollars.'
 todo:
-  - Not modeled (perks, not points per dollar) the 5,000-point anniversary bonus, 10% of points back on JetBlue Award Flights, 50% off inflight food and drink, the free first checked bag and the yearly $100 JetBlue Vacations statement credit.
+  - Not modeled (perks, not points per dollar) the 5,000-point anniversary bonus, 10% of points back on JetBlue Award Flights, 50% off inflight food and drink and the free first checked bag.
   - Card spending earns Mosaic tiles toward JetBlue elite status, which isn't modeled.
+  - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

@@ -2,6 +2,16 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.07
+
+New terms the engine can now express, each quoted from the issuer:
+
+- `amex-business-platinum`: 2X on any single eligible purchase of $5,000 or more (`large-purchases`, `min_amount: 5000`), inside the $2 million yearly cap shared with its 2X categories. Sources: [Amex](https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/), [offer terms](https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms).
+- New statement credits with a minimum purchase: `citi-strata-premier`'s $100 Annual Hotel Benefit (a Citi Travel hotel stay of $500 or more, once a calendar year), `wells-fargo-autograph-journey`'s $50 airline credit (an airline purchase of $50 or more, once a year) and `barclays-jetblue-plus`'s $100 JetBlue Vacations credit (a package of $100 or more, once a calendar year). Sources: [Citi](https://www.citi.com/credit-cards/citi-strata-premier-credit-card), [Wells Fargo](https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/), [Barclays terms](https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255).
+- Credits that end on a date take `valid_to`, quoted from each card's page: the Instacart credits on 10 Chase cards and `chase-sapphire-reserve`'s StubHub and Peloton credits (through 2027-12-31) and Lyft credit (through 2027-09-30). They stop counting after that day.
+- Spend milestones that start later take `valid_from`: `chase-ihg-one-rewards`'s 4th Reward Night free after $5,000 a calendar year and `chase-ihg-one-rewards-business`'s Diamond Elite status after $50,000, both from 2027-01-01. Source: [Chase](https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards), [Chase business](https://creditcards.chase.com/business-credit-cards/IHG/business).
+- `chase-prime-visa`'s welcome offer is a $200 Amazon Gift Card for Prime members (was $150), labeled limited-time with no end date. Source: [Chase](https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards).
+
 ## 2026.11.06.2
 
 Wording only; no rates changed. `chase-freedom-flex`'s Q4 2026 dining, grocery and American Red Cross rules list their explanatory quote first ("For Dining purchases, you will earn 7% cash back…"), so answers show it rather than a run-together category list. The notes for O'Reilly Auto Parts, Advance Auto Parts and NAPA Auto Parts say "An auto parts store" (was "A auto parts store").

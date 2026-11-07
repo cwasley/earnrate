@@ -174,6 +174,14 @@ export const paymentUnknownText = (
 ) =>
   `${capitalize(PAYMENT_PHRASES[payment])}, ${name} would earn ${earn} here, instead of the ${standard} it's ranked at. Say how you're paying to count it.`
 
+export const amountUnknownText = (
+  name: string,
+  amount: number,
+  earn: string,
+  standard: string,
+) =>
+  `On a purchase of ${wholeDollars(amount)} or more, ${name} would earn ${earn} here, instead of the ${standard} it's ranked at. Give the amount to count it.`
+
 // For answers that never ask how each purchase is paid (cheat sheets and
 // simulations): which cards' rates that need a way of paying are left out.
 export function paymentNote(
@@ -357,6 +365,16 @@ export const CREDIT_SKIPPED = "marked as one you don't use, so it isn't counted"
 export const creditBack = (c: Pick<Credit, 'amount' | 'period'>) =>
   `${money(c.amount)} back ${CREDIT_PERIODS[c.period]}`
 
+const minPurchase = (amount: number) =>
+  `a purchase of ${wholeDollars(amount)} or more`
+
+// " on a purchase of $500 or more", " through Sep 30, 2027": the limits a
+// credit's issuer sets beyond its amount and period.
+export const creditTerms = (c: Pick<Credit, 'valid_to' | 'min_amount'>) =>
+  `${c.min_amount === undefined ? '' : ` with ${minPurchase(c.min_amount)}`}${
+    c.valid_to === undefined ? '' : ` through ${shortDate(c.valid_to)}`
+  }`
+
 // "$75 back each quarter, then 1x Amex Membership Rewards"
 export const creditThen = (
   c: Pick<Credit, 'amount' | 'period'>,
@@ -374,10 +392,12 @@ export type CreditWords = {
   enrolled: boolean
   left: number | null // this period, before the purchase
   until: string | null // the period's last day
+  minAmount?: number | null // it pays only on a purchase this large
 }
 
 // A line for an answer that uses the card's credit, or says why it doesn't.
 export function creditAnswerText(c: CreditWords, dollars: number | null) {
+  const min = c.minAmount ?? null
   const credit = `${c.name} credit (${creditBack(c)})`
   if (!c.enrolled)
     return `Has ${withArticle(credit)} here; ${ENROLL_FIRST} with the issuer, then mark it enrolled in your wallet. It isn't counted until then.`
@@ -386,7 +406,9 @@ export function creditAnswerText(c: CreditWords, dollars: number | null) {
   if (c.left <= 0)
     return `Its ${c.name} credit is used up ${CREDIT_THIS_PERIOD[c.period]}${c.until === null ? '' : `; it renews after ${shortDate(c.until)}`}.`
   if (dollars === null)
-    return `Its ${credit} has ${creditLeft(c.left, c.period)}; give the amount to count it.`
+    return `Its ${credit} has ${creditLeft(c.left, c.period)}; give the amount to count it${min === null ? '' : ` (it needs ${minPurchase(min)})`}.`
+  if (dollars <= 0 && min !== null)
+    return `Its ${credit} needs ${minPurchase(min)}, so it doesn't count here.`
   return dollars < c.left
     ? `${money(dollars)} back from its ${credit}, on top of what it earns; ${creditLeft(roundCents(c.left - dollars), c.period)} after this.`
     : `${money(dollars)} back from its ${credit}: all that's left ${CREDIT_THIS_PERIOD[c.period]}, on top of what it earns.`
@@ -452,6 +474,15 @@ export const HELD_CREDITS_COUNTED =
 
 export const CREDITS_ONLY_IF =
   "They're worth that only if you'd spend at those places anyway."
+
+// "If you'd use all the statement credits on Amex Gold and Sapphire Reserve
+// ($724 a year), the pair nets $X a year."
+export const pairCreditsUsedText = (
+  cards: string[],
+  yearly: number,
+  dollars: number,
+) =>
+  `If you'd use all the statement credits on ${listed(cards)} (${wholeDollars(yearly)} a year), the pair nets ${wholeDollars(dollars)} a year.`
 
 // "If you'd use all its statement credits ($424 a year: …), it nets $X a
 // year." `adds` for a card beside the ones already held.

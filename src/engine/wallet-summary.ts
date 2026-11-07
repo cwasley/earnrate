@@ -25,6 +25,7 @@ import { activationRules } from './setup.ts'
 import {
   CAP_PERIODS,
   creditBack,
+  creditTerms,
   creditsCountedText,
   creditLeft,
   ENROLL_FIRST,
@@ -398,7 +399,7 @@ export function walletSummary(
       caps: capSummaries(catalog, card, held, today),
       milestones: milestoneSummaries(card, held, today),
       credits: creditSummaries(catalog, card, held, today),
-      ...usedCredits(catalog, card, held),
+      ...usedCredits(catalog, card, held, today),
       chosen: held.chosen
         ? {
             period: held.chosen.period,
@@ -442,8 +443,9 @@ function usedCredits(
   catalog: Catalog,
   card: Card,
   held: WalletCard,
+  today: string,
 ): Pick<CardSummary, 'usedCredits' | 'usedCreditsText'> {
-  const used = usedCreditsYear(catalog, card, held)
+  const used = usedCreditsYear(catalog, card, held, today)
   return {
     usedCredits: used.yearly,
     usedCreditsText:
@@ -485,7 +487,7 @@ function creditSummaries(
       used: s.used,
       left: s.left,
       tracked: held.credit_usage?.[s.credit.id] !== undefined,
-      text: `${creditBack(s)} ${creditWhere(catalog, s.credit)}: ${status}.`,
+      text: `${creditBack(s)} ${creditWhere(catalog, s.credit)}${creditTerms(s.credit)}: ${status}.`,
     }
   })
 }

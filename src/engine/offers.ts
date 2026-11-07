@@ -126,7 +126,7 @@ export function compareOffers(
     const firstYearValue = roundCents(
       value - (firstYearFee ?? 0) - membershipFee,
     )
-    const credits = allCreditsYear(catalog, card).yearly
+    const credits = allCreditsYear(catalog, card, today).yearly
     offers.push({
       cardId: card.id,
       cardName: card.name,

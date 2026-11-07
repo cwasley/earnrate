@@ -56,6 +56,12 @@ rules:
     geography: us_only
     cap: key-business-categories
     note: U.S. shipping providers. Shares the $2 million yearly cap.
+  - id: large-purchases
+    match: { any: true }
+    rate: 2
+    min_amount: 5000
+    cap: key-business-categories
+    note: A single eligible purchase of $5,000 or more, anywhere. It doesn't count if the merchant splits a purchase into charges under $5,000. A large purchase in a 2X category earns 2X once, and 5X travel wins over it. Shares the $2 million yearly cap.
 # Not modeled: the hotel and Airbnb credits (only some Amex Travel bookings),
 # the airline fee credit (an airline you pick), Adobe and the extra Dell
 # credit (after a spending total), the 35% Pay with Points airline bonus and
@@ -99,6 +105,15 @@ credits:
     note: "Bought directly from Dell Technologies in the U.S. The extra $1,000 after $5,000 of Dell purchases in a year isn't modeled."
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
+  - rule: large-purchases
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/
+    quote: 'Earn 2X points on eligible purchases in key business categories, or on single purchases of $5K or more.'
+  - rule: large-purchases
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'or (4) eligible purchases of $5,000 or more'
+  - rule: large-purchases
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'a purchase transaction of $5,000 or more will not qualify if the merchant divides the purchase'
   - rule: base_rate
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
     quote: 'Basic Card Members will get 1 Membership Rewards® point for each dollar charged for eligible purchases'
@@ -178,7 +193,6 @@ evidence:
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
     quote: 'Each Card Account can receive up to $150 in statement credits for eligible purchases with Dell Technologies'
 todo:
-  - "Any eligible purchase of $5,000 or more earns 2X (inside the same $2 million yearly cap). earnrate has no rule condition on purchase size, so this isn't modeled."
   - "Software and cloud system providers count toward the electronics category, but earnrate has no software or cloud category, so only electronics stores are modeled. Construction material and hardware suppliers are modeled as earnrate's home improvement category."
   - 'From February 17, 2027, U.S. shipping providers count only when bought directly from UPS, FedEx, USPS, Auctane, DHL, Worldwide Express and Old Dominion Freight Line. Not modeled yet.'
   - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'

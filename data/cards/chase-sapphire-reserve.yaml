@@ -70,20 +70,29 @@ credits:
     amount: 150
     period: half_year
     enroll: true
-    note: 'StubHub and viagogo, through December 31, 2027. Activate once on chase.com.'
+    valid_to: 2027-12-31
+    note: 'StubHub and viagogo. Activate once on chase.com.'
   - id: lyft-credit
     match: { merchants: [lyft] }
     amount: 10
     period: month
-    note: 'A $10 Lyft credit in the app each month, through September 30, 2027, once the card is added to Lyft. Rides only, not memberships, fees, tips or taxes.'
+    valid_to: 2027-09-30
+    note: 'A $10 Lyft credit in the app each month, once the card is added to Lyft. Rides only, not memberships, fees, tips or taxes.'
   - id: peloton-credit
     match: { merchants: [peloton-membership] }
     amount: 10
     period: month
     enroll: true
-    note: 'Peloton memberships (All-Access, Rental, App+, Guide, App One, Strength+), through December 31, 2027. Activate once on chase.com.'
+    valid_to: 2027-12-31
+    note: 'Peloton memberships (All-Access, Rental, App+, Guide, App One, Strength+). Activate once on chase.com.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
+  - rule: stubhub
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'for a maximum of $300 annually for StubHub and viagogo purchases through 12/31/2027'
+  - rule: peloton-credit
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'Get $10 in statement credits per month on eligible Peloton memberships through 12/31/2027'
   - rule: base_rate
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: "You'll earn 1 point for each $1 spent on all other purchases"
