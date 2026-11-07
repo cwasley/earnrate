@@ -2,7 +2,13 @@ import { z } from 'zod'
 import type { Catalog } from '../schema/catalog.ts'
 import { containsQuote, earningLines, lineKey, pageKey } from './text.ts'
 
-export type PageLoad = { innerText: string; textContent: string }
+export type PageLoad = {
+  innerText: string
+  // Also collapsed and hidden sections, which innerText skips.
+  fullText: string
+  // Script, template and noscript contents. See splitPage.
+  pageData: string
+}
 export type PageSnapshot =
   | { url: string; ok: true; loads: PageLoad[] }
   | { url: string; ok: false; reason: string }
@@ -23,6 +29,9 @@ export type SourcesReport = {
     rule: string
     url: string
     quote: string
+    // In the page's embedded data but not its text: stale copy, or a popup
+    // whose quote isn't marked `in_popup`.
+    onlyInPageData: boolean
   }[]
   newLines: { url: string; lines: string[] }[]
   removedLines: { url: string; keys: string[] }[]
@@ -123,15 +132,16 @@ export function compareSources(
     for (const e of card.evidence) {
       const snap = snapshots.get(pageKey(e.url))
       if (!snap?.ok) continue
-      const texts = snap.loads.flatMap((l) => [l.innerText, l.textContent])
-      const found = containsQuote(texts, e.quote)
+      const texts = (l: PageLoad) =>
+        e.in_popup === true
+          ? [l.innerText, l.fullText, l.pageData]
+          : [l.innerText, l.fullText]
+      const found = containsQuote(snap.loads.flatMap(texts), e.quote)
       if (
         found &&
         e.rule === 'welcome_offer' &&
         card.welcome_offer?.varies !== true &&
-        !snap.loads.every((l) =>
-          containsQuote([l.innerText, l.textContent], e.quote),
-        )
+        !snap.loads.every((l) => containsQuote(texts(l), e.quote))
       )
         report.varyingOffers.push({
           cardId: card.id,
@@ -144,6 +154,10 @@ export function compareSources(
           rule: e.rule,
           url: e.url,
           quote: e.quote,
+          onlyInPageData: containsQuote(
+            snap.loads.map((l) => l.pageData),
+            e.quote,
+          ),
         })
       }
     }
@@ -188,7 +202,9 @@ export function formatReport(
       '',
     )
     for (const m of report.missingEvidence) {
-      out.push(`- **${m.cardId}** \`${m.rule}\`: "${m.quote}" (${m.url})`)
+      out.push(
+        `- **${m.cardId}** \`${m.rule}\`: "${m.quote}" (${m.url})${m.onlyInPageData ? ": only in the page's embedded data, not its text. If a popup on the page shows it, add `in_popup: true` to the quote; otherwise the page no longer says it." : ''}`,
+      )
     }
     out.push('')
   }

@@ -113,6 +113,7 @@ evidence:
   - rule: spend-15k
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
     quote: 'Earn 15,000 bonus points after you spend $15,000 on purchases each calendar year.'
+    in_popup: true
   - rule: spend-15k
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
     quote: 'will qualify for Platinum Elite Status, 5 Elite Night credits and 15,000 bonus points'
@@ -128,6 +129,7 @@ evidence:
   - rule: instacart
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
     quote: 'Active Instacart+ membership is required to receive your $10 monthly credit.'
+    in_popup: true
 todo:
   - The $100 airline statement credit (after $250 on flights bought directly each calendar year, through 12/31/27) isn't modeled.
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

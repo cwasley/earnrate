@@ -69,6 +69,7 @@ evidence:
   - rule: gas-and-ev-charging
     url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
     quote: 'for gas or EV charging purchased at some superstores, supermarkets and warehouse clubs other than Costco'
+    in_popup: true
   - rule: restaurants
     url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
     quote: '3% cash back on restaurant purchases (including cafes, bars, lounges, and fast food restaurants)'
@@ -84,6 +85,7 @@ evidence:
   - rule: restaurants
     url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
     quote: 'for purchases made at bakeries and certain restaurants'
+    in_popup: true
   - rule: costco
     url: https://www.citi.com/credit-cards/costco-anywhere-visa-business-card
     quote: '2% cash back on all other purchases from Costco and Costco.com'

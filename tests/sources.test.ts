@@ -14,6 +14,7 @@ import {
   errorPage,
   lineKey,
   normalizeText,
+  splitPage,
 } from '../src/sources/text.ts'
 
 const realCatalog = await loadCatalog()
@@ -36,7 +37,7 @@ const PAGE = `SoFi Unlimited 2% Credit Card\n${quotes}.\nVariable APR 19.99% to 
 const ok = (...texts: string[]): PageSnapshot => ({
   url,
   ok: true,
-  loads: texts.map((t) => ({ innerText: t, textContent: t })),
+  loads: texts.map((t) => ({ innerText: t, fullText: t, pageData: '' })),
 })
 
 describe('text', () => {
@@ -55,7 +56,31 @@ describe('text', () => {
         'Log In Loading Error Sorry, we are unable to load this page at this time. Please try again later.',
       ),
     ).toMatch(/unable to load this page/)
+    expect(
+      errorPage(
+        'Target Circle We’re sorry! This page is currently unavailable. Please try again later.',
+      ),
+    ).toMatch(/currently unavailable/)
     expect(errorPage(PAGE)).toBeNull()
+  })
+
+  test('page text leaves script, style, template and noscript contents out', () => {
+    const html = [
+      '<html><head><title>Card</title><script>var s = "<body>in head"</script></head>',
+      '<body class="page" data-note="a > b"><h1>Earn&nbsp;5X &amp; more</h1>',
+      '<!-- <script> -->',
+      '<script id="__NEXT_DATA__" type="application/json">{"offer":"old offer"}</script>',
+      '<style>.offer::after { content: "styled" }</style>',
+      '<template><p>outer <template>inner</template> template</p></template>',
+      '<noscript><p>Turn on JavaScript</p></noscript>',
+      '<p>Card Members&#8217; &#x2018;offer&#x2019; &lt;terms&gt;</p></body></html>',
+    ].join('')
+    const { text, data } = splitPage(html)
+    expect(text).toBe('Earn\u00a05X & moreCard Members’ ‘offer’ <terms>')
+    expect(data).toContain('{"offer":"old offer"}')
+    expect(data).toContain('outer  template')
+    expect(data).toContain('inner')
+    expect(data).not.toContain('styled')
   })
 
   test('earning lines skip APRs and short fragments', () => {
@@ -111,6 +136,63 @@ describe('compareSources', () => {
       expect.objectContaining({ cardId: 'sofi-unlimited-2', rule: first.rule }),
     ])
     expect(formatReport(report, '2026-10-31')).toMatch(/backing text is gone/)
+  })
+
+  describe('a quote only in hidden text', () => {
+    const first = card.evidence[0]
+    if (!first) throw new Error('no evidence')
+    const visible = PAGE.replace(first.quote, '')
+    const check = (hidden: string, inPopup = false) => {
+      const html = `<html><body><main>${visible}</main>${hidden}</body></html>`
+      const { text, data } = splitPage(html)
+      const load = { innerText: visible, fullText: text, pageData: data }
+      const evidence = card.evidence.map((e) =>
+        e === first && inPopup ? { ...e, in_popup: true as const } : e,
+      )
+      return compareSources(
+        { ...catalog, cards: [{ ...card, evidence }] },
+        new Map([[url, { url, ok: true, loads: [load, load] }]]),
+        baseline(PAGE),
+        '2026-10-31',
+      ).report
+    }
+    const missing = (hidden: string, inPopup = false) =>
+      check(hidden, inPopup).missingEvidence.map((m) => m.rule)
+    const data = JSON.stringify({ props: { offer: first.quote } })
+    const script = `<script id="__NEXT_DATA__" type="application/json">${data}</script>`
+
+    test('fails when it is only in page data inside a script', () => {
+      const report = check(script)
+      expect(report.missingEvidence).toEqual([
+        expect.objectContaining({ rule: first.rule, onlyInPageData: true }),
+      ])
+      expect(formatReport(report, '2026-10-31')).toMatch(
+        /only in the page's embedded data/,
+      )
+    })
+
+    test('passes in page data when marked in_popup', () => {
+      expect(missing(script, true)).toEqual([])
+    })
+
+    test('fails when marked in_popup but gone from the page data too', () => {
+      expect(missing('', true)).toEqual([first.rule])
+      expect(check('').missingEvidence[0]?.onlyInPageData).toBe(false)
+    })
+
+    test('passes in a collapsed section', () => {
+      expect(
+        missing(`<details><summary>Terms</summary>${first.quote}</details>`),
+      ).toEqual([])
+    })
+
+    test('passes in an overlay hidden with display: none', () => {
+      expect(
+        missing(
+          `<div role="dialog" style="display: none"><p>${first.quote}</p></div>`,
+        ),
+      ).toEqual([])
+    })
   })
 
   test('a new earning line and a removed one are both reported', () => {

@@ -40,18 +40,22 @@ evidence:
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+    in_popup: true
   - rule: grocery-stores
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'Earn 2 AAdvantage® miles for each $1 spent at grocery stores, including grocery delivery services'
   - rule: grocery-stores
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'convenience stores, markets, specialty vendors, and bakeries'
+    in_popup: true
   - rule: grocery-stores
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'discount superstores, wholesale'
+    in_popup: true
   - rule: grocery-stores
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'confectionery stores, cafes, bars, lounges, and fast food restaurants'
+    in_popup: true
   - rule: annual_fee
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'Annual Fee - None. Fee for Foreign Purchases - 3%'

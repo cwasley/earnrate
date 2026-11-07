@@ -77,7 +77,7 @@ if (values.dump) {
     await writeFile(path.join(values.dump, `${name}.txt`), first.innerText)
     await writeFile(
       path.join(values.dump, `${name}.content.txt`),
-      first.textContent,
+      first.fullText,
     )
   }
 }

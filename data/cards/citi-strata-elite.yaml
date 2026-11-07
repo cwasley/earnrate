@@ -66,6 +66,7 @@ evidence:
   - rule: citi-travel-hotels-cars-attractions
     url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
     quote: 'only the portion paid with your card will earn points'
+    in_popup: true
   - rule: citi-travel-air
     url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
     quote: '6 points per dollar spent on Air Travel booked on cititravel.com'
@@ -78,6 +79,7 @@ evidence:
   - rule: restaurants
     url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
     quote: 'Excludes purchases at bakeries, caterers, and restaurants located inside another business'
+    in_popup: true
   - rule: restaurants
     url: https://www.thankyou.com/terms
     quote: '3 ThankYou Points for each $1 spent at restaurants, including restaurant delivery services'

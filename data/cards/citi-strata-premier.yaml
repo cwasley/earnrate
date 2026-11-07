@@ -85,9 +85,11 @@ evidence:
   - rule: travel-agencies
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: 'Includes purchases at airlines, hotels (not booked through the Citi Travel site via'
+    in_popup: true
   - rule: travel-agencies
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: '), and travel agencies.'
+    in_popup: true
   - rule: restaurants
     url: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
     quote: '3 points per dollar spent at Restaurants'

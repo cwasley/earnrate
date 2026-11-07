@@ -18,11 +18,70 @@ export function normalizeText(text: string): string {
 // What an issuer serves instead of the page while it's rate-limiting or down.
 // It comes with HTTP 200 and enough text to pass the length check, so without
 // this it would be read as the page and its hashes written to the lock.
-const ERROR_PAGES = ['Sorry, we are unable to load this page at this time']
+const ERROR_PAGES = [
+  'Sorry, we are unable to load this page at this time',
+  "We're sorry! This page is currently unavailable. Please try again later.",
+]
 
 export function errorPage(text: string): string | null {
   const page = normalizeText(text)
   return ERROR_PAGES.find((p) => page.includes(normalizeText(p))) ?? null
+}
+
+const ATTRS = `(?:[^>"']|"[^"]*"|'[^']*')*`
+const UNREAD = new RegExp(
+  `<!--[\\s\\S]*?-->|<(script|style|noscript)\\b${ATTRS}>([\\s\\S]*?)</\\1\\s*>`,
+  'gi',
+)
+const INNERMOST_TEMPLATE = new RegExp(
+  `<template\\b${ATTRS}>((?:(?!<template\\b)[\\s\\S])*?)</template\\s*>`,
+  'gi',
+)
+const TAG = new RegExp(`</?[a-z][^\\s/>]*${ATTRS}>`, 'gi')
+const ENTITY = /&(amp|lt|gt|quot|nbsp|#\d+|#x[\da-f]+);/gi
+const NAMED: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  nbsp: '\u00a0',
+}
+
+const decode = (s: string) =>
+  s.replace(ENTITY, (_, name: string) => {
+    const named = NAMED[name.toLowerCase()]
+    if (named !== undefined) return named
+    const code =
+      name[1] === 'x' || name[1] === 'X'
+        ? parseInt(name.slice(2), 16)
+        : parseInt(name.slice(1), 10)
+    return code <= 0x10ffff ? String.fromCodePoint(code) : ''
+  })
+
+// Splits Chromium's serialized DOM (`page.content()`) into the body's text
+// (body.textContent, hidden sections included) and the script, template and
+// noscript contents, which can hold copy the page no longer shows. The
+// serializer escapes only &, <, >, " and no-break spaces in text.
+export function splitPage(html: string): { text: string; data: string } {
+  const data: string[] = []
+  let s = html.replace(
+    UNREAD,
+    (_, tag: string | undefined, inner: string | undefined) => {
+      if (tag !== undefined && tag.toLowerCase() !== 'style')
+        data.push(inner ?? '')
+      return ''
+    },
+  )
+  for (let before = ''; before !== s;) {
+    before = s
+    s = s.replace(INNERMOST_TEMPLATE, (_, inner: string) => {
+      data.push(decode(inner.replace(TAG, '')))
+      return ''
+    })
+  }
+  const body = /<body[\s>]/i.exec(s)
+  if (body) s = s.slice(body.index)
+  return { text: decode(s.replace(TAG, '')), data: data.join('\n') }
 }
 
 export function containsQuote(pageTexts: string[], quote: string): boolean {

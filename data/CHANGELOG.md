@@ -2,6 +2,13 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
 
+## 2026.11.07.1
+
+Evidence quotes only; no rates, fees, offers or credits changed. No issuer changes.
+
+- 39 quotes on 16 cards live in popups the page builds from its embedded data only when opened. Each now has `in_popup: true`, after the quote was seen in the open popup: Chase's benefit popups (`chase-ihg-one-rewards-premier`, `chase-united-business`, `chase-united-club-business`), Citi's "Additional Information" panel (`citi-aadvantage-business`, `citi-aadvantage-executive`, `citi-aadvantage-globe`, `citi-aadvantage-mileup`, `citi-aadvantage-platinum-select`, `citi-costco-anywhere-visa`, `citi-costco-anywhere-visa-business`, `citi-double-cash`, `citi-my-best-buy-visa`, `citi-strata-elite`, `citi-strata-premier`) and Nordstrom's "Terms Apply" popup (`td-bank-nordstrom-credit-card`, `td-bank-nordstrom-visa`).
+- `citi-custom-cash`: the card page shows only that applications closed on May 28, 2026, so its 1% base rate and 5% top-category quotes now come from the card's ThankYou terms ("1 ThankYou Point for each $1 you spend on purchases", "5 ThankYou Points for each $1 You spend in Your highest eligible spend category each billing cycle"), and the Citi Travel rule keeps only its ThankYou terms quote. Same rates. Source: [ThankYou terms](https://www.thankyou.com/ccterms).
+
 ## 2026.11.07
 
 New terms the engine can now express, each quoted from the issuer:

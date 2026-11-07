@@ -4,12 +4,12 @@ color: '#3a7d8c'
 issuer: citi
 network: mastercard
 currency: cash
-last_verified: 2026-11-01
+last_verified: 2026-11-07
 verified_by: claude
 applications_closed: 2026-05-28
 # Existing cardmembers keep the card and its rewards. The card page no longer
-# lists the categories, so the definitions come from the card's current
-# ThankYou terms (Sept 2026).
+# states any earning terms, so the rates and definitions come from the card's
+# current ThankYou terms (Sept 2026).
 source_urls:
   - https://www.citi.com/credit-cards/citi-custom-cash-credit-card
   - https://www.thankyou.com/ccterms
@@ -107,14 +107,14 @@ todo:
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
-    url: https://www.citi.com/credit-cards/citi-custom-cash-credit-card
-    quote: 'Earn 1% cash back thereafter on all other purchases.'
+    url: https://www.thankyou.com/ccterms
+    quote: '1 ThankYou Point for each $1 you spend on purchases'
   - rule: base_rate
     url: https://www.thankyou.com/ccterms
     quote: 'You can combine them into one ThankYou Account'
   - rule: top-category
-    url: https://www.citi.com/credit-cards/citi-custom-cash-credit-card
-    quote: 'Earn 5% cash back on your top eligible spend category each billing cycle up to $500 spent'
+    url: https://www.thankyou.com/ccterms
+    quote: '5 ThankYou Points for each $1 You spend in Your highest eligible spend category each billing cycle'
   - rule: top-category
     url: https://www.thankyou.com/ccterms
     quote: 'After the first $500 spent in that category during the billing cycle'
@@ -148,9 +148,6 @@ evidence:
   - rule: citi-travel-hotels-cars-attractions
     url: https://www.thankyou.com/ccterms
     quote: 'only the portion paid with your card will earn points'
-  - rule: citi-travel-hotels-cars-attractions
-    url: https://www.citi.com/credit-cards/citi-custom-cash-credit-card
-    quote: 'additional 4% cash back on hotels, car rentals, and attractions booked with Citi Travel'
   - rule: citi-travel-hotels-cars-attractions
     url: https://www.thankyou.com/ccterms
     quote: '4 additional ThankYou Points for each $1 spent on hotels, car rentals, and attractions'

@@ -48,6 +48,7 @@ evidence:
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
     quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+    in_popup: true
   - rule: restaurants
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
     quote: 'Earn 2 AAdvantage® miles for every $1 spent at restaurants, including takeout and delivery'
@@ -57,6 +58,7 @@ evidence:
   - rule: rides-and-rails
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
     quote: 'passenger railways, bridge and road tolls, parking lots'
+    in_popup: true
   - rule: annual_fee
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
     quote: 'Annual fee: $350. Minimum interest charge $0.50.'

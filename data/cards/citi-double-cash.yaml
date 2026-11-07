@@ -56,6 +56,7 @@ evidence:
   - rule: citi-travel-hotels-cars-attractions
     url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
     quote: 'this totals 5 ThankYou Points per dollar'
+    in_popup: true
   - rule: citi-travel-hotels-cars-attractions
     url: https://www.thankyou.com/dcterms
     quote: '3 additional ThankYou Points for each $1 spent on hotels, car rentals and attractions booked with Citi Travel'

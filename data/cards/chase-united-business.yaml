@@ -129,9 +129,12 @@ evidence:
   - rule: rideshare
     url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
     quote: 'up to $8 back as a statement credit each month from January through November'
+    in_popup: true
   - rule: rideshare
     url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
     quote: 'Yearly opt-in is required.'
+    in_popup: true
   - rule: jsx
     url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
     quote: 'Get up to $100 back as a statement credit each anniversary year when you book flights directly with JSX'
+    in_popup: true

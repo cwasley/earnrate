@@ -1,6 +1,6 @@
 import { chromium, type Browser } from 'playwright'
 import type { PageLoad, PageSnapshot } from './check.ts'
-import { errorPage } from './text.ts'
+import { errorPage, splitPage } from './text.ts'
 
 // Headless Chrome's default user agent is often blocked outright.
 const USER_AGENT =
@@ -28,14 +28,13 @@ async function load(
     await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {
       // Pages with long-polling never go idle; what has rendered is enough.
     })
-    const body = page.locator('body')
-    const read = async () => ({
-      innerText: await body.innerText(),
-      // Includes collapsed accordions that innerText skips.
-      textContent: (await body.textContent()) ?? '',
-    })
-    const size = (t: { innerText: string; textContent: string }) =>
-      Math.max(t.innerText.length, t.textContent.length)
+    const read = async (): Promise<PageLoad> => {
+      const innerText = await page.locator('body').innerText()
+      const { text, data } = splitPage(await page.content())
+      return { innerText, fullText: text, pageData: data }
+    }
+    const size = (t: PageLoad) =>
+      Math.max(t.innerText.length, t.fullText.length)
     let text = await read()
     if (size(text) < MIN_TEXT) {
       await page.waitForTimeout(8_000)
@@ -47,7 +46,7 @@ async function load(
         reason: `only ${String(size(text))} characters of text (likely blocked)`,
       }
     }
-    const shown = () => errorPage(`${text.innerText}\n${text.textContent}`)
+    const shown = () => errorPage(`${text.innerText}\n${text.fullText}`)
     if (shown() !== null) {
       // A rate limit often lifts after a short wait.
       await page.waitForTimeout(30_000)

@@ -301,6 +301,9 @@ export const CardSchema = z
           rule: z.string().min(1),
           url: z.url(),
           quote: z.string().min(1),
+          // Set only after seeing the quote in a popup the page builds on
+          // click from its embedded data; other quotes must be in its text.
+          in_popup: z.literal(true).optional(),
         }),
       )
       .default([]),

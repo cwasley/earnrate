@@ -106,18 +106,23 @@ evidence:
   - rule: spend-50k
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'Receive United Club All Access Membership after spending $50,000 in a calendar year'
+    in_popup: true
   - rule: instacart
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'you can receive two (2) $10 credits in your Instacart account each month'
   - rule: rideshare
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'up to $12 back as a statement credit each month from January through November'
+    in_popup: true
   - rule: rideshare
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'Yearly opt-in is required.'
+    in_popup: true
   - rule: jsx
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'Get up to $200 back as a statement credit each anniversary year when you book flights directly with JSX'
+    in_popup: true
   - rule: renowned-hotels-credit
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'Receive up to $200 back in statement credits each anniversary year on hotel accommodations'
+    in_popup: true

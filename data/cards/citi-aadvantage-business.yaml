@@ -60,27 +60,32 @@ evidence:
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+    in_popup: true
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'Products or services that do not qualify are car rentals booked through aadvantagecars.com'
+    in_popup: true
   - rule: car-rentals
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'Earn 2 AAdvantage® miles for your business on every $1 spent at car rental merchants and gas stations'
   - rule: car-rentals
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'purchases made through travel agencies, tour operators, and online third party travel sites'
+    in_popup: true
   - rule: gas-stations
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'Earn 2 AAdvantage® miles for your business on every $1 spent at car rental merchants and gas stations'
   - rule: gas-stations
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'purchases made at warehouse clubs that do not code gas station purchases under a gas station code'
+    in_popup: true
   - rule: telecom-cable-satellite
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'Earn 2 AAdvantage® miles for your business on every $1 spent at telecommunications merchants and cable and satellite providers'
   - rule: telecom-cable-satellite
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'Cable and satellite providers are classified as merchants that provide the connection and ongoing delivery of television'
+    in_popup: true
   - rule: annual_fee
     url: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
     quote: 'The annual fee is $99. However, this fee is waived for the first 12 months.'

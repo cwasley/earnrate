@@ -53,18 +53,21 @@ evidence:
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+    in_popup: true
   - rule: restaurants
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'Earn 2 AAdvantage® miles for every $1 spent at restaurants, including takeout'
   - rule: restaurants
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'restaurants (including cafes, bars, lounges, and fast food restaurants) and at gas stations'
+    in_popup: true
   - rule: gas-stations
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'Earn 2 AAdvantage® miles for every $1 spent at gas stations'
   - rule: gas-stations
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'purchases made at warehouse clubs that do not code gas station purchases under a gas station code'
+    in_popup: true
   - rule: annual_fee
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'Annual fee - $99, waived for the first 12 months.'
@@ -86,3 +89,4 @@ evidence:
   - rule: spend-20k
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'Earn a $125 American Airlines Flight Discount certificate (the “Flight Discount”) after you spend $20,000 or more in purchases'
+    in_popup: true

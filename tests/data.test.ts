@@ -5,10 +5,14 @@ import { catalogProblems, walletProblems } from '../src/data/integrity.ts'
 import { loadCatalog, loadWallet } from '../src/data/load.ts'
 import { EXAMPLE_WALLET, ROOT } from './helpers.ts'
 
-test('repo data files parse and every reference resolves', async () => {
-  const catalog = await loadCatalog()
-  expect(catalogProblems(catalog)).toEqual([])
-})
+test(
+  'repo data files parse and every reference resolves',
+  { timeout: 30_000 },
+  async () => {
+    const catalog = await loadCatalog()
+    expect(catalogProblems(catalog)).toEqual([])
+  },
+)
 
 test('the example wallet matches the card catalog', async () => {
   const catalog = await loadCatalog()

@@ -43,6 +43,7 @@ evidence:
   - rule: best-buy
     url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
     quote: 'are only awarded when you select Standard Credit'
+    in_popup: true
   - rule: gas
     url: https://www.citi.com/credit-cards/citi-best-buy-credit-cards
     quote: 'per $1 spent at gas stations (3% back in rewards)'

@@ -59,12 +59,14 @@ evidence:
   - rule: aadvantage-cars
     url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
     quote: 'Payless car rentals will not qualify.'
+    in_popup: true
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
     quote: 'Earn 4 AAdvantage® miles for every $1 spent on eligible American Airlines purchases'
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
     quote: 'Eligible American Airlines purchases are items billed by American Airlines as the merchant of record.'
+    in_popup: true
   - rule: american-airlines
     url: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
     quote: 'After you spend $150,000 in purchases in a calendar year, earn a total of 5 AAdvantage® miles'

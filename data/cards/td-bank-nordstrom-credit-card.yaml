@@ -74,6 +74,7 @@ evidence:
   - rule: not_with
     url: https://www.nordstrom.com/becomecardmember
     quote: 'Current and previous Nordstrom credit cardmembers and Nordstrom employees are not eligible for this offer'
+    in_popup: true
   - rule: nordstrom
     url: https://www.nordstrom.com/browse/nordy-club/faq
     quote: "If you use your Nordstrom card via Google Pay or Apple Pay, you'll earn your standard Nordy Club base points"
