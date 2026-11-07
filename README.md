@@ -9,14 +9,14 @@ I wanted a ghost card: one card that always charges the best of my cards. The ca
 
 **earnrate is the best-card decision layer for people and AI agents.** Give it a merchant, and it tells you which credit card earns the most there, from your own cards or from every card it knows, and why. Save your cards and it tracks your caps and chosen categories. It's valuation-aware and transparent about its assumptions. It never sees a card number.
 
-- Runs on your machine, in your browser at [earnrate.dev](https://earnrate.dev) (which you can add to your phone's Home Screen and use offline), or in Claude as a connector at `https://mcp.earnrate.dev`, with nothing to install. No account and no affiliate links; the hosted server counts requests by tool name, nothing about what you ask. See the [privacy page](https://earnrate.dev/privacy).
+- Runs on your machine, in your browser at [earnrate.dev](https://earnrate.dev) (which you can add to your phone's Home Screen and use offline), or in Claude as a connector at `https://mcp.earnrate.dev`, with nothing to install. earnrate.dev and Claude can share one wallet. No account and no affiliate links; the hosted server counts requests by tool name, nothing about what you ask. See the [privacy page](https://earnrate.dev/privacy).
 - U.S. cards and U.S. merchants, for now.
 
 > **Status:** early, and it works: the engine, CLI, optional Claude merchant lookup, MCP server and the hosted Claude connector. See [the benchmark](docs/benchmark.md) (run 2026-11-03) for how it compares to an existing card-picking MCP server.
 
 ## Try it
 
-Needs Node 22 or later.
+Needs Node 22 or later (the published package is compiled JavaScript).
 
 ```sh
 npm install -g earnrate
@@ -55,7 +55,7 @@ Use Blue Cash Preferred: 6% back, about $4.80. High confidence.
 Amex Gold beats Blue Cash Preferred here if Amex Membership Rewards (MR) points are worth more than 1.5¢ (you value them at 1¢).
 
 Assumes Whole Foods Market codes as supermarkets (MCC 5411).
-Values points at: Amex Membership Rewards (MR) at 1¢, SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢.
+Point values: Amex Membership Rewards (MR) at 1¢, SoFi Member Rewards at 1¢ and Chase Ultimate Rewards (UR) at 1¢.
 ```
 
 Options: `--online` or `--in-store`, `--paying card|apple-pay|google-pay|paypal`, `--valuation flat|points-heavy`, `--cards`, `--member`, `--category`, `--all`, `--json`, `--date`, `--country`. Run `earnrate --help` for details. To keep the wallet somewhere else, set `EARNRATE_WALLET` to its path.
@@ -225,7 +225,7 @@ Spotted a wrong rate, or want a card added? [Open an issue](https://github.com/c
 
 ## Use it in an AI assistant (MCP)
 
-**In Claude, nothing to install:** add a custom connector (Settings → Connectors) with the address `https://mcp.earnrate.dev`. It works in Claude on the web, desktop and phone. When you add it, an earnrate page opens once, where you start an anonymous wallet: no email, just a recovery code you keep. Then ask anything: with no cards saved it answers from every card. Name your cards for answers about yours, and save them to track caps and welcome bonuses across your Claude apps. From the chat you can export the wallet for the command line, switch to another one, or delete it. In Claude Code:
+**In Claude, nothing to install:** add a custom connector (Settings → Connectors) with the address `https://mcp.earnrate.dev`. It works in Claude on the web, desktop and phone. When you add it, an earnrate page opens once, where you start an anonymous wallet: no email, just a recovery code you keep. Then ask anything: with no cards saved it answers from every card. Name your cards for answers about yours, and save them to track caps and welcome bonuses across your Claude apps. From the chat you can export the wallet for the command line, switch to another one, or delete it. To use the same wallet on earnrate.dev, choose "Use the same wallet as Claude" in My wallet there. In Claude Code:
 
 ```sh
 claude mcp add --transport http earnrate https://mcp.earnrate.dev
@@ -322,7 +322,7 @@ earnrate needs no account. The local version has no telemetry; the hosted server
 
 ## Working on earnrate
 
-Development needs Node 24 or later.
+Development needs Node 24 or later: the repo runs its TypeScript directly, with no build step. The published package is compiled and runs on Node 22 or later.
 
 ```sh
 git clone https://github.com/cwasley/earnrate.git && cd earnrate
