@@ -1389,6 +1389,13 @@ export function MyWallet({
       ? null
       : { text: initialQuery.trim(), amount: null },
   )
+  // A store sent here from its page ("Check with your own cards") lands on
+  // the answer, not the top of the wallet.
+  const askSection = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (initialQuery.trim() !== '')
+      askSection.current?.scrollIntoView({ block: 'start' })
+  }, [])
 
   // One change: refused, or done with what the card still needs.
   const apply = async (op: LocalOp, cardId?: string): Promise<boolean> => {
@@ -1594,7 +1601,11 @@ export function MyWallet({
         <InstallHint />
       </section>
 
-      <section class="panel" aria-labelledby="wallet-ask-title">
+      <section
+        class="panel"
+        aria-labelledby="wallet-ask-title"
+        ref={askSection}
+      >
         <h3 id="wallet-ask-title">Where do you want to make a purchase?</h3>
         <form
           class="ask"

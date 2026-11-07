@@ -55,6 +55,18 @@ header {
   text-decoration: none;
 }
 
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wordmark .mark {
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+
 h1 {
   font-size: clamp(28px, 6vw, 40px);
   line-height: 1.12;
@@ -530,4 +542,106 @@ table.numbers td {
 
 table.numbers tr:last-child td {
   border-bottom: none;
+}
+
+/* Links that would run on as a sentence, as chips (like the home page's). */
+.chip-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 10px 0;
+  padding: 0;
+}
+.chip-links a {
+  display: inline-block;
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14.5px;
+  line-height: 1.4;
+}
+.chip-links a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.chip-links .muted {
+  margin-left: 2px;
+}
+.compare-list .chip-links {
+  margin: 6px 0 0;
+}
+
+/* A card's placements, one collapsible row per kind of purchase. */
+.groups {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+.group {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.group summary {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 40px 12px 16px;
+  position: relative;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+.group summary::-webkit-details-marker {
+  display: none;
+}
+.group summary::after {
+  content: '+';
+  position: absolute;
+  right: 16px;
+  top: 9px;
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 500;
+}
+.group[open] summary::after {
+  content: '–';
+}
+.group-meta {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 14.5px;
+  white-space: nowrap;
+}
+.group .chip-links,
+.group > p {
+  margin: 0;
+  padding: 0 16px 14px;
+}
+.group .chip-links a {
+  background: var(--bg);
+}
+.more-groups > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 6px 2px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.more-groups > summary::-webkit-details-marker {
+  display: none;
+}
+.more-groups > summary::after {
+  content: ' +';
+}
+.more-groups[open] > summary::after {
+  content: ' –';
+}
+.more-groups > .groups {
+  margin-top: 4px;
 }

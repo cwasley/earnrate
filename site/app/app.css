@@ -202,9 +202,14 @@ input::-webkit-list-button {
   cursor: pointer;
 }
 
-.ask.small input {
+.ask.small input,
+.ask.small button {
   padding: 9px 10px;
   font-size: 16px;
+}
+
+.ask.small button {
+  padding: 0 16px;
 }
 
 .ask select {
@@ -562,6 +567,7 @@ input::-webkit-list-button {
   border-radius: 16px;
   padding: 18px 18px 14px;
   min-width: 0;
+  scroll-margin-top: 12px;
 }
 
 .app .panel > h3:first-child {
@@ -823,6 +829,8 @@ input::-webkit-list-button {
   border-radius: 10px;
   padding: 8px 14px;
   font-size: 15px;
+  /* The same weight as the filled button beside it: fill alone sets them apart. */
+  font-weight: 600;
   cursor: pointer;
 }
 

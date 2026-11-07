@@ -67,7 +67,14 @@ import { feeWorthKit, feeWorthSection } from './pages/fee-worth.ts'
 import { VALUATION_PROFILES } from '../src/engine/profiles.ts'
 import { drawImages, type OgImage } from './pages/og.ts'
 import { quarterlyCardIds, quarterlyPages } from './pages/quarterly.ts'
-import { esc, fitDescription, fitTitle, SITE, slugify } from './pages/site.ts'
+import {
+  chipLinks,
+  esc,
+  fitDescription,
+  fitTitle,
+  SITE,
+  slugify,
+} from './pages/site.ts'
 import {
   comparePairs,
   comparer,
@@ -305,9 +312,7 @@ function related(page: Page, all: Page[]): string {
       : []),
     ...siblings.map((p) => `<a href="/best/${p.slug}">${esc(p.label)}</a>`),
   ]
-  return links.length === 0
-    ? ''
-    : `<h2>Related</h2><p class="links">${links.join(' · ')}</p>`
+  return links.length === 0 ? '' : `<h2>Related</h2>${chipLinks(links)}`
 }
 
 // Cards with a statement credit at the store, before the ranking: dollars,
@@ -584,6 +589,63 @@ function placements(
   return found.sort((a, b) => a.rank - b.rank || b.pct - a.pct)
 }
 
+type Placement = { page: Page; rank: number; pct: number }
+
+// A card's placements grouped by kind of purchase, each a collapsible row
+// ("Supermarkets · 2% · 62 stores") of chips: open when there are few, and
+// past the six biggest, folded under one more row.
+const SHOWN_GROUPS = 6
+
+function placementGroups(list: Placement[], all: Page[]): string {
+  const nameOf = (categoryId: string) =>
+    catalog.categories.find((c) => c.id === categoryId)?.name ??
+    words(categoryId)
+  const groups = new Map<string, Placement[]>()
+  for (const w of list) {
+    const name = nameOf(w.page.categoryId)
+    groups.set(name, [...(groups.get(name) ?? []), w])
+  }
+  const open = list.length <= 8
+  const rows = [...groups]
+    .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
+    .map(([name, ws]) => {
+      const pcts = [...new Set(ws.map((w) => w.pct))].sort((a, b) => a - b)
+      const low = pcts[0] ?? 0
+      const high = pcts.at(-1) ?? low
+      const rate = low === high ? pct(low) : `${pct(low)}–${pct(high)}`
+      const stores = ws.filter((w) => w.page.merchant !== null).length
+      const meta = `${rate}${stores > 0 ? ` · ${String(stores)} ${stores === 1 ? 'store' : 'stores'}` : ''}`
+      // The kind of purchase's own page first, then its stores.
+      const ordered = [
+        ...ws.filter((w) => w.page.merchant === null),
+        ...ws.filter((w) => w.page.merchant !== null),
+      ]
+      const chips = ordered.map(
+        (w) =>
+          `<a href="/best/${w.page.slug}">${esc(w.page.merchant === null ? `All ${w.page.label}` : w.page.label)}${low === high ? '' : ` <span class="muted">${pct(w.pct)}</span>`}</a>`,
+      )
+      const categoryPage = all.find(
+        (p) => p.merchant === null && nameOf(p.categoryId) === name,
+      )
+      const more =
+        categoryPage && !ws.some((w) => w.page === categoryPage)
+          ? `<p class="small"><a href="/best/${categoryPage.slug}">Best cards for ${esc(categoryPage.label)}</a></p>`
+          : ''
+      return `<details class="group"${open ? ' open' : ''}><summary><span>${esc(name)}</span><span class="group-meta">${meta}</span></summary>${chipLinks(chips)}${more}</details>`
+    })
+  const stores = list.filter((w) => w.page.merchant !== null).length
+  const count =
+    list.length > 8
+      ? `<p class="muted">${String(stores)} stores in ${String(rows.length)} kinds of purchase.</p>`
+      : ''
+  const rest = rows.slice(SHOWN_GROUPS)
+  return `${count}<div class="groups">${rows.slice(0, SHOWN_GROUPS).join('')}${
+    rest.length > 0
+      ? `<details class="more-groups"><summary>${String(rest.length)} more kinds of purchase</summary><div class="groups">${rest.join('')}</div></details>`
+      : ''
+  }</div>`
+}
+
 const isPortal = (id: string) => findMerchant(catalog, id)?.kind !== undefined
 
 // The card's best everyday categories, then its best single-store bonus
@@ -678,9 +740,8 @@ function renderCard(
   const closed = card.applications_closed !== undefined && !card.only_at
   const where = closed ? [] : placements(card, all, byPage)
   const firsts = where.filter((w) => w.rank === 1)
-  const others = where.filter((w) => w.rank > 1).slice(0, 12)
-  const link = (w: { page: Page; pct: number }) =>
-    `<a href="/best/${w.page.slug}">${esc(w.page.label)}</a> (${pct(w.pct)})`
+  const others = where.filter((w) => w.rank > 1)
+  const kind = card.business ? 'business card' : 'personal card'
   const value =
     currency && card.currency !== 'cash'
       ? ` earnrate counts ${esc(currency.name)} at ${String(currency.value_cents)}¢ each${currency.range ? `; transferring to airlines or hotels can be worth up to about ${String(currency.range[1])}¢` : ''}.`
@@ -713,12 +774,17 @@ function renderCard(
       <p><a class="button" href="/#wallet&add=${card.id}">Add it to your wallet</a></p>
       ${
         firsts.length > 0
-          ? `<h2>Where it's the best ${card.business ? 'business ' : ''}card</h2><p class="links">${firsts.map(link).join(' · ')}</p>`
+          ? `<h2>Where it's the best ${kind}</h2>${placementGroups(firsts, all)}`
           : ''
       }
       ${
         others.length > 0
-          ? `<h2>Where it's in the top 3</h2><p class="links">${others.map(link).join(' · ')}</p>`
+          ? `<h2>Where it's in the top 3</h2>${placementGroups(others, all)}`
+          : ''
+      }
+      ${
+        !closed && where.length === 0
+          ? `<h2>Where it ranks</h2><p>At earnrate's default point values, it isn't one of the top 3 ${kind}s at any store or kind of purchase earnrate ranks: other cards earn as much or more. Its bonus rates are below.</p>`
           : ''
       }
       <h2>Earning rates</h2>
@@ -1087,7 +1153,7 @@ function renderCompare(c: Comparison): string {
       ${compareOffers(c)}
       ${compareQuotes(c)}
       <h2>Each card in full</h2>
-      <p class="links"><a href="/cards/${c.a.id}">${esc(c.a.name)}</a> · <a href="/cards/${c.b.id}">${esc(c.b.name)}</a> · <a href="/compare/">Every comparison</a></p>
+      ${chipLinks([`<a href="/cards/${c.a.id}">${esc(c.a.name)}</a>`, `<a href="/cards/${c.b.id}">${esc(c.b.name)}</a>`, '<a href="/compare/">Every comparison</a>'])}
       <p class="muted">Typical spending, point values and fees come from earnrate's data, and every rate from the issuers' terms. Rates change; check each issuer's terms before you apply.</p>`
   const cardLd = (k: Card) => ({
     '@type': 'CreditCard',
@@ -1121,12 +1187,12 @@ function renderCompare(c: Comparison): string {
 function comparedWith(card: Card, pairs: ComparePair[]): string {
   const mine = pairs.filter((p) => p.a === card.id || p.b === card.id)
   if (mine.length === 0) return ''
-  return `<h2>Compared with</h2><p class="links">${mine
-    .map((p) => {
+  return `<h2>Compared with</h2>${chipLinks(
+    mine.map((p) => {
       const other = p.a === card.id ? p.b : p.a
       return `<a href="/compare/${p.slug}">${esc(shortName(other))}</a>`
-    })
-    .join(' · ')}</p>`
+    }),
+  )}`
 }
 
 function renderCompareIndex(pairs: ComparePair[]): string {
@@ -1146,8 +1212,7 @@ function renderCompareIndex(pairs: ComparePair[]): string {
                 (p) =>
                   `<a href="/compare/${p.slug}">${esc(shortName(p.a === card.id ? p.b : p.a))}</a>`,
               )
-              .join(' · ')
-            return `<li>${art(card.id, 36)}<div><strong><a href="/cards/${card.id}">${esc(shortName(card.id))}</a></strong> vs <span class="links">${links}</span></div></li>`
+            return `<li>${art(card.id, 36)}<div><strong><a href="/cards/${card.id}">${esc(shortName(card.id))}</a></strong> vs${chipLinks(links)}</div></li>`
           })
           .join('')}</ul>`,
     )

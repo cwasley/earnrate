@@ -23,7 +23,7 @@ import { optionName } from '../../src/engine/rule-text.ts'
 import type { Cap, Card, Choice, Rule } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
-import { esc, fitDescription, fitTitle, SITE } from './site.ts'
+import { chipLinks, esc, fitDescription, fitTitle, SITE } from './site.ts'
 
 const TOP = 3
 
@@ -392,12 +392,12 @@ function renderQuarter(
   const nav =
     others.length === 0
       ? ''
-      : `<h2>Other quarters</h2><p class="links">${others
-          .map(
+      : `<h2>Other quarters</h2>${chipLinks(
+          others.map(
             (o) =>
-              `<a href="/quarterly/${o.slug}">${esc(o.label)}</a>${o.key === current ? ' (this quarter)' : ''}`,
-          )
-          .join(' · ')}</p>`
+              `<a href="/quarterly/${o.slug}">${esc(o.label)}${o.key === current ? ' (this quarter)' : ''}</a>`,
+          ),
+        )}`
   const h1 = title.replace(/ \| earnrate$/, '')
   const body = `
       <h1>${esc(h1)}</h1>

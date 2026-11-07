@@ -43,6 +43,10 @@ export function fitTitle(candidates: string[]): string {
 export const fitDescription = (candidates: string[]): string =>
   candidates.find((c) => c.length <= DESCRIPTION_MAX) ?? candidates.at(-1) ?? ''
 
+// Links as a row of chips, where a list would run on as a sentence.
+export const chipLinks = (links: string[]) =>
+  `<ul class="chip-links">${links.map((l) => `<li>${l}</li>`).join('')}</ul>`
+
 export type Crumb = { name: string; path: string }
 
 export type PageSpec = {
@@ -120,7 +124,7 @@ ${page.noindex ? '    <meta name="robots" content="noindex" />\n' : ''}    <meta
   </head>
   <body>
     <main>
-      <header><a class="wordmark" href="/">earnrate</a></header>
+      <header><a class="wordmark" href="/"><svg class="mark" viewBox="0 -20 120 120" aria-hidden="true"><rect x="24" y="8" width="88" height="56" rx="10" fill="none" stroke="currentColor" stroke-width="7" opacity=".35"/><rect x="8" y="22" width="92" height="58" rx="10" fill="currentColor"/><rect x="20" y="38" width="18" height="13" rx="3" fill="var(--surface)"/></svg>earnrate</a></header>
       ${page.crumbs.length > 0 ? crumbsHtml(page.crumbs) : ''}
 ${page.body}
       <aside class="next">

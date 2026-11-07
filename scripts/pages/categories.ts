@@ -11,7 +11,7 @@ import {
 import { findMerchant } from '../../src/merchants/resolve.ts'
 import type { Card, Rule } from '../../src/schema/card.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
-import { esc, fitDescription, fitTitle, SITE } from './site.ts'
+import { chipLinks, esc, fitDescription, fitTitle, SITE } from './site.ts'
 
 // The categories people search definitions for, by the word they use.
 const CATEGORY_PAGES: { slug: string; category: string }[] = [
@@ -195,9 +195,11 @@ export function categoryPages(
         .join('')}</div>
       <p class="muted">Open cards only. Caps and rates are on each card's page; rotating and limited-time bonuses show their dates.</p>
       <h2>Other categories</h2>
-      <p class="links">${CATEGORY_PAGES.filter((o) => o !== p)
-        .map((o) => `<a href="/categories/${o.slug}">${esc(o.slug)}</a>`)
-        .join(' · ')}</p>`
+      ${chipLinks(
+        CATEGORY_PAGES.filter((o) => o !== p).map(
+          (o) => `<a href="/categories/${o.slug}">${esc(o.slug)}</a>`,
+        ),
+      )}`
     const cardFiles = [
       ...new Set(defs.map((d) => `data/cards/${d.card.id}.yaml`)),
     ]
