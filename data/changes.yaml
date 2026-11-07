@@ -3,6 +3,21 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.07.3'
+  date: 2026-11-07
+  changes:
+    - cause: issuer
+      card: chase-freedom-flex
+      field: welcome_offer
+      was: { dollars: 250, spend: 500, months: 3 }
+      now: { dollars: 200, spend: 500, months: 3 }
+      source: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+      detected: 2026-11-07
+    - cause: quote
+      cards: [chase-freedom-flex, amex-platinum]
+      field: evidence
+      summary: Freedom Flex drops a quote that ran two category names together, and Platinum's Equinox credit quotes Amex's new wording (still $300 a year).
+
 - version: '2026.11.07.2'
   date: 2026-11-07
   changes:

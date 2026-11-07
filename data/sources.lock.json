@@ -406,14 +406,15 @@
       ]
     },
     "https://www.americanexpress.com/us/credit-cards/card/platinum/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-07",
       "lines": []
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-07",
       "lines": [
         "0232396b0a8716b1",
         "1e1c9e465bade44e",
+        "2d20bc72efc9d0ef",
         "3e0d74aebc3b1eb1",
         "3eca04ec169b3cd0",
         "4567b6426d9a5fb9",
@@ -421,7 +422,6 @@
         "56f120e8a90bf874",
         "95df37d3591f2d44",
         "9bc9670e154faa1d",
-        "cd95210cc0863210",
         "ed64edb053c61211"
       ]
     },
@@ -921,9 +921,9 @@
       ]
     },
     "https://creditcards.chase.com/cash-back-credit-cards/freedom/flex": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-07",
       "lines": [
-        "8d5b43ecfae20c4f",
+        "0be1973dd1080ca4",
         "c4aa062a6cebb860",
         "c8d1771b5db67c2a",
         "cd20353bc41ed6d8",
@@ -938,7 +938,7 @@
       ]
     },
     "https://www.chase.com/personal/credit-cards/freedom/flex-learnmore": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-07",
       "lines": [
         "171083c20b5bc170",
         "2c28b6aed108a5f2",
@@ -952,7 +952,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65280.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-07",
       "lines": [
         "33839a64c41979a9",
         "38f76b2bdb0cb431",

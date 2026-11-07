@@ -2,6 +2,11 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.07.3
+
+- `chase-freedom-flex`: the limited-time $250 welcome offer has ended; it's $200 after $500 in purchases in the first 3 months again. A card-page quote that ran two category names together ("Dining American Red Cross") is removed; the Q4 dining rule keeps its quotes from Chase's learn-more page. Source: [Chase](https://creditcards.chase.com/cash-back-credit-cards/freedom/flex).
+- `amex-platinum`: the Equinox credit quotes Amex's new wording (still up to $300 each calendar year). Source: [Amex terms](https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0).
+
 ## 2026.11.07.2
 
 - `citi-custom-cash` and `amex-business-gold`: their bonus categories are marked `automatic: true`, since the issuer applies the bonus to the categories with the most spending each billing period; the cardholder doesn't pick. Answers and pages now say "the category you spend the most in each month" instead of "the category you pick". No rate changes. Sources: [Citi ThankYou terms](https://www.thankyou.com/ccterms), [Amex offer terms](https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms).

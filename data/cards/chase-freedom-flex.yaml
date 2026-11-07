@@ -16,10 +16,10 @@ base_rate: 1
 annual_fee: 0
 foreign_transaction_fee: 0
 welcome_offer:
-  dollars: 250
+  dollars: 200
   spend: 500
   months: 3
-  note: 'Limited-time: the page says "Offer ending soon" (no end date given) and shows the usual $200 struck through. Chase: "available to you if you do not have this card and have not received a new cardmember bonus for this card in the past 24 months."'
+  note: 'Chase: "available to you if you do not have this card and have not received a new cardmember bonus for this card in the past 24 months."'
 # Its cash back is earned as points, which Chase lets you move to another
 # Ultimate Rewards card on your account.
 pools_into:
@@ -154,9 +154,6 @@ evidence:
     quote: 'For Dining purchases, you will earn 7% cash back (3% Dining cash back + 4% bonus category cash back)'
   - rule: q4-2026-dining
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
-    quote: 'Dining American Red Cross'
-  - rule: q4-2026-dining
-    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: '5% Cash Back rewards total for each $1 spent until $1,500 is spent'
   - rule: q4-2026-american-red-cross
     url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
@@ -187,7 +184,7 @@ evidence:
     quote: 'Annual Membership Fee None'
   - rule: welcome_offer
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
-    quote: 'Earn a $250 bonus after you spend $500 on purchases in the first 3 months from account opening'
+    quote: 'Earn a $200 bonus after you spend $500 on purchases in the first 3 months from account opening'
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65280.html
     quote: 'Foreign Transactions None Penalty Fees'
