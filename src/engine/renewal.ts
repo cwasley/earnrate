@@ -2,7 +2,8 @@ import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { ALL_PERSONAL_CARDS, matchesFilters } from './explore.ts'
-import { daysBetween } from './periods.ts'
+import { usedCreditsYear } from './credits.ts'
+import { daysBetween, isAnniversary } from './periods.ts'
 import {
   projectedWallet,
   simulateSingles,
@@ -41,7 +42,7 @@ function onYear(year: number, mmdd: string): string {
 // before the account's first year is nearly over.
 export function renewalDue(held: WalletCard, today: string): string | null {
   const mmdd = anniversaryOf(held)
-  if (mmdd === null) return null
+  if (mmdd === null || !isAnniversary(mmdd)) return null
   const opened = openedOf(held)
   const year = Number(today.slice(0, 4))
   for (const y of [year - 1, year, year + 1]) {
@@ -125,8 +126,9 @@ export function renewalCheck(
       against = bestCard ? shortCardName(bestCard.name) : null
     }
   }
-  const credits =
-    withCard.credits.find((c) => c.cardId === card.id && c.held)?.yearly ?? 0
+  // From the saved card: projectedWallet drops credit usage, which is how
+  // a credit that needs no enrolling is confirmed in use.
+  const credits = held ? usedCreditsYear(catalog, card, held, due).yearly : 0
   const rewardsAdded = roundCents(withCard.rewards - (without?.rewards ?? 0))
   const fee = card.annual_fee ?? 0
   const opened = held ? openedOf(held) : null

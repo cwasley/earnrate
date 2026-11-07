@@ -17,6 +17,7 @@ import {
   firstConnection,
   heldToInput,
   importOp,
+  keepClaudeSettings,
   membershipsOp,
   pointValueOp,
   removeOp,
@@ -313,5 +314,53 @@ describe('talking to /api/wallet', () => {
     expect(
       await syncRequest(null, () => Promise.reject(new TypeError('offline'))),
     ).toEqual({ kind: 'offline' })
+  })
+})
+
+describe('issuers left out of next-card answers, across the sync', () => {
+  const answer = (body: unknown) => () =>
+    Promise.resolve(new Response(JSON.stringify(body), { status: 200 }))
+
+  test('the synced wallet keeps them, and a local change sets them', async () => {
+    const wallet = { ...walletWith('amex-gold'), skipped_issuers: ['chase'] }
+    const result = await syncRequest(null, answer({ wallet, summary: {} }))
+    expect(result.kind === 'ok' && result.wallet.skipped_issuers).toEqual([
+      'chase',
+    ])
+    const local = applyLocally(
+      catalog,
+      walletWith('amex-gold'),
+      { tool: 'set_memberships', input: { skippedIssuers: ['amex'] } },
+      TODAY,
+    )
+    expect(local.ok && local.wallet.skipped_issuers).toEqual(['amex'])
+  })
+
+  test("a first connection keeps the Claude wallet's settings, and combining adds the browser's", () => {
+    const claude: Wallet = {
+      valuations: { UR: 1.5 },
+      memberships: ['costco'],
+      skipped_issuers: ['chase'],
+      cards: [],
+    }
+    const browser = walletWith('amex-gold')
+    expect(firstConnection(claude, browser)).toBe('browser')
+    expect(keepClaudeSettings(claude, browser)).toMatchObject({
+      memberships: ['costco'],
+      valuations: { UR: 1.5 },
+      skipped_issuers: ['chase'],
+      cards: browser.cards,
+    })
+    expect(firstConnection(claude, { ...claude, cards: [] })).toBe('same')
+    const ops = combineOps(
+      catalog,
+      { ...walletWith('citi-double-cash'), skipped_issuers: ['chase'] },
+      { ...walletWith('amex-gold'), skipped_issuers: ['amex'] },
+      TODAY,
+    )
+    expect(ops).toContainEqual({
+      tool: 'set_memberships',
+      input: { skippedIssuers: ['chase', 'amex'] },
+    })
   })
 })

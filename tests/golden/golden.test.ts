@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../../src/data/load.ts'
+import { walletProblems } from '../../src/data/integrity.ts'
 import { recommend } from '../../src/engine/recommend.ts'
 import { cardInfo } from '../../src/engine/setup.ts'
 import type { Spending } from '../../src/engine/renewal.ts'
@@ -2481,6 +2482,37 @@ describe('#36 the renewal check', () => {
         'flat',
       )
       expect(renewals(w, '2026-11-07')).toHaveLength(1)
+    },
+  )
+
+  goldenTest(
+    '#36i a credit confirmed by recorded use counts, like one marked used',
+    () => {
+      const text = (fields: object) =>
+        renewals(
+          wallet([
+            { id: 'capital-one-venture-x', anniversary: '11-20', ...fields },
+            { id: 'citi-double-cash' },
+          ]),
+          '2026-11-07',
+        )[0]?.text
+      const used = text({
+        credit_usage: { 'capital-one-travel': { period: '2026', used: 120 } },
+      })
+      const marked = text({ enrolled: ['capital-one-travel'] })
+      expect(used).toContain('plus $300 in credits you use')
+      expect(used).toBe(marked)
+    },
+  )
+
+  goldenTest(
+    "#36j an anniversary that isn't a date gets no renewal, and the wallet check flags it",
+    () => {
+      const w = wallet([{ id: 'amex-gold', anniversary: '13-45' }])
+      expect(renewals(w, '2026-11-07')).toHaveLength(0)
+      expect(walletProblems(w, catalog)).toContain(
+        "wallet card amex-gold: anniversary '13-45' isn't a date",
+      )
     },
   )
 

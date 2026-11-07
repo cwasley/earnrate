@@ -591,6 +591,10 @@ export function projectedWallet(
         ...(held.skipped_credits !== undefined
           ? { skipped_credits: held.skipped_credits }
           : {}),
+        // Usage confirms a credit that needs no enrolling is in use.
+        ...(held.credit_usage !== undefined
+          ? { credit_usage: held.credit_usage }
+          : {}),
       }
     }),
   }

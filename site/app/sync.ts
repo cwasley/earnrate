@@ -209,6 +209,14 @@ export function combineOps(
   ]
   if (memberships.length > claude.memberships.length)
     ops.push(membershipsOp(memberships))
+  const skipped = [
+    ...new Set([
+      ...(claude.skipped_issuers ?? []),
+      ...(browser.skipped_issuers ?? []),
+    ]),
+  ]
+  if (skipped.length > (claude.skipped_issuers ?? []).length)
+    ops.push({ tool: 'set_memberships', input: { skippedIssuers: skipped } })
   // A point value only this browser set carries over; where both set one,
   // the Claude wallet's stays.
   const values = Object.fromEntries(
@@ -228,11 +236,29 @@ const isEmpty = (w: Wallet | null) =>
   !w ||
   (w.cards.length === 0 &&
     w.memberships.length === 0 &&
-    Object.keys(w.valuations).length === 0)
+    Object.keys(w.valuations).length === 0 &&
+    (w.skipped_issuers ?? []).length === 0)
 
 const sameWallet = (a: Wallet, b: Wallet) =>
-  JSON.stringify([a.cards, a.memberships, a.valuations]) ===
-  JSON.stringify([b.cards, b.memberships, b.valuations])
+  JSON.stringify([a.cards, a.memberships, a.valuations, a.skipped_issuers]) ===
+  JSON.stringify([b.cards, b.memberships, b.valuations, b.skipped_issuers])
+
+// The browser's wallet, keeping settings the Claude wallet has and the
+// browser doesn't: for a first connection where only the browser has cards.
+export function keepClaudeSettings(claude: Wallet, browser: Wallet): Wallet {
+  const skipped = [
+    ...new Set([
+      ...(claude.skipped_issuers ?? []),
+      ...(browser.skipped_issuers ?? []),
+    ]),
+  ]
+  return {
+    ...browser,
+    memberships: [...new Set([...claude.memberships, ...browser.memberships])],
+    valuations: { ...claude.valuations, ...browser.valuations },
+    ...(skipped.length > 0 ? { skipped_issuers: skipped } : {}),
+  }
+}
 
 // What the first connection does: ask only when both sides have cards and
 // they differ; otherwise use the side that has cards (or anything at all).
@@ -302,6 +328,7 @@ function walletOf(raw: unknown): Wallet | null {
   return {
     valuations: w.valuations ?? {},
     memberships: w.memberships ?? [],
+    ...(w.skipped_issuers ? { skipped_issuers: w.skipped_issuers } : {}),
     cards: w.cards,
   }
 }

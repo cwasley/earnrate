@@ -8,7 +8,7 @@ import {
 } from '../schema/wallet.ts'
 import { addMonths } from './bonus.ts'
 import { capByKey } from './evaluate.ts'
-import { choicePeriod, periodKey } from './periods.ts'
+import { choicePeriod, isAnniversary, periodKey } from './periods.ts'
 import {
   knownMemberships,
   searchCards,
@@ -94,15 +94,6 @@ function findCatalogCard(
   return near.length > 0
     ? `No card '${id}' in earnrate. Closest: ${idList(near)}.`
     : `No card '${id}' in earnrate. Search the catalog to find its id.`
-}
-
-function isAnniversary(text: string): boolean {
-  const m = /^(\d{2})-(\d{2})$/.exec(text)
-  if (!m) return false
-  const date = new Date(`2024-${text}T00:00:00Z`) // a leap year allows 02-29
-  return (
-    !Number.isNaN(date.getTime()) && date.toISOString().slice(5, 10) === text
-  )
 }
 
 const isDate = (d: string) =>

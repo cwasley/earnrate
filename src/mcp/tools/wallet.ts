@@ -268,8 +268,11 @@ export function walletHandlers(
       const what = changes(catalog, args)
       const card = catalog.cards.find((c) => c.id === args.cardId)
       const unused =
-        args.anniversary !== undefined && card && !needsAnniversary(card)
-          ? " None of its caps reset on the account anniversary, so earnrate doesn't use it."
+        args.anniversary !== undefined &&
+        card &&
+        !needsAnniversary(card) &&
+        (card.annual_fee ?? 0) === 0
+          ? " It has no annual fee and none of its caps reset on the account anniversary, so earnrate doesn't use it."
           : ''
       return ctx.changed(
         await store.updateCard(cardInput(args), deps.today()),

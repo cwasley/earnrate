@@ -20,11 +20,12 @@ import {
   editState,
   firstConnection,
   importOp,
+  keepClaudeSettings,
   LIMITED,
   membershipsOp,
+  type Outcome,
   syncRequest,
   syncReturn,
-  type Outcome,
   type SyncReturn,
   type WalletOp,
 } from './sync.ts'
@@ -390,11 +391,12 @@ export function App() {
         return
       case 'browser': {
         if (!local) return
-        const error = await replaceClaude(local)
+        const merged = keepClaudeSettings(claude, local)
+        const error = await replaceClaude(merged)
         if (error) setSync({ state: 'off', note: error })
         else
           finish(
-            local,
+            merged,
             "Synced: your Claude wallet had no cards, so it now holds this browser's.",
           )
         return

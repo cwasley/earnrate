@@ -22,6 +22,7 @@ import {
 } from '../../src/engine/setup.ts'
 import {
   resolveSpendLines,
+  typicalSpendLines,
   simulateAdditions,
   TYPICAL_MONTHLY_SPEND,
   type Addition,
@@ -685,10 +686,10 @@ function CardEditor({
           )}
         </fieldset>
       ))}
-      {info.needsAnniversary || renewalAsks(held) ? (
+      {info.needsAnniversary || hasFee(held) ? (
         <label class="field">
           Account anniversary (MM-DD), for its{' '}
-          {info.needsAnniversary && renewalAsks(held)
+          {info.needsAnniversary && hasFee(held)
             ? 'yearly cap and renewal check'
             : info.needsAnniversary
               ? 'yearly cap'
@@ -715,7 +716,7 @@ function CardEditor({
 }
 
 // The My spending tab's rows, and whether they're still its typical amounts.
-function spending(): Spending {
+function spending(fallback = true): Spending {
   const rows = loadList<Row>('spending', TYPICAL_MONTHLY_SPEND)
   const typical =
     rows.length === TYPICAL_MONTHLY_SPEND.length &&
@@ -726,12 +727,17 @@ function spending(): Spending {
     catalog,
     rows.map((r) => lineFor(r.what, r.monthly)),
   ).filter((l) => l.merchant.source !== 'none')
-  return { lines, typical }
+  // An emptied tab says nothing about spending; typical amounts do better.
+  return lines.length === 0 && fallback
+    ? { lines: typicalSpendLines(catalog), typical: true }
+    : { lines, typical }
 }
+
+const hasFee = (held: WalletCard) => (cards.get(held.id)?.annual_fee ?? 0) > 0
 
 // A fee card with no date to tell when it renews.
 const renewalAsks = (held: WalletCard) =>
-  (cards.get(held.id)?.annual_fee ?? 0) > 0 && anniversaryOf(held) === null
+  hasFee(held) && anniversaryOf(held) === null
 
 function CardList({
   wallet,
@@ -1040,7 +1046,7 @@ function WhatIf({
 }) {
   const [open, setOpen] = useState<string | null>(null)
   const result = useMemo(() => {
-    const { lines } = spending()
+    const { lines } = spending(false)
     if (lines.length === 0) return null
     return simulateAdditions(catalog, wallet, lines, {
       filters: ALL_PERSONAL_CARDS,

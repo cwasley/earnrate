@@ -413,11 +413,16 @@ describe('tools', () => {
     const client = await connect(await walletCopy())
     const anniversary = await client.callTool({
       name: 'update_card',
-      arguments: { cardId: 'amex-gold', anniversary: '03-14' },
+      arguments: { cardId: 'citi-double-cash', anniversary: '03-14' },
     })
     expect(text(anniversary)).toMatch(
-      /anniversary 03-14\. None of its caps reset on the account anniversary/,
+      /anniversary 03-14\. It has no annual fee and none of its caps reset on the account anniversary, so earnrate doesn't use it\./,
     )
+    const feeCard = await client.callTool({
+      name: 'update_card',
+      arguments: { cardId: 'amex-gold', anniversary: '03-14' },
+    })
+    expect(text(feeCard)).not.toMatch(/doesn't use it/)
     const memberships = await client.callTool({
       name: 'set_memberships',
       arguments: { memberships: ['amazon-prime', 'nordy-club-ambassador'] },

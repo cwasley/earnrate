@@ -268,11 +268,17 @@ export function setTopListText(
       text,
       (pair.value === null ? range(pair.key) : range(pair.value))[1] - 1,
     )
-    return text.slice(0, start) + line + text.slice(end)
+    // A comment at the end of the key's line stays with the new value.
+    const first = text
+      .slice(start, afterLine(text, start))
+      .replace(/\r?\n$/, '')
+    const comment = / #.*$/.exec(first)?.[0] ?? ''
+    const kept = line === '' ? '' : line.replace(/\n$/, `${comment}\n`)
+    return text.slice(0, start) + kept + text.slice(end)
   }
   const cards = root.items.find((p) => keyOf(p) === 'cards')
   return cards
-    ? insertLines(text, lineStart(text, range(cards.key)[0]), line)
+    ? insertLines(text, aboveComments(text, range(cards.key)[0]), line)
     : insertLines(text, text.length, line)
 }
 

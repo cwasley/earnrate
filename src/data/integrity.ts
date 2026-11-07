@@ -2,6 +2,7 @@ import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { resolveMerchant } from '../merchants/resolve.ts'
 import type { Merchant } from '../schema/merchant.ts'
+import { isAnniversary } from '../engine/periods.ts'
 import { WALLET_VERSION, type Wallet } from '../schema/wallet.ts'
 
 function duplicates(ids: string[]): string[] {
@@ -394,6 +395,8 @@ export function walletProblems(wallet: Wallet, catalog: Catalog): string[] {
 
   for (const held of wallet.cards) {
     const where = `wallet card ${held.id}`
+    if (held.anniversary !== undefined && !isAnniversary(held.anniversary))
+      problems.push(`${where}: anniversary '${held.anniversary}' isn't a date`)
     const card = cards.get(held.id)
     if (!card) {
       problems.push(`${where}: not in the card catalog`)

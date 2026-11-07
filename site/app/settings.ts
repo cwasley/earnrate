@@ -84,6 +84,9 @@ export function loadWallet(): Wallet | null {
     return {
       valuations: parsed.valuations ?? {},
       memberships: parsed.memberships ?? [],
+      ...(parsed.skipped_issuers
+        ? { skipped_issuers: parsed.skipped_issuers }
+        : {}),
       cards: parsed.cards,
     }
   } catch {

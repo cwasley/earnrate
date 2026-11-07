@@ -29,6 +29,15 @@ export function periodKey(
   }
 }
 
+// MM-DD that is a real day of the year; 02-29 counts.
+export function isAnniversary(text: string): boolean {
+  if (!/^\d{2}-\d{2}$/.test(text)) return false
+  const date = new Date(`2024-${text}T00:00:00Z`)
+  return (
+    !Number.isNaN(date.getTime()) && date.toISOString().slice(5, 10) === text
+  )
+}
+
 export function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000)
 }
