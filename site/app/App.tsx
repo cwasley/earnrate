@@ -6,12 +6,38 @@ import { Spending } from './Spending.tsx'
 import { track } from './track.ts'
 import { issuerName, issuers } from './format.ts'
 import {
+  load,
   loadState,
   loadWallet,
   save,
   saveWallet,
   type Settings,
 } from './settings.ts'
+import {
+  applyLocally,
+  combineOps,
+  disconnect,
+  editState,
+  firstConnection,
+  importOp,
+  LIMITED,
+  membershipsOp,
+  syncRequest,
+  syncReturn,
+  type Outcome,
+  type SyncReturn,
+  type WalletOp,
+} from './sync.ts'
+import {
+  ConnectPanel,
+  Connecting,
+  Ended,
+  FirstChoice,
+  SyncStatus,
+  type Choice,
+  type SyncView,
+} from './Sync.tsx'
+import { localToday } from '../../src/engine/periods.ts'
 import { profileText } from '../../src/engine/profiles.ts'
 import { EMPTY_WALLET } from '../../src/engine/transient.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
@@ -82,11 +108,17 @@ function Filters({
   onChange,
   memberships,
   onMemberships,
+  synced,
+  locked,
+  note,
 }: {
   settings: Settings
   onChange: (s: Settings) => void
   memberships: string[]
   onMemberships: (memberships: string[]) => void
+  synced: boolean
+  locked: boolean
+  note: string | null
 }) {
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch })
   const has = (m: string) => memberships.includes(m)
@@ -160,50 +192,55 @@ function Filters({
         <fieldset class="filter-group">
           <legend>About you</legend>
           <p class="hint">
-            Saved in this browser with My wallet, and used on every tab.
+            {synced
+              ? 'Saved in your synced wallet, and used on every tab.'
+              : 'Saved in this browser with My wallet, and used on every tab.'}
+            {note ? ` ${note}` : ''}
           </p>
-          <div class="filter-checks">
-            {ASKED.map((m) => (
-              <label class="check" key={m.id}>
-                <input
-                  type="checkbox"
-                  checked={has(m.id)}
-                  onChange={(e) => toggle(m.id, e.currentTarget.checked)}
-                />
-                {m.ask}
-              </label>
-            ))}
-          </div>
-          {TIER_GROUPS.length > 0 ? (
-            <div class="filter-row">
-              {TIER_GROUPS.map(({ label, tiers }) => {
-                const ids = tiers.map((t) => t.id)
-                return (
-                  <label key={label}>
-                    {label}
-                    <select
-                      value={memberships.find((m) => ids.includes(m)) ?? ''}
-                      onChange={(e) =>
-                        onMemberships([
-                          ...memberships.filter((m) => !ids.includes(m)),
-                          ...(e.currentTarget.value
-                            ? [e.currentTarget.value]
-                            : []),
-                        ])
-                      }
-                    >
-                      <option value="">None</option>
-                      {tiers.map((t) => (
-                        <option value={t.id} key={t.id}>
-                          {t.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )
-              })}
+          <fieldset class="lock" disabled={locked}>
+            <div class="filter-checks">
+              {ASKED.map((m) => (
+                <label class="check" key={m.id}>
+                  <input
+                    type="checkbox"
+                    checked={has(m.id)}
+                    onChange={(e) => toggle(m.id, e.currentTarget.checked)}
+                  />
+                  {m.ask}
+                </label>
+              ))}
             </div>
-          ) : null}
+            {TIER_GROUPS.length > 0 ? (
+              <div class="filter-row">
+                {TIER_GROUPS.map(({ label, tiers }) => {
+                  const ids = tiers.map((t) => t.id)
+                  return (
+                    <label key={label}>
+                      {label}
+                      <select
+                        value={memberships.find((m) => ids.includes(m)) ?? ''}
+                        onChange={(e) =>
+                          onMemberships([
+                            ...memberships.filter((m) => !ids.includes(m)),
+                            ...(e.currentTarget.value
+                              ? [e.currentTarget.value]
+                              : []),
+                          ])
+                        }
+                      >
+                        <option value="">None</option>
+                        {tiers.map((t) => (
+                          <option value={t.id} key={t.id}>
+                            {t.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )
+                })}
+              </div>
+            ) : null}
+          </fieldset>
           <label class="check">
             <input
               type="checkbox"
@@ -224,22 +261,301 @@ function Filters({
   )
 }
 
+const CANCELED = 'Sign-in was canceled. Nothing changed.'
+const FAILED = "Couldn't connect to your Claude wallet. Try again."
+const UNREACHABLE =
+  "Couldn't reach earnrate's server to finish connecting. Try again when you're online."
+const NEEDS_CONNECTION = 'Changes need a connection.'
+const ENDED = 'This browser was signed out of your Claude wallet.'
+
+// Sign-in coming back (#wallet&sync=on) is read once and dropped from the
+// address, before anything else reads the hash.
+function takeSyncReturn(): SyncReturn | null {
+  const { sync, hash } = syncReturn(location.hash)
+  if (sync) history.replaceState(null, '', `${location.pathname}${hash}`)
+  return sync
+}
+
+function initialSync(back: SyncReturn | null): SyncView {
+  if (back === 'on') return { state: 'connecting' }
+  if (load('sync', { on: false }).on) return { state: 'on', note: null }
+  return {
+    state: 'off',
+    note: back === 'canceled' ? CANCELED : back === 'failed' ? FAILED : null,
+  }
+}
+
+const cardCount = (w: Wallet) =>
+  `${String(w.cards.length)} card${w.cards.length === 1 ? '' : 's'}`
+
+async function yamlOf(wallet: Wallet): Promise<string> {
+  const { walletYaml } = await import('../../src/format/wallet-yaml.ts')
+  return walletYaml(wallet)
+}
+
 export function App() {
   const [{ tab, query }, setView] = useState(readHash)
   const [initial] = useState(loadState)
   const [settings, setSettings] = useState<Settings>(initial.settings)
   const [wallet, setWallet] = useState<Wallet | null>(initial.wallet)
+  const [sync, setSync] = useState<SyncView>(() =>
+    initialSync(takeSyncReturn()),
+  )
+  const [online, setOnline] = useState(() => navigator.onLine)
+  const [busy, setBusy] = useState(false)
   const replaceWallet = (next: Wallet | null) => {
     setWallet(next)
     saveWallet(next)
   }
+  const synced = sync.state === 'on'
+  const edit = editState({ synced, online, busy })
+  const locked =
+    edit.locked || sync.state === 'connecting' || sync.state === 'choose'
+
+  // Synced: the server's copy wins, cached here for answers offline.
+  const finish = (next: Wallet, note: string | null) => {
+    replaceWallet(next)
+    save('sync', { on: true })
+    setOnline(true)
+    setSync({ state: 'on', note })
+  }
+  const ended = () => {
+    save('sync', { on: false })
+    setSync({ state: 'ended' })
+  }
+
+  const refresh = async () => {
+    const result = await syncRequest(null)
+    if (result.kind === 'ok') {
+      replaceWallet(result.wallet)
+      setOnline(true)
+    } else if (result.kind === 'ended') ended()
+    else if (result.kind === 'offline') setOnline(false)
+  }
+
+  // Replaces the Claude wallet with this browser's, through import_wallet.
+  const replaceClaude = async (local: Wallet): Promise<string | null> => {
+    const result = await syncRequest(importOp(await yamlOf(local)))
+    if (result.kind === 'ok') return null
+    if (result.kind === 'refused') return result.error
+    if (result.kind === 'ended') return FAILED
+    if (result.kind === 'limited') return LIMITED
+    return UNREACHABLE
+  }
+
+  const connectFirst = async () => {
+    const result = await syncRequest(null)
+    if (result.kind !== 'ok') {
+      setSync({
+        state: 'off',
+        note: result.kind === 'offline' ? UNREACHABLE : FAILED,
+      })
+      return
+    }
+    const claude = result.wallet
+    const local = wallet
+    switch (firstConnection(claude, local)) {
+      case 'same':
+        finish(claude, 'Synced with your Claude wallet.')
+        return
+      case 'claude':
+        finish(
+          claude,
+          `Synced: My wallet now shows your Claude wallet (${cardCount(claude)}).`,
+        )
+        return
+      case 'browser': {
+        if (!local) return
+        const error = await replaceClaude(local)
+        if (error) setSync({ state: 'off', note: error })
+        else
+          finish(
+            local,
+            "Synced: your Claude wallet had no cards, so it now holds this browser's.",
+          )
+        return
+      }
+      case 'ask':
+        setSync({ state: 'choose', claude, error: null, busy: false })
+    }
+  }
+
+  const choose = async (choice: Choice) => {
+    if (sync.state !== 'choose' || !wallet) return
+    const { claude } = sync
+    if (choice === 'claude') {
+      finish(claude, 'Synced: My wallet now shows your Claude wallet.')
+      return
+    }
+    setSync({ ...sync, busy: true, error: null })
+    if (choice === 'browser') {
+      const error = await replaceClaude(wallet)
+      if (error) setSync({ ...sync, busy: false, error })
+      else
+        finish(wallet, "Synced: your Claude wallet now holds this browser's.")
+      return
+    }
+    let latest = claude
+    const refused: string[] = []
+    for (const op of combineOps(catalog, claude, wallet, localToday())) {
+      const result = await syncRequest(op)
+      if (result.kind === 'ok') latest = result.wallet
+      else if (result.kind === 'refused') refused.push(result.error)
+      else {
+        setSync({
+          ...sync,
+          busy: false,
+          error:
+            result.kind === 'limited'
+              ? LIMITED
+              : `${UNREACHABLE} Your Claude wallet may have some of this browser's cards already.`,
+        })
+        return
+      }
+    }
+    finish(
+      latest,
+      refused.length > 0
+        ? `Combined, except: ${refused.join(' ')}`
+        : `Combined: your wallet now has every card from both (${cardCount(latest)}).`,
+    )
+  }
+
+  const stop = async () => {
+    const signedOut = await disconnect()
+    save('sync', { on: false })
+    setSync({
+      state: 'off',
+      note: signedOut
+        ? 'Stopped syncing. Your wallet stays in this browser.'
+        : "Stopped syncing here; your wallet stays in this browser. earnrate's server couldn't be reached to sign this browser out, so connecting again later replaces that sign-in.",
+    })
+  }
+
+  // Every change on the page goes through here: applied in this browser
+  // with the shared rules, or, synced, made on the server and shown back.
+  const perform = async (op: WalletOp): Promise<Outcome> => {
+    if (sync.state === 'connecting' || sync.state === 'choose')
+      return {
+        ok: false,
+        error: 'Finish connecting to your Claude wallet first.',
+      }
+    if (sync.state === 'on') {
+      if (!online) return { ok: false, error: NEEDS_CONNECTION }
+      // Shown at once by the same rules; the server's answer then replaces
+      // it, or the wallet goes back as it was.
+      const before = wallet
+      const local =
+        op.tool === 'import_wallet'
+          ? null
+          : applyLocally(catalog, wallet, op, localToday())
+      if (local?.ok) setWallet(local.wallet)
+      setBusy(true)
+      try {
+        const result = await syncRequest(op)
+        if (result.kind === 'ok') {
+          replaceWallet(result.wallet)
+          return { ok: true, notes: local?.ok ? local.notes : [] }
+        }
+        setWallet(before)
+        switch (result.kind) {
+          case 'refused':
+            return { ok: false, error: result.error }
+          case 'ended':
+            ended()
+            return { ok: false, error: ENDED }
+          case 'limited':
+            return { ok: false, error: LIMITED }
+          case 'offline':
+            setOnline(false)
+            return { ok: false, error: NEEDS_CONNECTION }
+        }
+      } finally {
+        setBusy(false)
+      }
+    }
+    if (op.tool === 'import_wallet') {
+      const { parseWalletYaml } =
+        await import('../../src/format/wallet-yaml.ts')
+      const parsed = parseWalletYaml(op.input.yaml, catalog)
+      if (typeof parsed === 'string') return { ok: false, error: parsed }
+      replaceWallet(parsed)
+      return { ok: true, notes: [] }
+    }
+    const change = applyLocally(catalog, wallet, op, localToday())
+    if (!change.ok) return { ok: false, error: change.error }
+    replaceWallet(change.wallet)
+    return { ok: true, notes: change.notes }
+  }
+
+  useEffect(() => {
+    if (sync.state === 'connecting') void connectFirst()
+    // Only the sign-in coming back starts this, once.
+  }, [])
+
+  // While synced: fetch the wallet now, when the page comes back into view,
+  // when the connection returns, and every half minute while it's away.
+  useEffect(() => {
+    if (sync.state !== 'on') return
+    void refresh()
+    const back = () => {
+      setOnline(true)
+      void refresh()
+    }
+    const gone = () => setOnline(false)
+    const seen = () => {
+      if (document.visibilityState === 'visible') void refresh()
+    }
+    addEventListener('online', back)
+    addEventListener('offline', gone)
+    document.addEventListener('visibilitychange', seen)
+    return () => {
+      removeEventListener('online', back)
+      removeEventListener('offline', gone)
+      document.removeEventListener('visibilitychange', seen)
+    }
+  }, [sync.state])
+  useEffect(() => {
+    if (sync.state !== 'on' || online) return
+    const timer = setInterval(() => void refresh(), 30_000)
+    return () => clearInterval(timer)
+  }, [sync.state, online])
+
+  const syncTop =
+    sync.state === 'connecting' ? (
+      <Connecting />
+    ) : sync.state === 'choose' && wallet ? (
+      <FirstChoice
+        claude={sync.claude}
+        browser={wallet}
+        error={sync.error}
+        busy={sync.busy}
+        onChoose={(c) => void choose(c)}
+        onCancel={() => void stop()}
+      />
+    ) : sync.state === 'ended' ? (
+      <Ended onKeep={() => setSync({ state: 'off', note: null })} />
+    ) : sync.state === 'on' ? (
+      <SyncStatus
+        online={online}
+        busy={busy}
+        note={sync.note}
+        onStop={() => void stop()}
+      />
+    ) : null
+  const connect =
+    sync.state === 'off' ? <ConnectPanel note={sync.note} /> : null
+
   const saved = wallet ?? EMPTY_WALLET
   const filters = (
     <Filters
       settings={settings}
       onChange={setSettings}
       memberships={saved.memberships}
-      onMemberships={(memberships) => replaceWallet({ ...saved, memberships })}
+      onMemberships={(memberships) => void perform(membershipsOp(memberships))}
+      synced={synced}
+      locked={locked}
+      note={edit.note}
     />
   )
   useEffect(() => save('settings', settings), [settings])
@@ -312,7 +628,13 @@ export function App() {
           <MyWallet
             initialQuery={query}
             wallet={wallet}
-            onReplace={replaceWallet}
+            perform={perform}
+            onDelete={() => replaceWallet(null)}
+            synced={synced}
+            locked={locked}
+            lockNote={edit.note}
+            syncTop={syncTop}
+            connect={connect}
           />
         )}
       </div>

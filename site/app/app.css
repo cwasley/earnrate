@@ -1256,3 +1256,137 @@ input[type='number']::-webkit-outer-spin-button {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
+
+/* Wallet sync with Claude. A locked fieldset wraps the controls that change
+   the wallet, so one `disabled` covers them while offline or saving. */
+.app fieldset.lock {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.app fieldset.lock:disabled {
+  opacity: 0.55;
+}
+
+.app fieldset.lock.point-value {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.sync-bar {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 10px 14px;
+}
+
+.sync-bar p {
+  margin: 0;
+}
+
+.sync-bar p + p {
+  margin-top: 4px;
+}
+
+.sync-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sync-status > span:nth-child(2) {
+  flex: 1 1 auto;
+}
+
+.sync-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2e7d32;
+}
+
+.sync-dot.off {
+  background: var(--muted);
+}
+
+.sync-dot.busy {
+  background: var(--accent);
+  animation: sync-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes sync-pulse {
+  to {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sync-dot.busy {
+    animation: none;
+  }
+}
+
+.sync-status .link,
+.sync-choice .link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.sync-sides {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 12px 0;
+  font-size: 15px;
+}
+
+.sync-sides dt {
+  font-weight: 600;
+}
+
+.sync-sides dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.sync-options {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.sync-options li {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+
+.sync-options button {
+  border: 1px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sync-dot {
+    background: #81c784;
+  }
+}

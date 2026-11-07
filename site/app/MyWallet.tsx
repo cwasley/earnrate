@@ -32,15 +32,7 @@ import {
 } from '../../src/engine/text.ts'
 import { cardValuation } from '../../src/engine/valuation.ts'
 import type { Recommendation } from '../../src/engine/types.ts'
-import {
-  addToWallet,
-  removeFromWallet,
-  updateInWallet,
-  withMemberships,
-  withValuations,
-  type CardInput,
-  type WalletChange,
-} from '../../src/engine/wallet-change.ts'
+import type { CardInput } from '../../src/engine/wallet-change.ts'
 import { resolvePlace } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { CardArt } from './CardArt.tsx'
@@ -63,6 +55,18 @@ import { PayingWith, payingNote } from './PayingWith.tsx'
 import type { PaymentMethod } from '../../src/schema/card.ts'
 import { SearchInput } from './SearchInput.tsx'
 import { load, loadList, save } from './settings.ts'
+import {
+  addOp,
+  importOp,
+  membershipsOp,
+  pointValueOp,
+  removeOp,
+  updateOp,
+  type LocalOp,
+  type Outcome,
+  type WalletOp,
+} from './sync.ts'
+import type { ComponentChildren } from 'preact'
 import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
 import { offerTerms } from '../../src/engine/offers.ts'
 import {
@@ -350,7 +354,7 @@ function CardEditor({
 }: {
   wallet: Wallet
   held: WalletCard
-  onChange: (change: WalletChange, cardId: string) => void
+  onChange: (input: CardInput) => void
   onRemove: (cardId: string) => void
 }) {
   const card = cards.get(held.id)
@@ -408,7 +412,7 @@ function CardEditor({
       input.creditUsed = Object.fromEntries(
         used.map(([id, v]) => [id, Math.max(0, Number(v) || 0)]),
       )
-    onChange(updateInWallet(catalog, wallet, input, localToday()), held.id)
+    onChange(input)
   }
 
   return (
@@ -635,7 +639,7 @@ function CardList({
   // The card whose Settings are showing; the to-do list can open one.
   open: string | null
   setOpen: (cardId: string | null) => void
-  onChange: (change: WalletChange, cardId: string) => void
+  onChange: (op: LocalOp, cardId: string) => Promise<boolean>
   onRemove: (cardId: string) => void
 }) {
   const today = localToday()
@@ -680,9 +684,10 @@ function CardList({
                 <CardEditor
                   wallet={wallet}
                   held={held}
-                  onChange={(change, id) => {
-                    if (change.ok) setOpen(null)
-                    onChange(change, id)
+                  onChange={(input) => {
+                    void onChange(updateOp(input), held.id).then((ok) => {
+                      if (ok) setOpen(null)
+                    })
                   }}
                   onRemove={(id) => {
                     setOpen(null)
@@ -708,7 +713,7 @@ function AddCard({
   onChange,
 }: {
   wallet: Wallet | null
-  onChange: (change: WalletChange, cardId: string) => void
+  onChange: (op: LocalOp, cardId: string) => Promise<boolean>
 }) {
   const [query, setQuery] = useState('')
   const found = useMemo(
@@ -754,10 +759,7 @@ function AddCard({
                     track('wallet-first-card')
                     save('counted-first-card', true)
                   }
-                  onChange(
-                    addToWallet(catalog, wallet, { id: c.id }, localToday()),
-                    c.id,
-                  )
+                  void onChange(addOp(c.id), c.id)
                   setQuery('')
                 }}
               >
@@ -774,9 +776,11 @@ function AddCard({
 function Memberships({
   wallet,
   onChange,
+  locked,
 }: {
   wallet: Wallet
-  onChange: (change: WalletChange) => void
+  onChange: (op: LocalOp) => Promise<boolean>
+  locked: boolean
 }) {
   const used = new Set(
     wallet.cards.flatMap((h) => {
@@ -790,26 +794,26 @@ function Memberships({
     <section class="panel">
       <h3>Memberships</h3>
       <p class="muted">Some of your cards earn more with these.</p>
-      {relevant.map((m) => (
-        <label class="check" key={m}>
-          <input
-            type="checkbox"
-            checked={wallet.memberships.includes(m)}
-            onChange={(e) =>
-              onChange(
-                withMemberships(
-                  catalog,
-                  wallet,
-                  e.currentTarget.checked
-                    ? [...wallet.memberships, m]
-                    : wallet.memberships.filter((x) => x !== m),
-                ),
-              )
-            }
-          />
-          {membershipName(m)}
-        </label>
-      ))}
+      <fieldset class="lock" disabled={locked}>
+        {relevant.map((m) => (
+          <label class="check" key={m}>
+            <input
+              type="checkbox"
+              checked={wallet.memberships.includes(m)}
+              onChange={(e) =>
+                void onChange(
+                  membershipsOp(
+                    e.currentTarget.checked
+                      ? [...wallet.memberships, m]
+                      : wallet.memberships.filter((x) => x !== m),
+                  ),
+                )
+              }
+            />
+            {membershipName(m)}
+          </label>
+        ))}
+      </fieldset>
     </section>
   )
 }
@@ -819,9 +823,11 @@ function Memberships({
 function PointValues({
   wallet,
   onChange,
+  locked,
 }: {
   wallet: Wallet
-  onChange: (change: WalletChange) => void
+  onChange: (op: LocalOp) => Promise<boolean>
+  locked: boolean
 }) {
   const ids = [
     ...new Set(
@@ -847,12 +853,12 @@ function PointValues({
           catalog.currencies.find((c) => c.id === id)?.value_cents ?? 1
         const value = set ? own : base
         const save = (cents: number | null) =>
-          onChange(withValuations(catalog, wallet, { [id]: cents }))
+          void onChange(pointValueOp(id, cents))
         const step = (by: number) =>
           save(Math.min(5, Math.max(0.1, Math.round((value + by) * 10) / 10)))
         const name = currencyLabel(catalog, id)
         return (
-          <div class="point-value" key={id}>
+          <fieldset class="lock point-value" key={id} disabled={locked}>
             <span>{name}</span>
             <span class="stepper">
               <button
@@ -891,7 +897,7 @@ function PointValues({
                 Reset
               </button>
             ) : null}
-          </div>
+          </fieldset>
         )
       })}
     </section>
@@ -1045,11 +1051,6 @@ async function exportWallet(wallet: Wallet) {
   setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }
 
-async function importWallet(file: File): Promise<Wallet | string> {
-  const { parseWalletYaml } = await import('../../src/format/wallet-yaml.ts')
-  return parseWalletYaml(await file.text(), catalog)
-}
-
 // On a phone, outside the installed app: how to add earnrate to the Home
 // Screen, where it opens straight to this tab and works with no signal.
 function InstallHint() {
@@ -1089,67 +1090,105 @@ function InstallHint() {
 
 function Transfer({
   wallet,
-  onReplace,
+  synced,
+  locked,
+  onImport,
+  onDelete,
 }: {
   wallet: Wallet | null
-  onReplace: (wallet: Wallet | null) => void
+  synced: boolean
+  locked: boolean
+  onImport: (op: WalletOp) => Promise<Outcome>
+  onDelete: () => void
 }) {
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+  // Synced, an import replaces the Claude wallet too, so it asks first.
+  const [pending, setPending] = useState<string | null>(null)
+  const runImport = (yaml: string) => {
+    void onImport(importOp(yaml)).then((result) => {
+      if (!result.ok) setError(result.error)
+      else {
+        track('wallet-import')
+        setError(null)
+      }
+    })
+  }
   return (
     <section class="panel">
       <h3>Move your wallet</h3>
       <p class="muted">
-        Your wallet is saved only in this browser. Export it to keep a copy, or
-        to use it with the command line or earnrate in Claude; import one to
-        bring it here.
+        {synced
+          ? 'Your wallet is synced with earnrate in Claude. Export it to keep a copy or use it with the command line; importing a file replaces the synced wallet.'
+          : 'Your wallet is saved only in this browser. Export it to keep a copy, or to use it with the command line or earnrate in Claude; import one to bring it here.'}
       </p>
-      <div class="row-buttons">
-        {wallet ? (
-          <button type="button" onClick={() => void exportWallet(wallet)}>
-            Export wallet.yaml
-          </button>
-        ) : null}
-        <label class="file-button">
-          Import a wallet file
-          <input
-            type="file"
-            accept=".yaml,.yml,text/yaml"
-            onChange={(e) => {
-              const file = e.currentTarget.files?.[0]
-              if (!file) return
-              void importWallet(file).then((result) => {
-                if (typeof result === 'string') setError(result)
-                else {
-                  track('wallet-import')
-                  setError(null)
-                  onReplace(result)
-                }
-              })
-              e.currentTarget.value = ''
-            }}
-          />
-        </label>
-        {wallet ? (
-          confirming ? (
+      <fieldset class="lock" disabled={locked}>
+        <div class="row-buttons">
+          {wallet ? (
+            <button type="button" onClick={() => void exportWallet(wallet)}>
+              Export wallet.yaml
+            </button>
+          ) : null}
+          <label class="file-button">
+            Import a wallet file
+            <input
+              type="file"
+              accept=".yaml,.yml,text/yaml"
+              onChange={(e) => {
+                const file = e.currentTarget.files?.[0]
+                if (!file) return
+                void file.text().then((yaml) => {
+                  if (synced) setPending(yaml)
+                  else runImport(yaml)
+                })
+                e.currentTarget.value = ''
+              }}
+            />
+          </label>
+          {wallet && !synced ? (
+            confirming ? (
+              <button
+                type="button"
+                class="danger"
+                onClick={() => {
+                  setConfirming(false)
+                  onDelete()
+                }}
+              >
+                Yes, delete it from this browser
+              </button>
+            ) : (
+              <button type="button" onClick={() => setConfirming(true)}>
+                Delete wallet
+              </button>
+            )
+          ) : null}
+        </div>
+        {pending !== null ? (
+          <div class="row-buttons">
             <button
               type="button"
               class="danger"
               onClick={() => {
-                setConfirming(false)
-                onReplace(null)
+                runImport(pending)
+                setPending(null)
               }}
             >
-              Yes, delete it from this browser
+              Replace my synced wallet with this file
             </button>
-          ) : (
-            <button type="button" onClick={() => setConfirming(true)}>
-              Delete wallet
+            <button type="button" onClick={() => setPending(null)}>
+              Cancel
             </button>
-          )
+          </div>
         ) : null}
-      </div>
+      </fieldset>
       {error ? <p class="callout">{error}</p> : null}
+      {synced ? (
+        <p class="muted small">
+          To delete the synced wallet, ask earnrate in Claude to delete it. Stop
+          syncing keeps a copy in this browser.
+        </p>
+      ) : null}
       <p class="muted small">
         Statement import stays in the command line version: never upload a card
         statement to a website, this one included.
@@ -1161,11 +1200,23 @@ function Transfer({
 export function MyWallet({
   initialQuery,
   wallet,
-  onReplace: replace,
+  perform,
+  onDelete,
+  synced,
+  locked,
+  lockNote,
+  syncTop,
+  connect,
 }: {
   initialQuery: string
   wallet: Wallet | null
-  onReplace: (wallet: Wallet | null) => void
+  perform: (op: WalletOp) => Promise<Outcome>
+  onDelete: () => void
+  synced: boolean
+  locked: boolean
+  lockNote: string | null
+  syncTop: ComponentChildren // sync status, the first-connection choice
+  connect: ComponentChildren // "Use the same wallet as Claude"
 }) {
   const [message, setMessage] = useState<{
     text: string
@@ -1185,22 +1236,24 @@ export function MyWallet({
       : { text: initialQuery.trim(), amount: null },
   )
 
-  const apply = (change: WalletChange, cardId?: string) => {
-    if (!change.ok) {
-      setMessage({ text: change.error, error: true })
-      return
+  // One change: refused, or done with what the card still needs.
+  const apply = async (op: LocalOp, cardId?: string): Promise<boolean> => {
+    const result = await perform(op)
+    if (!result.ok) {
+      setMessage({ text: result.error, error: true })
+      return false
     }
-    replace(change.wallet)
     setMessage(
-      change.notes.length > 0
+      result.notes.length > 0
         ? {
-            text: change.notes
+            text: result.notes
               .map((n) => noteText(n, shortName(cardId ?? '')))
               .join(' '),
             error: false,
           }
         : null,
     )
+    return true
   }
 
   const problems = wallet ? walletProblems(wallet, catalog) : []
@@ -1212,13 +1265,28 @@ export function MyWallet({
     [wallet, asked, abroad, payment, problems.length],
   )
 
+  const transfer = (
+    <Transfer
+      wallet={wallet}
+      synced={synced}
+      locked={locked}
+      onImport={perform}
+      onDelete={onDelete}
+    />
+  )
+  const shown = message ?? (lockNote ? { text: lockNote, error: false } : null)
+  const messageLine = shown ? (
+    <p class={shown.error ? 'callout' : 'muted'}>{shown.text}</p>
+  ) : null
+
   if (wallet && problems.length > 0) {
     return (
-      <div>
+      <div class="panels">
+        {syncTop}
         <p class="callout">
           The wallet saved in this browser has problems: {problems.join(' ')}
         </p>
-        <Transfer wallet={wallet} onReplace={replace} />
+        {transfer}
       </div>
     )
   }
@@ -1227,43 +1295,47 @@ export function MyWallet({
   if (!wallet || wallet.cards.length === 0) {
     return (
       <div class="panels">
+        {syncTop}
         <section class="panel first">
           <p>
-            Add the cards you have, and earnrate tells you which one to use
-            anywhere. Your wallet is saved only in this browser: no account, and
-            never a card number.
+            {synced
+              ? "Add the cards you have, and earnrate tells you which one to use anywhere. They're saved in your Claude wallet too: never a card number."
+              : 'Add the cards you have, and earnrate tells you which one to use anywhere. Your wallet is saved only in this browser: no account, and never a card number.'}
           </p>
-          <AddCard wallet={wallet} onChange={apply} />
-          {message ? (
-            <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
-          ) : null}
+          <fieldset class="lock" disabled={locked}>
+            <AddCard wallet={wallet} onChange={apply} />
+          </fieldset>
+          {messageLine}
           <InstallHint />
         </section>
-        <Transfer wallet={wallet} onReplace={replace} />
+        {connect}
+        {transfer}
       </div>
     )
   }
 
   const remove = (cardId: string) => {
-    apply(removeFromWallet(wallet, cardId), cardId)
-    if (wallet.cards.length === 1) setAsked(null)
+    void apply(removeOp(cardId), cardId).then((ok) => {
+      if (ok && wallet.cards.length === 1) setAsked(null)
+    })
   }
 
   return (
     <div class="panels">
+      {syncTop}
       <section class="panel first">
         <h3>Your cards</h3>
-        <CardList
-          wallet={wallet}
-          open={openCard}
-          setOpen={setOpenCard}
-          onChange={apply}
-          onRemove={remove}
-        />
-        <AddCard wallet={wallet} onChange={apply} />
-        {message ? (
-          <p class={message.error ? 'callout' : 'muted'}>{message.text}</p>
-        ) : null}
+        <fieldset class="lock" disabled={locked}>
+          <CardList
+            wallet={wallet}
+            open={openCard}
+            setOpen={setOpenCard}
+            onChange={apply}
+            onRemove={remove}
+          />
+          <AddCard wallet={wallet} onChange={apply} />
+        </fieldset>
+        {messageLine}
         <p class="pass-hint">
           At the register: your{' '}
           <button
@@ -1379,10 +1451,11 @@ export function MyWallet({
         }}
       />
       <CheatSheet wallet={wallet} />
-      <Memberships wallet={wallet} onChange={apply} />
-      <PointValues wallet={wallet} onChange={apply} />
+      <Memberships wallet={wallet} onChange={apply} locked={locked} />
+      <PointValues wallet={wallet} onChange={apply} locked={locked} />
       <WhatIf wallet={wallet} />
-      <Transfer wallet={wallet} onReplace={replace} />
+      {connect}
+      {transfer}
     </div>
   )
 }
