@@ -414,6 +414,13 @@ export const enrollCreditText = (card: string, names: string[]) =>
     ? `Enroll in ${possessive(card)} ${names[0] ?? ''} credit with the issuer, then mark it enrolled.`
     : `Enroll in ${possessive(card)} ${listed(names)} credits with the issuer, then mark them enrolled.`
 
+// Credits that need no enrolling, before the cardholder says whether they
+// use them: they don't offset the annual fee until then.
+export const askCreditText = (card: string, names: string[]) =>
+  names.length === 1
+    ? `Do you use ${possessive(card)} ${names[0] ?? ''} credit? Mark it used and it counts against the annual fee.`
+    : `Do you use ${possessive(card)} ${listed(names)} credits? Mark them used and they count against the annual fee.`
+
 // The cheat sheet: its picks are by rate alone.
 export const CREDITS_LEFT_OUT =
   'Statement credits (dollars back at a named store) are left out.'
@@ -441,7 +448,7 @@ export const CREDITS_APART =
   "Statement credits (dollars back at named stores) aren't in the ranking: they're worth it only if you'd spend at those places anyway. Where a card has them, what it nets if you'd use them all is shown apart."
 
 export const HELD_CREDITS_COUNTED =
-  "Statement credits on your own cards count against their fees when you use them: once you've marked them enrolled, or right away for ones that need no enrolling, unless you've marked them as credits you don't use."
+  "Statement credits on your own cards count against their fees once you've said you use them: marked enrolled, or marked used (or already used) for ones that need no enrolling."
 
 export const CREDITS_ONLY_IF =
   "They're worth that only if you'd spend at those places anyway."

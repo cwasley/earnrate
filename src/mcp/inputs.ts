@@ -146,7 +146,7 @@ const cardFields = {
     .array(z.string())
     .optional()
     .describe(
-      'Statement credit ids the user has enrolled in with the issuer (search_cards and list_wallet list each card\'s credits, e.g. "lululemon" on Amex Platinum). A credit that needs enrolling counts in answers only once it\'s here. Replaces the current list. Ask; never assume.',
+      "Statement credit ids the user has enrolled in with the issuer, or, for a credit that needs no enrolling, says they use (search_cards and list_wallet list each card's credits, e.g. \"lululemon\" on Amex Platinum). A credit that needs enrolling counts in answers only once it's here, and any credit counts against the annual fee only once it's here (or has been used). Replaces the current list. Ask; never assume.",
     ),
   creditUsed: z
     .record(z.string(), z.number().nonnegative())
@@ -158,7 +158,7 @@ const cardFields = {
     .array(z.string())
     .optional()
     .describe(
-      'Statement credit ids the user doesn\'t use, e.g. ["dunkin"] on Amex Gold. They\'re left out of picks, the to-do list and the annual-fee math; every other credit on the card counts against its fee once enrolled (or always, for one that needs no enrolling). Replaces the current list; [] counts them all again.',
+      "Statement credit ids the user doesn't use, e.g. [\"dunkin\"] on Amex Gold. They're left out of picks, the to-do list and the annual-fee math; every other credit on the card counts against its fee once it's in enrolled (or, for one that needs no enrolling, has been used). Replaces the current list; [] counts them all again.",
     ),
   bonus: z
     .object({

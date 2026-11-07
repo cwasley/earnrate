@@ -13,6 +13,7 @@ import type { MerchantResolution } from './types.ts'
 export type CreditState = CreditWords & {
   credit: Credit
   skipped: boolean // the cardholder doesn't use it
+  confirmed: boolean // the cardholder said they use it (creditConfirmed)
   key: string | null // the period, like 2026-Q4; null for a cardmember year without an anniversary
   used: number // dollars of credit received this period
 }
@@ -44,9 +45,16 @@ const isEnrolled = (credit: Credit, held: WalletCard) =>
 export const isSkipped = (credit: Credit, held: WalletCard) =>
   (held.skipped_credits ?? []).includes(credit.id)
 
-// A credit the cardholder uses: enrolled (or automatic) and not skipped.
+// The cardholder said they use it: it's in `enrolled` (for one that needs
+// no enrolling, that means "using it"), or one that needs no enrolling has
+// already paid out. Until then a credit doesn't offset the annual fee.
+export const creditConfirmed = (credit: Credit, held: WalletCard) =>
+  (held.enrolled ?? []).includes(credit.id) ||
+  (credit.enroll !== true && held.credit_usage?.[credit.id] !== undefined)
+
+// A credit that counts against the fee: confirmed and not skipped.
 export const creditInUse = (credit: Credit, held: WalletCard) =>
-  isEnrolled(credit, held) && !isSkipped(credit, held)
+  creditConfirmed(credit, held) && !isSkipped(credit, held)
 
 function creditState(
   catalog: Catalog,
@@ -69,6 +77,7 @@ function creditState(
     period: credit.period,
     enrolled: isEnrolled(credit, held),
     skipped: isSkipped(credit, held),
+    confirmed: creditConfirmed(credit, held),
     used,
     left:
       period === null ? null : roundCents(Math.max(0, credit.amount - used)),

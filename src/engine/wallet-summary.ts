@@ -61,6 +61,7 @@ export type CreditSummary = {
   enroll: boolean // the cardholder must enroll first
   enrolled: boolean // enrolled, or no enrollment needed
   skipped: boolean // the cardholder doesn't use it: counted nowhere
+  confirmed: boolean // said in use, so it counts against the annual fee
   currentPeriod: string | null // null for a cardmember year without an anniversary
   until: string | null // the period's last day, YYYY-MM-DD
   used: number
@@ -478,6 +479,7 @@ function creditSummaries(
       enroll: s.credit.enroll === true,
       enrolled: s.enrolled,
       skipped: s.skipped,
+      confirmed: s.confirmed,
       currentPeriod: s.key,
       until: s.until,
       used: s.used,

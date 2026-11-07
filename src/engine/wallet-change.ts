@@ -32,7 +32,8 @@ export type CardInput = {
   capSpent?: Record<string, number>
   // Spend milestone id → dollars already spent on the card this period.
   milestoneSpent?: Record<string, number>
-  // Statement credit ids the cardholder has enrolled in; replaces the list.
+  // Statement credit ids the cardholder has enrolled in, or, for ones that
+  // need no enrolling, says they use; replaces the list.
   enrolled?: string[]
   // Credit id → dollars of that credit already received this period.
   creditUsed?: Record<string, number>
@@ -256,15 +257,13 @@ export function cardFields(
     fields.milestone_usage = usage
   }
   if (input.enrolled !== undefined) {
-    const needing = card.credits
-      .filter((c) => c.enroll === true)
-      .map((c) => c.id)
+    const ids = card.credits.map((c) => c.id)
     for (const id of input.enrolled) {
-      if (!needing.includes(id))
+      if (!ids.includes(id))
         problems.push(
-          needing.length > 0
-            ? `'${id}' isn't a ${card.id} credit that needs enrolling. Those are: ${idList(needing)}.`
-            : `${card.id} has no credits that need enrolling.`,
+          ids.length > 0
+            ? `${card.id} has no credit '${id}'. Its credits are: ${idList(ids)}.`
+            : `${card.id} has no statement credits.`,
         )
     }
     fields.enrolled = [...new Set(input.enrolled)]

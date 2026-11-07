@@ -4,6 +4,7 @@ import { addDays, currentPeriodEnd, daysBetween } from './periods.ts'
 import {
   CAP_PERIODS,
   choiceName,
+  askCreditText,
   enrollCreditText,
   introEndsText,
   listed,
@@ -14,7 +15,7 @@ import {
   possessive,
 } from './text.ts'
 import { milestonePays } from './milestones.ts'
-import { optionName } from './rule-text.ts'
+import { creditLabel, optionName } from './rule-text.ts'
 import {
   activationsDue,
   walletSummary,
@@ -158,6 +159,23 @@ export function checklist(
       })
     }
 
+    const toAsk = s.credits.filter(
+      (c) => !c.enroll && !c.confirmed && !c.skipped,
+    )
+    if (toAsk.length > 0)
+      items.push({
+        kind: 'enroll',
+        cardId: card.id,
+        ref: toAsk.map((c) => c.id).join(','),
+        text: askCreditText(
+          name,
+          toAsk.map((c) => {
+            const credit = card.credits.find((x) => x.id === c.id)
+            return credit ? creditLabel(catalog, credit) : c.name
+          }),
+        ),
+        due: null,
+      })
     const toEnroll = s.credits.filter((c) => !c.enrolled && !c.skipped)
     if (toEnroll.length > 0)
       items.push({

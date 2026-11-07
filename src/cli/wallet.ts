@@ -27,8 +27,9 @@ const CARD_OPTIONS = `Options:
   --activated <rules>        Rules you've activated with the issuer, comma
                              separated. Replaces the current list.
   --enrolled <credits>       Statement credits you've enrolled in with the
-                             issuer, comma separated, e.g. --enrolled lululemon.
-                             Replaces the current list.
+                             issuer, or use if they need no enrolling, comma
+                             separated, e.g. --enrolled lululemon. They count
+                             against the annual fee. Replaces the current list.
   --credit-used <credit>=<dollars>
                              How much of a credit you've received this period,
                              e.g. --credit-used lululemon=40. Repeat for each.

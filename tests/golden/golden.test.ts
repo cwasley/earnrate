@@ -1962,9 +1962,12 @@ describe('#32 merchant statement credits', () => {
       expect(usedUp.some((i) => i.kind === 'credit')).toBe(false)
       const todo = checklist(catalog, wallet(), TODAY)
       const enroll = todo.filter((i) => i.kind === 'enroll')
-      expect(enroll).toHaveLength(1)
-      expect(enroll[0]?.due).toBeNull()
+      expect(enroll).toHaveLength(2)
+      expect(enroll.every((i) => i.due === null)).toBe(true)
       expect(enroll[0]?.text).toMatch(
+        /^Do you use The Platinum Card from American Express' Uber, Uber One, Walmart\+ membership and CLEAR credits\? Mark them used and they count against the annual fee\.$/,
+      )
+      expect(enroll[1]?.text).toMatch(
         /^Enroll in The Platinum Card from American Express' Lululemon, Resy, .* and YouTube TV credits with the issuer, then mark them enrolled\.$/,
       )
     },
@@ -2134,7 +2137,7 @@ describe('#34 statement credits against the annual fee', () => {
     () => {
       const { current } = simulateAdditions(
         catalog,
-        gold({ enrolled: ['dunkin'] }),
+        gold({ enrolled: ['dunkin', 'uber-cash'] }),
         typical,
         options,
       )

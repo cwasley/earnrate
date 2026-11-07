@@ -199,6 +199,7 @@ export const WalletSummarySchema = z.object({
           enroll: z.boolean(),
           enrolled: z.boolean(),
           skipped: z.boolean(), // the user doesn't use it: not counted anywhere
+          confirmed: z.boolean(), // said in use: counts against the annual fee
           currentPeriod: z.string().nullable(),
           until: z.string().nullable(),
           used: z.number(),

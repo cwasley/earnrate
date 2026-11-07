@@ -61,8 +61,9 @@ export const WalletCardSchema = z.strictObject({
   activated: z.array(KebabId).default([]),
   // Keyed by milestone id: every purchase on the card this period.
   milestone_usage: z.record(KebabId, CapUsage).optional(),
-  // Merchant credits (the card's `credits`) the cardholder has enrolled in,
-  // by credit id, and the dollars of each credit already received this period.
+  // Merchant credits (the card's `credits`) the cardholder has enrolled in
+  // or, for ones that need no enrolling, says they use, by credit id; and
+  // the dollars of each credit already received this period.
   enrolled: z.array(KebabId).optional(),
   credit_usage: z.record(KebabId, CreditUsage).optional(),
   // Credits the cardholder doesn't use: left out of the pick, the to-do

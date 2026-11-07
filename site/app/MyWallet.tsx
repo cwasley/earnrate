@@ -369,8 +369,8 @@ function milestoneLine(held: WalletCard): string | null {
 
 type CreditUse = 'using' | 'not-yet' | 'skipped'
 
-// Enrolled is what the issuer calls it; a credit that needs no enrolling is
-// in use until the cardholder says otherwise.
+// Enrolled is what the issuer calls it. A credit that needs no enrolling
+// starts with neither choice: it offsets the fee only once marked used.
 const ENROLL_CHOICES: { use: CreditUse; label: string }[] = [
   { use: 'using', label: 'Enrolled' },
   { use: 'not-yet', label: 'Not yet' },
@@ -413,7 +413,11 @@ function CardEditor({
     Object.fromEntries(
       credits.map((c) => [
         c.credit.id,
-        c.skipped ? 'skipped' : c.enrolled ? 'using' : 'not-yet',
+        c.skipped
+          ? 'skipped'
+          : (c.credit.enroll ? c.enrolled : c.confirmed)
+            ? 'using'
+            : 'not-yet',
       ]),
     ),
   )
@@ -452,11 +456,10 @@ function CardEditor({
       credits
         .filter((c) => creditUse[c.credit.id] === use)
         .map((c) => c.credit.id)
-    if (credits.some((c) => c.credit.enroll))
-      input.enrolled = withUse('using').filter((id) =>
-        credits.some((c) => c.credit.id === id && c.credit.enroll),
-      )
-    if (credits.length > 0) input.skippedCredits = withUse('skipped')
+    if (credits.length > 0) {
+      input.enrolled = withUse('using')
+      input.skippedCredits = withUse('skipped')
+    }
     const used = Object.entries(creditUsed).filter(([, v]) => v !== '')
     if (used.length > 0)
       input.creditUsed = Object.fromEntries(
@@ -653,7 +656,7 @@ function CardEditor({
             <p class="muted small">
               Left out of picks, the to-do list and the annual-fee math.
             </p>
-          ) : (
+          ) : creditUse[c.credit.id] !== 'using' ? null : (
             <label class="field">
               Used so far {CREDIT_THIS_PERIOD[c.period]}
               <input
@@ -1088,7 +1091,7 @@ function WhatIf({
 // Flex's bonus". Tied to the checklist's wording in src/engine/checklist.ts
 // and text.ts; an item whose wording doesn't match stays plain text.
 const SETTINGS_LINKS: Partial<Record<ChecklistItem['kind'], RegExp>> = {
-  enroll: /mark (?:it|them) enrolled/,
+  enroll: /mark (?:it|them) enrolled|Mark (?:it|them) used/,
   pick: /^Pick .+? categor(?:y|ies)/,
   activate: /^Activate .+?'s? bonus/,
 }

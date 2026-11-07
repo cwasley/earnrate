@@ -647,7 +647,7 @@ describe('merchant credits', () => {
         ),
       ),
     ).toMatch(
-      /'dell' isn't a amex-platinum credit that needs enrolling\. Those are: lululemon, resy,/,
+      /amex-platinum has no credit 'dell'\. Its credits are: lululemon, uber-cash,/,
     )
     expect(
       errorOf(

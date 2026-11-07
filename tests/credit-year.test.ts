@@ -9,6 +9,7 @@ import {
   creditPerYear,
   usedCreditsYear,
 } from '../src/engine/credits.ts'
+import { checklist } from '../src/engine/checklist.ts'
 import { ALL_PERSONAL_CARDS } from '../src/engine/explore.ts'
 import { effectiveMemberships } from '../src/engine/memberships.ts'
 import { recommend } from '../src/engine/recommend.ts'
@@ -60,14 +61,28 @@ describe('a credit over a year', () => {
     )
   })
 
-  test('a held card counts automatic credits and enrolled ones, but none marked unused', () => {
+  test('a held card counts credits said in use, but none marked unused', () => {
     const gold = cardOf(catalog, 'amex-gold')
-    expect(usedCreditsYear(catalog, gold, held({})).creditIds).toEqual([
-      'uber-cash',
-    ])
+    expect(usedCreditsYear(catalog, gold, held({})).creditIds).toEqual([])
     expect(
       usedCreditsYear(catalog, gold, held({ enrolled: ['dunkin'] })).yearly,
+    ).toBe(84)
+    expect(
+      usedCreditsYear(
+        catalog,
+        gold,
+        held({ enrolled: ['dunkin', 'uber-cash'] }),
+      ).yearly,
     ).toBe(204)
+    expect(
+      usedCreditsYear(
+        catalog,
+        gold,
+        held({
+          credit_usage: { 'uber-cash': { period: '2026-11', used: 10 } },
+        }),
+      ).creditIds,
+    ).toEqual(['uber-cash'])
     expect(
       usedCreditsYear(
         catalog,
@@ -248,5 +263,25 @@ describe("the annual-fee page's second figure", () => {
     const noCredits = feeWorth(cardOf(catalog, 'citi-strata-premier'))
     expect(noCredits?.credits).toBeNull()
     expect(noCredits?.creditsBreakEven).toBeNull()
+  })
+})
+
+describe('asking about credits that need no enrolling', () => {
+  const asks = (fields: object) =>
+    checklist(
+      catalog,
+      WalletSchema.parse({ cards: [{ id: 'amex-gold', ...fields }] }),
+      TODAY,
+    ).filter((i) => i.text.startsWith('Do you use'))
+
+  test('asks once, until the credit is marked used or not used', () => {
+    expect(asks({}).map((i) => i.text)).toEqual([
+      "Do you use American Express Gold Card's Uber credit? Mark it used and it counts against the annual fee.",
+    ])
+    expect(asks({ enrolled: ['uber-cash'] })).toEqual([])
+    expect(asks({ skipped_credits: ['uber-cash'] })).toEqual([])
+    expect(
+      asks({ credit_usage: { 'uber-cash': { period: '2026-10', used: 10 } } }),
+    ).toEqual([])
   })
 })
