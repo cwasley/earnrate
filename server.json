@@ -8,14 +8,14 @@
     "url": "https://github.com/cwasley/earnrate",
     "source": "github"
   },
-  "version": "0.2.17",
+  "version": "0.2.18",
   "remotes": [{ "type": "streamable-http", "url": "https://mcp.earnrate.dev" }],
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "earnrate",
-      "version": "0.2.17",
+      "version": "0.2.18",
       "runtimeHint": "npx",
       "transport": { "type": "stdio" },
       "packageArguments": [{ "type": "positional", "value": "mcp" }],
