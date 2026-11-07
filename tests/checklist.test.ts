@@ -188,3 +188,14 @@ test('a first-year rate ending this quarter is on the list, one ending later is 
     },
   ])
 })
+
+test('an activation over stores and services gives each its own preposition', () => {
+  const items = checklist(
+    catalog,
+    WalletSchema.parse({ cards: [{ id: 'discover-it-cash-back' }] }),
+    '2026-11-06',
+  )
+  expect(items.find((i) => i.kind === 'activate')?.text).toMatch(
+    /bonus at restaurants, .*, and on home utilities, /,
+  )
+})

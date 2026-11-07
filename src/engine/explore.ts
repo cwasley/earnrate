@@ -108,6 +108,9 @@ export type ExploreEntry = RankedCard & {
   evidence: { quote: string; url: string } | null
   // Higher returns with a membership this card's rules ask for, best first.
   withMembership: { membership: string; effectiveReturnPct: number }[]
+  // The membership the card itself needs, unless the person has it or the
+  // purchase implies it (shopping at Costco).
+  needsMembership: string | null
 }
 
 // What earning the ranked rate takes.
@@ -425,6 +428,11 @@ export function exploreCards(
         ...membershipNeeded(catalog, card, members),
       ],
       evidence: evidence ? { quote: evidence.quote, url: evidence.url } : null,
+      needsMembership:
+        card.requires_membership !== undefined &&
+        !members.has(card.requires_membership)
+          ? card.requires_membership
+          : null,
       withMembership: membershipUpgrades(
         catalog,
         card,
@@ -562,7 +570,7 @@ function exploreWarnings(
   const warnings: string[] = []
   if (merchant.source === 'none') {
     warnings.push(
-      `Couldn't identify "${merchant.input}", so only base rates apply. Try a category instead.`,
+      `earnrate doesn't know "${merchant.input}" yet, so only base rates apply. Try a category, or the name of a larger chain.`,
     )
   }
   if (merchant.ambiguity) {

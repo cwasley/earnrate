@@ -704,7 +704,7 @@ function renderCard(
       <div class="card-head">${art(card.id, 112)}<h1>${esc(card.name)}</h1></div>
       <p class="updated">${esc(issuer)} · ${esc(card.business ? 'Business card' : 'Personal card')} · Checked against ${esc(possessive(issuer))} terms ${esc(shortDate(card.last_verified))}</p>
       <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeLabel(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listed(card.only_at.map((id) => merchantName(id) ?? words(id))))}.` : ''}</p>
-      <p><a class="button" href="/#wallet">Add it to your wallet</a></p>
+      <p><a class="button" href="/#wallet&add=${card.id}">Add it to your wallet</a></p>
       ${
         firsts.length > 0
           ? `<h2>Where it's the best ${card.business ? 'business ' : ''}card</h2><p class="links">${firsts.map(link).join(' · ')}</p>`

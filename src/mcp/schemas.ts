@@ -462,6 +462,7 @@ export const ExplorationSchema = z.object({
       withMembership: z.array(
         z.object({ membership: z.string(), effectiveReturnPct: z.number() }),
       ),
+      needsMembership: z.string().nullable(),
     }),
   ),
   excluded: z.array(ExcludedCardSchema),

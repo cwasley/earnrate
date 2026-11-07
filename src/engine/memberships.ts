@@ -82,7 +82,7 @@ export function membershipCosts(
 export function membershipText(catalog: Catalog, id: string): string {
   const m = membership(catalog, id)
   const name = withArticle(m?.name ?? words(id))
-  return m?.annual_fee === undefined
+  return m?.annual_fee === undefined || m.annual_fee === 0
     ? name
     : `${name} (${money(m.annual_fee)} a year)`
 }

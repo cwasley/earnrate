@@ -36,9 +36,11 @@ export function cardText(catalog: Catalog) {
     )
   }
 
-  function feeLabel(id: string): string {
+  // `membership: false` leaves out a membership the card needs, for lists
+  // whose own conditions say it only when it applies.
+  function feeLabel(id: string, { membership = true } = {}): string {
     const card = cards.get(id)
-    const m = card?.requires_membership
+    const m = membership ? card?.requires_membership : undefined
     const needs = m === undefined ? '' : `; needs ${membershipText(catalog, m)}`
     const fee = card?.annual_fee
     if (fee === undefined) return 'Annual fee not on file'

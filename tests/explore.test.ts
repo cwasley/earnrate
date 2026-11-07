@@ -164,7 +164,9 @@ describe('best cards for a purchase', () => {
       query({ merchant: 'zzz unknown shop' }),
       casual,
     )
-    expect(unknown.warnings[0]).toMatch(/^Couldn't identify "zzz unknown shop"/)
+    expect(unknown.warnings[0]).toMatch(
+      /^earnrate doesn't know "zzz unknown shop" yet/,
+    )
   })
 })
 

@@ -68,7 +68,7 @@ export function checklist(
       items.push({
         kind: 'activate',
         cardId: card.id,
-        text: `Activate ${possessive(name)} bonus ${a.preposition} ${a.what}${a.activateBy === null ? '' : ` by ${shortDate(a.activateBy)}`}${starts}.`,
+        text: `Activate ${possessive(name)} bonus ${a.where}${a.activateBy === null ? '' : ` by ${shortDate(a.activateBy)}`}${starts}.`,
         due:
           a.activateBy ?? (a.from !== null && a.from > today ? a.from : a.to),
       })

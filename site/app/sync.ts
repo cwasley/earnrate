@@ -174,8 +174,9 @@ export function heldToInput(
 }
 
 // "Combine them": every card from both, the Claude wallet's settings where a
-// card is in both, the memberships of both, and the Claude wallet's point
-// values. Sent as changes, never as a whole wallet.
+// card is in both, the memberships of both, and point values from both (the
+// Claude wallet's where both set one). Sent as changes, never as a whole
+// wallet.
 export function combineOps(
   catalog: Catalog,
   claude: Wallet,
@@ -194,6 +195,18 @@ export function combineOps(
   ]
   if (memberships.length > claude.memberships.length)
     ops.push(membershipsOp(memberships))
+  // A point value only this browser set carries over; where both set one,
+  // the Claude wallet's stays.
+  const values = Object.fromEntries(
+    Object.entries(browser.valuations).flatMap(([currency, v]) => {
+      const cents = typeof v === 'number' ? v : v.value
+      return currency in claude.valuations || cents === undefined
+        ? []
+        : [[currency, cents]]
+    }),
+  )
+  if (Object.keys(values).length > 0)
+    ops.push({ tool: 'set_point_values', input: { values } })
   return ops
 }
 

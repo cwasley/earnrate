@@ -93,7 +93,10 @@ function CardRow({ entry, rank }: { entry: ExploreEntry; rank: number }) {
         <div class="result-name">
           <strong>{shortName(entry.cardId)}</strong>
           <span class="muted">
-            {issuerName(entry.issuer)} · {feeLabel(entry.cardId)}
+            {issuerName(entry.issuer)} ·{' '}
+            {feeLabel(entry.cardId, {
+              membership: entry.needsMembership !== null,
+            })}
           </span>
         </div>
         <span class="rate">{pct(entry.effectiveReturnPct)}</span>
@@ -153,7 +156,8 @@ function CreditRow({ pick }: { pick: CreditPick }) {
         <div class="result-name">
           <strong>{shortName(pick.cardId)}</strong>
           <span class="muted">
-            {issuerName(pick.issuer)} · {feeLabel(pick.cardId)}
+            {issuerName(pick.issuer)} ·{' '}
+            {feeLabel(pick.cardId, { membership: false })}
           </span>
         </div>
         <span class="rate">
@@ -209,7 +213,7 @@ function Example({
     <section class="example" aria-labelledby="example-title">
       <h3 id="example-title">
         For example, {title(result).toLowerCase()}
-        <span class="muted"> · top 3 of every card</span>
+        <span class="muted"> · top 3 personal cards</span>
       </h3>
       <ol class="example-list">
         {result.ranked.slice(0, EXAMPLE_ROWS).map((e) => (
@@ -224,7 +228,7 @@ function Example({
         ))}
       </ol>
       <button type="button" class="more" onClick={onOpen}>
-        See all {result.ranked.length} cards and why
+        See all {result.ranked.length} personal cards and why
       </button>
     </section>
   )
@@ -407,12 +411,6 @@ export function BestFor({
                 {w}
               </p>
             ))}
-            {result.merchant.source === 'none' ? (
-              <p>
-                earnrate doesn't know that store yet. Try a category above, or
-                the name of a larger chain.
-              </p>
-            ) : null}
             {result.credits.length > 0 ? (
               <>
                 <h4 class="credit-group">{CREDIT_GROUP}</h4>

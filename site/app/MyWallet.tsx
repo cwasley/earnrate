@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'preact/hooks'
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { walletProblems } from '../../src/data/integrity.ts'
 import { bonusStatus } from '../../src/engine/bonus.ts'
@@ -29,6 +29,7 @@ import {
   categoryPhrase,
   currencyLabel,
   currencyName,
+  choiceName,
 } from '../../src/engine/text.ts'
 import { cardValuation } from '../../src/engine/valuation.ts'
 import type { Recommendation } from '../../src/engine/types.ts'
@@ -52,7 +53,8 @@ import {
 } from './format.ts'
 import { ABROAD_NOTE, AbroadToggle } from './AbroadToggle.tsx'
 import { PayingWith, payingNote } from './PayingWith.tsx'
-import type { PaymentMethod } from '../../src/schema/card.ts'
+import type { Card, PaymentMethod } from '../../src/schema/card.ts'
+import { optionName, ruleWhat } from '../../src/engine/rule-text.ts'
 import { SearchInput } from './SearchInput.tsx'
 import { load, loadList, save } from './settings.ts'
 import {
@@ -67,7 +69,11 @@ import {
   type WalletOp,
 } from './sync.ts'
 import type { ComponentChildren } from 'preact'
-import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
+import {
+  checklist,
+  checklistCalendar,
+  type ChecklistItem,
+} from '../../src/engine/checklist.ts'
 import { offerTerms } from '../../src/engine/offers.ts'
 import {
   capitalize,
@@ -84,6 +90,17 @@ import { creditStates } from '../../src/engine/credits.ts'
 const QUICK = EVERYDAY_PURCHASES.slice(0, 6).map(quickPickText)
 
 // Setup notes name what to set in CLI terms; this says where on the page.
+// "Grocery stores and American Red Cross, Oct 1 to Dec 31": an activation
+// in the engine's words, with its dates.
+function activationLabel(card: Card, ruleId: string): string {
+  const rule = card.rules.find((r) => r.id === ruleId)
+  if (!rule) return words(ruleId)
+  const what = capitalize(ruleWhat(catalog, rule, card))
+  return rule.valid_from !== undefined && rule.valid_to !== undefined
+    ? `${what}, ${shortDate(rule.valid_from).replace(/, \d{4}$/, '')} to ${shortDate(rule.valid_to)}`
+    : what
+}
+
 function noteText(note: SetupNote, name: string): string {
   switch (note.kind) {
     case 'pick':
@@ -422,7 +439,9 @@ function CardEditor({
         return (
           <fieldset key={choice.id}>
             <legend>
-              {words(choice.id)}: pick {choice.pick}
+              {choiceName(choice.id)}{' '}
+              {choice.pick === 1 ? 'category' : 'categories'}: pick{' '}
+              {choice.pick}
               {choice.period === 'quarter' ? ' this quarter' : ''}
             </legend>
             {choice.options.map((option) => {
@@ -446,7 +465,7 @@ function CardEditor({
                       })
                     }}
                   />
-                  {words(option)}
+                  {optionName(catalog, card, choice.id, option)}
                 </label>
               )
             })}
@@ -475,7 +494,7 @@ function CardEditor({
                   )
                 }}
               />
-              {words(rule)}
+              {activationLabel(card, rule)}
             </label>
           ))}
         </fieldset>
@@ -673,10 +692,10 @@ function CardList({
                   </span>
                 </span>
                 <span class="muted">
-                  {needsPick
-                    ? 'Set picks'
-                    : open === held.id
-                      ? 'Close'
+                  {open === held.id
+                    ? 'Close'
+                    : needsPick
+                      ? 'Set picks'
                       : 'Settings'}
                 </span>
               </button>
@@ -904,7 +923,16 @@ function PointValues({
   )
 }
 
-function WhatIf({ wallet }: { wallet: Wallet }) {
+function WhatIf({
+  wallet,
+  locked,
+  onAdd,
+}: {
+  wallet: Wallet
+  locked: boolean
+  onAdd: (cardId: string) => void
+}) {
+  const [open, setOpen] = useState<string | null>(null)
   const result = useMemo(() => {
     const rows = loadList<Row>('spending', TYPICAL_MONTHLY_SPEND)
     const lines = resolveSpendLines(
@@ -935,20 +963,43 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
         <ol class="result-list">
           {gains.map((a, i) => (
             <li class="result" key={a.cardId}>
-              <div class="result-top">
+              <button
+                type="button"
+                class="result-top result-toggle"
+                aria-expanded={open === a.cardId}
+                onClick={() => setOpen(open === a.cardId ? null : a.cardId)}
+              >
                 <span class="rank">{i + 1}</span>
                 <CardArt id={a.cardId} />
-                <div class="result-name">
+                <span class="result-name">
                   <strong>{shortName(a.cardId)}</strong>
                   <span class="muted">
                     +{wholeDollars(a.extraRewards)} back · {feeLabel(a.cardId)}
                   </span>
-                </div>
+                </span>
                 <span class="rate">
                   +{wholeDollars(a.gain)}
                   <small>/yr</small>
                 </span>
-              </div>
+              </button>
+              {open === a.cardId ? (
+                <div class="row-buttons">
+                  <a class="row-link" href={`/cards/${a.cardId}`}>
+                    See card details
+                  </a>
+                  <button
+                    type="button"
+                    class="primary"
+                    disabled={locked}
+                    onClick={() => {
+                      setOpen(null)
+                      onAdd(a.cardId)
+                    }}
+                  >
+                    Add to my wallet
+                  </button>
+                </div>
+              ) : null}
             </li>
           ))}
         </ol>
@@ -957,26 +1008,39 @@ function WhatIf({ wallet }: { wallet: Wallet }) {
   )
 }
 
-function EnrollText({ text, onOpen }: { text: string; onOpen: () => void }) {
-  const match = MARK_ENROLLED.exec(text)
-  if (!match) return <>{text}</>
+// The part of a to-do item that opens the card's Settings, where it's done:
+// "mark them enrolled", "Pick Cash+'s 5% and 2% categories", "Activate Freedom
+// Flex's bonus". Tied to the checklist's wording in src/engine/checklist.ts
+// and text.ts; an item whose wording doesn't match stays plain text.
+const SETTINGS_LINKS: Partial<Record<ChecklistItem['kind'], RegExp>> = {
+  enroll: /mark (?:it|them) enrolled/,
+  pick: /^Pick .+? categor(?:y|ies)/,
+  activate: /^Activate .+?'s? bonus/,
+}
+
+function SettingsLinkText({
+  item,
+  onOpen,
+}: {
+  item: ChecklistItem
+  onOpen: () => void
+}) {
+  const pattern = SETTINGS_LINKS[item.kind]
+  const match = pattern?.exec(item.text)
+  if (!match) return <>{item.text}</>
   return (
     <>
-      {text.slice(0, match.index)}
+      {item.text.slice(0, match.index)}
       <button type="button" class="link" onClick={onOpen}>
         {match[0]}
       </button>
-      {text.slice(match.index + match[0].length)}
+      {item.text.slice(match.index + match[0].length)}
     </>
   )
 }
 
 // What the cards need this period, with a calendar file of the dates. The
 // file is built here and saved by the browser; nothing is sent anywhere.
-// "mark them enrolled" in an enroll item opens that card's Settings, where
-// the enrolled boxes are.
-const MARK_ENROLLED = /mark (?:it|them) enrolled/
-
 function ThisQuarter({
   wallet,
   onOpenCard,
@@ -998,16 +1062,12 @@ function ThisQuarter({
       <ul class="todo">
         {items.map((i) => (
           <li key={`${i.kind}-${i.cardId}`}>
-            {i.kind === 'enroll' && MARK_ENROLLED.test(i.text) ? (
-              <EnrollText
-                text={i.text}
-                onOpen={() => {
-                  onOpenCard(i.cardId)
-                }}
-              />
-            ) : (
-              i.text
-            )}
+            <SettingsLinkText
+              item={i}
+              onOpen={() => {
+                onOpenCard(i.cardId)
+              }}
+            />
           </li>
         ))}
       </ul>
@@ -1221,6 +1281,7 @@ export function MyWallet({
   const [message, setMessage] = useState<{
     text: string
     error: boolean
+    undo?: () => void
   } | null>(null)
   const [query, setQuery] = useState(initialQuery)
   const [amount, setAmount] = useState('')
@@ -1246,15 +1307,89 @@ export function MyWallet({
     setMessage(
       result.notes.length > 0
         ? {
-            text: result.notes
-              .map((n) => noteText(n, shortName(cardId ?? '')))
-              .join(' '),
+            text: [
+              ...new Set(
+                result.notes.map((n) => noteText(n, shortName(cardId ?? ''))),
+              ),
+            ].join(' '),
             error: false,
           }
         : null,
     )
     return true
   }
+
+  // Opens a card's Settings in Your cards and scrolls to it: from the to-do
+  // list, from a card page's "Add it to your wallet", and from "Would another
+  // card help?".
+  const openCardSettings = (cardId: string) => {
+    setOpenCard(cardId)
+    requestAnimationFrame(() => {
+      document
+        .getElementById(`held-${cardId}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
+  // Adds a card the person chose elsewhere, opens its Settings (picks, an
+  // opening date, a welcome bonus) and offers Undo. Already held: says so.
+  const addAndOpen = async (cardId: string) => {
+    if (wallet?.cards.some((c) => c.id === cardId)) {
+      openCardSettings(cardId)
+      setMessage({
+        text: `${shortName(cardId)} is already in your wallet.`,
+        error: false,
+      })
+      return
+    }
+    if (locked) {
+      setMessage({
+        text: `${shortName(cardId)} wasn't added: ${lockNote ?? 'changes need a connection.'}`,
+        error: true,
+      })
+      return
+    }
+    if (!(await apply(addOp(cardId), cardId))) return
+    openCardSettings(cardId)
+    setMessage(() => ({
+      text: `Added ${shortName(cardId)}. Its Settings are open above.`,
+      error: false,
+      undo: () => {
+        void apply(removeOp(cardId)).then((ok) => {
+          if (ok)
+            setMessage({
+              text: `Took ${shortName(cardId)} back out.`,
+              error: false,
+            })
+        })
+      },
+    }))
+  }
+
+  // A card page's "Add it to your wallet" arrives as #wallet&add=<card id>,
+  // on load or as a change to the address. The id is read once and cleared.
+  const addFromAddress = () => {
+    const params = new URLSearchParams(location.hash.slice(1))
+    const cardId = params.get('add')
+    if (cardId === null) return
+    params.delete('add')
+    const rest = params.toString().replace(/=(?=&|$)/g, '')
+    history.replaceState(null, '', `#${rest || 'wallet'}`)
+    if (!catalog.cards.some((c) => c.id === cardId)) return
+    void addAndOpen(cardId)
+  }
+  const addFromAddressRef = useRef(addFromAddress)
+  addFromAddressRef.current = addFromAddress
+  useEffect(() => {
+    const onChange = () => {
+      addFromAddressRef.current()
+    }
+    onChange()
+    addEventListener('hashchange', onChange)
+    return () => {
+      removeEventListener('hashchange', onChange)
+    }
+  }, [])
 
   const problems = wallet ? walletProblems(wallet, catalog) : []
   const rec = useMemo(
@@ -1274,9 +1409,20 @@ export function MyWallet({
       onDelete={onDelete}
     />
   )
-  const shown = message ?? (lockNote ? { text: lockNote, error: false } : null)
+  const shown: typeof message =
+    message ?? (lockNote ? { text: lockNote, error: false } : null)
   const messageLine = shown ? (
-    <p class={shown.error ? 'callout' : 'muted'}>{shown.text}</p>
+    <p class={shown.error ? 'callout' : 'muted'}>
+      {shown.text}
+      {shown.undo ? (
+        <>
+          {' '}
+          <button type="button" class="link" onClick={shown.undo}>
+            Undo
+          </button>
+        </>
+      ) : null}
+    </p>
   ) : null
 
   if (wallet && problems.length > 0) {
@@ -1439,21 +1585,15 @@ export function MyWallet({
         </div>
       </section>
 
-      <ThisQuarter
-        wallet={wallet}
-        onOpenCard={(cardId) => {
-          setOpenCard(cardId)
-          requestAnimationFrame(() => {
-            document
-              .getElementById(`held-${cardId}`)
-              ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          })
-        }}
-      />
+      <ThisQuarter wallet={wallet} onOpenCard={openCardSettings} />
       <CheatSheet wallet={wallet} />
       <Memberships wallet={wallet} onChange={apply} locked={locked} />
       <PointValues wallet={wallet} onChange={apply} locked={locked} />
-      <WhatIf wallet={wallet} />
+      <WhatIf
+        wallet={wallet}
+        locked={locked}
+        onAdd={(cardId) => void addAndOpen(cardId)}
+      />
       {connect}
       {transfer}
     </div>

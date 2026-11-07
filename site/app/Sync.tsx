@@ -171,8 +171,8 @@ export function FirstChoice({
               Combine them
             </button>
             <span class="muted small">
-              Every card from both. Where a card is in both, the Claude wallet's
-              settings and point values win.
+              Every card from both, and point values from both. Where both set
+              the same thing, the Claude wallet's wins.
             </span>
           </li>
         </ul>

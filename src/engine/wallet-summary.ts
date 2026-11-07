@@ -161,7 +161,7 @@ function headlineRates(
           wallet.memberships.includes(r.requires.membership)),
     )
     .sort((a, b) => b.rate - a.rate)
-  const lines = new Map<string, { at: string[]; on: string[] }>()
+  const lines = new Map<string, Rule[]>()
   for (const r of shown) {
     const keys = matchKeys(r)
     const higher = shown
@@ -193,22 +193,13 @@ function headlineRates(
       pending ? ', once activated' : '',
       payment === undefined ? '' : ` ${PAYMENT_PHRASES[payment]}`,
     ].join('|')
-    const line = lines.get(key) ?? { at: [], on: [] }
-    const whats = line[rulePreposition(catalog, [r])]
-    for (const part of ruleParts(catalog, r, card))
-      if (!whats.includes(part)) whats.push(part)
-    lines.set(key, line)
+    lines.set(key, [...(lines.get(key) ?? []), r])
   }
   return [
-    ...[...lines].map(([key, { at, on }]) => {
+    ...[...lines].map(([key, rules]) => {
       const [head = '', limit = '', activate = '', paid = ''] = key.split('|')
       const after = `${limit}${activate}`
-      // "at gas stations and on transit" when one line mixes the two.
-      const where = [
-        ...(at.length > 0 ? [`at ${listed(at)}`] : []),
-        ...(on.length > 0 ? [`on ${listed(on)}`] : []),
-      ].join(at.length > 1 ? ', and ' : ' and ')
-      return `${head} ${where}${paid}${after === '' ? '' : ` (${after.replace(/^, /, '')})`}`
+      return `${head} ${wherePhrase(catalog, card, rules)}${paid}${after === '' ? '' : ` (${after.replace(/^, /, '')})`}`
     }),
     ...(shown.some(
       (r) =>
@@ -224,7 +215,8 @@ function headlineRates(
 
 export type ActivationDue = {
   what: string // the bonus categories, in words: "grocery stores and restaurants"
-  preposition: 'at' | 'on' // "bonus at grocery stores", "bonus on streaming services"
+  // With each part's own preposition: "at restaurants, and on home utilities"
+  where: string
   from: string | null
   to: string | null
   activateBy: string | null
@@ -232,6 +224,26 @@ export type ActivationDue = {
 
 // Bonuses current or starting soon that the card hasn't activated, one per
 // activation group (one activation covers a quarter's categories).
+// "at gas stations and restaurants, and on transit": each rule's parts after
+// its own preposition, the "at" ones first.
+export function wherePhrase(
+  catalog: Catalog,
+  card: Card,
+  rules: Rule[],
+): string {
+  const parts = { at: [] as string[], on: [] as string[] }
+  for (const r of rules) {
+    const list = parts[rulePreposition(catalog, [r])]
+    for (const part of ruleParts(catalog, r, card))
+      if (!list.includes(part)) list.push(part)
+  }
+  const { at, on } = parts
+  return [
+    ...(at.length > 0 ? [`at ${listed(at)}`] : []),
+    ...(on.length > 0 ? [`on ${listed(on)}`] : []),
+  ].join(at.length > 1 ? ', and ' : ' and ')
+}
+
 export function activationsDue(
   catalog: Catalog,
   card: Card,
@@ -250,7 +262,7 @@ export function activationsDue(
       what: listed([
         ...new Set(rules.flatMap((r) => ruleParts(catalog, r, card))),
       ]),
-      preposition: rulePreposition(catalog, rules),
+      where: wherePhrase(catalog, card, rules),
       from: first?.valid_from ?? null,
       to: first?.valid_to ?? null,
       activateBy: first?.activate_by ?? null,

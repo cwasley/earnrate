@@ -163,6 +163,16 @@ describe('combining two wallets', () => {
     expect(combined.valuations).toEqual({ MR: 2 })
   })
 
+  test('a point value only this browser set carries over', () => {
+    const claude = run(walletWith('amex-gold'), [pointValueOp('MR', 2)])
+    const browser = run(walletWith('chase-sapphire-preferred'), [
+      pointValueOp('UR', 1.2),
+      pointValueOp('MR', 1.5),
+    ])
+    const combined = run(claude, combineOps(catalog, claude, browser, TODAY))
+    expect(combined.valuations).toEqual({ MR: 2, UR: 1.2 })
+  })
+
   test("an earlier period's picks and totals don't carry over", () => {
     const browser = run(walletWith('usbank-cash-plus'), [
       updateOp({

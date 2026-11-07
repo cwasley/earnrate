@@ -303,7 +303,13 @@ export function App() {
   )
   const [online, setOnline] = useState(() => navigator.onLine)
   const [busy, setBusy] = useState(false)
+  // A change can run later than the render that made it (Undo), so it
+  // reads the wallet as it is now.
+  const walletRef = useRef(wallet)
+  walletRef.current = wallet
+
   const replaceWallet = (next: Wallet | null) => {
+    walletRef.current = next
     setWallet(next)
     saveWallet(next)
   }
@@ -444,12 +450,15 @@ export function App() {
       if (!online) return { ok: false, error: NEEDS_CONNECTION }
       // Shown at once by the same rules; the server's answer then replaces
       // it, or the wallet goes back as it was.
-      const before = wallet
+      const before = walletRef.current
       const local =
         op.tool === 'import_wallet'
           ? null
-          : applyLocally(catalog, wallet, op, localToday())
-      if (local?.ok) setWallet(local.wallet)
+          : applyLocally(catalog, walletRef.current, op, localToday())
+      if (local?.ok) {
+        walletRef.current = local.wallet
+        setWallet(local.wallet)
+      }
       setBusy(true)
       try {
         const result = await syncRequest(op)
@@ -457,6 +466,7 @@ export function App() {
           replaceWallet(result.wallet)
           return { ok: true, notes: local?.ok ? local.notes : [] }
         }
+        walletRef.current = before
         setWallet(before)
         switch (result.kind) {
           case 'refused':
@@ -482,7 +492,7 @@ export function App() {
       replaceWallet(parsed)
       return { ok: true, notes: [] }
     }
-    const change = applyLocally(catalog, wallet, op, localToday())
+    const change = applyLocally(catalog, walletRef.current, op, localToday())
     if (!change.ok) return { ok: false, error: change.error }
     replaceWallet(change.wallet)
     return { ok: true, notes: change.notes }
