@@ -87,8 +87,8 @@ export function renewalCheck(
   },
 ): Renewal {
   const held = wallet.cards.find((c) => c.id === card.id)
-  const ids = wallet.cards.map((c) => c.id)
   const projected = projectedWallet(wallet, catalog, due)
+  const ids = projected.cards.map((c) => c.id)
   const withCard = simulateWallet(catalog, projected, spending.lines, due, ids)
   const others = projected.cards.filter((c) => c.id !== card.id)
   let without = null

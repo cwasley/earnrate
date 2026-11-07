@@ -48,7 +48,7 @@
     },
     {
       "name": "list_wallet",
-      "description": "A to-do list for your cards right now, then your cards, caps left, picked categories, statement credits left, welcome-bonus and spend-bonus progress, and point values."
+      "description": "A to-do list for your cards right now (including fee cards coming up for renewal), then your cards, caps left, picked categories, statement credits left, welcome-bonus and spend-bonus progress, and point values."
     },
     {
       "name": "cheat_sheet",
@@ -64,7 +64,7 @@
     },
     {
       "name": "compare_welcome_offers",
-      "description": "Public sign-up offers on cards you don't have."
+      "description": "Which card to get next: cards you don't have, ranked on their first two years with your spending and their sign-up offers."
     },
     {
       "name": "record_purchase",
@@ -88,7 +88,7 @@
     },
     {
       "name": "set_memberships",
-      "description": "Sets memberships like Amazon Prime or Costco that unlock rates or that a card needs."
+      "description": "Sets memberships like Amazon Prime or Costco that unlock rates or that a card needs, and issuers to leave out of next-card answers."
     },
     {
       "name": "set_point_values",
@@ -109,7 +109,7 @@
     },
     {
       "name": "this-quarter",
-      "description": "What should I do with my cards this quarter? Bonuses to activate, categories to pick, caps and welcome bonuses.",
+      "description": "What should I do with my cards this quarter? Bonuses to activate, categories to pick, caps, welcome bonuses and renewals.",
       "text": "What should I do with my cards this quarter?"
     },
     {

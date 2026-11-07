@@ -132,12 +132,7 @@ export function compareOffers(
   const held = new Set(wallet.cards.map((c) => c.id))
   const skipped = new Set(wallet.skipped_issuers ?? [])
   const monthly = spending.lines.reduce((sum, l) => sum + l.monthly, 0)
-  // A wallet card earnrate no longer lists can't be simulated.
-  const known = {
-    ...wallet,
-    cards: wallet.cards.filter((h) => catalog.cards.some((c) => c.id === h.id)),
-  }
-  const { additions } = simulateAdditions(catalog, known, spending.lines, {
+  const { additions } = simulateAdditions(catalog, wallet, spending.lines, {
     filters: { ...filters, issuer: null, includeClosed: true },
     memberships: wallet.memberships,
     valuations: wallet.valuations,

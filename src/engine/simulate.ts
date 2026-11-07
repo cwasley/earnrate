@@ -566,7 +566,8 @@ export type WalletWhatIf = {
 }
 
 // The person's own wallet, set up as it would run all year: their picks carry
-// over, rotating categories get activated, caps start fresh.
+// over, rotating categories get activated, caps start fresh. A card earnrate
+// no longer lists is left out, since it can't be simulated.
 export function projectedWallet(
   wallet: Wallet,
   catalog: Catalog,
@@ -574,11 +575,10 @@ export function projectedWallet(
 ): Wallet {
   return {
     ...wallet,
-    cards: wallet.cards.map((held) => {
+    cards: wallet.cards.flatMap((held) => {
       const card = catalog.cards.find((c) => c.id === held.id)
-      const ideal = card
-        ? idealHolding(card, start, held.chosen?.picks ?? {})
-        : held
+      if (!card) return []
+      const ideal = idealHolding(card, start, held.chosen?.picks ?? {})
       return {
         ...ideal,
         ...(held.checkout_label !== undefined

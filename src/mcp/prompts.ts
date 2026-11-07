@@ -106,11 +106,11 @@ export function registerPrompts(
     {
       title: 'What should I do with my cards this quarter?',
       description:
-        'Bonuses to activate, categories to pick, caps running low and welcome bonuses to finish, from your saved cards.',
+        'Bonuses to activate, categories to pick, caps running low, welcome bonuses to finish and fee cards coming up for renewal, from your saved cards.',
     },
     () =>
       ask('What should I do with my cards this quarter?', [
-        "Call earnrate's list_wallet: it starts with a to-do list. Walk through it, soonest first.",
+        "Call earnrate's list_wallet: it starts with a to-do list. Walk through it, soonest first. A renewal check says whether a fee card still pays for itself; give its math as stated, and don't recommend canceling or downgrading on your own.",
         ctx.walletUse,
         'If no cards are saved, say in a sentence or two what saving them adds (reminders to activate bonuses, pick categories, and watch caps and welcome bonuses), without pressing the user to do it, and offer the cheat sheet from every card instead.',
       ]),
@@ -133,7 +133,7 @@ export function registerPrompts(
           : []),
         'Find each card with search_cards and check the match with the user, then save it with add_card.',
         ctx.walletUse,
-        'When a card needs category picks, a membership like Amazon Prime, activations or its anniversary, ask rather than guessing, and save the answers with update_card or set_memberships.',
+        "When a card needs category picks, a membership like Amazon Prime, activations or its anniversary, ask rather than guessing, and save the answers with update_card or set_memberships. For a card with an annual fee, offer to save its anniversary (or opening date) so earnrate can check before each renewal whether it still pays for itself; it's optional.",
         'When done, call list_wallet and show its to-do list.',
       ]),
   )

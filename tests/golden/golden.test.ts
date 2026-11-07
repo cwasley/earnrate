@@ -2463,6 +2463,27 @@ describe('#36 the renewal check', () => {
     },
   )
 
+  goldenTest(
+    '#36h a saved card earnrate no longer lists is skipped, not an error',
+    () => {
+      const w = withProfile(
+        {
+          ...WalletSchema.parse({
+            cards: [{ id: 'amex-platinum', anniversary: '12-01' }],
+          }),
+          cards: [
+            ...WalletSchema.parse({
+              cards: [{ id: 'amex-platinum', anniversary: '12-01' }],
+            }).cards,
+            { id: 'retired-card', cap_usage: {}, activated: [] },
+          ],
+        },
+        'flat',
+      )
+      expect(renewals(w, '2026-11-07')).toHaveLength(1)
+    },
+  )
+
   goldenTest('#36g no-fee cards never get one', () => {
     expect(
       renewals(
