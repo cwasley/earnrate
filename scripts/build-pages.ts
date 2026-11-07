@@ -681,10 +681,12 @@ function renderCard(
     currency && card.currency !== 'cash'
       ? ` earnrate counts ${esc(currency.name)} at ${String(currency.value_cents)}¢ each${currency.range ? `; transferring to airlines or hotels can be worth up to about ${String(currency.range[1])}¢` : ''}.`
       : ''
+  // "Fidelity Rewards rates", not "Fidelity Rewards rewards rates".
+  const rates = /rewards$/i.test(name) ? 'rates' : 'rewards rates'
   const title = fitTitle([
-    `${name} rewards rates and annual fee (${thisMonth})`,
-    `${name} rewards rates and annual fee`,
-    `${name} rewards and fee`,
+    `${name} ${rates} and annual fee (${thisMonth})`,
+    `${name} ${rates} and annual fee`,
+    `${name} ${rates} and fee`,
     name,
   ])
   const firstClause = headline.split('; ')[0] ?? headline

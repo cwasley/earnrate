@@ -15,7 +15,7 @@ Use Cash+: 5% back. High confidence.
   + 6 more cards (--all lists them)
 
 Assumes Comcast Xfinity codes as TV and internet service (MCC 4899).
-Values points at: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢, Amex Membership Rewards (MR) at 1¢.
+Point values: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢ and Amex Membership Rewards (MR) at 1¢.
 "
 `;
 
@@ -37,7 +37,7 @@ Can't use here: Amex Gold, Blue Cash Preferred, Freedom Flex, Double Cash, Savor
 
 Assumes Costco codes as warehouse clubs (MCC 5300).
 Assumes an in-store purchase. Costco takes cards differently online.
-Values points at: Chase Ultimate Rewards (UR) at 1¢.
+Point values: Chase Ultimate Rewards (UR) at 1¢.
 "
 `;
 
@@ -59,7 +59,7 @@ Use Savor: 3% back, about $1.20. Medium confidence.
 ! If it codes as restaurants, Freedom Flex wins (3%).
 
 Assumes Dodger Stadium codes as live entertainment and events.
-Values points at: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢, Amex Membership Rewards (MR) at 1¢.
+Point values: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢ and Amex Membership Rewards (MR) at 1¢.
 "
 `;
 
@@ -95,7 +95,7 @@ Use Sapphire Preferred: 3% back. High confidence.
 Blue Cash Preferred also earns 3% here. Sapphire Preferred wins the tie because its points can be worth more.
 
 Assumes Shell codes as gas stations.
-Values points at: Chase Ultimate Rewards (UR) at 1¢, SoFi Member Rewards at 1¢, Amex Membership Rewards (MR) at 1¢.
+Point values: Chase Ultimate Rewards (UR) at 1¢, SoFi Member Rewards at 1¢ and Amex Membership Rewards (MR) at 1¢.
 "
 `;
 
@@ -122,7 +122,7 @@ SoFi also earns 2% here. Double Cash wins the tie by a fixed order; either works
 Freedom Flex beats Double Cash here if Chase Ultimate Rewards (UR) points are worth more than 2¢ (you value them at 1¢).
 
 Treats "Joe's Hardware Santa Monica" as an everyday purchase with no bonus category.
-Values points at: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢, Amex Membership Rewards (MR) at 1¢.
+Point values: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢ and Amex Membership Rewards (MR) at 1¢.
 "
 `;
 
@@ -143,6 +143,6 @@ Use Amex Gold: 6.8% back, about $5.44. High confidence.
 Blue Cash Preferred beats Amex Gold here if Amex Membership Rewards (MR) points are worth less than 1.5¢ (you value them at 1.7¢).
 
 Assumes Whole Foods Market codes as supermarkets (MCC 5411).
-Values points at: Amex Membership Rewards (MR) at 1.7¢, SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1.7¢.
+Point values: Amex Membership Rewards (MR) at 1.7¢, SoFi Member Rewards at 1¢ and Chase Ultimate Rewards (UR) at 1.7¢.
 "
 `;

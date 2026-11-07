@@ -720,7 +720,8 @@ function CardList({
       </ul>
       {untracked ? (
         <p class="muted small">
-          Opened one of these recently? Its Settings track the welcome bonus.
+          {wallet.cards.length === 1 ? 'Opened it' : 'Opened one of these'}{' '}
+          recently? Its Settings track the welcome bonus.
         </p>
       ) : null}
     </>
@@ -1031,9 +1032,17 @@ function SettingsLinkText({
   return (
     <>
       {item.text.slice(0, match.index)}
-      <button type="button" class="link" onClick={onOpen}>
+      {/* A link, not a button: a button can't wrap mid-sentence on a phone. */}
+      <a
+        href="#wallet"
+        class="link"
+        onClick={(e) => {
+          e.preventDefault()
+          onOpen()
+        }}
+      >
         {match[0]}
-      </button>
+      </a>
       {item.text.slice(match.index + match[0].length)}
     </>
   )
@@ -1180,7 +1189,9 @@ function Transfer({
       <p class="muted">
         {synced
           ? 'Your wallet is synced with earnrate in Claude. Export it to keep a copy or use it with the command line; importing a file replaces the synced wallet.'
-          : 'Your wallet is saved only in this browser. Export it to keep a copy, or to use it with the command line or earnrate in Claude; import one to bring it here.'}
+          : wallet
+            ? 'Your wallet is saved only in this browser. Export it to keep a copy, or to use it with the command line or earnrate for Claude Desktop; import one to bring it here.'
+            : 'Have a wallet file from the command line or earnrate for Claude Desktop? Import it here.'}
       </p>
       <fieldset class="lock" disabled={locked}>
         <div class="row-buttons">
@@ -1207,16 +1218,21 @@ function Transfer({
           </label>
           {wallet && !synced ? (
             confirming ? (
-              <button
-                type="button"
-                class="danger"
-                onClick={() => {
-                  setConfirming(false)
-                  onDelete()
-                }}
-              >
-                Yes, delete it from this browser
-              </button>
+              <>
+                <button
+                  type="button"
+                  class="danger"
+                  onClick={() => {
+                    setConfirming(false)
+                    onDelete()
+                  }}
+                >
+                  Yes, delete it from this browser
+                </button>
+                <button type="button" onClick={() => setConfirming(false)}>
+                  Cancel
+                </button>
+              </>
             ) : (
               <button type="button" onClick={() => setConfirming(true)}>
                 Delete wallet

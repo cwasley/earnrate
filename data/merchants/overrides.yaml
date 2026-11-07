@@ -1005,7 +1005,7 @@
   category: other
   online:
     category: online_retail
-  note: A auto parts store, with no bonus category in store. Its website counts as online retail.
+  note: An auto parts store, with no bonus category in store. Its website counts as online retail.
 - id: advance-auto-parts
   name: Advance Auto Parts
   aliases: [advance auto]
@@ -1013,7 +1013,7 @@
   category: other
   online:
     category: online_retail
-  note: A auto parts store, with no bonus category in store. Its website counts as online retail.
+  note: An auto parts store, with no bonus category in store. Its website counts as online retail.
 - id: napa-auto-parts
   name: NAPA Auto Parts
   aliases: [napa auto]
@@ -1021,7 +1021,7 @@
   category: other
   online:
     category: online_retail
-  note: A auto parts store, with no bonus category in store. Its website counts as online retail.
+  note: An auto parts store, with no bonus category in store. Its website counts as online retail.
 - id: discount-tire
   name: Discount Tire
   aliases: [americas tire]

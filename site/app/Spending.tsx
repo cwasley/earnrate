@@ -12,7 +12,11 @@ import {
   TYPICAL_MONTHLY_SPEND,
   type Simulation,
 } from '../../src/engine/simulate.ts'
-import { categoryPhrase, CREDITS_LEFT_OUT } from '../../src/engine/text.ts'
+import {
+  categoryPhrase,
+  CREDITS_LEFT_OUT,
+  listed,
+} from '../../src/engine/text.ts'
 import { feeLabel, shortName, wholeDollars, words } from './format.ts'
 import {
   engineOptions,
@@ -32,6 +36,9 @@ function picksText(picks: Picks): string | null {
   return all.length === 0 ? null : `Picks: ${all.map(words).join(', ')}`
 }
 
+// "Everything else" reads last in a card's list.
+const OTHER = catalog.categories.find((c) => c.id === 'other')?.name
+
 // Category names read mid-sentence in lower case; store names keep theirs.
 function phrase(label: string): string {
   const category = catalog.categories.find((c) => c.name === label)
@@ -49,7 +56,12 @@ function Split({ sim }: { sim: Simulation }) {
     <ul class="split">
       {[...byCard].map(([id, labels]) => (
         <li key={id}>
-          <strong>{shortName(id)}</strong> for {labels.map(phrase).join(', ')}
+          <strong>{shortName(id)}</strong> for{' '}
+          {listed(
+            [...labels]
+              .sort((a, b) => Number(a === OTHER) - Number(b === OTHER))
+              .map(phrase),
+          )}
         </li>
       ))}
     </ul>
@@ -171,7 +183,7 @@ export function Spending({
         {unknown.length > 0 ? (
           <p class="callout">
             earnrate doesn't know{' '}
-            {unknown.map((l) => `“${l.merchant.input}”`).join(', ')}, so the
+            {listed(unknown.map((l) => `“${l.merchant.input}”`))}, so the
             results leave {unknown.length === 1 ? 'it' : 'them'} out. Use a
             category like dining or groceries instead.
           </p>
@@ -259,7 +271,7 @@ export function Spending({
                       {p.alternatives.length > 0 ? (
                         <p class="muted">
                           Same result with{' '}
-                          {p.alternatives.map(shortName).join(' or ')} instead.
+                          {listed(p.alternatives.map(shortName), 'or')} instead.
                         </p>
                       ) : null}
                     </li>

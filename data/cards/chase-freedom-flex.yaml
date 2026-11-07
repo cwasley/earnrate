@@ -139,10 +139,10 @@ evidence:
     quote: 'Earn 2% total cash back on Lyft rides with your Freedom Flex card through September 30, 2027'
   - rule: q4-2026-grocery
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
-    quote: 'CURRENT QUARTER Grocery Stores'
+    quote: 'Activate each quarter to earn 5% cash back on up to $1,500 in combined purchases'
   - rule: q4-2026-grocery
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
-    quote: 'Activate each quarter to earn 5% cash back on up to $1,500 in combined purchases'
+    quote: 'CURRENT QUARTER Grocery Stores'
   - rule: q4-2026-grocery
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Purchases made at gas stations from merchants who also operate grocery stores are not included'
@@ -150,20 +150,20 @@ evidence:
     url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
     quote: 'This quarter, the deadline for activation is December 14, 2026'
   - rule: q4-2026-dining
+    url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
+    quote: 'For Dining purchases, you will earn 7% cash back (3% Dining cash back + 4% bonus category cash back)'
+  - rule: q4-2026-dining
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'Dining American Red Cross'
   - rule: q4-2026-dining
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: '5% Cash Back rewards total for each $1 spent until $1,500 is spent'
-  - rule: q4-2026-dining
-    url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
-    quote: 'For Dining purchases, you will earn 7% cash back (3% Dining cash back + 4% bonus category cash back)'
-  - rule: q4-2026-american-red-cross
-    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
-    quote: 'American Red Cross'
   - rule: q4-2026-american-red-cross
     url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
     quote: 'To ensure your charitable donation is eligible for the 5% total Cash Back reward'
+  - rule: q4-2026-american-red-cross
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'American Red Cross'
   - rule: q4-2026-american-red-cross
     url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
     quote: 'Local chapters may not be eligible due to transaction processing procedures'

@@ -131,7 +131,7 @@ export function codesAs(
   return `Assumes ${merchant.resolvedName} codes as ${categoryPhrase(catalog, merchant.category)}${code}.`
 }
 
-// "Values points at: Membership Rewards (MR) at 1¢." for the currencies an
+// "Point values: Membership Rewards (MR) at 1¢." for the currencies an
 // answer ranks, or null when every card shown earns cash.
 export function pointValuesText(
   catalog: Catalog,
@@ -144,7 +144,7 @@ export function pointValuesText(
   const list = [...values].map(
     ([id, cents]) => `${currencyLabel(catalog, id)} at ${num(cents)}¢`,
   )
-  return `Values points at: ${list.join(', ')}.`
+  return `Point values: ${listed(list)}.`
 }
 
 export const NETWORK_NAMES: Record<string, string> = {
@@ -217,6 +217,19 @@ export function withArticle(name: string): string {
     : /^[aeiou]/i.test(name) && !/^(u[bnst]|u\.s\.|eu|one\b|once\b)/i.test(name)
   return `${an ? 'an' : 'a'} ${name}`
 }
+
+// A card's name as people say it: "Amex Blue Cash Preferred", not "American
+// Express Blue Cash Preferred Card".
+export const shortCardName = (name: string) =>
+  name
+    .replace(/^American Express /, 'Amex ')
+    .replace(/^The (.+) Card from American Express$/, 'Amex $1')
+    // "Card" is part of Apple Card's name, not a suffix.
+    .replace(
+      / (Visa Signature |Visa Infinite )?(Credit )?(?<!^Apple )Card$/,
+      '',
+    )
+    .replace(/ Card by /, ' by ')
 
 // "Amex Platinum's", "Capital One Savor Rewards'".
 export const possessive = (name: string) =>

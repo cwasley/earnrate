@@ -41,6 +41,15 @@ export type ChecklistItem = {
   due: string | null // YYYY-MM-DD: the deadline, or when a cap resets
 }
 
+// "5% and 2% categories", "top category": a choice already named for its
+// category isn't followed by "categories" again.
+function pickWhat(names: string[]): string {
+  const [only] = names
+  if (names.length === 1 && only !== undefined && / category$/.test(only))
+    return only
+  return `${listed(names)} categories`
+}
+
 // What the wallet's cards need this period, soonest first: bonuses to
 // activate, categories to pick, caps running low, welcome bonuses to finish,
 // merchant credits to enroll in or use, and rotating categories the issuer
@@ -91,7 +100,7 @@ export function checklist(
       items.push({
         kind: 'pick',
         cardId: card.id,
-        text: `Pick ${possessive(name)} ${listed(unpicked.map((c) => choiceName(c.id)))} categories for this ${first.period.replace('_', ' ')}; until then they earn the base rate.`,
+        text: `Pick ${possessive(name)} ${pickWhat(unpicked.map((c) => choiceName(c.id)))} for this ${first.period.replace('_', ' ')}; until then they earn the base rate.`,
         due,
       })
     } else {

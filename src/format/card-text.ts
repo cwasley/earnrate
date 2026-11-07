@@ -10,6 +10,7 @@ import {
   capSentence,
   earnText,
   PICK_PERIODS,
+  shortCardName,
   wholeDollars,
   words,
 } from '../engine/text.ts'
@@ -21,20 +22,7 @@ export const issuerName = (catalog: Catalog, id: string) =>
 export function cardText(catalog: Catalog) {
   const cards = new Map<string, Card>(catalog.cards.map((c) => [c.id, c]))
 
-  function shortName(id: string): string {
-    const name = cards.get(id)?.name ?? id
-    return (
-      name
-        .replace(/^American Express /, 'Amex ')
-        .replace(/^The Platinum Card from American Express$/, 'Amex Platinum')
-        // "Card" is part of Apple Card's name, not a suffix.
-        .replace(
-          / (Visa Signature |Visa Infinite )?(Credit )?(?<!^Apple )Card$/,
-          '',
-        )
-        .replace(/ Card by /, ' by ')
-    )
-  }
+  const shortName = (id: string) => shortCardName(cards.get(id)?.name ?? id)
 
   // `membership: false` leaves out a membership the card needs, for lists
   // whose own conditions say it only when it applies.

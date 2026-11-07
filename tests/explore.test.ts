@@ -216,7 +216,7 @@ describe('a year of spending', () => {
     expect(sim.annualFees).toBe(95)
     expect(sim.net).toBe(394)
     expect(sim.notes).toContain(
-      "American Express Blue Cash Preferred Card's fee is $0 the first year; the yearly figure uses the $95 that follows.",
+      "Amex Blue Cash Preferred's fee is $0 the first year; the yearly figure uses the $95 that follows.",
     )
   })
 

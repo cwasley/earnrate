@@ -38,7 +38,8 @@ import {
   type SyncView,
 } from './Sync.tsx'
 import { localToday } from '../../src/engine/periods.ts'
-import { profileText } from '../../src/engine/profiles.ts'
+import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
+import { listed } from '../../src/engine/text.ts'
 import { EMPTY_WALLET } from '../../src/engine/transient.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 
@@ -92,15 +93,27 @@ const TIER_GROUPS = [
     names.every((n) => n.split(' ')[shared] === words[shared])
   )
     shared++
-  const prefix = words.slice(0, shared).join(' ')
+  const prefix = words.slice(0, shared).join(' ').replace(/,$/, '')
   return {
     label: `${prefix} tier`,
     tiers: tiers.map((m) => ({
       id: m.id,
-      name: m.name.slice(prefix.length).trim(),
+      name: m.name.slice(prefix.length).replace(/^,/, '').trim(),
     })),
   }
 })
+
+// "Values Amex Membership Rewards and Chase Ultimate Rewards points at 1.7¢
+// instead of 1¢": the profiles' own numbers, with the programs' names.
+const POINTS_HEAVY_HINT = (() => {
+  const heavy = Object.entries(VALUATION_PROFILES['points-heavy'])
+  const names = heavy.map(
+    ([id]) => catalog.currencies.find((c) => c.id === id)?.name ?? id,
+  )
+  const cents = (values: Record<string, number>) =>
+    listed([...new Set(Object.values(values))].map((v) => `${String(v)}¢`))
+  return `Values ${listed(names)} points at ${cents(VALUATION_PROFILES['points-heavy'])} instead of ${cents(VALUATION_PROFILES.flat)}.`
+})()
 
 // Memberships here are the wallet's, the same list My wallet shows.
 function Filters({
@@ -249,10 +262,7 @@ function Filters({
             />
             <span>
               I transfer points to airlines and hotels
-              <span class="hint">
-                Values {profileText('points-heavy')} instead of{' '}
-                {profileText('flat').replace(/.* at /, '')}.
-              </span>
+              <span class="hint">{POINTS_HEAVY_HINT}</span>
             </span>
           </label>
         </fieldset>

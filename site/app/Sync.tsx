@@ -37,10 +37,10 @@ function ConnectButton({ label }: { label: string }) {
 function SyncTerms() {
   return (
     <p class="muted small">
-      Your wallet (cards, picks, activations, memberships, point values, cap and
-      spending totals, credits used and opening dates) is stored encrypted on
-      earnrate's server, as it is for Claude. Searches, stores and amounts you
-      ask about still never leave your browser.{' '}
+      With sync on, your wallet (cards, picks, activations, memberships, point
+      values, cap and spending totals, credits used and opening dates) is stored
+      encrypted on earnrate's server, as it is for Claude. Searches, stores and
+      amounts you ask about still never leave your browser.{' '}
       <a href="/privacy#sync">How sync works</a>
     </p>
   )
@@ -52,9 +52,9 @@ export function ConnectPanel({ note }: { note: string | null }) {
     <section class="panel sync-panel">
       <h3>Sync with Claude</h3>
       <p>
-        Sync this wallet with earnrate in Claude, so a card you add in one shows
-        up in the other. You sign in with your earnrate recovery code, or start
-        a wallet if you don't use Claude yet.
+        Use one wallet here and in earnrate in Claude, so a card you add in one
+        shows up in the other. You sign in with your earnrate recovery code, or
+        start a wallet if you don't use Claude yet.
       </p>
       <div class="row-buttons">
         <ConnectButton label="Use the same wallet as Claude" />

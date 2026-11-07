@@ -128,6 +128,12 @@
       .copyable .terminal {
         padding-right: 76px;
       }
+      /* Long commands wrap at spaces on a phone rather than scroll under the
+         Copy button. */
+      .where .terminal {
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+      }
       .copy {
         position: absolute;
         top: 8px;
@@ -1164,7 +1170,8 @@
             </ol>
             <p class="note">
               Name your cards for answers about your own, and save them to track
-              caps and welcome bonuses.
+              caps and welcome bonuses. To use the same wallet on this site,
+              choose "Use the same wallet as Claude" in My wallet.
             </p>
           </div>
           <div class="where-panel where-code">
@@ -1185,6 +1192,10 @@
                     Copy
                   </button>
                 </div>
+              </li>
+              <li>
+                The first time it's used, an earnrate page opens to start an
+                anonymous wallet, as in Claude.
               </li>
               <li>Ask which card to use, from any project.</li>
             </ol>
@@ -1212,14 +1223,11 @@
           <div class="where-panel where-cli">
             <ol class="steps">
               <li>
-                It needs Node 22 or later. Install it and add the cards you
-                hold:
+                Install it (it needs Node 22 or later):
                 <div class="copyable">
                   <pre
                     class="terminal"
-                  ><span class="prompt">$</span> npm install -g earnrate
-<span class="prompt">$</span> earnrate add chase-sapphire-preferred
-<span class="prompt">$</span> earnrate trader joes</pre>
+                  ><span class="prompt">$</span> npm install -g earnrate</pre>
                   <button
                     type="button"
                     class="copy"
@@ -1231,15 +1239,32 @@
                 </div>
               </li>
               <li>
-                It can replay a statement to catch up your caps, and runs as a
-                local MCP server:
+                Ask, and add the cards you hold if you like:
                 <pre
                   class="terminal"
-                ><span class="prompt">$</span> claude mcp add --scope user earnrate -- npx -y earnrate mcp</pre>
+                ><span class="prompt">$</span> earnrate trader joes
+<span class="prompt">$</span> earnrate add chase-sapphire-preferred</pre>
+              </li>
+              <li>
+                To use it from Claude Code as a local MCP server:
+                <div class="copyable">
+                  <pre
+                    class="terminal"
+                  ><span class="prompt">$</span> claude mcp add --scope user earnrate -- npx -y earnrate mcp</pre>
+                  <button
+                    type="button"
+                    class="copy"
+                    data-copy="claude mcp add --scope user earnrate -- npx -y earnrate mcp"
+                    data-count="copy-cli-mcp"
+                  >
+                    Copy
+                  </button>
+                </div>
               </li>
             </ol>
             <p class="note">
-              Options are in the
+              It can also read Amex and Chase activity downloads to catch up
+              your caps; options are in the
               <a href="https://github.com/cwasley/earnrate#readme"
                 >README on GitHub</a
               >. Export your wallet from this page and it works there too.
@@ -1321,8 +1346,10 @@
               On this site, in your browser's storage; clearing site data
               deletes it. In Claude, in an anonymous wallet on earnrate's
               server, encrypted so only your recovery code or your connected
-              apps can open it. On the command line, in a file on your computer.
-              The <a href="/privacy">privacy page</a> has the details.
+              apps can open it. To use that one here too, choose "Use the same
+              wallet as Claude" in My wallet. On the command line, in a file on
+              your computer. The <a href="/privacy">privacy page</a> has the
+              details.
             </p>
           </details>
           <details>

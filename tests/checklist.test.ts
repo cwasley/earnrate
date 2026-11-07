@@ -40,6 +40,16 @@ describe('checklist', () => {
     )
   })
 
+  test('a choice named for its category is not followed by "categories"', () => {
+    const custom = WalletSchema.parse({ cards: [{ id: 'citi-custom-cash' }] })
+    const [pick] = checklist(catalog, custom, TODAY).filter(
+      (i) => i.kind === 'pick',
+    )
+    expect(pick?.text).toMatch(
+      /^Pick Citi Custom Cash Card's top category for this month;/,
+    )
+  })
+
   test('a done activation and current picks drop off', () => {
     const done = WalletSchema.parse({
       cards: [

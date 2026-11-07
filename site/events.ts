@@ -37,6 +37,7 @@ export const EVENTS = [
   'copy-connector',
   'copy-plugin',
   'copy-cli',
+  'copy-cli-mcp',
   'desktop-download',
 ] as const
 

@@ -140,7 +140,7 @@ export function formatCatalogSimulation(
       )
       if (s.alternatives.length > 0)
         lines.push(
-          `    Same result with ${s.alternatives.map(name).join(' or ')} as the second card.`,
+          `    Same result with ${listed(s.alternatives.map(name), 'or')} as the second card.`,
         )
       for (const split of splitText(s, name)) lines.push(`    ${split}`)
     })
