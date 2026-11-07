@@ -45,6 +45,9 @@ export class WalletObject extends DurableObject<Env> {
   setMemberships(walletKey: string, memberships: string[]) {
     return this.vault.setMemberships(walletKey, memberships)
   }
+  setSkippedIssuers(walletKey: string, issuers: string[]) {
+    return this.vault.setSkippedIssuers(walletKey, issuers)
+  }
   setValuations(walletKey: string, changes: Record<string, number | null>) {
     return this.vault.setValuations(walletKey, changes)
   }

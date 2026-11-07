@@ -614,7 +614,12 @@ export function simulateAdditions(
   const held = new Set(heldIds)
   const additions: Addition[] = []
   for (const card of catalog.cards) {
-    if (held.has(card.id) || !matchesFilters(card, options.filters)) continue
+    if (
+      held.has(card.id) ||
+      !matchesFilters(card, options.filters) ||
+      (wallet.skipped_issuers ?? []).includes(card.issuer)
+    )
+      continue
     const simulation = bestSimulation(catalog, projected.cards, card, lines, {
       ...options,
       memberships: wallet.memberships,

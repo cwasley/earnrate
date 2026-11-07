@@ -18,6 +18,7 @@ import {
   currencyName,
   NETWORK_NAMES,
 } from '../../engine/text.ts'
+import type { Spending } from '../../engine/renewal.ts'
 import { EMPTY_WALLET } from '../../engine/transient.ts'
 import type { MerchantResolution } from '../../engine/types.ts'
 import { formatCardInfo } from '../../format/cards.ts'
@@ -81,6 +82,7 @@ export function registerAnswerTools(
     NamedMemberships,
     OfferFilters,
     CatalogFilters,
+    SkippedIssuers,
   } = inputs
 
   server.registerTool(
@@ -248,12 +250,48 @@ export function registerAnswerTools(
     },
   )
 
+  const SpendingLines = z
+    .array(
+      z.object({
+        merchant: Merchant.optional(),
+        category: CatalogCategory.optional(),
+        monthly: z.number().positive().describe('US dollars a month.'),
+      }),
+    )
+    .optional()
+    .describe(
+      "Monthly spending lines, each a category (grocery.supermarket, dining, gas, other) or a merchant (Amazon, Costco). Optional: leave out to use typical amounts, and don't press the user for numbers they haven't offered.",
+    )
+  type GivenLine = NonNullable<z.infer<typeof SpendingLines>>[number]
+
+  // Spending lines as given, or typical amounts; a string is why they can't
+  // be used.
+  const spendingFrom = (given: GivenLine[]): Spending | string => {
+    if (given.some((l) => l.merchant === undefined && l.category === undefined))
+      return 'Each spending line needs a merchant or a category.'
+    const lines =
+      given.length === 0
+        ? typicalSpendLines(catalog)
+        : resolveSpendLines(
+            catalog,
+            given.map((l) => ({
+              merchant: l.merchant ?? null,
+              category: l.merchant === undefined ? (l.category ?? null) : null,
+              monthly: l.monthly,
+            })),
+          )
+    const unknown = lines.filter((l) => l.merchant.source === 'none')
+    if (unknown.length > 0)
+      return `earnrate doesn't know ${unknown.map((l) => `"${l.merchant.input}"`).join(', ')}. Give a category for those lines instead.`
+    return { lines, typical: given.length === 0 }
+  }
+
   server.registerTool(
     'compare_welcome_offers',
     {
       title: 'Compare welcome offers',
       description:
-        "Ranks the public welcome (sign-up) offers on cards the user doesn't have by first-year value: the bonus at the user's point values minus the first year's annual fee and any membership the card needs that the user doesn't have. Offers the issuer rules out because of a card in the user's wallet are marked likely not eligible and listed last. Use it when the user asks which new card to get or which has the best sign-up bonus. It covers only the cards earnrate knows, offers vary by person, and each offer's note gives the issuer's eligibility rules; pass those caveats on. It doesn't account for what a card would earn on the user's spending.",
+        "Ranks cards the user doesn't have by what they'd be worth over the first two years: what each adds to the user's cards (or, with none, earns) on their spending, plus the public welcome (sign-up) bonus in year one if its minimum spend fits in the window, less each year's annual fee and any membership it needs. Each offer also shows the bonus alone (first-year value), year one and year two, and how many weeks of spending the minimum takes. Offers the issuer rules out because of a card in the user's wallet are marked likely not eligible and listed last; issuers the user can't get cards from (skippedIssuers, or saved with set_memberships) are left out. Use it when the user asks which card to get next or which has the best sign-up bonus. Spending is optional (typical amounts otherwise). It covers only the cards earnrate knows, offers vary by person, and each offer's note gives the issuer's eligibility rules; pass those caveats on. Never suggest applying through a link.",
       inputSchema: z.object({
         ...OfferFilters,
         valuation: CatalogFilters.valuation,
@@ -263,6 +301,10 @@ export function registerAnswerTools(
           .describe('Include cards already in the wallet.'),
         cards: NamedCards,
         memberships: NamedMemberships,
+        spending: SpendingLines,
+        skippedIssuers: SkippedIssuers.optional().describe(
+          "Issuers the user says they can't or won't get a new card from (for example Chase, over its 5/24 rule), for this answer. Replaces the saved list. Never assume it.",
+        ),
       }),
       outputSchema: OfferComparisonSchema,
       annotations: {
@@ -276,9 +318,14 @@ export function registerAnswerTools(
       const wallet = await ctx.cardsFor(args.cards, args.memberships)
       if (typeof wallet === 'string') return fail(wallet)
       const found = wallet ?? { ...EMPTY_WALLET, ...(await ctx.saved()) }
-      const base = args.memberships
+      const spending = spendingFrom(args.spending ?? [])
+      if (typeof spending === 'string') return fail(spending)
+      const withMembers = args.memberships
         ? { ...found, memberships: args.memberships }
         : found
+      const base = args.skippedIssuers
+        ? { ...withMembers, skipped_issuers: args.skippedIssuers }
+        : withMembers
       const comparison = compareOffers(
         catalog,
         args.valuation ? withValuationProfile(base, args.valuation) : base,
@@ -289,6 +336,7 @@ export function registerAnswerTools(
           includeHeld: args.includeHeld ?? false,
         },
         deps.today(),
+        spending,
       )
       const trimmed = {
         ...comparison,
@@ -383,18 +431,7 @@ export function registerAnswerTools(
       description:
         'Spends monthly amounts for a year across every card earnrate knows, and ranks single cards and two-card pairs by rewards minus annual fees, and minus a membership a card needs (a Costco membership) unless the user has it or spends at Costco. Spending is optional: without it, typical U.S. household amounts are used and the answer says so. With `cards` (named in the conversation) or compareToWallet (the saved wallet), it ranks the cards that would add the most to those cards instead. Use it for "which card fits my spending?" or "is it worth adding a card?". It leaves out welcome bonuses.',
       inputSchema: z.object({
-        spending: z
-          .array(
-            z.object({
-              merchant: Merchant.optional(),
-              category: CatalogCategory.optional(),
-              monthly: z.number().positive().describe('US dollars a month.'),
-            }),
-          )
-          .optional()
-          .describe(
-            "Monthly spending lines, each a category (grocery.supermarket, dining, gas, other) or a merchant (Amazon, Costco). Optional: leave out to use typical amounts, and don't press the user for numbers they haven't offered.",
-          ),
+        spending: SpendingLines,
         cards: NamedCards,
         compareToWallet: z
           .boolean()
@@ -414,27 +451,9 @@ export function registerAnswerTools(
     },
     async (args) => {
       const given = args.spending ?? []
-      if (
-        given.some((l) => l.merchant === undefined && l.category === undefined)
-      )
-        return fail('Each spending line needs a merchant or a category.')
-      const lines =
-        given.length === 0
-          ? typicalSpendLines(catalog)
-          : resolveSpendLines(
-              catalog,
-              given.map((l) => ({
-                merchant: l.merchant ?? null,
-                category:
-                  l.merchant === undefined ? (l.category ?? null) : null,
-                monthly: l.monthly,
-              })),
-            )
-      const unknown = lines.filter((l) => l.merchant.source === 'none')
-      if (unknown.length > 0)
-        return fail(
-          `earnrate doesn't know ${unknown.map((l) => `"${l.merchant.input}"`).join(', ')}. Give a category for those lines instead.`,
-        )
+      const spending = spendingFrom(given)
+      if (typeof spending === 'string') return fail(spending)
+      const { lines } = spending
       const notes = given.length === 0 ? [TYPICAL_SPEND_NOTE] : []
       const options = {
         ...settings(args, await ctx.saved()),

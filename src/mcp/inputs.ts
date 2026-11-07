@@ -260,6 +260,7 @@ export function makeInputs(catalog: Catalog) {
         `Instead of the user's saved point values (or earnrate's defaults): flat, points at their cash-out value, ${profileText('flat')}; or points-heavy, ${profileText('points-heavy')}, for people who transfer points to airlines and hotels.`,
       ),
   }
+  const SkippedIssuers = z.array(z.enum(issuers))
   const AllMemberships = Memberships.describe(
     `Every membership the user has. Known: ${membershipIds.join(', ')}.`,
   )
@@ -273,6 +274,7 @@ export function makeInputs(catalog: Catalog) {
     OfferFilters,
     CatalogFilters,
     AllMemberships,
+    SkippedIssuers,
   }
 }
 

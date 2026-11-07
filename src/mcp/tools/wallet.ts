@@ -16,7 +16,7 @@ import { optionName } from '../../engine/rule-text.ts'
 import { currencyChanges } from '../../engine/wallet-change.ts'
 import { walletSummary } from '../../engine/wallet-summary.ts'
 import { checklist } from '../../engine/checklist.ts'
-import { cardText } from '../../format/card-text.ts'
+import { cardText, issuerName } from '../../format/card-text.ts'
 import {
   formatBooking,
   formatChecklist,
@@ -289,10 +289,28 @@ export function walletHandlers(
       ),
   }
 
-  const MembershipsInput = z.object({ memberships: inputs.AllMemberships })
+  const MembershipsInput = z.object({
+    memberships: inputs.AllMemberships.optional(),
+    skippedIssuers: inputs.SkippedIssuers.optional().describe(
+      "Issuers the user says they can't or won't get a new card from (for example Chase, over its 5/24 rule): left out of compare_welcome_offers and of the cards that would add the most. Replaces the saved list; [] clears it. Ask; never assume.",
+    ),
+  })
   const setMemberships: Handler<typeof MembershipsInput> = {
     input: MembershipsInput,
-    run: async ({ memberships }) => {
+    run: async ({ memberships, skippedIssuers }) => {
+      if (memberships === undefined && skippedIssuers === undefined)
+        return fail('Give memberships, skippedIssuers or both.')
+      let skipText = ''
+      if (skippedIssuers !== undefined) {
+        const skipped = await store.setSkippedIssuers(skippedIssuers)
+        skipText =
+          skippedIssuers.length > 0
+            ? `Next-card answers now leave out ${listed(skippedIssuers.map((i) => issuerName(catalog, i)))}.`
+            : 'Next-card answers include every issuer again.'
+        if (memberships === undefined || !skipped.ok)
+          return ctx.changed(skipped, skipText, { notes: false })
+      }
+      if (memberships === undefined) return fail('Give memberships.')
       const result = await store.setMemberships(memberships)
       const used = new Set(
         (result.ok ? result.wallet.cards : []).flatMap((held) => {
@@ -307,7 +325,7 @@ export function walletHandlers(
           memberships.length > 0
             ? `Memberships set to ${memberships.map((m) => `${membershipName(catalog, m)} (${m})`).join(', ')}.`
             : 'Memberships cleared.'
-        }${unused.length > 0 ? ` ${listed(unused.map((m) => membershipName(catalog, m)))} ${unused.length === 1 ? "doesn't" : "don't"} change any saved card's rates yet; kept for cards that use ${unused.length === 1 ? 'it' : 'them'}.` : ''}`,
+        }${skipText === '' ? '' : ` ${skipText}`}${unused.length > 0 ? ` ${listed(unused.map((m) => membershipName(catalog, m)))} ${unused.length === 1 ? "doesn't" : "don't"} change any saved card's rates yet; kept for cards that use ${unused.length === 1 ? 'it' : 'them'}.` : ''}`,
         { notes: false },
       )
     },
@@ -459,7 +477,7 @@ export function registerWalletTools(
     'set_memberships',
     {
       title: 'Set memberships',
-      description: `Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep. It saves them even with no cards saved, and every answer then uses them. ${ctx.walletUse}`,
+      description: `Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep. It saves them even with no cards saved, and every answer then uses them. With skippedIssuers, it also saves the issuers the user can't or won't get a new card from (Chase over its 5/24 rule), which next-card answers leave out; either can be given alone. ${ctx.walletUse}`,
       inputSchema: tools.set_memberships.input,
       outputSchema: WalletChangeSchema,
       annotations: {

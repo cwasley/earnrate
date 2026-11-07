@@ -117,6 +117,8 @@ export type CardSummary = {
 export type WalletSummary = {
   memberships: string[]
   membershipNames: string[]
+  // Issuers left out of next-card answers, by id and name.
+  skippedIssuers: { id: string; name: string }[]
   // Point values the wallet sets: a number, or a way of redeeming (like
   // SoFi points into a SoFi account), which `redemption` names.
   pointValues: {
@@ -433,6 +435,10 @@ export function walletSummary(
   return {
     memberships: wallet.memberships,
     membershipNames: wallet.memberships.map((m) => membershipName(catalog, m)),
+    skippedIssuers: (wallet.skipped_issuers ?? []).map((id) => ({
+      id,
+      name: catalog.issuers.find((i) => i.id === id)?.name ?? id,
+    })),
     pointValues: pointValues(catalog, wallet),
     started: null,
     cards,

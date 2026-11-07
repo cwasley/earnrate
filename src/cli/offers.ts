@@ -16,9 +16,11 @@ import {
 
 const OFFERS_HELP = `Usage: ${CLI_NAME} offers [--cash | --points] [--no-fee] [--business] [options]
 
-Ranks the welcome offers on cards you don't have by first-year value: the
-bonus at your point values minus the first year's annual fee and any
-membership the card needs that you don't have.
+Which card to get next: ranks cards you don't have by their first two years
+together. That's what each adds to your cards at typical spending, plus its
+welcome bonus in year one if the minimum spend fits in the window, less each
+year's annual fee and any membership it needs. Each also shows the bonus
+alone. Issuers saved with ${CLI_NAME} skip-issuers are left out.
 
 Options:
   --cash                 Cash back cards only.
@@ -28,6 +30,8 @@ Options:
   --held                 Include cards already in your wallet.
   --cards <ids>          Cards you have, instead of your wallet, comma separated.
   --member <name>        A membership you have, in place of the saved ones.
+  --skip-issuer <id>     Leave out an issuer's cards (chase), in place of the
+                         saved list. Repeat for more.
   --valuation <profile>  flat or points-heavy, instead of your wallet's values.
   --all                  List every offer, not just the top 10.
   --json                 Print the full comparison as JSON.
@@ -47,6 +51,7 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
         held: { type: 'boolean' },
         cards: { type: 'string' },
         member: { type: 'string', multiple: true },
+        'skip-issuer': { type: 'string', multiple: true },
         valuation: { type: 'string' },
         all: { type: 'boolean' },
         json: { type: 'boolean' },
@@ -83,13 +88,26 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
       ? await savedSettings(io).then((saved) => ({
           valuations: saved.valuations,
           memberships: values.member ?? saved.memberships,
+          ...(saved.skipped_issuers
+            ? { skipped_issuers: saved.skipped_issuers }
+            : {}),
           cards: [],
         }))
       : found
+  const skips = values['skip-issuer']
+  const issuers = new Set(catalog.cards.map((c) => c.issuer))
+  const unknown = (skips ?? []).filter((i) => !issuers.has(i))
+  if (unknown.length > 0) {
+    io.stderr(
+      `No card earnrate knows is from ${unknown.map((i) => `'${i}'`).join(', ')}. Issuers: ${[...issuers].sort().join(', ')}.\n`,
+    )
+    return USAGE_ERROR
+  }
+  const skipped = skips ? { ...loaded, skipped_issuers: skips } : loaded
   const wallet =
     values.valuation && isValuationProfile(values.valuation)
-      ? withValuationProfile(loaded, values.valuation)
-      : loaded
+      ? withValuationProfile(skipped, values.valuation)
+      : skipped
 
   const comparison = compareOffers(
     catalog,

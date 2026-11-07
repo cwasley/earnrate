@@ -77,6 +77,7 @@ Save your cards (optional):
   ${CLI_NAME} remove <card-id>                     Remove a card.
   ${CLI_NAME} memberships [names...]               Show or set memberships (amazon-prime, costco).
   ${CLI_NAME} values [UR=1.5 ...]                  Show or set what your points are worth.
+  ${CLI_NAME} skip-issuers [chase ...]             Issuers to leave out of next-card answers.
 
 Other commands:
   ${CLI_NAME} cheatsheet                           The best card for each category this quarter.
@@ -178,7 +179,13 @@ export async function cardsToUse(
       io.stderr(`${wallet}\n`)
       return null
     }
-    return { ...wallet, valuations: saved.valuations }
+    return {
+      ...wallet,
+      valuations: saved.valuations,
+      ...(saved.skipped_issuers
+        ? { skipped_issuers: saved.skipped_issuers }
+        : {}),
+    }
   }
   try {
     await access(file)
@@ -204,10 +211,16 @@ export const NO_WALLET_HINT = `These are every card earnrate knows. For the best
 // can't be read, has none.
 export async function savedSettings(
   io: Io,
-): Promise<Pick<Wallet, 'valuations' | 'memberships'>> {
+): Promise<Pick<Wallet, 'valuations' | 'memberships' | 'skipped_issuers'>> {
   try {
-    const { valuations, memberships } = await loadWallet(walletPath(io.env))
-    return { valuations, memberships }
+    const { valuations, memberships, skipped_issuers } = await loadWallet(
+      walletPath(io.env),
+    )
+    return {
+      valuations,
+      memberships,
+      ...(skipped_issuers ? { skipped_issuers } : {}),
+    }
   } catch {
     return { valuations: {}, memberships: [] }
   }

@@ -230,6 +230,15 @@ export class WalletVault {
     )
   }
 
+  setSkippedIssuers(
+    walletKey: string,
+    issuers: string[],
+  ): Promise<SetupResult> {
+    return this.withStore(walletKey, failed(), (s) =>
+      s.setSkippedIssuers(issuers),
+    )
+  }
+
   setValuations(
     walletKey: string,
     changes: Record<string, number | null>,
@@ -281,6 +290,7 @@ export type VaultApi = Pick<
   | 'updateCard'
   | 'removeCard'
   | 'setMemberships'
+  | 'setSkippedIssuers'
   | 'setValuations'
   | 'replace'
   | 'record'

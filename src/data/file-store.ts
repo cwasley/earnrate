@@ -5,6 +5,7 @@ import {
   removeFromWallet,
   updateInWallet,
   withMemberships,
+  withSkippedIssuers,
   withValuations,
   type CardInput,
   type WalletChange,
@@ -25,6 +26,7 @@ import {
   readWalletText,
   removeCardText,
   setMembershipsText,
+  setTopListText,
   setValuationsText,
   updateCardText,
   writeProgress,
@@ -130,6 +132,18 @@ export class FileWalletStore implements WalletStore {
         setMembershipsText(
           text ?? EMPTY_WALLET_TEXT,
           change.wallet.memberships,
+        ),
+    )
+  }
+
+  setSkippedIssuers(issuers: string[]): Promise<SetupResult> {
+    return this.change(
+      (w) => withSkippedIssuers(this.catalog, w ?? emptyWallet(), issuers),
+      (text, change) =>
+        setTopListText(
+          text ?? EMPTY_WALLET_TEXT,
+          'skipped_issuers',
+          change.wallet.skipped_issuers ?? [],
         ),
     )
   }

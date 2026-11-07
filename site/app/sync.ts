@@ -12,6 +12,7 @@ import {
   removeFromWallet,
   updateInWallet,
   withMemberships,
+  withSkippedIssuers,
   withValuations,
   type CardInput,
   type WalletChange,
@@ -28,7 +29,10 @@ export type LocalOp =
   | { tool: 'add_card'; input: CardChangeInput }
   | { tool: 'update_card'; input: CardChangeInput }
   | { tool: 'remove_card'; input: { cardId: string } }
-  | { tool: 'set_memberships'; input: { memberships: string[] } }
+  | {
+      tool: 'set_memberships'
+      input: { memberships?: string[]; skippedIssuers?: string[] }
+    }
   | {
       tool: 'set_point_values'
       input: { values: Record<string, number | null> }
@@ -103,12 +107,18 @@ export function applyLocally(
       return wallet
         ? removeFromWallet(wallet, op.input.cardId)
         : failed('Add a card first.')
-    case 'set_memberships':
-      return withMemberships(
-        catalog,
-        wallet ?? EMPTY_WALLET,
-        op.input.memberships,
-      )
+    case 'set_memberships': {
+      const { memberships, skippedIssuers } = op.input
+      const withSkip =
+        skippedIssuers === undefined
+          ? null
+          : withSkippedIssuers(catalog, wallet ?? EMPTY_WALLET, skippedIssuers)
+      if (withSkip && !withSkip.ok) return withSkip
+      const base = withSkip ? withSkip.wallet : (wallet ?? EMPTY_WALLET)
+      return memberships === undefined
+        ? (withSkip ?? failed('Give memberships.'))
+        : withMemberships(catalog, base, memberships)
+    }
     case 'set_point_values':
       return withValuations(catalog, wallet ?? EMPTY_WALLET, op.input.values)
   }

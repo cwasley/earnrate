@@ -650,3 +650,31 @@ describe('named cards with credits and opening dates', () => {
     expect(stray.stderr).toMatch(/isn't one/)
   })
 })
+
+describe('issuers left out of next-card answers', () => {
+  test('skip-issuers saves the list in the file, keeping comments, and offers leaves them out', async () => {
+    const file = await walletFile(
+      '# my cards\ncards:\n  - id: citi-double-cash # daily\n',
+    )
+    const set = await cli(['skip-issuers', 'chase'], file)
+    expect(set.code).toBe(0)
+    expect(set.stdout).toMatch(
+      /Next-card answers now leave out Chase \(chase\)/,
+    )
+    const text = await readFile(file, 'utf8')
+    expect(text).toContain('skipped_issuers: [chase]\n')
+    expect(text).toContain('# my cards')
+    expect(text).toContain('citi-double-cash # daily')
+    const shown = await cli(['skip-issuers'], file)
+    expect(shown.stdout).toMatch(/^Left out: Chase \(chase\)/)
+    const offers = await cli(['offers', '--all'], file)
+    expect(offers.stdout).not.toMatch(/Chase Sapphire/)
+    expect(offers.stdout).toMatch(/Leaves out cards from Chase, as you asked\./)
+    const cleared = await cli(['skip-issuers', '--none'], file)
+    expect(cleared.code).toBe(0)
+    expect(await readFile(file, 'utf8')).not.toContain('skipped_issuers')
+    const wrong = await cli(['offers', '--skip-issuer', 'chse'], file)
+    expect(wrong.code).not.toBe(0)
+    expect(wrong.stderr).toMatch(/No card earnrate knows is from 'chse'/)
+  })
+})

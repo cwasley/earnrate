@@ -373,6 +373,10 @@ export function walletProblems(wallet: Wallet, catalog: Catalog): string[] {
   for (const id of duplicates(wallet.cards.map((c) => c.id))) {
     problems.push(`wallet: card '${id}' is listed twice`)
   }
+  const issuers = new Set(catalog.cards.map((c) => c.issuer))
+  for (const id of wallet.skipped_issuers ?? [])
+    if (!issuers.has(id))
+      problems.push(`wallet skipped_issuers: no card is from '${id}'`)
   for (const [id, valuation] of Object.entries(wallet.valuations)) {
     const currency = currencies.get(id)
     if (!currency) {

@@ -9,6 +9,8 @@ import { bookPurchase } from '../../src/engine/record.ts'
 import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../../src/engine/explore.ts'
 import { compareOffers } from '../../src/engine/offers.ts'
+import { minimumSpendText } from '../../src/engine/text.ts'
+import { withSkippedIssuers } from '../../src/engine/wallet-change.ts'
 import {
   resolveSpendLines,
   simulateAdditions,
@@ -2213,7 +2215,7 @@ describe('#34 statement credits against the annual fee', () => {
   )
 
   goldenTest(
-    '#34d welcome offers rank on first-year value and add the credits apart',
+    '#34d welcome offers rank on the first two years and add the credits apart',
     () => {
       const { offers } = compareOffers(
         catalog,
@@ -2228,7 +2230,7 @@ describe('#34 statement credits against the annual fee', () => {
       )
       const values = offers
         .filter((o) => o.ineligible === null)
-        .map((o) => o.firstYearValue)
+        .map((o) => o.plan?.twoYears ?? -Infinity)
       expect(values).toEqual([...values].sort((a, b) => b - a))
     },
   )
@@ -2469,4 +2471,127 @@ describe('#36 the renewal check', () => {
       ),
     ).toHaveLength(0)
   })
+})
+
+describe('#37 the next-card planner', () => {
+  const ANY = {
+    kind: 'any' as const,
+    business: false,
+    noAnnualFee: false,
+    includeHeld: false,
+  }
+  const plan = (w: object, spending?: Spending) =>
+    compareOffers(
+      catalog,
+      withProfile(WalletSchema.parse(w), 'flat'),
+      ANY,
+      TODAY,
+      spending,
+    )
+  const find = (r: ReturnType<typeof plan>, id: string) => {
+    const o = r.offers.find((x) => x.cardId === id)
+    if (!o) throw new Error(`${id} isn't offered`)
+    return o
+  }
+
+  goldenTest(
+    '#37a each offer is ranked on its first two years: what it adds, plus the bonus in year one, less each year’s fee',
+    () => {
+      const r = plan({ cards: [{ id: 'citi-double-cash' }] })
+      const eligible = r.offers.filter((o) => o.ineligible === null)
+      const totals = eligible.map((o) => o.plan?.twoYears ?? -Infinity)
+      expect(totals).toEqual([...totals].sort((a, b) => b - a))
+      const csp = find(r, 'chase-sapphire-preferred')
+      const p = csp.plan
+      if (!p) throw new Error('no plan')
+      expect(p.yearOne).toBeCloseTo(
+        p.extraRewards + csp.bonusValue - (csp.firstYearFee ?? 0),
+      )
+      expect(p.yearTwo).toBeCloseTo(p.extraRewards - (csp.annualFee ?? 0))
+      expect(p.twoYears).toBeCloseTo(p.yearOne + p.yearTwo)
+      expectSome(
+        r.notes,
+        /^Ranked on the first two years together: what each card adds to your cards on typical U\.S\. spending/,
+      )
+    },
+  )
+
+  goldenTest(
+    "#37b a minimum spend that doesn't fit leaves the bonus out of year one, and says so",
+    () => {
+      const small: Spending = {
+        lines: resolveSpendLines(catalog, [
+          spendLineFor(catalog, 'groceries', 200),
+        ]),
+        typical: false,
+      }
+      const r = plan({ cards: [] }, small)
+      const csp = find(r, 'chase-sapphire-preferred')
+      expect(csp.plan?.minimumSpend).toMatchObject({ reachable: false })
+      expect(csp.plan?.yearOne).toBeCloseTo(
+        (csp.plan?.extraRewards ?? 0) - (csp.firstYearFee ?? 0),
+      )
+      expect(
+        minimumSpendText(
+          csp.spend,
+          csp.months,
+          csp.plan?.minimumSpend ?? { reachable: true, weeks: 0 },
+          false,
+        ),
+      ).toMatch(
+        /^The \$[\d,]+ minimum in \d+ months is more than your spending, so the bonus isn't counted\.$/,
+      )
+      const reachable = find(plan({ cards: [] }), 'chase-sapphire-preferred')
+      expect(reachable.plan?.minimumSpend?.reachable).toBe(true)
+      expect(reachable.plan?.minimumSpend?.weeks).toBeGreaterThan(0)
+    },
+  )
+
+  goldenTest(
+    '#37c skipped issuers are left out, saved or for one answer, and the notes say so',
+    () => {
+      const saved = plan({ cards: [], skipped_issuers: ['chase'] })
+      expect(saved.offers.some((o) => o.issuer === 'chase')).toBe(false)
+      expectSome(saved.notes, /^Leaves out cards from Chase, as you asked\.$/)
+      expect(plan({ cards: [] }).offers.some((o) => o.issuer === 'chase')).toBe(
+        true,
+      )
+      const w = withSkippedIssuers(catalog, WalletSchema.parse({}), ['chse'])
+      expect(w.ok || w.error).toMatch(
+        /^No card earnrate knows is from 'chse'\./,
+      )
+    },
+  )
+
+  goldenTest(
+    '#37d skipped issuers also leave "would another card help?"',
+    () => {
+      const w = withProfile(
+        WalletSchema.parse({
+          cards: [{ id: 'citi-double-cash' }],
+          skipped_issuers: ['chase', 'amex'],
+        }),
+        'flat',
+      )
+      const { additions } = simulateAdditions(
+        catalog,
+        w,
+        typicalSpendLines(catalog),
+        {
+          filters: ALL_PERSONAL_CARDS,
+          memberships: [],
+          valuations: w.valuations,
+          start: TODAY,
+        },
+      )
+      const issuers = new Set(
+        additions.map(
+          (a) => catalog.cards.find((c) => c.id === a.cardId)?.issuer,
+        ),
+      )
+      expect(issuers.has('chase')).toBe(false)
+      expect(issuers.has('amex')).toBe(false)
+      expect(issuers.has('citi')).toBe(true)
+    },
+  )
 })

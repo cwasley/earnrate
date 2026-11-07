@@ -489,6 +489,28 @@ export function withMemberships(
   }
 }
 
+// Issuers to leave out of next-card answers. [] clears the list.
+export function withSkippedIssuers(
+  catalog: Catalog,
+  wallet: Wallet,
+  issuers: string[],
+): WalletChange {
+  const known = [...new Set(catalog.cards.map((c) => c.issuer))].sort()
+  const unknown = issuers.filter((i) => !known.includes(i))
+  if (unknown.length > 0)
+    return failed(
+      `No card earnrate knows is from ${unknown.map((i) => `'${i}'`).join(', ')}. Issuers: ${idList(known)}.`,
+    )
+  const { skipped_issuers: _, ...rest } = wallet
+  const list = [...new Set(issuers)]
+  return {
+    ok: true,
+    wallet: list.length > 0 ? { ...rest, skipped_issuers: list } : rest,
+    fields: {},
+    notes: [],
+  }
+}
+
 // Point values in cents per point, by currency id; null goes back to
 // earnrate's default for that currency.
 export function withValuations(

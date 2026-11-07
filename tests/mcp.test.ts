@@ -1133,6 +1133,7 @@ describe('wallet setup', () => {
     expect(before.structuredContent).toEqual({
       memberships: [],
       membershipNames: [],
+      skippedIssuers: [],
       pointValues: [],
       started: null,
       cards: [],
@@ -1868,4 +1869,58 @@ test('list_wallet handles a monthly cap', async () => {
   expect(
     (listed.structuredContent as WalletSummary).cards[0]?.caps[0]?.period,
   ).toBe('month')
+})
+
+describe('skipped issuers', () => {
+  test('set_memberships saves them, list_wallet shows them, and compare_welcome_offers leaves them out', async () => {
+    const file = await walletCopy('cards:\n  - id: citi-double-cash\n')
+    const client = await connect(file)
+    const set = await client.callTool({
+      name: 'set_memberships',
+      arguments: { skippedIssuers: ['chase'] },
+    })
+    expect(set.isError).toBeFalsy()
+    expect(JSON.stringify(set.content)).toMatch(
+      /Next-card answers now leave out Chase\./,
+    )
+    const listed = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect((listed.structuredContent as WalletSummary).skippedIssuers).toEqual([
+      { id: 'chase', name: 'Chase' },
+    ])
+    const offers = await client.callTool({
+      name: 'compare_welcome_offers',
+      arguments: {},
+    })
+    const ids = (
+      offers.structuredContent as { offers: { issuer: string }[] }
+    ).offers.map((o) => o.issuer)
+    expect(ids).not.toContain('chase')
+    const once = await client.callTool({
+      name: 'compare_welcome_offers',
+      arguments: { skippedIssuers: [] },
+    })
+    expect(
+      (once.structuredContent as { offers: { issuer: string }[] }).offers.some(
+        (o) => o.issuer === 'chase',
+      ),
+    ).toBe(true)
+    const neither = await client.callTool({
+      name: 'set_memberships',
+      arguments: {},
+    })
+    expect(neither.isError).toBe(true)
+  })
+
+  test('the hosted store keeps them', async () => {
+    const store = new JsonWalletStore(
+      catalog,
+      memoryBackend(),
+      'your saved wallet',
+    )
+    const done = await store.setSkippedIssuers(['amex', 'amex'])
+    expect(done.ok && done.wallet.skipped_issuers).toEqual(['amex'])
+    expect((await store.load())?.skipped_issuers).toEqual(['amex'])
+    const cleared = await store.setSkippedIssuers([])
+    expect(cleared.ok && cleared.wallet.skipped_issuers).toBeUndefined()
+  })
 })

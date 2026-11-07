@@ -246,13 +246,22 @@ export function updateCardText(
   return out
 }
 
-export function setMembershipsText(
+export const setMembershipsText = (text: string, memberships: string[]) =>
+  setTopListText(text, 'memberships', memberships)
+
+// A top-level list, written as one flow line before `cards:`. An empty list
+// other than memberships loses its line.
+export function setTopListText(
   text: string,
-  memberships: string[],
+  key: 'memberships' | 'skipped_issuers',
+  list: string[],
 ): string {
   const root = rootMap(text)
-  const line = `memberships: ${flowList(memberships)}\n`
-  const pair = root.items.find((p) => keyOf(p) === 'memberships')
+  const line =
+    list.length === 0 && key !== 'memberships'
+      ? ''
+      : `${key}: ${flowList(list)}\n`
+  const pair = root.items.find((p) => keyOf(p) === key)
   if (pair) {
     const start = range(pair.key)[0]
     const end = afterLine(

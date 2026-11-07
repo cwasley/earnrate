@@ -96,7 +96,13 @@ export function formatWalletSummary(summary: WalletSummary): string {
     summary.pointValues.length > 0
       ? `Point values in the wallet: ${summary.pointValues.map((v) => `${v.name} at ${String(v.centsPerUnit)}¢${v.redemption === null ? '' : ` (redeemed ${v.redemption})`}`).join(', ')}. Others use earnrate's defaults.`
       : "Point values: earnrate's defaults."
-  return [...cards, memberships, values].join('\n')
+  const skipped =
+    summary.skippedIssuers.length > 0
+      ? [
+          `Next-card answers leave out: ${summary.skippedIssuers.map((i) => `${i.name} (${i.id})`).join(', ')}.`,
+        ]
+      : []
+  return [...cards, memberships, ...skipped, values].join('\n')
 }
 
 export function formatBooking(

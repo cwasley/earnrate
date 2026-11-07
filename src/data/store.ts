@@ -6,6 +6,7 @@ import {
   removeFromWallet,
   updateInWallet,
   withMemberships,
+  withSkippedIssuers,
   withValuations,
   type CardInput,
   type WalletChange,
@@ -36,6 +37,8 @@ export interface WalletStore {
   updateCard(input: CardInput, today: string): Promise<SetupResult>
   removeCard(cardId: string): Promise<SetupResult>
   setMemberships(memberships: string[]): Promise<SetupResult>
+  // Issuers to leave out of next-card answers; [] clears them.
+  setSkippedIssuers(issuers: string[]): Promise<SetupResult>
   // Cents per point by currency id; null goes back to the default.
   setValuations(changes: Record<string, number | null>): Promise<SetupResult>
   record(
@@ -136,6 +139,12 @@ export class JsonWalletStore implements AccountStore {
   setMemberships(memberships: string[]): Promise<SetupResult> {
     return this.change((w) =>
       withMemberships(this.catalog, w ?? emptyWallet(), memberships),
+    )
+  }
+
+  setSkippedIssuers(issuers: string[]): Promise<SetupResult> {
+    return this.change((w) =>
+      withSkippedIssuers(this.catalog, w ?? emptyWallet(), issuers),
     )
   }
 

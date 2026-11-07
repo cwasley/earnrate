@@ -105,6 +105,7 @@ const RecommendationSchema = z.object({
 export const WalletSummarySchema = z.object({
   memberships: z.array(z.string()),
   membershipNames: z.array(z.string()),
+  skippedIssuers: z.array(z.object({ id: z.string(), name: z.string() })),
   pointValues: z.array(
     z.object({
       currency: z.string(),
@@ -317,12 +318,25 @@ export const OfferComparisonSchema = z.object({
       // if all were used. Not ranked on.
       credits: z.number(),
       firstYearValueIfCreditsUsed: z.number(),
+      // On the user's spending beside their cards; null for a card they hold.
+      plan: z
+        .object({
+          extraRewards: z.number(),
+          minimumSpend: z
+            .object({ reachable: z.boolean(), weeks: z.number() })
+            .nullable(),
+          yearOne: z.number(),
+          yearTwo: z.number(),
+          twoYears: z.number(),
+        })
+        .nullable(),
       held: z.boolean(),
       lastVerified: z.string(),
       verifiedBy: z.string(),
     }),
   ),
   withoutOffer: z.array(z.string()),
+  typical: z.boolean(),
   notes: z.array(z.string()),
 })
 

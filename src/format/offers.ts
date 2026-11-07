@@ -2,8 +2,10 @@ import { offerTerms, type OfferComparison } from '../engine/offers.ts'
 import {
   capitalize,
   feeText,
+  minimumSpendText,
   money,
   shortDate,
+  twoYearText,
   wholeDollars,
 } from '../engine/text.ts'
 
@@ -25,12 +27,16 @@ export function formatOffers(
     const pace =
       o.spend > 0 ? ` (about ${wholeDollars(o.spend / weeks)} a week)` : ''
     lines.push(
-      `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  about ${wholeDollars(o.firstYearValue)} the first year${o.credits > 0 ? `, ${wholeDollars(o.firstYearValueIfCreditsUsed)} if you'd use all its credits (${wholeDollars(o.credits)} a year)` : ''}`,
+      `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  ${o.plan ? twoYearText(o.plan) : `about ${wholeDollars(o.firstYearValue)} the first year`}${o.credits > 0 ? `; its credits are ${wholeDollars(o.credits)} a year more if you'd use them all` : ''}`,
       `    ${offerTerms(o, currencyName(o.currency))}${pace}. ${capitalize(feeText(o))}.${o.membershipFee > 0 ? ` Needs a ${money(o.membershipFee)} membership, counted in the first year.` : ''}${o.held ? ' In your wallet.' : ''}`,
     )
     lines.push(
-      `    ${o.validTo ? `Offer ends ${shortDate(o.validTo)}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ.`,
+      `    ${o.validTo ? `Offer ends ${shortDate(o.validTo)}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ. The bonus alone is worth about ${wholeDollars(o.firstYearValue)} after the first year's fee.`,
     )
+    if (o.plan?.minimumSpend)
+      lines.push(
+        `    ${minimumSpendText(o.spend, o.months, o.plan.minimumSpend, c.typical)}`,
+      )
     if (o.ineligible) lines.push(`    ${o.ineligible}`)
     if (o.note) lines.push(`    ${o.note}`)
   })

@@ -9,6 +9,7 @@ import {
   VALUATION_PROFILES,
 } from '../engine/profiles.ts'
 import { membershipName } from '../engine/memberships.ts'
+import { issuerName } from '../format/card-text.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
 import { currencyChanges, type CardInput } from '../engine/wallet-change.ts'
 import { formatCardInfo, formatNotes } from '../format/cards.ts'
@@ -90,6 +91,13 @@ and point values stay.
 
 With no arguments, shows your memberships and the ones earnrate knows. With
 names, replaces the list. --none clears it. No cards need to be saved first.
+`,
+  'skip-issuers': `Usage: ${CLI_NAME} skip-issuers [<issuer>...] [--none]
+
+Issuers you can't or won't get a new card from (for example chase, if
+you're over its 5/24 rule). ${CLI_NAME} offers and the cards that would add
+the most leave them out. With no arguments, shows the list and the issuers
+earnrate knows. With issuers, replaces the list. --none clears it.
 `,
   values: `Usage: ${CLI_NAME} values [<currency>=<cents>...] [--profile <name>]
 
@@ -228,8 +236,8 @@ export async function runWalletCommand(
   if (command !== 'add' && command !== 'update' && cardOptionsGiven) {
     return usage(`${CLI_NAME} ${command} doesn't take card options.`)
   }
-  if (command !== 'memberships' && values.none) {
-    return usage('--none is only for memberships.')
+  if (command !== 'memberships' && command !== 'skip-issuers' && values.none) {
+    return usage('--none is only for memberships and skip-issuers.')
   }
 
   const catalog = await loadCatalog()
@@ -291,6 +299,31 @@ export async function runWalletCommand(
             `${id} ${c === null ? 'back to the default' : `${String(c)}¢`}`,
         )
         .join(', ')}.`,
+      null,
+      io,
+    )
+  }
+
+  if (command === 'skip-issuers') {
+    const issuerList = (ids: string[]) =>
+      ids.map((i) => `${issuerName(catalog, i)} (${i})`).join(', ')
+    if (positionals.length === 0 && !values.none) {
+      const held = await heldWallet(io)
+      const known = [...new Set(catalog.cards.map((c) => c.issuer))].sort()
+      io.stdout(
+        `Left out: ${held?.skipped_issuers?.length ? issuerList(held.skipped_issuers) : 'none'}\nKnown: ${known.join(', ')}\n`,
+      )
+      return 0
+    }
+    if (positionals.length > 0 && values.none) {
+      return usage('Give issuers or --none, not both.')
+    }
+    const list = values.none ? [] : positionals
+    return report(
+      await store.setSkippedIssuers(list),
+      list.length > 0
+        ? `Next-card answers now leave out ${issuerList(list)} (${where}).`
+        : `Next-card answers include every issuer again (${where}).`,
       null,
       io,
     )

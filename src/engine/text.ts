@@ -534,3 +534,25 @@ export function renewalText(
       : `about ${wholeDollars(-r.net)} a year short of the fee. Check with ${issuer} before the fee posts.`
   return `${when}. ${basis}, ${earns}${credits}: ${result}`
 }
+
+// The next-card planner's figures: "about $1,690 over the first two years
+// ($1,290 the first year, then $394 a year)".
+export const twoYearText = (p: {
+  yearOne: number
+  yearTwo: number
+  twoYears: number
+}) =>
+  `about ${wholeDollars(p.twoYears)} over the first two years (${wholeDollars(p.yearOne)} the first year, then ${wholeDollars(p.yearTwo)} a year${p.yearTwo < 0 ? ' after its fee' : ''})`
+
+// Whether a welcome offer's minimum spend fits, at the person's spending.
+export function minimumSpendText(
+  spend: number,
+  months: number,
+  m: { reachable: boolean; weeks: number },
+  typical: boolean,
+): string {
+  const whose = typical ? 'typical spending' : 'your spending'
+  return m.reachable
+    ? `The ${money(spend)} minimum takes about ${String(m.weeks)} weeks of all ${whose}.`
+    : `The ${money(spend)} minimum in ${String(months)} months is more than ${whose}, so the bonus isn't counted.`
+}

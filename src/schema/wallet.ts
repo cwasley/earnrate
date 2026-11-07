@@ -92,6 +92,9 @@ export const WalletSchema = z.strictObject({
   version: z.number().int().positive().optional(),
   valuations: z.record(CurrencyId, Valuation).default({}),
   memberships: z.array(KebabId).default([]),
+  // Issuers whose new cards the person can't or won't get (Chase over
+  // 5/24): left out of next-card answers. Never assumed.
+  skipped_issuers: z.array(KebabId).optional(),
   cards: z.array(WalletCardSchema).default([]),
 })
 

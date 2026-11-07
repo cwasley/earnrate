@@ -52,6 +52,10 @@ export class VaultWalletStore implements AccountStore {
     return this.vault.setMemberships(this.walletKey, memberships)
   }
 
+  setSkippedIssuers(issuers: string[]): Promise<SetupResult> {
+    return this.vault.setSkippedIssuers(this.walletKey, issuers)
+  }
+
   setValuations(changes: Record<string, number | null>): Promise<SetupResult> {
     return this.vault.setValuations(this.walletKey, changes)
   }
@@ -91,6 +95,7 @@ export const signedOutStore: AccountStore = {
   updateCard: refuse,
   removeCard: refuse,
   setMemberships: refuse,
+  setSkippedIssuers: refuse,
   setValuations: refuse,
   replace: refuse,
   record: refuse,

@@ -37,6 +37,9 @@ function compact(wallet: Wallet) {
     ...(wallet.memberships.length > 0
       ? { memberships: wallet.memberships }
       : {}),
+    ...(wallet.skipped_issuers && wallet.skipped_issuers.length > 0
+      ? { skipped_issuers: wallet.skipped_issuers }
+      : {}),
     cards: wallet.cards.map((c) =>
       Object.fromEntries(
         CARD_FIELDS.flatMap((k) => (isEmpty(c[k]) ? [] : [[k, c[k]]])),

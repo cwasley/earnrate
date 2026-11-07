@@ -105,12 +105,17 @@ export function makeContext(deps: ServerDeps) {
   // neither (null), answers cover every card earnrate knows.
   // Saved point values and memberships apply to every answer, not just ones
   // from saved cards. A wallet that can't be read has none.
-  async function saved(): Promise<Pick<Wallet, 'valuations' | 'memberships'>> {
+  async function saved(): Promise<
+    Pick<Wallet, 'valuations' | 'memberships' | 'skipped_issuers'>
+  > {
     try {
       const wallet = await deps.store.load()
       return {
         valuations: wallet?.valuations ?? {},
         memberships: wallet?.memberships ?? [],
+        ...(wallet?.skipped_issuers
+          ? { skipped_issuers: wallet.skipped_issuers }
+          : {}),
       }
     } catch {
       return { valuations: {}, memberships: [] }
@@ -133,9 +138,13 @@ export function makeContext(deps: ServerDeps) {
         },
         deps.today(),
       )
-      return typeof named === 'string'
-        ? named
-        : { ...named, valuations: (await saved()).valuations }
+      if (typeof named === 'string') return named
+      const { valuations, skipped_issuers } = await saved()
+      return {
+        ...named,
+        valuations,
+        ...(skipped_issuers ? { skipped_issuers } : {}),
+      }
     }
     const read = await readableWallet()
     if (typeof read === 'string') return read
