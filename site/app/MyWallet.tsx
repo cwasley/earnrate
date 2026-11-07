@@ -1427,7 +1427,7 @@ export function MyWallet({
     requestAnimationFrame(() => {
       document
         .getElementById(`held-${cardId}`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        ?.scrollIntoView({ block: 'start' })
     })
   }
 
@@ -1512,7 +1512,7 @@ export function MyWallet({
   const shown: typeof message =
     message ?? (lockNote ? { text: lockNote, error: false } : null)
   const messageLine = shown ? (
-    <p class={shown.error ? 'callout' : 'muted'}>
+    <p class={`${shown.error ? 'callout' : 'muted'} message-line`}>
       {shown.text}
       {shown.undo ? (
         <>
@@ -1589,9 +1589,7 @@ export function MyWallet({
             class="link"
             onClick={() => {
               track('cta-pass-hint')
-              document
-                .getElementById('cheat-sheet')
-                ?.scrollIntoView({ behavior: 'smooth' })
+              document.getElementById('cheat-sheet')?.scrollIntoView()
             }}
           >
             cheat sheet

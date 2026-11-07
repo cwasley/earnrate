@@ -645,3 +645,81 @@ table.numbers tr:last-child td {
 .more-groups > .groups {
   margin-top: 4px;
 }
+
+/* Motion: the same vocabulary as the app's (site/app/app.css): press 0.97
+   in 160ms, open and arrive in 220ms, colors fade in 150ms, one strong
+   ease-out. Reduced motion keeps fades and drops movement. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --press: 160ms;
+  --arrive: 220ms;
+  --fade: 150ms;
+  --pressed: 0.97;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --pressed: 1;
+  }
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--arrive);
+  animation-timing-function: var(--ease-out);
+}
+
+a.button,
+.chip-links a,
+.card-grid a,
+.wordmark {
+  transition:
+    transform var(--press) var(--ease-out),
+    background-color var(--fade) ease,
+    border-color var(--fade) ease,
+    color var(--fade) ease;
+}
+
+:is(a.button, .chip-links a):active {
+  transform: scale(var(--pressed));
+}
+
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    height: 0;
+    overflow: clip;
+    opacity: 0;
+    transition:
+      height var(--arrive) var(--ease-out),
+      opacity var(--arrive) var(--ease-out),
+      content-visibility var(--arrive) allow-discrete;
+  }
+  details[open]::details-content {
+    height: auto;
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    details::details-content {
+      height: auto;
+      transition:
+        opacity var(--arrive) var(--ease-out),
+        content-visibility var(--arrive) allow-discrete;
+    }
+  }
+}

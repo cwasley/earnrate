@@ -897,58 +897,139 @@ input[type='number']::-webkit-outer-spin-button {
   margin: 0;
 }
 
-/* Light motion: answers rise in, ranked cards and cheat sheet rows follow
-   one after another, and a card added to the wallet slides into the list. */
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-
-@keyframes slide-in {
-  from {
-    opacity: 0;
-    transform: translateX(-14px) scale(0.98);
-  }
-}
-
-.results {
-  animation: rise 0.25s ease-out both;
-}
-
-.result-list > li,
-.sheet-rows li {
-  animation: rise 0.3s ease-out both;
-}
-
-.result-list > li:nth-child(2),
-.sheet-rows li:nth-child(2) {
-  animation-delay: 40ms;
-}
-.result-list > li:nth-child(3),
-.sheet-rows li:nth-child(3) {
-  animation-delay: 80ms;
-}
-.result-list > li:nth-child(4),
-.sheet-rows li:nth-child(4) {
-  animation-delay: 120ms;
-}
-.result-list > li:nth-child(n + 5),
-.sheet-rows li:nth-child(n + 5) {
-  animation-delay: 160ms;
-}
-
-.held > li {
-  animation: slide-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+/* Motion. One vocabulary for the site (pages.css repeats it for the static
+   pages), and nothing outside it:
+   - Press: anything you tap presses in to 0.97 (wide rows 0.99), 160ms.
+   - Arrive: content that appears because you did something fades in and
+     rises 6px, 220ms; an answer's rows follow 30ms apart, four at most.
+   - Open: expanding sections grow and fade in, 220ms.
+   - Color: hover and selection colors fade, 150ms.
+   Every curve is the same strong ease-out. Nothing animates on page load, on
+   a tab switch (.settled marks a panel that has finished rendering), while
+   typing or on scroll. Reduced motion keeps the fades and drops movement. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --press: 160ms;
+  --arrive: 220ms;
+  --fade: 150ms;
+  --pressed: 0.97;
+  --pressed-wide: 0.99;
+  --rise: 6px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .results,
-  .result-list > li,
-  .sheet-rows li,
-  .held > li {
-    animation: none;
+  :root {
+    --pressed: 1;
+    --pressed-wide: 1;
+    --rise: 0px;
+  }
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+button:not(.link),
+a.button,
+.header-cta,
+.popular-links a,
+.file-button,
+.row-buttons .row-link,
+.segments label {
+  transition:
+    transform var(--press) var(--ease-out),
+    background-color var(--fade) ease,
+    border-color var(--fade) ease,
+    color var(--fade) ease;
+}
+
+:is(
+  button:not(.link),
+  a.button,
+  .header-cta,
+  .popular-links a,
+  .file-button,
+  .row-buttons .row-link,
+  .segments label
+):active {
+  transform: scale(var(--pressed));
+}
+
+:is(.result-toggle, .held-row):active {
+  transform: scale(var(--pressed-wide));
+}
+
+button:disabled:active {
+  transform: none;
+}
+
+.settled
+  :is(
+    .results,
+    .result-list > li,
+    .held > li,
+    .editor,
+    .result > .row-buttons,
+    .result > p,
+    .message-line,
+    .row-buttons
+  ) {
+  transition:
+    opacity var(--arrive) var(--ease-out),
+    transform var(--arrive) var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(var(--rise));
+  }
+}
+
+/* The answer as a whole only fades; its rows do the rising. */
+.settled .results {
+  @starting-style {
+    transform: none;
+  }
+}
+
+.settled .result-list > li:nth-child(2) {
+  transition-delay: 30ms;
+}
+.settled .result-list > li:nth-child(3) {
+  transition-delay: 60ms;
+}
+.settled .result-list > li:nth-child(n + 4) {
+  transition-delay: 90ms;
+}
+
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    height: 0;
+    overflow: clip;
+    opacity: 0;
+    transition:
+      height var(--arrive) var(--ease-out),
+      opacity var(--arrive) var(--ease-out),
+      content-visibility var(--arrive) allow-discrete;
+  }
+  details[open]::details-content {
+    height: auto;
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    details::details-content {
+      height: auto;
+      transition:
+        opacity var(--arrive) var(--ease-out),
+        content-visibility var(--arrive) allow-discrete;
+    }
   }
 }
 

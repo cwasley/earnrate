@@ -590,6 +590,15 @@ export function App() {
   useEffect(() => {
     track(`tab-${tab}`)
   }, [tab])
+  // A tab's panel animates only what arrives after it has rendered, so
+  // opening a tab or loading the page shows it at rest.
+  const [settled, setSettled] = useState<Tab | null>(null)
+  useEffect(() => {
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => setSettled(tab))
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [tab])
   useEffect(() => {
     // A link to a section below (#claude) scrolls there and keeps the app
     // as it is.
@@ -628,7 +637,7 @@ export function App() {
           My wallet
         </button>
       </div>
-      <div role="tabpanel">
+      <div role="tabpanel" class={settled === tab ? 'settled' : undefined}>
         {tab === 'best' ? (
           <BestFor
             settings={settings}

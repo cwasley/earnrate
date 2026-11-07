@@ -112,6 +112,17 @@
         font-size: 18px;
         text-decoration: none;
       }
+      /* Page-to-page fades, the same as the static pages' (pages.css). */
+      @media (prefers-reduced-motion: no-preference) {
+        @view-transition {
+          navigation: auto;
+        }
+      }
+      ::view-transition-old(root),
+      ::view-transition-new(root) {
+        animation-duration: 220ms;
+        animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+      }
       .wordmark .mark {
         width: 28px;
         height: 28px;
