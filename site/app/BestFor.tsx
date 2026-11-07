@@ -17,6 +17,7 @@ import {
   ENROLL_FIRST,
   hostname,
   money,
+  PAYMENT_PHRASES,
 } from '../../src/engine/text.ts'
 import {
   cards,
@@ -27,9 +28,10 @@ import {
   requirementLines,
   shortName,
 } from './format.ts'
-import { ABROAD_NOTE, AbroadToggle } from './AbroadToggle.tsx'
-import { PayingWith, payingNote } from './PayingWith.tsx'
+import { ABROAD_NOTE } from './AbroadToggle.tsx'
+import { payingNote } from './PayingWith.tsx'
 import type { PaymentMethod } from '../../src/schema/card.ts'
+import type { Purchase } from './App.tsx'
 import { CardArt } from './CardArt.tsx'
 import { track } from './track.ts'
 import { SearchInput } from './SearchInput.tsx'
@@ -275,6 +277,8 @@ export function BestFor({
   settings,
   saved,
   filters,
+  purchase,
+  onPurchase,
   query,
   onQuery,
   onWallet,
@@ -283,6 +287,8 @@ export function BestFor({
   settings: Settings
   saved: Saved
   filters: ComponentChildren
+  purchase: Purchase
+  onPurchase: (p: Purchase) => void
   query: string
   onQuery: (q: string) => void
   onWallet: () => void
@@ -290,8 +296,7 @@ export function BestFor({
 }) {
   const [text, setText] = useState(query)
   const [all, setAll] = useState(false)
-  const [abroad, setAbroad] = useState(false)
-  const [payment, setPayment] = useState<PaymentMethod | null>(null)
+  const { abroad, payment } = purchase
   const result = useMemo(
     () =>
       query.trim() === ''
@@ -369,14 +374,6 @@ export function BestFor({
             </button>
           ))}
         </div>
-        <div class="options">
-          <AbroadToggle abroad={abroad} onChange={setAbroad} />
-          <PayingWith
-            name="best-for-paying"
-            payment={payment}
-            onChange={setPayment}
-          />
-        </div>
       </div>
       {!result && example ? (
         <Example
@@ -415,6 +412,21 @@ export function BestFor({
                 {w}
               </p>
             ))}
+            {[...new Map(result.ifPaying.map((p) => [p.payment, p])).values()]
+              .slice(0, 2)
+              .map((p) => (
+                <button
+                  type="button"
+                  class="paying-hint"
+                  key={p.payment}
+                  onClick={() =>
+                    onPurchase({ ...purchase, payment: p.payment })
+                  }
+                >
+                  {capitalize(PAYMENT_PHRASES[p.payment])}?{' '}
+                  {shortName(p.cardId)} earns {p.earn} here.
+                </button>
+              ))}
             {result.credits.length > 0 ? (
               <>
                 <h4 class="credit-group">{CREDIT_GROUP}</h4>

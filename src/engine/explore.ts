@@ -169,6 +169,14 @@ export type Exploration = {
   excluded: ExcludedCard[]
   assumptions: string[]
   warnings: string[]
+  // With the payment unknown: ways of paying that would put a card at the
+  // top, the same ones the assumptions name.
+  ifPaying: {
+    cardId: string
+    cardName: string
+    payment: PaymentMethod
+    earn: string
+  }[]
 }
 
 export type ExploreQuery = {
@@ -490,7 +498,26 @@ export function exploreCards(
       ifLarger,
     ),
     warnings: exploreWarnings(catalog, merchant),
+    ifPaying: paidAtTop(ranked, ifPaid).map(({ entry, paid }) => ({
+      cardId: entry.cardId,
+      cardName: entry.cardName,
+      payment: paid.payment,
+      earn: paid.earn,
+    })),
   }
+}
+
+// Cards a way of paying would lift to the top (or that are already there).
+function paidAtTop(ranked: ExploreEntry[], ifPaid: Map<string, PaidUpgrade>) {
+  const top = ranked[0]
+  if (!top) return []
+  return ranked.flatMap((entry) => {
+    const paid = ifPaid.get(entry.cardId)
+    return paid &&
+      (entry === top || paid.returnPct > top.effectiveReturnPct + EPSILON)
+      ? [{ entry, paid }]
+      : []
+  })
 }
 
 function creditPicks(
@@ -581,11 +608,7 @@ function exploreAssumptions(
   if (isForeign(purchase)) assumptions.push(FOREIGN_ASSUMPTION)
   if (purchase.payment) assumptions.push(paidText(purchase.payment))
   const top = ranked[0]
-  for (const entry of ranked) {
-    const paid = ifPaid.get(entry.cardId)
-    if (!paid || !top) continue
-    if (entry !== top && paid.returnPct <= top.effectiveReturnPct + EPSILON)
-      continue
+  for (const { entry, paid } of paidAtTop(ranked, ifPaid)) {
     assumptions.push(
       paymentUnknownText(
         entry.cardName,

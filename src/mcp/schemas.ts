@@ -494,6 +494,15 @@ export const ExplorationSchema = z.object({
   excluded: z.array(ExcludedCardSchema),
   assumptions: z.array(z.string()),
   warnings: z.array(z.string()),
+  // Ways of paying that would put a card at the top, when payment is unknown.
+  ifPaying: z.array(
+    z.object({
+      cardId: z.string(),
+      cardName: z.string(),
+      payment: z.string(),
+      earn: z.string(),
+    }),
+  ),
 })
 
 const SimulationSchema = z.object({

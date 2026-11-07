@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { catalog, dataVersion } from 'virtual:catalog'
+import type { PaymentMethod } from '../../src/schema/card.ts'
 import { BestFor, SUGGESTIONS } from './BestFor.tsx'
+import { AbroadToggle } from './AbroadToggle.tsx'
 import { MyWallet } from './MyWallet.tsx'
+import { PayingWith } from './PayingWith.tsx'
 import { Spending } from './Spending.tsx'
 import { track } from './track.ts'
 import { issuerName, issuers } from './format.ts'
@@ -112,6 +115,10 @@ const POINTS_HEAVY_HINT = (() => {
 })()
 
 // Memberships here are the wallet's, the same list My wallet shows.
+// How one purchase is made, on the Best for tab only: kept out of the search
+// tile, where most visitors never need it.
+export type Purchase = { abroad: boolean; payment: PaymentMethod | null }
+
 function Filters({
   settings,
   onChange,
@@ -120,6 +127,8 @@ function Filters({
   synced,
   locked,
   note,
+  purchase,
+  onPurchase,
 }: {
   settings: Settings
   onChange: (s: Settings) => void
@@ -128,6 +137,8 @@ function Filters({
   synced: boolean
   locked: boolean
   note: string | null
+  purchase?: Purchase
+  onPurchase?: (p: Purchase) => void
 }) {
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch })
   const has = (m: string) => memberships.includes(m)
@@ -139,7 +150,9 @@ function Filters({
     (settings.issuer !== null ? 1 : 0) +
     (settings.business ? 1 : 0) +
     memberships.length +
-    (settings.pointsHeavy ? 1 : 0)
+    (settings.pointsHeavy ? 1 : 0) +
+    (purchase?.abroad ? 1 : 0) +
+    (purchase?.payment ? 1 : 0)
 
   return (
     <details class="filters">
@@ -148,6 +161,20 @@ function Filters({
         {active > 0 ? <span class="badge">{active}</span> : null}
       </summary>
       <div class="filter-panel">
+        {purchase && onPurchase ? (
+          <fieldset class="filter-group">
+            <legend>This purchase</legend>
+            <AbroadToggle
+              abroad={purchase.abroad}
+              onChange={(abroad) => onPurchase({ ...purchase, abroad })}
+            />
+            <PayingWith
+              name="best-for-paying"
+              payment={purchase.payment}
+              onChange={(payment) => onPurchase({ ...purchase, payment })}
+            />
+          </fieldset>
+        ) : null}
         <fieldset class="filter-group">
           <legend>Which cards</legend>
           <div class="filter-row">
@@ -568,17 +595,21 @@ export function App() {
     sync.state === 'off' ? <ConnectPanel note={sync.note} /> : null
 
   const saved = wallet ?? EMPTY_WALLET
-  const filters = (
-    <Filters
-      settings={settings}
-      onChange={setSettings}
-      memberships={saved.memberships}
-      onMemberships={(memberships) => void perform(membershipsOp(memberships))}
-      synced={synced}
-      locked={locked}
-      note={edit.note}
-    />
-  )
+  const [purchase, setPurchase] = useState<Purchase>({
+    abroad: false,
+    payment: null,
+  })
+  const filterProps = {
+    settings,
+    onChange: setSettings,
+    memberships: saved.memberships,
+    onMemberships: (memberships: string[]) =>
+      void perform(membershipsOp(memberships)),
+    synced,
+    locked,
+    note: edit.note,
+  }
+  const filters = <Filters {...filterProps} />
   useEffect(() => save('settings', settings), [settings])
   const section = useRef(linkedSection())
   useEffect(() => {
@@ -643,7 +674,15 @@ export function App() {
           <BestFor
             settings={settings}
             saved={saved}
-            filters={filters}
+            filters={
+              <Filters
+                {...filterProps}
+                purchase={purchase}
+                onPurchase={setPurchase}
+              />
+            }
+            purchase={purchase}
+            onPurchase={setPurchase}
             query={query}
             onQuery={(q) => setView({ tab: 'best', query: q })}
             hasCards={(wallet?.cards.length ?? 0) > 0}

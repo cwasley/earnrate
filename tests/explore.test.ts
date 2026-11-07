@@ -470,3 +470,23 @@ describe('categories the issuer applies by spending', () => {
     )
   })
 })
+
+describe('ways of paying that change the answer', () => {
+  test('are listed while payment is unknown, the same ones the assumptions name', () => {
+    const r = exploreCards(catalog, query({ merchant: 'Nike' }), casual)
+    expect(r.ifPaying.map((p) => [p.cardId, p.payment])).toEqual(
+      expect.arrayContaining([
+        ['apple-card', 'apple-pay'],
+        ['paypal-cashback-mastercard', 'paypal'],
+      ]),
+    )
+    for (const p of r.ifPaying)
+      expect(r.assumptions.join(' ')).toContain(p.cardName)
+    const paid = exploreCards(
+      catalog,
+      query({ merchant: 'Nike', payment: 'apple-pay' }),
+      casual,
+    )
+    expect(paid.ifPaying).toEqual([])
+  })
+})
