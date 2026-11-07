@@ -2288,6 +2288,20 @@ describe('#35 terms with a size or a date', () => {
         small.reasoning,
         /needs a purchase of \$500 or more, so it doesn't count here\.$/,
       )
+      const listed = exploreCards(
+        catalog,
+        {
+          merchant: 'citi travel hotel',
+          category: null,
+          amount: null,
+          channel: null,
+          date: TODAY,
+        },
+        { filters: ALL_PERSONAL_CARDS, memberships: [], valuations: {} },
+      ).credits.find((c) => c.cardId === 'citi-strata-premier')
+      expect(listed?.text).toBe(
+        '$100 back each calendar year with a purchase of $500 or more, then 10x Citi ThankYou points',
+      )
     },
   )
 

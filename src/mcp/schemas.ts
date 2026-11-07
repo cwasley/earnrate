@@ -434,6 +434,7 @@ export const ExplorationSchema = z.object({
       enroll: z.boolean(),
       note: z.string().nullable(),
       back: z.string(),
+      terms: z.string(),
       earn: z.string(),
       text: z.string(),
       evidence: z.object({ quote: z.string(), url: z.string() }).nullable(),

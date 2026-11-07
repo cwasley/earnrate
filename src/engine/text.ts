@@ -377,9 +377,9 @@ export const creditTerms = (c: Pick<Credit, 'valid_to' | 'min_amount'>) =>
 
 // "$75 back each quarter, then 1x Amex Membership Rewards"
 export const creditThen = (
-  c: Pick<Credit, 'amount' | 'period'>,
+  c: Pick<Credit, 'amount' | 'period' | 'valid_to' | 'min_amount'>,
   earn: string,
-) => `${creditBack(c)}, then ${earn}`
+) => `${creditBack(c)}${creditTerms(c)}, then ${earn}`
 
 // "$35 left this quarter"
 export const creditLeft = (left: number, period: Credit['period']) =>

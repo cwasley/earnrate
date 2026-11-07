@@ -165,7 +165,8 @@ function CreditRow({ pick }: { pick: CreditPick }) {
         </span>
       </div>
       <p>
-        {capitalize(CREDIT_PERIODS[pick.period])}, then {pick.earn}.
+        {capitalize(CREDIT_PERIODS[pick.period])}
+        {pick.terms}, then {pick.earn}.
         {pick.enroll ? (
           <strong class="credit-enroll"> {capitalize(ENROLL_FIRST)}.</strong>
         ) : null}
@@ -305,6 +306,8 @@ export function BestFor({
   useEffect(() => {
     if (query.trim() !== '') track('search')
   }, [query])
+  // Back, Forward or a link can change the search without the box.
+  useEffect(() => setText(query), [query])
 
   const ask = (q: string) => {
     setText(q)

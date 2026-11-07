@@ -154,6 +154,8 @@ export type CreditPick = {
   enroll: boolean // the cardholder must enroll first
   note: string | null
   back: string // "$75 back each quarter"
+  terms: string // " with a purchase of $500 or more", or ""
+
   earn: string // what the purchase earns too: "1x Amex Membership Rewards"
   text: string // the two together
   evidence: { quote: string; url: string } | null
@@ -518,6 +520,7 @@ function creditPicks(
             enroll: credit.enroll === true,
             note: credit.note ?? null,
             back: `${creditBack(credit)}${creditTerms(credit)}`,
+            terms: creditTerms(credit),
             earn,
             text: creditThen(credit, earn),
             evidence: evidence
