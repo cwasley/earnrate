@@ -8,6 +8,7 @@ import {
   type ExploreEntry,
 } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
+import { splitPurchaseText } from '../../src/merchants/resolve.ts'
 import { ABROAD } from '../../src/engine/recommend.ts'
 import {
   capitalize,
@@ -63,12 +64,13 @@ function explore(
   settings: Settings,
   saved: Saved,
 ): Exploration {
+  const { merchant, amount } = splitPurchaseText(text)
   return exploreCards(
     catalog,
     {
-      merchant: text,
+      merchant,
       category: null,
-      amount: null,
+      amount,
       channel: null,
       date: localToday(),
       country: abroad ? ABROAD : 'US',
@@ -395,6 +397,12 @@ export function BestFor({
           >
             <h3>
               Best cards for {title(result)}
+              {splitPurchaseText(query).amount !== null ? (
+                <span class="muted">
+                  {' '}
+                  · {money(splitPurchaseText(query).amount ?? 0)}
+                </span>
+              ) : null}
               {abroad ? <span class="muted">{ABROAD_NOTE}</span> : null}
               {payment ? (
                 <span class="muted">{payingNote(payment)}</span>
@@ -412,7 +420,20 @@ export function BestFor({
                 {w}
               </p>
             ))}
-            {[...new Map(result.ifPaying.map((p) => [p.payment, p])).values()]
+            {result.ranked.length === 0 ? (
+              <p class="callout">
+                No card matches your filters. Open Filters and memberships to
+                widen them.
+              </p>
+            ) : null}
+            {(result.merchant.source === 'none'
+              ? []
+              : [
+                  ...new Map(
+                    result.ifPaying.map((p) => [p.payment, p]),
+                  ).values(),
+                ]
+            )
               .slice(0, 2)
               .map((p) => (
                 <button

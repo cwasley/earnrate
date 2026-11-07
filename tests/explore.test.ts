@@ -10,7 +10,7 @@ import {
 } from '../src/engine/explore.ts'
 import { VALUATION_PROFILES } from '../src/engine/profiles.ts'
 import { ruleParts } from '../src/engine/rule-text.ts'
-import { findCategory } from '../src/merchants/resolve.ts'
+import { findCategory, splitPurchaseText } from '../src/merchants/resolve.ts'
 import {
   resolveSpendLines,
   simulateAdditions,
@@ -488,5 +488,31 @@ describe('ways of paying that change the answer', () => {
       casual,
     )
     expect(paid.ifPaying).toEqual([])
+  })
+})
+
+describe('what someone types in one box', () => {
+  test('an amount before or after the store, and accents, are understood', () => {
+    expect(splitPurchaseText('$50 at Starbucks')).toEqual({
+      merchant: 'Starbucks',
+      amount: 50,
+    })
+    expect(splitPurchaseText('whole foods 80')).toEqual({
+      merchant: 'whole foods',
+      amount: 80,
+    })
+    expect(splitPurchaseText('$1,200.50 on delta.com')).toEqual({
+      merchant: 'delta.com',
+      amount: 1200.5,
+    })
+    expect(splitPurchaseText('76')).toEqual({ merchant: '76', amount: null })
+    expect(splitPurchaseText('at costco')).toEqual({
+      merchant: 'costco',
+      amount: null,
+    })
+    expect(
+      exploreCards(catalog, query({ merchant: 'Café' }), casual).merchant
+        .source,
+    ).not.toBe('none')
   })
 })

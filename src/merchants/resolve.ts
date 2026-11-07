@@ -3,8 +3,12 @@ import type { Catalog } from '../schema/catalog.ts'
 import { Network } from '../schema/common.ts'
 import type { Merchant } from '../schema/merchant.ts'
 
+// "Café" finds "cafe" and "Häagen-Dazs" "haagen dazs": accents are dropped.
+const unaccented = (s: string) =>
+  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
 export function normalizeMerchantName(input: string): string {
-  return input
+  return unaccented(input)
     .toLowerCase()
     .trim()
     .replace(/^https?:\/\//, '')
@@ -200,7 +204,7 @@ export function withCallerCategory(
 }
 
 const plainWords = (s: string) =>
-  s
+  unaccented(s)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
@@ -276,4 +280,35 @@ export function resolvePlace(
   if (bare === '' || bare === text.trim()) return asGiven
   const found = attempt(bare)
   return found.source === 'none' ? asGiven : found
+}
+
+const AMOUNT_WORDS =
+  /^\$\s?(\d{1,3}(?:,\d{3})+|\d+)(\.\d{1,2})?\s+(?:(?:at|on|for|in)\s+)?/i
+const TRAILING_AMOUNT = /\s+\$?(\d{1,3}(?:,\d{3})+|\d+)(\.\d{1,2})?$/
+const LEADING_WORD = /^(?:at|on|for)\s+/i
+
+// What someone types in one box: "$50 at Starbucks", "starbucks $50", "at
+// Costco". A trailing bare number counts only after other words, so a store
+// named "76" still works.
+export function splitPurchaseText(text: string): {
+  merchant: string
+  amount: number | null
+} {
+  let rest = text.trim()
+  let amount: number | null = null
+  const lead = AMOUNT_WORDS.exec(rest)
+  if (lead) {
+    amount = Number(`${(lead[1] ?? '').replace(/,/g, '')}${lead[2] ?? ''}`)
+    rest = rest.slice(lead[0].length)
+  } else {
+    const trail = TRAILING_AMOUNT.exec(rest)
+    if (trail && trail.index > 0) {
+      amount = Number(`${(trail[1] ?? '').replace(/,/g, '')}${trail[2] ?? ''}`)
+      rest = rest.slice(0, trail.index)
+    }
+  }
+  rest = rest.replace(LEADING_WORD, '').trim()
+  return rest === ''
+    ? { merchant: text.trim(), amount: null }
+    : { merchant: rest, amount: amount !== null && amount > 0 ? amount : null }
 }

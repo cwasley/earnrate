@@ -589,6 +589,12 @@ input::-webkit-list-button {
 
 .app .callout {
   margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+
+/* A long unbroken search mustn't widen the page. */
+.results h3 {
+  overflow-wrap: anywhere;
 }
 
 /* Shown only when how you pay would change the best card; one tap sets it. */
