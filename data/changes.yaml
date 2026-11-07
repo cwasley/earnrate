@@ -1,0 +1,2817 @@
+# Every change to data/, structured, newest release first. data/CHANGELOG.md
+# tells the same releases in prose. `cause: issuer` only when the issuer
+# changed a term after earnrate had recorded the old value correctly; see
+# src/schema/changes.ts for the fields.
+
+- version: '2026.11.07.1'
+  date: 2026-11-07
+  changes:
+    - cause: quote
+      cards:
+        [
+          chase-ihg-one-rewards-premier,
+          chase-united-business,
+          chase-united-club-business,
+          citi-aadvantage-business,
+          citi-aadvantage-executive,
+          citi-aadvantage-globe,
+          citi-aadvantage-mileup,
+          citi-aadvantage-platinum-select,
+          citi-costco-anywhere-visa,
+          citi-costco-anywhere-visa-business,
+          citi-double-cash,
+          citi-my-best-buy-visa,
+          citi-strata-elite,
+          citi-strata-premier,
+          td-bank-nordstrom-credit-card,
+          td-bank-nordstrom-visa,
+        ]
+      field: evidence
+      summary: Quotes that live in popups the page builds from its embedded data are marked in_popup, after each was seen in the open popup.
+    - cause: quote
+      card: citi-custom-cash
+      field: evidence
+      summary: The 1% and 5% quotes come from the card's ThankYou terms, since its page now says only that applications closed; same rates.
+
+- version: '2026.11.07'
+  date: 2026-11-07
+  changes:
+    - cause: issuer
+      card: chase-prime-visa
+      field: welcome_offer
+      was: { dollars: 150, spend: 0, months: 1 }
+      now: { dollars: 200, spend: 0, months: 1 }
+      source: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    - cause: addition
+      card: amex-business-platinum
+      field: rules.large-purchases
+      now: { rate: 2, min_amount: 5000 }
+      summary: 2X on any single eligible purchase of $5,000 or more, inside the $2 million yearly cap shared with its 2X categories.
+      source: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/
+    - cause: addition
+      card: citi-strata-premier
+      field: credits.annual-hotel-benefit
+      now: { amount: 100, period: calendar_year, min_amount: 500 }
+      summary: The $100 Annual Hotel Benefit, on a Citi Travel hotel stay of $500 or more, once a calendar year.
+      source: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    - cause: addition
+      card: wells-fargo-autograph-journey
+      field: credits.airline-credit
+      now: { amount: 50, min_amount: 50 }
+      summary: The $50 airline credit, on an airline purchase of $50 or more, once a year.
+      source: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    - cause: addition
+      card: barclays-jetblue-plus
+      field: credits.jetblue-vacations
+      now: { amount: 100, period: calendar_year, min_amount: 100 }
+      summary: The $100 JetBlue Vacations credit, on a package of $100 or more, once a calendar year.
+      source: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    - cause: addition
+      cards:
+        [
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-ink-business-cash,
+          chase-ink-business-unlimited,
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-explorer,
+          chase-united-quest,
+        ]
+      field: credits.instacart.valid_to
+      now: '2027-12-31'
+      summary: The Instacart credits end on the date Chase gives, so they stop counting after it.
+    - cause: addition
+      card: chase-sapphire-reserve
+      field: credits.stubhub.valid_to
+      now: '2027-12-31'
+      summary: The StubHub credit ends on the date Chase gives.
+    - cause: addition
+      card: chase-sapphire-reserve
+      field: credits.peloton-credit.valid_to
+      now: '2027-12-31'
+      summary: The Peloton credit ends on the date Chase gives.
+    - cause: addition
+      card: chase-sapphire-reserve
+      field: credits.lyft-credit.valid_to
+      now: '2027-09-30'
+      summary: The Lyft credit ends on the date Chase gives.
+    - cause: addition
+      card: chase-ihg-one-rewards
+      field: milestones.fourth-night-free
+      now: { spend: 5000, valid_from: '2027-01-01' }
+      summary: The 4th Reward Night free after $5,000 a calendar year, from 2027.
+    - cause: addition
+      card: chase-ihg-one-rewards-business
+      field: milestones.diamond-status
+      now: { spend: 50000, valid_from: '2027-01-01' }
+      summary: Diamond Elite status after $50,000 a calendar year, from 2027.
+
+- version: '2026.11.06.2'
+  date: 2026-11-06
+  changes:
+    - cause: quote
+      card: chase-freedom-flex
+      field: evidence
+      summary: The Q4 2026 dining, grocery and American Red Cross rules list their explanatory quote first, so answers show it.
+    - cause: wording
+      merchants: [advance-auto-parts, napa-auto-parts, oreilly-auto-parts]
+      field: note
+      summary: The notes say "An auto parts store" (was "A auto parts store").
+
+- version: '2026.11.06.1'
+  date: 2026-11-06
+  changes:
+    - cause: wording
+      categories:
+        [
+          dining.fast_food,
+          grocery.online,
+          gas.grocery_store,
+          gas.superstore,
+          transit.rideshare,
+          travel.flights,
+          travel.car_rental,
+          travel.cruise,
+          home_improvement,
+          other,
+        ]
+      field: preposition
+      now: 'on'
+      summary: Read "on flights" rather than "at flights".
+
+- version: '2026.11.06'
+  date: 2026-11-06
+  changes:
+    - cause: wording
+      card: discover-it-cash-back
+      field: welcome_offer.note
+      summary: The note says Cashback Match doubles every rate for the first year, instead of naming the data field it's stored in.
+
+- version: '2026.11.05.2'
+  date: 2026-11-05
+  changes:
+    - cause: quote
+      cards: [chase-ihg-one-rewards-business, venmo-credit-card]
+      field: evidence
+      summary: The Expensify credit and the foreign transaction fee quote their pages' new wording.
+
+- version: '2026.11.05.1'
+  date: 2026-11-05
+  changes:
+    - cause: issuer
+      card: amex-delta-skymiles-gold
+      field: welcome_offer
+      was:
+        {
+          points: 80000,
+          spend: 3000,
+          months: 6,
+          valid_to: '2026-11-04',
+          varies: true,
+        }
+      now: { points: 80000, spend: 2000, months: 6, varies: true }
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
+      effective: 2026-11-04
+      detected: 2026-11-05
+    - cause: issuer
+      card: amex-delta-skymiles-platinum
+      field: welcome_offer
+      was:
+        {
+          points: 90000,
+          spend: 4000,
+          months: 6,
+          valid_to: '2026-11-04',
+          varies: true,
+        }
+      now: { points: 90000, spend: 3000, months: 6, varies: true }
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
+      effective: 2026-11-04
+      detected: 2026-11-05
+    - cause: issuer
+      card: amex-delta-skymiles-reserve
+      field: welcome_offer
+      was: { points: 50000, spend: 10000, months: 6, valid_to: '2026-11-04' }
+      now: { points: 125000, spend: 5000, months: 6, varies: true }
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0#offer-terms
+      effective: 2026-11-04
+      detected: 2026-11-05
+    - cause: issuer
+      card: amex-marriott-bonvoy-business
+      field: welcome_offer
+      was: { points: 100000, spend: 8000, months: 6, valid_to: '2026-11-04' }
+      now: { points: 75000, spend: 6000, months: 6 }
+      source: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
+      effective: 2026-11-04
+      detected: 2026-11-05
+    - cause: addition
+      card: discover-it-cash-back
+      field: foreign_transaction_fee
+      was: null
+      now: 0
+      summary: No foreign transaction fee, from a Discover page that states it.
+      source: https://www.discover.com/credit-cards/card-smarts/best-international-travel-credit-card/
+    - cause: review
+      cards:
+        [
+          amex-delta-skymiles-gold,
+          amex-delta-skymiles-platinum,
+          amex-delta-skymiles-reserve,
+          amex-marriott-bonvoy-business,
+          discover-it-cash-back,
+        ]
+      field: last_verified
+      summary: Checked against every source page.
+
+- version: '2026.11.05'
+  date: 2026-11-05
+  changes:
+    - cause: wording
+      merchants: [peloton-membership, uber-one, walmart-plus]
+      field: preposition
+      now: 'on'
+      summary: Their credits read "on Walmart+ membership" rather than "at".
+
+- version: '2026.11.04.15'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-blue-cash-everyday,
+          amex-business-gold,
+          amex-business-platinum,
+          amex-delta-skymiles-gold,
+          amex-delta-skymiles-platinum,
+          amex-delta-skymiles-reserve,
+          amex-gold,
+          amex-hilton-honors-aspire,
+          amex-hilton-honors-business,
+          amex-hilton-honors-surpass,
+          amex-marriott-bonvoy-brilliant,
+          amex-platinum,
+          bilt-obsidian,
+          bilt-palladium,
+          capital-one-venture-x,
+          capital-one-venture-x-business,
+          chase-aeroplan,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-ink-business-cash,
+          chase-ink-business-unlimited,
+          chase-sapphire-preferred,
+          chase-sapphire-reserve,
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-explorer,
+          chase-united-quest,
+          citi-aadvantage-executive,
+          citi-strata-elite,
+        ]
+      field: credits
+      summary: Merchant statement credits on every card whose issuer publishes them, 73 in all, each quoted from the issuer's own pages.
+    - cause: addition
+      merchants:
+        [
+          alto,
+          american-airlines-vacations,
+          blacklane,
+          chatgpt,
+          clear,
+          dell,
+          expensify,
+          home-chef,
+          indeed,
+          jsx,
+          new-york-times,
+          oura,
+          peloton-membership,
+          resy,
+          squarespace,
+          viagogo,
+          wall-street-journal,
+          walmart-plus,
+          wonder,
+        ]
+      summary: New merchants for the credits.
+
+- version: '2026.11.04.14'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      card: penfed-power-cash-rewards
+      summary: PenFed Power Cash Rewards Visa Signature, read in Chrome because penfed.org refuses the source check.
+    - cause: addition
+      issuers: [penfed]
+      summary: PenFed, a new issuer.
+    - cause: addition
+      memberships: [penfed-honors-advantage]
+      summary: PenFed Honors Advantage, for the card's 2% rate.
+    - cause: addition
+      card: usbank-smartly
+      field: foreign_transaction_fee
+      was: null
+      now: 3
+      summary: A 3% foreign transaction fee, from its terms.
+
+- version: '2026.11.04.13'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      card: amex-platinum
+      field: credits.lululemon
+      now: { amount: 75, period: quarter, enroll: true }
+      summary: Merchant statement credits start with three from Amex's benefit terms; this one is $75 a quarter at lululemon.
+    - cause: addition
+      card: amex-gold
+      field: credits.dunkin
+      now: { amount: 7, period: month, enroll: true }
+      summary: $7 a month at Dunkin'.
+    - cause: addition
+      card: amex-blue-cash-preferred
+      field: credits.disney-streaming
+      now: { amount: 10, period: month, enroll: true }
+      summary: $10 a month on Disney+, Hulu or ESPN subscriptions.
+
+- version: '2026.11.04.12'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      card: amex-blue-cash-preferred
+      field: rules.us-streaming.match
+      summary: The 6% streaming rule covers Luminary, which joined the merchant directory.
+    - cause: addition
+      cards: [usbank-altitude-connect, usbank-altitude-go]
+      field: rules.streaming.match
+      summary: The streaming rate covers AMC+, FanDuel Sports Network, iHeartRadio, LiveOne, Luminary and YouTube Music, all named in the program rules.
+    - cause: quote
+      cards:
+        [
+          fidelity-rewards-visa-signature,
+          navy-federal-cash-rewards,
+          navy-federal-cash-rewards-plus,
+          navy-federal-more-rewards-amex,
+        ]
+      field: evidence
+      summary: Quotes match their pages ("cashRewards", Elan's foreign fee table).
+
+- version: '2026.11.04.11'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      cards:
+        [
+          caltech-efcu-platinum-mastercard,
+          capital-one-rei-co-op-mastercard,
+          fidelity-rewards-visa-signature,
+          navy-federal-cash-rewards,
+          navy-federal-cash-rewards-plus,
+          navy-federal-more-rewards-amex,
+          usbank-smartly,
+          venmo-credit-card,
+          verizon-visa-card,
+        ]
+      summary: Nine credit union and fintech cards, each from the issuer's own pages.
+    - cause: addition
+      issuers: [caltech-efcu, elan, navy-federal]
+      summary: New issuers.
+    - cause: addition
+      memberships:
+        [
+          caltech-efcu,
+          navy-federal,
+          rei-co-op,
+          usbank-smartly-100,
+          usbank-smartly-25,
+          usbank-smartly-50,
+          verizon-account,
+        ]
+      summary: Credit union and account memberships, and the U.S. Bank Smartly Earning Bonus tiers.
+    - cause: addition
+      currencies: [navy-federal-rewards, rei-rewards]
+      summary: Navy Federal Rewards points and REI Co-op Mastercard rewards.
+    - cause: addition
+      merchants: [verizon-store]
+      summary: Verizon devices and accessories, apart from the Verizon bill.
+
+- version: '2026.11.04.10'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      merchants:
+        [
+          a-and-w,
+          allsups,
+          aloft,
+          amoco,
+          andys-frozen-custard,
+          armstrong-garden-centers,
+          atom-tickets,
+          avianca,
+          b-and-b-theatres,
+          backcountry,
+          bargain-hunt,
+          barrys,
+          bashas,
+          bealls,
+          biggby-coffee,
+          blue-nile,
+          bluemercury,
+          books-a-million,
+          bookshop-org,
+          bose,
+          brookshire-brothers,
+          build-a-bear,
+          burgerfi,
+          cafe-rio,
+          cafe-zupas,
+          calloways-nursery,
+          camping-world,
+          cardenas-markets,
+          carters,
+          cathay-pacific,
+          centerpoint-energy,
+          central-market,
+          century-21-stores,
+          chicken-salad-chick,
+          childrens-place,
+          chuys,
+          chuze-fitness,
+          clipper-card,
+          coborns,
+          coffee-bean-and-tea-leaf,
+          comfort-inn,
+          consumers-energy,
+          cook-out,
+          cooper-s-hawk,
+          copa-airlines,
+          corepower-yoga,
+          country-inn-and-suites,
+          courtyard,
+          cox-mobile,
+          crowne-plaza,
+          cunard,
+          daiso,
+          daves-hot-chicken,
+          days-inn,
+          delta-hotels,
+          dickeys,
+          discount-drug-mart,
+          donatos,
+          doubletree,
+          e-pass,
+          econo-lodge,
+          eddie-vs,
+          eighty-four-lumber,
+          emagine,
+          embassy-suites,
+          eos-fitness,
+          etihad,
+          evergy,
+          evolve-vacation-rental,
+          ez-tag,
+          fairfield-inn,
+          fairmont,
+          fairway-market,
+          famous-daves,
+          fanduel-sports-network,
+          fareway,
+          fast-park-and-relax,
+          fatburger,
+          festival-foods,
+          field-and-stream,
+          fiesta-mart,
+          firestone-complete-auto-care,
+          flix-brewhouse,
+          foodland-hawaii,
+          foodtown,
+          four-points,
+          friendlys,
+          frischs-big-boy,
+          fruth-pharmacy,
+          fuzzys-taco-shop,
+          genesis-health-clubs,
+          gerbes,
+          giordanos,
+          good-neighbor-pharmacy,
+          good-times,
+          grand-hyatt,
+          habit-burger,
+          haggen,
+          half-price-books,
+          hampton-inn,
+          harbor-freight,
+          harmons,
+          harps,
+          harveys-supermarket,
+          heinens,
+          hilton-garden-inn,
+          hipcamp,
+          holiday-inn,
+          holiday-inn-express,
+          home2-suites,
+          homewood-suites,
+          hungry-howies,
+          hyatt-house,
+          hyatt-place,
+          hyatt-regency,
+          i-pass,
+          intercontinental,
+          ionna,
+          irving-oil,
+          jamba,
+          jared,
+          jiffy-lube,
+          joes-crab-shack,
+          jw-marriott,
+          kay-jewelers,
+          key-food,
+          kimpton,
+          king-county-metro,
+          kings-food-markets,
+          kinney-drugs,
+          koa,
+          korean-air,
+          kwik-fill,
+          la-quinta,
+          ladwp,
+          latam,
+          lazy-dog,
+          lees-famous-recipe,
+          lego-store,
+          liveone,
+          living-spaces,
+          look-cinemas,
+          lou-malnatis,
+          luminary,
+          lunds-and-byerlys,
+          mapco,
+          massage-envy,
+          mattress-warehouse,
+          medicine-shoppe,
+          mellow-mushroom,
+          mendocino-farms,
+          metro-market,
+          midas,
+          millers-ale-house,
+          mister-car-wash,
+          mor-furniture,
+          moxy,
+          musicians-friend,
+          nc-quick-pass,
+          nicor-gas,
+          northgate-market,
+          nugget-markets,
+          ocean-state-job-lot,
+          oceania-cruises,
+          old-chicago,
+          on-the-border,
+          optimum-mobile,
+          original-pancake-house,
+          pandora-jewelry,
+          pappadeaux,
+          park-n-fly,
+          peach-pass,
+          pei-wei,
+          pep-boys,
+          pga-tour-superstore,
+          philz-coffee,
+          pizza-ranch,
+          pollo-tropical,
+          porter-airlines,
+          portland-general-electric,
+          powells-books,
+          price-rite,
+          puget-sound-energy,
+          pure-barre,
+          qantas,
+          quality-inn,
+          ramada,
+          raymour-and-flanigan,
+          redners,
+          republic-services,
+          residence-inn,
+          ridleys,
+          ritas,
+          ritz-carlton,
+          rivian-adventure-network,
+          roche-bros,
+          rockauto,
+          round-table-pizza,
+          rtd-denver,
+          sally-beauty,
+          schlotzskys,
+          scooters-coffee,
+          seasons-52,
+          seatgeek,
+          sedanos,
+          sendiks,
+          seven-brew,
+          shell-recharge,
+          sheraton,
+          sizzler,
+          skyline-chili,
+          sleep-inn,
+          slim-chickens,
+          slumberland,
+          smart-and-final,
+          snooze,
+          sound-transit,
+          sp-plus,
+          springhill-suites,
+          st-regis,
+          starlink,
+          staybridge-suites,
+          steak-n-shake,
+          stew-leonards,
+          stubhub,
+          super-1-foods,
+          super-8,
+          sweetwater,
+          t-mobile-home-internet,
+          taco-cabana,
+          the-halal-guys,
+          the-melting-pot,
+          the-parking-spot,
+          thriftbooks,
+          thrifty-white,
+          tiffany,
+          tire-rack,
+          tolltag,
+          torchys-tacos,
+          travelodge,
+          ultra-mobile,
+          united-supermarkets,
+          uno-pizzeria,
+          us-mobile,
+          vallarta,
+          valley-metro,
+          valvoline-instant-oil-change,
+          village-inn,
+          viva-aerobus,
+          vivid-seats,
+          w-hotels,
+          waldorf-astoria,
+          washington-state-ferries,
+          wayback-burgers,
+          weigels,
+          westin,
+          woodmans,
+          wow-internet,
+          xsport-fitness,
+          yellow-cab,
+          yesway,
+          yokes,
+          zales,
+          ziply-fiber,
+        ]
+      summary: The merchant directory grows by 264, from the issuers' merchant lists, public lists of chains and hotel groups' brand lists. Hotel brands get their own entries.
+    - cause: addition
+      merchants:
+        [accor, choice-hotels, hilton, hyatt, ihg, marriott, radisson, wyndham]
+      field: aliases
+      summary: Brands with their own entries move out of their group's names; a rule naming the group still matches them.
+    - cause: correction
+      merchants: [delta-stays]
+      field: aliases
+      summary: '"Delta Hotels" now means Marriott''s brand, not Delta Stays.'
+
+- version: '2026.11.04.9'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      card: apple-card
+      summary: Apple Card, with rates that depend on paying with Apple Pay.
+    - cause: addition
+      issuers: [goldman-sachs]
+      summary: Goldman Sachs, a new issuer.
+    - cause: addition
+      merchants: [nike]
+      summary: Nike, for Apple Card's Apple Pay merchants.
+    - cause: addition
+      card: paypal-cashback-mastercard
+      field: rules.paypal-checkout
+      now: { rate: 3 }
+      summary: 3% on purchases through PayPal checkout online, which rules can now express (was a todo, modeled at 1.5% everywhere).
+      source: https://www.synchronycredit.com/gecrbterms/html/PayPalCashbackRewardsTerms.htm
+
+- version: '2026.11.04.8'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      card: sams-club-mastercard
+      summary: Sam's Club Mastercard, from Synchrony's page.
+    - cause: addition
+      memberships: [sams-club, sams-club-plus]
+      summary: Sam's Club and Sam's Club Plus memberships.
+    - cause: quote
+      card: amex-delta-skymiles-blue
+      field: source_urls
+      summary: Cites Amex's standard terms page; the address it had returns 404.
+
+- version: '2026.11.04.7'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-delta-skymiles-blue,
+          amex-hilton-honors-business,
+          amex-marriott-bonvoy-business,
+          barclays-jetblue-plus,
+          bilt-blue,
+          bilt-palladium,
+          capital-one-spark-cash-plus,
+          capital-one-venture-x-business,
+          paypal-cashback-mastercard,
+        ]
+      summary: Nine new cards, each from the issuer's own pages.
+    - cause: addition
+      issuers: [barclays, synchrony]
+      summary: New issuers.
+    - cause: addition
+      currencies: [trueblue-points]
+      summary: JetBlue TrueBlue points.
+    - cause: addition
+      merchants:
+        [
+          capital-one-business-travel,
+          capital-one-business-travel-car-rentals,
+          capital-one-business-travel-flights,
+          capital-one-business-travel-hotels,
+          capital-one-business-travel-vacation-rentals,
+          jetblue-vacations,
+          trueblue-travel,
+        ]
+      summary: Capital One Business Travel bookings, JetBlue Vacations and TrueBlue Travel.
+
+- version: '2026.11.04.6'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      card: amex-blue-cash-preferred
+      field: rules.us-streaming.match
+      summary: The 6% streaming rule covers AMC+, BritBox, iHeartRadio, Kindle Unlimited, MGM+ and YouTube Music Premium, all on Amex's list.
+
+- version: '2026.11.04.5'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      cards: [bank-of-america-customized-cash-rewards, discover-it-cash-back]
+      field: intro_rates
+      summary: First-year rates for new accounts (Cashback Match; an extra 3% in the choice category for 365 days).
+
+- version: '2026.11.04.4'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      merchants:
+        [
+          accor,
+          acme-markets,
+          advance-auto-parts,
+          advantage-rent-a-car,
+          aer-lingus,
+          aeromexico,
+          agoda,
+          air-france,
+          all-nippon-airways,
+          amc-plus,
+          ameren,
+          american-furniture-warehouse,
+          aps,
+          arco,
+          aria,
+          astound,
+          athleta,
+          avelo,
+          axs,
+          bahama-breeze,
+          barnes-and-noble,
+          baskin-robbins,
+          bath-and-body-works,
+          benihana,
+          big-y,
+          black-bear-diner,
+          blaze-pizza,
+          boscovs,
+          breeze-airways,
+          brightline,
+          britbox,
+          british-airways,
+          brookshires,
+          buckle,
+          budget-truck-rental,
+          caesars-palace,
+          california-pizza-kitchen,
+          caltrain,
+          capital-grille,
+          captain-ds,
+          caribou-coffee,
+          cava,
+          cenex,
+          cheapoair,
+          checkers-rallys,
+          cheddars,
+          chicos,
+          churchs-chicken,
+          cinepolis,
+          club-pilates,
+          cold-stone,
+          comed,
+          conoco,
+          consumer-cellular,
+          cta,
+          cub-foods,
+          curb,
+          dart,
+          dave-and-busters,
+          dierbergs,
+          discount-tire,
+          drury-hotels,
+          dsw,
+          dte-energy,
+          dunhams,
+          e-zpass,
+          emirates,
+          entergy,
+          europcar,
+          eversource,
+          extended-stay-america,
+          f45-training,
+          fandango,
+          fastrak,
+          fenway-park,
+          first-watch,
+          flemings,
+          flixbus,
+          fogo-de-chao,
+          food-city,
+          four-seasons,
+          fred-meyer,
+          freddys,
+          getgo,
+          golden-corral,
+          golds-gym,
+          golf-galaxy,
+          google-fiber,
+          great-wolf-lodge,
+          grocery-outlet,
+          guitar-center,
+          gulf,
+          h-e-b-pharmacy,
+          h-mart,
+          hard-rock-cafe,
+          hardees,
+          health-mart,
+          holland-america,
+          hot-topic,
+          hotwire,
+          huddle-house,
+          icelandair,
+          iheartradio,
+          ingles-markets,
+          japan-airlines,
+          jasons-deli,
+          jets-pizza,
+          jewel-osco,
+          jollibee,
+          kindle-unlimited,
+          kinetic,
+          klm,
+          kroger-pharmacy,
+          krystal,
+          kwik-shop,
+          la-metro,
+          lane-bryant,
+          laz-parking,
+          loews-hotels,
+          loft,
+          logans-roadhouse,
+          long-john-silvers,
+          lowes-foods,
+          lufthansa,
+          madewell,
+          madison-square-garden,
+          marcos-pizza,
+          market-basket,
+          marta,
+          mattress-firm,
+          mcalisters,
+          mediacom,
+          megabus,
+          megaplex-theatres,
+          meijer,
+          mens-wearhouse,
+          mgm-grand,
+          mgm-plus,
+          mod-pizza,
+          moes,
+          monoprice,
+          mortons,
+          msc-cruises,
+          murphy-usa,
+          napa-auto-parts,
+          national-grid,
+          nebraska-furniture-mart,
+          neiman-marcus,
+          noodles-and-company,
+          ocharleys,
+          omni-hotels,
+          oreilly-auto-parts,
+          orvis,
+          pacsun,
+          panera-bread,
+          papa-murphys,
+          parkwhiz,
+          path-train,
+          paybyphone,
+          peco,
+          peets-coffee,
+          penske-truck-rental,
+          perkins,
+          pet-supplies-plus,
+          pick-n-save,
+          piggly-wiggly,
+          play-it-again-sports,
+          portillos,
+          potbelly,
+          pseg,
+          publix-pharmacy,
+          qatar-airways,
+          quickchek,
+          radisson,
+          ranch-99,
+          randalls,
+          rc-willey,
+          room-and-board,
+          rouses,
+          royal-farms,
+          ruths-chris,
+          rutters,
+          save-a-lot,
+          save-mart,
+          schnucks,
+          sdge,
+          sfmta,
+          shaws,
+          sinclair,
+          singapore-airlines,
+          smashburger,
+          smoothie-king,
+          snap-fitness,
+          sonesta,
+          soulcycle,
+          specs,
+          spectrum-mobile,
+          sportsmans-warehouse,
+          star-market,
+          stewarts-shops,
+          straight-talk,
+          studio-movie-grill,
+          sunpass,
+          taco-johns,
+          texaco,
+          texas-de-brazil,
+          the-giant-company,
+          the-venetian,
+          thorntons,
+          tim-hortons,
+          tom-thumb,
+          tops-markets,
+          torrid,
+          total-wine,
+          total-wireless,
+          tracfone,
+          trimet,
+          trip-com,
+          turkish-airlines,
+          txtag,
+          u-haul,
+          value-city-furniture,
+          verizon-fios,
+          viking-cruises,
+          virgin-atlantic,
+          virgin-voyages,
+          volaris,
+          von-maur,
+          walmart-pharmacy,
+          waste-management,
+          weis-markets,
+          westjet,
+          white-castle,
+          wienerschnitzel,
+          wmata,
+          wrigley-field,
+          wynn-las-vegas,
+          xcel-energy,
+          xfinity-mobile,
+          yankee-stadium,
+          youtube-music,
+        ]
+      summary: The merchant directory grows by 241, from NRF's top retailers, the issuers' merchant lists and well-known chains.
+    - cause: correction
+      merchants: [amazon-prime-video]
+      summary: '"Amazon Prime Video" no longer matches Amazon itself.'
+
+- version: '2026.11.04.3'
+  date: 2026-11-04
+  changes:
+    - cause: wording
+      cards:
+        [
+          amex-blue-business-plus,
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          amex-business-gold,
+          amex-business-platinum,
+          amex-delta-skymiles-gold,
+          amex-delta-skymiles-platinum,
+          amex-delta-skymiles-reserve,
+          amex-gold,
+          amex-hilton-honors,
+          amex-hilton-honors-aspire,
+          amex-hilton-honors-surpass,
+          amex-marriott-bonvoy-bevy,
+          amex-marriott-bonvoy-brilliant,
+          amex-platinum,
+          bank-of-america-atmos-rewards-ascent,
+          bank-of-america-atmos-rewards-business,
+          bank-of-america-atmos-rewards-summit,
+          bank-of-america-customized-cash-rewards,
+          bank-of-america-premium-rewards,
+          bank-of-america-travel-rewards,
+          bank-of-america-unlimited-cash-rewards,
+          bilt-obsidian,
+          capital-one-kohls-card,
+          capital-one-kohls-rewards-visa,
+          capital-one-quicksilver,
+          capital-one-savor,
+          capital-one-venture,
+          capital-one-venture-x,
+          chase-aeroplan,
+          chase-freedom-flex,
+          chase-freedom-rise,
+          chase-freedom-unlimited,
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-ink-business-cash,
+          chase-ink-business-preferred,
+          chase-ink-business-unlimited,
+          chase-marriott-bonvoy-bold,
+          chase-marriott-bonvoy-boundless,
+          chase-prime-visa,
+          chase-sapphire-preferred,
+          chase-sapphire-reserve,
+          chase-southwest-performance-business,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-premier-business,
+          chase-southwest-priority,
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-explorer,
+          chase-united-gateway,
+          chase-united-quest,
+          citi-aadvantage-business,
+          citi-aadvantage-executive,
+          citi-aadvantage-globe,
+          citi-aadvantage-mileup,
+          citi-aadvantage-platinum-select,
+          citi-costco-anywhere-visa,
+          citi-costco-anywhere-visa-business,
+          citi-custom-cash,
+          citi-double-cash,
+          citi-my-best-buy-visa,
+          citi-strata,
+          citi-strata-elite,
+          citi-strata-premier,
+          discover-it-cash-back,
+          sofi-unlimited-2,
+          td-bank-nordstrom-credit-card,
+          td-bank-nordstrom-visa,
+          td-bank-target-circle-card,
+          usbank-altitude-connect,
+          usbank-altitude-go,
+          usbank-cash-plus,
+          wells-fargo-active-cash,
+          wells-fargo-autograph,
+          wells-fargo-autograph-journey,
+        ]
+      field: color
+      summary: A color for each card, roughly its card face's, for earnrate's own drawings.
+    - cause: wording
+      issuers:
+        [
+          amex,
+          bank-of-america,
+          capital-one,
+          chase,
+          citi,
+          column,
+          discover,
+          sofi,
+          td-bank,
+          usbank,
+          wells-fargo,
+        ]
+      field: color
+      summary: A color for each issuer.
+
+- version: '2026.11.04.2'
+  date: 2026-11-04
+  changes:
+    - cause: wording
+      cards:
+        [
+          amex-business-platinum,
+          amex-delta-skymiles-gold,
+          amex-delta-skymiles-platinum,
+          amex-delta-skymiles-reserve,
+          amex-hilton-honors,
+          amex-hilton-honors-aspire,
+          amex-hilton-honors-surpass,
+          amex-marriott-bonvoy-bevy,
+          amex-marriott-bonvoy-brilliant,
+          bank-of-america-atmos-rewards-business,
+          bank-of-america-customized-cash-rewards,
+          bank-of-america-premium-rewards,
+          bank-of-america-travel-rewards,
+          bank-of-america-unlimited-cash-rewards,
+          capital-one-quicksilver,
+          capital-one-savor,
+          capital-one-venture,
+          capital-one-venture-x,
+          chase-aeroplan,
+          chase-ihg-one-rewards-premier-select,
+          chase-marriott-bonvoy-boundless,
+          chase-southwest-performance-business,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-premier-business,
+          chase-southwest-priority,
+          citi-aadvantage-business,
+          citi-aadvantage-executive,
+          citi-aadvantage-globe,
+          citi-aadvantage-mileup,
+          citi-aadvantage-platinum-select,
+          citi-costco-anywhere-visa,
+          citi-costco-anywhere-visa-business,
+          usbank-altitude-connect,
+          wells-fargo-autograph-journey,
+        ]
+      field: short_name
+      summary: Short names for cards too long for one line of the Apple Wallet pass.
+
+- version: '2026.11.04.1'
+  date: 2026-11-04
+  changes:
+    - cause: wording
+      categories: [grocery]
+      summary: Reads "grocery stores" in sentences.
+
+- version: '2026.11.04'
+  date: 2026-11-04
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-business-gold,
+          amex-business-platinum,
+          bank-of-america-premium-rewards,
+          bank-of-america-travel-rewards,
+          bank-of-america-unlimited-cash-rewards,
+          chase-freedom-rise,
+          chase-ink-business-unlimited,
+          citi-strata,
+          usbank-altitude-connect,
+          usbank-altitude-go,
+          wells-fargo-autograph-journey,
+        ]
+      summary: Eleven new cards, each from the issuer's own pages.
+    - cause: addition
+      currencies: [bofa-premium-rewards, bofa-travel-rewards, usbank-altitude]
+      summary: Bank of America Travel Rewards and Premium Rewards points, and U.S. Bank Altitude points, at each issuer's own redemption rate.
+    - cause: addition
+      merchants:
+        [
+          bofa-travel-center,
+          usbank-travel-center-car-rentals,
+          usbank-travel-center-hotels,
+        ]
+      summary: Bank of America Travel Center, and prepaid hotels and car rentals through the U.S. Bank Travel Center.
+
+- version: '2026.11.03.6'
+  date: 2026-11-03
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-delta-skymiles-gold,
+          amex-delta-skymiles-platinum,
+          amex-delta-skymiles-reserve,
+          amex-hilton-honors,
+          amex-hilton-honors-aspire,
+          amex-hilton-honors-surpass,
+          amex-marriott-bonvoy-bevy,
+          amex-marriott-bonvoy-brilliant,
+          capital-one-quicksilver,
+          chase-marriott-bonvoy-bold,
+          chase-marriott-bonvoy-boundless,
+          discover-it-cash-back,
+        ]
+      summary: Twelve new cards, each from the issuer's own pages.
+    - cause: addition
+      currencies: [delta-skymiles, hilton-honors, marriott-bonvoy]
+      summary: Delta SkyMiles, Hilton Honors and Marriott Bonvoy points.
+    - cause: addition
+      issuers: [discover]
+      summary: Discover, a new issuer.
+    - cause: addition
+      merchants:
+        [
+          capital-one-travel-activities,
+          caviar,
+          delivery-com,
+          delta-stays,
+          delta-vacations,
+          ez-rent-a-car,
+          fox-rent-a-car,
+          payless-car-rental,
+          sixt,
+        ]
+      summary: Delta Vacations, Delta Stays, delivery apps, car rental companies, and activities through Capital One Travel.
+    - cause: quote
+      cards:
+        [
+          amex-hilton-honors,
+          amex-hilton-honors-aspire,
+          amex-hilton-honors-surpass,
+        ]
+      field: source_urls
+      summary: The terms pages are cited at the address Amex serves them from.
+
+- version: '2026.11.03.5'
+  date: 2026-11-03
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-platinum,
+          bank-of-america-atmos-rewards-ascent,
+          bank-of-america-atmos-rewards-business,
+          bank-of-america-atmos-rewards-summit,
+          chase-aeroplan,
+          chase-sapphire-reserve,
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-explorer,
+          chase-united-gateway,
+          chase-united-quest,
+          citi-aadvantage-business,
+          citi-aadvantage-platinum-select,
+        ]
+      field: milestones
+      summary: Spend milestones that pay something other than points (certificates, upgrades, status), shown but not valued.
+
+- version: '2026.11.03.4'
+  date: 2026-11-03
+  changes:
+    - cause: correction
+      merchants: [bjs-restaurant, bjs-wholesale-club]
+      summary: '"BJ''s" alone now means BJ''s Wholesale Club; BJ''s Restaurant & Brewhouse keeps its own names.'
+    - cause: wording
+      card: amex-blue-cash-preferred
+      field: rules.us-streaming.note
+      summary: Reads "select streaming services" with a few examples.
+    - cause: wording
+      card: chase-united-quest
+      field: rules.streaming.note
+      summary: Reads "select streaming services" with a few examples.
+    - cause: wording
+      card: chase-ihg-one-rewards
+      field: rules.streaming-through-2026.note
+      summary: Reads "select streaming services" with a few examples.
+
+- version: '2026.11.03.3'
+  date: 2026-11-03
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-blue-business-plus,
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          amex-gold,
+          amex-platinum,
+          bank-of-america-atmos-rewards-ascent,
+          bank-of-america-atmos-rewards-business,
+          bank-of-america-atmos-rewards-summit,
+          bank-of-america-customized-cash-rewards,
+          bilt-obsidian,
+          capital-one-kohls-card,
+          capital-one-kohls-rewards-visa,
+          capital-one-savor,
+          capital-one-venture,
+          capital-one-venture-x,
+          chase-aeroplan,
+          chase-freedom-flex,
+          chase-freedom-unlimited,
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-ink-business-cash,
+          chase-ink-business-preferred,
+          chase-prime-visa,
+          chase-sapphire-preferred,
+          chase-sapphire-reserve,
+          chase-southwest-performance-business,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-premier-business,
+          chase-southwest-priority,
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-explorer,
+          chase-united-gateway,
+          chase-united-quest,
+          citi-aadvantage-business,
+          citi-aadvantage-executive,
+          citi-aadvantage-globe,
+          citi-aadvantage-mileup,
+          citi-aadvantage-platinum-select,
+          citi-costco-anywhere-visa,
+          citi-costco-anywhere-visa-business,
+          citi-custom-cash,
+          citi-double-cash,
+          citi-my-best-buy-visa,
+          citi-strata-elite,
+          citi-strata-premier,
+          sofi-unlimited-2,
+          td-bank-nordstrom-credit-card,
+          td-bank-nordstrom-visa,
+          td-bank-target-circle-card,
+          usbank-cash-plus,
+          wells-fargo-active-cash,
+          wells-fargo-autograph,
+        ]
+      field: foreign_transaction_fee
+      summary: Every card's foreign transaction fee, from its issuer's rates-and-fees table where one is readable. Abroad, answers rank each card after its fee.
+    - cause: addition
+      card: bank-of-america-atmos-rewards-summit
+      field: rules.foreign-purchases
+      now: { rate: 3, geography: foreign_only }
+      summary: 3x on purchases outside the U.S., with a new foreign-only geography.
+
+- version: '2026.11.03.2'
+  date: 2026-11-03
+  changes:
+    - cause: correction
+      card: amex-blue-cash-preferred
+      field: rules.us-streaming.match
+      summary: The 6% follows Amex's Select U.S. Streaming Subscriptions list, so Showtime no longer earns it and Audible now does.
+    - cause: correction
+      card: chase-united-quest
+      field: rules.streaming.match
+      summary: Follows Chase's select streaming list; services off it earn the base rate.
+    - cause: correction
+      card: chase-ihg-one-rewards
+      field: rules.bills-and-streaming-through-2026
+      now: null
+      summary: Split into a bills rule and a streaming rule that follows Chase's list.
+    - cause: correction
+      card: chase-ihg-one-rewards
+      field: rules.bills-through-2026
+      summary: The bills half of the split rule; its rate doesn't change.
+    - cause: correction
+      card: chase-ihg-one-rewards
+      field: rules.streaming-through-2026
+      summary: The streaming half, which follows Chase's select streaming list.
+
+- version: '2026.11.03.1'
+  date: 2026-11-03
+  changes:
+    - cause: addition
+      merchants:
+        [
+          abercrombie,
+          academy-sports,
+          ace-hardware,
+          alamo,
+          alamo-drafthouse,
+          allegiant,
+          amazon-music,
+          amtrak,
+          anthropologie,
+          anytime-fitness,
+          applebees,
+          arbys,
+          ashley,
+          att,
+          autozone,
+          avis,
+          bart,
+          bass-pro-shops,
+          belk,
+          best-western,
+          big-5,
+          bjs-gas,
+          bjs-restaurant,
+          bjs-wholesale-club,
+          blink-charging,
+          bloomingdales,
+          bob-evans,
+          bobs-discount-furniture,
+          bojangles,
+          bonefish-grill,
+          booking-com,
+          boost-mobile,
+          bp,
+          budget,
+          buffalo-wild-wings,
+          burger-king,
+          cabelas,
+          carls-jr,
+          carnival,
+          carrabbas,
+          caseys,
+          celebrity-cruises,
+          chewy,
+          chilis,
+          choice-hotels,
+          cinemark,
+          circle-k,
+          citgo,
+          con-edison,
+          cox,
+          cracker-barrel,
+          cricket-wireless,
+          crunch-fitness,
+          culvers,
+          cumberland-farms,
+          dairy-queen,
+          del-taco,
+          dennys,
+          dhl,
+          dillards,
+          dillons,
+          directv,
+          discovery-plus,
+          dish,
+          disney-cruise-line,
+          dollar-car-rental,
+          dollar-general,
+          dollar-tree,
+          dominion-energy,
+          dominos,
+          duane-reade,
+          duke-energy,
+          dunkin,
+          dutch-bros,
+          el-pollo-loco,
+          equinox,
+          ethan-allen,
+          evgo,
+          family-dollar,
+          firehouse-subs,
+          five-below,
+          five-guys,
+          food-lion,
+          fpl,
+          free-people,
+          freshdirect,
+          frontier-airlines,
+          frontier-communications,
+          frys-food,
+          georgia-power,
+          giant-eagle,
+          giant-food,
+          greyhound,
+          grubhub,
+          h-e-b,
+          hannaford,
+          harkins,
+          harris-teeter,
+          havertys,
+          hibbett,
+          hobby-lobby,
+          holiday-stationstores,
+          hollister,
+          hooters,
+          hopper,
+          hotels-com,
+          hy-vee,
+          hyatt,
+          ihop,
+          jack-in-the-box,
+          jcpenney,
+          jersey-mikes,
+          jetblue,
+          jimmy-johns,
+          kfc,
+          king-soopers,
+          kwik-trip,
+          la-fitness,
+          la-z-boy,
+          lidl,
+          life-time,
+          little-caesars,
+          live-nation,
+          longhorn-steakhouse,
+          lululemon,
+          maggianos,
+          marathon,
+          marcus-theatres,
+          marianos,
+          maverik,
+          mbta,
+          menards,
+          metra,
+          metro-by-t-mobile,
+          michaels,
+          micro-center,
+          mint-mobile,
+          motel-6,
+          mta,
+          national-car-rental,
+          newegg,
+          nj-transit,
+          norwegian-cruise-line,
+          olive-garden,
+          ollies,
+          optimum,
+          orangetheory,
+          orbitz,
+          outback-steakhouse,
+          panda-express,
+          papa-johns,
+          parkmobile,
+          petco,
+          petsmart,
+          pf-changs,
+          pge,
+          phillips-66,
+          pizza-hut,
+          popeyes,
+          postmates,
+          price-chopper,
+          priceline,
+          princess-cruises,
+          publix,
+          qdoba,
+          qfc,
+          quiktrip,
+          racetrac,
+          raising-canes,
+          raleys,
+          red-lobster,
+          red-robin,
+          red-roof,
+          rh,
+          rooms-to-go,
+          royal-caribbean,
+          ruby-tuesday,
+          saks-fifth-avenue,
+          saks-off-5th,
+          scheels,
+          sephora,
+          septa,
+          shake-shack,
+          sheetz,
+          shoprite,
+          smiths,
+          sonic,
+          speedway,
+          spirit-airlines,
+          spothero,
+          stop-and-shop,
+          subway,
+          sun-country,
+          sunoco,
+          texas-roadhouse,
+          tgi-fridays,
+          thrifty,
+          ticketmaster,
+          travelocity,
+          tropical-smoothie-cafe,
+          true-value,
+          twin-peaks,
+          ulta-beauty,
+          urban-outfitters,
+          valero,
+          visible,
+          waffle-house,
+          wawa,
+          wayfair,
+          wegmans,
+          wendys,
+          whataburger,
+          winco-foods,
+          wingstop,
+          winn-dixie,
+          wyndham,
+          yard-house,
+          zappos,
+          zaxbys,
+        ]
+      summary: The merchant directory grows by 217, from about 300 well-known U.S. merchants, with categories following the issuers' own definitions.
+    - cause: addition
+      merchants: [hilton, ihg, marriott]
+      field: aliases
+      summary: Hotel brands as other names (Courtyard, Hampton Inn, DoubleTree), and IHG answers to "IHG".
+
+- version: '2026.11.03'
+  date: 2026-11-03
+  changes:
+    - cause: addition
+      cards:
+        [
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+        ]
+      field: milestones
+      summary: Spend milestones, bonuses paid once a year after a spending total.
+
+- version: '2026.11.02.5'
+  date: 2026-11-02
+  changes:
+    - cause: correction
+      card: chase-prime-visa
+      field: rules.amazon-without-prime.match
+      summary: Whole Foods moves to its own rule.
+    - cause: correction
+      card: chase-prime-visa
+      field: rules.whole-foods-without-prime
+      now: { rate: 3, geography: us_only }
+      summary: 3% at Whole Foods without Prime applies in the U.S. only; Chase's terms exclude international Whole Foods Markets.
+
+- version: '2026.11.02.4'
+  date: 2026-11-02
+  changes:
+    - cause: addition
+      card: bank-of-america-customized-cash-rewards
+      field: todo
+      summary: Past the quarterly cap, a BofA Rewards tier's boosted base rate now applies, so the todo is resolved.
+
+- version: '2026.11.02.3'
+  date: 2026-11-02
+  changes:
+    - cause: addition
+      card: chase-freedom-flex
+      field: todo
+      summary: Spending past a cap earns the card's best uncapped rate when that's higher, so the todo about crossing the quarterly cap is resolved.
+
+- version: '2026.11.02.2'
+  date: 2026-11-02
+  changes:
+    - cause: addition
+      card: chase-freedom-flex
+      field: rules.q4-2026-dining.activate_by
+      now: '2026-12-14'
+      summary: The Q4 2026 activation deadline is data, so answers mention it only while the bonus isn't activated.
+    - cause: addition
+      card: chase-freedom-flex
+      field: rules.q4-2026-grocery.activate_by
+      now: '2026-12-14'
+      summary: The Q4 2026 activation deadline.
+    - cause: addition
+      card: chase-freedom-flex
+      field: rules.q4-2026-american-red-cross.activate_by
+      now: '2026-12-14'
+      summary: The Q4 2026 activation deadline.
+
+- version: '2026.11.02.1'
+  date: 2026-11-02
+  changes:
+    - cause: issuer
+      card: citi-aadvantage-executive
+      field: welcome_offer
+      was: { points: 125000, spend: 15000, months: 5 }
+      now: { points: 80000, spend: 8000, months: 3 }
+      source: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    - cause: review
+      cards:
+        [
+          amex-blue-business-plus,
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          amex-gold,
+          amex-platinum,
+          bank-of-america-atmos-rewards-ascent,
+          bank-of-america-atmos-rewards-business,
+          bank-of-america-atmos-rewards-summit,
+          bank-of-america-customized-cash-rewards,
+          bilt-obsidian,
+          capital-one-kohls-card,
+          capital-one-kohls-rewards-visa,
+          capital-one-savor,
+          capital-one-venture,
+          capital-one-venture-x,
+          chase-aeroplan,
+          chase-freedom-flex,
+          chase-freedom-unlimited,
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-ink-business-cash,
+          chase-ink-business-preferred,
+          chase-prime-visa,
+          chase-sapphire-preferred,
+          chase-sapphire-reserve,
+          chase-southwest-performance-business,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-premier-business,
+          chase-southwest-priority,
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-explorer,
+          chase-united-gateway,
+          chase-united-quest,
+          citi-aadvantage-business,
+          citi-aadvantage-executive,
+          citi-aadvantage-mileup,
+          citi-aadvantage-platinum-select,
+          citi-costco-anywhere-visa,
+          citi-costco-anywhere-visa-business,
+          citi-custom-cash,
+          citi-double-cash,
+          citi-my-best-buy-visa,
+          citi-strata-elite,
+          citi-strata-premier,
+          sofi-unlimited-2,
+          td-bank-nordstrom-credit-card,
+          td-bank-nordstrom-visa,
+          td-bank-target-circle-card,
+          usbank-cash-plus,
+          wells-fargo-active-cash,
+          wells-fargo-autograph,
+        ]
+      field: last_verified
+      summary: A fine-print pass checked every card against all of its issuer's pages (card page, rates and fees, rewards and offer terms, FAQ).
+    - cause: quote
+      cards:
+        [
+          amex-blue-business-plus,
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          amex-gold,
+          capital-one-kohls-card,
+          capital-one-kohls-rewards-visa,
+          capital-one-savor,
+          capital-one-venture,
+          capital-one-venture-x,
+          chase-freedom-flex,
+          chase-freedom-unlimited,
+          chase-ihg-one-rewards-premier-select,
+          chase-ink-business-cash,
+          chase-ink-business-preferred,
+          chase-prime-visa,
+          chase-sapphire-preferred,
+          chase-sapphire-reserve,
+          chase-southwest-performance-business,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-premier-business,
+          chase-southwest-priority,
+          chase-united-club,
+          citi-strata-elite,
+          citi-strata-premier,
+          sofi-unlimited-2,
+          wells-fargo-active-cash,
+          wells-fargo-autograph,
+        ]
+      field: source_urls
+      summary: The readable fine-print pages join the sources the weekly check watches.
+    - cause: correction
+      card: chase-freedom-flex
+      field: rules.q4-2026-dining.rate
+      was: 5
+      now: 7
+      summary: Q4 2026 dining earns 7%, per Chase's FAQ ("For Dining purchases, you will earn 7% cash back").
+    - cause: correction
+      cards: [chase-freedom-flex]
+      field: rules.q1-2027-streaming.match
+      summary: Follows Chase's list of select streaming services instead of every streaming service.
+    - cause: correction
+      card: chase-sapphire-preferred
+      field: rules.streaming.match
+      summary: Follows Chase's list of select streaming services instead of every streaming service.
+    - cause: correction
+      card: chase-sapphire-preferred
+      field: rules.peloton
+      summary: 5x on Peloton through 2027-12-31, in the U.S.
+    - cause: correction
+      card: chase-prime-visa
+      field: rules.whole-foods.geography
+      was: worldwide
+      now: us_only
+      summary: 5% at Whole Foods applies in the U.S. only.
+    - cause: correction
+      card: amex-platinum
+      field: rules.prepaid-car-rental-amex-travel
+      now: { rate: 2 }
+      summary: 2x on prepaid car rentals through Amex Travel (was 1x).
+    - cause: correction
+      card: amex-blue-cash-preferred
+      field: rules.us-streaming
+      summary: Fandango at Home isn't on Amex's list.
+    - cause: correction
+      card: amex-blue-cash-everyday
+      field: rules.us-online-retail.match
+      summary: Online purchases at superstores and drugstores count as online retail.
+    - cause: correction
+      card: capital-one-savor
+      field: rules.grocery-stores.exclude
+      summary: Warehouse clubs and convenience stores don't count as grocery stores.
+    - cause: correction
+      card: citi-custom-cash
+      field: rules.top-category-restaurants
+      summary: The restaurants pick is its own rule, so Dodger Stadium and Bellagio earn 5% under their own picks.
+    - cause: correction
+      card: usbank-cash-plus
+      field: rules.two-percent.exclude
+      summary: Parking and tolls, and fast food at 2%, follow U.S. Bank's sample merchants.
+    - cause: correction
+      card: wells-fargo-autograph
+      field: rules.dining.exclude
+      summary: DoorDash and Uber Eats aren't dining; superstore and grocery-store gas isn't gas.
+    - cause: correction
+      cards: [bank-of-america-atmos-rewards-ascent]
+      field: rules.gas-ev-cable-streaming-transit.exclude
+      summary: Parking (MCC 7523) isn't on Bank of America's transit list.
+    - cause: correction
+      cards: [bank-of-america-atmos-rewards-business]
+      field: rules.gas-ev-shipping-transit.exclude
+      summary: Parking (MCC 7523) isn't on Bank of America's transit list.
+    - cause: correction
+      card: td-bank-nordstrom-visa
+      field: rules.caterers
+      summary: 2x at caterers (MCC 5811).
+    - cause: addition
+      merchants: [peacock, showtime]
+      summary: Streaming services on Chase's list.
+
+- version: '2026.11.02'
+  date: 2026-11-02
+  changes:
+    - cause: addition
+      issuers:
+        [
+          amex,
+          bank-of-america,
+          capital-one,
+          chase,
+          citi,
+          column,
+          sofi,
+          td-bank,
+          usbank,
+          wells-fargo,
+        ]
+      summary: Issuer names and the words people search for them by move from code to data/issuers.yaml.
+    - cause: quote
+      card: usbank-cash-plus
+      field: evidence
+      summary: The annual fee quote matches both layouts of U.S. Bank's page.
+
+- version: '2026.11.01.7'
+  date: 2026-11-01
+  changes:
+    - cause: addition
+      currencies: [sofi-rewards]
+      field: redemption_names
+      summary: Names how a redemption reads ("into a SoFi account").
+
+- version: '2026.11.01.6'
+  date: 2026-11-01
+  changes:
+    - cause: wording
+      card: chase-freedom-flex
+      field: rules.q4-2026-dining.note
+      summary: The dining note says 5x rather than 5%, since its points can pool into Ultimate Rewards.
+
+- version: '2026.11.01.5'
+  date: 2026-11-01
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-gold,
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-premier,
+          td-bank-nordstrom-credit-card,
+          td-bank-nordstrom-visa,
+        ]
+      field: welcome_offer.not_with
+      summary: Offers the issuer rules out for holders of another card.
+    - cause: quote
+      cards:
+        [
+          bank-of-america-atmos-rewards-ascent,
+          bank-of-america-atmos-rewards-business,
+          bank-of-america-atmos-rewards-summit,
+        ]
+      field: evidence
+      summary: The qualifying account for the Atmos account bonus, quoted from each card's terms.
+    - cause: wording
+      card: chase-united-club
+      field: welcome_offer.note
+      summary: Says the business card isn't clearly covered.
+    - cause: wording
+      categories:
+        [
+          ev_charging,
+          transit,
+          travel,
+          streaming,
+          tv_internet,
+          phone,
+          utilities,
+          entertainment,
+          online_retail,
+          shipping,
+          online_advertising,
+          other,
+        ]
+      summary: Categories bought as a service read "on"; "everything else" gets its page name.
+    - cause: wording
+      merchants:
+        [
+          airbnb-amex-travel,
+          amex-travel,
+          amex-travel-car-rentals,
+          amex-travel-cruises,
+          amex-travel-flights,
+          amex-travel-hotels,
+          bilt-travel,
+          bilt-travel-flights,
+          bilt-travel-hotels,
+          capital-one-entertainment,
+          capital-one-travel,
+          capital-one-travel-car-rentals,
+          capital-one-travel-flights,
+          capital-one-travel-hotels,
+          capital-one-travel-vacation-rentals,
+          chase-travel,
+          citi-travel,
+          citi-travel-attractions,
+          citi-travel-car-rentals,
+          citi-travel-flights,
+          citi-travel-hotels,
+          costco-travel,
+          renowned-hotels-chase-travel,
+          sofi-travel,
+          usbank-travel-center,
+        ]
+      field: kind
+      summary: Travel sites and bookings through them are marked.
+
+- version: '2026.11.01.4'
+  date: 2026-11-01
+  changes:
+    - cause: addition
+      memberships:
+        [
+          amazon-prime,
+          bank-of-america-account,
+          bank-of-america-small-business-account,
+          bofa-rewards-member,
+          bofa-rewards-preferred-honors,
+          bofa-rewards-preferred-plus,
+          bofa-rewards-premier,
+          costco,
+          nordy-club-ambassador,
+        ]
+      summary: Memberships move to data/memberships.yaml, with the Costco fee and the BofA Preferred Rewards tiers as one group.
+    - cause: wording
+      cards: [citi-costco-anywhere-visa, citi-costco-anywhere-visa-business]
+      field: requires_membership
+      now: costco
+      summary: Cards name the membership they need by id.
+
+- version: '2026.11.01.3'
+  date: 2026-11-01
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-blue-cash-everyday,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-priority,
+        ]
+      field: welcome_offer.not_with
+      summary: Welcome offers name the cards whose holders the issuer rules out.
+    - cause: quote
+      card: amex-blue-cash-everyday
+      field: evidence
+      summary: The card page's headline now says "As High As $200"; same offer.
+
+- version: '2026.11.01.2'
+  date: 2026-11-01
+  changes:
+    - cause: correction
+      merchants: [chipotle]
+      field: ambiguity
+      summary: Chipotle may post as fast food, so answers there say which card wins either way.
+
+- version: '2026.11.01.1'
+  date: 2026-11-01
+  changes:
+    - cause: wording
+      card: chase-freedom-flex
+      field: rules.q4-2026-dining.note
+      summary: Quotes Chase's "5% total" and says where the 7% figure comes from.
+
+- version: '2026.11.01'
+  date: 2026-11-01
+  changes:
+    - cause: addition
+      cards: [citi-costco-anywhere-visa, citi-costco-anywhere-visa-business]
+      field: requires_membership
+      summary: Costco Anywhere needs a Costco membership, $65 a year for Gold Star.
+    - cause: quote
+      card: citi-aadvantage-globe
+      field: evidence
+      summary: Quotes follow Citi's new wording; same rates.
+    - cause: review
+      card: citi-aadvantage-globe
+      field: verified_by
+      summary: Re-checked against Citi's page.
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-ascent
+      field: welcome_offer
+      was: { points: 50000, spend: 1500, months: 3 }
+      now: { points: 70000, spend: 2500, months: 3 }
+      source: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
+      date: 2026-10-31
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-summit
+      field: welcome_offer
+      was: { points: 70000, spend: 3000, months: 3 }
+      now: { points: 80000, spend: 4000, months: 3 }
+      source: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-infinite-credit-card/
+      date: 2026-10-31
+    - cause: issuer
+      card: chase-southwest-plus
+      field: welcome_offer
+      was: { points: 50000, spend: 1000, months: 3 }
+      now: { points: 80000, spend: 1000, months: 3 }
+      source: https://creditcards.chase.com/travel-credit-cards/southwest/plus
+      date: 2026-10-31
+    - cause: issuer
+      card: chase-southwest-premier
+      field: welcome_offer
+      was: { points: 55000, spend: 1500, months: 3 }
+      now: { points: 85000, spend: 2000, months: 3 }
+      source: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+      date: 2026-10-31
+    - cause: issuer
+      card: chase-southwest-priority
+      field: welcome_offer
+      was: { points: 60000, spend: 2000, months: 3 }
+      now: { points: 90000, spend: 3000, months: 3 }
+      source: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+      date: 2026-10-31
+    - cause: issuer
+      card: chase-southwest-premier-business
+      field: welcome_offer
+      was: { points: 80000, spend: 3000, months: 3 }
+      now: { points: 60000, spend: 3000, months: 3 }
+      source: https://creditcards.chase.com/business-credit-cards/southwest/premier-business
+      date: 2026-10-31
+    - cause: issuer
+      card: citi-aadvantage-business
+      field: welcome_offer
+      was: { points: 65000, spend: 4000, months: 4 }
+      now: { points: 75000, spend: 5000, months: 5 }
+      source: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+      date: 2026-10-31
+    - cause: issuer
+      card: citi-aadvantage-platinum-select
+      field: welcome_offer
+      was: { points: 80000, spend: 3500, months: 4 }
+      now: { points: 50000, spend: 2500, months: 3 }
+      source: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+      date: 2026-10-31
+    - cause: addition
+      cards:
+        [
+          amex-blue-business-plus,
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          amex-gold,
+          amex-platinum,
+        ]
+      field: welcome_offer.varies
+      now: true
+      summary: '"As high as" offers are marked, so answers and card pages show them as "up to".'
+      date: 2026-10-31
+    - cause: quote
+      cards:
+        [
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          citi-costco-anywhere-visa-business,
+        ]
+      field: evidence
+      summary: Quotes follow the pages' new wording; same terms.
+      date: 2026-10-31
+    - cause: review
+      cards:
+        [
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          bank-of-america-atmos-rewards-ascent,
+          bank-of-america-atmos-rewards-summit,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-premier-business,
+          chase-southwest-priority,
+          citi-aadvantage-business,
+          citi-aadvantage-platinum-select,
+          citi-costco-anywhere-visa-business,
+        ]
+      field: verified_by
+      summary: Re-checked against the issuers' pages after the offers above changed.
+      date: 2026-10-31
+    - cause: wording
+      card: chase-freedom-flex
+      field: rules.q4-2026-dining.note
+      summary: Says Chase doesn't state whether the Q4 dining bonus stacks with the 3% dining rate.
+      date: 2026-10-31
+    - cause: correction
+      merchants: [costco]
+      field: online
+      summary: Costco.com takes Visa and Mastercard.
+      date: 2026-10-31
+
+- version: '2026.10.30.3'
+  date: 2026-10-30
+  changes:
+    - cause: addition
+      categories:
+        [
+          convenience_store,
+          dining,
+          dining.fast_food,
+          gas,
+          home_improvement,
+          online_retail,
+          transit,
+          travel.flights,
+          travel.hotels,
+        ]
+      field: aliases
+      summary: More everyday words find categories ("coffee shop", "dinner", "train").
+
+- version: '2026.10.30.2'
+  date: 2026-10-30
+  changes:
+    - cause: addition
+      card: citi-custom-cash
+      field: applications_closed
+      now: '2026-05-28'
+      summary: Records that Citi stopped taking applications, so "best card for" lists can leave it out.
+    - cause: addition
+      categories:
+        [
+          dining,
+          dining.fast_food,
+          drugstore,
+          entertainment,
+          ev_charging,
+          fitness,
+          gas,
+          grocery.online,
+          grocery.supermarket,
+          home_improvement,
+          movie_theaters,
+          online_retail,
+          other,
+          phone,
+          streaming,
+          superstore,
+          transit.rideshare,
+          travel.car_rental,
+          travel.cruise,
+          travel.flights,
+          travel.hotels,
+          tv_internet,
+          utilities,
+          warehouse_club,
+        ]
+      field: aliases
+      summary: The everyday words people search by ("groceries" finds supermarkets).
+
+- version: '2026.10.30.1'
+  date: 2026-10-30
+  changes:
+    - cause: addition
+      card: chase-freedom-flex
+      field: caps.five-percent-quarterly.rotating
+      now: true
+      summary: A quarter whose categories aren't in the data yet gets a warning instead of ranking Flex at its everyday rates.
+    - cause: wording
+      cards: [capital-one-savor, capital-one-venture, capital-one-venture-x]
+      field: issuer
+      summary: Capital One's issuer id is spelled the same on every card.
+
+- version: '2026.10.28.2'
+  date: 2026-10-28
+  changes:
+    - cause: addition
+      card: bank-of-america-customized-cash-rewards
+      summary: Bank of America Customized Cash Rewards, reviewed by Collin. Choice options can be "any online purchase except these categories".
+
+- version: '2026.10.28.1'
+  date: 2026-10-28
+  changes:
+    - cause: review
+      cards:
+        [
+          bank-of-america-atmos-rewards-ascent,
+          bank-of-america-atmos-rewards-business,
+          bank-of-america-atmos-rewards-summit,
+          capital-one-kohls-card,
+          capital-one-kohls-rewards-visa,
+          chase-aeroplan,
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-southwest-performance-business,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-premier-business,
+          chase-southwest-priority,
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-explorer,
+          chase-united-gateway,
+          chase-united-quest,
+          citi-aadvantage-business,
+          citi-aadvantage-executive,
+          citi-aadvantage-globe,
+          citi-aadvantage-mileup,
+          citi-aadvantage-platinum-select,
+          citi-costco-anywhere-visa,
+          citi-costco-anywhere-visa-business,
+          td-bank-nordstrom-credit-card,
+          td-bank-nordstrom-visa,
+          td-bank-target-circle-card,
+        ]
+      field: verified_by
+      summary: Collin reviewed the family-cards and offers packets and kept every value as recorded.
+
+- version: '2026.10.27.1'
+  date: 2026-10-27
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-blue-business-plus,
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          amex-gold,
+          amex-platinum,
+          bank-of-america-atmos-rewards-ascent,
+          bank-of-america-atmos-rewards-business,
+          bank-of-america-atmos-rewards-summit,
+          bilt-obsidian,
+          capital-one-kohls-card,
+          capital-one-kohls-rewards-visa,
+          capital-one-savor,
+          capital-one-venture,
+          capital-one-venture-x,
+          chase-aeroplan,
+          chase-freedom-flex,
+          chase-freedom-unlimited,
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-ink-business-cash,
+          chase-ink-business-preferred,
+          chase-prime-visa,
+          chase-sapphire-preferred,
+          chase-sapphire-reserve,
+          chase-southwest-performance-business,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-premier-business,
+          chase-southwest-priority,
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-explorer,
+          chase-united-gateway,
+          chase-united-quest,
+          citi-aadvantage-business,
+          citi-aadvantage-executive,
+          citi-aadvantage-globe,
+          citi-aadvantage-mileup,
+          citi-aadvantage-platinum-select,
+          citi-costco-anywhere-visa,
+          citi-costco-anywhere-visa-business,
+          citi-double-cash,
+          citi-my-best-buy-visa,
+          citi-strata-elite,
+          citi-strata-premier,
+          sofi-unlimited-2,
+          td-bank-nordstrom-credit-card,
+          td-bank-nordstrom-visa,
+          td-bank-target-circle-card,
+          usbank-cash-plus,
+          wells-fargo-active-cash,
+          wells-fargo-autograph,
+        ]
+      field: annual_fee
+      summary: Annual fees, each backed by a quote from the card's own product page.
+    - cause: addition
+      cards:
+        [
+          amex-blue-business-plus,
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          amex-gold,
+          amex-platinum,
+          bank-of-america-atmos-rewards-ascent,
+          bank-of-america-atmos-rewards-business,
+          bank-of-america-atmos-rewards-summit,
+          capital-one-savor,
+          capital-one-venture,
+          capital-one-venture-x,
+          chase-aeroplan,
+          chase-freedom-flex,
+          chase-freedom-unlimited,
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-ink-business-cash,
+          chase-ink-business-preferred,
+          chase-prime-visa,
+          chase-sapphire-preferred,
+          chase-sapphire-reserve,
+          chase-southwest-performance-business,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-premier-business,
+          chase-southwest-priority,
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-explorer,
+          chase-united-gateway,
+          chase-united-quest,
+          citi-aadvantage-business,
+          citi-aadvantage-executive,
+          citi-aadvantage-globe,
+          citi-aadvantage-mileup,
+          citi-aadvantage-platinum-select,
+          citi-double-cash,
+          citi-strata-elite,
+          citi-strata-premier,
+          td-bank-nordstrom-credit-card,
+          td-bank-nordstrom-visa,
+          td-bank-target-circle-card,
+          usbank-cash-plus,
+          wells-fargo-active-cash,
+          wells-fargo-autograph,
+        ]
+      field: welcome_offer
+      summary: Public welcome offers; Amex "as high as" offers recorded at the public figure.
+    - cause: quote
+      cards:
+        [chase-southwest-performance-business, chase-southwest-premier-business]
+      field: source_urls
+      summary: Adds the product pages; the existing ones are cardmember-benefits pages.
+
+- version: '2026.10.26.7'
+  date: 2026-10-26
+  changes:
+    - cause: review
+      cards: [capital-one-kohls-card, capital-one-kohls-rewards-visa]
+      summary: The 5% every Kohl's Rewards member earns is confirmed on Kohl's page, so its unverified flag is removed.
+    - cause: addition
+      merchants: [ihg]
+      field: aliases
+      summary: Adds Garner, Ruby and HUALUXE, confirmed against IHG's brands page.
+
+- version: '2026.10.26.6'
+  date: 2026-10-26
+  changes:
+    - cause: addition
+      cards:
+        [
+          bank-of-america-atmos-rewards-ascent,
+          bank-of-america-atmos-rewards-business,
+          bank-of-america-atmos-rewards-summit,
+          capital-one-kohls-card,
+          capital-one-kohls-rewards-visa,
+          chase-aeroplan,
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-southwest-performance-business,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-premier-business,
+          chase-southwest-priority,
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-explorer,
+          chase-united-gateway,
+          chase-united-quest,
+          citi-aadvantage-business,
+          citi-aadvantage-executive,
+          citi-aadvantage-globe,
+          citi-aadvantage-mileup,
+          citi-aadvantage-platinum-select,
+          citi-costco-anywhere-visa,
+          citi-costco-anywhere-visa-business,
+          td-bank-nordstrom-credit-card,
+          td-bank-nordstrom-visa,
+          td-bank-target-circle-card,
+        ]
+      summary: 31 new cards. Co-brand cards model only the card's own earning.
+    - cause: addition
+      currencies:
+        [
+          aadvantage-miles,
+          aeroplan,
+          atmos-points,
+          ihg-points,
+          kohls-rewards,
+          nordy-club,
+          southwest-rapid-rewards,
+          united-miles,
+        ]
+      summary: Airline, hotel and store reward currencies.
+    - cause: addition
+      merchants:
+        [
+          aadvantage-cars,
+          aadvantage-hotels,
+          air-canada,
+          costco-travel,
+          hawaiian-airlines,
+          ihg,
+          nordstrom-rack,
+          renowned-hotels-chase-travel,
+        ]
+      summary: Merchants for the new cards' rules.
+    - cause: addition
+      merchants: [kohls, nordstrom]
+      field: domains
+      summary: Web addresses for the stores' cards.
+
+- version: '2026.10.26.5'
+  date: 2026-10-26
+  changes:
+    - cause: correction
+      merchants: [amazon]
+      field: aliases
+      summary: Adds "amzn mktp", how marketplace orders appear on card statements.
+
+- version: '2026.10.26.4'
+  date: 2026-10-26
+  changes:
+    - cause: correction
+      merchants: [whole-foods]
+      field: aliases
+      summary: Adds "wholefds", how Whole Foods appears on card statements.
+    - cause: correction
+      merchants: [uber-one]
+      summary: Uber One membership, so it no longer resolves to Uber rides.
+
+- version: '2026.10.26.3'
+  date: 2026-10-26
+  changes:
+    - cause: review
+      cards:
+        [
+          amex-blue-business-plus,
+          amex-blue-cash-everyday,
+          bilt-obsidian,
+          capital-one-savor,
+          capital-one-venture,
+          capital-one-venture-x,
+          chase-freedom-flex,
+          chase-ink-business-cash,
+          chase-ink-business-preferred,
+          chase-sapphire-reserve,
+          citi-custom-cash,
+          citi-double-cash,
+          citi-strata-elite,
+          citi-strata-premier,
+          wells-fargo-active-cash,
+          wells-fargo-autograph,
+        ]
+      field: verified_by
+      summary: Collin reviewed the new-cards packet and its open decisions.
+
+- version: '2026.10.26.2'
+  date: 2026-10-26
+  changes:
+    - cause: correction
+      cards: [chase-freedom-flex, chase-freedom-unlimited]
+      field: pools_into
+      summary: Backed by Chase's own page; also pools with Ink Business Preferred (and Freedom Unlimited with Sapphire Reserve).
+    - cause: correction
+      card: chase-ink-business-cash
+      field: pools_into
+      summary: Pools into Ultimate Rewards with Sapphire Preferred, Sapphire Reserve or Ink Business Preferred.
+    - cause: quote
+      cards: [citi-custom-cash, citi-double-cash]
+      field: pools_into
+      summary: Pooling is backed by Citi's ThankYou terms.
+
+- version: '2026.10.26.1'
+  date: 2026-10-26
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-blue-business-plus,
+          amex-blue-cash-everyday,
+          bilt-obsidian,
+          capital-one-savor,
+          capital-one-venture,
+          capital-one-venture-x,
+          chase-freedom-flex,
+          chase-ink-business-cash,
+          chase-ink-business-preferred,
+          chase-sapphire-reserve,
+          citi-custom-cash,
+          citi-double-cash,
+          citi-strata-elite,
+          citi-strata-premier,
+          wells-fargo-active-cash,
+          wells-fargo-autograph,
+        ]
+      summary: Sixteen popular cards, each drafted from the issuer's own pages.
+    - cause: addition
+      currencies: [BILT, C1, TYP, WFR]
+      summary: Capital One, Citi, Wells Fargo and Bilt points, each at the issuer's own floor value.
+    - cause: addition
+      categories: [office_supply, online_advertising, online_retail, shipping]
+      summary: Categories from Amex's and Chase's terms.
+    - cause: addition
+      categories: [streaming]
+      summary: Fifteen streaming services join the merchant directory, with travel sites by booking type, office supply stores, shippers and ad platforms.
+    - cause: correction
+      merchants:
+        [
+          amex-travel-car-rentals,
+          amex-travel-cruises,
+          amex-travel-flights,
+          amex-travel-hotels,
+        ]
+      field: category
+      summary: Bookings through a bank's travel site count as a travel agency, not a direct hotel or airline booking.
+    - cause: correction
+      merchants: [amazon]
+      field: category
+      summary: Amazon counts as online retail, so Blue Cash Everyday's 3% applies.
+    - cause: correction
+      cards: [amex-gold, amex-platinum]
+      field: rules.flights-amex-travel
+      summary: Amex Travel flights keep their rate now that the merchant is a travel agency.
+
+- version: '2026.10.26'
+  date: 2026-10-26
+  changes:
+    - cause: addition
+      merchants:
+        [bristol-farms, erewhon, food-4-less, gelsons, pavilions, stater-bros]
+      summary: Southern California supermarkets.
+
+- version: '2026.10.24.7'
+  date: 2026-10-24
+  changes:
+    - cause: quote
+      cards:
+        [
+          amex-blue-cash-preferred,
+          amex-gold,
+          amex-platinum,
+          chase-freedom-unlimited,
+          chase-prime-visa,
+          chase-sapphire-preferred,
+          citi-my-best-buy-visa,
+          sofi-unlimited-2,
+          usbank-cash-plus,
+        ]
+      field: evidence
+      summary: A short quote from the issuer page for every rule and base rate, checked weekly.
+    - cause: quote
+      card: amex-blue-cash-preferred
+      field: source_urls
+      summary: The terms page moved; the old address returns 404.
+    - cause: quote
+      cards: [chase-prime-visa, citi-my-best-buy-visa]
+      field: source_urls
+      summary: Pages that block automated checks are dropped; the issuer's own page is the source.
+
+- version: '2026.10.24.6'
+  date: 2026-10-24
+  changes:
+    - cause: correction
+      card: chase-prime-visa
+      field: rules.amazon-without-prime
+      summary: 3% at Amazon.com, Amazon Fresh and Audible without Prime (was the 1% base).
+    - cause: correction
+      card: chase-prime-visa
+      field: rules.chase-travel-without-prime
+      now: { rate: 3 }
+      summary: 3% on Chase Travel without Prime.
+    - cause: correction
+      card: chase-prime-visa
+      field: rules.audible
+      now: { rate: 5 }
+      summary: 5% at Audible.com with Prime.
+    - cause: addition
+      merchants: [audible, pacific-kitchen-home]
+      summary: Merchants for Prime Visa and My Best Buy Visa.
+    - cause: correction
+      card: citi-my-best-buy-visa
+      field: rules.best-buy.match
+      summary: Adds Pacific Kitchen & Home.
+    - cause: review
+      cards: [chase-prime-visa, citi-my-best-buy-visa]
+      field: verified_by
+      summary: Re-checked against the issuers' own pages (Chase and Citi) instead of Amazon's and Best Buy's.
+
+- version: '2026.10.24.5'
+  date: 2026-10-24
+  changes:
+    - cause: correction
+      merchants:
+        [
+          airbnb-amex-travel,
+          amex-travel-car-rentals,
+          amex-travel-cruises,
+          amex-travel-flights,
+          amex-travel-hotels,
+        ]
+      summary: One merchant per Amex Travel booking type; the old Amex Travel rules never matched.
+    - cause: addition
+      cards: [amex-gold, amex-platinum]
+      field: rules.airbnb-amex-travel
+      summary: Prepaid Airbnb stays through Amex Travel (2x Gold, 5x Platinum), from Amex's offer terms (was a todo).
+    - cause: correction
+      card: amex-platinum
+      field: rules.cruises-amex-travel
+      summary: 2x on cruises booked through Amex Travel.
+    - cause: correction
+      card: amex-gold
+      field: rules.restaurants.exclude
+      summary: No 4x at restaurants inside hotels, casinos or event venues, or at bars.
+    - cause: review
+      cards: [amex-gold, amex-platinum]
+      field: verified_by
+      summary: Collin's review and the terms check.
+
+- version: '2026.10.24.4'
+  date: 2026-10-24
+  changes:
+    - cause: review
+      cards:
+        [
+          amex-blue-cash-preferred,
+          chase-freedom-unlimited,
+          chase-sapphire-preferred,
+          sofi-unlimited-2,
+          usbank-cash-plus,
+        ]
+      field: verified_by
+      summary: Collin reviewed the flagged items from the rule-by-rule re-check.
+
+- version: '2026.10.24.3'
+  date: 2026-10-24
+  changes:
+    - cause: addition
+      categories: [gas.grocery_store, gas.superstore]
+      summary: Gas sold by grocery stores, and by superstores and warehouse clubs.
+    - cause: correction
+      merchants: [costco-gas, sams-club-gas]
+      field: category
+      now: gas.superstore
+      summary: Warehouse club gas is superstore gas.
+    - cause: correction
+      card: amex-blue-cash-preferred
+      field: rules.us-gas.exclude
+      summary: Leaves out all grocery-store, superstore and warehouse-club gas, not just Costco's and Sam's Club's.
+    - cause: correction
+      card: usbank-cash-plus
+      field: rules.two-percent.exclude
+      summary: Leaves out all superstore and warehouse-club gas.
+    - cause: correction
+      card: usbank-cash-plus
+      field: choices
+      summary: Select clothing stores are only the 13 stores U.S. Bank lists.
+    - cause: addition
+      merchants:
+        [
+          aeropostale,
+          american-eagle,
+          ann-taylor,
+          banana-republic,
+          eddie-bauer,
+          express,
+          forever-21,
+          j-crew,
+          jos-a-bank,
+          talbots,
+          the-limited,
+        ]
+      summary: The stores on Cash+'s clothing list.
+    - cause: correction
+      card: chase-sapphire-preferred
+      field: rules.online-grocery.exclude
+      summary: Leaves out all warehouse clubs.
+    - cause: wording
+      card: chase-prime-visa
+      field: rules.amazon-fresh.note
+      summary: The physical stores closed or became Whole Foods in 2026.
+
+- version: '2026.10.24.2'
+  date: 2026-10-24
+  changes:
+    - cause: correction
+      card: chase-sapphire-preferred
+      field: rules.vacation-homes
+      summary: 3x on direct bookings with Airbnb, Vrbo, Vacasa, Plum Guide and Homestay.com (was a todo).
+    - cause: correction
+      card: chase-sapphire-preferred
+      field: rules.lyft
+      summary: 5x on Lyft rides through 2027-09-30.
+    - cause: correction
+      card: chase-freedom-unlimited
+      field: rules.lyft
+      summary: 2% total on Lyft through 2027-09-30.
+    - cause: review
+      card: chase-sapphire-preferred
+      field: rules.transit-as-travel
+      summary: Chase's travel category lists trains, buses, taxis, ferries, tolls and parking, so the unverified flag is removed.
+    - cause: addition
+      merchants: [homestay-com, plum-guide, vacasa, vrbo]
+      summary: Merchants for the vacation-homes rule.
+    - cause: correction
+      currencies: [best-buy-rewards, sofi-rewards]
+      summary: Notes match the issuers' redemption pages.
+    - cause: wording
+      card: citi-my-best-buy-visa
+      field: rules.best-buy.note
+      summary: The Plus and Total wording matches the page.
+
+- version: '2026.10.24.1'
+  date: 2026-10-24
+  changes:
+    - cause: wording
+      categories: [superstore, warehouse_club]
+      field: name
+      summary: Drops the example merchants in parentheses.
+
+- version: '2026.10.24'
+  date: 2026-10-24
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-blue-cash-preferred,
+          amex-gold,
+          amex-platinum,
+          chase-freedom-unlimited,
+          chase-prime-visa,
+          chase-sapphire-preferred,
+          citi-my-best-buy-visa,
+          sofi-unlimited-2,
+          usbank-cash-plus,
+        ]
+      summary: First release. Nine cards, each checked against its issuer's page, with 91 merchants, 32 categories and 5 currencies.
+    - cause: correction
+      cards: [amex-blue-cash-preferred, amex-gold]
+      field: rules.us-supermarkets.exclude
+      summary: Specialty food stores came from review sites, not Amex's terms, so they're no longer left out.

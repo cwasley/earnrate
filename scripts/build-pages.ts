@@ -3,7 +3,7 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { DATA_DIR, loadCatalog } from '../src/data/load.ts'
+import { DATA_DIR, loadCatalog, loadChanges } from '../src/data/load.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,
@@ -60,6 +60,11 @@ import { changeDates, latest } from './lastmod.ts'
 import { pageContext, type GeneratedPage } from './pages/context.ts'
 import { categoryPageFor, categoryPages } from './pages/categories.ts'
 import {
+  changesFeed,
+  changesPage,
+  recentChangesSection,
+} from './pages/changes.ts'
+import {
   hasCodingNotes,
   howItCodes,
   howStoresCodePage,
@@ -96,6 +101,7 @@ const TOP = 10
 const RELATED = 8
 
 const catalog = await loadCatalog()
+const releases = await loadChanges()
 const dataVersion = (await readFile(`${DATA_DIR}VERSION`, 'utf8')).trim()
 const today = process.env.EARNRATE_PAGES_TODAY ?? localToday()
 const ctx = pageContext(catalog, { today, dataVersion })
@@ -811,6 +817,7 @@ function renderCard(
       ${creditsText(card)}
       ${foreignFeeSection(card)}
       ${offerText(card)}
+      ${recentChangesSection(ctx, releases, card.id)}
       ${comparedWith(card, comparisons)}
       <h2>Sources</h2>
       <ul>${card.source_urls.map((u) => `<li><a href="${esc(u)}" rel="nofollow noopener">${esc(hostname(u) + new URL(u).pathname)}</a></li>`).join('')}</ul>
@@ -1335,11 +1342,14 @@ const generated: GeneratedPage[] = [
     ]),
   ),
   ...categoryPages(ctx, categorySlug, filesDate),
+  changesPage(ctx, releases),
 ]
 for (const page of generated) {
   await mkdir(path.dirname(path.join(OUT, page.file)), { recursive: true })
   await writeFile(path.join(OUT, page.file), page.html)
 }
+await writeFile(path.join(OUT, 'changes.xml'), changesFeed(catalog, releases))
+const changesDate = generated.find((g) => g.path === '/changes')?.lastmod ?? ''
 const noFeeFiles = catalog.cards
   .filter((c) => c.annual_fee === 0)
   .map((c) => `data/cards/${c.id}.yaml`)
@@ -1373,12 +1383,12 @@ const urls: [string, string][] = [
       changed('data/currencies.yaml'),
     ]),
   ]),
-  ...['privacy', 'terms', 'companies', 'support'].map(
-    (page): [string, string] => [
-      `${SITE}/${page}`,
-      changed(`site/${page}.html`),
-    ],
-  ),
+  ...['privacy', 'terms', 'support'].map((page): [string, string] => [
+    `${SITE}/${page}`,
+    changed(`site/${page}.html`),
+  ]),
+  // Its freshness line and recent changes follow the change record.
+  [`${SITE}/companies`, latest([changed('site/companies.html'), changesDate])],
 ]
 await writeFile(
   path.join(OUT, 'sitemap.xml'),

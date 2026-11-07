@@ -8,8 +8,10 @@ import {
   RETENTION_MONTHS,
   UNUSED_NEW_WALLET,
 } from '../remote/src/policy.ts'
-import { loadCatalog, loadWallet } from '../src/data/load.ts'
+import { loadCatalog, loadChanges, loadWallet } from '../src/data/load.ts'
 import { landingFacts, renderLanding } from '../scripts/landing.ts'
+import { companyParts } from '../scripts/pages/changes.ts'
+import { issuerChanges } from '../src/engine/changes.ts'
 import { ANSWER_TOOLS, SAVED_WALLET_TOOLS } from '../src/mcp/server.ts'
 import { ROOT } from './helpers.ts'
 
@@ -156,16 +158,25 @@ test('the companies page states the catalog’s counts and promises no hosted pl
   const catalog = await loadCatalog()
   const sample = await loadWallet(path.join(ROOT, 'wallet.example.yaml'))
   const facts = landingFacts(catalog, sample, '2026-11-03')
+  const releases = await loadChanges()
+  const parts = companyParts(catalog, releases)
   const page = renderLanding(
     await readFile(path.join(ROOT, 'site/companies.html'), 'utf8'),
     facts,
+    parts,
   ).replace(/\s+/g, ' ')
   expect(page).toContain(
     `Rules for ${String(catalog.cards.length)} U.S. credit cards from ${String(facts.issuers.length)} issuers`,
   )
   expect(page).toContain(`About ${String(facts.stores)} stores`)
+  expect(page).toContain(
+    `${String(issuerChanges(releases).length)} issuer changes recorded since`,
+  )
   expect(page).toContain('licensing@earnrate.dev')
-  expect(page).not.toMatch(/API key|pricing|\$/i)
+  // The recent issuer changes quote offers in dollars; nothing else may.
+  expect(page.replace(parts.recent_changes ?? '', '')).not.toMatch(
+    /API key|pricing|\$/i,
+  )
 })
 
 test('the plugin README and README name every hosted tool', async () => {

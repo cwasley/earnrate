@@ -42,6 +42,13 @@
         color: var(--muted);
         max-width: 36em;
       }
+      .fresh {
+        font-size: 15px;
+        background: var(--accent-soft);
+        border-radius: 12px;
+        padding: 12px 14px;
+        max-width: 40em;
+      }
       code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         font-size: 0.9em;
@@ -89,6 +96,7 @@
           card app, an agent wallet or an assistant and want to use it in your
           product, you can license it.
         </p>
+        <p class="fresh"><!--earnrate:freshness--></p>
       </header>
 
       <section>
@@ -102,14 +110,31 @@
           it came from. Every card records when it was last checked
           (<code>last_verified</code>), who checked it
           (<code>verified_by</code>) and the pages it was checked against
-          (<code>source_urls</code>).
+          (<code>source_urls</code>). Claude checks every issuer page, fine
+          print included, and Collin reviews anything ambiguous.
         </p>
         <p>
-          The data is versioned. Each release has an entry in the
+          The data is versioned, and every release is recorded change by change
+          in
+          <a
+            href="https://github.com/cwasley/earnrate/blob/main/data/changes.yaml"
+            ><code>data/changes.yaml</code></a
+          >: the card and field, the old and new value, the issuer page behind
+          it, and the cause. A change an issuer made is kept apart from
+          earnrate's own corrections, additions and wording fixes, so a typo fix
+          never reads as a rate cut. The same releases are told in prose in the
           <a
             href="https://github.com/cwasley/earnrate/blob/main/data/CHANGELOG.md"
             >change log</a
-          >, with the old and new value and the issuer page behind each change.
+          >.
+        </p>
+      </section>
+      <section>
+        <h2>Recent issuer changes</h2>
+        <!--earnrate:recent_changes-->
+        <p>
+          <a href="/changes">Every change issuers made to card terms</a>, also
+          as an <a href="/changes.xml">RSS feed</a>.
         </p>
       </section>
 
@@ -135,12 +160,23 @@
             changes the category.
           </li>
           <li>
+            <b>The update stream.</b> On each data release: the version, the
+            cards that changed, the old and new values with the issuer page
+            behind each, whether the issuer or earnrate made the change, and the
+            weekly source check's result.
+          </li>
+          <li>
             <b>Updates from the weekly source check.</b> Every Monday, a script
             loads each issuer page the cards cite, more than once, and checks
             that every rule's quoted text is still there. It also flags new
             lines on a page that state an earning rate, and welcome offers that
             show on some visits but not others. A flagged card is re-read
-            against the issuer's pages before its data changes.
+            against the issuer's pages before its data changes. Its
+            <a
+              href="https://github.com/cwasley/earnrate/actions/workflows/check-sources.yml"
+              >run history</a
+            >
+            is public.
           </li>
         </ul>
       </section>

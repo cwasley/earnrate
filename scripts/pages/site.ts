@@ -25,6 +25,7 @@ const FOOTER_GROUPS: [string, [string, string][]][] = [
     [
       ['/categories/', 'What each category covers'],
       ['/how-stores-code', 'How stores code'],
+      ['/changes', 'Card term changes'],
       ['/#claude', 'Use it in Claude'],
       ['https://github.com/cwasley/earnrate', 'Source code'],
     ],

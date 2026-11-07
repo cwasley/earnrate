@@ -1,6 +1,6 @@
 # Data changelog
 
-Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit. Each row cites the issuer page the new value came from.
+Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
 ## 2026.11.07.1
 
@@ -669,6 +669,8 @@ Cards can name a paid membership they need (`requires_membership`). Costco Anywh
 | ------------------------------------------------------------- | ------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | citi-costco-anywhere-visa, citi-costco-anywhere-visa-business | requires_membership | Costco membership, $65 a year                 | [Citi card page](https://www.citi.com/credit-cards/citi-costco-anywhere-visa-credit-card), [Costco membership page](https://www.costco.com/join-costco.html) |
 | citi-aadvantage-globe                                         | evidence            | quotes follow Citi's new wording (same rates) | [card page](https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard)                                                                              |
+
+Recorded late: changes made on 2026-10-31 without a section of their own, first shipped in this release. New public welcome offers: Atmos Rewards Ascent 70,000 points after $2,500 (was 50,000 after $1,500) and Summit 80,000 after $4,000 (was 70,000 after $3,000); Southwest Plus 80,000 (was 50,000), Premier 85,000 after $2,000 (was 55,000 after $1,500) and Priority 90,000 after $3,000 (was 60,000 after $2,000), all limited-time; Southwest Premier Business back to 60,000 (was a limited-time 80,000); AAdvantage Business 75,000 after $5,000 in 5 months (was 65,000 after $4,000 in 4); AAdvantage Platinum Select 50,000 after $2,500 in 3 months (was a limited-time 80,000 after $3,500 in 4). Each card was re-checked against its issuer's page. The five Amex "as high as" offers take `varies: true`; Blue Cash Preferred, Blue Cash Everyday and Costco Anywhere Business quotes follow their pages' new wording; Freedom Flex's Q4 dining note says the stacking with 3% is unstated; Costco.com takes Visa and Mastercard. Sources: each card's `welcome_offer` evidence.
 
 ## 2026.10.30.3
 

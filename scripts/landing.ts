@@ -246,8 +246,14 @@ export function landingFacts(
 }
 
 // Each placeholder is an HTML comment in site/index.html.
-export function renderLanding(html: string, f: LandingFacts): string {
+// `extra` fills placeholders only one page has (the companies page's).
+export function renderLanding(
+  html: string,
+  f: LandingFacts,
+  extra: Record<string, string> = {},
+): string {
   const parts: Record<string, string> = {
+    ...extra,
     cards: String(f.cards),
     stores: String(f.stores),
     issuer_count: String(f.issuers.length),

@@ -677,6 +677,23 @@ table.numbers tr:last-child td {
   margin-top: 4px;
 }
 
+/* Term changes: issuer changes as a card list, earnrate's own per release. */
+ul.change-list > li > div {
+  min-width: 0;
+}
+ul.change-list p {
+  margin: 0 0 2px;
+}
+ul.change-notes li {
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.group > ul.change-notes {
+  margin: 0;
+  padding: 0 16px 10px 34px;
+  font-size: 15px;
+}
+
 /* Motion: the same vocabulary as the app's (site/app/app.css): press 0.97
    in 160ms, open and arrive in 220ms, colors fade in 150ms, one strong
    ease-out. Reduced motion keeps fades and drops movement. */

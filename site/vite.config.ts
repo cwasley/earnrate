@@ -1,8 +1,14 @@
 import { readFile } from 'node:fs/promises'
 import { defineConfig, type Plugin } from 'vite'
-import { DATA_DIR, loadCatalog, loadWallet } from '../src/data/load.ts'
+import {
+  DATA_DIR,
+  loadCatalog,
+  loadChanges,
+  loadWallet,
+} from '../src/data/load.ts'
 import { localToday } from '../src/engine/periods.ts'
 import { landingFacts, renderLanding } from '../scripts/landing.ts'
+import { companyParts } from '../scripts/pages/changes.ts'
 import { siteFooter } from '../scripts/pages/site.ts'
 
 const CATALOG = 'virtual:catalog'
@@ -31,19 +37,26 @@ const FILLED = ['/index.html', '/companies.html']
 
 // Every page's shared footer (renderLanding fills it too, for the pages it
 // fills). The home page's counts, sample cheat sheet and quoted answer, and the
-// companies page's counts, come from the card data and the example wallet,
-// filled in when the page is built.
+// companies page's counts and recent changes, come from the card data, the
+// change record and the example wallet, filled in when the page is built.
 function landingPage(): Plugin {
   return {
     name: 'earnrate-landing',
     async transformIndexHtml(source, ctx) {
       const html = source.replace('<!--earnrate:footer-->', siteFooter())
       if (!FILLED.some((f) => ctx.filename.endsWith(f))) return html
-      const [catalog, sample] = await Promise.all([
+      const [catalog, sample, releases] = await Promise.all([
         loadCatalog(),
         loadWallet(`${import.meta.dirname}/../wallet.example.yaml`),
+        loadChanges(),
       ])
-      return renderLanding(html, landingFacts(catalog, sample, localToday()))
+      return renderLanding(
+        html,
+        landingFacts(catalog, sample, localToday()),
+        ctx.filename.endsWith('/companies.html')
+          ? companyParts(catalog, releases)
+          : {},
+      )
     },
   }
 }

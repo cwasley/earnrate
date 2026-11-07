@@ -8,6 +8,7 @@ import { CONFIG_DIR, WALLET_ENV_VAR } from '../brand.ts'
 import { CardSchema, type Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { CategoriesFileSchema } from '../schema/category.ts'
+import { ChangesFileSchema, type Release } from '../schema/changes.ts'
 import { CurrenciesFileSchema } from '../schema/currency.ts'
 import { IssuersFileSchema } from '../schema/issuer.ts'
 import { MembershipsFileSchema } from '../schema/membership.ts'
@@ -63,6 +64,11 @@ export async function loadCatalog(dir = DATA_DIR): Promise<Catalog> {
     cards,
     merchants: { seed, overrides },
   }
+}
+
+// The structured change record, newest release first.
+export function loadChanges(dir = DATA_DIR): Promise<Release[]> {
+  return readYaml(path.join(dir, 'changes.yaml'), ChangesFileSchema)
 }
 
 // MCP clients pass config values through without a shell, so "~" or
