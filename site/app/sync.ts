@@ -74,6 +74,10 @@ export const membershipsOp = (memberships: string[]): LocalOp => ({
   tool: 'set_memberships',
   input: { memberships },
 })
+export const skippedIssuersOp = (skippedIssuers: string[]): LocalOp => ({
+  tool: 'set_memberships',
+  input: { skippedIssuers },
+})
 export const pointValueOp = (
   currency: string,
   cents: number | null,
@@ -216,7 +220,7 @@ export function combineOps(
     ]),
   ]
   if (skipped.length > (claude.skipped_issuers ?? []).length)
-    ops.push({ tool: 'set_memberships', input: { skippedIssuers: skipped } })
+    ops.push(skippedIssuersOp(skipped))
   // A point value only this browser set carries over; where both set one,
   // the Claude wallet's stays.
   const values = Object.fromEntries(

@@ -1245,6 +1245,7 @@ button:disabled:active {
 .next-steps .link,
 .pass-hint .link,
 .todo .link,
+.skip-saved .link,
 p.muted .link,
 p.callout .link {
   border: 0;
@@ -1371,6 +1372,41 @@ p.callout .link {
 .app .segments label:has(input:focus-visible) {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+.app .whatif-view {
+  max-width: 360px;
+  margin: 12px 0 14px;
+}
+
+.app .skip-saved {
+  margin: 12px 0 0;
+  font-size: 15px;
+}
+
+/* Optional and asked for quietly: muted until opened. */
+.app .whatif-more summary {
+  color: var(--muted);
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.app .whatif-more[open] summary {
+  color: var(--accent);
+}
+
+.app .skip-issuers fieldset {
+  margin: 4px 0 8px;
+}
+
+.issuer-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0 16px;
+}
+
+.year-split {
+  white-space: nowrap;
 }
 
 /* Wallet sync with Claude. A locked fieldset wraps the controls that change

@@ -17,6 +17,8 @@ export const EVENTS = [
   'cheat-sheet',
   'cheat-sheet-image',
   'apple-wallet',
+  'wallet-two-years',
+  'wallet-skip-issuers',
   'wallet-sync-on',
   'wallet-sync-off',
   // Calls to action

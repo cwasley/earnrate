@@ -35,7 +35,10 @@ import {
   currencyLabel,
   currencyName,
   choiceName,
+  feeText,
   ifCreditsUsedText,
+  listed,
+  minimumSpendText,
 } from '../../src/engine/text.ts'
 import { cardValuation } from '../../src/engine/valuation.ts'
 import type { Recommendation } from '../../src/engine/types.ts'
@@ -52,6 +55,7 @@ import {
   cards,
   feeLabel,
   issuerName,
+  issuers,
   membershipName,
   pct,
   shortName,
@@ -70,6 +74,7 @@ import {
   membershipsOp,
   pointValueOp,
   removeOp,
+  skippedIssuersOp,
   updateOp,
   type LocalOp,
   type Outcome,
@@ -81,7 +86,13 @@ import {
   checklistCalendar,
   type ChecklistItem,
 } from '../../src/engine/checklist.ts'
-import { offerTerms } from '../../src/engine/offers.ts'
+import {
+  compareOffers,
+  OFFERS_MAY_DIFFER,
+  offerTerms,
+  type OfferPlan,
+  type OfferSummary,
+} from '../../src/engine/offers.ts'
 import {
   capitalize,
   creditBack,
@@ -1038,20 +1049,197 @@ function AdditionCredits({ addition }: { addition: Addition }) {
   )
 }
 
+// Issuers with a card "Would another card help?" can suggest.
+const SKIPPABLE = issuers.filter((id) =>
+  catalog.cards.some(
+    (c) => c.issuer === id && !c.business && c.network !== 'store',
+  ),
+)
+
+// Never assumed: nothing is left out until the person checks an issuer.
+function SkipIssuers({
+  wallet,
+  locked,
+  onChange,
+}: {
+  wallet: Wallet
+  locked: boolean
+  onChange: (op: LocalOp) => Promise<boolean>
+}) {
+  const skipped = wallet.skipped_issuers ?? []
+  const set = (list: string[]) => {
+    track('wallet-skip-issuers')
+    void onChange(skippedIssuersOp(list))
+  }
+  return (
+    <>
+      {skipped.length > 0 ? (
+        <p class="skip-saved">
+          Leaving out cards from {listed(skipped.map(issuerName))}.{' '}
+          <button
+            type="button"
+            class="link"
+            disabled={locked}
+            onClick={() => set([])}
+          >
+            Clear
+          </button>
+        </p>
+      ) : null}
+      <details class="filters whatif-more skip-issuers">
+        <summary>Can't get cards from some issuers? Leave them out</summary>
+        <fieldset class="lock" disabled={locked}>
+          <legend class="visually-hidden">Issuers to leave out</legend>
+          <div class="issuer-checks">
+            {SKIPPABLE.map((id) => (
+              <label class="check" key={id}>
+                <input
+                  type="checkbox"
+                  checked={skipped.includes(id)}
+                  onChange={(e) =>
+                    set(
+                      e.currentTarget.checked
+                        ? [...skipped, id]
+                        : skipped.filter((x) => x !== id),
+                    )
+                  }
+                />
+                {issuerName(id)}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <p class="muted small">
+          Both views leave out every card from the issuers you check. Saved with
+          your wallet.
+        </p>
+      </details>
+    </>
+  )
+}
+
+type WhatIfView = 'yearly' | 'two-years'
+
+const VIEWS: { view: WhatIfView; label: string }[] = [
+  { view: 'yearly', label: 'Every year' },
+  { view: 'two-years', label: 'First two years' },
+]
+
+const NEW_PERSONAL_CARDS = {
+  kind: 'any',
+  business: false,
+  noAnnualFee: false,
+  includeHeld: false,
+} as const
+
+function OfferRow({
+  offer: o,
+  plan,
+  rank,
+  typical,
+  open,
+  setOpen,
+  locked,
+  onAdd,
+}: {
+  offer: OfferSummary
+  plan: OfferPlan
+  rank: number
+  typical: boolean
+  open: boolean
+  setOpen: (cardId: string | null) => void
+  locked: boolean
+  onAdd: (cardId: string) => void
+}) {
+  return (
+    <li class="result" id={`whatif-${o.cardId}`}>
+      <button
+        type="button"
+        class="result-top result-toggle"
+        aria-expanded={open}
+        onClick={() => setOpen(open ? null : o.cardId)}
+      >
+        <span class="rank">{rank}</span>
+        <CardArt id={o.cardId} />
+        <span class="result-name">
+          <strong>{shortName(o.cardId)}</strong>
+          <span class="muted">
+            <span class="year-split">
+              {wholeDollars(plan.yearOne)} year one ·
+            </span>{' '}
+            <span class="year-split">
+              {wholeDollars(plan.yearTwo)} year two
+            </span>
+          </span>
+        </span>
+        <span class="rate">
+          {plan.twoYears > 0 ? '+' : ''}
+          {wholeDollars(plan.twoYears)}
+          <small>/2 yrs</small>
+        </span>
+      </button>
+      {plan.minimumSpend ? (
+        <p class={plan.minimumSpend.reachable ? undefined : 'warn'}>
+          {minimumSpendText(o.spend, o.months, plan.minimumSpend, typical)}
+        </p>
+      ) : null}
+      {o.ineligible ? <p class="warn">{o.ineligible}</p> : null}
+      <p class="muted">
+        {offerTerms(o, currencyName(catalog, o.currency))}.
+        {o.validTo ? ` Offer ends ${shortDate(o.validTo)}.` : ''} Public offer
+        as of {shortDate(o.lastVerified)}.
+      </p>
+      {open ? (
+        <p class="muted">
+          {capitalize(feeText(o))}.
+          {o.membershipFee > 0
+            ? ` Needs a ${money(o.membershipFee)} membership, counted each year.`
+            : ''}
+          {o.note ? ` ${o.note}` : ''}
+          {o.credits > 0
+            ? ` Its credits are ${wholeDollars(o.credits)} a year more if you'd use them all. ${CREDITS_ONLY_IF}`
+            : ''}
+        </p>
+      ) : null}
+      {open ? (
+        <div class="row-buttons">
+          <a class="row-link" href={`/cards/${o.cardId}`}>
+            See card details
+          </a>
+          <button
+            type="button"
+            class="primary"
+            disabled={locked}
+            onClick={() => {
+              setOpen(null)
+              onAdd(o.cardId)
+            }}
+          >
+            Add to my wallet
+          </button>
+        </div>
+      ) : null}
+    </li>
+  )
+}
+
 function WhatIf({
   wallet,
   locked,
   onAdd,
+  onChange,
   focus,
 }: {
   wallet: Wallet
   locked: boolean
   onAdd: (cardId: string) => void
+  onChange: (op: LocalOp) => Promise<boolean>
   // A card or comparison page's "See what it adds to your cards": shown,
   // and the first one open, even when they aren't in the top 3.
   focus: string[]
 }) {
   const [open, setOpen] = useState<string | null>(focus[0] ?? null)
+  const [view, setView] = useState<WhatIfView>('yearly')
   useEffect(() => {
     const [first] = focus
     if (first === undefined) return
@@ -1062,17 +1250,33 @@ function WhatIf({
         ?.scrollIntoView({ block: 'center' })
     })
   }, [focus])
-  const result = useMemo(() => {
-    const { lines } = spending(false)
-    if (lines.length === 0) return null
-    return simulateAdditions(catalog, wallet, lines, {
-      filters: ALL_PERSONAL_CARDS,
-      memberships: wallet.memberships,
-      valuations: wallet.valuations,
-      start: localToday(),
-    })
-    // The spending rows come from storage and change only on the other tab.
-  }, [wallet])
+  // The spending rows come from storage and change only on the other tab.
+  const spent = useMemo(() => spending(false), [wallet])
+  const result = useMemo(
+    () =>
+      spent.lines.length === 0
+        ? null
+        : simulateAdditions(catalog, wallet, spent.lines, {
+            filters: ALL_PERSONAL_CARDS,
+            memberships: wallet.memberships,
+            valuations: wallet.valuations,
+            start: localToday(),
+          }),
+    [wallet, spent],
+  )
+  const offers = useMemo(
+    () =>
+      view === 'two-years' && spent.lines.length > 0
+        ? compareOffers(
+            catalog,
+            wallet,
+            NEW_PERSONAL_CARDS,
+            localToday(),
+            spent,
+          )
+        : null,
+    [wallet, spent, view],
+  )
   if (!result) return null
   const gains = result.additions.filter((a) => a.gain > 0).slice(0, 3)
   const focused = focus
@@ -1121,12 +1325,35 @@ function WhatIf({
       ) : null}
     </li>
   )
+
+  const planned = (offers?.offers ?? []).flatMap((o) =>
+    o.plan ? [{ offer: o, plan: o.plan }] : [],
+  )
+  const topOffers = planned.filter((p) => p.plan.twoYears > 0).slice(0, 3)
+  const focusedOffers = focus
+    .filter((id) => !topOffers.some((p) => p.offer.cardId === id))
+    .flatMap((id) => planned.filter((p) => p.offer.cardId === id))
+  const offerRow = (p: (typeof planned)[number], rank: number) => (
+    <OfferRow
+      key={p.offer.cardId}
+      offer={p.offer}
+      plan={p.plan}
+      rank={rank}
+      typical={spent.typical}
+      open={open === p.offer.cardId}
+      setOpen={setOpen}
+      locked={locked}
+      onAdd={onAdd}
+    />
+  )
+
   return (
     <section class="panel" id="whatif">
       <h3>Would another card help?</h3>
       <p class="muted">
-        On your spending from the My spending tab, your cards earn about{' '}
-        {wholeDollars(result.current.rewards)} a year.
+        {spent.typical
+          ? `On typical U.S. spending, your cards earn about ${wholeDollars(result.current.rewards)} a year. Put in your own on the My spending tab.`
+          : `On your spending from the My spending tab, your cards earn about ${wholeDollars(result.current.rewards)} a year.`}
       </p>
       {result.current.credits
         .filter((c) => c.held)
@@ -1139,27 +1366,96 @@ function WhatIf({
             )}
           </p>
         ))}
-      {gains.length === 0 ? (
-        <p>No card would add more than its annual fee costs.</p>
+      <div
+        class="segments whatif-view"
+        role="radiogroup"
+        aria-label="What to count"
+      >
+        {VIEWS.map((v) => (
+          <label key={v.view} class={view === v.view ? 'on' : undefined}>
+            <input
+              type="radio"
+              name="whatif-view"
+              checked={view === v.view}
+              onChange={() => {
+                if (v.view === 'two-years') track('wallet-two-years')
+                setView(v.view)
+              }}
+            />
+            {v.label}
+          </label>
+        ))}
+      </div>
+      {view === 'yearly' ? (
+        <>
+          {gains.length === 0 ? (
+            <p>No card would add more than its annual fee costs.</p>
+          ) : (
+            <ol class="result-list" key="yearly">
+              {gains.map((a, i) => row(a, i + 1))}
+            </ol>
+          )}
+          {focused.map((f) => (
+            <Fragment key={f.cardId}>
+              <p class="muted">
+                {shortName(f.cardId)}{' '}
+                {f.gain > 0
+                  ? 'would add this much, after its annual fee:'
+                  : 'would add less than its annual fee costs:'}
+              </p>
+              <ol class="result-list">
+                {row(
+                  f,
+                  result.additions.findIndex((a) => a.cardId === f.cardId) + 1,
+                )}
+              </ol>
+            </Fragment>
+          ))}
+        </>
       ) : (
-        <ol class="result-list">{gains.map((a, i) => row(a, i + 1))}</ol>
-      )}
-      {focused.map((f) => (
-        <Fragment key={f.cardId}>
+        <>
           <p class="muted">
-            {shortName(f.cardId)}{' '}
-            {f.gain > 0
-              ? 'would add this much, after its annual fee:'
-              : 'would add less than its annual fee costs:'}
+            With each card's welcome bonus, if the minimum spend fits, less its
+            fees.
           </p>
-          <ol class="result-list">
-            {row(
-              f,
-              result.additions.findIndex((a) => a.cardId === f.cardId) + 1,
-            )}
-          </ol>
-        </Fragment>
-      ))}
+          {topOffers.length === 0 ? (
+            <p>No card's first two years would add more than its fees cost.</p>
+          ) : (
+            <ol class="result-list" key="two-years">
+              {topOffers.map((p, i) => offerRow(p, i + 1))}
+            </ol>
+          )}
+          {focusedOffers.map((p) => (
+            <Fragment key={p.offer.cardId}>
+              <p class="muted">
+                {shortName(p.offer.cardId)}
+                {p.plan.twoYears > 0
+                  ? ' over its first two years:'
+                  : "'s first two years would add less than its fees cost:"}
+              </p>
+              <ol class="result-list">
+                {offerRow(
+                  p,
+                  planned.findIndex((x) => x.offer.cardId === p.offer.cardId) +
+                    1,
+                )}
+              </ol>
+            </Fragment>
+          ))}
+          <p class="muted small">{OFFERS_MAY_DIFFER}</p>
+          {offers ? (
+            <details class="filters whatif-more">
+              <summary>How this is ranked</summary>
+              {offers.notes.map((n) => (
+                <p class="muted small" key={n}>
+                  {n}
+                </p>
+              ))}
+            </details>
+          ) : null}
+        </>
+      )}
+      <SkipIssuers wallet={wallet} locked={locked} onChange={onChange} />
     </section>
   )
 }
@@ -1815,6 +2111,7 @@ export function MyWallet({
         wallet={wallet}
         locked={locked}
         onAdd={(cardId) => void addAndOpen(cardId)}
+        onChange={apply}
         focus={whatIf}
       />
       {connect}
