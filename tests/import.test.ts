@@ -423,7 +423,7 @@ describe('earnrate import', () => {
     )
     const dry = await cli([csv, '--card', 'amex-gold'], wallet)
     expect(dry.stdout).toMatch(
-      /Welcome bonus on Gold: \$0\.00 → \$320\.00 of \$6,000\.00 by 2026-06-30\./,
+      /Welcome bonus on Gold: \$0\.00 → \$320\.00 of \$6,000\.00 by Jun 30, 2026\./,
     )
     expect(dry.stdout).toMatch(/record 4 toward welcome bonuses/)
 

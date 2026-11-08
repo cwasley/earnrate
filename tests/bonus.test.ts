@@ -140,7 +140,7 @@ describe('recommendations', () => {
       costHere: 5,
     })
     expect(rec.notes[0]).toMatch(
-      /behind pace on .*\$3,500 more to spend by 2027-01-01 \(about \$355 a week\), worth about \$600\. Using it here earns \$5 less than American Express Blue Cash Preferred Card/,
+      /behind pace on .*\$3,500 more to spend by Jan 1, 2027 \(about \$355 a week\), worth about \$600\. Using it here earns \$5 less than American Express Blue Cash Preferred Card/,
     )
   })
 

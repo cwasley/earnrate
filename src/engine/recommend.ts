@@ -922,7 +922,7 @@ export function recommend(
     )
   const best = winner?.effectiveReturnPct ?? 0
   const toGo = open
-    ? `${money(open.status.remaining ?? 0)} more by ${open.status.deadline ?? ''}`
+    ? `${money(open.status.remaining ?? 0)} more by ${shortDate(open.status.deadline ?? purchase.date)}`
     : ''
   if (open && isBest && !bonus)
     notes.push(
@@ -975,8 +975,8 @@ export function recommend(
       status.value === null ? '' : `, worth about ${wholeDollars(status.value)}`
     notes.unshift(
       ties
-        ? `${displayName(bonus.entry)} earns as much here as any of your cards, so it's the pick: it helps its welcome bonus, ${money(remaining)} more to spend by ${deadline}${worth}.`
-        : `You're behind pace on ${possessive(displayName(bonus.entry))} welcome bonus: ${money(remaining)} more to spend by ${deadline}${pace}${worth}.${
+        ? `${displayName(bonus.entry)} earns as much here as any of your cards, so it's the pick: it helps its welcome bonus, ${money(remaining)} more to spend by ${shortDate(deadline)}${worth}.`
+        : `You're behind pace on ${possessive(displayName(bonus.entry))} welcome bonus: ${money(remaining)} more to spend by ${shortDate(deadline)}${pace}${worth}.${
             isBest
               ? ''
               : costHere === null

@@ -31,6 +31,7 @@ import {
   dollarsAndCents,
   listed,
   periodPhrase,
+  shortDate,
 } from '../engine/text.ts'
 
 const IMPORT_HELP = `Usage: ${CLI_NAME} import <statement.csv> --card <card-id> [--apply]
@@ -188,7 +189,7 @@ function formatAnalysis(
   }
   for (const b of a.bonuses) {
     out.push(
-      `Welcome bonus on ${labelOf(b.cardId)}: ${dollarsAndCents(b.before)} → ${dollarsAndCents(b.after)} of ${dollarsAndCents(b.spend)}${b.deadline ? ` by ${b.deadline}` : ''}.`,
+      `Welcome bonus on ${labelOf(b.cardId)}: ${dollarsAndCents(b.before)} → ${dollarsAndCents(b.after)} of ${dollarsAndCents(b.spend)}${b.deadline ? ` by ${shortDate(b.deadline)}` : ''}.`,
     )
   }
   for (const m of a.milestones) {
