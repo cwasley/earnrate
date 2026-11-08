@@ -204,7 +204,7 @@ describe('recommendations', () => {
     )
   })
 
-  test('a credit on a card below the top one still beats a bonus behind pace', () => {
+  test('a credit beats both a spend bonus and a welcome bonus behind pace', () => {
     const w = wallet({ opened: '2026-10-01', spent: 500 }, [
       { id: 'amex-platinum', enrolled: ['lululemon'] },
       {
@@ -213,10 +213,15 @@ describe('recommendations', () => {
       },
     ])
     const rec = recommend(catalog, w, purchase('Lululemon', { amount: 100 }))
-    expect(rec.ranked[0]?.cardId).toBe('chase-ihg-one-rewards-premier')
+    expect(rec.ranked.map((r) => r.cardId).slice(0, 2)).toEqual([
+      'amex-platinum',
+      'chase-ihg-one-rewards-premier',
+    ])
     expect(rec.decision?.cardId).toBe('amex-platinum')
     expect(rec.bonus).toBeNull()
-    expect(rec.notes.join(' ')).toMatch(/Lululemon credit here/)
+    expect(rec.notes).toContain(
+      "Use The Platinum Card from American Express' Lululemon credit here: what's left of it ends Dec 31, 2026. IHG One Rewards Premier Credit Card's spend bonus can come with a later purchase on it. Test Offer Card's welcome bonus can catch up on other purchases ($3,500 more to spend by Jan 1, 2027).",
+    )
   })
 
   test('once the credit is used up, the bonus takes the pick again', () => {
@@ -278,6 +283,52 @@ describe('recommendations', () => {
     )
     expect(rec.decision?.cardId).toBe('chase-freedom-unlimited')
     expect(rec.bonus).toBeNull()
+  })
+})
+
+describe('credits and spend bonuses', () => {
+  const held = (usage: number) =>
+    WalletSchema.parse({
+      cards: [
+        { id: 'amex-platinum', enrolled: ['lululemon'] },
+        {
+          id: 'chase-ihg-one-rewards-premier',
+          milestone_usage: { 'spend-15k': { period: '2026', spent: usage } },
+        },
+      ],
+    })
+
+  test('a credit that pays here ranks above a card that leads only on a spend bonus', () => {
+    const rec = recommend(
+      catalog,
+      held(14900),
+      purchase('Lululemon', { amount: 100 }),
+    )
+    expect(rec.decision?.cardId).toBe('amex-platinum')
+    expect(rec.ranked[1]?.milestoneBonus).not.toBeNull()
+    expect(rec.notes).toContain(
+      "Use The Platinum Card from American Express' Lululemon credit here: what's left of it ends Dec 31, 2026. IHG One Rewards Premier Credit Card's spend bonus can come with a later purchase on it.",
+    )
+  })
+
+  test('a card that leads on its own rate keeps its place', () => {
+    const rec = recommend(
+      catalog,
+      held(14900),
+      purchase('Holiday Inn', { amount: 100 }),
+    )
+    expect(rec.decision?.cardId).toBe('chase-ihg-one-rewards-premier')
+    expect(rec.notes.join(' ')).not.toMatch(/credit here/)
+  })
+
+  test('without a spend bonus in reach, nothing moves or is said', () => {
+    const rec = recommend(
+      catalog,
+      held(0),
+      purchase('Lululemon', { amount: 100 }),
+    )
+    expect(rec.decision?.cardId).toBe('amex-platinum')
+    expect(rec.notes.join(' ')).not.toMatch(/credit here/)
   })
 })
 

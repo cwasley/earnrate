@@ -440,15 +440,28 @@ export type CreditWords = {
   minAmount?: number | null // it pays only on a purchase this large
 }
 
-// A welcome bonus behind pace stands aside for a credit that pays here.
-export const creditOverBonusText = (
+// A credit that pays here comes first: what's left of it ends with its
+// period, while a spend bonus or a welcome bonus can come from other
+// purchases.
+export function creditFirstText(
   card: string,
   c: Pick<CreditWords, 'name' | 'until'>,
-  bonusCard: string,
-  remaining: number,
-  deadline: string,
-) =>
-  `Use ${possessive(card)} ${c.name} credit here${c.until === null ? '' : `: what's left of it ends ${shortDate(c.until)}`}. ${possessive(bonusCard)} welcome bonus can catch up on other purchases (${money(remaining)} more to spend by ${shortDate(deadline)}).`
+  spendBonus: string | null,
+  welcome: { card: string; remaining: number; deadline: string } | null,
+): string {
+  const parts = [
+    `Use ${possessive(card)} ${c.name} credit here${c.until === null ? '' : `: what's left of it ends ${shortDate(c.until)}`}.`,
+  ]
+  if (spendBonus !== null)
+    parts.push(
+      `${possessive(spendBonus)} spend bonus can come with a later purchase on it.`,
+    )
+  if (welcome !== null)
+    parts.push(
+      `${possessive(welcome.card)} welcome bonus can catch up on other purchases (${money(welcome.remaining)} more to spend by ${shortDate(welcome.deadline)}).`,
+    )
+  return parts.join(' ')
+}
 
 // A line for an answer that uses the card's credit, or says why it doesn't.
 export function creditAnswerText(c: CreditWords, dollars: number | null) {

@@ -35,7 +35,7 @@ import {
   categoryPhrase,
   codesAs,
   creditAnswerText,
-  creditOverBonusText,
+  creditFirstText,
   currencyLabel,
   currencyName,
   earnText,
@@ -283,7 +283,47 @@ function rankEntries(
   }
 
   entries.sort(compareEntries)
+  creditsBeforeSpendBonuses(entries)
   return { entries, excluded }
+}
+
+// What the card earns here without a spend bonus the purchase reaches.
+const withoutSpendBonus = (e: Entry) =>
+  e.effectiveReturnPct -
+  (e.perDollar - e.evaluation.best.rate) * e.valuation.centsPerUnit
+
+// A spend bonus the purchase reaches comes with a later purchase too, but a
+// credit's dollars end with its period: a card whose credit pays here moves
+// above any card that leads it only on a spend bonus. A pass after the sort,
+// not a comparator, so the order stays consistent.
+function creditsBeforeSpendBonuses(entries: Entry[]) {
+  for (let i = 1; i < entries.length; i++) {
+    const e = entries[i]
+    if (!e || e.creditPct <= 0) continue
+    let j = i
+    for (; j > 0; j--) {
+      const above = entries[j - 1]
+      if (
+        !above ||
+        above.milestones.length === 0 ||
+        above.creditPct > 0 ||
+        withoutSpendBonus(above) >= withoutSpendBonus(e) - EPSILON
+      )
+        break
+      entries[j] = above
+    }
+    entries[j] = e
+  }
+}
+
+// The card a credit-paying winner moved above for this, if any.
+const passedOnSpendBonus = (entries: Entry[]) => {
+  const [first, second] = entries
+  return first && second && first.creditPct > 0 && second.milestones.length > 0
+    ? compareEntries(first, second) > 0
+      ? second
+      : null
+    : null
 }
 
 function reasoningFor(
@@ -863,14 +903,21 @@ export function recommend(
           )
       : undefined
   const bonus = open && !creditEntry && (open.behind || ties) ? open : null
-  if (open && creditEntry?.credit)
+  const passed = passedOnSpendBonus(entries)
+  const firstCredit = creditEntry ?? (passed ? winner : undefined)
+  if (firstCredit?.credit)
     notes.push(
-      creditOverBonusText(
-        displayName(creditEntry),
-        creditEntry.credit,
-        displayName(open.entry),
-        open.status.remaining ?? 0,
-        open.status.deadline ?? purchase.date,
+      creditFirstText(
+        displayName(firstCredit),
+        firstCredit.credit,
+        passed && firstCredit === winner ? displayName(passed) : null,
+        open && creditEntry
+          ? {
+              card: displayName(open.entry),
+              remaining: open.status.remaining ?? 0,
+              deadline: open.status.deadline ?? purchase.date,
+            }
+          : null,
       ),
     )
   const best = winner?.effectiveReturnPct ?? 0
