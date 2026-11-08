@@ -1465,7 +1465,7 @@ function WhatIf({
 // Flex's bonus". Tied to the checklist's wording in src/engine/checklist.ts
 // and text.ts; an item whose wording doesn't match stays plain text.
 const SETTINGS_LINKS: Partial<Record<ChecklistItem['kind'], RegExp>> = {
-  enroll: /mark (?:it|them) enrolled|Mark (?:it|them) used/,
+  enroll: /mark (?:it|them) enrolled|Say (?:you use it|which you use)/,
   pick: /^Pick .+? categor(?:y|ies)/,
   activate: /^Activate .+?'s? bonus/,
 }

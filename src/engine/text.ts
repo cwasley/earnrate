@@ -485,8 +485,8 @@ export const enrollCreditText = (card: string, names: string[]) =>
 // use them: they don't offset the annual fee until then.
 export const askCreditText = (card: string, names: string[]) =>
   names.length === 1
-    ? `Do you use ${possessive(card)} ${names[0] ?? ''} credit? Mark it used and it counts against the annual fee.`
-    : `Do you use ${possessive(card)} ${listed(names)} credits? Mark them used and they count against the annual fee.`
+    ? `Do you use ${possessive(card)} ${names[0] ?? ''} credit? Say you use it and it counts against the annual fee.`
+    : `Do you use ${possessive(card)} ${listed(names)} credits? Say which you use and they count against the annual fee.`
 
 // The cheat sheet: its picks are by rate alone.
 export const CREDITS_LEFT_OUT =

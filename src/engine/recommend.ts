@@ -876,13 +876,11 @@ export function recommend(
     const costHere =
       ties || top.earned === null || first.earned === null
         ? null
-        : roundCents(
+        : // A spend bonus isn't lost here, only moved to a later purchase.
+          roundCents(
             first.earned +
-              (first.milestoneBonus?.dollars ?? 0) +
               (first.credit?.dollars ?? 0) -
-              (top.earned +
-                (top.milestoneBonus?.dollars ?? 0) +
-                (top.credit?.dollars ?? 0)),
+              (top.earned + (top.credit?.dollars ?? 0)),
           )
     bonusResult = {
       cardId: top.cardId,
@@ -941,14 +939,19 @@ export function recommend(
   }
 }
 
-// Behind a steady pace: less spent than an even share of the spending needed
-// for the days gone by. Ahead of it, the bonus will likely be met anyway, so
-// it doesn't justify a card that earns less.
+// Behind a steady pace by more than a week's share of the spending, or by
+// anything in the last two weeks. A smaller shortfall closes with ordinary
+// spending, so it doesn't justify a card that earns less.
 function behindPace(status: BonusStatus, date: string): boolean {
   if (status.spend === null || status.deadline === null) return false
   const window = Math.max(1, daysBetween(status.opened, status.deadline))
   const elapsed = Math.min(window, daysBetween(status.opened, date))
-  return status.spent < (status.spend * elapsed) / window
+  const short = (status.spend * elapsed) / window - status.spent
+  if (short <= 0) return false
+  return (
+    short > (status.spend * 7) / window ||
+    daysBetween(date, status.deadline) <= 14
+  )
 }
 
 // The open welcome bonus that most needs this purchase: the one with the most

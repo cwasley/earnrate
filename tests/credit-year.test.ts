@@ -340,7 +340,7 @@ describe('asking about credits that need no enrolling', () => {
 
   test('asks once, until the credit is marked used or not used', () => {
     expect(asks({}).map((i) => i.text)).toEqual([
-      "Do you use American Express Gold Card's Uber credit? Mark it used and it counts against the annual fee.",
+      "Do you use American Express Gold Card's Uber credit? Say you use it and it counts against the annual fee.",
     ])
     expect(asks({ enrolled: ['uber-cash'] })).toEqual([])
     expect(asks({ skipped_credits: ['uber-cash'] })).toEqual([])

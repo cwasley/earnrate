@@ -1971,7 +1971,7 @@ describe('#32 merchant statement credits', () => {
       expect(enroll).toHaveLength(2)
       expect(enroll.every((i) => i.due === null)).toBe(true)
       expect(enroll[0]?.text).toMatch(
-        /^Do you use The Platinum Card from American Express' Uber, Uber One, Walmart\+ membership and CLEAR credits\? Mark them used and they count against the annual fee\.$/,
+        /^Do you use The Platinum Card from American Express' Uber, Uber One, Walmart\+ membership and CLEAR credits\? Say which you use and they count against the annual fee\.$/,
       )
       expect(enroll[1]?.text).toMatch(
         /^Enroll in The Platinum Card from American Express' Lululemon, Resy, .* and YouTube TV credits with the issuer, then mark them enrolled\.$/,

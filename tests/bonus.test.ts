@@ -155,6 +155,43 @@ describe('recommendations', () => {
     expect(rec.notes.join(' ')).not.toMatch(/welcome bonus/)
   })
 
+  test("a shortfall under a week's share of the spending isn't picked", () => {
+    const rec = recommend(
+      catalog,
+      wallet({ opened: '2026-10-01', spent: 800 }),
+      purchase('Whole Foods', { amount: 100 }),
+    )
+    expect(rec.decision?.cardId).toBe('amex-blue-cash-preferred')
+    expect(rec.bonus).toBeNull()
+  })
+
+  test('in the last two weeks, any shortfall is picked', () => {
+    const rec = recommend(
+      catalog,
+      wallet({ opened: '2026-10-01', by: '2026-11-05', spent: 2500 }),
+      purchase('Whole Foods', { amount: 100 }),
+    )
+    expect(rec.decision?.cardId).toBe('test-offer')
+  })
+
+  test("a spend bonus the purchase would reach on the best card isn't counted as lost", () => {
+    const w = wallet({ opened: '2026-10-01', spent: 500 }, [
+      {
+        id: 'chase-ihg-one-rewards-premier',
+        milestone_usage: { 'spend-15k': { period: '2026', spent: 14990 } },
+      },
+    ])
+    const rec = recommend(catalog, w, purchase('Holiday Inn', { amount: 100 }))
+    const first = rec.ranked[0]
+    const top = rec.ranked.find((r) => r.cardId === 'test-offer')
+    expect(first?.cardId).toBe('chase-ihg-one-rewards-premier')
+    expect(first?.milestoneBonus).not.toBeNull()
+    expect(rec.decision?.cardId).toBe('test-offer')
+    expect(rec.bonus?.costHere).toBe(
+      Math.round(((first?.earned ?? 0) - (top?.earned ?? 0)) * 100) / 100,
+    )
+  })
+
   test.each([
     ['met', { opened: '2026-10-01', spent: 4000 }],
     ['expired', { opened: '2026-06-01' }],
