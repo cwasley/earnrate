@@ -204,6 +204,21 @@ describe('recommendations', () => {
     )
   })
 
+  test('a credit on a card below the top one still beats a bonus behind pace', () => {
+    const w = wallet({ opened: '2026-10-01', spent: 500 }, [
+      { id: 'amex-platinum', enrolled: ['lululemon'] },
+      {
+        id: 'chase-ihg-one-rewards-premier',
+        milestone_usage: { 'spend-15k': { period: '2026', spent: 14900 } },
+      },
+    ])
+    const rec = recommend(catalog, w, purchase('Lululemon', { amount: 100 }))
+    expect(rec.ranked[0]?.cardId).toBe('chase-ihg-one-rewards-premier')
+    expect(rec.decision?.cardId).toBe('amex-platinum')
+    expect(rec.bonus).toBeNull()
+    expect(rec.notes.join(' ')).toMatch(/Lululemon credit here/)
+  })
+
   test('once the credit is used up, the bonus takes the pick again', () => {
     const w = wallet({ opened: '2026-10-01', spent: 500 }, [
       {

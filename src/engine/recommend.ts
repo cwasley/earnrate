@@ -850,17 +850,24 @@ export function recommend(
   const isBest = open !== null && open.entry === winner
   const ties = !isBest && gap <= EPSILON
   // Unused credit ends with its period; the bonus's spending can move to
-  // other purchases.
-  const creditHere =
-    !isBest && !ties && winner?.credit
-      ? (winner.creditDollars ?? winner.credit.left ?? winner.credit.amount) > 0
-      : false
-  const bonus = open && !creditHere && (open.behind || ties) ? open : null
-  if (open?.behind && creditHere && winner?.credit)
+  // other purchases. Any card ranked above the bonus card counts: a spend
+  // bonus can put another card first.
+  const creditEntry =
+    open?.behind && !isBest && !ties
+      ? entries
+          .slice(0, entries.indexOf(open.entry))
+          .find(
+            (e) =>
+              e.credit !== null &&
+              (e.creditDollars ?? e.credit.left ?? e.credit.amount) > 0,
+          )
+      : undefined
+  const bonus = open && !creditEntry && (open.behind || ties) ? open : null
+  if (open && creditEntry?.credit)
     notes.push(
       creditOverBonusText(
-        displayName(winner),
-        winner.credit,
+        displayName(creditEntry),
+        creditEntry.credit,
         displayName(open.entry),
         open.status.remaining ?? 0,
         open.status.deadline ?? purchase.date,
@@ -874,13 +881,18 @@ export function recommend(
     notes.push(
       `${displayName(open.entry)} is the best card here anyway, and this counts toward its welcome bonus (${toGo}).`,
     )
-  else if (open && !bonus && isClose(open.entry.effectiveReturnPct, best))
+  else if (
+    open &&
+    !bonus &&
+    !creditEntry &&
+    isClose(open.entry.effectiveReturnPct, best)
+  )
     notes.push(
       `${displayName(open.entry)} earns ${pct(open.entry.rateReturnPct)} here, ${num(gap)} ${gap === 1 ? 'point' : 'points'} less than ${pct(best)}, and would help its welcome bonus (${toGo}). You're on pace, so this uses the higher rate.`,
     )
-  const chosen = bonus?.entry ?? winner
+  const chosen = bonus?.entry ?? creditEntry ?? winner
   // A tie among the top cards doesn't matter when a welcome bonus decides.
-  const tie = bonus ? null : tieNote(entries)
+  const tie = bonus || creditEntry ? null : tieNote(entries)
   if (tie) notes.push(tie)
   const top = ranked.find((r) => r.cardId === chosen?.card.id)
   const first = ranked[0]
@@ -951,7 +963,10 @@ export function recommend(
     assumptions: assumptionsFor(catalog, merchant, purchase, entries),
     warnings,
     notes,
-    sensitivity: bonusResult ? null : sensitivity(catalog, entries),
+    sensitivity:
+      bonusResult || (creditEntry && creditEntry !== winner)
+        ? null
+        : sensitivity(catalog, entries),
     bonus: bonusResult,
   }
 }
