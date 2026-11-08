@@ -2,7 +2,7 @@ import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { ALL_PERSONAL_CARDS, matchesFilters } from './explore.ts'
-import { usedCreditsYear } from './credits.ts'
+import { nightStates, usedCreditsYear } from './credits.ts'
 import { daysBetween, isAnniversary } from './periods.ts'
 import {
   projectedWallet,
@@ -70,7 +70,10 @@ export type Renewal = {
   // it (its other cards picking up the spending). Alone, against the best
   // no-fee card.
   rewardsAdded: number
-  credits: number // its statement credits the cardholder uses, a year
+  credits: number // its statement credits and free nights the cardholder uses, a year
+  freeNights: number // the part of credits from free nights, "up to"
+  // Free nights the cardholder hasn't said they use or don't: not in net.
+  nightsNotCounted: number
   net: number // rewardsAdded + credits - fee
   against: string | null // the no-fee card compared with, for a card held alone
   typical: boolean
@@ -128,7 +131,10 @@ export function renewalCheck(
   }
   // From the saved card: projectedWallet drops credit usage, which is how
   // a credit that needs no enrolling is confirmed in use.
-  const credits = held ? usedCreditsYear(catalog, card, held, due).yearly : 0
+  const used = held
+    ? usedCreditsYear(catalog, card, held, due, wallet.valuations)
+    : null
+  const credits = used?.yearly ?? 0
   const rewardsAdded = roundCents(withCard.rewards - (without?.rewards ?? 0))
   const fee = card.annual_fee ?? 0
   const opened = held ? openedOf(held) : null
@@ -144,6 +150,12 @@ export function renewalCheck(
         : null,
     rewardsAdded,
     credits,
+    freeNights: used?.nights ?? 0,
+    nightsNotCounted: roundCents(
+      nightStates(catalog, wallet.valuations, card, held ?? null)
+        .filter((n) => !n.confirmed && !n.skipped)
+        .reduce((sum, n) => sum + n.value, 0),
+    ),
     net: roundCents(rewardsAdded + credits - fee),
     against,
     typical: spending.typical,

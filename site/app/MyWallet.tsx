@@ -31,7 +31,7 @@ import {
 import {
   categoryPhrase,
   creditsCountedText,
-  CREDITS_ONLY_IF,
+  creditsOnlyIf,
   currencyLabel,
   currencyName,
   choiceName,
@@ -39,8 +39,10 @@ import {
   ifCreditsUsedText,
   listed,
   minimumSpendText,
+  offerPerksText,
+  onlyIfText,
 } from '../../src/engine/text.ts'
-import { cardValuation } from '../../src/engine/valuation.ts'
+import { cardValuation, currencyValuation } from '../../src/engine/valuation.ts'
 import type { Recommendation } from '../../src/engine/types.ts'
 import type { CardInput } from '../../src/engine/wallet-change.ts'
 import { resolvePlace } from '../../src/merchants/resolve.ts'
@@ -100,10 +102,13 @@ import {
   creditShort,
   CREDIT_THIS_PERIOD,
   dollarsAndCents,
+  FREE_NIGHT_NAME,
+  freeNightText,
+  freeNightValueText,
   money,
   shortDate,
 } from '../../src/engine/text.ts'
-import { creditStates } from '../../src/engine/credits.ts'
+import { creditStates, nightStates } from '../../src/engine/credits.ts'
 
 // The first everyday purchases, as quick picks for one question.
 const QUICK = EVERYDAY_PURCHASES.slice(0, 6).map(quickPickText)
@@ -396,6 +401,39 @@ const AUTOMATIC_CHOICES: { use: CreditUse; label: string }[] = [
   { use: 'skipped', label: "I don't use this" },
 ]
 
+function UseChoices({
+  name,
+  label,
+  choices,
+  value,
+  onPick,
+}: {
+  name: string
+  label: string
+  choices: { use: CreditUse; label: string }[]
+  value: CreditUse | undefined
+  onPick: (use: CreditUse) => void
+}) {
+  return (
+    <div class="segments credit-use" role="radiogroup" aria-label={label}>
+      {choices.map((choice) => {
+        const on = value === choice.use
+        return (
+          <label key={choice.use} class={on ? 'on' : undefined}>
+            <input
+              type="radio"
+              name={name}
+              checked={on}
+              onChange={() => onPick(choice.use)}
+            />
+            {choice.label}
+          </label>
+        )
+      })}
+    </div>
+  )
+}
+
 function CardEditor({
   wallet,
   held,
@@ -424,9 +462,11 @@ function CardEditor({
     trackedSpend ? String(trackedSpend.spent) : '',
   )
   const credits = card ? creditStates(catalog, card, held, localToday()) : []
+  const nights = card ? nightStates(catalog, wallet.valuations, card, held) : []
+  // Free nights share the credits' ids, enrolled and skipped_credits.
   const [creditUse, setCreditUse] = useState<Record<string, CreditUse>>(() =>
-    Object.fromEntries(
-      credits.map((c) => [
+    Object.fromEntries([
+      ...credits.map((c): [string, CreditUse] => [
         c.credit.id,
         c.skipped
           ? 'skipped'
@@ -434,7 +474,11 @@ function CardEditor({
             ? 'using'
             : 'not-yet',
       ]),
-    ),
+      ...nights.map((n): [string, CreditUse] => [
+        n.night.id,
+        n.skipped ? 'skipped' : n.confirmed ? 'using' : 'not-yet',
+      ]),
+    ]),
   )
   const [creditUsed, setCreditUsed] = useState<Record<string, string>>(() =>
     Object.fromEntries(
@@ -468,10 +512,11 @@ function CardEditor({
       )
     }
     const withUse = (use: CreditUse) =>
-      credits
-        .filter((c) => creditUse[c.credit.id] === use)
-        .map((c) => c.credit.id)
-    if (credits.length > 0) {
+      [
+        ...credits.map((c) => c.credit.id),
+        ...nights.map((n) => n.night.id),
+      ].filter((id) => creditUse[id] === use)
+    if (credits.length + nights.length > 0) {
       input.enrolled = withUse('using')
       input.skippedCredits = withUse('skipped')
     }
@@ -650,33 +695,15 @@ function CardEditor({
               ? ''
               : ` It ends after ${shortDate(c.credit.valid_to)}.`}
           </p>
-          <div
-            class="segments credit-use"
-            role="radiogroup"
-            aria-label={`${c.name} credit`}
-          >
-            {(c.credit.enroll ? ENROLL_CHOICES : AUTOMATIC_CHOICES).map(
-              (choice) => {
-                const on = creditUse[c.credit.id] === choice.use
-                return (
-                  <label key={choice.use} class={on ? 'on' : undefined}>
-                    <input
-                      type="radio"
-                      name={`credit-${held.id}-${c.credit.id}`}
-                      checked={on}
-                      onChange={() =>
-                        setCreditUse((prev) => ({
-                          ...prev,
-                          [c.credit.id]: choice.use,
-                        }))
-                      }
-                    />
-                    {choice.label}
-                  </label>
-                )
-              },
-            )}
-          </div>
+          <UseChoices
+            name={`credit-${held.id}-${c.credit.id}`}
+            label={`${c.name} credit`}
+            choices={c.credit.enroll ? ENROLL_CHOICES : AUTOMATIC_CHOICES}
+            value={creditUse[c.credit.id]}
+            onPick={(use) =>
+              setCreditUse((prev) => ({ ...prev, [c.credit.id]: use }))
+            }
+          />
           {creditUse[c.credit.id] === 'skipped' ? (
             <p class="muted small">
               Left out of picks, the to-do list and the annual-fee math.
@@ -698,6 +725,36 @@ function CardEditor({
               />
             </label>
           )}
+        </fieldset>
+      ))}
+      {nights.map((n) => (
+        <fieldset key={n.night.id}>
+          <legend>{capitalize(FREE_NIGHT_NAME)}</legend>
+          <p class="muted small">
+            {capitalize(
+              freeNightText(n.points, currencyLabel(catalog, card.currency)),
+            )}
+            :{' '}
+            {freeNightValueText(
+              n.value,
+              currencyValuation(catalog, wallet, card.currency).centsPerUnit,
+            )}
+            . It counts against the annual fee once you say you use it.
+          </p>
+          <UseChoices
+            name={`credit-${held.id}-${n.night.id}`}
+            label={FREE_NIGHT_NAME}
+            choices={AUTOMATIC_CHOICES}
+            value={creditUse[n.night.id]}
+            onPick={(use) =>
+              setCreditUse((prev) => ({ ...prev, [n.night.id]: use }))
+            }
+          />
+          {creditUse[n.night.id] === 'skipped' ? (
+            <p class="muted small">
+              Left out of the to-do list and the annual-fee math.
+            </p>
+          ) : null}
         </fieldset>
       ))}
       {info.needsAnniversary || hasFee(held) ? (
@@ -1044,7 +1101,7 @@ function AdditionCredits({ addition }: { addition: Addition }) {
   return (
     <p class="muted">
       {ifCreditsUsedText(credits, addition.gainIfCreditsUsed, 'adds')}{' '}
-      {CREDITS_ONLY_IF}
+      {creditsOnlyIf(credits)}
     </p>
   )
 }
@@ -1196,8 +1253,10 @@ function OfferRow({
             ? ` Needs a ${money(o.membershipFee)} membership, counted each year.`
             : ''}
           {o.note ? ` ${o.note}` : ''}
-          {o.credits > 0
-            ? ` Its credits are ${wholeDollars(o.credits)} a year more if you'd use them all. ${CREDITS_ONLY_IF}`
+          {o.credits + o.freeNights > 0
+            ? ` ${offerPerksText(o.credits, o.freeNights)
+                .map((t) => `${capitalize(t)}.`)
+                .join(' ')} ${onlyIfText(o.credits > 0, o.freeNights > 0)}`
             : ''}
         </p>
       ) : null}

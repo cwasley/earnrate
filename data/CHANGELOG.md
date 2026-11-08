@@ -2,6 +2,17 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.08
+
+Yearly free nights, a new `free_nights:` list on a card: one certificate each year after the account anniversary, with no spending needed, valued at its point cap times your point value for the hotel program ("up to"). It counts against the annual fee in the renewal check, the fee math and the planner only once you say you use it, like a credit that needs no enrolling. Free nights earned by spending stay spend-bonus rewards, shown but not valued. Each quoted from the issuer:
+
+- `chase-ihg-one-rewards-premier`: an Anniversary Free Night with a redemption cap of 50,000 points. Source: [Chase](https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier).
+- `chase-ihg-one-rewards-premier-select`: an Anniversary Free Night with a redemption cap of 60,000 points. Source: [Chase](https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select).
+- `chase-ihg-one-rewards-business`: an Anniversary Free Night with a redemption cap of 50,000 points. Source: [Chase](https://creditcards.chase.com/business-credit-cards/IHG/business).
+- `chase-marriott-bonvoy-boundless`: a Free Night Award each account anniversary, at a property up to 35,000 points. Source: [Chase](https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless).
+- `amex-marriott-bonvoy-brilliant`: a Free Night Award after each Card renewal month, at or under 85,000 points. Sources: [Amex](https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-brilliant/), [offer terms](https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0#offer-terms).
+- `amex-marriott-bonvoy-business`: a Free Night Award after each Card renewal month, up to 35,000 points. Sources: [Amex](https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/), [offer terms](https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms).
+
 ## 2026.11.07.3
 
 - `chase-freedom-flex`: the limited-time $250 welcome offer has ended; it's $200 after $500 in purchases in the first 3 months again. A card-page quote that ran two category names together ("Dining American Red Cross") is removed; the Q4 dining rule keeps its quotes from Chase's learn-more page. Source: [Chase](https://creditcards.chase.com/cash-back-credit-cards/freedom/flex).

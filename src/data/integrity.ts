@@ -197,7 +197,24 @@ function cardProblems(
     ...card.milestones.map((m) => m.id),
     ...card.intro_rates.map((i) => i.id),
     ...card.credits.map((c) => c.id),
+    ...card.free_nights.map((n) => n.id),
   ])
+  // A free night is valued at its cap, so a quote has to state it ("50,000
+  // points", "up to 85K points").
+  for (const night of card.free_nights) {
+    const caps = [
+      night.points.toLocaleString('en-US'),
+      `${String(night.points / 1000)}k`,
+    ]
+    if (
+      !card.evidence.some(
+        (e) =>
+          e.rule === night.id &&
+          caps.some((c) => e.quote.toLowerCase().includes(c)),
+      )
+    )
+      problems.push(`${where} ${night.id}: no evidence quote states its cap`)
+  }
   // An end or start date has to come from the issuer, so a quote names its
   // year ("through 12/31/2027", "Starting in 2027").
   for (const [id, date] of [

@@ -56,7 +56,12 @@ describe('a credit over a year', () => {
   })
 
   test("a card's credits add up, each named by its first store", () => {
-    const year = allCreditsYear(catalog, cardOf(catalog, 'amex-gold'), TODAY)
+    const year = allCreditsYear(
+      catalog,
+      cardOf(catalog, 'amex-gold'),
+      TODAY,
+      {},
+    )
     expect(year.yearly).toBe(424)
     expect(year.names).toEqual(["Dunkin'", 'Uber', 'Grubhub', 'Resy'])
     expect(creditsYearText(year)).toBe(
@@ -66,11 +71,11 @@ describe('a credit over a year', () => {
 
   test('a held card counts credits said in use, but none marked unused', () => {
     const gold = cardOf(catalog, 'amex-gold')
-    expect(usedCreditsYear(catalog, gold, held({}), TODAY).creditIds).toEqual(
-      [],
-    )
     expect(
-      usedCreditsYear(catalog, gold, held({ enrolled: ['dunkin'] }), TODAY)
+      usedCreditsYear(catalog, gold, held({}), TODAY, {}).creditIds,
+    ).toEqual([])
+    expect(
+      usedCreditsYear(catalog, gold, held({ enrolled: ['dunkin'] }), TODAY, {})
         .yearly,
     ).toBe(84)
     expect(
@@ -79,6 +84,7 @@ describe('a credit over a year', () => {
         gold,
         held({ enrolled: ['dunkin', 'uber-cash'] }),
         TODAY,
+        {},
       ).yearly,
     ).toBe(204)
     expect(
@@ -89,6 +95,7 @@ describe('a credit over a year', () => {
           credit_usage: { 'uber-cash': { period: '2026-11', used: 10 } },
         }),
         TODAY,
+        {},
       ).creditIds,
     ).toEqual(['uber-cash'])
     expect(
@@ -100,6 +107,7 @@ describe('a credit over a year', () => {
           skipped_credits: ['dunkin', 'uber-cash'],
         }),
         TODAY,
+        {},
       ),
     ).toMatchObject({ yearly: 100, creditIds: ['resy'] })
   })
@@ -123,9 +131,13 @@ describe('a credit that ends on a date', () => {
         valid_to: '2027-12-31',
       },
     ])
-    expect(allCreditsYear(catalog, card, '2026-11-07').yearly).toBe(110 + 300)
-    expect(allCreditsYear(catalog, card, '2027-08-15').yearly).toBe(20 + 150)
-    expect(allCreditsYear(catalog, card, '2027-10-01')).toMatchObject({
+    expect(allCreditsYear(catalog, card, '2026-11-07', {}).yearly).toBe(
+      110 + 300,
+    )
+    expect(allCreditsYear(catalog, card, '2027-08-15', {}).yearly).toBe(
+      20 + 150,
+    )
+    expect(allCreditsYear(catalog, card, '2027-10-01', {})).toMatchObject({
       yearly: 150,
       creditIds: ['stubhub'],
     })

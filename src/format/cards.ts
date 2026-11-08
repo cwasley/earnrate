@@ -34,6 +34,7 @@ export function formatCardInfo(catalog: Catalog, card: CardInfo): string {
       (i) => `new accounts: ${i.text}; needs the opening date`,
     ),
     ...card.credits.map((c) => `statement credit ${c.id}: ${c.text}`),
+    ...card.freeNights.map((n) => `free night ${n.id}: ${n.text}`),
     ...(card.onlyAt ? [`works only at ${card.onlyAt.join(', ')}`] : []),
     foreignFeeText(card.foreignTransactionFee).toLowerCase(),
   ]

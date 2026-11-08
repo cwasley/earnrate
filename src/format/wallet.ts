@@ -68,6 +68,8 @@ export function formatWalletSummary(summary: WalletSummary): string {
       lines.push(`  Spend bonus (${m.id}): ${m.text}`)
     for (const credit of c.credits)
       lines.push(`  Credit (${credit.id}): ${credit.text}`)
+    for (const night of c.freeNights)
+      lines.push(`  Free night (${night.id}): ${night.text}`)
     if (c.usedCreditsText !== null) lines.push(`  ${c.usedCreditsText}`)
     if (c.anniversary !== null)
       lines.push(`  Account anniversary: ${c.anniversary}.`)

@@ -61,6 +61,11 @@ credits:
     enroll: true
     valid_to: 2027-12-31
     note: "Instacart credits, which need an active Instacart+ membership: activate Chase's complimentary one with the card."
+# One a year after the account anniversary, valued at its point cap.
+free_nights:
+  - id: anniversary-night
+    points: 50000
+    note: 'Each year after the account anniversary; use it within 12 months. Points from the IHG account can top it up at a hotel above the cap.'
 evidence:
   - rule: instacart
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
@@ -130,6 +135,12 @@ evidence:
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
     quote: 'Active Instacart+ membership is required to receive your $10 monthly credit.'
     in_popup: true
+  - rule: anniversary-night
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
+    quote: "Each year, after your card anniversary, you'll receive an Anniversary Free Night with a redemption cap of 50,000 points"
+  - rule: anniversary-night
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
+    quote: 'Anniversary Free Night must be redeemed, and stay must be completed, within 12 months from date of issue.'
 todo:
   - The $100 airline statement credit (after $250 on flights bought directly each calendar year, through 12/31/27) isn't modeled.
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

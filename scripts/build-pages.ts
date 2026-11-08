@@ -25,7 +25,7 @@ import {
   creditBack,
   creditTerms,
   CREDIT_GROUP,
-  CREDITS_ONLY_IF,
+  creditsOnlyIf,
   currencyName,
   earnText,
   ENROLL_FIRST,
@@ -42,9 +42,11 @@ import {
   wholeDollars,
   words,
   foreignFeeText,
+  freeNightText,
+  freeNightValueText,
   possessive,
 } from '../src/engine/text.ts'
-import { allCreditsYear } from '../src/engine/credits.ts'
+import { allCreditsYear, nightValue } from '../src/engine/credits.ts'
 import { cardColor } from '../src/format/card-art.ts'
 import type { Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
@@ -626,8 +628,22 @@ function creditsText(card: Card): string {
   const items = card.credits.map((c) => {
     return `<li><strong>${esc(capitalize(`${creditBack(c)} ${creditWhere(catalog, c)}${creditTerms(c)}`))}</strong>${c.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}${c.note ? `<br /><span class="muted">${esc(c.note)}</span>` : ''}${evidenceFor(card, c.id)}</li>`
   })
-  const year = allCreditsYear(catalog, card, today).yearly
+  const all = allCreditsYear(catalog, card, today, {})
+  const year = all.yearly - all.nights
   return `<h2>Statement credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns: ${esc(wholeDollars(year))} a year if you'd use them all. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that, and counts the ones you use against the annual fee. You can mark any you don't use.</p><ul>${items.join('')}</ul>`
+}
+
+// Valued like points: the night's cap at earnrate's default point value.
+function freeNightsText(card: Card): string {
+  if (card.free_nights.length === 0) return ''
+  const currency = catalog.currencies.find((c) => c.id === card.currency)
+  const cents = currency?.value_cents ?? 1
+  const items = card.free_nights.map((n) => {
+    const what = freeNightText(n.points, currency?.name ?? card.currency)
+    const value = freeNightValueText(nightValue(catalog, {}, card, n), cents)
+    return `<li><strong>${esc(capitalize(what))}</strong> (${esc(value)}, earnrate's default)${n.note ? `<br /><span class="muted">${esc(n.note)}</span>` : ''}${evidenceFor(card, n.id)}</li>`
+  })
+  return `<h2>Free night</h2><p>A free night each year after the account anniversary, with no spending needed. It's worth the most at a hotel that costs its full point cap, on a stay you'd make anyway. With your cards saved, earnrate counts it against the annual fee once you say you use it, and you can mark it as one you don't.</p><ul>${items.join('')}</ul>`
 }
 
 function introRatesText(card: Card): string {
@@ -1025,6 +1041,7 @@ function renderCard(
       }
       ${introRatesText(card)}
       ${creditsText(card)}
+      ${freeNightsText(card)}
       ${foreignFeeSection(card)}
       ${offerText(card)}
       ${recentChangesSection(ctx, releases, card.id)}
@@ -1207,10 +1224,14 @@ function compareBasis(c: Comparison): string {
         ),
       ),
   )
+  const unheld = [x, y].flatMap((s) => s.sim.credits.filter((k) => !k.held))
+  const onlyIf = creditsOnlyIf({
+    yearly: 0,
+    names: unheld.flatMap((k) => k.names),
+    nightIds: unheld.flatMap((k) => k.nightIds),
+  })
   const creditsText =
-    credits.length === 0
-      ? ''
-      : ` ${esc([...credits, CREDITS_ONLY_IF].join(' '))}`
+    credits.length === 0 ? '' : ` ${esc([...credits, onlyIf].join(' '))}`
   return `<h2>How this is figured</h2><p>Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks. ${esc(valueText(c))}${creditsText}</p>`
 }
 

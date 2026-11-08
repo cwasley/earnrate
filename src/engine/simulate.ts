@@ -71,11 +71,12 @@ export type Simulation = {
   memberships: MembershipCost[]
   membershipFees: number
   // Statement credits a cardholder uses on cards they already hold, at
-  // face value each period: counted against the fees, so in `net`.
+  // face value each period, and free nights they use at their "up to"
+  // value: counted against the fees, so in `net`.
   heldCredits: number
   net: number // rewards plus heldCredits, minus annual fees and membership fees
-  // Statement credits on the cards not held, a year at face value. Left out
-  // of `net`: they're worth it only to someone who'd spend there anyway.
+  // Statement credits and free nights on the cards not held, a year. Left
+  // out of `net`: they're worth it only to someone who'd spend there anyway.
   otherCredits: number
   netIfCreditsUsed: number // net plus otherCredits
   credits: SimulatedCredits[] // each card with credits
@@ -284,8 +285,8 @@ export function simulateWallet(
     const raw = wallet.cards.find((h) => h.id === card.id)
     const year =
       holding && raw
-        ? usedCreditsYear(catalog, card, raw, start)
-        : allCreditsYear(catalog, card, start)
+        ? usedCreditsYear(catalog, card, raw, start, wallet.valuations)
+        : allCreditsYear(catalog, card, start, wallet.valuations)
     return year.creditIds.length === 0 ? [] : [{ ...year, held: holding }]
   })
   const creditSum = (heldOnes: boolean) =>
@@ -636,7 +637,12 @@ export function simulateAdditions(
       simulation.membershipFees - current.membershipFees,
     )
     const gain = roundCents(extraRewards - annualFee - membershipFee)
-    const credits = allCreditsYear(catalog, card, options.start).yearly
+    const credits = allCreditsYear(
+      catalog,
+      card,
+      options.start,
+      wallet.valuations,
+    ).yearly
     additions.push({
       cardId: card.id,
       picks: simulation.cards.at(-1)?.picks ?? {},

@@ -11,12 +11,17 @@ import {
 import { milestoneStarts, milestoneWhat } from './milestones.ts'
 import { daysBetween } from './periods.ts'
 import { rotationGap, rotationGapText } from './rotation.ts'
+import { currencyValuation } from './valuation.ts'
 import { creditName, creditWhere, introWhat } from './rule-text.ts'
+import { nightValue } from './credits.ts'
 import {
   choicePhrase,
   creditBack,
   creditTerms,
+  currencyLabel,
   ENROLL_FIRST,
+  freeNightText,
+  freeNightValueText,
   idList,
   listed,
   possessive,
@@ -67,6 +72,15 @@ export type CardInfo = {
     amount: number
     period: Credit['period']
     enroll: boolean
+    text: string
+  }[]
+  // One a year each, after the account anniversary: "an anniversary free
+  // night each year, up to 50,000 IHG One Rewards points (up to $250 at
+  // 0.5¢ a point)". Marked used or not like a credit, by id.
+  freeNights: {
+    id: string
+    points: number // in the card's currency
+    value: number // dollars at the wallet's point value, "up to"
     text: string
   }[]
 }
@@ -239,6 +253,21 @@ export function cardInfo(
         period: c.period,
         enroll: c.enroll === true,
         text: `${creditBack(c)} ${creditWhere(catalog, c)}${creditTerms(c)}${c.enroll ? `, ${ENROLL_FIRST}` : ''}`,
+      }
+    }),
+    freeNights: card.free_nights.map((n) => {
+      const valuations = wallet?.valuations ?? {}
+      const value = nightValue(catalog, valuations, card, n)
+      const { centsPerUnit } = currencyValuation(
+        catalog,
+        { valuations },
+        card.currency,
+      )
+      return {
+        id: n.id,
+        points: n.points,
+        value,
+        text: `${freeNightText(n.points, currencyLabel(catalog, card.currency))} (${freeNightValueText(value, centsPerUnit)})`,
       }
     }),
   }

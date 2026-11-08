@@ -481,44 +481,139 @@ export const enrollCreditText = (card: string, names: string[]) =>
     ? `Enroll in ${possessive(card)} ${names[0] ?? ''} credit with the issuer, then mark it enrolled.`
     : `Enroll in ${possessive(card)} ${listed(names)} credits with the issuer, then mark them enrolled.`
 
-// Credits that need no enrolling, before the cardholder says whether they
-// use them: they don't offset the annual fee until then.
-export const askCreditText = (card: string, names: string[]) =>
-  names.length === 1
-    ? `Do you use ${possessive(card)} ${names[0] ?? ''} credit? Say you use it and it counts against the annual fee.`
-    : `Do you use ${possessive(card)} ${listed(names)} credits? Say which you use and they count against the annual fee.`
+// Credits that need no enrolling and free nights, before the cardholder
+// says whether they use them: they don't offset the annual fee until then.
+export function askCreditText(card: string, names: string[], nights = 0) {
+  const parts = [
+    ...(names.length === 0
+      ? []
+      : [
+          names.length === 1
+            ? `${names[0] ?? ''} credit`
+            : `${listed(names)} credits`,
+        ]),
+    ...(nights === 0 ? [] : [FREE_NIGHT_NAME]),
+  ]
+  return names.length + nights === 1
+    ? `Do you use ${possessive(card)} ${parts[0] ?? ''}? Say you use it and it counts against the annual fee.`
+    : `Do you use ${possessive(card)} ${listed(parts)}? Say which you use and they count against the annual fee.`
+}
+
+// A free night given each cardmember year, valued at its point cap.
+export const FREE_NIGHT_NAME = 'anniversary free night'
+
+// "an anniversary free night each year, up to 40,000 IHG One Rewards points"
+export const freeNightText = (points: number, currencyName: string) =>
+  `${withArticle(FREE_NIGHT_NAME)} each year, up to ${points.toLocaleString('en-US')} ${currencyName}`
+
+// "up to $200 at 0.5¢ a point"
+export const freeNightValueText = (value: number, cents: number) =>
+  `up to ${wholeDollars(value)} at ${num(cents)}¢ a point`
 
 // The cheat sheet: its picks are by rate alone.
 export const CREDITS_LEFT_OUT =
   'Statement credits (dollars back at a named store) are left out.'
 
-type CreditsTotal = { yearly: number; names: string[] }
+// `nights` is the dollars of `yearly` from free nights, which are "up to".
+type CreditsTotal = {
+  yearly: number
+  names: string[]
+  nights?: number
+  nightIds?: string[]
+}
+
+const nightCount = (c: CreditsTotal) => c.nightIds?.length ?? 0
+const upTo = (c: CreditsTotal) => ((c.nights ?? 0) > 0 ? 'up to ' : '')
+
+// "statement credits", "free night", "statement credits and free night"
+export function perksNoun(c: CreditsTotal, statement = true): string {
+  const nights = nightCount(c)
+  const credits = c.names.length - nights
+  return listed([
+    ...(credits === 0 ? [] : [statement ? 'statement credits' : 'credits']),
+    ...(nights === 0 ? [] : [nights === 1 ? 'free night' : 'free nights']),
+  ])
+}
 
 // "$424 a year: Dunkin', Uber, Grubhub and Resy"
 export const creditsYearText = (c: CreditsTotal) =>
-  `${wholeDollars(c.yearly)} a year: ${listed(c.names)}`
+  `${upTo(c)}${wholeDollars(c.yearly)} a year: ${listed(c.names)}`
 
 // A held card's credits the cardholder uses, counted against its fee:
 // "Amex Gold's credits you use (Dunkin' and Uber) count against its fee: $204 a year."
-export const creditsCountedText = (
+export function creditsCountedText(
   card: string,
   fee: number,
   c: CreditsTotal,
-) =>
-  fee > 0
-    ? `${possessive(card)} credits you use (${listed(c.names)}) count against its fee: ${wholeDollars(c.yearly)} a year.`
-    : `${possessive(card)} credits you use (${listed(c.names)}) add ${wholeDollars(c.yearly)} a year.`
+): string {
+  const amount = `${upTo(c)}${wholeDollars(c.yearly)} a year`
+  if (nightCount(c) > 0 && c.names.length === 1)
+    return fee > 0
+      ? `${possessive(card)} ${c.names[0] ?? ''}, which you use, counts against its fee: ${amount}.`
+      : `${possessive(card)} ${c.names[0] ?? ''}, which you use, adds ${amount}.`
+  const noun = nightCount(c) > 0 ? perksNoun(c, false) : 'credits'
+  return fee > 0
+    ? `${possessive(card)} ${noun} you use (${listed(c.names)}) count against its fee: ${amount}.`
+    : `${possessive(card)} ${noun} you use (${listed(c.names)}) add ${amount}.`
+}
 
 // Rankings of cards the person doesn't hold: the honest figure leaves
 // credits out, and the one with them is shown beside it.
 export const CREDITS_APART =
-  "Statement credits (dollars back at named stores) aren't in the ranking: they're worth it only if you'd spend at those places anyway. Where a card has them, what it nets if you'd use them all is shown apart."
+  "Statement credits (dollars back at named stores) and yearly free nights aren't in the ranking: they're worth it only if you'd spend at those places or stay at those hotels anyway. Where a card has them, what it nets if you'd use them all is shown apart."
 
 export const HELD_CREDITS_COUNTED =
-  "Statement credits on your own cards count against their fees once you've said you use them: marked enrolled, or marked used (or already used) for ones that need no enrolling."
+  "Statement credits and free nights on your own cards count against their fees once you've said you use them: marked enrolled, or marked used (or already used) for ones that need no enrolling."
 
 export const CREDITS_ONLY_IF =
   "They're worth that only if you'd spend at those places anyway."
+
+// What "if you'd use them all" assumes, for what the total holds.
+export function onlyIfText(credits: boolean, nights: boolean): string {
+  if (!nights) return CREDITS_ONLY_IF
+  return credits
+    ? "They're worth that only if you'd spend at those places anyway, and a free night only on a stay you'd make anyway, at a hotel that costs its full point cap."
+    : "A free night is worth that only on a stay you'd make anyway, at a hotel that costs its full point cap."
+}
+
+export const creditsOnlyIf = (c: CreditsTotal) =>
+  onlyIfText(c.names.length > nightCount(c), nightCount(c) > 0)
+
+// Several cards' credits and free nights as one total.
+export const perksTotal = (list: CreditsTotal[]): CreditsTotal => ({
+  yearly: roundCents(list.reduce((sum, c) => sum + c.yearly, 0)),
+  names: list.flatMap((c) => c.names),
+  nights: roundCents(list.reduce((sum, c) => sum + (c.nights ?? 0), 0)),
+  nightIds: list.flatMap((c) => c.nightIds ?? []),
+})
+
+// " · $X if you'd use all its credits ($424 a year)", for a ranked line.
+export function ifCreditsShort(
+  c: CreditsTotal,
+  net: number,
+  sign = '',
+  its = 'its',
+): string {
+  if (c.yearly <= 0) return ''
+  const noun = nightCount(c) > 0 ? perksNoun(c, false) : 'credits'
+  const all = nightCount(c) > 0 && c.names.length === 1 ? '' : 'all '
+  return ` · ${sign}${upTo(c)}${wholeDollars(net)} if you'd use ${all}${its} ${noun} (${upTo(c)}${wholeDollars(c.yearly)} a year)`
+}
+
+// The planner's credits and free nights, kept apart from its figures: "its
+// credits are $120 a year more if you'd use them all".
+export const offerPerksText = (credits: number, freeNights: number) => [
+  ...(credits > 0
+    ? [
+        `its credits are ${wholeDollars(credits)} a year more if you'd use them all`,
+      ]
+    : []),
+  ...(freeNights > 0
+    ? [
+        `its ${FREE_NIGHT_NAME} is up to ${wholeDollars(freeNights)} a year more from the first anniversary, if you'd use it`,
+      ]
+    : []),
+]
 
 // "If you'd use all the statement credits on Amex Gold and Sapphire Reserve
 // ($724 a year), the pair nets $X a year."
@@ -526,18 +621,23 @@ export const pairCreditsUsedText = (
   cards: string[],
   yearly: number,
   dollars: number,
+  nights = false, // the total includes a free night, so it's "up to"
 ) =>
-  `If you'd use all the statement credits on ${listed(cards)} (${wholeDollars(yearly)} a year), the pair nets ${wholeDollars(dollars)} a year.`
+  `If you'd use all the statement credits${nights ? ' and free nights' : ''} on ${listed(cards)} (${nights ? 'up to ' : ''}${wholeDollars(yearly)} a year), the pair nets ${nights ? 'up to ' : ''}${wholeDollars(dollars)} a year.`
 
 // "If you'd use all its statement credits ($424 a year: …), it nets $X a
 // year." `adds` for a card beside the ones already held.
-export const ifCreditsUsedText = (
+export function ifCreditsUsedText(
   c: CreditsTotal,
   dollars: number,
   verb: 'nets' | 'adds' = 'nets',
   owner = 'its', // "the Amex Gold's" beside another card
-) =>
-  `If you'd use all ${owner} statement credits (${creditsYearText(c)}), it ${verb} ${wholeDollars(dollars)} a year.`
+): string {
+  if (nightCount(c) === 0)
+    return `If you'd use all ${owner} statement credits (${creditsYearText(c)}), it ${verb} ${wholeDollars(dollars)} a year.`
+  const all = c.names.length > 1 ? 'all ' : ''
+  return `If you'd use ${all}${owner} ${perksNoun(c)} (${creditsYearText(c)}), it ${verb} up to ${wholeDollars(dollars)} a year.`
+}
 
 // The renewal check on the to-do list. A card well ahead gets one short
 // line; one that's close or behind gets the parts of the math.
@@ -550,6 +650,8 @@ export function renewalText(
     firstYearFee: number | null
     rewardsAdded: number
     credits: number
+    freeNights: number
+    nightsNotCounted: number
     net: number
     against: string | null
     typical: boolean
@@ -560,7 +662,9 @@ export function renewalText(
       ? `${money(r.fee)} fee`
       : `${money(r.fee)} fee, up from ${money(r.firstYearFee)} the first year`
   const when = `${name} renews around ${shortDate(r.due)} (${fee})`
-  if (r.net >= r.fee)
+  // The free night is what puts it ahead: give the math and name it.
+  const tipped = r.freeNights > 0 && r.net >= 0 && r.net < r.freeNights
+  if (r.net >= r.fee && !tipped)
     return `${when}: it's paying for itself, about ${wholeDollars(r.net)} a year ahead after the fee.`
   const basis = r.typical ? 'At typical spending' : 'On your spending'
   const over =
@@ -571,12 +675,25 @@ export function renewalText(
       : Math.round(r.rewardsAdded) < 0
         ? `it earns about ${wholeDollars(-r.rewardsAdded)} a year less than ${over}`
         : `it earns about the same as ${over}`
-  const credits =
-    r.credits > 0 ? `, plus ${wholeDollars(r.credits)} in credits you use` : ''
+  const creditDollars = roundCents(r.credits - r.freeNights)
+  const extras = [
+    ...(creditDollars > 0
+      ? [`${wholeDollars(creditDollars)} in credits you use`]
+      : []),
+    ...(r.freeNights > 0
+      ? [`up to ${wholeDollars(r.freeNights)} for its ${FREE_NIGHT_NAME}`]
+      : []),
+  ]
+  const credits = extras.length > 0 ? `, plus ${listed(extras)}` : ''
+  const withNight = roundCents(r.net + r.nightsNotCounted)
+  const uncounted =
+    r.nightsNotCounted > 0
+      ? ` Its ${FREE_NIGHT_NAME} (up to ${wholeDollars(r.nightsNotCounted)}) isn't counted until you say you use it${withNight >= 0 ? `; with it, up to about ${wholeDollars(withNight)} a year ahead` : ''}.`
+      : ''
   const result =
     r.net >= 0
-      ? `about ${wholeDollars(r.net)} a year ahead after the fee.`
-      : `about ${wholeDollars(-r.net)} a year short of the fee. Check with ${issuer} before the fee posts.`
+      ? `about ${wholeDollars(r.net)} a year ahead after the fee${tipped ? ', but only with the free night at its full value' : ''}.`
+      : `about ${wholeDollars(-r.net)} a year short of the fee.${uncounted} Check with ${issuer} before the fee posts.`
   return `${when}. ${basis}, ${earns}${credits}: ${result}`
 }
 

@@ -13,9 +13,10 @@ import {
   type Simulation,
 } from '../../src/engine/simulate.ts'
 import {
+  creditsOnlyIf,
   creditsYearText,
-  CREDITS_ONLY_IF,
   listed,
+  perksNoun,
   money,
   num,
   pct,
@@ -137,7 +138,7 @@ export function feeWorthKit(
       (m) => at(m).card.net > at(m).best.net,
       STEP,
     )
-    const year = allCreditsYear(catalog, card, today)
+    const year = allCreditsYear(catalog, card, today, valuations)
     const credits = year.creditIds.length > 0 ? year : null
     const withCredits =
       credits === null
@@ -228,16 +229,26 @@ export function feeWorthSection(
     w.creditsStopAt === null
       ? ''
       : `; past about ${esc(wholeDollars(w.creditsStopAt))} a month, the best no-fee card earns more`
+  // "all its statement credits", "its free night", "all its statement
+  // credits and free night"
+  const perks =
+    w.credits === null
+      ? ''
+      : `${w.credits.names.length > 1 ? 'all ' : ''}its ${perksNoun(w.credits)}`
+  const worthMore =
+    w.credits !== null && w.credits.names.length === 1
+      ? "it's worth"
+      : "they're worth"
   const creditsLine =
     w.credits === null
       ? ''
       : ` ${
           w.creditsBreakEven === null
-            ? `Even if you'd use all its statement credits (${esc(creditsYearText(w.credits))}), it doesn't come out ahead within ${esc(wholeDollars(MAX_MONTHLY))} a month.`
+            ? `Even if you'd use ${esc(perks)} (${esc(creditsYearText(w.credits))}), it doesn't come out ahead within ${esc(wholeDollars(MAX_MONTHLY))} a month.`
             : w.creditsBreakEven === 0
-              ? `If you'd use all its statement credits (${esc(creditsYearText(w.credits))}), they're worth more than its ${esc(fee)} fee, so it comes out ahead ${w.creditsStopAt === null ? 'at any amount' : `up to about ${esc(wholeDollars(w.creditsStopAt))} a month; past that, the best no-fee card earns more`}.`
-              : `If you'd use all its statement credits (${esc(creditsYearText(w.credits))}), the fee pays off from about <strong>${esc(wholeDollars(w.creditsBreakEven))} a month</strong>${pastThat}.`
-        } ${esc(CREDITS_ONLY_IF)}`
+              ? `If you'd use ${esc(perks)} (${esc(creditsYearText(w.credits))}), ${worthMore} more than its ${esc(fee)} fee, so it comes out ahead ${w.creditsStopAt === null ? 'at any amount' : `up to about ${esc(wholeDollars(w.creditsStopAt))} a month; past that, the best no-fee card earns more`}.`
+              : `If you'd use ${esc(perks)} (${esc(creditsYearText(w.credits))}), the fee pays off from about <strong>${esc(wholeDollars(w.creditsBreakEven))} a month</strong>${pastThat}.`
+        } ${esc(creditsOnlyIf(w.credits))}`
   const extras = [
     w.at(SHOWN_AMOUNTS[0] ?? 500).card.membershipFees > 0
       ? 'the membership it needs, counted like a fee'

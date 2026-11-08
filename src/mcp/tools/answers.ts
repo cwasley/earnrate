@@ -574,7 +574,7 @@ export function registerAnswerTools(
     {
       title: 'Search cards',
       description:
-        'Finds credit cards in earnrate\'s catalog by name or issuer, e.g. "sapphire", "amex gold" or "bofa". Returns each card\'s id (for add_card), network, annual fee (and any first-year waiver), foreign transaction fee, whether it\'s already in the wallet, what it needs set up (category picks and their options, memberships, activations), its yearly spend bonuses, first-year rates and statement credits, each with the id update_card takes. Leave the query out to list every card. US cards only.',
+        'Finds credit cards in earnrate\'s catalog by name or issuer, e.g. "sapphire", "amex gold" or "bofa". Returns each card\'s id (for add_card), network, annual fee (and any first-year waiver), foreign transaction fee, whether it\'s already in the wallet, what it needs set up (category picks and their options, memberships, activations), its yearly spend bonuses, first-year rates, statement credits and yearly free nights (valued at their point cap, "up to"), each with the id update_card takes. Leave the query out to list every card. US cards only.',
       inputSchema: z.object({
         query: z
           .string()

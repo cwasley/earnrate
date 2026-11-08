@@ -170,17 +170,19 @@ export function checklist(
     const toAsk = s.credits.filter(
       (c) => !c.enroll && !c.confirmed && !c.skipped,
     )
-    if (toAsk.length > 0)
+    const nightsToAsk = s.freeNights.filter((n) => !n.confirmed && !n.skipped)
+    if (toAsk.length + nightsToAsk.length > 0)
       items.push({
         kind: 'enroll',
         cardId: card.id,
-        ref: toAsk.map((c) => c.id).join(','),
+        ref: [...toAsk, ...nightsToAsk].map((c) => c.id).join(','),
         text: askCreditText(
           name,
           toAsk.map((c) => {
             const credit = card.credits.find((x) => x.id === c.id)
             return credit ? creditLabel(catalog, credit) : c.name
           }),
+          nightsToAsk.length,
         ),
         due: null,
       })

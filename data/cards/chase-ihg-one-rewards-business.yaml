@@ -77,6 +77,11 @@ credits:
     amount: 100
     period: calendar_year
     note: 'Bought directly from Expensify on expensify.com or in its app, applied automatically.'
+# One a year after the account anniversary, valued at its point cap.
+free_nights:
+  - id: anniversary-night
+    points: 50000
+    note: 'Each year on the account anniversary; use it within 12 months. Points from the IHG account can top it up at a hotel above the cap.'
 evidence:
   - rule: diamond-status
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
@@ -159,6 +164,12 @@ evidence:
   - rule: expensify
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
     quote: 'Enjoy up to $100 in statement credits towards Expensify purchases each calendar year.'
+  - rule: anniversary-night
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: "Each year, after your card anniversary, you'll receive an Anniversary Free Night with a redemption cap of 50,000 points"
+  - rule: anniversary-night
+    url: https://creditcards.chase.com/business-credit-cards/IHG/business
+    quote: 'Anniversary Free Night will be available for redemption on your account anniversary date each year.'
 todo:
   - The $100 airline statement credit (after $250 on flights bought directly each calendar year) isn't modeled.
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

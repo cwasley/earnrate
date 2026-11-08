@@ -112,9 +112,10 @@ A `cardmember_year` milestone runs from the account anniversary date. Citi count
 
 ### Perks that offset the annual fee
 
-Merchant credits (`credits:`) count against a held card's fee once used, and are shown apart for cards not held. Perks that aren't dollars at a store don't count anywhere.
+Merchant credits (`credits:`) and yearly free nights (`free_nights:`, one after each account anniversary, valued at the night's point cap times the person's point value) count against a held card's fee once the cardholder says they use them, and are shown apart for cards not held. A free night needs a point cap to be valued; other perks that aren't dollars at a store don't count anywhere.
 
-- `amex-hilton-honors-aspire`: an Annual Free Night Reward with no spending needed.
+- `amex-hilton-honors-aspire`: an Annual Free Night Reward with no spending needed, but Hilton's has no point cap ("one standard accommodation ... at properties in the Hilton portfolio"), so it has no value to count yet.
+- Free nights earned by spending (milestone `rewards` on the Hilton, Marriott and IHG cards) are shown, not valued.
 
 ### Merchant credits the schema can't express
 
@@ -134,6 +135,6 @@ A credit (`credits:`) is a fixed dollar amount each period at named merchants or
 
 Out of scope per the project's non-goals, or too variable to model as a rate.
 
-- Statement credits other than merchant credits: credits for a merchant you choose first (an airline fee credit), credits once every several years (Global Entry, TSA PreCheck), and benefits that aren't spending (free nights, lounges, memberships). Merchant credits (dollars back at named merchants up to a limit per period, like Amex Platinum's lululemon credit) are modeled as card `credits:` (Collin's call, 2026-11-04).
+- Statement credits other than merchant credits: credits for a merchant you choose first (an airline fee credit), credits once every several years (Global Entry, TSA PreCheck), and benefits that aren't spending (lounges, memberships). Merchant credits (dollars back at named merchants up to a limit per period, like Amex Platinum's lululemon credit) are modeled as card `credits:` (Collin's call, 2026-11-04), and yearly free nights with a point cap as `free_nights:`.
 - Store discounts and coupons (Kohl's, Target, Nordstrom cardholder offers).
 - Per-item and limited-time promotions (Prime Card Bonus, Prime Visa's 6% with select delivery, Nordstrom bonus points events, Bilt Neighborhood Dining).

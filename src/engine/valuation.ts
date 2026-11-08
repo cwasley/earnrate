@@ -11,7 +11,7 @@ export type Valuation = {
 
 export function currencyValuation(
   catalog: Catalog,
-  wallet: Wallet,
+  wallet: Pick<Wallet, 'valuations'>,
   currencyId: string,
 ): Omit<Valuation, 'pooledFrom'> {
   const currency = catalog.currencies.find((c) => c.id === currencyId)

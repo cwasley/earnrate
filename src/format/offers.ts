@@ -4,6 +4,7 @@ import {
   feeText,
   minimumSpendText,
   money,
+  offerPerksText,
   shortDate,
   twoYearText,
   wholeDollars,
@@ -27,7 +28,12 @@ export function formatOffers(
     const pace =
       o.spend > 0 ? ` (about ${wholeDollars(o.spend / weeks)} a week)` : ''
     lines.push(
-      `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  ${o.plan ? twoYearText(o.plan) : `about ${wholeDollars(o.firstYearValue)} the first year`}${o.credits > 0 ? `; its credits are ${wholeDollars(o.credits)} a year more if you'd use them all` : ''}`,
+      `${String(i + 1).padStart(2)}. ${o.cardName.padEnd(width)}  ${o.plan ? twoYearText(o.plan) : `about ${wholeDollars(o.firstYearValue)} the first year`}${offerPerksText(
+        o.credits,
+        o.freeNights,
+      )
+        .map((t) => `; ${t}`)
+        .join('')}`,
       `    ${offerTerms(o, currencyName(o.currency))}${pace}. ${capitalize(feeText(o))}.${o.membershipFee > 0 ? ` Needs a ${money(o.membershipFee)} membership, counted in the first year.` : ''}${o.held ? ' In your wallet.' : ''}`,
     )
     lines.push(

@@ -210,6 +210,19 @@ export const WalletSummarySchema = z.object({
           text: z.string(),
         }),
       ),
+      // One a year each, after the anniversary; marked used (in enrolled)
+      // or not used (skippedCredits) by id, like a credit.
+      freeNights: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          points: z.number(), // the most a night can cost
+          value: z.number(), // dollars at the user's point value: "up to"
+          confirmed: z.boolean(), // said in use: counts against the annual fee
+          skipped: z.boolean(),
+          text: z.string(),
+        }),
+      ),
       usedCredits: z.number(), // a year, counted against the annual fee
       usedCreditsText: z.string().nullable(),
       chosen: z
@@ -318,6 +331,9 @@ export const OfferComparisonSchema = z.object({
       // if all were used. Not ranked on.
       credits: z.number(),
       firstYearValueIfCreditsUsed: z.number(),
+      // Its free nights a year from the first anniversary, "up to": not
+      // ranked on, and not in the first year.
+      freeNights: z.number(),
       // On the user's spending beside their cards; null for a card they hold.
       plan: z
         .object({
@@ -396,6 +412,14 @@ export const CardSearchSchema = z.object({
           amount: z.number(),
           period: CreditPeriod,
           enroll: z.boolean(),
+          text: z.string(),
+        }),
+      ),
+      freeNights: z.array(
+        z.object({
+          id: z.string(),
+          points: z.number(),
+          value: z.number(), // dollars, "up to"
           text: z.string(),
         }),
       ),
@@ -519,18 +543,21 @@ const SimulationSchema = z.object({
     }),
   ),
   membershipFees: z.number(),
-  // Credits the user uses on cards they hold, a year: counted in net.
+  // Credits and free nights the user uses on cards they hold, a year:
+  // counted in net.
   heldCredits: z.number(),
   net: z.number(),
-  // Credits on cards not held, a year at face value: not in net.
+  // Credits and free nights on cards not held, a year: not in net.
   otherCredits: z.number(),
   netIfCreditsUsed: z.number(),
   credits: z.array(
     z.object({
       cardId: z.string(),
-      yearly: z.number(),
-      creditIds: z.array(z.string()),
+      yearly: z.number(), // free nights included, at their "up to" value
+      creditIds: z.array(z.string()), // credit ids, then free night ids
       names: z.array(z.string()),
+      nights: z.number(), // the dollars of yearly from free nights
+      nightIds: z.array(z.string()),
       held: z.boolean(),
     }),
   ),
@@ -569,7 +596,7 @@ export const SpendingSimulationSchema = z.object({
       annualFee: z.number(),
       membershipFee: z.number(),
       gain: z.number(),
-      credits: z.number(), // its statement credits, a year: not in gain
+      credits: z.number(), // its statement credits and free nights, a year: not in gain
       gainIfCreditsUsed: z.number(),
     }),
   ),

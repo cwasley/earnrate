@@ -33,11 +33,12 @@ export type CardInput = {
   // Spend milestone id → dollars already spent on the card this period.
   milestoneSpent?: Record<string, number>
   // Statement credit ids the cardholder has enrolled in, or, for ones that
-  // need no enrolling, says they use; replaces the list.
+  // need no enrolling and free nights, says they use; replaces the list.
   enrolled?: string[]
   // Credit id → dollars of that credit already received this period.
   creditUsed?: Record<string, number>
-  // Statement credit ids the cardholder doesn't use; replaces the list.
+  // Statement credit and free night ids the cardholder doesn't use;
+  // replaces the list.
   skippedCredits?: string[]
   // A welcome bonus in progress; null stops tracking it. Spend and deadline
   // default to the card's published offer.
@@ -247,28 +248,31 @@ export function cardFields(
     }
     fields.milestone_usage = usage
   }
+  // Free nights are marked used or skipped beside the credits.
+  const unknownCredit = (id: string) => {
+    const ids = [
+      ...card.credits.map((c) => c.id),
+      ...card.free_nights.map((n) => n.id),
+    ]
+    if (ids.includes(id)) return
+    const what =
+      card.free_nights.length === 0
+        ? 'credits are'
+        : card.credits.length === 0
+          ? 'free nights are'
+          : 'credits and free nights are'
+    problems.push(
+      ids.length > 0
+        ? `${card.id} has no credit '${id}'. Its ${what}: ${idList(ids)}.`
+        : `${card.id} has no statement credits.`,
+    )
+  }
   if (input.enrolled !== undefined) {
-    const ids = card.credits.map((c) => c.id)
-    for (const id of input.enrolled) {
-      if (!ids.includes(id))
-        problems.push(
-          ids.length > 0
-            ? `${card.id} has no credit '${id}'. Its credits are: ${idList(ids)}.`
-            : `${card.id} has no statement credits.`,
-        )
-    }
+    input.enrolled.forEach(unknownCredit)
     fields.enrolled = [...new Set(input.enrolled)]
   }
   if (input.skippedCredits !== undefined) {
-    const ids = card.credits.map((c) => c.id)
-    for (const id of input.skippedCredits) {
-      if (!ids.includes(id))
-        problems.push(
-          ids.length > 0
-            ? `${card.id} has no credit '${id}'. Its credits are: ${idList(ids)}.`
-            : `${card.id} has no statement credits.`,
-        )
-    }
+    input.skippedCredits.forEach(unknownCredit)
     fields.skipped_credits = [...new Set(input.skippedCredits)]
   }
   if (input.creditUsed !== undefined) {

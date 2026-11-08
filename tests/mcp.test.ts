@@ -1383,6 +1383,54 @@ describe('wallet setup', () => {
     )
   })
 
+  test('a free night: listed, asked about, marked used through update_card, and counted in the renewal check', async () => {
+    const file = await walletCopy(
+      "cards:\n  - id: chase-ihg-one-rewards-premier # mine\n    anniversary: '11-15'\n",
+    )
+    const client = await connect(file)
+    const search = await client.callTool({
+      name: 'search_cards',
+      arguments: { query: 'ihg premier' },
+    })
+    expect(
+      (
+        search.structuredContent as {
+          cards: { id: string; freeNights: { id: string; value: number }[] }[]
+        }
+      ).cards.find((c) => c.id === 'chase-ihg-one-rewards-premier')?.freeNights,
+    ).toEqual([
+      expect.objectContaining({ id: 'anniversary-night', value: 250 }),
+    ])
+    const before = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(before)).toMatch(
+      /Do you use IHG One Rewards Premier's anniversary free night\?/,
+    )
+    expect(text(before)).toMatch(
+      /Its anniversary free night \(up to \$250\) isn't counted until you say you use it/,
+    )
+    const set = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'chase-ihg-one-rewards-premier',
+        enrolled: ['anniversary-night'],
+      },
+    })
+    expect(set.isError).toBeFalsy()
+    const after = await client.callTool({ name: 'list_wallet', arguments: {} })
+    const ihg = (after.structuredContent as WalletSummary).cards[0]
+    expect(ihg?.freeNights).toEqual([
+      expect.objectContaining({ id: 'anniversary-night', confirmed: true }),
+    ])
+    expect(ihg?.usedCredits).toBe(250)
+    expect(text(after)).not.toMatch(/Do you use/)
+    expect(text(after)).toMatch(
+      /plus up to \$250 for its anniversary free night: about \$\d+ a year ahead after the fee, but only with the free night at its full value\./,
+    )
+    expect(await readFile(file, 'utf8')).toContain(
+      '    enrolled: [anniversary-night]\n',
+    )
+  })
+
   test('best_cards_for puts cards with a store credit first', async () => {
     const client = await connect(await walletCopy())
     const result = await client.callTool({

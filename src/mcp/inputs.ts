@@ -80,13 +80,13 @@ const NamedCard = z.object({
     .array(z.string())
     .optional()
     .describe(
-      "Statement credits the user has enrolled in with the issuer, as credit ids from search_cards. A credit that needs enrolling counts only when it's here. Ask; never assume.",
+      "Statement credits the user has enrolled in with the issuer, and free nights they use, as ids from search_cards. A credit that needs enrolling counts only when it's here. Ask; never assume.",
     ),
   skippedCredits: z
     .array(z.string())
     .optional()
     .describe(
-      "Statement credit ids the user says they don't use. They don't count toward a pick or against the card's annual fee.",
+      "Statement credit and free night ids the user says they don't use. They don't count toward a pick or against the card's annual fee.",
     ),
   opened: z
     .string()
@@ -146,7 +146,7 @@ const cardFields = {
     .array(z.string())
     .optional()
     .describe(
-      "Statement credit ids the user has enrolled in with the issuer, or, for a credit that needs no enrolling, says they use (search_cards and list_wallet list each card's credits, e.g. \"lululemon\" on Amex Platinum). A credit that needs enrolling counts in answers only once it's here, and any credit counts against the annual fee only once it's here (or has been used). Replaces the current list. Ask; never assume.",
+      'Statement credit ids the user has enrolled in with the issuer, or, for a credit that needs no enrolling, says they use, and free night ids they say they use (search_cards and list_wallet list each card\'s credits and free nights, e.g. "lululemon" on Amex Platinum, "anniversary-night" on IHG Premier). A credit that needs enrolling counts in answers only once it\'s here, and any credit or free night counts against the annual fee only once it\'s here (or, for a credit, has been used). Replaces the current list. Ask; never assume.',
     ),
   creditUsed: z
     .record(z.string(), z.number().nonnegative())
@@ -158,7 +158,7 @@ const cardFields = {
     .array(z.string())
     .optional()
     .describe(
-      "Statement credit ids the user doesn't use, e.g. [\"dunkin\"] on Amex Gold. They're left out of picks, the to-do list and the annual-fee math; every other credit on the card counts against its fee once it's in enrolled (or, for one that needs no enrolling, has been used). Replaces the current list; [] counts them all again.",
+      "Statement credit and free night ids the user doesn't use, e.g. [\"dunkin\"] on Amex Gold. They're left out of picks, the to-do list and the annual-fee math; every other credit or free night on the card counts against its fee once it's in enrolled (or, for a credit that needs no enrolling, has been used). Replaces the current list; [] counts them all again.",
     ),
   bonus: z
     .object({

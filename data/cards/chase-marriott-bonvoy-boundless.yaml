@@ -31,6 +31,11 @@ milestones:
     rewards:
       - Gold Elite status
     note: January 1 through December 31; purchases that post in the next year count toward that year. Chase says to allow up to 8 weeks for status to post. One Boundless account per Marriott Bonvoy member qualifies.
+# One a year after the account anniversary, valued at its point cap.
+free_nights:
+  - id: anniversary-night
+    points: 35000
+    note: 'Deposited within 8 weeks of the account anniversary; it expires after 12 months. Marriott Bonvoy points can top it up.'
 evidence:
   - rule: base_rate
     url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
@@ -71,8 +76,17 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65195.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: anniversary-night
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: 'a Free Night Award every year after your account anniversary'
+  - rule: anniversary-night
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: 'Your Anniversary Free Night Award is valid for a one night hotel stay'
+  - rule: anniversary-night
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    quote: 'at a property with a redemption level up to 35,000 points'
 todo:
   - 'The welcome offer is 3 Free Night Awards (each up to 50,000 points a night) after $3,000 in purchases in the first 3 months, not points, so the schema can''t hold it. Chase: "This credit card is not available to you if (1) you currently have any of the following cards or (2) you received a new cardmember bonus for any of the following cards within the last 24 months" (Marriott Bonvoy Premier, Rewards Premier, Boundless, Rewards Premier Plus, Bold); the bonus also isn''t available to holders of the Marriott Bonvoy American Express Card in the last 30 days, or anyone approved for Brilliant or Bevy in the last 90 days or paid their bonus in the last 24 months.'
   - 1 Elite Night Credit for every $5,000 in purchases, with no limit, isn't modeled (milestones are once a period).
-  - The yearly Free Night Award (up to 35,000 points) after each account anniversary, automatic Silver Elite status and 15 Elite Night Credits each calendar year aren't modeled; they don't depend on spending.
+  - Automatic Silver Elite status and 15 Elite Night Credits each calendar year aren't modeled; they don't depend on spending.
   - "The airline statement credit isn't modeled: $50 after $250 on purchases directly with airlines June 4 to Dec 31, 2026, and another $50 after $250 Jan 1 to June 30, 2027."

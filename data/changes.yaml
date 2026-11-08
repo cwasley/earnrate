@@ -3,6 +3,46 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.08'
+  date: 2026-11-08
+  changes:
+    - cause: addition
+      card: chase-ihg-one-rewards-premier
+      field: free_nights.anniversary-night
+      now: { points: 50000 }
+      summary: The Anniversary Free Night, up to 50,000 points, each year after the account anniversary.
+      source: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
+    - cause: addition
+      card: chase-ihg-one-rewards-premier-select
+      field: free_nights.anniversary-night
+      now: { points: 60000 }
+      summary: The Anniversary Free Night, up to 60,000 points, each year after the account anniversary.
+      source: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    - cause: addition
+      card: chase-ihg-one-rewards-business
+      field: free_nights.anniversary-night
+      now: { points: 50000 }
+      summary: The Anniversary Free Night, up to 50,000 points, each year on the account anniversary.
+      source: https://creditcards.chase.com/business-credit-cards/IHG/business
+    - cause: addition
+      card: chase-marriott-bonvoy-boundless
+      field: free_nights.anniversary-night
+      now: { points: 35000 }
+      summary: The Free Night Award, up to 35,000 points, each year after the account anniversary.
+      source: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
+    - cause: addition
+      card: amex-marriott-bonvoy-brilliant
+      field: free_nights.anniversary-night
+      now: { points: 85000 }
+      summary: The Free Night Award, up to 85,000 points, each year after the Card renewal month.
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0
+    - cause: addition
+      card: amex-marriott-bonvoy-business
+      field: free_nights.anniversary-night
+      now: { points: 35000 }
+      summary: The Free Night Award, up to 35,000 points, each year after the Card renewal month.
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0
+
 - version: '2026.11.07.3'
   date: 2026-11-07
   changes:

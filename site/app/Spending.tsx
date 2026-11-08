@@ -354,6 +354,7 @@ export function Spending({
                               .map((c) => shortName(c.cardId)),
                             p.otherCredits,
                             p.netIfCreditsUsed,
+                            p.credits.some((c) => !c.held && c.nights > 0),
                           )}
                         </p>
                       ) : null}

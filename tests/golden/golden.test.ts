@@ -2171,6 +2171,8 @@ describe('#34 statement credits against the annual fee', () => {
           yearly: 424,
           creditIds: ['dunkin', 'uber-cash', 'dining', 'resy'],
           names: ["Dunkin'", 'Uber', 'Grubhub', 'Resy'],
+          nights: 0,
+          nightIds: [],
           held: false,
         },
       ])
@@ -2645,6 +2647,98 @@ describe('#37 the next-card planner', () => {
       expect(issuers.has('chase')).toBe(false)
       expect(issuers.has('amex')).toBe(false)
       expect(issuers.has('citi')).toBe(true)
+    },
+  )
+})
+
+describe('#38 yearly free nights', () => {
+  const ihg = (fields: object = {}) =>
+    withProfile(
+      WalletSchema.parse({
+        cards: [
+          {
+            id: 'chase-ihg-one-rewards-premier',
+            anniversary: '11-15',
+            ...fields,
+          },
+          { id: 'citi-double-cash' },
+        ],
+      }),
+      'flat',
+    )
+  const renewal = (w: Wallet) =>
+    checklist(catalog, w, TODAY).find((i) => i.kind === 'renewal')
+  const both = ['chase-ihg-one-rewards-premier', 'citi-double-cash']
+
+  goldenTest(
+    "#38a until the cardholder says they use it, the night doesn't offset the fee, and the check says what it would",
+    () => {
+      expect(renewal(ihg())?.text).toMatch(
+        /^IHG One Rewards Premier Credit Card renews around Nov 15, 2026 \(\$150 fee\)\. At typical spending, it earns about \$\d+ a year more than your other cards would: about \$\d+ a year short of the fee\. Its anniversary free night \(up to \$250\) isn't counted until you say you use it; with it, up to about \$\d+ a year ahead\. Check with Chase before the fee posts\.$/,
+      )
+    },
+  )
+
+  goldenTest(
+    '#38b once used, the night counts at its cap times the point value, and the check names it when it tips the result',
+    () => {
+      const w = ihg({ enrolled: ['anniversary-night'] })
+      expect(renewal(w)?.text).toMatch(
+        /, plus up to \$250 for its anniversary free night: about \$\d+ a year ahead after the fee, but only with the free night at its full value\.$/,
+      )
+      const lines = typicalSpendLines(catalog)
+      expect(simulateWallet(catalog, w, lines, TODAY, both).heldCredits).toBe(
+        250,
+      )
+      const valued = {
+        ...w,
+        valuations: { ...w.valuations, 'ihg-points': 0.7 },
+      }
+      expect(
+        simulateWallet(catalog, valued, lines, TODAY, both).heldCredits,
+      ).toBe(350)
+    },
+  )
+
+  goldenTest(
+    "#38c a night the cardholder doesn't use counts nowhere and isn't asked about",
+    () => {
+      const w = ihg({ skipped_credits: ['anniversary-night'] })
+      expect(renewal(w)?.text).not.toMatch(/free night/)
+      expect(
+        checklist(catalog, w, TODAY).some((i) =>
+          i.text.startsWith('Do you use'),
+        ),
+      ).toBe(false)
+    },
+  )
+
+  goldenTest(
+    "#38d the planner shows a card's free night apart, from year two, never in the ranking",
+    () => {
+      const { offers } = compareOffers(
+        catalog,
+        withProfile(
+          WalletSchema.parse({ cards: [{ id: 'citi-double-cash' }] }),
+          'flat',
+        ),
+        {
+          kind: 'any',
+          business: false,
+          noAnnualFee: false,
+          includeHeld: false,
+        },
+        TODAY,
+      )
+      const it = offers.find(
+        (o) => o.cardId === 'chase-ihg-one-rewards-premier',
+      )
+      expect(it?.freeNights).toBe(250)
+      expect(it?.credits).toBe(120)
+      expect(it?.firstYearValueIfCreditsUsed).toBeCloseTo(
+        (it?.firstYearValue ?? 0) + 120,
+      )
+      expect(it?.plan?.yearTwo).toBeCloseTo((it?.plan?.extraRewards ?? 0) - 150)
     },
   )
 })

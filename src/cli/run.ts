@@ -103,10 +103,12 @@ Options:
                          separated: --cards amex-gold,chase-prime-visa.
   --enrolled <card>=<credits>
                          For a named card, statement credits you've enrolled
-                         in: --enrolled amex-platinum=lululemon. Repeat per card.
+                         in and free nights you use:
+                         --enrolled amex-platinum=lululemon. Repeat per card.
   --skipped-credits <card>=<credits>
-                         For a named card, statement credits you don't use:
-                         --skipped-credits amex-gold=dunkin. Repeat per card.
+                         For a named card, statement credits and free nights
+                         you don't use: --skipped-credits amex-gold=dunkin.
+                         Repeat per card.
   --opened <card>=<date> For a named card, the day it opened (YYYY-MM-DD), for
                          a first-year rate. Repeat per card.
   --member <name>        A membership you have, in place of the saved ones.

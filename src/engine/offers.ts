@@ -43,6 +43,9 @@ export type OfferSummary = {
   // them all used: shown apart, never ranked on.
   credits: number
   firstYearValueIfCreditsUsed: number
+  // Its free nights a year, from the first anniversary on, at their "up to"
+  // value: shown apart too.
+  freeNights: number
   // On the person's spending (or typical amounts), beside the cards they
   // hold; null for a card they hold.
   plan: OfferPlan | null
@@ -169,7 +172,9 @@ export function compareOffers(
     const firstYearValue = roundCents(
       value - (firstYearFee ?? 0) - membershipFee,
     )
-    const credits = allCreditsYear(catalog, card, today).yearly
+    // A free night comes after each anniversary, so not in year one.
+    const year = allCreditsYear(catalog, card, today, wallet.valuations)
+    const credits = roundCents(year.yearly - year.nights)
     const addition = added.get(card.id)
     const minimum = minimumSpend(offer.spend, offer.months, monthly)
     const plan: OfferPlan | null = addition
@@ -215,6 +220,7 @@ export function compareOffers(
       firstYearValue,
       credits,
       firstYearValueIfCreditsUsed: roundCents(firstYearValue + credits),
+      freeNights: year.nights,
       plan,
       held: held.has(card.id),
       lastVerified: card.last_verified,

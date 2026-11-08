@@ -248,6 +248,18 @@ export const CreditSchema = z.strictObject({
   note: z.string().optional(),
 })
 
+// A free night the issuer gives once each cardmember year, around the
+// account anniversary, with no spending needed (IHG's Anniversary Free
+// Night). One entry is one certificate a year. Nights earned by spending
+// are milestone `rewards` instead.
+export const FreeNightSchema = z.strictObject({
+  id: KebabId,
+  // The most a night can cost, in the card's own currency: its value is
+  // this at the person's point value, said as "up to".
+  points: z.number().int().positive(),
+  note: z.string().optional(),
+})
+
 const HexColor = z.string().regex(/^#[0-9a-f]{6}$/)
 
 export const CardSchema = z
@@ -296,6 +308,9 @@ export const CardSchema = z
     milestones: z.array(MilestoneSchema).default([]),
     intro_rates: z.array(IntroRateSchema).default([]),
     credits: z.array(CreditSchema).default([]),
+    // Wallets mark these used or skipped by id beside credits, so the two
+    // lists share one id space.
+    free_nights: z.array(FreeNightSchema).default([]),
     // A short quote from an issuer page for each rule (or `base_rate`, or a
     // credit's id). The weekly source check fails a rule whose quote
     // disappears from its page.
@@ -318,6 +333,12 @@ export const CardSchema = z
     (c) => (c.network === 'store') === (c.only_at !== undefined),
     'a store card needs only_at, and only a store card can have it',
   )
+  .refine(
+    (c) =>
+      !c.free_nights.some((n) => c.credits.some((x) => x.id === n.id)) &&
+      new Set(c.free_nights.map((n) => n.id)).size === c.free_nights.length,
+    'free night ids must differ from each other and from credit ids',
+  )
 
 export type Cap = z.output<typeof CapSchema>
 export type Rule = z.output<typeof RuleSchema>
@@ -326,3 +347,4 @@ export type Card = z.output<typeof CardSchema>
 export type Milestone = z.output<typeof MilestoneSchema>
 export type IntroRate = z.output<typeof IntroRateSchema>
 export type Credit = z.output<typeof CreditSchema>
+export type FreeNight = z.output<typeof FreeNightSchema>

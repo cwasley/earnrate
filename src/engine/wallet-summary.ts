@@ -11,7 +11,7 @@ import {
 import { introUntil, introWindows, openedOn } from './intro.ts'
 import { effectiveMemberships, membershipName } from './memberships.ts'
 import { milestoneSummaries, type MilestoneSummary } from './milestones.ts'
-import { creditStates, usedCreditsYear } from './credits.ts'
+import { creditStates, nightStates, usedCreditsYear } from './credits.ts'
 import {
   creditWhere,
   optionName,
@@ -24,6 +24,7 @@ import { rotationGap } from './rotation.ts'
 import { activationRules } from './setup.ts'
 import {
   CAP_PERIODS,
+  capitalize,
   creditBack,
   creditTerms,
   creditsCountedText,
@@ -33,6 +34,8 @@ import {
   currencyLabel,
   CREDIT_SKIPPED,
   earnText,
+  freeNightText,
+  freeNightValueText,
   listed,
   PAYMENT_PHRASES,
   shortCardName,
@@ -71,6 +74,16 @@ export type CreditSummary = {
   text: string // "$75 back each quarter at Lululemon: $35 left this quarter."
 }
 
+export type FreeNightSummary = {
+  id: string // what enrolled and skipped_credits call it
+  name: string
+  points: number // the most a night can cost, in the card's currency
+  value: number // dollars at the wallet's point value: "up to"
+  confirmed: boolean // said in use: counts against the annual fee
+  skipped: boolean // the user doesn't use it: not counted anywhere
+  text: string
+}
+
 export type CardSummary = {
   cardId: string
   cardName: string
@@ -89,7 +102,8 @@ export type CardSummary = {
   caps: CapSummary[]
   milestones: MilestoneSummary[] // spend milestones and progress toward them
   credits: CreditSummary[] // merchant statement credits and what's left
-  // The credits the cardholder uses, a year at face value: what counts
+  freeNights: FreeNightSummary[] // one a year each, after the anniversary
+  // The credits and free nights the cardholder uses, a year: what counts
   // against the annual fee, and that in words.
   usedCredits: number
   usedCreditsText: string | null
@@ -401,7 +415,8 @@ export function walletSummary(
       caps: capSummaries(catalog, card, held, today),
       milestones: milestoneSummaries(card, held, today),
       credits: creditSummaries(catalog, card, held, today),
-      ...usedCredits(catalog, card, held, today),
+      freeNights: nightSummaries(catalog, wallet, card, held),
+      ...usedCredits(catalog, wallet, card, held, today),
       chosen: held.chosen
         ? {
             period: held.chosen.period,
@@ -447,11 +462,12 @@ export function walletSummary(
 
 function usedCredits(
   catalog: Catalog,
+  wallet: Wallet,
   card: Card,
   held: WalletCard,
   today: string,
 ): Pick<CardSummary, 'usedCredits' | 'usedCreditsText'> {
-  const used = usedCreditsYear(catalog, card, held, today)
+  const used = usedCreditsYear(catalog, card, held, today, wallet.valuations)
   return {
     usedCredits: used.yearly,
     usedCreditsText:
@@ -463,6 +479,31 @@ function usedCredits(
             used,
           ),
   }
+}
+
+function nightSummaries(
+  catalog: Catalog,
+  wallet: Wallet,
+  card: Card,
+  held: WalletCard,
+): FreeNightSummary[] {
+  const { centsPerUnit } = currencyValuation(catalog, wallet, card.currency)
+  return nightStates(catalog, wallet.valuations, card, held).map((n) => {
+    const status = n.skipped
+      ? CREDIT_SKIPPED
+      : n.confirmed
+        ? 'you use it, so it counts against the annual fee'
+        : 'not counted against the annual fee until you say you use it'
+    return {
+      id: n.night.id,
+      name: n.name,
+      points: n.points,
+      value: n.value,
+      confirmed: n.confirmed,
+      skipped: n.skipped,
+      text: `${capitalize(freeNightText(n.points, currencyLabel(catalog, card.currency)))} (${freeNightValueText(n.value, centsPerUnit)}): ${status}.`,
+    }
+  })
 }
 
 function creditSummaries(

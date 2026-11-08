@@ -63,12 +63,13 @@ export const WalletCardSchema = z.strictObject({
   // Keyed by milestone id: every purchase on the card this period.
   milestone_usage: z.record(KebabId, CapUsage).optional(),
   // Merchant credits (the card's `credits`) the cardholder has enrolled in
-  // or, for ones that need no enrolling, says they use, by credit id; and
-  // the dollars of each credit already received this period.
+  // or, for ones that need no enrolling, says they use, by credit id, and
+  // free nights (`free_nights`) they say they use; and the dollars of each
+  // credit already received this period.
   enrolled: z.array(KebabId).optional(),
   credit_usage: z.record(KebabId, CreditUsage).optional(),
-  // Credits the cardholder doesn't use: left out of the pick, the to-do
-  // list and the fee math, even if enrolled.
+  // Credits and free nights the cardholder doesn't use: left out of the
+  // pick, the to-do list and the fee math, even if enrolled.
   skipped_credits: z.array(KebabId).optional(),
   // A welcome bonus in progress. Terms default to the card's published
   // offer; set spend, by, points or dollars when yours was different.
