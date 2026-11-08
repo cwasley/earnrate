@@ -440,6 +440,16 @@ export type CreditWords = {
   minAmount?: number | null // it pays only on a purchase this large
 }
 
+// A welcome bonus behind pace stands aside for a credit that pays here.
+export const creditOverBonusText = (
+  card: string,
+  c: Pick<CreditWords, 'name' | 'until'>,
+  bonusCard: string,
+  remaining: number,
+  deadline: string,
+) =>
+  `Use ${possessive(card)} ${c.name} credit here${c.until === null ? '' : `: what's left of it ends ${shortDate(c.until)}`}. ${possessive(bonusCard)} welcome bonus can catch up on other purchases (${money(remaining)} more to spend by ${shortDate(deadline)}).`
+
 // A line for an answer that uses the card's credit, or says why it doesn't.
 export function creditAnswerText(c: CreditWords, dollars: number | null) {
   const min = c.minAmount ?? null

@@ -35,6 +35,7 @@ import {
   categoryPhrase,
   codesAs,
   creditAnswerText,
+  creditOverBonusText,
   currencyLabel,
   currencyName,
   earnText,
@@ -848,7 +849,23 @@ export function recommend(
   // Already the best card, it's the pick anyway: a tie needs no note.
   const isBest = open !== null && open.entry === winner
   const ties = !isBest && gap <= EPSILON
-  const bonus = open && (open.behind || ties) ? open : null
+  // Unused credit ends with its period; the bonus's spending can move to
+  // other purchases.
+  const creditHere =
+    !isBest && !ties && winner?.credit
+      ? (winner.creditDollars ?? winner.credit.left ?? winner.credit.amount) > 0
+      : false
+  const bonus = open && !creditHere && (open.behind || ties) ? open : null
+  if (open?.behind && creditHere && winner?.credit)
+    notes.push(
+      creditOverBonusText(
+        displayName(winner),
+        winner.credit,
+        displayName(open.entry),
+        open.status.remaining ?? 0,
+        open.status.deadline ?? purchase.date,
+      ),
+    )
   const best = winner?.effectiveReturnPct ?? 0
   const toGo = open
     ? `${money(open.status.remaining ?? 0)} more by ${open.status.deadline ?? ''}`

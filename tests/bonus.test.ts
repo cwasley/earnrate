@@ -192,6 +192,30 @@ describe('recommendations', () => {
     )
   })
 
+  test('a bonus behind pace stands aside for a credit that pays here', () => {
+    const w = wallet({ opened: '2026-10-01', spent: 500 }, [
+      { id: 'amex-platinum', enrolled: ['lululemon'] },
+    ])
+    const rec = recommend(catalog, w, purchase('Lululemon', { amount: 100 }))
+    expect(rec.decision?.cardId).toBe('amex-platinum')
+    expect(rec.bonus).toBeNull()
+    expect(rec.notes).toContain(
+      "Use The Platinum Card from American Express' Lululemon credit here: what's left of it ends Dec 31, 2026. Test Offer Card's welcome bonus can catch up on other purchases ($3,500 more to spend by Jan 1, 2027).",
+    )
+  })
+
+  test('once the credit is used up, the bonus takes the pick again', () => {
+    const w = wallet({ opened: '2026-10-01', spent: 500 }, [
+      {
+        id: 'amex-platinum',
+        enrolled: ['lululemon'],
+        credit_usage: { lululemon: { period: '2026-Q4', used: 75 } },
+      },
+    ])
+    const rec = recommend(catalog, w, purchase('Lululemon', { amount: 100 }))
+    expect(rec.decision?.cardId).toBe('test-offer')
+  })
+
   test.each([
     ['met', { opened: '2026-10-01', spent: 4000 }],
     ['expired', { opened: '2026-06-01' }],
