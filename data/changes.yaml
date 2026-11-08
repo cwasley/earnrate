@@ -6,6 +6,11 @@
 - version: '2026.11.08'
   date: 2026-11-08
   changes:
+    - cause: wording
+      card: chase-marriott-bonvoy-boundless
+      field: todo
+      summary: The note on the welcome offer now says Chase shows 200,000 bonus points after $3,000 in 3 months, labeled this week only, so earnrate doesn't record it yet.
+      source: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
     - cause: addition
       card: chase-ihg-one-rewards-premier
       field: free_nights.anniversary-night
