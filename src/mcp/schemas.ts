@@ -243,6 +243,8 @@ export const WalletSummarySchema = z.object({
       chosen: z
         .object({
           period: z.string(),
+          periodName: z.string(),
+          automatic: z.boolean(),
           current: z.boolean(),
           until: z.string().nullable(),
           picks: z.record(z.string(), z.array(z.string())),

@@ -39,6 +39,7 @@ import {
   nightWorthText,
   listed,
   PAYMENT_PHRASES,
+  periodPhrase,
   shortCardName,
   shortDate,
   wholeDollars,
@@ -111,6 +112,8 @@ export type CardSummary = {
   usedCreditsText: string | null
   chosen: {
     period: string
+    periodName: string // "November 2026"
+    automatic: boolean // the issuer applies it; the picks are the expected ones
     current: boolean
     until: string | null // the period's last day, YYYY-MM-DD
     picks: Record<string, string[]>
@@ -324,6 +327,13 @@ function toActivate(
 }
 
 // Picks that carry over have no end date.
+function picksPeriodName(card: Card, key: string): string {
+  const period = choicePeriod(card)
+  return period === null || period === 'cardmember_year'
+    ? key
+    : periodPhrase(period, key).replace(/^for /, '')
+}
+
 function picksUntil(card: Card, key: string): string | null {
   if (card.choices.every((c) => c.period === 'until_changed')) return null
   const period = choicePeriod(card)
@@ -423,6 +433,8 @@ export function walletSummary(
       chosen: held.chosen
         ? {
             period: held.chosen.period,
+            periodName: picksPeriodName(card, held.chosen.period),
+            automatic: card.choices.every((c) => c.automatic === true),
             current: pickedCategories(card, held, today).staleChoice === null,
             // Picks that carry over have no end date.
             until: picksUntil(card, held.chosen.period),

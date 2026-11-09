@@ -44,10 +44,12 @@ export function formatWalletSummary(summary: WalletSummary): string {
         : ''
       lines.push(
         !c.chosen.current
-          ? `  Picks are for ${c.chosen.period}, which is over: ask for this period's picks.`
+          ? `  ${c.chosen.automatic ? 'Expected categories are' : 'Picks are'} for ${c.chosen.periodName}, which is over: ask for this period's ${c.chosen.automatic ? 'expected ones' : 'picks'}.`
           : c.chosen.until === null
             ? `  Picks: ${picks}. They stay until the user changes them.`
-            : `  Picks for ${c.chosen.period}${until}: ${picks}. Pick again after that.`,
+            : c.chosen.automatic
+              ? `  Expected for ${c.chosen.periodName}${until}: ${picks}. The issuer applies the bonus where the most is spent; set the expected category again after that.`
+              : `  Picks for ${c.chosen.periodName}${until}: ${picks}. Pick again after that.`,
       )
     }
     if (c.toActivate.length > 0)

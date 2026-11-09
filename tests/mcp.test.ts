@@ -472,7 +472,7 @@ describe('tools', () => {
       /Cash\+ Visa Signature Card \(usbank-cash-plus\), shown at checkout as "Cash\+": Visa,/,
     )
     expect(text(result)).toMatch(
-      /Picks for 2026-Q4, through Dec 31, 2026: 5%: /,
+      /Picks for Q4 2026, through Dec 31, 2026: 5%: /,
     )
     expect(text(result)).toMatch(
       /Cap on the 2 categories you pick each quarter: .* \(cap key five-percent-combined\)/,

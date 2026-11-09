@@ -3,7 +3,9 @@ import { loadCatalog } from '../src/data/load.ts'
 import { cardDetails } from '../src/engine/card-details.ts'
 import { cardInfo } from '../src/engine/setup.ts'
 import { formatCardInfo } from '../src/format/cards.ts'
-import { formatBooking } from '../src/format/wallet.ts'
+import { formatBooking, formatWalletSummary } from '../src/format/wallet.ts'
+import { walletSummary } from '../src/engine/wallet-summary.ts'
+import { WalletSchema } from '../src/schema/wallet.ts'
 
 const catalog = await loadCatalog()
 const TODAY = '2026-11-09'
@@ -66,4 +68,21 @@ test('a cap named by a phrase reads after "its cap on"', () => {
       'supermarkets',
     ),
   ).toMatch(/toward its supermarkets cap:/)
+})
+
+test('picks the issuer applies itself read as expected, by month name', () => {
+  const wallet = WalletSchema.parse({
+    cards: [
+      {
+        id: 'citi-custom-cash',
+        chosen: {
+          period: '2026-11',
+          picks: { 'top-category': ['restaurants'] },
+        },
+      },
+    ],
+  })
+  expect(formatWalletSummary(walletSummary(catalog, wallet, TODAY))).toMatch(
+    /Expected for November 2026, through Nov 30, 2026: top category: restaurants\. The issuer applies the bonus where the most is spent; set the expected category again after that\./,
+  )
 })
