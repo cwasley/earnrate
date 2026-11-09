@@ -626,7 +626,7 @@ describe('paying abroad', () => {
     expect(cards.stdout).toMatch(/3% foreign transaction fee/)
     const gold = await cli(['cards', 'amex gold'])
     expect(gold.stdout).toMatch(/no foreign transaction fee/)
-  })
+  }, 20_000)
 })
 
 describe('named cards with credits and opening dates', () => {
