@@ -256,6 +256,11 @@ function Answer({
             </li>
           ))}
       </ol>
+      {cantUseHere(rec.excluded).map((line) => (
+        <p class="muted" key={line}>
+          {line}
+        </p>
+      ))}
       {rec.sensitivity ? <p class="muted">{rec.sensitivity}</p> : null}
       <ul class="assumptions">
         {rec.assumptions.map((a) => (
@@ -263,6 +268,19 @@ function Answer({
         ))}
       </ul>
     </div>
+  )
+}
+
+// "Can't use here: Amex Gold. Costco takes only Visa in-store."
+function cantUseHere(excluded: Recommendation['excluded']): string[] {
+  const byReason = new Map<string, string[]>()
+  for (const e of excluded)
+    byReason.set(e.reason, [
+      ...(byReason.get(e.reason) ?? []),
+      shortName(e.cardId),
+    ])
+  return [...byReason].map(
+    ([reason, names]) => `Can't use here: ${listed(names)}. ${reason}`,
   )
 }
 
@@ -722,7 +740,7 @@ function CardEditor({
       ) : null}
       {credits.map((c) => (
         <fieldset key={c.credit.id}>
-          <legend>{c.name} credit</legend>
+          <legend>{capitalize(c.name)} credit</legend>
           <p class="muted small">
             {capitalize(creditBack(c))}
             {creditTerms(
@@ -738,6 +756,7 @@ function CardEditor({
               ? ''
               : ` It ends after ${shortDate(c.credit.valid_to)}.`}
           </p>
+          {c.credit.note ? <p class="muted small">{c.credit.note}</p> : null}
           <UseChoices
             name={`credit-${held.id}-${c.credit.id}`}
             label={`${c.name} credit`}
