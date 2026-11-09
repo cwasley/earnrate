@@ -39,9 +39,10 @@ function SyncTerms() {
     <p class="muted small">
       With sync on, your wallet (cards, picks, activations, memberships, point
       values, cap and spending totals, credits and free nights used and not
-      used, and opening dates) is stored encrypted on earnrate's server, as it
-      is for Claude. Searches, stores and amounts you ask about still never
-      leave your browser. <a href="/privacy#sync">How sync works</a>
+      used, what a free night is worth to you if you've said, and opening dates)
+      is stored encrypted on earnrate's server, as it is for Claude. Searches,
+      stores and amounts you ask about still never leave your browser.{' '}
+      <a href="/privacy#sync">How sync works</a>
     </p>
   )
 }
