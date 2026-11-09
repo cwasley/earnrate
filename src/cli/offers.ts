@@ -19,8 +19,7 @@ const OFFERS_HELP = `Usage: ${CLI_NAME} offers [--cash | --points] [--no-fee] [-
 Which card to get next: ranks cards you don't have by their first two years
 together. That's what each adds to your cards at typical spending, plus its
 welcome bonus in year one if the minimum spend fits in the window, less each
-year's annual fee and any membership it needs. Each also shows the bonus
-alone. Issuers saved with ${CLI_NAME} skip-issuers are left out.
+year's annual fee. Each also shows the bonus alone. Issuers saved with ${CLI_NAME} skip-issuers are left out.
 
 Options:
   --cash                 Cash back cards only.

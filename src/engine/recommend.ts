@@ -27,7 +27,7 @@ import {
 import { daysBetween } from './periods.ts'
 import { creditAt, creditDollars, type CreditState } from './credits.ts'
 import { ruleWhat } from './rule-text.ts'
-import { rotationGap } from './rotation.ts'
+import { heldRotationGap } from './rotation.ts'
 import { EPSILON, isClose } from './compare.ts'
 import {
   amountUnknownText,
@@ -898,9 +898,10 @@ export function recommend(
     )
   }
 
+  const heldIds = wallet.cards.map((c) => c.id)
   for (const held of wallet.cards) {
     const card = catalog.cards.find((c) => c.id === held.id)
-    const gap = card ? rotationGap(card, purchase.date) : null
+    const gap = card ? heldRotationGap(card, purchase.date, heldIds) : null
     if (card && gap !== null) {
       const name = held.checkout_label ?? card.name
       warnings.push(

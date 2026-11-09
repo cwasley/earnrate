@@ -221,22 +221,53 @@ describe('a year of spending', () => {
     )
   })
 
-  test("rotating quarters that aren't in the data count at base rates, with a note", () => {
+  test("rotating quarters that aren't in the data count at base rates, with a note for the card's holder", () => {
     const lines = resolveSpendLines(catalog, [
       { merchant: null, category: 'grocery.supermarket', monthly: 700 },
     ])
     const flex = catalog.cards.find((c) => c.id === 'chase-freedom-flex')
     if (!flex) throw new Error('missing card')
-    const sim = simulateWallet(
-      catalog,
-      WalletSchema.parse({ cards: [idealHolding(flex, TODAY)] }),
-      lines,
-      TODAY,
-    )
+    const wallet = WalletSchema.parse({ cards: [idealHolding(flex, TODAY)] })
+    const sim = simulateWallet(catalog, wallet, lines, TODAY, [flex.id])
     // Q4 2026 and Q1 2027: $1,500 at 5% and $600 at 1% each. Q2–Q3 2027: 1%.
     expect(sim.rewards).toBe(204)
     expect(sim.notes[0]).toMatch(
       /2027-Q2, 2027-Q3 aren't in earnrate's data yet/,
+    )
+    const unheld = simulateWallet(catalog, wallet, lines, TODAY)
+    expect(unheld.rewards).toBe(204)
+    expect(unheld.notes.join(' ')).not.toMatch(/data yet/)
+  })
+
+  test("every-card answers leave out rotating quarters that aren't in the data", () => {
+    const lines = typicalSpendLines(catalog)
+    const all = simulateCatalog(catalog, lines, options)
+    expect(
+      all.singles.some((s) => s.cards[0]?.cardId === 'chase-freedom-flex'),
+    ).toBe(true)
+    const notes = [...all.singles, ...all.pairs, ...all.membersOnly].flatMap(
+      (s) => s.notes,
+    )
+    expect(notes.join(' ')).not.toMatch(/data yet/)
+    const explored = exploreCards(
+      catalog,
+      query({ category: 'grocery.supermarket', date: '2027-04-10' }),
+      casual,
+    )
+    expect(explored.ranked.some((e) => e.cardId === 'chase-freedom-flex')).toBe(
+      true,
+    )
+    expect(explored.ranked.flatMap((e) => e.warnings).join(' ')).not.toMatch(
+      /data yet/,
+    )
+    const named = simulateAdditions(
+      catalog,
+      WalletSchema.parse({ cards: [{ id: 'chase-freedom-flex' }] }),
+      lines,
+      options,
+    )
+    expect(named.current.notes.join(' ')).toMatch(
+      /Chase Freedom Flex's rotating categories for .+ aren't in earnrate's data yet/,
     )
   })
 

@@ -19,6 +19,18 @@ export function rotationGap(card: Card, date: string): string | null {
   return null
 }
 
+// The gap as answers tell it: only to the card's holders (a saved wallet or
+// cards named for the answer) and in answers about the card itself. An
+// every-card answer leaves it out: the issuer hasn't announced the period
+// yet, so there's nothing for anyone else to do.
+export function heldRotationGap(
+  card: Card,
+  date: string,
+  held: readonly string[],
+): string | null {
+  return held.includes(card.id) ? rotationGap(card, date) : null
+}
+
 // What answers say about a gap: "Freedom Flex's rotating categories for
 // 2027-Q2 aren't in earnrate's data yet. ..."
 export const rotationGapText = (name: string, gap: string) =>

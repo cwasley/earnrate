@@ -80,17 +80,17 @@ test('adding the card ranks it apart unless the wallet has the membership', () =
   expect(plain.additions.some((a) => a.cardId === COSTCO)).toBe(false)
   const member = plain.membersOnly.find((a) => a.cardId === COSTCO)
   expect(member?.membership).toBe('costco')
-  expect(member?.membershipFee).toBe(0)
+  expect(member?.simulation.membershipFees).toBe(0)
   const add = (wallet: typeof gold, l = lines) =>
     what(wallet, l).additions.find((a) => a.cardId === COSTCO)
-  expect(add(gold, withCostco)?.membershipFee).toBe(0)
+  expect(add(gold, withCostco)?.simulation.membershipFees).toBe(0)
   expect(
     add(
       WalletSchema.parse({
         memberships: ['costco'],
         cards: [{ id: 'amex-gold' }],
       }),
-    )?.membershipFee,
+    )?.simulation.membershipFees,
   ).toBe(0)
   const holder = WalletSchema.parse({ cards: [{ id: COSTCO }] })
   expect(

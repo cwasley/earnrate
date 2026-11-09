@@ -335,7 +335,6 @@ export const OfferComparisonSchema = z.object({
       note: z.string().nullable(),
       annualFee: z.number().nullable(),
       firstYearFee: z.number().nullable(),
-      membershipFee: z.number(),
       ineligible: z.string().nullable(),
       bonusValue: z.number(),
       firstYearValue: z.number(),
@@ -639,7 +638,6 @@ export const SpendingSimulationSchema = z.object({
       picks: Picks,
       extraRewards: z.number(),
       annualFee: z.number(),
-      membershipFee: z.number(),
       gain: z.number(),
       credits: z.number(), // its statement credits and free nights, a year: not in gain
       gainIfCreditsUsed: z.number(),

@@ -1,4 +1,4 @@
-import type { ComponentChildren } from 'preact'
+import { Fragment, type ComponentChildren } from 'preact'
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import {
@@ -14,6 +14,8 @@ import { splitPurchaseText } from '../../src/merchants/resolve.ts'
 import { ABROAD, noteOnly } from '../../src/engine/recommend.ts'
 import {
   capitalize,
+  CATEGORY_CARDS_LEAD,
+  categoryCards,
   categoryPhrase,
   CREDIT_GROUP,
   CREDIT_PERIODS,
@@ -421,6 +423,11 @@ export function BestFor({
             {result.categoryNote ? (
               <p class="callout">{result.categoryNote}</p>
             ) : null}
+            {result.categoryNote ? (
+              <NamedCards
+                ids={categoryCards(catalog, result.merchant.category)}
+              />
+            ) : null}
             {result.warnings.map((w) => (
               <p class="callout" key={w}>
                 {w}
@@ -481,5 +488,21 @@ export function BestFor({
         ) : null}
       </div>
     </div>
+  )
+}
+
+function NamedCards({ ids }: { ids: string[] }) {
+  if (ids.length === 0) return null
+  return (
+    <p>
+      {CATEGORY_CARDS_LEAD}{' '}
+      {ids.map((id, i) => (
+        <Fragment key={id}>
+          {i === 0 ? '' : i === ids.length - 1 ? ' and ' : ', '}
+          <a href={`/cards/${id}`}>{shortName(id)}</a>
+        </Fragment>
+      ))}
+      .
+    </p>
   )
 }

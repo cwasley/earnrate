@@ -16,9 +16,7 @@ import {
 import {
   ifMemberLines,
   membershipName,
-  membershipNote,
   placedAmong,
-  type MembershipCost,
 } from '../engine/memberships.ts'
 import {
   capitalize,
@@ -38,11 +36,6 @@ import {
   listed,
 } from '../engine/text.ts'
 import type { Catalog } from '../schema/catalog.ts'
-
-const membershipFees = (memberships: MembershipCost[]) =>
-  memberships
-    .map((m) => ` + ${wholeDollars(m.annualFee)} for ${m.name}`)
-    .join('')
 
 const TOP_BEST = 10
 
@@ -166,7 +159,7 @@ export function formatCatalogSimulation(
     const card = s.cards[0]
     if (!card) return
     lines.push(
-      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeDollars(s.net)}  (${wholeDollars(s.rewards)} rewards, ${wholeDollars(s.annualFees)} fee${membershipFees(s.memberships)})${ifCreditsShort(unheld(s), s.netIfCreditsUsed)}${picksText(card.picks)}`,
+      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeDollars(s.net)}  (${wholeDollars(s.rewards)} rewards, ${wholeDollars(s.annualFees)} fee)${ifCreditsShort(unheld(s), s.netIfCreditsUsed)}${picksText(card.picks)}`,
     )
   })
   const pairs = r.pairs.slice(0, top)
@@ -216,13 +209,10 @@ export function formatAdditions(
   if (gains.length === 0) {
     lines.push('', 'No card would add more than its annual fee costs.')
   } else {
-    lines.push(
-      '',
-      'Cards that would add the most (after their annual fee and any membership they need):',
-    )
+    lines.push('', 'Cards that would add the most (after their annual fee):')
     gains.slice(0, all ? 20 : TOP_SIMULATED).forEach((a, i) => {
       lines.push(
-        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeDollars(a.gain)} a year  (+${wholeDollars(a.extraRewards)} rewards, ${wholeDollars(a.annualFee)} fee${membershipFees(a.simulation.memberships.filter((m) => m.cardIds.includes(a.cardId)))})${ifCreditsShort(unheld(a.simulation, a.cardId), a.gainIfCreditsUsed, '+')}${picksText(a.picks)}`,
+        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeDollars(a.gain)} a year  (+${wholeDollars(a.extraRewards)} rewards, ${wholeDollars(a.annualFee)} fee)${ifCreditsShort(unheld(a.simulation, a.cardId), a.gainIfCreditsUsed, '+')}${picksText(a.picks)}`,
       )
     })
   }
@@ -240,14 +230,7 @@ export function formatAdditions(
     })),
   )
   if (members.length > 0) lines.push('', ...members)
-  const notes = new Set([
-    ...r.current.notes,
-    ...gains
-      .slice(0, all ? 20 : TOP_SIMULATED)
-      .flatMap((a) =>
-        a.simulation.memberships.map((m) => membershipNote(catalog, m)),
-      ),
-  ])
+  const notes = new Set(r.current.notes)
   if (notes.size > 0) lines.push('', ...notes)
   lines.push(
     '',

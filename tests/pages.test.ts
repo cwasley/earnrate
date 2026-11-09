@@ -183,6 +183,12 @@ describe('the built static pages', () => {
     expect(page('groceries')).toContain('href="/best/aldi"')
   })
 
+  test("rent's page links the cards its note names", () => {
+    const html = readFileSync(path.join(out, 'best', 'rent.html'), 'utf8')
+    for (const id of ['bilt-blue', 'bilt-obsidian', 'bilt-palladium'])
+      expect(html).toContain(`href="/cards/${id}"`)
+  })
+
   test('grocery stores and supermarkets share one page, and the other address redirects', () => {
     const best = readdirSync(path.join(out, 'best'))
     expect(best.filter((f) => /^grocer(y|ies)\.html$/.test(f))).toEqual([

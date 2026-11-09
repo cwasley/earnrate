@@ -9,7 +9,6 @@ import {
   capitalize,
   feeText,
   minimumSpendText,
-  money,
   offerPerksText,
   shortDate,
   twoYearText,
@@ -56,7 +55,7 @@ export function formatOffers(
       )
         .map((t) => `; ${t}`)
         .join('')}`,
-      `    ${offerTerms(o, currencyName(o.currency))}${pace}. ${capitalize(feeText(o))}.${o.membershipFee > 0 ? ` Needs a ${money(o.membershipFee)} membership, counted in the first year.` : ''}${o.held ? ' In your wallet.' : ''}`,
+      `    ${offerTerms(o, currencyName(o.currency))}${pace}. ${capitalize(feeText(o))}.${o.held ? ' In your wallet.' : ''}`,
     )
     lines.push(
       `    ${o.validTo ? `Offer ends ${shortDate(o.validTo)}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ. The bonus alone is worth about ${wholeDollars(o.firstYearValue)} after the first year's fee.`,

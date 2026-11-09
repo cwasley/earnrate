@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CategoryId, Mcc } from './common.ts'
+import { CategoryId, KebabId, Mcc } from './common.ts'
 
 export const CategorySchema = z
   .strictObject({
@@ -14,6 +14,9 @@ export const CategorySchema = z
     // card at all. Answers lead with it and their pick is low confidence.
     // Subcategories without one inherit it.
     note: z.string().min(1).optional(),
+    // Cards the note names, linked beside it (the Bilt cards on rent): their
+    // rules can't show what they earn here. Inherited with the note.
+    cards: z.array(KebabId).min(1).optional(),
     // Answered by its note alone: no ranking or pick. Subcategories inherit it.
     unranked: z.literal(true).optional(),
     // Bought as a service, a category reads "on" (3x on flights); places read
@@ -26,6 +29,9 @@ export const CategorySchema = z
   })
   .refine((c) => !c.unranked || c.note !== undefined, {
     message: 'an unranked category needs a note to answer with',
+  })
+  .refine((c) => c.cards === undefined || c.note !== undefined, {
+    message: "a category's cards are the ones its note names",
   })
 
 export const CategoriesFileSchema = z.array(CategorySchema).min(1)

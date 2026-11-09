@@ -1274,11 +1274,7 @@ function OfferRow({
       </p>
       {open ? (
         <p class="muted">
-          {capitalize(feeText(o))}.
-          {o.membershipFee > 0
-            ? ` Needs a ${money(o.membershipFee)} membership, counted each year.`
-            : ''}
-          {o.note ? ` ${o.note}` : ''}
+          {capitalize(feeText(o))}.{o.note ? ` ${o.note}` : ''}
           {o.credits + o.freeNights > 0
             ? ` ${offerPerksText(o.credits, o.freeNights)
                 .map((t) => `${capitalize(t)}.`)

@@ -236,6 +236,27 @@ describe('catalogProblems', () => {
     )
   })
 
+  test("catches a category naming a card that isn't there", () => {
+    const c = catalog()
+    c.categories = CategoriesFileSchema.parse([
+      ...c.categories,
+      {
+        id: 'housing',
+        name: 'Rent',
+        note: 'Pay rent through Bilt.',
+        cards: ['bilt-teal'],
+      },
+    ])
+    expect(catalogProblems(c)).toContain(
+      "category housing: card 'bilt-teal' is not in the catalog",
+    )
+    expect(
+      CategoriesFileSchema.safeParse([
+        { id: 'dining', name: 'Dining', cards: ['bilt-blue'] },
+      ]).success,
+    ).toBe(false)
+  })
+
   test('catches one alias naming two merchants', () => {
     const c = catalog()
     c.merchants.seed = MerchantsFileSchema.parse([

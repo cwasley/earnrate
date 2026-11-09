@@ -25,6 +25,8 @@ import { findCategory, findMerchant } from '../src/merchants/resolve.ts'
 import { addDays, inEffect, localToday } from '../src/engine/periods.ts'
 import {
   capitalize,
+  CATEGORY_CARDS_LEAD,
+  categoryCards,
   categoryPhrase,
   creditBack,
   creditTerms,
@@ -259,8 +261,12 @@ function tieText(tied: ExploreEntry[], where: string): string {
 }
 
 function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
-  if (r.categoryNote !== null)
-    return `<p class="answer">${esc(r.categoryNote)}</p>`
+  if (r.categoryNote !== null) {
+    const cards = categoryCards(catalog, r.merchant.category).map(
+      (id) => `<a href="/cards/${id}">${esc(shortName(id))}</a>`,
+    )
+    return `<p class="answer">${esc(r.categoryNote)}</p>${cards.length === 0 ? '' : `\n      <p>${CATEGORY_CARDS_LEAD} ${listed(cards)}.</p>`}`
+  }
   const [top] = shown
   if (!top) return `<p>No card in earnrate's data earns a bonus here.</p>`
   const tied = tiedAtTop(r)
@@ -1214,9 +1220,9 @@ function costText(sim: Simulation): string {
       ? 'with no annual fee'
       : `after its ${wholeDollars(sim.annualFees)} annual fee`
   const m = listed(
-    sim.memberships.map(
-      (x) => `the ${wholeDollars(x.annualFee)} ${x.name} it needs`,
-    ),
+    sim.memberships
+      .filter((x) => x.annualFee > 0)
+      .map((x) => `the ${wholeDollars(x.annualFee)} ${x.name} it needs`),
   )
   return m === ''
     ? fee

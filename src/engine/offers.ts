@@ -10,11 +10,7 @@ import {
   typicalSpendLines,
   type MembersOnly,
 } from './simulate.ts'
-import {
-  membershipCosts,
-  missingMembership,
-  paidMemberships,
-} from './memberships.ts'
+import { missingMembership, paidMemberships } from './memberships.ts'
 import { inEffect } from './periods.ts'
 import { CREDITS_APART, heldName, listed, money, roundCents } from './text.ts'
 import { cardValuation } from './valuation.ts'
@@ -43,11 +39,9 @@ export type OfferSummary = {
   annualFee: number | null
   firstYearFee: number | null // what the first year costs
   bonusValue: number // dollars, at the wallet's point values
-  // A membership the card needs that the wallet doesn't pay for (Costco).
-  membershipFee: number
   // Why the issuer may not give this offer to this wallet's holder, if so.
   ineligible: string | null
-  firstYearValue: number // bonus value minus the first year's fee and membership
+  firstYearValue: number // bonus value minus the first year's fee
   // Its statement credits, a year at face value, and firstYearValue with
   // them all used: shown apart, never ranked on.
   credits: number
@@ -69,7 +63,7 @@ export type OfferPlan = {
   // card, and how many weeks of it that takes; null with no minimum.
   minimumSpend: { reachable: boolean; weeks: number } | null
   yearOne: number // extraRewards, plus the bonus if reachable, less first-year fees
-  yearTwo: number // extraRewards less the full fee and any membership
+  yearTwo: number // extraRewards less the full fee
   twoYears: number // what it's ranked on
 }
 
@@ -198,13 +192,7 @@ export function compareOffers(
       0
     const firstYearFee = card.first_year_fee ?? card.annual_fee ?? null
     const membership = missingMembership(card, paid)
-    const membershipFee =
-      membership === null
-        ? (membershipCosts(catalog, [card], paid)[0]?.annualFee ?? 0)
-        : 0
-    const firstYearValue = roundCents(
-      value - (firstYearFee ?? 0) - membershipFee,
-    )
+    const firstYearValue = roundCents(value - (firstYearFee ?? 0))
     // A free night comes after each anniversary, so not in year one.
     const year = allCreditsYear(catalog, card, today, wallet.valuations)
     const credits = roundCents(year.yearly - year.nights)
@@ -214,14 +202,9 @@ export function compareOffers(
       ? (() => {
           const reached = minimum === null || minimum.reachable
           const yearOne = roundCents(
-            addition.extraRewards +
-              (reached ? value : 0) -
-              (firstYearFee ?? 0) -
-              addition.membershipFee,
+            addition.extraRewards + (reached ? value : 0) - (firstYearFee ?? 0),
           )
-          const yearTwo = roundCents(
-            addition.extraRewards - addition.annualFee - addition.membershipFee,
-          )
+          const yearTwo = roundCents(addition.extraRewards - addition.annualFee)
           return {
             extraRewards: addition.extraRewards,
             minimumSpend: minimum,
@@ -248,7 +231,6 @@ export function compareOffers(
       annualFee: card.annual_fee ?? null,
       firstYearFee,
       bonusValue: roundCents(value),
-      membershipFee,
       ineligible: ineligibleText(catalog, wallet, offer.not_with ?? []),
       firstYearValue,
       credits,
@@ -268,8 +250,8 @@ export function compareOffers(
   const notes = [
     `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`,
     `Each offer is the public one on the issuer's page on the date shown, checked weekly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how.`,
-    `Ranked on the first two years together: what each card ${wallet.cards.length > 0 ? 'adds to your cards' : 'earns'} on ${spending.typical ? 'typical U.S. spending' : 'your spending'}${wallet.cards.length > 0 ? ' (it takes the purchases where it earns more)' : ''}, plus the welcome bonus in year one if the minimum spend fits in the window with all your spending on it, less each year's annual fee and any membership it needs. Year one counts the card at its standard rates.`,
-    "First-year value is the bonus alone at your point values, less the first year's fee and membership.",
+    `Ranked on the first two years together: what each card ${wallet.cards.length > 0 ? 'adds to your cards' : 'earns'} on ${spending.typical ? 'typical U.S. spending' : 'your spending'}${wallet.cards.length > 0 ? ' (it takes the purchases where it earns more)' : ''}, plus the welcome bonus in year one if the minimum spend fits in the window with all your spending on it, less each year's annual fee. Year one counts the card at its standard rates.`,
+    "First-year value is the bonus alone at your point values, less the first year's fee.",
     CREDITS_APART,
     ...(skipped.size > 0
       ? [

@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.08.5
+
+No rates changed. Categories can now name the cards their note is about in a new `cards` field, inherited with the note. Rent and mortgage (`housing`) names the three Bilt cards (`bilt-blue`, `bilt-obsidian`, `bilt-palladium`), so earnrate.dev's rent page and its Best for answer link each card's page under the note.
+
 ## 2026.11.08.4
 
 No rates changed. Rent and mortgage (`housing`) is now `unranked`, a new category field: its note is the whole answer, with no ranking, pick or card under it, since most landlords and lenders don't take cards directly and a payment service's fee usually outweighs what a card earns. Subcategories inherit it. A year of spending leaves rent and mortgage out and says why. The note drops its last sentence, about the ranking below it, and the Bilt cards' notes on rent and mortgage say answers there give only the category's note.

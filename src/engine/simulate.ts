@@ -16,7 +16,6 @@ import {
 } from './explore.ts'
 import {
   membershipCosts,
-  membershipNote,
   missingMembership,
   paidMemberships,
   type MembershipCost,
@@ -24,7 +23,7 @@ import {
 import { choicePeriod, periodKey } from './periods.ts'
 import { applyBooking, capBooking } from './record.ts'
 import { liveMilestones, milestoneStarts, milestoneWhat } from './milestones.ts'
-import { rotationGap } from './rotation.ts'
+import { heldRotationGap } from './rotation.ts'
 import {
   categoryNote,
   categoryUnranked,
@@ -71,7 +70,8 @@ export type Simulation = {
   rewards: number // dollars a year, at the point values given
   annualFees: number
   // Memberships these cards need that the person doesn't already pay for,
-  // counted like annual fees.
+  // counted like annual fees. Rankings never have any: a card that needs
+  // one is simulated for a member. A card simulated on its own can.
   memberships: MembershipCost[]
   membershipFees: number
   // Statement credits a cardholder uses on cards they already hold, at
@@ -347,7 +347,6 @@ export function simulateWallet(
     ),
     ...milestoneNotes,
   ]
-  for (const m of memberships) notes.push(membershipNote(catalog, m))
   for (const c of credits.filter((c) => c.held)) {
     const card = cards.find((x) => x.card.id === c.cardId)?.card
     if (card)
@@ -363,7 +362,9 @@ export function simulateWallet(
   for (const { card } of cards) {
     const gaps = [
       ...new Set(
-        dates.map((d) => rotationGap(card, d)).filter((g) => g !== null),
+        dates
+          .map((d) => heldRotationGap(card, d, held))
+          .filter((g) => g !== null),
       ),
     ]
     if (gaps.length > 0)
@@ -626,8 +627,7 @@ export type Addition = {
   picks: Picks
   extraRewards: number // dollars a year over the current wallet
   annualFee: number
-  membershipFee: number // a membership it needs that the wallet doesn't pay for
-  gain: number // extra rewards minus the annual fee and membership
+  gain: number // extra rewards minus the annual fee
   credits: number // its statement credits, a year at face value; not in gain
   gainIfCreditsUsed: number // gain plus credits
   simulation: Simulation
@@ -642,8 +642,7 @@ export type WalletWhatIf = {
 }
 
 export const gainOrder = (a: Addition, b: Addition) =>
-  b.gain - a.gain ||
-  a.annualFee + a.membershipFee - (b.annualFee + b.membershipFee)
+  b.gain - a.gain || a.annualFee - b.annualFee
 
 // The person's own wallet, set up as it would run all year: their picks carry
 // over, rotating categories get activated, caps start fresh. A card earnrate
@@ -718,10 +717,7 @@ export function simulateAdditions(
     })
     const extraRewards = roundCents(simulation.rewards - current.rewards)
     const annualFee = card.annual_fee ?? 0
-    const membershipFee = roundCents(
-      simulation.membershipFees - current.membershipFees,
-    )
-    const gain = roundCents(extraRewards - annualFee - membershipFee)
+    const gain = roundCents(extraRewards - annualFee)
     const credits = allCreditsYear(
       catalog,
       card,
@@ -733,7 +729,6 @@ export function simulateAdditions(
       picks: simulation.cards.at(-1)?.picks ?? {},
       extraRewards,
       annualFee,
-      membershipFee,
       gain,
       credits,
       gainIfCreditsUsed: roundCents(gain + credits),

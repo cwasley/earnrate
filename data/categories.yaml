@@ -137,6 +137,7 @@
   mccs: [6513]
   note: "Most landlords and lenders don't take cards directly, and paying through a payment service usually costs a fee that outweighs what a card earns. The Bilt cards pay rent and mortgages through Bilt with no transaction fee and earn up to 1.25X Bilt points on them; the rate goes up with how much else you spend on the card that billing cycle."
   unranked: true
+  cards: [bilt-blue, bilt-obsidian, bilt-palladium]
 
 - id: drugstore
   name: Drugstores and pharmacies

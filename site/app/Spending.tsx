@@ -387,8 +387,7 @@ export function Spending({
                           </strong>
                           <span class="muted">
                             {wholeDollars(p.rewards)} back ·{' '}
-                            {wholeDollars(p.annualFees + p.membershipFees)} in
-                            fees
+                            {wholeDollars(p.annualFees)} in fees
                           </span>
                         </span>
                         <span class="rate">

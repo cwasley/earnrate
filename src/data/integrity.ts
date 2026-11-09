@@ -334,6 +334,11 @@ export function catalogProblems(catalog: Catalog): string[] {
       problems.push(`category ${id}: parent '${id.slice(0, dot)}' is missing`)
     }
   }
+  const cardIds = new Set(catalog.cards.map((c) => c.id))
+  for (const { id, cards = [] } of catalog.categories)
+    for (const card of cards)
+      if (!cardIds.has(card))
+        problems.push(`category ${id}: card '${card}' is not in the catalog`)
   for (const { id, page } of catalog.categories) {
     if (page === undefined) continue
     const target = catalog.categories.find((c) => c.id === page)

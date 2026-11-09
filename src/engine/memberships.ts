@@ -1,7 +1,7 @@
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Membership } from '../schema/membership.ts'
-import { listed, money, shortCardName, withArticle, words } from './text.ts'
+import { money, withArticle, words } from './text.ts'
 
 export type MembershipCost = {
   id: string
@@ -110,18 +110,6 @@ export function membershipNeeded(
   return id !== undefined && !paid.has(id)
     ? [`Needs ${membershipText(catalog, id)}.`]
     : []
-}
-
-export function membershipNote(catalog: Catalog, m: MembershipCost): string {
-  const names = m.cardIds.map((id) =>
-    shortCardName(catalog.cards.find((c) => c.id === id)?.name ?? id),
-  )
-  const needs = `${listed(names)} ${names.length === 1 ? 'needs' : 'need'} ${withArticle(m.name)}`
-  const cost =
-    m.annualFee === 0
-      ? ''
-      : `, ${money(m.annualFee)} a year, counted here like an annual fee`
-  return `${needs}${cost}. If you have one, add it to your memberships.`
 }
 
 // The membership a card can't be had without, unless the person has it.

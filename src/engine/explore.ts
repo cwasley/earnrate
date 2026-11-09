@@ -27,7 +27,6 @@ import {
   noteOnlyAssumptions,
   recommend,
 } from './recommend.ts'
-import { rotationGap } from './rotation.ts'
 import { membershipsUsed } from './setup.ts'
 import { optionName } from './rule-text.ts'
 import {
@@ -437,7 +436,6 @@ export function exploreCards(
       merchant,
       purchase,
     )
-    const gap = rotationGap(card, query.date)
     const paid = paymentUpgrade(
       card,
       held,
@@ -470,13 +468,6 @@ export function exploreCards(
     const evidence = card.evidence.find((e) => e.rule === evidenceRule)
     ranked.push({
       ...top,
-      warnings:
-        gap === null
-          ? top.warnings
-          : [
-              ...top.warnings,
-              `Its rotating categories for ${gap} aren't in earnrate's data yet, so it's ranked without them.`,
-            ],
       issuer: card.issuer,
       network: card.network,
       annualFee: card.annual_fee ?? null,

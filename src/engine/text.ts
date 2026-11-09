@@ -123,6 +123,17 @@ export function categoryNote(catalog: Catalog, id: string): string | null {
   return dot === -1 ? null : categoryNote(catalog, id.slice(0, dot))
 }
 
+// Leads the links to a category's cards, after its note.
+export const CATEGORY_CARDS_LEAD = 'More on each card:'
+
+// The card ids named by the note categoryNote gives.
+export function categoryCards(catalog: Catalog, id: string): string[] {
+  const category = catalog.categories.find((c) => c.id === id)
+  if (category?.note !== undefined) return category.cards ?? []
+  const dot = id.lastIndexOf('.')
+  return dot === -1 ? [] : categoryCards(catalog, id.slice(0, dot))
+}
+
 export function categoryUnranked(catalog: Catalog, id: string): boolean {
   if (catalog.categories.find((c) => c.id === id)?.unranked) return true
   const dot = id.lastIndexOf('.')

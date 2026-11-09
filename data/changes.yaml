@@ -3,6 +3,16 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.08.5'
+  date: 2026-11-08
+  changes:
+    - cause: addition
+      categories: [housing]
+      field: cards
+      was: null
+      now: [bilt-blue, bilt-obsidian, bilt-palladium]
+      summary: The rent and mortgage note's Bilt cards are named in data, so earnrate.dev links each card's page under the note.
+
 - version: '2026.11.08.4'
   date: 2026-11-08
   changes:
