@@ -559,7 +559,8 @@ function foldTies(pairs: Simulation[]): PairSimulation[] {
     }
     const shared = new Set(twin.cards.map((c) => c.cardId))
     const other = [a, b].find((c) => c && !shared.has(c.cardId))
-    if (other) twin.alternatives.push(other.cardId)
+    if (other && !twin.alternatives.includes(other.cardId))
+      twin.alternatives.push(other.cardId)
   }
   return folded
 }

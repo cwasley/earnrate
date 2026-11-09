@@ -343,6 +343,20 @@ describe('a year of spending', () => {
     expect(pairs[0]?.net).toBe(12 * (5 + 2))
   })
 
+  test('a folded pair names each interchangeable card once', () => {
+    const cat = testCatalog([
+      card('flat-a', { base_rate: 2 }),
+      card('flat-b', { base_rate: 2 }),
+      card('flat-c', { base_rate: 2 }),
+    ])
+    const lines = resolveSpendLines(cat, [
+      { merchant: null, category: 'other', monthly: 100 },
+    ])
+    const { pairs } = simulateCatalog(cat, lines, options)
+    for (const p of pairs)
+      expect(new Set(p.alternatives).size).toBe(p.alternatives.length)
+  })
+
   test('what adding a card to a wallet would gain, after its fee', () => {
     const cat = testCatalog([
       card('held-flat', { base_rate: 1.5 }),
