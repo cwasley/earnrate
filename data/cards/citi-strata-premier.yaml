@@ -36,6 +36,7 @@ rules:
     note: Airlines, and hotels not booked through Citi Travel. Air travel booked through Citi Travel also falls here.
   - id: travel-agencies
     match: { mccs: [4722] }
+    what: travel agencies
     rate: 3
     note: Citi counts travel agency purchases in its air travel and other hotels category.
   - id: restaurants

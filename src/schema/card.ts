@@ -127,6 +127,9 @@ export const RuleSchema = z
     // Set when a rule isn't confirmed against the issuer's terms. The engine
     // warns when an unverified rule decides the winner.
     unverified: z.string().optional(),
+    // The kinds of stores a rule matched only by MCC covers, in words, for
+    // answers that would otherwise read out the codes: "caterers".
+    what: z.string().min(1).optional(),
     note: z.string().optional(),
   })
   .refine(

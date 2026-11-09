@@ -3,6 +3,19 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.09.6'
+  date: 2026-11-09
+  changes:
+    - cause: wording
+      cards:
+        [
+          td-bank-nordstrom-visa,
+          verizon-visa-card,
+          citi-strata-premier,
+          venmo-credit-card,
+        ]
+      summary: Rules matched by merchant category codes name the kinds of stores they cover instead of the codes, and three earlier corrections drop the codes.
+
 - version: '2026.11.09.5'
   date: 2026-11-09
   changes:
@@ -2100,15 +2113,15 @@
     - cause: correction
       cards: [bank-of-america-atmos-rewards-ascent]
       field: rules.gas-ev-cable-streaming-transit.exclude
-      summary: Parking (MCC 7523) isn't on Bank of America's transit list.
+      summary: Parking isn't on Bank of America's transit list.
     - cause: correction
       cards: [bank-of-america-atmos-rewards-business]
       field: rules.gas-ev-shipping-transit.exclude
-      summary: Parking (MCC 7523) isn't on Bank of America's transit list.
+      summary: Parking isn't on Bank of America's transit list.
     - cause: correction
       card: td-bank-nordstrom-visa
       field: rules.caterers
-      summary: 2x at caterers (MCC 5811).
+      summary: 2x at caterers.
     - cause: addition
       merchants: [peacock, showtime]
       summary: Streaming services on Chase's list.

@@ -39,6 +39,7 @@ rules:
     note: Restaurants, drinking places and fast food, including takeout and delivery. A cafe inside another store can code as that store and earn 1%.
   - id: caterers
     match: { mccs: [5811] }
+    what: caterers
     rate: 4
     note: Caterers count as restaurants.
   - id: verizon-purchases

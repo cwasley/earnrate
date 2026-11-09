@@ -98,3 +98,11 @@ test('search shows the published welcome offer with its fine print', () => {
     /welcome offer \(published\): \$60 with no spending required; the offer ends Dec 1, 2026\. A \$60 Nordstrom Note, not a statement credit/,
   )
 })
+
+test('rules matched only by store codes are named, not read out as codes', () => {
+  const text = search('td-bank-nordstrom-visa')
+  expect(text).not.toMatch(/MCC/)
+  expect(text).toMatch(
+    /at .*caterers, meat markets, candy and nut stores, dairy stores, bakeries and liquor stores/,
+  )
+})

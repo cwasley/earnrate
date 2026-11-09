@@ -47,6 +47,7 @@ rules:
     note: Supermarkets, grocers, convenience stores and specialty food markets, by merchant category code.
   - id: specialty-food
     match: { mccs: [5422, 5441, 5451, 5462, 5921] }
+    what: meat markets, candy and nut stores, dairy stores, bakeries and liquor stores
     rate: 2
     note: Liquor stores, meat lockers, candy and nut stores, dairy stores and bakeries count as grocery.
   - id: dining
@@ -55,6 +56,7 @@ rules:
     note: Includes fast food, bars, caterers and third-party delivery. Restaurants inside Nordstrom earn as Nordstrom purchases.
   - id: caterers
     match: { mccs: [5811] }
+    what: caterers
     rate: 2
     note: Caterers count as dining.
   - id: streaming

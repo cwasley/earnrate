@@ -31,6 +31,7 @@ rules:
     rate: 3
     note: Movie theaters, concert and theatrical promoters, pro sports, streaming and other subscription TV, radio or streaming, sporting goods stores, and membership sports and recreation clubs (gyms, golf, tennis, swimming).
   - id: entertainment-other
+    what: bookstores and newsstands, digital goods sellers, music and video stores, amusement parks and attractions, camps, bowling alleys, golf courses and arcades
     # Visa's codes for the rest of Venmo's "Eligible entertainment
     # categories" list. Betting (7995) is on the list but Synchrony treats
     # gambling as a cash advance, which earns nothing.

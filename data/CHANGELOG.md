@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.09.6
+
+Wording only; no rates changed. A rule matched only by merchant category codes can now say in words what kinds of stores it covers (`what`), so answers no longer read out the codes: `td-bank-nordstrom-visa`'s specialty food stores (meat markets, candy and nut stores, dairy stores, bakeries and liquor stores) and caterers, `verizon-visa-card`'s caterers, `citi-strata-premier`'s travel agencies, and `venmo-credit-card`'s other entertainment (bookstores and newsstands, digital goods, music and video stores, amusement parks, camps, bowling alleys, golf courses and arcades). Three earlier corrections' summaries (Nordstrom Visa's caterers, Bank of America's parking) drop the codes too.
+
 ## 2026.11.09.5
 
 Evidence quotes only; no rates, fees or offers changed. `bank-of-america-atmos-rewards-business`'s card page moved to business.bankofamerica.com/en/credit-cards/atmos-rewards; every quote was read there in Chrome (Bank of America blocks the source check), and the offer's minimum spend, in an "Online offer terms" overlay that opens on click, is marked `in_collapsed`. `td-bank-nordstrom-visa` and `td-bank-nordstrom-credit-card` back the offer's eligibility with the card page's banner ("as a new credit cardmember"), since the full terms now load only on click; the full wording is in each card's notes. Also read in Chrome, unchanged: the welcome offers of Bank of America's seven cards and of eleven Amex cards whose offer terms the source check couldn't reach.

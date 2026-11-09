@@ -84,6 +84,7 @@ export function ruleParts(
     return [`${listed(merchantParts)} when it codes as ${listed(categories)}`]
   const parts = [...categories, ...(merchants.length > 0 ? merchantParts : [])]
   if (parts.length > 0) return parts
+  if (rule.what !== undefined) return [rule.what]
   return m.mccs?.length
     ? [`purchases coded MCC ${m.mccs.map(String).join(', ')}`]
     : [words(rule.id)]
@@ -136,6 +137,8 @@ export function ruleWhat(
 export function rulePreposition(catalog: Catalog, rules: Rule[]): 'on' | 'at' {
   const readsOn = (r: Rule) => {
     if (r.match.any === true || r.match.choice !== undefined) return true
+    // `what` names kinds of stores for a rule matched only by MCC.
+    if (r.what !== undefined) return false
     const merchants = r.match.merchants ?? []
     const kind = shortenedKind(catalog, merchants)
     return (
