@@ -23,7 +23,7 @@ welcome_offer:
   spend: 0
   months: 3
   valid_to: 2027-01-13
-  note: 'A $150 statement credit after one purchase within 90 days of opening, for applicants approved 8/12/26 to 1/13/27; spend 0 stands in for "make one purchase". One offer per account; the credit posts 1-2 billing cycles after the purchase.'
+  note: 'A $150 statement credit after one purchase within 90 days of opening, for applicants approved 8/12/26 to 1/13/27. One offer per account; the credit posts 1-2 billing cycles after the purchase.'
 rules:
   - id: gas-ev-charging
     match: { categories: [gas, ev_charging] }

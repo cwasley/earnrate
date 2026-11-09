@@ -3,6 +3,18 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.08.2'
+  date: 2026-11-08
+  changes:
+    - cause: addition
+      categories: [phone, entertainment]
+      field: aliases
+      summary: '"Phone bill" and "cell phone bill" find cell phone service; "concert tickets" finds live entertainment and events.'
+    - cause: wording
+      card: verizon-visa-card
+      field: welcome_offer.note
+      summary: The note no longer mentions how the data file stores "make one purchase".
+
 - version: '2026.11.08.1'
   date: 2026-11-08
   changes:

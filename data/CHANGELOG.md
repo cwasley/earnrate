@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.08.2
+
+No rates changed. "Phone bill" and "cell phone bill" now find cell phone service, and "concert tickets" finds live entertainment and events. Verizon Visa's welcome-offer note no longer mentions how the data file stores "make one purchase".
+
 ## 2026.11.08.1
 
 Site pages only; no rates, rankings or merchant matches changed. The `grocery` category (grocery stores) gets a new `page: grocery.supermarket`: earnrate.dev had two near-duplicate pages, /best/grocery and /best/groceries, and the grocery stores one left out bonuses that pay only at supermarkets. /best/grocery now redirects to /best/groceries, which ranks every card at least as high and is where searches for "grocery" and "groceries" already land.

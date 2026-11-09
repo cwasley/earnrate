@@ -119,7 +119,7 @@
 - id: phone
   preposition: on
   name: Cell phone service
-  aliases: [phone, cell phone, wireless]
+  aliases: [phone, cell phone, phone bill, cell phone bill, wireless]
   mccs: [4814]
 - id: utilities
   preposition: on
@@ -138,7 +138,7 @@
 - id: entertainment
   preposition: on
   name: Live entertainment and events
-  aliases: [concerts, events, tickets]
+  aliases: [concerts, concert tickets, events, tickets]
   mccs: [7922, 7941]
 - id: fitness
   name: Gyms and fitness

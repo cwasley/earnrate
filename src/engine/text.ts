@@ -265,12 +265,13 @@ const NUMBERS: Record<string, string> = {
   six: '6',
 }
 
-// "five-percent" reads "5%"; other ids read as words.
+// "five-percent" reads "5%" and "three-x" reads "3x"; other ids read as words.
 export function choiceName(id: string): string {
   return words(
     id.replace(
-      /\b(one|two|three|four|five|six)-percent\b/g,
-      (_, n: string) => `${NUMBERS[n] ?? n}%`,
+      /\b(one|two|three|four|five|six)-(percent|x)\b/g,
+      (_, n: string, unit: string) =>
+        `${NUMBERS[n] ?? n}${unit === 'x' ? 'x' : '%'}`,
     ),
   )
 }
