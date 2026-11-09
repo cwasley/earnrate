@@ -3,7 +3,7 @@ import { loadCatalog } from '../src/data/load.ts'
 import { checklist, checklistCalendar } from '../src/engine/checklist.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 
-const catalog = await loadCatalog()
+const catalog = { ...(await loadCatalog()), changes: [] }
 const TODAY = '2026-11-01'
 
 const wallet = WalletSchema.parse({

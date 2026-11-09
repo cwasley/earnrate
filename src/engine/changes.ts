@@ -3,7 +3,7 @@ import type { Catalog } from '../schema/catalog.ts'
 import type { Change, ChangeSubject, Release } from '../schema/changes.ts'
 import type { z } from 'zod'
 import { offerTerms } from './offers.ts'
-import { creditName, ruleWhat } from './rule-text.ts'
+import { creditName, rulePreposition, ruleWhat } from './rule-text.ts'
 import {
   creditBack,
   currencyName,
@@ -36,6 +36,22 @@ export function datedChanges(releases: Release[]): DatedChange[] {
 
 export const issuerChanges = (releases: Release[]) =>
   datedChanges(releases).filter((d) => d.change.cause === 'issuer')
+
+// What a cardholder's to-do list tells them about: an issuer changing a
+// card's terms, or earnrate fixing its own mistake about a card.
+export const holderNews = (c: Change) =>
+  (c.cause === 'issuer' || c.cause === 'correction') && c.cards !== undefined
+
+// The releases cut down to those changes, for the catalog the engine runs on.
+export function holderReleases(releases: Release[]): Release[] {
+  return releases.flatMap((r) => {
+    const changes = r.changes.filter(holderNews)
+    return changes.length === 0 ? [] : [{ ...r, changes }]
+  })
+}
+
+// The day a cardholder could first have heard of it.
+export const changeSeen = (d: DatedChange) => d.change.detected ?? d.date
 
 export function subjectOf(
   catalog: Catalog,
@@ -136,7 +152,7 @@ export function changeHeadline(catalog: Catalog, change: Change): string {
               typeof v === 'number' ? v : (v as Rule).rate,
               card.currency,
             )
-      return `${name} rate ${ruleWhat(catalog, rule, card)}: ${rate(was)} → ${rate(now)}`
+      return `${name} rate ${rulePreposition(catalog, [rule])} ${ruleWhat(catalog, rule, card)}: ${rate(was)} → ${rate(now)}`
     }
     case 'credits': {
       const credit = (card.credits.find((c) => c.id === item) ??
@@ -153,6 +169,68 @@ export function changeHeadline(catalog: Catalog, change: Change): string {
     return lower(
       offerTerms(o as Offer, currencyName(catalog, card?.currency ?? '')),
     )
+  }
+}
+
+const sentence = (t: string) => (/[.!?]["')]?$/.test(t) ? t : `${t}.`)
+
+// How long a change stays on a cardholder's to-do list.
+export const HOLDER_NEWS_DAYS = 60
+
+// The card page's "Recent changes", which lists earnrate's recent
+// corrections too, so a to-do line can link there.
+export const RECENT_CHANGES_ID = 'recent-changes'
+export const cardChangesUrl = (cardId: string) =>
+  `https://earnrate.dev/cards/${cardId}#${RECENT_CHANGES_ID}`
+
+const issuerOf = (catalog: Catalog, cardId: string) => {
+  const card = catalog.cards.find((c) => c.id === cardId)
+  return catalog.issuers.find((i) => i.id === card?.issuer)?.name ?? ''
+}
+
+const sourceText = (url: string | undefined) =>
+  url === undefined ? '' : ` Source: ${url}`
+
+// A to-do line about an issuer's change to a held card: the old and new
+// terms and the issuer's page. A welcome offer's is only for a bonus being
+// tracked from the published offer, whose tracking now uses the new terms.
+export function holderChangeText(catalog: Catalog, d: DatedChange): string {
+  const { change } = d
+  const issuer = issuerOf(catalog, change.cards?.[0] ?? '')
+  const source = sourceText(change.source)
+  const headline = sentence(changeHeadline(catalog, change))
+  const effective =
+    change.effective === undefined
+      ? ''
+      : `, effective ${shortDate(change.effective)}`
+  const kind = change.field?.split('.')[0]
+  if (kind === 'welcome_offer')
+    return `${headline} ${issuer} changed it for new applicants${effective}; earnrate now tracks your welcome bonus at the new terms, so set yours if you got the old offer.${source}`
+  if (kind === 'applications_closed') return `${headline}${source}`
+  return `${headline} ${issuer} made this change${effective}; earnrate's answers already use the new terms.${source}`
+}
+
+// One to-do line for earnrate's recent corrections to a held card, newest
+// first: one is said in full, more are counted with a link to the card page.
+export function holderFixesText(
+  catalog: Catalog,
+  cardId: string,
+  name: string, // as the to-do list names the card
+  fixes: DatedChange[],
+): { text: string; url?: string } {
+  const issuer = issuerOf(catalog, cardId)
+  const [only] = fixes
+  if (fixes.length === 1 && only !== undefined) {
+    const url = only.change.source
+    return {
+      text: `earnrate fixed its own mistake about ${name} (${issuer} didn't change anything): ${sentence(only.change.summary ?? '')} Answers before ${shortDate(only.date)} used the old value.${sourceText(url)}`,
+      ...(url === undefined ? {} : { url }),
+    }
+  }
+  const url = cardChangesUrl(cardId)
+  return {
+    text: `earnrate fixed ${String(fixes.length)} of its own mistakes about ${name} (${issuer} didn't change anything); answers already use the fixed terms. See what changed: ${url}`,
+    url,
   }
 }
 

@@ -7,8 +7,11 @@ import {
   datedChanges,
   type DatedChange,
   freshness,
+  HOLDER_NEWS_DAYS,
   issuerChanges,
+  RECENT_CHANGES_ID,
 } from '../../src/engine/changes.ts'
+import { addDays } from '../../src/engine/periods.ts'
 import {
   currencyName,
   hostname,
@@ -191,15 +194,34 @@ export function recentChangesSection(
   const recent = issuerChanges(releases)
     .filter((d) => cardOf(d) === cardId)
     .slice(0, RECENT_ON_CARD)
-  if (recent.length === 0) return ''
-  return `<h2>Recent changes</h2><ul class="change-notes">${recent
-    .map(
-      (d) =>
-        `<li><time datetime="${d.date}">${esc(shortDate(d.date))}</time>: ${esc(changeHeadline(ctx.catalog, d.change))}. Source: ${sourceLink(d.change.source ?? '')}</li>`,
-    )
-    .join(
-      '',
-    )}</ul><p><a href="/changes">Every change issuers made to card terms</a></p>`
+  // Every correction a cardholder's to-do list can count links here.
+  const since = addDays(releases[0]?.date ?? '', -HOLDER_NEWS_DAYS)
+  const fixes = datedChanges(releases).filter(
+    (d) =>
+      d.change.cause === 'correction' &&
+      d.change.cards?.includes(cardId) === true &&
+      d.date >= since,
+  )
+  if (recent.length === 0 && fixes.length === 0) return ''
+  const issuer =
+    recent.length === 0
+      ? ''
+      : `<ul class="change-notes">${recent
+          .map(
+            (d) =>
+              `<li><time datetime="${d.date}">${esc(shortDate(d.date))}</time>: ${esc(changeHeadline(ctx.catalog, d.change))}. Source: ${sourceLink(d.change.source ?? '')}</li>`,
+          )
+          .join('')}</ul>`
+  const own =
+    fixes.length === 0
+      ? ''
+      : `<p>Corrections earnrate made to its own data about this card; ${esc(ctx.issuerName(ctx.catalog.cards.find((c) => c.id === cardId)?.issuer ?? ''))} didn't change anything:</p><ul class="change-notes">${fixes
+          .map(
+            (d) =>
+              `<li><time datetime="${d.date}">${esc(shortDate(d.date))}</time>: ${esc(d.change.summary ?? '')}</li>`,
+          )
+          .join('')}</ul>`
+  return `<h2 id="${RECENT_CHANGES_ID}">Recent changes</h2>${issuer}${own}<p><a href="/changes">Every change issuers made to card terms</a></p>`
 }
 
 // The companies page's <!--earnrate:freshness--> and <!--earnrate:recent_changes-->.

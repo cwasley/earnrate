@@ -22,6 +22,9 @@ import {
   STEP,
 } from '../src/engine/fee-worth.ts'
 import { quarterlyPages, quarters } from '../scripts/pages/quarterly.ts'
+import { recentChangesSection } from '../scripts/pages/changes.ts'
+import { cardChangesUrl } from '../src/engine/changes.ts'
+import { ChangesFileSchema } from '../src/schema/changes.ts'
 import { DESCRIPTION_MAX, esc, TITLE_MAX } from '../scripts/pages/site.ts'
 import { ROOT } from './helpers.ts'
 
@@ -328,4 +331,42 @@ describe('is the annual fee worth it', () => {
     for (const m of [STEP, 1000, MAX_MONTHLY])
       expect(lead(worth, m), worth.card.id).toBeLessThanOrEqual(0)
   }, 60_000)
+})
+
+test("a card page's recent changes list earnrate's recent corrections, where the to-do list links", () => {
+  const releases = ChangesFileSchema.parse([
+    {
+      version: '2026.11.20',
+      date: '2026-11-20',
+      changes: [
+        {
+          cause: 'correction',
+          card: 'chase-prime-visa',
+          field: 'rules.amazon',
+          summary: '5% at Audible.com with Prime.',
+        },
+      ],
+    },
+    {
+      version: '2026.09.01',
+      date: '2026-09-01',
+      changes: [
+        {
+          cause: 'correction',
+          card: 'chase-prime-visa',
+          field: 'rules.whole-foods',
+          summary: 'An older fix.',
+        },
+      ],
+    },
+  ])
+  const html = recentChangesSection(ctx, releases, 'chase-prime-visa')
+  expect(cardChangesUrl('chase-prime-visa')).toMatch(/#recent-changes$/)
+  expect(html).toMatch(/^<h2 id="recent-changes">Recent changes<\/h2>/)
+  expect(html).toContain(
+    "Corrections earnrate made to its own data about this card; Chase didn't change anything:",
+  )
+  expect(html).toContain('5% at Audible.com with Prime.')
+  expect(html).not.toContain('An older fix.')
+  expect(recentChangesSection(ctx, releases, 'amex-gold')).toBe('')
 })

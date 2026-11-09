@@ -1,5 +1,14 @@
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
+import {
+  changeSeen,
+  datedChanges,
+  type DatedChange,
+  HOLDER_NEWS_DAYS,
+  holderChangeText,
+  holderFixesText,
+  holderNews,
+} from './changes.ts'
 import { addDays, currentPeriodEnd, daysBetween } from './periods.ts'
 import {
   CAP_PERIODS,
@@ -41,11 +50,13 @@ export type ChecklistItem = {
     | 'credit'
     | 'enroll'
     | 'renewal'
+    | 'change'
   cardId: string
   // Tells apart a card's items of the same kind and date (two credits).
   ref?: string
   text: string
   due: string | null // YYYY-MM-DD: the deadline, or when a cap resets
+  url?: string // where a change came from, also at the end of its text
 }
 
 // "5% and 2% categories", "top category": a choice already named for its
@@ -60,7 +71,8 @@ function pickWhat(names: string[]): string {
 // What the wallet's cards need this period, soonest first: bonuses to
 // activate, categories to pick, caps running low, welcome bonuses to finish,
 // merchant credits to enroll in or use, and rotating categories the issuer
-// hasn't posted yet.
+// hasn't posted yet; then, newest first, the issuers' recent changes to the
+// cards and earnrate's corrections to them.
 export function checklist(
   catalog: Catalog,
   wallet: Wallet,
@@ -72,11 +84,13 @@ export function checklist(
   spending?: Spending,
 ): ChecklistItem[] {
   const items: ChecklistItem[] = []
+  const names = new Map<string, string>()
   for (const held of wallet.cards) {
     const card = catalog.cards.find((c) => c.id === held.id)
     const s = summary.cards.find((c) => c.cardId === held.id)
     if (!card || !s) continue
     const name = s.checkoutLabel ?? shortName?.(card.id) ?? s.cardName
+    names.set(card.id, name)
 
     for (const a of activationsDue(catalog, card, held, today)) {
       const starts =
@@ -261,11 +275,82 @@ export function checklist(
       })
     }
   }
-  return items.sort(
-    (a, b) =>
-      (a.due ?? '9999').localeCompare(b.due ?? '9999') ||
-      a.cardId.localeCompare(b.cardId),
-  )
+  return [
+    ...items.sort(
+      (a, b) =>
+        (a.due ?? '9999').localeCompare(b.due ?? '9999') ||
+        a.cardId.localeCompare(b.cardId),
+    ),
+    ...changeItems(catalog, wallet, today, summary, names),
+  ]
+}
+
+function changeItems(
+  catalog: Catalog,
+  wallet: Wallet,
+  today: string,
+  summary: WalletSummary,
+  names: Map<string, string>,
+): ChecklistItem[] {
+  const from = addDays(today, -HOLDER_NEWS_DAYS)
+  const news = datedChanges(catalog.changes ?? [])
+    .filter(
+      (d) => holderNews(d.change) && d.date <= today && changeSeen(d) >= from,
+    )
+    .sort((a, b) => changeSeen(b).localeCompare(changeSeen(a)))
+  const dated: { seen: string; item: ChecklistItem }[] = []
+  const fixes = new Map<string, DatedChange[]>()
+  for (const d of news) {
+    const ids = (d.change.cards ?? []).filter((id) => names.has(id))
+    if (d.change.cause === 'correction') {
+      for (const id of ids) fixes.set(id, [...(fixes.get(id) ?? []), d])
+      continue
+    }
+    const [cardId] = ids
+    if (cardId === undefined) continue
+    // A new offer matters to a holder only while a bonus is tracked from the
+    // published one, opened before the change.
+    if (d.change.field === 'welcome_offer') {
+      const b = wallet.cards.find((c) => c.id === cardId)?.bonus
+      const open =
+        summary.cards.find((c) => c.cardId === cardId)?.bonus?.state === 'open'
+      const fromOffer = [b?.spend, b?.by, b?.points, b?.dollars].every(
+        (v) => v === undefined,
+      )
+      if (!b || !open || !fromOffer || b.opened >= changeSeen(d)) continue
+    }
+    dated.push({
+      seen: changeSeen(d),
+      item: {
+        kind: 'change',
+        cardId,
+        ref: `${d.version}:${d.change.field ?? ''}`,
+        text: holderChangeText(catalog, d),
+        due: null,
+        ...(d.change.source === undefined ? {} : { url: d.change.source }),
+      },
+    })
+  }
+  for (const [cardId, list] of fixes) {
+    const [newest] = list
+    if (newest === undefined) continue
+    dated.push({
+      seen: changeSeen(newest),
+      item: {
+        kind: 'change',
+        cardId,
+        ref:
+          list.length === 1
+            ? `${newest.version}:${newest.change.field ?? ''}`
+            : 'corrections',
+        ...holderFixesText(catalog, cardId, names.get(cardId) ?? cardId, list),
+        due: null,
+      },
+    })
+  }
+  return dated
+    .sort((a, b) => b.seen.localeCompare(a.seen))
+    .map(({ item }) => item)
 }
 
 // An all-day calendar event for each dated action (activations, picks,

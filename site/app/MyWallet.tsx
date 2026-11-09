@@ -38,7 +38,9 @@ import {
   currencyName,
   choiceName,
   feeText,
+  hostname,
   ifCreditsUsedText,
+  possessive,
   listed,
   minimumSpendText,
   offerPerksText,
@@ -1664,6 +1666,24 @@ function SettingsLinkText({
   item: ChecklistItem
   onOpen: () => void
 }) {
+  const { url } = item
+  if (url !== undefined && item.text.endsWith(` ${url}`)) {
+    const own = url.startsWith('https://earnrate.dev/')
+      ? url.slice('https://earnrate.dev'.length)
+      : null
+    return (
+      <>
+        {item.text.slice(0, -url.length)}
+        {own === null ? (
+          <a href={url} rel="noopener" target="_blank">
+            {hostname(url)}
+          </a>
+        ) : (
+          <a href={own}>{`${possessive(shortName(item.cardId))} page`}</a>
+        )}
+      </>
+    )
+  }
   const pattern = SETTINGS_LINKS[item.kind]
   const match = pattern?.exec(item.text)
   if (!match) return <>{item.text}</>
@@ -1717,7 +1737,7 @@ function ThisQuarter({
       <h3>To do now</h3>
       <ul class="todo">
         {items.map((i) => (
-          <li key={`${i.kind}-${i.cardId}`}>
+          <li key={`${i.kind}-${i.cardId}-${i.ref ?? i.text}`}>
             <SettingsLinkText
               item={i}
               onOpen={() => {

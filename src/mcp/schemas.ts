@@ -141,11 +141,13 @@ export const WalletSummarySchema = z.object({
           'credit',
           'enroll',
           'renewal',
+          'change',
         ]),
         cardId: z.string(),
         ref: z.string().optional(),
         text: z.string(),
         due: z.string().nullable(),
+        url: z.string().optional(),
       }),
     )
     .optional(),

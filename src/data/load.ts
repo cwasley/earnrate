@@ -8,6 +8,7 @@ import { CONFIG_DIR, WALLET_ENV_VAR } from '../brand.ts'
 import { CardSchema, type Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { CategoriesFileSchema } from '../schema/category.ts'
+import { holderReleases } from '../engine/changes.ts'
 import { ChangesFileSchema, type Release } from '../schema/changes.ts'
 import { CurrenciesFileSchema } from '../schema/currency.ts'
 import { IssuersFileSchema } from '../schema/issuer.ts'
@@ -43,19 +44,28 @@ async function loadCards(dir: string): Promise<Card[]> {
 }
 
 export async function loadCatalog(dir = DATA_DIR): Promise<Catalog> {
-  const [categories, currencies, issuers, memberships, cards, seed, overrides] =
-    await Promise.all([
-      readYaml(path.join(dir, 'categories.yaml'), CategoriesFileSchema),
-      readYaml(path.join(dir, 'currencies.yaml'), CurrenciesFileSchema),
-      readYaml(path.join(dir, 'issuers.yaml'), IssuersFileSchema),
-      readYaml(path.join(dir, 'memberships.yaml'), MembershipsFileSchema),
-      loadCards(path.join(dir, 'cards')),
-      readYaml(path.join(dir, 'merchants', 'seed.yaml'), MerchantsFileSchema),
-      readYaml(
-        path.join(dir, 'merchants', 'overrides.yaml'),
-        MerchantsFileSchema,
-      ),
-    ])
+  const [
+    categories,
+    currencies,
+    issuers,
+    memberships,
+    cards,
+    seed,
+    overrides,
+    releases,
+  ] = await Promise.all([
+    readYaml(path.join(dir, 'categories.yaml'), CategoriesFileSchema),
+    readYaml(path.join(dir, 'currencies.yaml'), CurrenciesFileSchema),
+    readYaml(path.join(dir, 'issuers.yaml'), IssuersFileSchema),
+    readYaml(path.join(dir, 'memberships.yaml'), MembershipsFileSchema),
+    loadCards(path.join(dir, 'cards')),
+    readYaml(path.join(dir, 'merchants', 'seed.yaml'), MerchantsFileSchema),
+    readYaml(
+      path.join(dir, 'merchants', 'overrides.yaml'),
+      MerchantsFileSchema,
+    ),
+    loadChanges(dir),
+  ])
   return {
     categories,
     currencies,
@@ -63,6 +73,7 @@ export async function loadCatalog(dir = DATA_DIR): Promise<Catalog> {
     memberships,
     cards,
     merchants: { seed, overrides },
+    changes: holderReleases(releases),
   }
 }
 

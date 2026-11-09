@@ -18,7 +18,9 @@ const TODO_HELP = `Usage: ${CLI_NAME} todo [--ics <file>] [--date <YYYY-MM-DD>]
 What your saved cards need this period, soonest first: bonuses to activate,
 categories to pick, spending caps running low, welcome bonuses to finish,
 spend bonuses you're close to, statement credits to enroll in or use, first-year
-rates ending, and rotating categories the issuer hasn't posted yet.
+rates ending, and rotating categories the issuer hasn't posted yet. Then, for
+60 days, changes an issuer made to your cards' terms and corrections earnrate
+made to its data about them.
 
 Options:
   --ics <file>          Also write the dated items as a calendar file to import
