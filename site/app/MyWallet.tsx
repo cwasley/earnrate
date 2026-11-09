@@ -67,8 +67,9 @@ import {
   wholeDollars,
   words,
 } from './format.ts'
-import { ABROAD_NOTE, AbroadToggle } from './AbroadToggle.tsx'
-import { PayingWith, payingNote } from './PayingWith.tsx'
+import { ABROAD_NOTE } from './AbroadToggle.tsx'
+import { PayingHints, payingNote } from './PayingWith.tsx'
+import { PurchaseOptions, type Purchase } from './ThisPurchase.tsx'
 import type { Card, PaymentMethod } from '../../src/schema/card.ts'
 import { optionName, ruleWhat } from '../../src/engine/rule-text.ts'
 import { SearchInput } from './SearchInput.tsx'
@@ -162,7 +163,15 @@ function ask(
   return recommend(catalog, wallet, purchase, resolvePlace(catalog, text, null))
 }
 
-function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
+function Answer({
+  wallet,
+  rec,
+  onPayment,
+}: {
+  wallet: Wallet
+  rec: Recommendation
+  onPayment: (payment: PaymentMethod) => void
+}) {
   const decided = rec.decision
   const top = rec.ranked.find((r) => r.cardId === decided?.cardId)
   const held = wallet.cards.find((c) => c.id === decided?.cardId)
@@ -201,6 +210,7 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
           {w}
         </p>
       ))}
+      <PayingHints answer={rec} onPick={onPayment} />
       {rec.notes.map((n) => (
         <p class="muted" key={n}>
           {n}
@@ -1870,6 +1880,8 @@ export function MyWallet({
   lockNote,
   syncTop,
   connect,
+  purchase,
+  onPurchase,
 }: {
   initialQuery: string
   focusAsk: boolean
@@ -1881,6 +1893,8 @@ export function MyWallet({
   lockNote: string | null
   syncTop: ComponentChildren // sync status, the first-connection choice
   connect: ComponentChildren // "Use the same wallet as Claude"
+  purchase: Purchase
+  onPurchase: (p: Purchase) => void
 }) {
   const [message, setMessage] = useState<{
     text: string
@@ -1889,8 +1903,7 @@ export function MyWallet({
   } | null>(null)
   const [query, setQuery] = useState(initialQuery)
   const [amount, setAmount] = useState('')
-  const [abroad, setAbroad] = useState(false)
-  const [payment, setPayment] = useState<PaymentMethod | null>(null)
+  const { abroad, payment } = purchase
   const [openCard, setOpenCard] = useState<string | null>(null)
   const [asked, setAsked] = useState<{
     text: string
@@ -2198,14 +2211,7 @@ export function MyWallet({
             </button>
           ))}
         </div>
-        <div class="options">
-          <AbroadToggle abroad={abroad} onChange={setAbroad} />
-          <PayingWith
-            name="wallet-paying"
-            payment={payment}
-            onChange={setPayment}
-          />
-        </div>
+        <PurchaseOptions purchase={purchase} onChange={onPurchase} />
         <div aria-live="polite">
           {rec ? (
             <div
@@ -2222,8 +2228,19 @@ export function MyWallet({
                 {payment ? (
                   <span class="muted">{payingNote(payment)}</span>
                 ) : null}
+                {rec.merchant.source !== 'category' &&
+                rec.merchant.source !== 'none' ? (
+                  <span class="muted">
+                    {' '}
+                    · codes as {categoryPhrase(catalog, rec.merchant.category)}
+                  </span>
+                ) : null}
               </h4>
-              <Answer wallet={wallet} rec={rec} />
+              <Answer
+                wallet={wallet}
+                rec={rec}
+                onPayment={(p) => onPurchase({ ...purchase, payment: p })}
+              />
             </div>
           ) : null}
         </div>

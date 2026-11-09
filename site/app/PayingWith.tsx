@@ -1,5 +1,7 @@
 import type { PaymentMethod } from '../../src/schema/card.ts'
-import { PAYMENT_PHRASES } from '../../src/engine/text.ts'
+import { capitalize, PAYMENT_PHRASES } from '../../src/engine/text.ts'
+import type { MerchantResolution } from '../../src/engine/types.ts'
+import { shortName } from './format.ts'
 
 // Unknown unless the visitor picks one: a rate that needs Apple Pay never
 // applies by assumption.
@@ -41,3 +43,36 @@ export function PayingWith({
 
 export const payingNote = (payment: PaymentMethod | null) =>
   payment === null ? '' : ` · ${PAYMENT_PHRASES[payment]}`
+
+// Shown only when how you pay would change the best card; one tap sets it.
+// An unidentified store can't say whether it takes Apple Pay or PayPal.
+export function PayingHints({
+  answer,
+  onPick,
+}: {
+  answer: {
+    merchant: MerchantResolution
+    ifPaying: { cardId: string; payment: PaymentMethod; earn: string }[]
+  }
+  onPick: (payment: PaymentMethod) => void
+}) {
+  if (answer.merchant.source === 'none') return null
+  const hints = [
+    ...new Map(answer.ifPaying.map((p) => [p.payment, p])).values(),
+  ].slice(0, 2)
+  return (
+    <>
+      {hints.map((p) => (
+        <button
+          type="button"
+          class="paying-hint"
+          key={p.payment}
+          onClick={() => onPick(p.payment)}
+        >
+          {capitalize(PAYMENT_PHRASES[p.payment])}? {shortName(p.cardId)} earns{' '}
+          {p.earn} here.
+        </button>
+      ))}
+    </>
+  )
+}

@@ -1322,19 +1322,6 @@ p.callout .link {
   opacity: 1;
 }
 
-/* The per-question options under a search: where and how you're paying. */
-.app .options {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  column-gap: 20px;
-  margin-top: 8px;
-}
-
-.app .options label.check.abroad {
-  margin-top: 0;
-}
-
 .app fieldset.paying {
   display: flex;
   flex-wrap: wrap;

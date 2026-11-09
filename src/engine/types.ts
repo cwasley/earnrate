@@ -107,6 +107,14 @@ export type Recommendation = {
     value: number | null // dollars, at the wallet's point values
     costHere: number | null // dollars less than the best earner, when the amount is known
   } | null
+  // With the payment unknown: ways of paying that would put a card at the
+  // top or raise the winner, the same ones the assumptions name.
+  ifPaying: {
+    cardId: string
+    cardName: string // its checkout label when it has one
+    payment: PaymentMethod
+    earn: string
+  }[]
 }
 
 export type RecordedPurchase = {

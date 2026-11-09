@@ -20,7 +20,6 @@ import {
   ENROLL_FIRST,
   hostname,
   money,
-  PAYMENT_PHRASES,
 } from '../../src/engine/text.ts'
 import {
   cards,
@@ -32,9 +31,9 @@ import {
   shortName,
 } from './format.ts'
 import { ABROAD_NOTE } from './AbroadToggle.tsx'
-import { payingNote } from './PayingWith.tsx'
+import { PayingHints, payingNote } from './PayingWith.tsx'
 import type { PaymentMethod } from '../../src/schema/card.ts'
-import type { Purchase } from './App.tsx'
+import type { Purchase } from './ThisPurchase.tsx'
 import { CardArt } from './CardArt.tsx'
 import { track } from './track.ts'
 import { SearchInput } from './SearchInput.tsx'
@@ -433,28 +432,10 @@ export function BestFor({
                 widen them.
               </p>
             ) : null}
-            {(result.merchant.source === 'none'
-              ? []
-              : [
-                  ...new Map(
-                    result.ifPaying.map((p) => [p.payment, p]),
-                  ).values(),
-                ]
-            )
-              .slice(0, 2)
-              .map((p) => (
-                <button
-                  type="button"
-                  class="paying-hint"
-                  key={p.payment}
-                  onClick={() =>
-                    onPurchase({ ...purchase, payment: p.payment })
-                  }
-                >
-                  {capitalize(PAYMENT_PHRASES[p.payment])}?{' '}
-                  {shortName(p.cardId)} earns {p.earn} here.
-                </button>
-              ))}
+            <PayingHints
+              answer={result}
+              onPick={(payment) => onPurchase({ ...purchase, payment })}
+            />
             {result.credits.length > 0 ? (
               <>
                 <h4 class="credit-group">{CREDIT_GROUP}</h4>

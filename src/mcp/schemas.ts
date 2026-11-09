@@ -65,6 +65,15 @@ const RankedCardSchema = z.object({
   warnings: z.array(z.string()),
 })
 
+const IfPayingSchema = z.array(
+  z.object({
+    cardId: z.string(),
+    cardName: z.string(),
+    payment: z.string(),
+    earn: z.string(),
+  }),
+)
+
 const RecommendationSchema = z.object({
   decision: z
     .object({
@@ -101,6 +110,8 @@ const RecommendationSchema = z.object({
       costHere: z.number().nullable(),
     })
     .nullable(),
+  // Ways of paying that would put a card at the top, when payment is unknown.
+  ifPaying: IfPayingSchema,
 })
 
 export const WalletSummarySchema = z.object({
@@ -560,14 +571,7 @@ export const ExplorationSchema = z.object({
   assumptions: z.array(z.string()),
   warnings: z.array(z.string()),
   // Ways of paying that would put a card at the top, when payment is unknown.
-  ifPaying: z.array(
-    z.object({
-      cardId: z.string(),
-      cardName: z.string(),
-      payment: z.string(),
-      earn: z.string(),
-    }),
-  ),
+  ifPaying: IfPayingSchema,
 })
 
 const SimulationSchema = z.object({

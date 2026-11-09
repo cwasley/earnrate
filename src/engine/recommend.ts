@@ -597,6 +597,33 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
   return (closest as { text: string } | null)?.text ?? null
 }
 
+// Ways of paying that would put a card at the top, or raise the winner.
+function ifPaying(
+  catalog: Catalog,
+  entries: Entry[],
+): (Recommendation['ifPaying'][number] & { standard: string })[] {
+  const winner = entries[0]
+  if (!winner) return []
+  return entries.flatMap((e) => {
+    if (
+      !e.ifPaid ||
+      (e !== winner &&
+        e.ifPaid.returnPct <= winner.effectiveReturnPct + EPSILON)
+    )
+      return []
+    const currency = e.valuation.currency
+    return [
+      {
+        cardId: e.card.id,
+        cardName: displayName(e),
+        payment: e.ifPaid.payment,
+        earn: earnText(catalog, e.ifPaid.rate, currency),
+        standard: earnText(catalog, e.evaluation.best.nominalRate, currency),
+      },
+    ]
+  })
+}
+
 function assumptionsFor(
   catalog: Catalog,
   merchant: MerchantResolution,
@@ -658,23 +685,10 @@ function assumptionsFor(
   if (isForeign(purchase)) assumptions.push(FOREIGN_ASSUMPTION)
   if (purchase.payment) assumptions.push(paidText(purchase.payment))
   const winner = entries[0]
-  for (const e of entries) {
-    if (!e.ifPaid || !winner) continue
-    if (
-      e !== winner &&
-      e.ifPaid.returnPct <= winner.effectiveReturnPct + EPSILON
-    )
-      continue
-    const currency = e.valuation.currency
+  for (const p of ifPaying(catalog, entries))
     assumptions.push(
-      paymentUnknownText(
-        displayName(e),
-        e.ifPaid.payment,
-        earnText(catalog, e.ifPaid.rate, currency),
-        earnText(catalog, e.evaluation.best.nominalRate, currency),
-      ),
+      paymentUnknownText(p.cardName, p.payment, p.earn, p.standard),
     )
-  }
   for (const e of entries) {
     if (!e.ifLarger || !winner) continue
     if (
@@ -759,6 +773,7 @@ export function recommend(
       notes: [],
       sensitivity: null,
       bonus: null,
+      ifPaying: [],
     }
   const { entries, excluded } = rankEntries(
     catalog,
@@ -1051,6 +1066,12 @@ export function recommend(
         ? null
         : sensitivity(catalog, entries),
     bonus: bonusResult,
+    ifPaying: ifPaying(catalog, entries).map((p) => ({
+      cardId: p.cardId,
+      cardName: p.cardName,
+      payment: p.payment,
+      earn: p.earn,
+    })),
   }
 }
 

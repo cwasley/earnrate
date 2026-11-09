@@ -6,6 +6,7 @@ import type { RankedCard, Recommendation } from '../src/engine/types.ts'
 import {
   normalizeMerchantName,
   resolveMerchant,
+  resolvePlace,
 } from '../src/merchants/resolve.ts'
 import { CardSchema } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
@@ -718,6 +719,44 @@ describe('Amex Travel and Airbnb', () => {
       category: 'dining',
     })
     expect(atStadium.ranked.find((r) => r.cardId === 'amex-gold')?.rate).toBe(1)
+  })
+})
+
+describe('ways of paying that change the answer', () => {
+  const held = WalletSchema.parse({
+    cards: [{ id: 'paypal-cashback-mastercard' }, { id: 'citi-double-cash' }],
+  })
+
+  test('are listed while payment is unknown, the same ones the assumptions name', () => {
+    const rec = recommend(realCatalog, held, purchase('etsy.com'))
+    expect(rec.ifPaying).toEqual([
+      {
+        cardId: 'paypal-cashback-mastercard',
+        cardName: 'PayPal Cashback Mastercard',
+        payment: 'paypal',
+        earn: '3% cash back',
+      },
+    ])
+    expect(rec.assumptions.join(' ')).toContain(
+      'Through PayPal checkout, PayPal Cashback Mastercard would earn 3% cash back',
+    )
+  })
+
+  test('are empty once the payment is given, and for a note-only answer', () => {
+    const told = recommend(
+      realCatalog,
+      held,
+      purchase('etsy.com', { payment: 'paypal' }),
+    )
+    expect(told.ifPaying).toEqual([])
+    const rent = recommend(
+      realCatalog,
+      held,
+      purchase('rent'),
+      resolvePlace(realCatalog, 'rent', null),
+    )
+    expect(rent.categoryNote).not.toBeNull()
+    expect(rent.ifPaying).toEqual([])
   })
 })
 
