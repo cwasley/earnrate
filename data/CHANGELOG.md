@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.09.5
+
+Evidence quotes only; no rates, fees or offers changed. `bank-of-america-atmos-rewards-business`'s card page moved to business.bankofamerica.com/en/credit-cards/atmos-rewards; every quote was read there in Chrome (Bank of America blocks the source check), and the offer's minimum spend, in an "Online offer terms" overlay that opens on click, is marked `in_collapsed`. `td-bank-nordstrom-visa` and `td-bank-nordstrom-credit-card` back the offer's eligibility with the card page's banner ("as a new credit cardmember"), since the full terms now load only on click; the full wording is in each card's notes. Also read in Chrome, unchanged: the welcome offers of Bank of America's seven cards and of eleven Amex cards whose offer terms the source check couldn't reach.
+
 ## 2026.11.09.4
 
 Wording only; no rates or terms changed. Nine summaries of earlier corrections, which card pages and card search show cardholders for 60 days, say what changed for someone holding the card instead of how the data file is organized: `citi-custom-cash` and `amex-business-gold` (categories the issuer applies), `chase-ihg-one-rewards` (bills and streaming), `chase-freedom-flex`, `chase-freedom-unlimited` and `chase-ink-business-cash` (combining points), `amex-gold` and `amex-platinum` (Amex Travel flights), `citi-my-best-buy-visa` and `chase-sapphire-preferred` (vacation homes).

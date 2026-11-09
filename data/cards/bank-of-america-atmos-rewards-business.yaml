@@ -8,7 +8,7 @@ currency: atmos-points
 last_verified: 2026-11-01
 verified_by: claude
 source_urls:
-  - https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+  - https://business.bankofamerica.com/en/credit-cards/atmos-rewards
   - https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
 base_rate: 1
 business: true
@@ -54,13 +54,13 @@ milestones:
     note: 'Spending by the account anniversary counts; the code arrives within 2 billing cycles after it. $99 plus taxes and fees from $23, for a companion on a Saver or Main Cabin fare within North America on Alaska or Hawaiian. Use it within 12 months.'
 evidence:
   - rule: base_rate
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'Earn 1 point for every $1 spent on all other purchases.'
   - rule: alaska-and-hawaiian
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'Earn 3 points for every $1 spent on eligible Alaska Airlines and Hawaiian Airlines purchases.'
   - rule: gas-ev-shipping-transit
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'eligible gas, EV charging station, shipping and local transit purchases, including rideshare'
   - rule: gas-ev-shipping-transit
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
@@ -69,26 +69,27 @@ evidence:
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
     quote: 'Passenger Railways; Taxicabs and Limousines (including rideshare); Bus Lines; Tolls and Bridge Fees'
   - rule: alaska-and-hawaiian-with-boa-account
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'earn a 10% rewards bonus on all points earned from card purchases'
   - rule: gas-ev-shipping-transit-with-boa-account
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'if your company has an eligible Bank of America® small business account.'
   - rule: everything-else-with-boa-account
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'if your company has an eligible Bank of America® small business account.'
   - rule: annual_fee
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'Plus, a low annual fee of $70 for the company and $25 per card.'
   - rule: annual_fee
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
     quote: '$70 for the company and $25 per card.'
   - rule: welcome_offer
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'Limited-time online offer: 70,000 bonus points + $99 Companion Fare'
   - rule: welcome_offer
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'after you make $4,000 or more in purchases within the first 90 days of opening your account'
+    in_collapsed: true
   - rule: alaska-and-hawaiian-with-boa-account
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
     quote: 'open small business (non-consumer) checking or savings account with Bank of America, N.A.'
@@ -96,7 +97,7 @@ evidence:
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
     quote: 'International Transaction None Penalty Fee'
   - rule: spend-6k
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/products/alaska-airlines-business-credit-card/
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'every year that you spend at least $6,000 on purchases with your card'
   - rule: spend-6k
     url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US

@@ -62,6 +62,7 @@ rules:
     rate: 2
     note: Cable, satellite and other TV, radio and streaming services billed by subscription.
 todo:
+  - 'The offer''s full terms ("Current and previous Nordstrom credit cardmembers and Nordstrom employees are not eligible for this offer") load only when "Terms Apply" is clicked, so the source check quotes the banner instead. Read in Chrome 2026-11-09.'
   - 'The foreign transaction fee is quoted from nordstrom.com. TD''s rates table, a PDF (td.com/nordstromcard/credit-card-agreement, read 2026-11-09 in Chrome), also says "Foreign Transaction: None"; the source check can''t read PDFs.'
   - No points at Last Chance clearance stores either.
   - Not modeled are bonus points events, Personal Double Points Days and alterations reimbursement Notes.
@@ -116,8 +117,7 @@ evidence:
     quote: 'approved for a new Nordstrom credit card October 12 - December 1'
   - rule: not_with
     url: https://www.nordstrom.com/becomecardmember
-    quote: 'Current and previous Nordstrom credit cardmembers and Nordstrom employees are not eligible for this offer'
-    in_popup: true
+    quote: 'Get $60 off your next purchase as a new credit cardmember.'
   - rule: nordstrom
     url: https://www.nordstrom.com/browse/nordy-club/faq
     quote: "If you use your Nordstrom card via Google Pay or Apple Pay, you'll earn your standard Nordy Club base points"

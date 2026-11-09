@@ -3,6 +3,18 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.09.5'
+  date: 2026-11-09
+  changes:
+    - cause: quote
+      card: bank-of-america-atmos-rewards-business
+      field: source_urls
+      summary: The card page moved to business.bankofamerica.com; its quotes were read there, and the offer's minimum spend is in an overlay that opens on click.
+    - cause: quote
+      cards: [td-bank-nordstrom-visa, td-bank-nordstrom-credit-card]
+      field: evidence
+      summary: The offer's eligibility is quoted from the card page's banner, since the full terms load only on click.
+
 - version: '2026.11.09.4'
   date: 2026-11-09
   changes:
