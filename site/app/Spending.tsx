@@ -12,6 +12,7 @@ import {
 } from '../../src/engine/memberships.ts'
 import {
   byNet,
+  nothingCounted,
   resolveSpendLines,
   simulateCatalog,
   spendLineFor,
@@ -122,15 +123,21 @@ export function Spending({
     [rows],
   )
   const unknown = lines.filter((l) => l.merchant.source === 'none')
-  const result = useMemo(() => {
-    const known = lines.filter((l) => l.merchant.source !== 'none')
-    return known.length === 0
-      ? null
-      : simulateCatalog(catalog, known, {
-          ...engineOptions(settings, saved),
-          start: localToday(),
-        })
-  }, [lines, settings, saved])
+  const known = useMemo(
+    () => lines.filter((l) => l.merchant.source !== 'none'),
+    [lines],
+  )
+  const leftOut = useMemo(() => nothingCounted(catalog, known), [known])
+  const result = useMemo(
+    () =>
+      known.length === 0 || leftOut !== null
+        ? null
+        : simulateCatalog(catalog, known, {
+            ...engineOptions(settings, saved),
+            start: localToday(),
+          }),
+    [known, leftOut, settings, saved],
+  )
   const members = result
     ? ifMemberLines(
         catalog,
@@ -274,6 +281,7 @@ export function Spending({
             category like dining or groceries instead.
           </p>
         ) : null}
+        {leftOut !== null ? <p class="callout">{leftOut}</p> : null}
       </div>
       {filters}
 

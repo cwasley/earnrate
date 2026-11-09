@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.08.4
+
+No rates changed. Rent and mortgage (`housing`) is now `unranked`, a new category field: its note is the whole answer, with no ranking, pick or card under it, since most landlords and lenders don't take cards directly and a payment service's fee usually outweighs what a card earns. Subcategories inherit it. A year of spending leaves rent and mortgage out and says why. The note drops its last sentence, about the ranking below it, and the Bilt cards' notes on rent and mortgage say answers there give only the category's note.
+
 ## 2026.11.08.3
 
 No rates changed. A new `housing` category, rent and mortgage, found by "rent", "rent payment", "mortgage", "mortgage payment" and "housing" (car rentals, Hertz and U-Haul code as before). Categories can now carry a `note` that every answer leads with, before any ranking. Rent and mortgage's says most landlords and lenders don't take cards directly and a payment service usually charges a fee that outweighs what a card earns, and that the Bilt cards pay rent and mortgages through Bilt with no transaction fee, earning up to 1.25X, more as the cycle's other spending on the card grows (the tiers are in the Bilt cards' notes). The ranking under it shows each card's usual rate, for a landlord who takes cards directly. Source: [Bilt](https://www.bilt.com/card). The Bilt cards' notes on rent and mortgage say so.

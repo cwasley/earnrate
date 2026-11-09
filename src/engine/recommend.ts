@@ -34,6 +34,7 @@ import {
   CAP_ADJECTIVES,
   categoryNote,
   categoryPhrase,
+  categoryUnranked,
   codesAs,
   creditAnswerText,
   creditFirstText,
@@ -716,6 +717,25 @@ function assumptionsFor(
   return assumptions
 }
 
+// An unranked category's answer (rent): its note, and no cards at all.
+export const noteOnly = (r: {
+  categoryNote: string | null
+  ranked: unknown[]
+  excluded: unknown[]
+}): boolean =>
+  r.categoryNote !== null && r.ranked.length === 0 && r.excluded.length === 0
+
+// Where an unranked category's note is the whole answer, only how a named
+// store codes is left to assume.
+export function noteOnlyAssumptions(
+  catalog: Catalog,
+  merchant: MerchantResolution,
+): string[] {
+  return merchant.source === 'category' || merchant.source === 'none'
+    ? []
+    : [codesAs(catalog, merchant)]
+}
+
 export function recommend(
   catalog: Catalog,
   wallet: Wallet,
@@ -727,6 +747,19 @@ export function recommend(
   ),
   options: RecommendOptions = {},
 ): Recommendation {
+  if (categoryUnranked(catalog, merchant.category))
+    return {
+      decision: null,
+      merchant,
+      categoryNote: categoryNote(catalog, merchant.category),
+      ranked: [],
+      excluded: [],
+      assumptions: noteOnlyAssumptions(catalog, merchant),
+      warnings: [],
+      notes: [],
+      sensitivity: null,
+      bonus: null,
+    }
   const { entries, excluded } = rankEntries(
     catalog,
     wallet,

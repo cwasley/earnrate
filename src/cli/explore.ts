@@ -13,6 +13,7 @@ import {
   withValuationProfile,
 } from '../engine/profiles.ts'
 import {
+  nothingCounted,
   resolveSpendLines,
   simulateAdditions,
   simulateCatalog,
@@ -308,6 +309,11 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
     io.stderr(
       `Not a category or a merchant earnrate knows: ${unknown.map((l) => `"${l.merchant.input}"`).join(', ')}. Categories include groceries, dining, gas, travel, streaming and other.\n`,
     )
+    return USAGE_ERROR
+  }
+  const none = nothingCounted(catalog, lines)
+  if (none !== null) {
+    io.stderr(`${none}\n`)
     return USAGE_ERROR
   }
   const started = dateProblem(values.start)

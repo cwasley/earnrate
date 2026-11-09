@@ -20,7 +20,7 @@ import {
   VALUATION_PROFILES,
   withValuationProfile,
 } from '../engine/profiles.ts'
-import { recommend } from '../engine/recommend.ts'
+import { noteOnly, recommend } from '../engine/recommend.ts'
 import { walletFromCards } from '../engine/transient.ts'
 import type { MerchantResolution, Purchase } from '../engine/types.ts'
 import { formatExploration } from '../format/explore.ts'
@@ -368,9 +368,8 @@ export async function run(argv: string[], io: Io): Promise<number> {
     if (options.json) {
       io.stdout(`${JSON.stringify(explored, null, 2)}\n`)
     } else {
-      io.stdout(
-        `${formatExploration(explored, catalog, options.all)}\n${NO_WALLET_HINT}\n`,
-      )
+      const hint = noteOnly(explored) ? '' : `\n${NO_WALLET_HINT}\n`
+      io.stdout(`${formatExploration(explored, catalog, options.all)}${hint}`)
     }
     for (const n of notices) io.stderr(`${n}\n`)
     return 0

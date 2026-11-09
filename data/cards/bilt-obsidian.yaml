@@ -58,7 +58,7 @@ rules:
     note: Booked directly with airlines, hotels, motels, resorts, cruise lines and car rental agencies, by Mastercard merchant code. Travel agencies and transit don't count.
 # Not modeled on purpose: the $200 Bilt Cash welcome bonus.
 todo:
-  - Rent and mortgage paid through Bilt earn 0X-1.25X depending on the cycle's everyday spend as a share of the housing payment (25%/50%/75%/100% tiers give 0.5X/0.75X/1X/1.25X; below 25% a flat 250 points). earnrate has no spend-ratio rule, so the rent and mortgage category's note states it and the card ranks there at its usual rate.
+  - Rent and mortgage paid through Bilt earn 0X-1.25X depending on the cycle's everyday spend as a share of the housing payment (25%/50%/75%/100% tiers give 0.5X/0.75X/1X/1.25X; below 25% a flat 250 points). earnrate has no spend-ratio rule, so answers for rent and mortgage give only the category's note, which states it.
   - The Flexible Bilt Cash option earns 4% Bilt Cash on everyday spend on top of points, but drops the housing multiplier (housing points must be bought with Bilt Cash, $3 per 100 points). Bilt Cash is a second currency; not modeled.
   - Point Accelerator (spend $200 Bilt Cash for +1X on the next $5,000, up to five times a year) isn't modeled.
   - Bilt Neighborhood Dining restaurants add a per-restaurant bonus (up to 6X total). It varies by restaurant, so it isn't modeled.

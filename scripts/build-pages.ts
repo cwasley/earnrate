@@ -15,6 +15,7 @@ import {
   type ExploreQuery,
 } from '../src/engine/explore.ts'
 import { EPSILON } from '../src/engine/compare.ts'
+import { noteOnly } from '../src/engine/recommend.ts'
 import {
   membershipNeeded,
   membershipText,
@@ -453,11 +454,19 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   const top = shown[0]
   const subject = page.label
   const lead = page.merchant === null ? 'for' : 'to use at'
-  const title = fitTitle([
-    `Best credit card ${lead} ${subject} (${thisQuarter})`,
-    `Best credit card ${lead} ${subject}`,
-    `Best card ${page.merchant === null ? 'for' : 'at'} ${subject}`,
-  ])
+  const only = noteOnly(r)
+  const heading = only
+    ? `Paying ${subject} by credit card`
+    : `Best credit card ${lead} ${subject}`
+  const title = fitTitle(
+    only
+      ? [heading]
+      : [
+          `Best credit card ${lead} ${subject} (${thisQuarter})`,
+          heading,
+          `Best card ${page.merchant === null ? 'for' : 'at'} ${subject}`,
+        ],
+  )
   const where = page.merchant === null ? 'on' : 'at'
   const tied = tiedAtTop(r)
   const ranking = fitDescription(
@@ -489,8 +498,14 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   const canonical = `${SITE}/best/${page.slug}`
   const definitions = categoryPageFor(page.categoryId)
   const appLink = `/#wallet=${encodeURIComponent(page.merchant?.name ?? catalog.categories.find((c) => c.id === page.categoryId)?.name ?? page.label).replace(/%20/g, '+')}`
-  const body = `
-      <h1>Best credit card ${page.merchant === null ? 'for' : 'to use at'} ${esc(subject)}</h1>
+  const body = only
+    ? `
+      <h1>${esc(heading)}</h1>
+      <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
+      ${answer(page, r, shown)}
+      ${related(page, all)}`
+    : `
+      <h1>${esc(heading)}</h1>
       <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
       ${answer(page, r, shown)}
       ${pageActions([
@@ -525,16 +540,20 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
     description,
     url: canonical,
     dateModified: dataDate,
-    mainEntity: {
-      '@type': 'ItemList',
-      name: `Best credit cards ${page.merchant === null ? 'for' : 'at'} ${subject}`,
-      itemListElement: shown.map((e, i) => ({
-        '@type': 'ListItem',
-        position: i + 1,
-        name: cards.get(e.cardId)?.name ?? e.cardId,
-        description: `${pct(e.effectiveReturnPct)} back; ${feeLabel(e.cardId)}`,
-      })),
-    },
+    ...(only
+      ? {}
+      : {
+          mainEntity: {
+            '@type': 'ItemList',
+            name: `Best credit cards ${page.merchant === null ? 'for' : 'at'} ${subject}`,
+            itemListElement: shown.map((e, i) => ({
+              '@type': 'ListItem',
+              position: i + 1,
+              name: cards.get(e.cardId)?.name ?? e.cardId,
+              description: `${pct(e.effectiveReturnPct)} back; ${feeLabel(e.cardId)}`,
+            })),
+          },
+        }),
   }
   // The image names the top card, which a note says not to lead with.
   const image = top !== undefined && r.categoryNote === null

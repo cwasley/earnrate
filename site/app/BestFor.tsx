@@ -11,7 +11,7 @@ import {
 } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { splitPurchaseText } from '../../src/merchants/resolve.ts'
-import { ABROAD } from '../../src/engine/recommend.ts'
+import { ABROAD, noteOnly } from '../../src/engine/recommend.ts'
 import {
   capitalize,
   categoryPhrase,
@@ -398,7 +398,9 @@ export function BestFor({
             key={query}
           >
             <h3>
-              Best cards for {title(result)}
+              {noteOnly(result)
+                ? capitalize(title(result))
+                : `Best cards for ${title(result)}`}
               {splitPurchaseText(query).amount !== null ? (
                 <span class="muted">
                   {' '}
@@ -425,7 +427,7 @@ export function BestFor({
                 {w}
               </p>
             ))}
-            {result.ranked.length === 0 ? (
+            {result.ranked.length === 0 && !noteOnly(result) ? (
               <p class="callout">
                 No card matches your filters. Open Filters and memberships to
                 widen them.
@@ -484,12 +486,16 @@ export function BestFor({
               </p>
             ))}
             <Excluded r={result} />
-            <ul class="assumptions">
-              {result.assumptions.map((a) => (
-                <li key={a}>{a}</li>
-              ))}
-            </ul>
-            <NextSteps hasCards={hasCards} onWallet={onWallet} />
+            {result.assumptions.length > 0 ? (
+              <ul class="assumptions">
+                {result.assumptions.map((a) => (
+                  <li key={a}>{a}</li>
+                ))}
+              </ul>
+            ) : null}
+            {noteOnly(result) ? null : (
+              <NextSteps hasCards={hasCards} onWallet={onWallet} />
+            )}
           </section>
         ) : null}
       </div>

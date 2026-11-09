@@ -13,8 +13,12 @@ import { loadCatalog } from '../src/data/load.ts'
 import { JsonWalletStore } from '../src/data/store.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../src/engine/explore.ts'
 import { recommend } from '../src/engine/recommend.ts'
-import { simulateCatalog, resolveSpendLines } from '../src/engine/simulate.ts'
-import { categoryNote } from '../src/engine/text.ts'
+import {
+  nothingCounted,
+  simulateCatalog,
+  resolveSpendLines,
+} from '../src/engine/simulate.ts'
+import { categoryNote, categoryUnranked } from '../src/engine/text.ts'
 import { walletFromCards } from '../src/engine/transient.ts'
 import { formatExploration } from '../src/format/explore.ts'
 import { formatRecommendation } from '../src/format/recommendation.ts'
@@ -92,22 +96,39 @@ describe('rent and mortgage', () => {
     },
   )
 
-  test('every card answer for rent leads with the note', () => {
-    const r = explore('rent')
-    expect(r.categoryNote).toBe(NOTE)
-    const out = formatExploration(r, catalog, false)
-    expect(out.startsWith(NOTE)).toBe(true)
-    expect(out.indexOf(NOTE)).toBeLessThan(out.indexOf('Best cards for'))
-    expect(out).not.toMatch(/not recognized/)
+  test.each(['rent', 'mortgage'])(
+    'every card answer for %s is the note alone',
+    (words) => {
+      const r = explore(words)
+      expect(r.categoryNote).toBe(NOTE)
+      expect(r.ranked).toEqual([])
+      expect(r.membersOnly).toEqual([])
+      expect(r.credits).toEqual([])
+      expect(r.excluded).toEqual([])
+      expect(r.ifPaying).toEqual([])
+      expect(r.assumptions).toEqual([])
+      expect(formatExploration(r, catalog, false)).toBe(`${NOTE}\n`)
+    },
+  )
+
+  test('other categories carry no note and still rank', () => {
+    for (const words of ['groceries', 'car rental', 'Hertz']) {
+      const r = explore(words)
+      expect(r.categoryNote).toBeNull()
+      expect(r.ranked.length).toBeGreaterThan(0)
+    }
   })
 
-  test('other categories carry no note', () => {
-    expect(explore('groceries').categoryNote).toBeNull()
-    expect(explore('car rental').categoryNote).toBeNull()
-    expect(explore('Hertz').categoryNote).toBeNull()
+  test('only a category marked unranked goes unranked, and its subcategories', () => {
+    const marked = catalog.categories.filter((c) => c.unranked)
+    expect(marked.map((c) => c.id)).toEqual(['housing'])
+    expect(marked.every((c) => c.note !== undefined)).toBe(true)
+    expect(categoryUnranked(catalog, 'housing')).toBe(true)
+    expect(categoryUnranked(catalog, 'housing.anything')).toBe(true)
+    expect(categoryUnranked(catalog, 'travel.car_rental')).toBe(false)
   })
 
-  test('an answer from named cards leads with the note too', () => {
+  test('an answer from named cards is the note alone too', () => {
     const wallet = walletFromCards(
       catalog,
       { cards: [{ id: 'bilt-obsidian' }, { id: 'citi-double-cash' }] },
@@ -121,10 +142,15 @@ describe('rent and mortgage', () => {
       resolvePlace(catalog, 'mortgage', null),
     )
     expect(rec.categoryNote).toBe(NOTE)
-    expect(rec.decision?.confidence).toBe('low')
+    expect(rec.decision).toBeNull()
+    expect(rec.ranked).toEqual([])
+    expect(rec.excluded).toEqual([])
+    expect(rec.notes).toEqual([])
+    expect(rec.warnings).toEqual([])
+    expect(rec.sensitivity).toBeNull()
+    expect(rec.bonus).toBeNull()
     const out = formatRecommendation(rec, purchase('mortgage'))
-    expect(out.indexOf(NOTE)).toBeGreaterThan(-1)
-    expect(out.indexOf(NOTE)).toBeLessThan(out.indexOf('Use '))
+    expect(out).toBe(`Rent and mortgage\n\n${NOTE}\n`)
     const elsewhere = recommend(
       catalog,
       wallet,
@@ -132,53 +158,94 @@ describe('rent and mortgage', () => {
       resolvePlace(catalog, 'car rental', null),
     )
     expect(elsewhere.categoryNote).toBeNull()
+    expect(elsewhere.decision).not.toBeNull()
+    expect(elsewhere.ranked.length).toBe(2)
   })
 
-  test('a year of spending that includes rent says so', () => {
+  const simulate = (spend: { merchant: string; monthly: number }[]) =>
+    simulateCatalog(
+      catalog,
+      resolveSpendLines(
+        catalog,
+        spend.map((s) => ({ ...s, category: null })),
+      ),
+      {
+        filters: ALL_PERSONAL_CARDS,
+        memberships: [],
+        valuations: {},
+        start: TODAY,
+      },
+    )
+
+  test('a year of spending leaves rent out and says so', () => {
     const lines = resolveSpendLines(catalog, [
       { merchant: 'rent', category: null, monthly: 2000 },
       { merchant: 'groceries', category: null, monthly: 500 },
     ])
-    const sim = simulateCatalog(catalog, lines, {
-      filters: ALL_PERSONAL_CARDS,
-      memberships: [],
-      valuations: {},
-      start: TODAY,
-    })
-    expect(sim.singles[0]?.notes).toContain(NOTE)
+    const sim = simulate([
+      { merchant: 'rent', monthly: 2000 },
+      { merchant: 'groceries', monthly: 500 },
+    ])
+    const without = simulate([{ merchant: 'groceries', monthly: 500 }])
+    const first = sim.singles[0]
+    expect(first?.spend).toBe(6000)
+    expect(first?.lines.map((l) => l.label)).toEqual(['Supermarkets'])
+    expect(first?.notes.slice(0, 2)).toEqual([
+      "Rent and mortgage isn't counted in the year.",
+      NOTE,
+    ])
+    expect(sim.singles.map((s) => [s.cards[0]?.cardId, s.net])).toEqual(
+      without.singles.map((s) => [s.cards[0]?.cardId, s.net]),
+    )
+    expect(nothingCounted(catalog, lines)).toBeNull()
+    expect(nothingCounted(catalog, lines.slice(0, 1))).toBe(
+      `Rent and mortgage isn't counted in the year. ${NOTE} Add other spending to compare cards.`,
+    )
   })
 })
 
+const namesNoCard = (out: string) => {
+  for (const card of catalog.cards) expect(out).not.toContain(card.name)
+  expect(out).not.toMatch(/Citi Double Cash|Use |\d% back|Best cards for/)
+}
+
 describe('surfaces', () => {
-  test('the CLI leads with the note, with or without cards', async () => {
+  test('the CLI gives the note alone, with or without cards', async () => {
     const cli = async (argv: string[], wallet: string) => {
       let stdout = ''
-      await run(argv, {
+      let stderr = ''
+      const code = await run(argv, {
         env: { EARNRATE_MISSED_MERCHANTS: 'off', [WALLET_ENV_VAR]: wallet },
         today: TODAY,
         stdout: (t) => (stdout += t),
-        stderr: () => undefined,
+        stderr: (t) => (stderr += t),
       })
-      return stdout
+      return { code, stdout, stderr }
     }
     const none = path.join(
       await mkdtemp(path.join(tmpdir(), 'earnrate-rent-')),
       'none.yaml',
     )
     const every = await cli(['rent'], none)
-    expect(every.indexOf(NOTE)).toBeGreaterThan(-1)
-    expect(every.indexOf(NOTE)).toBeLessThan(every.indexOf('Best cards for'))
+    expect(every.stdout).toBe(`${NOTE}\n`)
     const named = await cli(
       ['rent', '--cards', 'bilt-obsidian,citi-double-cash'],
       none,
     )
-    expect(named.indexOf(NOTE)).toBeGreaterThan(-1)
-    expect(named.indexOf(NOTE)).toBeLessThan(named.indexOf('Use '))
+    expect(named.stdout).toBe(`Rent and mortgage\n\n${NOTE}\n`)
     const saved = await cli(['mortgage'], EXAMPLE_WALLET)
-    expect(saved.indexOf(NOTE)).toBeGreaterThan(-1)
+    expect(saved.stdout).toBe(`Rent and mortgage\n\n${NOTE}\n`)
+    const best = await cli(['best', 'rent'], none)
+    expect(best.stdout).toBe(`${NOTE}\n`)
+    for (const out of [every, named, saved, best]) namesNoCard(out.stdout)
+    const year = await cli(['simulate', 'rent=2000'], none)
+    expect(year.code).not.toBe(0)
+    expect(year.stderr).toContain(NOTE)
+    const rental = await cli(['car rental'], none)
+    expect(rental.stdout).toMatch(/Best cards for/)
   })
 
-  test('the MCP answers lead with the note', async () => {
+  test('the MCP answers give the note alone', async () => {
     const handler = createMcpHandler(() =>
       createEarnrateServer({
         catalog,
@@ -203,14 +270,26 @@ describe('surfaces', () => {
         fetch: (url, init) => handler.fetch(new Request(url, init)),
       }),
     )
-    type Answer = { categoryNote: string | null }
+    type Answer = {
+      categoryNote: string | null
+      decision: unknown
+      ranked: unknown[]
+      warnings: string[]
+      allCards: { ranked: unknown[]; credits: unknown[] } | null
+    }
     const every = await client.callTool({
       name: 'best_card_for_purchase',
       arguments: { merchant: 'rent' },
     })
     expect(every.isError, text(every)).toBeFalsy()
-    expect(text(every).startsWith(NOTE)).toBe(true)
-    expect((every.structuredContent as Answer).categoryNote).toBe(NOTE)
+    expect(text(every)).toBe(`${NOTE}\n`)
+    const everyAnswer = every.structuredContent as Answer
+    expect(everyAnswer.categoryNote).toBe(NOTE)
+    expect(everyAnswer.decision).toBeNull()
+    expect(everyAnswer.ranked).toEqual([])
+    expect(everyAnswer.warnings).toEqual([])
+    expect(everyAnswer.allCards?.ranked).toEqual([])
+    expect(everyAnswer.allCards?.credits).toEqual([])
     const named = await client.callTool({
       name: 'best_card_for_purchase',
       arguments: {
@@ -219,16 +298,38 @@ describe('surfaces', () => {
       },
     })
     expect(named.isError, text(named)).toBeFalsy()
-    expect(text(named).indexOf(NOTE)).toBeGreaterThan(-1)
-    expect(text(named).indexOf(NOTE)).toBeLessThan(text(named).indexOf('Use '))
-    expect((named.structuredContent as Answer).categoryNote).toBe(NOTE)
+    expect(text(named)).toBe(`Rent and mortgage\n\n${NOTE}\n`)
+    const namedAnswer = named.structuredContent as Answer
+    expect(namedAnswer.categoryNote).toBe(NOTE)
+    expect(namedAnswer.decision).toBeNull()
+    expect(namedAnswer.ranked).toEqual([])
     const best = await client.callTool({
       name: 'best_cards_for',
       arguments: { category: 'housing' },
     })
     expect(best.isError, text(best)).toBeFalsy()
-    expect(text(best).startsWith(NOTE)).toBe(true)
+    expect(text(best)).toBe(`${NOTE}\n`)
     expect((best.structuredContent as Answer).categoryNote).toBe(NOTE)
+    expect((best.structuredContent as Answer).ranked).toEqual([])
+    for (const out of [every, named, best]) namesNoCard(text(out))
+    const onlyRent = await client.callTool({
+      name: 'simulate_spending',
+      arguments: { spending: [{ merchant: 'rent', monthly: 2000 }] },
+    })
+    expect(onlyRent.isError).toBe(true)
+    expect(text(onlyRent)).toContain(NOTE)
+    const withRent = await client.callTool({
+      name: 'simulate_spending',
+      arguments: {
+        spending: [
+          { merchant: 'rent', monthly: 2000 },
+          { category: 'dining', monthly: 400 },
+        ],
+      },
+    })
+    expect(withRent.isError, text(withRent)).toBeFalsy()
+    expect(text(withRent)).toContain("Rent and mortgage isn't counted")
+    expect(text(withRent)).toContain('A year of this spending: $4,800.')
     await client.close()
     await handler.close()
   })

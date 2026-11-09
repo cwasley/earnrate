@@ -24,6 +24,7 @@ import {
   FOREIGN_ASSUMPTION,
   foreignFeeFor,
   isForeign,
+  noteOnlyAssumptions,
   recommend,
 } from './recommend.ts'
 import { rotationGap } from './rotation.ts'
@@ -34,6 +35,7 @@ import {
   capSentence,
   categoryNote,
   categoryPhrase,
+  categoryUnranked,
   choiceName,
   codesAs,
   creditBack,
@@ -386,6 +388,18 @@ export function exploreCards(
     country: query.country ?? 'US',
     payment: query.payment ?? null,
   }
+  if (categoryUnranked(catalog, merchant.category))
+    return {
+      merchant,
+      categoryNote: categoryNote(catalog, merchant.category),
+      credits: [],
+      ranked: [],
+      membersOnly: [],
+      excluded: [],
+      assumptions: noteOnlyAssumptions(catalog, merchant),
+      warnings: [],
+      ifPaying: [],
+    }
   const ranked: ExploreEntry[] = []
   const ifPaid = new Map<string, PaidUpgrade>()
   const ifLarger = new Map<string, LargerUpgrade>()

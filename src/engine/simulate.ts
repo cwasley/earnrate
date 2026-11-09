@@ -27,7 +27,9 @@ import { liveMilestones, milestoneStarts, milestoneWhat } from './milestones.ts'
 import { rotationGap } from './rotation.ts'
 import {
   categoryNote,
+  categoryUnranked,
   creditsCountedText,
+  leftOutText,
   money,
   paymentNote,
   roundCents,
@@ -123,6 +125,30 @@ export function resolveSpendLines(
     })
 }
 
+// Spending a card can be assumed to pay: an unranked category's (rent) is
+// left out of the year, and its note says why.
+export function countedLines(
+  catalog: Catalog,
+  lines: ResolvedLine[],
+): ResolvedLine[] {
+  return lines.filter((l) => !categoryUnranked(catalog, l.merchant.category))
+}
+
+// With only such spending there's no year to simulate: why, or null.
+export function nothingCounted(
+  catalog: Catalog,
+  lines: ResolvedLine[],
+): string | null {
+  if (lines.length === 0 || countedLines(catalog, lines).length > 0) return null
+  const why = lines.flatMap((l) => [
+    leftOutText(l.label),
+    categoryNote(catalog, l.merchant.category) ?? [],
+  ])
+  return [...new Set(why.flat()), 'Add other spending to compare cards.'].join(
+    ' ',
+  )
+}
+
 function monthDates(start: string): string[] {
   const year = Number(start.slice(0, 4))
   const month = Number(start.slice(5, 7)) - 1
@@ -156,12 +182,13 @@ function withCurrentPicks(
 export function simulateWallet(
   catalog: Catalog,
   wallet: Wallet,
-  lines: ResolvedLine[],
+  given: ResolvedLine[],
   start: string,
   // Cards the person already has: their first year is behind them and any
   // membership they need is paid for.
   held: string[] = [],
 ): Simulation {
+  const lines = countedLines(catalog, given)
   const cards = wallet.cards.map((held) => {
     const card = catalog.cards.find((c) => c.id === held.id)
     if (!card) throw new Error(`${held.id} isn't in the card catalog`)
@@ -312,7 +339,11 @@ export function simulateWallet(
   const membershipFees = memberships.reduce((sum, m) => sum + m.annualFee, 0)
   const notes: string[] = [
     ...new Set(
-      lines.flatMap((l) => categoryNote(catalog, l.merchant.category) ?? []),
+      given.flatMap((l) => {
+        const note = categoryNote(catalog, l.merchant.category)
+        if (note === null) return []
+        return lines.includes(l) ? [note] : [leftOutText(l.label), note]
+      }),
     ),
     ...milestoneNotes,
   ]
@@ -561,7 +592,7 @@ export function simulateCatalog(
   const shortlist = new Set(
     singles.slice(0, SHORTLIST).map((s) => s.cards[0]?.cardId),
   )
-  lines.forEach((line) => {
+  countedLines(catalog, lines).forEach((line) => {
     const best = [...singles].sort(
       (a, b) =>
         (b.lines.find((l) => l.label === line.label)?.earned ?? 0) -

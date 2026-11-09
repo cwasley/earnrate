@@ -3,6 +3,24 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.08.4'
+  date: 2026-11-08
+  changes:
+    - cause: wording
+      categories: [housing]
+      field: unranked
+      was: null
+      now: true
+      summary: Answers for rent and mortgage give only the category's note, with no ranking or pick, and a year of spending leaves it out.
+    - cause: wording
+      categories: [housing]
+      field: note
+      summary: The note no longer mentions a ranking below it.
+    - cause: wording
+      cards: [bilt-blue, bilt-obsidian, bilt-palladium]
+      field: todo
+      summary: The rent and mortgage note now says answers there give only the category's note.
+
 - version: '2026.11.08.3'
   date: 2026-11-08
   changes:

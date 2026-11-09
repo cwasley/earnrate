@@ -5,6 +5,7 @@ import {
   type ExploreEntry,
   type Picks,
 } from '../engine/explore.ts'
+import { noteOnly } from '../engine/recommend.ts'
 import {
   byNet,
   gainOrder,
@@ -65,6 +66,8 @@ export function formatExploration(
         ? `"${m.input}" (not recognized)`
         : m.resolvedName
   const lead = r.categoryNote === null ? [] : [r.categoryNote, '']
+  if (noteOnly(r) && r.membersOnly.length === 0)
+    return `${[...lead, ...r.assumptions].join('\n').trimEnd()}\n`
   if (r.ranked.length === 0)
     return `${[...lead, `No cards match at ${title}.`, ...membersOnlyLines(catalog, r.membersOnly)].join('\n')}\n`
   const shown = all ? r.ranked : r.ranked.slice(0, TOP_BEST)

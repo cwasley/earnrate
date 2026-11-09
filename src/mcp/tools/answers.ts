@@ -10,11 +10,12 @@ import { exploreCards, topOf } from '../../engine/explore.ts'
 import { placedAmong } from '../../engine/memberships.ts'
 import { compareOffers, offerOrder } from '../../engine/offers.ts'
 import { withValuationProfile } from '../../engine/profiles.ts'
-import { recommend } from '../../engine/recommend.ts'
+import { noteOnly, recommend } from '../../engine/recommend.ts'
 import { searchCards } from '../../engine/setup.ts'
 import {
   byNet,
   gainOrder,
+  nothingCounted,
   resolveSpendLines,
   simulateAdditions,
   simulateCatalog,
@@ -180,16 +181,20 @@ export function registerAnswerTools(
           purchase,
           resolved.merchant,
         )
+        const everyCard = noteOnly(explored) ? [] : [ALL_CARDS_NOTE]
         return {
           content: [
             {
               type: 'text',
-              text: `${retry}${formatExploration(allCards, catalog, true)}\n${ALL_CARDS_NOTE}`,
+              text: [
+                `${retry}${formatExploration(allCards, catalog, true)}`,
+                ...everyCard,
+              ].join('\n'),
             },
           ],
           structuredContent: {
             ...empty,
-            warnings: [ALL_CARDS_NOTE, ...resolved.notices],
+            warnings: [...everyCard, ...resolved.notices],
             allCards,
           },
         }
@@ -204,7 +209,7 @@ export function registerAnswerTools(
         content: [
           {
             type: 'text',
-            text: `${retry}${ctx.fromCards(cards)}${formatRecommendation(output, purchase, { all: true })}`,
+            text: `${retry}${noteOnly(rec) ? '' : ctx.fromCards(cards)}${formatRecommendation(output, purchase, { all: true })}`,
           },
         ],
         structuredContent: output,
@@ -291,6 +296,8 @@ export function registerAnswerTools(
     const unknown = lines.filter((l) => l.merchant.source === 'none')
     if (unknown.length > 0)
       return `earnrate doesn't know ${unknown.map((l) => `"${l.merchant.input}"`).join(', ')}. Give a category for those lines instead.`
+    const none = nothingCounted(catalog, lines)
+    if (none !== null) return none
     return { lines, typical: given.length === 0 }
   }
 

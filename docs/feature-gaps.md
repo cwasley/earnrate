@@ -76,7 +76,7 @@ Merchant types some cards name that have no earnrate category, so they fall to `
 
 ### Housing payments and second currencies
 
-- `bilt-obsidian`, `bilt-blue`, `bilt-palladium`: rent and mortgage points depend on the cycle's everyday spend as a share of the housing payment. The `housing` category's note states the tiers; answers for rent and mortgage lead with it, and the ranking below shows only each card's usual rate. Bilt Cash is a second currency (the Flexible option, Point Accelerator and the welcome offer all use it).
+- `bilt-obsidian`, `bilt-blue`, `bilt-palladium`: rent and mortgage points depend on the cycle's everyday spend as a share of the housing payment. The `housing` category's note states the tiers; answers for rent and mortgage give only that note, with no ranking or pick. Bilt Cash is a second currency (the Flexible option, Point Accelerator and the welcome offer all use it).
 
 ### Tiered and repeating sign-up bonuses
 

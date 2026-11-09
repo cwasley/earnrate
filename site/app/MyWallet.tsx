@@ -13,7 +13,7 @@ import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
 import { activationGroup } from '../../src/engine/evaluate.ts'
 import { milestoneSummaries } from '../../src/engine/milestones.ts'
 import { inEffect, localToday } from '../../src/engine/periods.ts'
-import { ABROAD, recommend } from '../../src/engine/recommend.ts'
+import { ABROAD, noteOnly, recommend } from '../../src/engine/recommend.ts'
 import {
   cardInfo,
   knownMemberships,
@@ -166,6 +166,17 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
   const decided = rec.decision
   const top = rec.ranked.find((r) => r.cardId === decided?.cardId)
   const held = wallet.cards.find((c) => c.id === decided?.cardId)
+  if (noteOnly(rec))
+    return (
+      <div class="answer">
+        <p class="callout">{rec.categoryNote}</p>
+        <ul class="assumptions">
+          {rec.assumptions.map((a) => (
+            <li key={a}>{a}</li>
+          ))}
+        </ul>
+      </div>
+    )
   return (
     <div class="answer">
       {rec.categoryNote ? <p class="callout">{rec.categoryNote}</p> : null}

@@ -5,6 +5,7 @@ import { allCreditsYear } from './credits.ts'
 import { matchesFilters } from './explore.ts'
 import type { Spending } from './renewal.ts'
 import {
+  countedLines,
   simulateAdditions,
   typicalSpendLines,
   type MembersOnly,
@@ -151,7 +152,10 @@ export function compareOffers(
 ): OfferComparison {
   const held = new Set(wallet.cards.map((c) => c.id))
   const skipped = new Set(wallet.skipped_issuers ?? [])
-  const monthly = spending.lines.reduce((sum, l) => sum + l.monthly, 0)
+  const monthly = countedLines(catalog, spending.lines).reduce(
+    (sum, l) => sum + l.monthly,
+    0,
+  )
   const { additions, membersOnly: memberAdditions } = simulateAdditions(
     catalog,
     wallet,

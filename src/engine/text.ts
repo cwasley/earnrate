@@ -123,6 +123,17 @@ export function categoryNote(catalog: Catalog, id: string): string | null {
   return dot === -1 ? null : categoryNote(catalog, id.slice(0, dot))
 }
 
+export function categoryUnranked(catalog: Catalog, id: string): boolean {
+  if (catalog.categories.find((c) => c.id === id)?.unranked) return true
+  const dot = id.lastIndexOf('.')
+  return dot !== -1 && categoryUnranked(catalog, id.slice(0, dot))
+}
+
+// A spending line a simulated year doesn't count, before its category's note.
+export function leftOutText(label: string): string {
+  return `${label} isn't counted in the year.`
+}
+
 export function earnText(
   catalog: Catalog,
   rate: number,
