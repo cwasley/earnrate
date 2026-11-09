@@ -479,7 +479,7 @@ export function BestFor({
               all ? result.membersOnly : topOf(result, TOP).membersOnly,
               (e) => shortName(e.cardId),
             ).map((m) => (
-              <p class="muted" key={m}>
+              <p class="muted small" key={m}>
                 {m}
               </p>
             ))}

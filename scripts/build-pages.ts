@@ -444,7 +444,7 @@ function membersOnly(r: Exploration): string {
     ).membersOnly,
     (e) => shortName(e.cardId),
   )
-  return lines.map((l) => `<p>${esc(l)}</p>`).join('')
+  return lines.map((l) => `<p class="small">${esc(l)}</p>`).join('')
 }
 
 function renderPage(page: Page, all: Page[], r: Exploration): string {
