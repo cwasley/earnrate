@@ -585,7 +585,7 @@ export const nightWorthText = (
 
 // A night at the cardholder's value, in a list of credits.
 export const ownNightName = (value: number) =>
-  `${FREE_NIGHT_NAME} at your ${wholeDollars(value)}`
+  `${FREE_NIGHT_NAME} worth ${wholeDollars(value)} to you`
 
 // A night with no point cap counts only at what the person says it's worth.
 export const NIGHT_NOT_VALUED =
@@ -642,10 +642,12 @@ export function creditsCountedText(
   c: CreditsTotal,
 ): string {
   const amount = `${upTo(c)}${wholeDollars(c.yearly)} a year`
-  if (nightCount(c) > 0 && c.names.length === 1)
+  if (nightCount(c) > 0 && c.names.length === 1) {
+    const used = (c.ownNightIds?.length ?? 0) > 0 ? '' : ', which you use,'
     return fee > 0
-      ? `${possessive(card)} ${c.names[0] ?? ''}, which you use, counts against its fee: ${amount}.`
-      : `${possessive(card)} ${c.names[0] ?? ''}, which you use, adds ${amount}.`
+      ? `${possessive(card)} ${c.names[0] ?? ''}${used} counts against its fee: ${amount}.`
+      : `${possessive(card)} ${c.names[0] ?? ''}${used} adds ${amount}.`
+  }
   const noun = nightCount(c) > 0 ? perksNoun(c, false) : 'credits'
   return fee > 0
     ? `${possessive(card)} ${noun} you use (${listed(c.names)}) count against its fee: ${amount}.`

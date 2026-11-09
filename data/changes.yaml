@@ -3,6 +3,35 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.09'
+  date: 2026-11-09
+  changes:
+    - cause: addition
+      card: amex-hilton-honors-aspire
+      field: credits.resort-credit
+      now: { amount: 200, period: half_year }
+      summary: The $400 Hilton Resort Credit, up to $200 each half year on purchases made directly with a participating Hilton Resort.
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0
+    - cause: addition
+      merchants: [hilton-resorts]
+      summary: Hilton Resorts, the participating Hilton resorts the Aspire's resort credit pays at.
+    - cause: wording
+      card: amex-hilton-honors-aspire
+      field: milestones
+      summary: The Free Night Rewards from the $30,000 and $60,000 spend milestones start with "a", as they're read mid-sentence.
+    - cause: wording
+      card: amex-hilton-honors-surpass
+      field: milestones
+      summary: The Free Night Reward from the spend milestone starts with "a", as it's read mid-sentence.
+    - cause: wording
+      card: amex-marriott-bonvoy-bevy
+      field: milestones
+      summary: The Free Night Award from the spend milestone starts with "a", as it's read mid-sentence.
+    - cause: wording
+      card: amex-hilton-honors-aspire
+      field: todo
+      summary: The note that the Hilton Resort Credit isn't modeled is gone.
+
 - version: '2026.11.08.6'
   date: 2026-11-08
   changes:

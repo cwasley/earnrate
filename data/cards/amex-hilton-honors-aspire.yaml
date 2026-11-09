@@ -70,6 +70,11 @@ credits:
     amount: 219
     period: calendar_year
     note: 'An annual CLEAR+ membership.'
+  - id: resort-credit
+    match: { merchants: [hilton-resorts] }
+    amount: 200
+    period: half_year
+    note: 'Purchases made directly with a participating Hilton Resort (Hilton lists them at hilton.com/en/aspireresortcredit): $200 from January through June and $200 from July through December. Incidentals count only when charged to the room. Not advance purchase or non-refundable rates.'
 # Hilton sets no point cap, so it counts only at what the cardholder says
 # it's worth to them.
 free_nights:
@@ -148,6 +153,18 @@ evidence:
   - rule: clear-plus
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'earn up to $219 in statement credits per calendar year when their Hilton Honors American Express Aspire Card'
+  - rule: resort-credit
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'for up to $400 back annually for eligible purchases made directly with participating Hilton Resorts'
+  - rule: resort-credit
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'can receive up to a total of $200 in statement credits semi-annually (January through June; and July through December)'
+  - rule: resort-credit
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'Eligible purchases must be made directly with a participating Hilton Resort'
+  - rule: resort-credit
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
+    quote: 'on eligible purchases made directly with participating Hilton Resorts using your Hilton Honors American Express Aspire Card.'
   - rule: anniversary-night
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'During each year of your Card Membership, you will receive one Annual Free Night Reward from Hilton Honors.'
@@ -159,16 +176,15 @@ milestones:
     spend: 30000
     period: calendar_year
     rewards:
-      - Free Night Reward
+      - a Free Night Reward
     note: Basic Card Member only, though Additional Card purchases count. A standard room for one night, expiring a year after it is issued. Amex says 8-12 weeks to arrive by email.
   - id: spend-60k
     spend: 60000
     period: calendar_year
     rewards:
-      - A second Free Night Reward
+      - a second Free Night Reward
     note: Another $30,000 on top of the first, $60,000 in the calendar year in all.
 todo:
-  - The $400 Hilton Resort credit (up to $200 each half year) isn't modeled. It counts only at the participating Hilton Resorts Hilton lists, which earnrate can't tell apart from other Hilton properties.
   - The $100 property credit on two-night Waldorf Astoria and Conrad stays booked through the Aspire card site or phone line is an on-property credit, not modeled.
   - Complimentary Hilton Honors Diamond status and National Car Rental Emerald Club Executive status aren't modeled.
   - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'

@@ -243,6 +243,41 @@ describe('marking a credit unused', () => {
   })
 })
 
+describe("Aspire's Hilton Resort Credit", () => {
+  const at = (merchant: string) =>
+    recommend(
+      catalog,
+      WalletSchema.parse({
+        cards: [
+          { id: 'amex-hilton-honors-aspire', enrolled: ['resort-credit'] },
+        ],
+      }),
+      {
+        merchant,
+        amount: 300,
+        channel: 'in_store',
+        date: TODAY,
+        country: 'US',
+        payment: null,
+      },
+    ).ranked[0]
+
+  test('pays at a participating resort and says only those count', () => {
+    const r = at('Hilton resort')
+    expect(r?.rate).toBe(14)
+    expect(r?.credit).toMatchObject({ dollars: 200 })
+    expect(r?.reasoning.join(' ')).toMatch(
+      /directly with a participating Hilton Resort/,
+    )
+  })
+
+  test('not at a plain Hilton, which earns the same', () => {
+    const r = at('Hilton')
+    expect(r?.rate).toBe(14)
+    expect(r?.credit).toBeNull()
+  })
+})
+
 describe('memberships a card implies', () => {
   test("a held card's required membership counts as held", () => {
     expect(

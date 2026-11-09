@@ -375,8 +375,13 @@ function reasoningFor(
 
   for (const hit of entry.milestones)
     lines.push(reachedText(card, hit, valuation.centsPerUnit))
-  if (entry.credit)
-    lines.push(creditAnswerText(entry.credit, entry.creditDollars))
+  if (entry.credit) {
+    const note = entry.credit.credit.note
+    const pays = (entry.creditDollars ?? 0) > 0 && note !== undefined
+    lines.push(
+      `${creditAnswerText(entry.credit, entry.creditDollars)}${pays ? ` ${note}` : ''}`,
+    )
+  }
 
   if (valuation.pooledFrom !== null) {
     const partners = card.pools_into?.when_wallet_has ?? []

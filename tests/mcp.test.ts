@@ -1526,7 +1526,7 @@ describe('wallet setup', () => {
       arguments: { query: 'hilton aspire' },
     })
     expect(text(search)).toMatch(
-      /\(\$919 a year: flights, CLEAR and anniversary free night at your \$500\)/,
+      /\(\$1,319 a year: flights, CLEAR, Hilton Resorts and anniversary free night worth \$500 to you\)/,
     )
     expect(await readFile(file, 'utf8')).toBe(
       "cards:\n  - id: amex-hilton-honors-aspire # mine\n    anniversary: '11-15'\n    enrolled: [anniversary-night]\n    night_values:\n      anniversary-night: 500\n",

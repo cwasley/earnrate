@@ -53,7 +53,7 @@ milestones:
     spend: 15000
     period: calendar_year
     rewards:
-      - Free Night Award (up to 50,000 points a night)
+      - a Free Night Award (up to 50,000 points a night)
     note: One a calendar year. Deposited 8-12 weeks after you reach the total; it expires a year after it's issued. Basic Card Member only.
 evidence:
   - rule: base_rate

@@ -276,7 +276,7 @@ describe('what a free night is worth to you', () => {
       ownNights: 300,
       nightIds: ['anniversary-night'],
       ownNightIds: ['anniversary-night'],
-      names: ['anniversary free night at your $300'],
+      names: ['anniversary free night worth $300 to you'],
     })
     const summary = walletSummary(catalog, wallet, TODAY).cards[0]
     expect(summary?.freeNights[0]).toMatchObject({
@@ -285,7 +285,7 @@ describe('what a free night is worth to you', () => {
       text: 'An anniversary free night each year, up to 50,000 IHG One Rewards points (worth $300 to you): you use it, so it counts against the annual fee.',
     })
     expect(summary?.usedCreditsText).toBe(
-      "IHG One Rewards Premier's anniversary free night at your $300, which you use, counts against its fee: $300 a year.",
+      "IHG One Rewards Premier's anniversary free night worth $300 to you counts against its fee: $300 a year.",
     )
     expect(creditsOnlyIf(year)).toBe('')
     expect(cardInfo(catalog, cardOf(IHG), wallet, TODAY).freeNights).toEqual([
@@ -304,7 +304,7 @@ describe('what a free night is worth to you', () => {
     const year = allCreditsYear(catalog, card, TODAY, {})
     expect(year.nightIds).toEqual([])
     expect(year.unvaluedNightIds).toEqual(['anniversary-night'])
-    expect(year.yearly).toBe(419)
+    expect(year.yearly).toBe(819)
     const before = held([{ id: ASPIRE, enrolled: ['anniversary-night'] }])
     expect(walletSummary(catalog, before, TODAY).cards[0]?.freeNights).toEqual([
       expect.objectContaining({
@@ -318,7 +318,7 @@ describe('what a free night is worth to you', () => {
       walletSummary(catalog, before, TODAY).cards[0]?.usedCreditsText,
     ).toBeNull()
     expect(asks([{ id: ASPIRE }]).map((i) => i.ref)).toEqual([
-      'flight-credit,clear-plus',
+      'flight-credit,clear-plus,resort-credit',
     ])
     expect(cardInfo(catalog, card, null, TODAY).freeNights[0]?.text).toBe(
       "an anniversary free night each year, with no point cap (not valued: what it's worth depends on the hotel)",
@@ -336,7 +336,7 @@ describe('what a free night is worth to you', () => {
     expect(walletSummary(catalog, after, TODAY).cards[0]).toMatchObject({
       usedCredits: 500,
       usedCreditsText:
-        "Hilton Honors American Express Aspire's anniversary free night at your $500, which you use, counts against its fee: $500 a year.",
+        "Hilton Honors American Express Aspire's anniversary free night worth $500 to you counts against its fee: $500 a year.",
     })
   })
 
@@ -403,7 +403,7 @@ describe('what a free night is worth to you', () => {
     })
     if (!ihg) throw new Error('no fee math')
     expect(feeWorthCredits(catalog, ihg)).toMatch(
-      /\(\$420 a year: Instacart and anniversary free night at your \$300\)/,
+      /\(\$420 a year: Instacart and anniversary free night worth \$300 to you\)/,
     )
     const aspire = feeWorth(cardOf(ASPIRE))
     if (!aspire) throw new Error('no fee math')

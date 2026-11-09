@@ -12,6 +12,14 @@
   aliases: [renowned hotels, renowned hotels and resorts]
   category: travel
   note: Prepaid stays in the Renowned Hotels and Resorts collection for United cardmembers on Chase Travel.
+# The resorts Hilton lists for the Aspire card's resort credit. A Hilton
+# brand, so every rule naming Hilton matches it too.
+- id: hilton-resorts
+  name: Hilton Resorts
+  aliases: [hilton resort, hilton resorts, hilton resort credit]
+  category: travel.hotels
+  brand_of: hilton
+  note: One of the resorts Hilton lists at hilton.com/en/aspireresortcredit for the Aspire card's resort credit. At any other Hilton, earning is the same but that credit doesn't pay.
 - id: costco-travel
   kind: portal
   name: Costco Travel

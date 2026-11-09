@@ -152,7 +152,7 @@ milestones:
     spend: 15000
     period: calendar_year
     rewards:
-      - Free Night Reward
+      - a Free Night Reward
     note: Basic Card Member only, though Additional Card purchases count. A standard room for one night, expiring a year after it is issued. Amex says 8-12 weeks to arrive by email.
   - id: spend-40k
     spend: 40000
