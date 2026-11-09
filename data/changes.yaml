@@ -3,6 +3,26 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.09.1'
+  date: 2026-11-09
+  changes:
+    - cause: addition
+      card: td-bank-nordstrom-visa
+      field: foreign_transaction_fee
+      was: null
+      now: 0
+      summary: No foreign transaction fee, from TD's rates table and Nordstrom's card page.
+      source: https://www.nordstrom.com/becomecardmember
+    - cause: wording
+      cards:
+        [
+          td-bank-nordstrom-visa,
+          td-bank-nordstrom-credit-card,
+          td-bank-target-circle-card,
+        ]
+      field: todo
+      summary: The notes on foreign transaction fees say what the rates tables, read in Chrome, show.
+
 - version: '2026.11.09'
   date: 2026-11-09
   changes:

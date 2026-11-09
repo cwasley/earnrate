@@ -26,7 +26,7 @@ rules:
     rate: 5
     note: An instant 5% discount at checkout in Target stores and on Target.com, after other discounts, on the part of the purchase paid with the card. Not on prescriptions, pharmacy-counter items or clinic services, Target Optical eye exams and protection plans (glasses and contacts do count), Target GiftCards, prepaid Visa/Mastercard/Amex cards or sports betting gift cards, Starbucks gift cards bought at in-store Starbucks, Shipt or Target Circle 360 fees, wireless protection plans and carrier deposits, gift wrapping, alcohol in Indiana, taxes, shipping or other fees.
 todo:
-  - "Foreign transaction fee not on file: Target's credit rates and fees page loads empty for the source check. It works only at Target, so it doesn't matter abroad."
+  - "Foreign transaction fee not on file: Target's credit rates and fees table (target.com/circlecard/credit-rates-and-fees, read 2026-11-09 in Chrome; empty for the source check) has no foreign transaction row for the Target Credit Card. It works only at Target, so it doesn't matter abroad."
   - The debit version (Target Circle Debit Card) gets the same 5% discount but isn't modeled as a separate card.
   - Target considers credit applicants for the Target Mastercard first, which also earns 2% on dining and gas and 1% elsewhere. Not modeled; target.com doesn't say what form those earnings take.
   - Starbucks counters inside Target stores get the 5% discount too. They aren't a separate merchant here.

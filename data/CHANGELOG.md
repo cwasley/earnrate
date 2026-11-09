@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.09.1
+
+No rates changed. `td-bank-nordstrom-visa` gets its foreign transaction fee, none: TD's rates table (a PDF, read in Chrome) says "Foreign Transaction: None", and Nordstrom's card page, quoted, says the Visa shops abroad without the extra charges. The store-only `td-bank-nordstrom-credit-card` and `td-bank-target-circle-card` still have none on file: their rates tables, read in Chrome, have no foreign transaction row, and their notes now say so. Target's program rules page, which the source check can't read, was read in Chrome; its four quotes are still there. Source: [Nordstrom](https://www.nordstrom.com/becomecardmember).
+
 ## 2026.11.09
 
 No rates changed. `amex-hilton-honors-aspire` gets its $400 Hilton Resort Credit (`credits.resort-credit`): up to $200 in statement credits from January through June and again from July through December, on purchases made directly with a participating Hilton Resort. A new merchant, `hilton-resorts` ("Hilton Resorts", the participating resorts as a Hilton brand, so every Hilton card earns there as at any Hilton), is where it pays: earnrate can't tell Hilton's listed resorts from its other hotels, so the credit counts when the person names one, never at a plain "Hilton". It counts in the card's fee math like its other credits. The free nights from spend milestones on the Aspire, `amex-hilton-honors-surpass` and `amex-marriott-bonvoy-bevy` start with "a" ("a Free Night Reward", "a second Free Night Reward"), since they're read mid-sentence. Source: [Amex terms](https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms), [Amex](https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/).
