@@ -238,7 +238,7 @@ export function holderFixesText(
 // One to-do line for earnrate's recent corrections across several held
 // cards: none of them asks anything of the user, so they share a line.
 export const holderFixesAcrossText = (names: string[]) =>
-  `earnrate fixed some of its own mistakes about ${listed(names.length > 3 ? [...names.slice(0, 3), `${String(names.length - 3)} more of your cards`] : names)} (their issuers didn't change anything); answers already use the fixed terms. Each card's page lists them under Recent changes.`
+  `earnrate fixed some of its own mistakes about ${listed(names.length > 4 ? [...names.slice(0, 3), `${String(names.length - 3)} more of your cards`] : names)} (their issuers didn't change anything); answers already use the fixed terms. Each card's page lists them under Recent changes.`
 
 export type Freshness = {
   issuerChanges: number
