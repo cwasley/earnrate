@@ -23,6 +23,12 @@ test('a card with no annual fee on file says so', () => {
   )
 })
 
+test('a category the issuer applies itself is described as such', () => {
+  expect(search('citi-custom-cash')).toMatch(
+    /top-category: the issuer applies it to the one with the most spending; the wallet can set the expected one of restaurants, gas-stations,/,
+  )
+})
+
 test("search shows a card's recent issuer changes and earnrate's corrections", () => {
   const text = search('chase-prime-visa')
   expect(text).toMatch(

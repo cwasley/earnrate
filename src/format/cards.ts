@@ -19,9 +19,10 @@ export function formatCardInfo(
     ...(details && details.earning.length > 0
       ? [`earns: ${details.earning.join('; ')}`]
       : []),
-    ...card.choices.map(
-      (c) =>
-        `${c.id}: pick ${String(c.pick)} of ${c.options.join(', ')}${c.default ? ` (default ${c.default.join(', ')})` : ''}`,
+    ...card.choices.map((c) =>
+      c.automatic
+        ? `${c.id}: the issuer applies it to the ${c.pick === 1 ? 'one' : String(c.pick)} with the most spending; the wallet can set the expected ${c.pick === 1 ? 'one' : String(c.pick)} of ${c.options.join(', ')}${c.default ? ` (assumed ${c.default.join(', ')})` : ''}`
+        : `${c.id}: pick ${String(c.pick)} of ${c.options.join(', ')}${c.default ? ` (default ${c.default.join(', ')})` : ''}`,
     ),
     ...(card.requiresMembership
       ? [
