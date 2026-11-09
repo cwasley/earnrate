@@ -234,6 +234,18 @@ describe('changes on the to-do list', () => {
   })
 })
 
+test('corrections to several held cards share one line', () => {
+  const wallet = WalletSchema.parse({
+    cards: [{ id: 'chase-prime-visa' }, { id: 'amex-gold' }],
+  })
+  const fixes = checklist(real, wallet, real.changes?.[0]?.date ?? TODAY)
+    .filter((i) => i.kind === 'change')
+    .filter((i) => i.text.startsWith('earnrate fixed '))
+  expect(fixes.map((i) => i.text)).toEqual([
+    "earnrate fixed some of its own mistakes about Prime Visa and American Express Gold Card (their issuers didn't change anything); answers already use the fixed terms. Each card's page lists them under Recent changes.",
+  ])
+})
+
 test("today's real record shows only issuer changes and corrections, for held cards", () => {
   const wallet = WalletSchema.parse({
     cards: (real.changes ?? [])
@@ -248,7 +260,8 @@ test("today's real record shows only issuer changes and corrections, for held ca
   )
   expect(items.length).toBeGreaterThan(0)
   const fixed = items.filter((i) => i.text.startsWith('earnrate fixed '))
-  expect(new Set(fixed.map((i) => i.cardId)).size).toBe(fixed.length)
+  expect(fixed).toHaveLength(1)
+  expect(fixed[0]?.text).toMatch(/ more of your cards \(their issuers/)
   for (const i of items) {
     expect(wallet.cards.some((c) => c.id === i.cardId)).toBe(true)
     expect(i.ref).not.toMatch(/:welcome_offer$/)

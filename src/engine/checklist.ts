@@ -6,6 +6,7 @@ import {
   type DatedChange,
   HOLDER_NEWS_DAYS,
   holderChangeText,
+  holderFixesAcrossText,
   holderFixesText,
   holderNews,
 } from './changes.ts'
@@ -336,23 +337,44 @@ function changeItems(
       },
     })
   }
-  for (const [cardId, list] of fixes) {
-    const [newest] = list
-    if (newest === undefined) continue
+  const fixed = [...fixes]
+  const newestFix = fixed
+    .flatMap(([, list]) => list.slice(0, 1))
+    .sort((a, b) => changeSeen(b).localeCompare(changeSeen(a)))[0]
+  if (fixed.length > 1 && newestFix !== undefined)
     dated.push({
-      seen: changeSeen(newest),
+      seen: changeSeen(newestFix),
       item: {
         kind: 'change',
-        cardId,
-        ref:
-          list.length === 1
-            ? `${newest.version}:${newest.change.field ?? ''}`
-            : 'corrections',
-        ...holderFixesText(catalog, cardId, names.get(cardId) ?? cardId, list),
+        cardId: fixed[0]?.[0] ?? '',
+        ref: 'corrections',
+        text: holderFixesAcrossText(fixed.map(([id]) => names.get(id) ?? id)),
         due: null,
       },
     })
-  }
+  else
+    for (const [cardId, list] of fixed) {
+      const [newest] = list
+      if (newest === undefined) continue
+      dated.push({
+        seen: changeSeen(newest),
+        item: {
+          kind: 'change',
+          cardId,
+          ref:
+            list.length === 1
+              ? `${newest.version}:${newest.change.field ?? ''}`
+              : 'corrections',
+          ...holderFixesText(
+            catalog,
+            cardId,
+            names.get(cardId) ?? cardId,
+            list,
+          ),
+          due: null,
+        },
+      })
+    }
   return dated
     .sort((a, b) => b.seen.localeCompare(a.seen))
     .map(({ item }) => item)
