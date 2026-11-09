@@ -3,6 +3,25 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.09.4'
+  date: 2026-11-09
+  changes:
+    - cause: wording
+      cards:
+        [
+          citi-custom-cash,
+          amex-business-gold,
+          chase-ihg-one-rewards,
+          chase-freedom-flex,
+          chase-freedom-unlimited,
+          chase-ink-business-cash,
+          amex-gold,
+          amex-platinum,
+          citi-my-best-buy-visa,
+          chase-sapphire-preferred,
+        ]
+      summary: Earlier corrections' summaries say what changed for cardholders.
+
 - version: '2026.11.09.3'
   date: 2026-11-09
   changes:
@@ -216,7 +235,7 @@
     - cause: correction
       cards: [citi-custom-cash, amex-business-gold]
       field: choices
-      summary: The bonus categories are marked automatic, since the issuer applies the bonus to the categories with the most spending each billing period; answers no longer say the cardholder picks.
+      summary: The issuer applies the bonus to the categories with the most spending each billing period, so answers no longer say you pick them; you can still tell earnrate the one you expect.
 
 - version: '2026.11.07.1'
   date: 2026-11-07
@@ -1604,15 +1623,15 @@
       card: chase-ihg-one-rewards
       field: rules.bills-and-streaming-through-2026
       now: null
-      summary: Split into a bills rule and a streaming rule that follows Chase's list.
+      summary: "The bills and streaming bonus is now counted in two parts: bills keep their rate, and streaming earns it only at the services on Chase's select streaming list."
     - cause: correction
       card: chase-ihg-one-rewards
       field: rules.bills-through-2026
-      summary: The bills half of the split rule; its rate doesn't change.
+      summary: Bills keep their bonus rate.
     - cause: correction
       card: chase-ihg-one-rewards
       field: rules.streaming-through-2026
-      summary: The streaming half, which follows Chase's select streaming list.
+      summary: Streaming earns the bonus only at the services on Chase's select streaming list.
 
 - version: '2026.11.03.1'
   date: 2026-11-03
@@ -2752,11 +2771,11 @@
     - cause: correction
       cards: [chase-freedom-flex, chase-freedom-unlimited]
       field: pools_into
-      summary: Backed by Chase's own page; also pools with Ink Business Preferred (and Freedom Unlimited with Sapphire Reserve).
+      summary: Points can also be combined with an Ink Business Preferred (and Freedom Unlimited's with a Sapphire Reserve), per Chase's own page.
     - cause: correction
       card: chase-ink-business-cash
       field: pools_into
-      summary: Pools into Ultimate Rewards with Sapphire Preferred, Sapphire Reserve or Ink Business Preferred.
+      summary: Points can be combined with a Sapphire Preferred, Sapphire Reserve or Ink Business Preferred.
     - cause: quote
       cards: [citi-custom-cash, citi-double-cash]
       field: pools_into
@@ -2812,7 +2831,7 @@
     - cause: correction
       cards: [amex-gold, amex-platinum]
       field: rules.flights-amex-travel
-      summary: Amex Travel flights keep their rate now that the merchant is a travel agency.
+      summary: Flights booked through Amex Travel earn the card's rate for them.
 
 - version: '2026.10.26'
   date: 2026-10-26
@@ -2872,7 +2891,7 @@
     - cause: correction
       card: citi-my-best-buy-visa
       field: rules.best-buy.match
-      summary: Adds Pacific Kitchen & Home.
+      summary: Pacific Kitchen & Home, part of Best Buy, counts as Best Buy.
     - cause: review
       cards: [chase-prime-visa, citi-my-best-buy-visa]
       field: verified_by
@@ -2977,7 +2996,7 @@
     - cause: correction
       card: chase-sapphire-preferred
       field: rules.vacation-homes
-      summary: 3x on direct bookings with Airbnb, Vrbo, Vacasa, Plum Guide and Homestay.com (was a todo).
+      summary: 3x on direct bookings with Airbnb, Vrbo, Vacasa, Plum Guide and Homestay.com, which earnrate hadn't recorded.
     - cause: correction
       card: chase-sapphire-preferred
       field: rules.lyft

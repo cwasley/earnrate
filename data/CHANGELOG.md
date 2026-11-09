@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.09.4
+
+Wording only; no rates or terms changed. Nine summaries of earlier corrections, which card pages and card search show cardholders for 60 days, say what changed for someone holding the card instead of how the data file is organized: `citi-custom-cash` and `amex-business-gold` (categories the issuer applies), `chase-ihg-one-rewards` (bills and streaming), `chase-freedom-flex`, `chase-freedom-unlimited` and `chase-ink-business-cash` (combining points), `amex-gold` and `amex-platinum` (Amex Travel flights), `citi-my-best-buy-visa` and `chase-sapphire-preferred` (vacation homes).
+
 ## 2026.11.09.3
 
 Wording only; no rates or terms changed. Two summaries of earlier corrections, which card pages and the to-do list now show cardholders, say what changed for them instead of how the data file is organized (`chase-prime-visa` in 2026.11.02.5, `citi-custom-cash`).
