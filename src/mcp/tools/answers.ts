@@ -661,7 +661,12 @@ export function registerAnswerTools(
           : `No card matched "${query ?? ''}". earnrate covers ${String(catalog.cards.length)} US cards; list them all by leaving the query out.`
       const cards = result.cards.map((c, i) => ({
         ...c,
-        ...(details?.[i] ?? { earning: null, feeWorth: null }),
+        ...(details?.[i] ?? {
+          earning: null,
+          feeWorth: null,
+          changes: null,
+          welcomeOffer: null,
+        }),
       }))
       return {
         content: [

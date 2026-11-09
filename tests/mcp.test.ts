@@ -1007,6 +1007,9 @@ describe('wallet setup', () => {
       ['simulate_spending', { compareToWallet: true }],
       ['compare_welcome_offers', {}],
       ['search_cards', { query: 'gold' }],
+      ['search_cards', { query: 'amex gold' }],
+      ['search_cards', { query: 'td-bank-nordstrom-visa' }],
+      ['search_cards', { query: 'sapphire' }],
       ['add_card', { cardId: 'chase-freedom-unlimited' }],
       [
         'update_card',
@@ -1040,7 +1043,7 @@ describe('wallet setup', () => {
         .map((t) => t.name)
         .filter((n) => !called.has(n) && n !== 'import_wallet'),
     ).toEqual([])
-  })
+  }, 30_000)
 
   test('an account wallet exports, imports and deletes', async () => {
     const backend = memoryBackend()

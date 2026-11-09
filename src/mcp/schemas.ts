@@ -473,6 +473,9 @@ export const CardSearchSchema = z.object({
           text: z.string(),
         })
         .nullable(),
+      // Null when the search found more cards than it details.
+      changes: z.array(z.string()).nullable(),
+      welcomeOffer: z.string().nullable(),
     }),
   ),
   detailed: z.boolean(), // earning and feeWorth were worked out
