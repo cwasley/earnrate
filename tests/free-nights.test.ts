@@ -383,10 +383,7 @@ describe('what a free night is worth to you', () => {
       cardOf(IHG),
       due,
     )
-    expect(ihg).toMatchObject({
-      nightsNotCounted: 400,
-      nightsNotCountedOwn: true,
-    })
+    expect(ihg).toMatchObject({ ownNights: 400, nightsNotCounted: 0 })
   })
 
   test("the fee math uses a held card's value, and names an uncapped night it leaves out", () => {
@@ -478,6 +475,33 @@ describe('setting what a free night is worth', () => {
       enrolled: ['resort-credit', 'flight-credit', 'anniversary-night'],
       night_values: { 'anniversary-night': 400 },
     })
+  })
+
+  test('a wallet saved with a value but no enrolled entry counts the night as used', () => {
+    const saved = held([
+      {
+        id: ASPIRE,
+        enrolled: ['resort-credit'],
+        night_values: { 'anniversary-night': 400 },
+      },
+    ])
+    expect(walletSummary(catalog, saved, TODAY).cards[0]).toMatchObject({
+      freeNights: [
+        expect.objectContaining({
+          text: 'An anniversary free night each year, with no point cap (worth $400 to you): you use it, so it counts against the annual fee.',
+        }),
+      ],
+    })
+    const skipped = held([
+      {
+        id: ASPIRE,
+        night_values: { 'anniversary-night': 400 },
+        skipped_credits: ['anniversary-night'],
+      },
+    ])
+    expect(
+      walletSummary(catalog, skipped, TODAY).cards[0]?.freeNights[0]?.text,
+    ).not.toMatch(/you use it/)
   })
 
   test('null clears it, dropping the field when none are left', () => {

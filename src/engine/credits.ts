@@ -190,9 +190,12 @@ export const nightValue = (
 export const ownNightValue = (night: FreeNight, held: WalletCard | null) =>
   held?.night_values?.[night.id] ?? null
 
-// Like a credit that needs no enrolling: in use once it's in `enrolled`.
+// Like a credit that needs no enrolling: in use once it's in `enrolled`,
+// or once the cardholder has said what it's worth to them (wallets saved
+// before a value always marked the night may lack the `enrolled` entry).
 export const nightConfirmed = (night: FreeNight, held: WalletCard) =>
-  (held.enrolled ?? []).includes(night.id)
+  (held.enrolled ?? []).includes(night.id) ||
+  held.night_values?.[night.id] !== undefined
 
 export const nightSkipped = (night: FreeNight, held: WalletCard) =>
   (held.skipped_credits ?? []).includes(night.id)
