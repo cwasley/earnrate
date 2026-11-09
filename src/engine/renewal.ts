@@ -71,9 +71,13 @@ export type Renewal = {
   // no-fee card.
   rewardsAdded: number
   credits: number // its statement credits and free nights the cardholder uses, a year
-  freeNights: number // the part of credits from free nights, "up to"
+  freeNights: number // the part of credits from free nights at their cap, "up to"
+  ownNights: number // the part from nights at the cardholder's own value
   // Free nights the cardholder hasn't said they use or don't: not in net.
   nightsNotCounted: number
+  nightsNotCountedOwn: boolean // all at the cardholder's value, not "up to"
+  // Nights not skipped with no cap and no value of the cardholder's.
+  nightsUnvalued: number
   net: number // rewardsAdded + credits - fee
   against: string | null // the no-fee card compared with, for a card held alone
   typical: boolean
@@ -135,6 +139,10 @@ export function renewalCheck(
     ? usedCreditsYear(catalog, card, held, due, wallet.valuations)
     : null
   const credits = used?.yearly ?? 0
+  const nights = nightStates(catalog, wallet.valuations, card, held ?? null)
+  const notCounted = nights.filter(
+    (n) => !n.confirmed && !n.skipped && n.worth !== null,
+  )
   const rewardsAdded = roundCents(withCard.rewards - (without?.rewards ?? 0))
   const fee = card.annual_fee ?? 0
   const opened = held ? openedOf(held) : null
@@ -151,11 +159,13 @@ export function renewalCheck(
     rewardsAdded,
     credits,
     freeNights: used?.nights ?? 0,
+    ownNights: used?.ownNights ?? 0,
     nightsNotCounted: roundCents(
-      nightStates(catalog, wallet.valuations, card, held ?? null)
-        .filter((n) => !n.confirmed && !n.skipped)
-        .reduce((sum, n) => sum + n.value, 0),
+      notCounted.reduce((sum, n) => sum + (n.worth ?? 0), 0),
     ),
+    nightsNotCountedOwn:
+      notCounted.length > 0 && notCounted.every((n) => n.own !== null),
+    nightsUnvalued: nights.filter((n) => !n.skipped && n.worth === null).length,
     net: roundCents(rewardsAdded + credits - fee),
     against,
     typical: spending.typical,

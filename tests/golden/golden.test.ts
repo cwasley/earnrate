@@ -2179,6 +2179,9 @@ describe('#34 statement credits against the annual fee', () => {
           names: ["Dunkin'", 'Uber', 'Grubhub', 'Resy'],
           nights: 0,
           nightIds: [],
+          ownNights: 0,
+          ownNightIds: [],
+          unvaluedNightIds: [],
           held: false,
         },
       ])

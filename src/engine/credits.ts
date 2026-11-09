@@ -5,7 +5,12 @@ import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { categoryMatches } from './evaluate.ts'
 import { inEffect, periodEnd, periodKey } from './periods.ts'
 import { creditLabel, creditName } from './rule-text.ts'
-import { FREE_NIGHT_NAME, roundCents, type CreditWords } from './text.ts'
+import {
+  FREE_NIGHT_NAME,
+  ownNightName,
+  roundCents,
+  type CreditWords,
+} from './text.ts'
 import type { MerchantResolution } from './types.ts'
 import { currencyValuation } from './valuation.ts'
 
@@ -164,18 +169,26 @@ export const creditPerYear = (c: Pick<Credit, 'amount' | 'period'>) =>
   c.amount * PER_YEAR[c.period]
 
 // A free night at its point cap, at the person's value for the card's own
-// currency: the most it's worth, so always said as "up to".
+// currency: the most it's worth, so always said as "up to". Null for a night
+// with no cap.
 export const nightValue = (
   catalog: Catalog,
   valuations: Wallet['valuations'],
   card: Card,
   night: FreeNight,
-) =>
-  roundCents(
-    (night.points *
-      currencyValuation(catalog, { valuations }, card.currency).centsPerUnit) /
-      100,
-  )
+): number | null =>
+  night.points === undefined
+    ? null
+    : roundCents(
+        (night.points *
+          currencyValuation(catalog, { valuations }, card.currency)
+            .centsPerUnit) /
+          100,
+      )
+
+// What the cardholder says the night is worth to them, if they have.
+export const ownNightValue = (night: FreeNight, held: WalletCard | null) =>
+  held?.night_values?.[night.id] ?? null
 
 // Like a credit that needs no enrolling: in use once it's in `enrolled`.
 export const nightConfirmed = (night: FreeNight, held: WalletCard) =>
@@ -190,8 +203,10 @@ export const nightInUse = (night: FreeNight, held: WalletCard) =>
 export type NightState = {
   night: FreeNight
   name: string
-  points: number // its cap, in the card's currency
-  value: number // dollars, "up to"
+  points: number | null // its cap, in the card's currency; null without one
+  value: number | null // dollars at its cap, "up to"; null without a cap
+  own: number | null // dollars the cardholder says it's worth to them
+  worth: number | null // what it counts at: own, else value
   confirmed: boolean // the cardholder said they use it
   skipped: boolean
 }
@@ -202,24 +217,34 @@ export const nightStates = (
   card: Card,
   held: WalletCard | null,
 ): NightState[] =>
-  card.free_nights.map((night) => ({
-    night,
-    name: FREE_NIGHT_NAME,
-    points: night.points,
-    value: nightValue(catalog, valuations, card, night),
-    confirmed: held !== null && nightConfirmed(night, held),
-    skipped: held !== null && nightSkipped(night, held),
-  }))
+  card.free_nights.map((night) => {
+    const value = nightValue(catalog, valuations, card, night)
+    const own = ownNightValue(night, held)
+    return {
+      night,
+      name: FREE_NIGHT_NAME,
+      points: night.points ?? null,
+      value,
+      own,
+      worth: own ?? value,
+      confirmed: held !== null && nightConfirmed(night, held),
+      skipped: held !== null && nightSkipped(night, held),
+    }
+  })
 
 // A card's credits and free nights added up over the 12 months from a date:
-// credits at face value, each night once at its "up to" value.
+// credits at face value, each night once at the cardholder's value for it,
+// else at its "up to" value. A night with neither isn't counted.
 export type CreditsYear = {
   cardId: string
   yearly: number // dollars a year, nights included
-  creditIds: string[] // credit ids, then free night ids
+  creditIds: string[] // credit ids, then the ids of nights counted
   names: string[] // creditLabel of each credit, then each night's name
-  nights: number // the dollars of `yearly` from free nights
-  nightIds: string[]
+  nights: number // the dollars of `yearly` from nights at their cap
+  nightIds: string[] // every night counted
+  ownNights: number // the dollars of `yearly` from nights at the cardholder's value
+  ownNightIds: string[]
+  unvaluedNightIds: string[] // no cap and no value of the cardholder's
 }
 
 function creditsYear(
@@ -229,39 +254,66 @@ function creditsYear(
   nights: FreeNight[],
   valuations: Wallet['valuations'],
   date: string,
+  held: WalletCard | null,
 ): CreditsYear {
   const live = credits.filter((c) => inEffect(c, date))
-  const nightDollars = roundCents(
-    nights.reduce(
-      (sum, n) => sum + nightValue(catalog, valuations, card, n),
-      0,
-    ),
-  )
+  const valued = nights.map((night) => {
+    const own = ownNightValue(night, held)
+    return {
+      night,
+      own,
+      worth: own ?? nightValue(catalog, valuations, card, night),
+    }
+  })
+  const counted = valued.filter((n) => n.worth !== null)
+  const owned = counted.filter((n) => n.own !== null)
+  const sum = (list: typeof valued) =>
+    roundCents(list.reduce((total, n) => total + (n.worth ?? 0), 0))
+  const nightDollars = sum(counted.filter((n) => n.own === null))
+  const ownDollars = sum(owned)
   return {
     cardId: card.id,
     yearly: roundCents(
-      live.reduce((sum, c) => sum + c.amount * payoutsAYear(c, date), 0) +
-        nightDollars,
+      live.reduce((total, c) => total + c.amount * payoutsAYear(c, date), 0) +
+        nightDollars +
+        ownDollars,
     ),
-    creditIds: [...live.map((c) => c.id), ...nights.map((n) => n.id)],
+    creditIds: [...live.map((c) => c.id), ...counted.map((n) => n.night.id)],
     names: [
       ...live.map((c) => creditLabel(catalog, c)),
-      ...nights.map(() => FREE_NIGHT_NAME),
+      ...counted.map((n) =>
+        n.own === null ? FREE_NIGHT_NAME : ownNightName(n.own),
+      ),
     ],
     nights: nightDollars,
-    nightIds: nights.map((n) => n.id),
+    nightIds: counted.map((n) => n.night.id),
+    ownNights: ownDollars,
+    ownNightIds: owned.map((n) => n.night.id),
+    unvaluedNightIds: valued
+      .filter((n) => n.worth === null)
+      .map((n) => n.night.id),
   }
 }
 
 // Every credit and free night on the card, as if each were used in full:
-// for a card the person doesn't hold.
+// for a card the person doesn't hold, or the fee math on one they do (with
+// `held`, for their own night values).
 export const allCreditsYear = (
   catalog: Catalog,
   card: Card,
   date: string,
   valuations: Wallet['valuations'],
+  held: WalletCard | null = null,
 ) =>
-  creditsYear(catalog, card, card.credits, card.free_nights, valuations, date)
+  creditsYear(
+    catalog,
+    card,
+    card.credits,
+    card.free_nights,
+    valuations,
+    date,
+    held,
+  )
 
 // The credits and free nights a cardholder uses, in full each period: what
 // counts against the fee of a card they hold.
@@ -279,4 +331,5 @@ export const usedCreditsYear = (
     card.free_nights.filter((n) => nightInUse(n, held)),
     valuations,
     date,
+    held,
   )

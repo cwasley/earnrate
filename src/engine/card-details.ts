@@ -20,7 +20,8 @@ export type CardDetails = {
 }
 
 // Rates count the saved memberships (and one the card itself needs); the
-// fee math counts the saved point values, and is run again at transfer value
+// fee math counts the saved point values and what the person says a held
+// card's free night is worth to them, and is run again at transfer value
 // for points that transfer, as the card page does, unless the wallet sets
 // their value.
 export function cardDetails(
@@ -31,7 +32,8 @@ export function cardDetails(
 ): CardDetails[] | null {
   if (ids.length > DETAILED_UP_TO) return null
   const valuations = saved?.valuations ?? {}
-  const { feeWorth } = feeWorthKit(catalog, today, valuations)
+  const heldCards = saved?.cards ?? []
+  const { feeWorth } = feeWorthKit(catalog, today, valuations, heldCards)
   let transferred: ReturnType<typeof feeWorthKit> | null = null
   return ids.map((id) => {
     const card = catalog.cards.find((c) => c.id === id)
@@ -51,10 +53,12 @@ export function cardDetails(
       valuations[card.currency] !== undefined
         ? null
         : {
-            worth: (transferred ??= feeWorthKit(catalog, today, {
-              ...valuations,
-              ...TRANSFER_VALUES,
-            })).feeWorth(card),
+            worth: (transferred ??= feeWorthKit(
+              catalog,
+              today,
+              { ...valuations, ...TRANSFER_VALUES },
+              heldCards,
+            )).feeWorth(card),
             cents,
           }
     return {

@@ -4,7 +4,7 @@
 // card search answer both say it.
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
-import type { Wallet } from '../schema/wallet.ts'
+import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { EPSILON } from './compare.ts'
 import { allCreditsYear, type CreditsYear } from './credits.ts'
 import { matchesFilters } from './explore.ts'
@@ -21,10 +21,12 @@ import {
   creditsOnlyIf,
   creditsYearText,
   currencyName,
+  FREE_NIGHT_NAME,
   listed,
   num,
   perksNoun,
   pct,
+  roundCents,
   shortCardName,
   wholeDollars,
 } from './text.ts'
@@ -47,6 +49,8 @@ export type FeeWorth = {
   // The same with every statement credit used in full: 0 when the credits
   // alone outweigh the fee. Null without credits.
   credits: CreditsYear | null
+  unvaluedNights: string[] // free nights with no cap and no value of the person's
+  held: boolean // the person holds it, so can say what a night is worth
   creditsBreakEven: number | null
   creditsStopAt: number | null
   rivals: number // no-fee cards it was compared with
@@ -57,10 +61,13 @@ const scaled = (lines: ResolvedLine[], monthly: number) =>
   lines.map((l) => ({ ...l, monthly: l.monthly * monthly }))
 
 // `valuations` overrides point values: the wallet's, or transfer values.
+// `held` are the person's saved cards, for what their free nights are worth
+// to them.
 export function feeWorthKit(
   catalog: Catalog,
   today: string,
   valuations: Wallet['valuations'] = {},
+  held: WalletCard[] = [],
 ) {
   const typical = resolveSpendLines(catalog, typicalSpend(catalog))
   const cache = new Map<string, Simulation>()
@@ -148,12 +155,21 @@ export function feeWorthKit(
       (m) => at(m).card.net > at(m).best.net,
       STEP,
     )
-    const year = allCreditsYear(catalog, card, today, valuations)
+    const own = held.find((h) => h.id === card.id) ?? null
+    const year = allCreditsYear(catalog, card, today, valuations, own)
+    // The simulation counts each night at its cap; the person's own value
+    // replaces that.
+    const ownExtra = roundCents(
+      year.yearly - allCreditsYear(catalog, card, today, valuations).yearly,
+    )
     const credits = year.creditIds.length > 0 ? year : null
     const withCredits =
       credits === null
         ? { breakEven: null, stopsAt: null }
-        : firstLead((m) => at(m).card.netIfCreditsUsed > at(m).best.net, 0)
+        : firstLead(
+            (m) => at(m).card.netIfCreditsUsed + ownExtra > at(m).best.net,
+            0,
+          )
     return {
       card,
       lines,
@@ -161,6 +177,8 @@ export function feeWorthKit(
       breakEven,
       stopsAt,
       credits,
+      unvaluedNights: year.unvaluedNightIds,
+      held: own !== null,
       creditsBreakEven: withCredits.breakEven,
       creditsStopAt: withCredits.stopsAt,
       rivals: noFee(card).length,
@@ -246,11 +264,29 @@ export function feeWorthTransfer(
     : `If you transfer ${esc(points)} to airlines and hotels and count them at ${esc(num(transfer.cents))}¢ each, it comes out ahead from about ${strong(`${esc(wholeDollars(breakEven))} a month`)}.`
 }
 
+// A free night with no point cap, which the math leaves out.
+function unvaluedText(w: FeeWorth): string {
+  if (w.unvaluedNights.length === 0) return ''
+  return w.held
+    ? `Its ${FREE_NIGHT_NAME} isn't counted until you say what it's worth to you.`
+    : `Its ${FREE_NIGHT_NAME} isn't counted: with no point cap, what it's worth depends on the hotel.`
+}
+
 // With every credit and free night used; empty for a card without them.
 export function feeWorthCredits(
   catalog: Catalog,
   w: FeeWorth,
-  { esc, strong }: Markup = PLAIN,
+  markup: Markup = PLAIN,
+): string {
+  return [creditsSentences(catalog, w, markup), markup.esc(unvaluedText(w))]
+    .filter((s) => s !== '')
+    .join(' ')
+}
+
+function creditsSentences(
+  catalog: Catalog,
+  w: FeeWorth,
+  { esc, strong }: Markup,
 ): string {
   if (w.credits === null) return ''
   const fee = wholeDollars(w.card.annual_fee ?? 0)
@@ -282,7 +318,8 @@ export function feeWorthCredits(
         : w.creditsBreakEven === 0
           ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, so it comes out ahead ${w.creditsStopAt === null ? 'at any amount' : `up to about ${esc(wholeDollars(w.creditsStopAt))} a month; past that, the best no-fee card earns more`}.`
           : `If you'd use ${esc(perks)} (${esc(year)}), the fee pays off from about ${strong(`${esc(wholeDollars(w.creditsBreakEven))} a month`)}${pastThat}.`
-  return `${sentence} ${esc(creditsOnlyIf(w.credits, true))}`
+  const onlyIf = creditsOnlyIf(w.credits, true)
+  return onlyIf === '' ? sentence : `${sentence} ${esc(onlyIf)}`
 }
 
 export type FeeWorthAnswer = {

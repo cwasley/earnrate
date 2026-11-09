@@ -47,7 +47,10 @@ import {
 } from '../../src/engine/text.ts'
 import { cardValuation, currencyValuation } from '../../src/engine/valuation.ts'
 import type { Recommendation } from '../../src/engine/types.ts'
-import type { CardInput } from '../../src/engine/wallet-change.ts'
+import {
+  MAX_NIGHT_VALUE,
+  type CardInput,
+} from '../../src/engine/wallet-change.ts'
 import { resolvePlace } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { anniversaryOf, type Spending } from '../../src/engine/renewal.ts'
@@ -513,6 +516,13 @@ function CardEditor({
         .map((c) => [c.credit.id, String(c.used)]),
     ),
   )
+  const [nightWorth, setNightWorth] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      nights.flatMap((n) =>
+        n.own === null ? [] : [[n.night.id, String(n.own)]],
+      ),
+    ),
+  )
   if (!info || !card) return null
   const offer = card.welcome_offer
 
@@ -551,6 +561,13 @@ function CardEditor({
       input.creditUsed = Object.fromEntries(
         used.map(([id, v]) => [id, Math.max(0, Number(v) || 0)]),
       )
+    // A blank value clears one saved before; the rules refuse a bad one.
+    const worth = nights.flatMap((n): [string, number | null][] => {
+      const text = (nightWorth[n.night.id] ?? '').trim()
+      if (text === '') return n.own === null ? [] : [[n.night.id, null]]
+      return [[n.night.id, Number(text.replace(/[$,]/g, ''))]]
+    })
+    if (worth.length > 0) input.nightValues = Object.fromEntries(worth)
     onChange(input)
   }
 
@@ -760,12 +777,13 @@ function CardEditor({
             {capitalize(
               freeNightText(n.points, currencyLabel(catalog, card.currency)),
             )}
-            :{' '}
-            {freeNightValueText(
-              n.value,
-              currencyValuation(catalog, wallet, card.currency).centsPerUnit,
-            )}
-            . It counts against the annual fee once you say you use it.
+            {n.value === null
+              ? ". It counts against the annual fee once you say what it's worth to you."
+              : `: ${freeNightValueText(
+                  n.value,
+                  currencyValuation(catalog, wallet, card.currency)
+                    .centsPerUnit,
+                )}. It counts against the annual fee once you say you use it.`}
           </p>
           <UseChoices
             name={`credit-${held.id}-${n.night.id}`}
@@ -780,7 +798,25 @@ function CardEditor({
             <p class="muted small">
               Left out of the to-do list and the annual-fee math.
             </p>
-          ) : null}
+          ) : creditUse[n.night.id] !== 'using' ? null : (
+            <label class="field">
+              Worth to you{n.value === null ? '' : ' (optional)'}, in dollars
+              <input
+                type="number"
+                inputMode="decimal"
+                min="1"
+                max={String(MAX_NIGHT_VALUE)}
+                placeholder={
+                  n.value === null ? '' : String(Math.round(n.value))
+                }
+                value={nightWorth[n.night.id] ?? ''}
+                onInput={(e) => {
+                  const value = e.currentTarget.value
+                  setNightWorth((prev) => ({ ...prev, [n.night.id]: value }))
+                }}
+              />
+            </label>
+          )}
         </fieldset>
       ))}
       {info.needsAnniversary || hasFee(held) ? (

@@ -3,6 +3,19 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.08.6'
+  date: 2026-11-08
+  changes:
+    - cause: addition
+      card: amex-hilton-honors-aspire
+      field: free_nights.anniversary-night
+      summary: The Annual Free Night Reward, one each year of Card Membership. Hilton sets no point cap, so it counts against the annual fee only at what the cardholder says it's worth to them.
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0
+    - cause: wording
+      card: amex-hilton-honors-aspire
+      field: todo
+      summary: The note that the Annual Free Night Reward isn't modeled is gone.
+
 - version: '2026.11.08.5'
   date: 2026-11-08
   changes:

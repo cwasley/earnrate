@@ -259,6 +259,7 @@ test("the privacy page says everything a saved wallet's card can hold", async ()
     enrolled: "statement credits you've enrolled in",
     credit_usage: "how much of each you've used",
     skipped_credits: "which ones you don't use",
+    night_values: "what it's worth to you",
     bonus: 'welcome bonus',
   }
   for (const key of Object.keys(WalletCardSchema.shape)) {

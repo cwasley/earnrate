@@ -70,6 +70,11 @@ credits:
     amount: 219
     period: calendar_year
     note: 'An annual CLEAR+ membership.'
+# Hilton sets no point cap, so it counts only at what the cardholder says
+# it's worth to them.
+free_nights:
+  - id: anniversary-night
+    note: 'In the first year of Card Membership and each year after renewal, for one standard room, double occupancy, at Hilton hotels other than those Hilton lists; taxes and resort fees included. Basic Card Member only; it expires a year after it is issued.'
 evidence:
   - rule: base_rate
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
@@ -143,6 +148,12 @@ evidence:
   - rule: clear-plus
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'earn up to $219 in statement credits per calendar year when their Hilton Honors American Express Aspire Card'
+  - rule: anniversary-night
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'During each year of your Card Membership, you will receive one Annual Free Night Reward from Hilton Honors.'
+  - rule: anniversary-night
+    url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/
+    quote: 'Enjoy an Annual Free Night Reward from Hilton Honors in your first year of Card Membership'
 milestones:
   - id: spend-30k
     spend: 30000
@@ -157,7 +168,6 @@ milestones:
       - A second Free Night Reward
     note: Another $30,000 on top of the first, $60,000 in the calendar year in all.
 todo:
-  - The Annual Free Night Reward (one each year of Card Membership, no spending needed) isn't modeled.
   - The $400 Hilton Resort credit (up to $200 each half year) isn't modeled. It counts only at the participating Hilton Resorts Hilton lists, which earnrate can't tell apart from other Hilton properties.
   - The $100 property credit on two-night Waldorf Astoria and Conrad stays booked through the Aspire card site or phone line is an on-property credit, not modeled.
   - Complimentary Hilton Honors Diamond status and National Car Rental Emerald Club Executive status aren't modeled.

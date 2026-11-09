@@ -255,8 +255,9 @@ export const CreditSchema = z.strictObject({
 export const FreeNightSchema = z.strictObject({
   id: KebabId,
   // The most a night can cost, in the card's own currency: its value is
-  // this at the person's point value, said as "up to".
-  points: z.number().int().positive(),
+  // this at the person's point value, said as "up to". Without a cap (any
+  // standard room) it's valued only at what the cardholder says it's worth.
+  points: z.number().int().positive().optional(),
   note: z.string().optional(),
 })
 

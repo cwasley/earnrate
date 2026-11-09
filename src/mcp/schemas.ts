@@ -228,8 +228,9 @@ export const WalletSummarySchema = z.object({
         z.object({
           id: z.string(),
           name: z.string(),
-          points: z.number(), // the most a night can cost
-          value: z.number(), // dollars at the user's point value: "up to"
+          points: z.number().nullable(), // the most a night can cost; null without a cap
+          value: z.number().nullable(), // dollars at the user's point value: "up to"
+          ownValue: z.number().nullable(), // what the user says it's worth, counted instead
           confirmed: z.boolean(), // said in use: counts against the annual fee
           skipped: z.boolean(),
           text: z.string(),
@@ -440,8 +441,9 @@ export const CardSearchSchema = z.object({
       freeNights: z.array(
         z.object({
           id: z.string(),
-          points: z.number(),
-          value: z.number(), // dollars, "up to"
+          points: z.number().nullable(), // null without a cap
+          value: z.number().nullable(), // dollars, "up to"
+          ownValue: z.number().nullable(), // on a card the user holds
           text: z.string(),
         }),
       ),
@@ -600,8 +602,11 @@ const SimulationSchema = z.object({
       yearly: z.number(), // free nights included, at their "up to" value
       creditIds: z.array(z.string()), // credit ids, then free night ids
       names: z.array(z.string()),
-      nights: z.number(), // the dollars of yearly from free nights
+      nights: z.number(), // the dollars of yearly from free nights at their cap
       nightIds: z.array(z.string()),
+      ownNights: z.number(), // the dollars from nights at the user's own value
+      ownNightIds: z.array(z.string()),
+      unvaluedNightIds: z.array(z.string()), // no cap and no value given: not counted
       held: z.boolean(),
     }),
   ),

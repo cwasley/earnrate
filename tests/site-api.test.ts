@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { SYNC_HEADER } from '../site/api.ts'
+import { cardChangeOf } from '../site/app/sync.ts'
 import preview from '../site/preview-worker.ts'
 import worker, { type SiteEnv } from '../site/worker.ts'
 import { deployment, ORIGIN } from './remote-helpers.ts'
@@ -222,6 +223,36 @@ describe('earnrate.dev wallet sync', () => {
     })
     expect(refused.status).toBe(422)
     expect(((await refused.json()) as { error: string }).error).toBeTruthy()
+  })
+
+  test("what a free night is worth syncs like the card's other settings", async () => {
+    const b = browser()
+    await b.syncOn()
+    await b.change('add_card', { cardId: 'amex-hilton-honors-aspire' })
+    const set = await b.change(
+      'update_card',
+      cardChangeOf({
+        id: 'amex-hilton-honors-aspire',
+        enrolled: ['anniversary-night'],
+        skippedCredits: [],
+        nightValues: { 'anniversary-night': 450 },
+      }),
+    )
+    expect(set.status).toBe(200)
+    const saved = (await (await b.wallet()).json()) as {
+      wallet: { cards: { night_values?: Record<string, number> }[] }
+    }
+    expect(saved.wallet.cards[0]?.night_values).toEqual({
+      'anniversary-night': 450,
+    })
+    const refused = await b.change('update_card', {
+      cardId: 'amex-hilton-honors-aspire',
+      nightValues: { 'anniversary-night': 6000 },
+    })
+    expect(refused.status).toBe(422)
+    expect(((await refused.json()) as { error: string }).error).toMatch(
+      /at most \$5,000/,
+    )
   })
 
   test('no token ever reaches a response body or a redirect the page sees', async () => {

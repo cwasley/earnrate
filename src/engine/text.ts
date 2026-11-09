@@ -555,27 +555,63 @@ export function askCreditText(card: string, names: string[], nights = 0) {
 // A free night given each cardmember year, valued at its point cap.
 export const FREE_NIGHT_NAME = 'anniversary free night'
 
-// "an anniversary free night each year, up to 40,000 IHG One Rewards points"
-export const freeNightText = (points: number, currencyName: string) =>
-  `${withArticle(FREE_NIGHT_NAME)} each year, up to ${points.toLocaleString('en-US')} ${currencyName}`
+// "an anniversary free night each year, up to 40,000 IHG One Rewards points",
+// or "with no point cap" for any standard room.
+export const freeNightText = (
+  points: number | null | undefined,
+  currencyName: string,
+) =>
+  `${withArticle(FREE_NIGHT_NAME)} each year, ${points == null ? 'with no point cap' : `up to ${points.toLocaleString('en-US')} ${currencyName}`}`
 
 // "up to $200 at 0.5¢ a point"
 export const freeNightValueText = (value: number, cents: number) =>
   `up to ${wholeDollars(value)} at ${num(cents)}¢ a point`
 
+// What the cardholder says a free night is worth: "worth $300 to you".
+export const ownNightValueText = (value: number) =>
+  `worth ${wholeDollars(value)} to you`
+
+// A night's value, at the person's own figure or else its cap; null for a
+// night with neither.
+export const nightWorthText = (
+  n: { value: number | null; own: number | null },
+  cents: number,
+): string | null =>
+  n.own !== null
+    ? ownNightValueText(n.own)
+    : n.value === null
+      ? null
+      : freeNightValueText(n.value, cents)
+
+// A night at the cardholder's value, in a list of credits.
+export const ownNightName = (value: number) =>
+  `${FREE_NIGHT_NAME} at your ${wholeDollars(value)}`
+
+// A night with no point cap counts only at what the person says it's worth.
+export const NIGHT_NOT_VALUED =
+  "not counted against the annual fee until you say what it's worth to you"
+export const NIGHT_UNVALUED_SHORT =
+  "not counted until you say what it's worth to you"
+// The same where nothing can be said back: card pages.
+export const NIGHT_NO_CAP = "not valued: what it's worth depends on the hotel"
+
 // The cheat sheet: its picks are by rate alone.
 export const CREDITS_LEFT_OUT =
   'Statement credits (dollars back at a named store) are left out.'
 
-// `nights` is the dollars of `yearly` from free nights, which are "up to".
+// `nights` is the dollars of `yearly` from free nights at their cap, which
+// are "up to"; `ownNightIds` are nights at the cardholder's own value.
 type CreditsTotal = {
   yearly: number
   names: string[]
   nights?: number
   nightIds?: string[]
+  ownNightIds?: string[]
 }
 
 const nightCount = (c: CreditsTotal) => c.nightIds?.length ?? 0
+const cappedCount = (c: CreditsTotal) =>
+  nightCount(c) - (c.ownNightIds?.length ?? 0)
 const upTo = (c: CreditsTotal) => ((c.nights ?? 0) > 0 ? 'up to ' : '')
 
 // "statement credits", "free night", "statement credits and free night";
@@ -638,10 +674,12 @@ export function onlyIfText(credits: boolean, nights: boolean): string {
 export const CREDIT_ONLY_IF =
   "It's worth that only if you'd spend there anyway."
 
-// `counted` speaks of a lone credit in the singular.
+// `counted` speaks of a lone credit in the singular. A night at the
+// person's own value needs no caveat, so with only those it's empty.
 export function creditsOnlyIf(c: CreditsTotal, counted = false): string {
-  const nights = nightCount(c)
-  const credits = c.names.length - nights
+  const nights = cappedCount(c)
+  const credits = c.names.length - nightCount(c)
+  if (credits === 0 && nights === 0) return ''
   if (counted && credits === 1)
     return nights === 0
       ? CREDIT_ONLY_IF
@@ -655,6 +693,7 @@ export const perksTotal = (list: CreditsTotal[]): CreditsTotal => ({
   names: list.flatMap((c) => c.names),
   nights: roundCents(list.reduce((sum, c) => sum + (c.nights ?? 0), 0)),
   nightIds: list.flatMap((c) => c.nightIds ?? []),
+  ownNightIds: list.flatMap((c) => c.ownNightIds ?? []),
 })
 
 // " · $X if you'd use all its credits ($424 a year)", for a ranked line.
@@ -706,7 +745,7 @@ export function ifCreditsUsedText(
   if (nightCount(c) === 0)
     return `If you'd use all ${owner} statement credits (${creditsYearText(c)}), it ${verb} ${wholeDollars(dollars)} a year.`
   const all = c.names.length > 1 ? 'all ' : ''
-  return `If you'd use ${all}${owner} ${perksNoun(c)} (${creditsYearText(c)}), it ${verb} up to ${wholeDollars(dollars)} a year.`
+  return `If you'd use ${all}${owner} ${perksNoun(c)} (${creditsYearText(c)}), it ${verb} ${upTo(c)}${wholeDollars(dollars)} a year.`
 }
 
 // The renewal check on the to-do list. A card well ahead gets one short
@@ -721,7 +760,10 @@ export function renewalText(
     rewardsAdded: number
     credits: number
     freeNights: number
+    ownNights: number
     nightsNotCounted: number
+    nightsNotCountedOwn: boolean
+    nightsUnvalued: number
     net: number
     against: string | null
     typical: boolean
@@ -745,7 +787,7 @@ export function renewalText(
       : Math.round(r.rewardsAdded) < 0
         ? `it earns about ${wholeDollars(-r.rewardsAdded)} a year less than ${over}`
         : `it earns about the same as ${over}`
-  const creditDollars = roundCents(r.credits - r.freeNights)
+  const creditDollars = roundCents(r.credits - r.freeNights - r.ownNights)
   const extras = [
     ...(creditDollars > 0
       ? [`${wholeDollars(creditDollars)} in credits you use`]
@@ -753,13 +795,21 @@ export function renewalText(
     ...(r.freeNights > 0
       ? [`up to ${wholeDollars(r.freeNights)} for its ${FREE_NIGHT_NAME}`]
       : []),
+    ...(r.ownNights > 0
+      ? [
+          `the ${wholeDollars(r.ownNights)} its ${FREE_NIGHT_NAME} is worth to you`,
+        ]
+      : []),
   ]
   const credits = extras.length > 0 ? `, plus ${listed(extras)}` : ''
   const withNight = roundCents(r.net + r.nightsNotCounted)
+  const upTo = r.nightsNotCountedOwn ? '' : 'up to '
   const uncounted =
     r.nightsNotCounted > 0
-      ? ` Its ${FREE_NIGHT_NAME} (up to ${wholeDollars(r.nightsNotCounted)}) isn't counted until you say you use it${withNight >= 0 ? `; with it, up to about ${wholeDollars(withNight)} a year ahead` : ''}.`
-      : ''
+      ? ` Its ${FREE_NIGHT_NAME} (${upTo}${wholeDollars(r.nightsNotCounted)}) isn't counted until you say you use it${withNight >= 0 ? `; with it, ${upTo}about ${wholeDollars(withNight)} a year ahead` : ''}.`
+      : r.nightsUnvalued > 0
+        ? ` Its ${FREE_NIGHT_NAME} isn't counted until you say what it's worth to you.`
+        : ''
   const result =
     r.net >= 0
       ? `about ${wholeDollars(r.net)} a year ahead after the fee${tipped ? ', but only with the free night at its full value' : ''}.`

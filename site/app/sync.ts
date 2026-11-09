@@ -190,6 +190,10 @@ export function heldToInput(
       card.free_nights.some((n) => n.id === id),
   )
   if (skipped.length > 0) input.skippedCredits = skipped
+  const worth = Object.entries(held.night_values ?? {}).filter(([id]) =>
+    card.free_nights.some((n) => n.id === id),
+  )
+  if (worth.length > 0) input.nightValues = Object.fromEntries(worth)
   return input
 }
 

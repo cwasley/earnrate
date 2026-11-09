@@ -1487,6 +1487,61 @@ describe('wallet setup', () => {
     )
   })
 
+  test("what a free night is worth: update_card saves it, and Aspire's uncapped night counts only with it", async () => {
+    const file = await walletCopy(
+      "cards:\n  - id: amex-hilton-honors-aspire # mine\n    anniversary: '11-15'\n",
+    )
+    const client = await connect(file)
+    const before = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(before)).toContain(
+      "Free night (anniversary-night): An anniversary free night each year, with no point cap: not counted against the annual fee until you say what it's worth to you.",
+    )
+    expect(text(before)).not.toMatch(/Do you use [^?]*free night/)
+    const set = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'amex-hilton-honors-aspire',
+        nightValues: { 'anniversary-night': 500 },
+      },
+    })
+    expect(set.isError).toBeFalsy()
+    expect(text(set)).toContain('anniversary-night worth $500 to you')
+    const after = await client.callTool({ name: 'list_wallet', arguments: {} })
+    const aspire = (after.structuredContent as WalletSummary).cards[0]
+    expect(aspire?.freeNights).toEqual([
+      expect.objectContaining({
+        id: 'anniversary-night',
+        points: null,
+        value: null,
+        ownValue: 500,
+        confirmed: true,
+      }),
+    ])
+    expect(aspire?.usedCredits).toBe(500)
+    expect(text(after)).toContain(
+      'An anniversary free night each year, with no point cap (worth $500 to you): you use it, so it counts against the annual fee.',
+    )
+    const search = await client.callTool({
+      name: 'search_cards',
+      arguments: { query: 'hilton aspire' },
+    })
+    expect(text(search)).toMatch(
+      /\(\$919 a year: flights, CLEAR and anniversary free night at your \$500\)/,
+    )
+    expect(await readFile(file, 'utf8')).toBe(
+      "cards:\n  - id: amex-hilton-honors-aspire # mine\n    anniversary: '11-15'\n    enrolled: [anniversary-night]\n    night_values:\n      anniversary-night: 500\n",
+    )
+    const refused = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'amex-hilton-honors-aspire',
+        nightValues: { 'anniversary-night': 9000 },
+      },
+    })
+    expect(refused.isError).toBe(true)
+    expect(text(refused)).toMatch(/at most \$5,000/)
+  })
+
   test('best_cards_for puts cards with a store credit first', async () => {
     const client = await connect(await walletCopy())
     const result = await client.callTool({

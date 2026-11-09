@@ -50,6 +50,7 @@ import {
   foreignFeeText,
   freeNightText,
   freeNightValueText,
+  NIGHT_NO_CAP,
   possessive,
   withArticle,
 } from '../src/engine/text.ts'
@@ -715,10 +716,15 @@ function freeNightsText(card: Card): string {
   const cents = currency?.value_cents ?? 1
   const items = card.free_nights.map((n) => {
     const what = freeNightText(n.points, currency?.name ?? card.currency)
-    const value = freeNightValueText(nightValue(catalog, {}, card, n), cents)
-    return `<li><strong>${esc(capitalize(what))}</strong> (${esc(value)}, earnrate's default)${n.note ? `<br /><span class="muted">${esc(n.note)}</span>` : ''}${evidenceFor(card, n.id)}</li>`
+    const value = nightValue(catalog, {}, card, n)
+    const worth =
+      value === null
+        ? NIGHT_NO_CAP
+        : `${freeNightValueText(value, cents)}, earnrate's default`
+    return `<li><strong>${esc(capitalize(what))}</strong> (${esc(worth)})${n.note ? `<br /><span class="muted">${esc(n.note)}</span>` : ''}${evidenceFor(card, n.id)}</li>`
   })
-  return `<h2>Free night</h2><p>A free night each year after the account anniversary, with no spending needed. It's worth the most at a hotel that costs its full point cap, on a stay you'd make anyway. With your cards saved, earnrate counts it against the annual fee once you say you use it, and you can mark it as one you don't.</p><ul>${items.join('')}</ul>`
+  const capped = card.free_nights.some((n) => n.points !== undefined)
+  return `<h2>Free night</h2><p>A free night each year after the account anniversary, with no spending needed. ${capped ? "It's worth the most at a hotel that costs its full point cap, on a stay you'd make anyway. With your cards saved, earnrate counts it against the annual fee once you say you use it, and you can mark it as one you don't." : "With your cards saved, earnrate counts it against the annual fee once you say what it's worth to you, and you can mark it as one you don't."}</p><ul>${items.join('')}</ul>`
 }
 
 function introRatesText(card: Card): string {

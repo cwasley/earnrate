@@ -98,6 +98,12 @@ function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
         ? 'every credit counted'
         : `credits not used: ${args.skippedCredits.join(', ')}`,
     )
+  for (const [id, dollars] of Object.entries(args.nightValues ?? {}))
+    out.push(
+      dollars === null
+        ? `your value for ${id} cleared`
+        : `${id} worth ${money(dollars)} to you`,
+    )
   if (args.bonus === null) out.push('welcome bonus no longer tracked')
   else if (args.bonus !== undefined)
     out.push(
@@ -395,7 +401,7 @@ export function registerWalletTools(
     'list_wallet',
     {
       title: 'List wallet',
-      description: `Starts with a to-do list for the user's cards right now (bonuses to activate and their deadlines, categories to pick or confirm, caps nearly used up, welcome bonuses to finish and the weekly pace, yearly spend bonuses at least 75% of the way, statement credits to enroll in or use before they reset, whether the user uses a card's credits and yearly free night, and a fee card's renewal check in the month before its anniversary: whether it still pays for itself at typical spending); use it when the user asks what to do with their cards this quarter or what they're forgetting. Then lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, progress toward yearly spend bonuses, statement credits (enrolled or not, and what's left this period), yearly free nights (used or not), which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
+      description: `Starts with a to-do list for the user's cards right now (bonuses to activate and their deadlines, categories to pick or confirm, caps nearly used up, welcome bonuses to finish and the weekly pace, yearly spend bonuses at least 75% of the way, statement credits to enroll in or use before they reset, whether the user uses a card's credits and yearly free night, and a fee card's renewal check in the month before its anniversary: whether it still pays for itself at typical spending); use it when the user asks what to do with their cards this quarter or what they're forgetting. Then lists the user's cards: checkout label, network, rewards currency and its value, spending caps with how much is left this period, chosen bonus categories (and whether they're current), welcome-bonus progress, progress toward yearly spend bonuses, statement credits (enrolled or not, and what's left this period), yearly free nights (used or not, and what one is worth to the user if they said), which stores a store card works at, when each card's data was last verified, the point values the user saved, and (for the hosted wallet) when it was started. ${ctx.walletUse}`,
       outputSchema: WalletSummarySchema,
       annotations: {
         title: 'List wallet',
@@ -446,7 +452,7 @@ export function registerWalletTools(
     'update_card',
     {
       title: 'Update a card',
-      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, opening date (optional; for first-year rates), activated categories, cap spending so far (capSpent), spending this year toward its spend bonuses (milestoneSpent), statement credits enrolled in and free nights used (enrolled), credits used this period (creditUsed), credits or free nights not used at all (skippedCredits), or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
+      description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, opening date (optional; for first-year rates), activated categories, cap spending so far (capSpent), spending this year toward its spend bonuses (milestoneSpent), statement credits enrolled in and free nights used (enrolled), credits used this period (creditUsed), credits or free nights not used at all (skippedCredits), what a free night is worth to the user (nightValues, only if they say), or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
       inputSchema: tools.update_card.input,
       outputSchema: WalletChangeSchema,
       annotations: {

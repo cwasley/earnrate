@@ -200,8 +200,9 @@ function cardProblems(
     ...card.free_nights.map((n) => n.id),
   ])
   // A free night is valued at its cap, so a quote has to state it ("50,000
-  // points", "up to 85K points").
+  // points", "up to 85K points"). One with no cap still needs its own quote.
   for (const night of card.free_nights) {
+    if (night.points === undefined) continue
     const caps = [
       night.points.toLocaleString('en-US'),
       `${String(night.points / 1000)}k`,
@@ -447,6 +448,12 @@ export function walletProblems(wallet: Wallet, catalog: Catalog): string[] {
       if (!milestoneIds.has(key))
         problems.push(
           `${where} milestone_usage: '${key}' is not a spend milestone on this card`,
+        )
+    }
+    for (const key of Object.keys(held.night_values ?? {})) {
+      if (!card.free_nights.some((n) => n.id === key))
+        problems.push(
+          `${where} night_values: '${key}' is not a free night on this card`,
         )
     }
     if (held.chosen) {

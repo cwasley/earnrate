@@ -251,6 +251,41 @@ describe('wallet setup commands', () => {
     )
   })
 
+  test('update sets and clears what a free night is worth', async () => {
+    const file = await newWalletPath()
+    await cli(['add', 'amex-hilton-honors-aspire'], file)
+    const set = await cli(
+      [
+        'update',
+        'amex-hilton-honors-aspire',
+        '--night-value',
+        'anniversary-night=$450',
+      ],
+      file,
+    )
+    expect(set.code).toBe(0)
+    expect(await readFile(file, 'utf8')).toContain(
+      '    enrolled: [anniversary-night]\n    night_values:\n      anniversary-night: 450\n',
+    )
+    const cleared = await cli(
+      [
+        'update',
+        'amex-hilton-honors-aspire',
+        '--night-value',
+        'anniversary-night=none',
+      ],
+      file,
+    )
+    expect(cleared.code).toBe(0)
+    expect(await readFile(file, 'utf8')).not.toContain('night_values')
+    const bad = await cli(
+      ['update', 'amex-hilton-honors-aspire', '--night-value', '450'],
+      file,
+    )
+    expect(bad.code).toBe(2)
+    expect(bad.stderr).toMatch(/--night-value takes <night>=<dollars>/)
+  })
+
   test('update sets cap and spend-bonus spending; memberships refuses card options', async () => {
     const file = await newWalletPath()
     await cli(['add', 'amex-blue-cash-preferred'], file)

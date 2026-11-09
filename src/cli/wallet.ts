@@ -42,6 +42,12 @@ const CARD_OPTIONS = `Options:
                              comma separated, e.g. --skipped-credits dunkin.
                              They're left out of picks, the to-do list and
                              annual-fee math. Replaces the current list.
+  --night-value <night>=<dollars>
+                             Optional: what a yearly free night is worth to
+                             you, e.g. --night-value anniversary-night=300.
+                             It counts at that instead of its point cap, and
+                             is marked used; a night with no point cap counts
+                             only this way. <night>=none clears it.
   --cap-spent <cap>=<dollars>
                              Spending toward a cap so far this period, e.g.
                              --cap-spent us-supermarkets=1200. Repeat for each.
@@ -192,6 +198,7 @@ export async function runWalletCommand(
         enrolled: { type: 'string' },
         'skipped-credits': { type: 'string' },
         'credit-used': { type: 'string', multiple: true },
+        'night-value': { type: 'string', multiple: true },
         'cap-spent': { type: 'string', multiple: true },
         'milestone-spent': { type: 'string', multiple: true },
         'bonus-opened': { type: 'string' },
@@ -228,6 +235,7 @@ export async function runWalletCommand(
     values.enrolled !== undefined ||
     values['skipped-credits'] !== undefined ||
     values['credit-used'] !== undefined ||
+    values['night-value'] !== undefined ||
     values['cap-spent'] !== undefined ||
     values['milestone-spent'] !== undefined ||
     values['bonus-opened'] !== undefined ||
@@ -428,6 +436,20 @@ export async function runWalletCommand(
     if (typeof result === 'string') return usage(result)
   if (typeof creditUsed === 'object') input.creditUsed = creditUsed
   if (typeof capSpent === 'object') input.capSpent = capSpent
+  if (values['night-value'] !== undefined) {
+    const nightValues: Record<string, number | null> = {}
+    for (const pair of values['night-value']) {
+      const [night = '', dollars = ''] = pair.split('=')
+      const n =
+        dollars.trim() === 'none' ? null : dollarsFlag('night-value', dollars)
+      if (night.trim() === '' || dollars.trim() === '' || typeof n === 'string')
+        return usage(
+          '--night-value takes <night>=<dollars>, like anniversary-night=300, or <night>=none.',
+        )
+      nightValues[night.trim()] = n ?? null
+    }
+    input.nightValues = nightValues
+  }
   if (typeof milestoneSpent === 'object') input.milestoneSpent = milestoneSpent
   if (values['no-bonus']) {
     input.bonus = null

@@ -143,6 +143,9 @@ cards:
     chosen: { period: 2026-Q4, picks: { five-percent: [fast-food, cell-phone] } }
   - id: discover-it-cash-back
     activated: [q4-2026-restaurants]
+  - id: chase-ihg-one-rewards-premier
+    enrolled: [anniversary-night]
+    night_values: { anniversary-night: 300 }
 `,
       catalog,
     )

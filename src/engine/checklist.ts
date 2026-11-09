@@ -170,7 +170,11 @@ export function checklist(
     const toAsk = s.credits.filter(
       (c) => !c.enroll && !c.confirmed && !c.skipped,
     )
-    const nightsToAsk = s.freeNights.filter((n) => !n.confirmed && !n.skipped)
+    // A night with no cap counts only at a value the user gives: not asked.
+    const nightsToAsk = s.freeNights.filter(
+      (n) =>
+        !n.confirmed && !n.skipped && (n.value !== null || n.ownValue !== null),
+    )
     if (toAsk.length + nightsToAsk.length > 0)
       items.push({
         kind: 'enroll',

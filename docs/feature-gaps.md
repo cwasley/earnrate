@@ -112,9 +112,8 @@ A `cardmember_year` milestone runs from the account anniversary date. Citi count
 
 ### Perks that offset the annual fee
 
-Merchant credits (`credits:`) and yearly free nights (`free_nights:`, one after each account anniversary, valued at the night's point cap times the person's point value) count against a held card's fee once the cardholder says they use them, and are shown apart for cards not held. A free night needs a point cap to be valued; other perks that aren't dollars at a store don't count anywhere.
+Merchant credits (`credits:`) and yearly free nights (`free_nights:`, one after each account anniversary, valued at the night's point cap times the person's point value, or at what the cardholder says it's worth to them) count against a held card's fee once the cardholder says they use them, and are shown apart for cards not held. A night with no point cap (`amex-hilton-honors-aspire`'s Annual Free Night Reward) counts only at the cardholder's own value, and isn't counted for cards not held. Other perks that aren't dollars at a store don't count anywhere.
 
-- `amex-hilton-honors-aspire`: an Annual Free Night Reward with no spending needed, but Hilton's has no point cap ("one standard accommodation ... at properties in the Hilton portfolio"), so it has no value to count yet.
 - Free nights earned by spending (milestone `rewards` on the Hilton, Marriott and IHG cards) are shown, not valued.
 
 ### Merchant credits the schema can't express

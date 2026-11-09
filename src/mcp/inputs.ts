@@ -160,6 +160,12 @@ const cardFields = {
     .describe(
       "Statement credit and free night ids the user doesn't use, e.g. [\"dunkin\"] on Amex Gold. They're left out of picks, the to-do list and the annual-fee math; every other credit or free night on the card counts against its fee once it's in enrolled (or, for a credit that needs no enrolling, has been used). Replaces the current list; [] counts them all again.",
     ),
+  nightValues: z
+    .record(z.string(), z.number().positive().nullable())
+    .optional()
+    .describe(
+      'What a yearly free night is worth to the user, in dollars, only if they say: free night id → dollars, e.g. {"anniversary-night": 300}. The night then counts at that instead of its point cap, and a night with no point cap counts only this way. Setting one marks the night used. null clears it; other nights keep theirs.',
+    ),
   bonus: z
     .object({
       opened: IsoDate.describe('The day the account opened, YYYY-MM-DD.'),

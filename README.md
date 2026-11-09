@@ -181,7 +181,9 @@ Some hotel cards give a free night each year after the account anniversary, with
 
 Like a credit that needs no enrolling, a free night counts against the card's fee only once you say you use it: `earnrate update chase-ihg-one-rewards-premier --enrolled anniversary-night` (`enrolled: [anniversary-night]` in the file), or "Using it" in the card's settings on earnrate.dev. Until then the to-do list asks, in the card's "Do you use ...?" line, and a renewal check that comes up short says what the night would add. `--skipped-credits anniversary-night` (or "I don't use this") leaves it out everywhere. With it counted, the renewal check names the night when it's what puts the card ahead.
 
-For a card you don't hold, a free night is shown apart like credits, never ranked on: in `simulate`, the annual-fee math on each card's page and, from the second year, `offers`. Free nights earned by spending (Hilton's and Marriott's after $15,000 or more a year) are spend bonuses, shown but not valued, and Hilton Honors Aspire's yearly night has no point cap, so it isn't valued yet.
+If a night is worth something else to you (you'd only use it at a cheaper hotel, or the hotels you'd pick cost more in cash), say so: `earnrate update chase-ihg-one-rewards-premier --night-value anniversary-night=300` (`night_values: { anniversary-night: 300 }` in the file, "Worth to you" under the night in the card's settings on earnrate.dev, or tell Claude). It then counts at that, as yours rather than "up to", and is marked used; `--night-value anniversary-night=none` goes back to the cap. Hilton Honors Aspire's Annual Free Night Reward has no point cap ("one standard accommodation"), so it's listed but counts only once you give it a value this way.
+
+For a card you don't hold, a free night is shown apart like credits, never ranked on: in `simulate`, the annual-fee math on each card's page and, from the second year, `offers`. Free nights earned by spending (Hilton's and Marriott's after $15,000 or more a year) are spend bonuses, shown but not valued.
 
 ### Which new card?
 

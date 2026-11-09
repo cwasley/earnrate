@@ -40,8 +40,8 @@ export function feeWorthSection(
     const best = r.best.cards[0]?.cardId ?? ''
     return `<tr><td>${esc(wholeDollars(m))}</td><td>${esc(money(r.card.net))}</td><td>${esc(money(r.best.net))} <span class="muted">(<a href="/cards/${best}">${esc(ctx.shortName(best))}</a>)</span></td></tr>`
   }).join('')
-  const creditsLine =
-    w.credits === null ? '' : ` ${feeWorthCredits(ctx.catalog, w, HTML)}`
+  const credits = feeWorthCredits(ctx.catalog, w, HTML)
+  const creditsLine = credits === '' ? '' : ` ${credits}`
   const extras = [
     w.at(SHOWN_AMOUNTS[0] ?? 500).card.membershipFees > 0
       ? 'the membership it needs, counted like a fee'

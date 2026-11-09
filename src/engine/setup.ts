@@ -13,7 +13,7 @@ import { daysBetween } from './periods.ts'
 import { rotationGap, rotationGapText } from './rotation.ts'
 import { currencyValuation } from './valuation.ts'
 import { creditName, creditWhere, introWhat } from './rule-text.ts'
-import { nightValue } from './credits.ts'
+import { nightStates } from './credits.ts'
 import {
   choicePhrase,
   creditBack,
@@ -21,8 +21,10 @@ import {
   currencyLabel,
   ENROLL_FIRST,
   freeNightText,
-  freeNightValueText,
   idList,
+  NIGHT_NO_CAP,
+  NIGHT_UNVALUED_SHORT,
+  nightWorthText,
   listed,
   possessive,
 } from './text.ts'
@@ -79,8 +81,9 @@ export type CardInfo = {
   // 0.5¢ a point)". Marked used or not like a credit, by id.
   freeNights: {
     id: string
-    points: number // in the card's currency
-    value: number // dollars at the wallet's point value, "up to"
+    points: number | null // in the card's currency; null without a cap
+    value: number | null // dollars at the wallet's point value, "up to"
+    ownValue: number | null // what the user says it's worth, on a card they hold
     text: string
   }[]
 }
@@ -195,6 +198,7 @@ export function cardInfo(
   wallet: Wallet | null,
   today: string,
 ): CardInfo {
+  const heldCard = wallet?.cards.find((c) => c.id === card.id) ?? null
   return {
     id: card.id,
     name: card.name,
@@ -255,19 +259,23 @@ export function cardInfo(
         text: `${creditBack(c)} ${creditWhere(catalog, c)}${creditTerms(c)}${c.enroll ? `, ${ENROLL_FIRST}` : ''}`,
       }
     }),
-    freeNights: card.free_nights.map((n) => {
-      const valuations = wallet?.valuations ?? {}
-      const value = nightValue(catalog, valuations, card, n)
+    freeNights: nightStates(
+      catalog,
+      wallet?.valuations ?? {},
+      card,
+      heldCard,
+    ).map((n) => {
       const { centsPerUnit } = currencyValuation(
         catalog,
-        { valuations },
+        { valuations: wallet?.valuations ?? {} },
         card.currency,
       )
       return {
-        id: n.id,
+        id: n.night.id,
         points: n.points,
-        value,
-        text: `${freeNightText(n.points, currencyLabel(catalog, card.currency))} (${freeNightValueText(value, centsPerUnit)})`,
+        value: n.value,
+        ownValue: n.own,
+        text: `${freeNightText(n.points, currencyLabel(catalog, card.currency))} (${nightWorthText(n, centsPerUnit) ?? (heldCard ? NIGHT_UNVALUED_SHORT : NIGHT_NO_CAP)})`,
       }
     }),
   }

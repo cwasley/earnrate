@@ -71,6 +71,10 @@ export const WalletCardSchema = z.strictObject({
   // Credits and free nights the cardholder doesn't use: left out of the
   // pick, the to-do list and the fee math, even if enrolled.
   skipped_credits: z.array(KebabId).optional(),
+  // Free night id → dollars a year the cardholder says it's worth to them:
+  // counted at that instead of its point cap. A night with no cap counts
+  // only this way.
+  night_values: z.record(KebabId, z.number().positive()).optional(),
   // A welcome bonus in progress. Terms default to the card's published
   // offer; set spend, by, points or dollars when yours was different.
   bonus: z

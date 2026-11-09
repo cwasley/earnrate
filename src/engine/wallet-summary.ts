@@ -35,7 +35,8 @@ import {
   CREDIT_SKIPPED,
   earnText,
   freeNightText,
-  freeNightValueText,
+  NIGHT_NOT_VALUED,
+  nightWorthText,
   listed,
   PAYMENT_PHRASES,
   shortCardName,
@@ -77,8 +78,9 @@ export type CreditSummary = {
 export type FreeNightSummary = {
   id: string // what enrolled and skipped_credits call it
   name: string
-  points: number // the most a night can cost, in the card's currency
-  value: number // dollars at the wallet's point value: "up to"
+  points: number | null // the most a night can cost, in the card's currency; null without a cap
+  value: number | null // dollars at the wallet's point value: "up to"; null without a cap
+  ownValue: number | null // dollars the user says it's worth to them, counted instead
   confirmed: boolean // said in use: counts against the annual fee
   skipped: boolean // the user doesn't use it: not counted anywhere
   text: string
@@ -492,17 +494,21 @@ function nightSummaries(
   return nightStates(catalog, wallet.valuations, card, held).map((n) => {
     const status = n.skipped
       ? CREDIT_SKIPPED
-      : n.confirmed
-        ? 'you use it, so it counts against the annual fee'
-        : 'not counted against the annual fee until you say you use it'
+      : n.worth === null
+        ? NIGHT_NOT_VALUED
+        : n.confirmed
+          ? 'you use it, so it counts against the annual fee'
+          : 'not counted against the annual fee until you say you use it'
+    const worth = nightWorthText(n, centsPerUnit)
     return {
       id: n.night.id,
       name: n.name,
       points: n.points,
       value: n.value,
+      ownValue: n.own,
       confirmed: n.confirmed,
       skipped: n.skipped,
-      text: `${capitalize(freeNightText(n.points, currencyLabel(catalog, card.currency)))} (${freeNightValueText(n.value, centsPerUnit)}): ${status}.`,
+      text: `${capitalize(freeNightText(n.points, currencyLabel(catalog, card.currency)))}${worth === null ? '' : ` (${worth})`}: ${status}.`,
     }
   })
 }

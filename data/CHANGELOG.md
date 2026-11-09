@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.08.6
+
+No rates changed. `amex-hilton-honors-aspire` gets its Annual Free Night Reward as a yearly free night (`free_nights:`), one each year of Card Membership with no spending needed. Hilton sets no point cap ("one standard accommodation" at most Hilton hotels), so a free night's `points` is now optional: one without a cap is listed but counts against the annual fee only at the dollars the cardholder says it's worth to them, a new optional wallet setting that works for any free night. Source: [Amex terms](https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms), [Amex](https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/).
+
 ## 2026.11.08.5
 
 No rates changed. Categories can now name the cards their note is about in a new `cards` field, inherited with the note. Rent and mortgage (`housing`) names the three Bilt cards (`bilt-blue`, `bilt-obsidian`, `bilt-palladium`), so earnrate.dev's rent page and its Best for answer link each card's page under the note.

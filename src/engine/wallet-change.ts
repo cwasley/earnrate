@@ -19,6 +19,10 @@ import { CREDIT_PERIODS, idList, money } from './text.ts'
 
 // Node-free: earnrate.dev runs these on the wallet it keeps in the browser.
 
+// The most a free night can be worth to someone, in dollars: past this it's
+// surely a typo.
+export const MAX_NIGHT_VALUE = 5000
+
 export type CardInput = {
   id: string
   checkoutLabel?: string | null // null goes back to the card's name
@@ -40,6 +44,9 @@ export type CardInput = {
   // Statement credit and free night ids the cardholder doesn't use;
   // replaces the list.
   skippedCredits?: string[]
+  // Free night id → dollars a year it's worth to the cardholder, counted
+  // instead of its point cap; null clears one. Others are kept.
+  nightValues?: Record<string, number | null>
   // A welcome bonus in progress; null stops tracking it. Spend and deadline
   // default to the card's published offer.
   bonus?: {
@@ -70,6 +77,7 @@ export type CardFields = {
   enrolled?: string[]
   credit_usage?: Record<string, { period: string; used: number }>
   skipped_credits?: string[]
+  night_values?: Record<string, number> // the whole map; {} removes it
   bonus?: BonusFields | null // null removes it
 }
 
@@ -275,6 +283,45 @@ export function cardFields(
     input.skippedCredits.forEach(unknownCredit)
     fields.skipped_credits = [...new Set(input.skippedCredits)]
   }
+  if (input.nightValues !== undefined) {
+    const values: Record<string, number> = { ...held?.night_values }
+    const cleared = new Set<string>()
+    for (const [id, dollars] of Object.entries(input.nightValues)) {
+      if (!card.free_nights.some((n) => n.id === id)) {
+        problems.push(
+          card.free_nights.length > 0
+            ? `${card.id} has no free night '${id}'. Its free nights are: ${idList(card.free_nights.map((n) => n.id))}.`
+            : `${card.id} has no yearly free night.`,
+        )
+        continue
+      }
+      if (dollars === null) {
+        cleared.add(id)
+        continue
+      }
+      if (!(dollars > 0 && dollars <= MAX_NIGHT_VALUE)) {
+        problems.push(
+          `What a free night is worth to you must be more than $0 and at most ${money(MAX_NIGHT_VALUE)}.`,
+        )
+        continue
+      }
+      values[id] = dollars
+      // Saying what a night is worth says it's used, unless this change
+      // also says which are.
+      if (input.enrolled === undefined) {
+        const enrolled = fields.enrolled ?? held?.enrolled ?? []
+        if (!enrolled.includes(id)) fields.enrolled = [...enrolled, id]
+      }
+      if (input.skippedCredits === undefined) {
+        const skipped = fields.skipped_credits ?? held?.skipped_credits ?? []
+        if (skipped.includes(id))
+          fields.skipped_credits = skipped.filter((s) => s !== id)
+      }
+    }
+    fields.night_values = Object.fromEntries(
+      Object.entries(values).filter(([id]) => !cleared.has(id)),
+    )
+  }
   if (input.creditUsed !== undefined) {
     const usage = { ...held?.credit_usage }
     const anniversary = fields.anniversary ?? held?.anniversary ?? null
@@ -364,10 +411,16 @@ const newHolding = (id: string): WalletCard => ({
 })
 
 const withFields = (
-  { bonus, checkout_label, opened, ...held }: WalletCard,
+  { bonus, checkout_label, opened, night_values, ...held }: WalletCard,
   f: CardFields,
 ): WalletCard => ({
   ...held,
+  ...(night_values !== undefined && f.night_values === undefined
+    ? { night_values }
+    : {}),
+  ...(f.night_values !== undefined && Object.keys(f.night_values).length > 0
+    ? { night_values: f.night_values }
+    : {}),
   ...(opened !== undefined && f.opened === undefined ? { opened } : {}),
   ...(f.opened ? { opened: f.opened } : {}),
   ...(bonus && f.bonus === undefined ? { bonus } : {}),
