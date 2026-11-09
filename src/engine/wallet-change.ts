@@ -306,9 +306,9 @@ export function cardFields(
         continue
       }
       values[id] = dollars
-      // Saying what a night is worth says it's used, unless this change
-      // also says which are.
-      if (input.enrolled === undefined) {
+      // Saying what a night is worth says it's used, even beside an enrolled
+      // list that leaves it out, unless this change says it isn't used.
+      if (!(input.skippedCredits ?? []).includes(id)) {
         const enrolled = fields.enrolled ?? held?.enrolled ?? []
         if (!enrolled.includes(id)) fields.enrolled = [...enrolled, id]
       }

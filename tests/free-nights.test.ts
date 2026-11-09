@@ -441,7 +441,7 @@ describe('setting what a free night is worth', () => {
     })
   })
 
-  test('the enrolled and skipped lists given with it win', () => {
+  test('a skipped list that names it wins', () => {
     const set = changed(
       updateInWallet(
         catalog,
@@ -458,6 +458,25 @@ describe('setting what a free night is worth', () => {
     expect(set.fields).toMatchObject({
       enrolled: [],
       skipped_credits: ['anniversary-night'],
+    })
+  })
+
+  test('given beside an enrolled list that leaves it out, the night still counts as used', () => {
+    const set = changed(
+      updateInWallet(
+        catalog,
+        held([{ id: ASPIRE }]),
+        {
+          id: ASPIRE,
+          enrolled: ['resort-credit', 'flight-credit'],
+          nightValues: { 'anniversary-night': 400 },
+        },
+        TODAY,
+      ),
+    )
+    expect(set.fields).toMatchObject({
+      enrolled: ['resort-credit', 'flight-credit', 'anniversary-night'],
+      night_values: { 'anniversary-night': 400 },
     })
   })
 

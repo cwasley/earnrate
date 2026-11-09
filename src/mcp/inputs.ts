@@ -164,7 +164,7 @@ const cardFields = {
     .record(z.string(), z.number().positive().nullable())
     .optional()
     .describe(
-      'What a yearly free night is worth to the user, in dollars, only if they say: free night id → dollars, e.g. {"anniversary-night": 300}. The night then counts at that instead of its point cap, and a night with no point cap counts only this way. Setting one marks the night used. null clears it; other nights keep theirs.',
+      'What a yearly free night is worth to the user, in dollars, only if they say: free night id → dollars, e.g. {"anniversary-night": 300}. The night then counts at that instead of its point cap, and a night with no point cap counts only this way. Setting one marks the night used, even when enrolled in the same call leaves it out (only skippedCredits naming it says otherwise). null clears it; other nights keep theirs.',
     ),
   bonus: z
     .object({
