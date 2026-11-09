@@ -75,6 +75,7 @@ const RecommendationSchema = z.object({
     })
     .nullable(),
   merchant: MerchantResolutionSchema,
+  categoryNote: z.string().nullable(),
   ranked: z.array(RankedCardSchema),
   excluded: z.array(
     z.object({
@@ -458,6 +459,8 @@ const Picks = z.record(z.string(), z.array(z.string()))
 
 export const ExplorationSchema = z.object({
   merchant: MerchantResolutionSchema,
+  // About this kind of purchase; shown before the ranking.
+  categoryNote: z.string().nullable(),
   // Cards with a statement credit at this store, shown before the ranking.
   credits: z.array(
     z.object({

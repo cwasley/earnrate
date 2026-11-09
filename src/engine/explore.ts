@@ -28,6 +28,7 @@ import { optionName } from './rule-text.ts'
 import {
   amountUnknownText,
   capSentence,
+  categoryNote,
   categoryPhrase,
   choiceName,
   codesAs,
@@ -164,6 +165,7 @@ export type CreditPick = {
 
 export type Exploration = {
   merchant: MerchantResolution
+  categoryNote: string | null
   credits: CreditPick[]
   ranked: ExploreEntry[]
   excluded: ExcludedCard[]
@@ -485,6 +487,7 @@ export function exploreCards(
 
   return {
     merchant,
+    categoryNote: categoryNote(catalog, merchant.category),
     credits: creditPicks(catalog, merchant, ranked, query.date),
     ranked,
     excluded,

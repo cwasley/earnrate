@@ -244,6 +244,8 @@ function tieText(tied: ExploreEntry[], where: string): string {
 }
 
 function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
+  if (r.categoryNote !== null)
+    return `<p class="answer">${esc(r.categoryNote)}</p>`
   const [top] = shown
   if (!top) return `<p>No card in earnrate's data earns a bonus here.</p>`
   const tied = tiedAtTop(r)
@@ -426,7 +428,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   ])
   const where = page.merchant === null ? 'on' : 'at'
   const tied = tiedAtTop(r)
-  const description = fitDescription(
+  const ranking = fitDescription(
     top && tied.length > 1
       ? [
           `${shortName(top.cardId)} and ${String(tied.length - 1)} other ${tied.length === 2 ? 'card' : 'cards'} earn ${pct(top.effectiveReturnPct)} ${where} ${subject}, the most of any card. Compare ${String(r.ranked.length)} cards by rate, annual fee and conditions, quoted from issuer terms. No affiliate links.`,
@@ -444,6 +446,14 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
             `Which credit card earns the most ${where} ${subject}.`,
           ],
   )
+  const description =
+    r.categoryNote === null
+      ? ranking
+      : fitDescription([
+          r.categoryNote,
+          r.categoryNote.split(/(?<=\.)\s+/)[0] ?? '',
+          `What to know before paying for ${subject} by credit card.`,
+        ])
   const canonical = `${SITE}/best/${page.slug}`
   const definitions = categoryPageFor(page.categoryId)
   const appLink = `/#wallet=${encodeURIComponent(page.merchant?.name ?? catalog.categories.find((c) => c.id === page.categoryId)?.name ?? page.label).replace(/%20/g, '+')}`
@@ -493,7 +503,9 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       })),
     },
   }
-  if (top)
+  // The image names the top card, which a note says not to lead with.
+  const image = top !== undefined && r.categoryNote === null
+  if (image)
     images.push({
       file: `og/best/${page.slug}.jpg`,
       color: cardColor(catalog, top.cardId),
@@ -514,7 +526,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
         path: `/best/${page.slug}`,
       },
     ],
-    ...(top ? { image: `/og/best/${page.slug}.jpg` } : {}),
+    ...(image ? { image: `/og/best/${page.slug}.jpg` } : {}),
     noindex: !isIndexed(page),
   })
 }
@@ -696,7 +708,7 @@ function placements(
   const found: { page: Page; rank: number; pct: number }[] = []
   for (const page of all) {
     const r = byPage.get(page.slug)
-    if (!r) continue
+    if (!r || r.categoryNote !== null) continue
     const list = ranked(r)
     const i = list.findIndex((e) => e.cardId === card.id)
     const entry = list[i]
@@ -858,7 +870,10 @@ function topAtBase(
 ): Page[] {
   return all.filter((page) => {
     const r = byPage.get(page.slug)
-    const entry = r && tiedAtTop(r).find((e) => e.cardId === card.id)
+    const entry =
+      r?.categoryNote === null
+        ? tiedAtTop(r).find((e) => e.cardId === card.id)
+        : undefined
     return (
       entry !== undefined &&
       entry.effectiveReturnPct <= card.base_rate * entry.centsPerUnit + EPSILON

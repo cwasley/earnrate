@@ -32,6 +32,7 @@ import { EPSILON, isClose } from './compare.ts'
 import {
   amountUnknownText,
   CAP_ADJECTIVES,
+  categoryNote,
   categoryPhrase,
   codesAs,
   creditAnswerText,
@@ -986,7 +987,8 @@ export function recommend(
     )
   }
 
-  let confidence: Confidence = merchant.confidence
+  const note = categoryNote(catalog, merchant.category)
+  let confidence: Confidence = note === null ? merchant.confidence : 'low'
   if (confidence === 'high' && chosen && top) {
     const unverified = chosen.evaluation.best.rule?.unverified !== undefined
     const stale =
@@ -1005,6 +1007,7 @@ export function recommend(
           }
         : null,
     merchant,
+    categoryNote: note,
     ranked,
     excluded,
     assumptions: assumptionsFor(catalog, merchant, purchase, entries),

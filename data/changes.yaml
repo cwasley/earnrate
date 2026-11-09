@@ -3,6 +3,18 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.08.3'
+  date: 2026-11-08
+  changes:
+    - cause: addition
+      categories: [housing]
+      summary: 'A rent and mortgage category, found by "rent", "mortgage" and "housing". Its note leads every answer: paying a landlord or lender by card usually isn''t possible directly or costs a payment service''s fee, and the Bilt cards earn up to 1.25X on rent and mortgages paid through Bilt, by the cycle''s other spending.'
+      source: https://www.bilt.com/card
+    - cause: wording
+      cards: [bilt-blue, bilt-obsidian, bilt-palladium]
+      field: todo
+      summary: The rent and mortgage note now says the new category's note states the housing tiers, and the card ranks there at its usual rate.
+
 - version: '2026.11.08.2'
   date: 2026-11-08
   changes:

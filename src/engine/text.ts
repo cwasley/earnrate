@@ -116,6 +116,13 @@ export function categoryReadsOn(catalog: Catalog, id: string): boolean {
   return dot !== -1 && categoryReadsOn(catalog, id.slice(0, dot))
 }
 
+export function categoryNote(catalog: Catalog, id: string): string | null {
+  const note = catalog.categories.find((c) => c.id === id)?.note
+  if (note !== undefined) return note
+  const dot = id.lastIndexOf('.')
+  return dot === -1 ? null : categoryNote(catalog, id.slice(0, dot))
+}
+
 export function earnText(
   catalog: Catalog,
   rate: number,

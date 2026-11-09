@@ -89,6 +89,8 @@ export type Recommendation = {
     confidence: Confidence
   } | null
   merchant: MerchantResolution
+  // Every surface shows it before the ranking.
+  categoryNote: string | null
   ranked: RankedCard[]
   excluded: ExcludedCard[]
   assumptions: string[]

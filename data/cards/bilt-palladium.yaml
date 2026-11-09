@@ -36,7 +36,7 @@ rules:
     note: 2X card earn plus 2X Bilt bonus on eligible rides after linking Bilt and Lyft accounts in the Bilt app. Uncapped.
 # Not modeled on purpose: $200 annual Bilt Cash and Priority Pass.
 todo:
-  - Rent and mortgage paid through Bilt earn 0.5X-1.25X depending on the cycle's everyday spend as a share of the housing payment (25%/50%/75%/100% give 0.5X/0.75X/1X/1.25X; below 25% a flat 250 points). earnrate has no housing category or spend-ratio rule.
+  - Rent and mortgage paid through Bilt earn 0.5X-1.25X depending on the cycle's everyday spend as a share of the housing payment (25%/50%/75%/100% give 0.5X/0.75X/1X/1.25X; below 25% a flat 250 points). earnrate has no spend-ratio rule, so the rent and mortgage category's note states it and the card ranks there at its usual rate.
   - Bilt Neighborhood Dining restaurants add a per-restaurant bonus (usually +2-3X, up to 5X total). It varies by restaurant, so it isn't modeled.
   - Point Accelerator (spend $200 Bilt Cash for +1X on the next $5,000, up to five times a year) isn't modeled.
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

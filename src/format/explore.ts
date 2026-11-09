@@ -54,10 +54,13 @@ export function formatExploration(
       : m.source === 'none'
         ? `"${m.input}" (not recognized)`
         : m.resolvedName
-  if (r.ranked.length === 0) return `No cards match at ${title}.\n`
+  const lead = r.categoryNote === null ? [] : [r.categoryNote, '']
+  if (r.ranked.length === 0)
+    return `${[...lead, `No cards match at ${title}.`].join('\n')}\n`
   const shown = all ? r.ranked : r.ranked.slice(0, TOP_BEST)
   const width = Math.max(...shown.map((e) => e.cardName.length))
   const lines = [
+    ...lead,
     ...(r.credits.length === 0
       ? []
       : [

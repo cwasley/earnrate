@@ -164,6 +164,7 @@ function Answer({ wallet, rec }: { wallet: Wallet; rec: Recommendation }) {
   const held = wallet.cards.find((c) => c.id === decided?.cardId)
   return (
     <div class="answer">
+      {rec.categoryNote ? <p class="callout">{rec.categoryNote}</p> : null}
       {decided && held ? (
         <p class="verdict">
           Use <strong>{shortName(held.id)}</strong>

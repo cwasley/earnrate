@@ -415,6 +415,9 @@ export function BestFor({
                 </span>
               ) : null}
             </h3>
+            {result.categoryNote ? (
+              <p class="callout">{result.categoryNote}</p>
+            ) : null}
             {result.warnings.map((w) => (
               <p class="callout" key={w}>
                 {w}

@@ -25,6 +25,7 @@ import { applyBooking, capBooking } from './record.ts'
 import { liveMilestones, milestoneStarts, milestoneWhat } from './milestones.ts'
 import { rotationGap } from './rotation.ts'
 import {
+  categoryNote,
   creditsCountedText,
   money,
   paymentNote,
@@ -308,7 +309,12 @@ export function simulateWallet(
     paid,
   )
   const membershipFees = memberships.reduce((sum, m) => sum + m.annualFee, 0)
-  const notes: string[] = [...milestoneNotes]
+  const notes: string[] = [
+    ...new Set(
+      lines.flatMap((l) => categoryNote(catalog, l.merchant.category) ?? []),
+    ),
+    ...milestoneNotes,
+  ]
   for (const m of memberships) notes.push(membershipNote(catalog, m))
   for (const c of credits.filter((c) => c.held)) {
     const card = cards.find((x) => x.card.id === c.cardId)?.card

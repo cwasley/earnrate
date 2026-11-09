@@ -9,7 +9,10 @@ export const CategorySchema = z.strictObject({
   mccs: z.array(Mcc).default([]),
   // Everyday words people search by ("groceries"), besides the name.
   aliases: z.array(z.string().min(1)).default([]),
-  note: z.string().optional(),
+  // What a ranking here can't express, like whether the purchase can go on a
+  // card at all. Answers lead with it and their pick is low confidence.
+  // Subcategories without one inherit it.
+  note: z.string().min(1).optional(),
   // Bought as a service, a category reads "on" (3x on flights); places read
   // "at". Subcategories inherit it.
   preposition: z.literal('on').optional(),

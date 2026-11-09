@@ -84,6 +84,7 @@ export function formatRecommendation(
   }: { all?: boolean; style?: Style; notices?: string[] } = {},
 ): string {
   const lines = [header(rec, purchase), '']
+  if (rec.categoryNote !== null) lines.push(rec.categoryNote, '')
   const top =
     rec.ranked.find((r) => r.cardId === rec.decision?.cardId) ?? rec.ranked[0]
   const noCard = noCardText(rec.merchant.resolvedName)
