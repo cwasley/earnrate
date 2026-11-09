@@ -46,6 +46,9 @@ export function formatCardInfo(
     ...card.freeNights.map((n) => `free night ${n.id}: ${n.text}`),
     ...(card.onlyAt ? [`works only at ${card.onlyAt.join(', ')}`] : []),
     foreignFeeText(card.foreignTransactionFee).toLowerCase(),
+    ...(details?.welcomeOffer
+      ? [`welcome offer (published): ${details.welcomeOffer}`]
+      : []),
     ...(details?.feeWorth
       ? [`is the fee worth it? ${details.feeWorth.text}`]
       : []),

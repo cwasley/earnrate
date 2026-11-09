@@ -92,3 +92,9 @@ test('picks the issuer applies itself read as expected, by month name', () => {
     /Expected for November 2026, through Nov 30, 2026: top category: restaurants\. The issuer applies the bonus where the most is spent; set the expected category again after that\./,
   )
 })
+
+test('search shows the published welcome offer with its fine print', () => {
+  expect(search('td-bank-nordstrom-visa')).toMatch(
+    /welcome offer \(published\): \$60 with no spending required; the offer ends Dec 1, 2026\. A \$60 Nordstrom Note, not a statement credit/,
+  )
+})

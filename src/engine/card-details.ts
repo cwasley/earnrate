@@ -1,3 +1,4 @@
+import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { WalletCardSchema, type Wallet } from '../schema/wallet.ts'
 import {
@@ -13,8 +14,9 @@ import {
   HOLDER_NEWS_DAYS,
   holderNews,
 } from './changes.ts'
-import { addDays } from './periods.ts'
-import { shortDate } from './text.ts'
+import { offerTerms } from './offers.ts'
+import { addDays, inEffect } from './periods.ts'
+import { currencyName, shortDate } from './text.ts'
 import { headlineRates } from './wallet-summary.ts'
 
 // A search weighs each card's fee only when it finds this many cards or
@@ -29,6 +31,14 @@ export type CardDetails = {
   // The issuer's changes and earnrate's corrections in the last
   // HOLDER_NEWS_DAYS, newest first, as the to-do list points to them.
   changes: string[]
+  // The published welcome offer, with its end date and fine print.
+  welcomeOffer: string | null
+}
+
+function welcomeOfferText(catalog: Catalog, card: Card, today: string) {
+  const o = card.welcome_offer
+  if (!o || !inEffect(o, today)) return null
+  return `${offerTerms(o, currencyName(catalog, card.currency))}${o.valid_to === undefined ? '' : `; the offer ends ${shortDate(o.valid_to)}`}.${o.note === undefined ? '' : ` ${o.note}`}`
 }
 
 function recentChanges(catalog: Catalog, id: string, today: string) {
@@ -98,6 +108,7 @@ export function cardDetails(
           ? null
           : feeWorthAnswer(catalog, worth, valuations, transfer),
       changes: recentChanges(catalog, id, today),
+      welcomeOffer: welcomeOfferText(catalog, card, today),
     }
   })
 }

@@ -290,6 +290,26 @@ export function searchCards(
   wallet: Wallet | null,
   today: string,
 ): CardSearch {
+  // An exact id or name is that card alone, even when its words also
+  // match its sibling cards ("IHG One Rewards" is in all four IHG names).
+  const named = (text: string) =>
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+  const asked = named(query)
+  const one = catalog.cards.filter(
+    (c) =>
+      named(c.id) === asked ||
+      named(c.name) === asked ||
+      named(c.name).replace(/ (credit )?card$/, '') === asked ||
+      (c.short_name !== undefined && named(c.short_name) === asked),
+  )
+  if (one.length === 1)
+    return {
+      cards: one.map((c) => cardInfo(catalog, c, wallet, today)),
+      exact: true,
+    }
   const tokens = searchWords(query)
   const scored = catalog.cards.map((card) => {
     const matches = matcher(catalog, card)

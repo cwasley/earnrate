@@ -169,20 +169,33 @@ describe('searchCards', () => {
   const ids = (query: string) =>
     searchCards(catalog, query, null, TODAY).cards.map((c) => c.id)
 
+  test('an exact id or name is that card alone', () => {
+    for (const q of [
+      'IHG One Rewards',
+      'IHG One Rewards Credit Card',
+      'chase-ihg-one-rewards',
+    ])
+      expect(ids(q)).toEqual(['chase-ihg-one-rewards'])
+    expect(ids('ihg')).toHaveLength(4)
+  })
+
   test('matches names, ids and issuer nicknames', () => {
     expect(ids('sapphire')).toEqual([
       'chase-sapphire-preferred',
       'chase-sapphire-reserve',
     ])
-    expect(ids('amex gold')).toEqual([
-      'amex-gold',
-      'amex-business-gold',
-      'amex-delta-skymiles-gold',
-    ])
+    expect(ids('amex gold')).toEqual(['amex-gold'])
+    expect(ids('gold')).toEqual(
+      expect.arrayContaining([
+        'amex-business-gold',
+        'amex-delta-skymiles-gold',
+      ]),
+    )
     expect(ids('bofa customized')).toEqual([
       'bank-of-america-customized-cash-rewards',
     ])
-    expect(ids('capital one venture')).toEqual([
+    expect(ids('capital one venture')).toEqual(['capital-one-venture'])
+    expect(ids('venture')).toEqual([
       'capital-one-venture',
       'capital-one-venture-x',
       'capital-one-venture-x-business',
