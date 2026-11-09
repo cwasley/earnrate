@@ -37,11 +37,15 @@ const options = (memberships: string[]) => ({
 const single = (sim: ReturnType<typeof simulateCatalog>) =>
   sim.singles.find((s) => s.cards[0]?.cardId === COSTCO)
 
-test('a non-member pays for the Costco membership in the spending math', () => {
-  const sim = single(simulateCatalog(catalog, lines, options([])))
-  expect(sim?.membershipFees).toBe(65)
-  expect(sim?.net).toBeCloseTo((sim?.rewards ?? 0) - 65)
-  expect(sim?.notes.join(' ')).toMatch(/needs a Costco membership, \$65/)
+test("a non-member's spending ranks the Costco card apart, as for a member", () => {
+  const sim = simulateCatalog(catalog, lines, options([]))
+  expect(single(sim)).toBeUndefined()
+  expect(sim.pairs.some((p) => p.cards.some((c) => c.cardId === COSTCO))).toBe(
+    false,
+  )
+  const member = sim.membersOnly.find((s) => s.cards[0]?.cardId === COSTCO)
+  expect(member?.membership).toBe('costco')
+  expect(member?.membershipFees).toBe(0)
 })
 
 test('members, and anyone who shops at Costco, pay nothing more', () => {
@@ -68,15 +72,17 @@ test('two cards that need one membership pay for it once', () => {
   ])
 })
 
-test('adding the card counts the membership unless the wallet pays it', () => {
+test('adding the card ranks it apart unless the wallet has the membership', () => {
   const gold = WalletSchema.parse({ cards: [{ id: 'amex-gold' }] })
+  const what = (wallet: typeof gold, l = lines) =>
+    simulateAdditions(catalog, wallet, l, options([]))
+  const plain = what(gold)
+  expect(plain.additions.some((a) => a.cardId === COSTCO)).toBe(false)
+  const member = plain.membersOnly.find((a) => a.cardId === COSTCO)
+  expect(member?.membership).toBe('costco')
+  expect(member?.membershipFee).toBe(0)
   const add = (wallet: typeof gold, l = lines) =>
-    simulateAdditions(catalog, wallet, l, options([])).additions.find(
-      (a) => a.cardId === COSTCO,
-    )
-  const plain = add(gold)
-  expect(plain?.membershipFee).toBe(65)
-  expect(plain?.gain).toBeCloseTo((plain?.extraRewards ?? 0) - 65)
+    what(wallet, l).additions.find((a) => a.cardId === COSTCO)
   expect(add(gold, withCostco)?.membershipFee).toBe(0)
   expect(
     add(
@@ -94,15 +100,24 @@ test('adding the card counts the membership unless the wallet pays it', () => {
 })
 
 test('every-card answers say so, except at Costco itself', () => {
-  const at = (merchant: string | null, category: string | null, m: string[]) =>
+  const explored = (
+    merchant: string | null,
+    category: string | null,
+    m: string[],
+  ) =>
     exploreCards(
       catalog,
       { merchant, category, amount: null, channel: null, date: START },
       { filters: ALL_PERSONAL_CARDS, memberships: m, valuations: {} },
-    ).ranked.find((e) => e.cardId === COSTCO)?.conditions ?? []
-  expect(at(null, 'gas', [])).toContain(
-    'Needs a Costco membership ($65 a year).',
-  )
+    )
+  const at = (merchant: string | null, category: string | null, m: string[]) =>
+    explored(merchant, category, m).ranked.find((e) => e.cardId === COSTCO)
+      ?.conditions ?? []
+  expect(at(null, 'gas', [])).toEqual([])
+  expect(
+    explored(null, 'gas', []).membersOnly.find((e) => e.cardId === COSTCO)
+      ?.conditions,
+  ).toContain('Needs a Costco membership ($65 a year).')
   expect(at(null, 'gas', ['costco']).join(' ')).not.toMatch(/membership/)
   expect(at('Costco', null, []).join(' ')).not.toMatch(/membership/)
   const sheet = catalogCheatSheet(catalog, START, {

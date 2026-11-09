@@ -123,3 +123,56 @@ export function membershipNote(catalog: Catalog, m: MembershipCost): string {
       : `, ${money(m.annualFee)} a year, counted here like an annual fee`
   return `${needs}${cost}. If you have one, add it to your memberships.`
 }
+
+// The membership a card can't be had without, unless the person has it.
+// When every card is ranked, such a card ranks apart, named after the
+// ranking: most people can't get it.
+export function missingMembership(
+  card: Pick<Card, 'requires_membership'>,
+  has: Set<string>,
+): string | null {
+  const id = card.requires_membership
+  return id !== undefined && !has.has(id) ? id : null
+}
+
+// The members-only results that would have placed among the first `n` of
+// `ranked`; `better` is negative when its first argument ranks higher.
+export function placedAmong<T, U>(
+  membersOnly: T[],
+  ranked: U[],
+  n: number,
+  better: (a: T, b: U) => number,
+): T[] {
+  const last = ranked[n - 1]
+  return membersOnly.filter((m) => last === undefined || better(m, last) < 0)
+}
+
+export const NO_MEMBERSHIPS =
+  'Assumes no memberships (like Amazon Prime). Cards and rates that need one are listed separately.'
+
+// "If you have a Verizon wireless or Fios account: Verizon Visa Card, 4%."
+// One line per membership, in the order first named.
+export function ifMemberLines(
+  catalog: Catalog,
+  items: { membership: string; text: string }[],
+): string[] {
+  const grouped = new Map<string, string[]>()
+  for (const { membership: id, text } of items) {
+    const texts = grouped.get(id) ?? []
+    if (!texts.includes(text)) texts.push(text)
+    grouped.set(id, texts)
+  }
+  return [...grouped].map(
+    ([id, texts]) =>
+      `If you have ${withArticle(membershipName(catalog, id))}: ${texts.join('; ')}.`,
+  )
+}
+
+// The site's checkbox for a membership: its own question, or, for one a
+// card needs, "I have a Verizon wireless or Fios account".
+export function askText(catalog: Catalog, m: Membership): string | null {
+  if (m.ask !== undefined) return m.ask
+  return catalog.cards.some((c) => c.requires_membership === m.id)
+    ? `I have ${withArticle(m.name)}`
+    : null
+}

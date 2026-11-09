@@ -85,7 +85,7 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
   if (found === null) return RUNTIME_ERROR
   const loaded =
     found === 'none'
-      ? await savedSettings(io).then((saved) => ({
+      ? await savedSettings(io, catalog).then((saved) => ({
           valuations: saved.valuations,
           memberships: values.member ?? saved.memberships,
           ...(saved.skipped_issuers
@@ -129,6 +129,7 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
       comparison,
       (id) => currencyName(catalog, id),
       values.all ?? false,
+      catalog,
     ),
   )
   return 0

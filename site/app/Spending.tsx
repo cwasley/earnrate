@@ -6,6 +6,12 @@ import { CardArt } from './CardArt.tsx'
 import { track } from './track.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import {
+  ifMemberLines,
+  membershipName,
+  placedAmong,
+} from '../../src/engine/memberships.ts'
+import {
+  byNet,
   resolveSpendLines,
   simulateCatalog,
   spendLineFor,
@@ -18,6 +24,7 @@ import {
   ifCreditsUsedText,
   listed,
   pairCreditsUsedText,
+  withArticle,
 } from '../../src/engine/text.ts'
 import { feeLabel, shortName, wholeDollars, words } from './format.ts'
 import {
@@ -124,6 +131,15 @@ export function Spending({
           start: localToday(),
         })
   }, [lines, settings, saved])
+  const members = result
+    ? ifMemberLines(
+        catalog,
+        placedAmong(result.membersOnly, result.singles, 5, byNet).map((s) => ({
+          membership: s.membership,
+          text: `${shortName(s.cards[0]?.cardId ?? '')}, ${wholeDollars(s.net)} a year`,
+        })),
+      )
+    : []
   const total = rows.reduce((sum, r) => sum + r.monthly, 0)
   const single = result?.singles[0]
   const pair = result?.pairs[0]
@@ -268,6 +284,11 @@ export function Spending({
             <ol class="result-list">
               {result.singles.slice(0, 5).map((s, i) => singleRow(s, i + 1))}
             </ol>
+            {members.map((m) => (
+              <p class="muted" key={m}>
+                {m}
+              </p>
+            ))}
             {focus
               .filter(
                 (id) =>
@@ -280,6 +301,28 @@ export function Spending({
                   (s) => s.cards[0]?.cardId === id,
                 )
                 const s = result.singles[rank]
+                const member = result.membersOnly.find(
+                  (m) => m.cards[0]?.cardId === id,
+                )
+                if (!s && member)
+                  return (
+                    <Fragment key={id}>
+                      <p class="muted">
+                        Where the {shortName(id)} ranks on this spending, with{' '}
+                        {withArticle(
+                          membershipName(catalog, member.membership),
+                        )}
+                        , which it needs:
+                      </p>
+                      <ol class="result-list">
+                        {singleRow(
+                          member,
+                          result.singles.filter((x) => byNet(x, member) < 0)
+                            .length + 1,
+                        )}
+                      </ol>
+                    </Fragment>
+                  )
                 return s ? (
                   <Fragment key={id}>
                     <p class="muted">

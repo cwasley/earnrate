@@ -1,5 +1,7 @@
+import { catalog } from 'virtual:catalog'
 import type { CardFilters } from '../../src/engine/explore.ts'
 import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
+import { effectiveMemberships } from '../../src/engine/memberships.ts'
 import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 
@@ -20,8 +22,9 @@ export const DEFAULT_SETTINGS: Settings = {
 }
 
 // The memberships and point values saved in the wallet, which every tab
-// shares.
-export type Saved = Pick<Wallet, 'memberships' | 'valuations'>
+// shares, and its cards, whose own memberships their holder has.
+export type Saved = Pick<Wallet, 'memberships' | 'valuations'> &
+  Partial<Pick<Wallet, 'cards'>>
 
 export function engineOptions(
   s: Settings,
@@ -39,7 +42,11 @@ export function engineOptions(
       business: s.business,
       issuer: s.issuer,
     },
-    memberships: saved.memberships,
+    memberships: effectiveMemberships(
+      catalog,
+      saved.memberships,
+      (saved.cards ?? []).map((c) => c.id),
+    ),
     valuations: s.pointsHeavy
       ? VALUATION_PROFILES['points-heavy']
       : saved.valuations,

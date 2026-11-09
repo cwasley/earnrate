@@ -17,6 +17,7 @@ import {
 import {
   membershipCosts,
   membershipNote,
+  missingMembership,
   paidMemberships,
   type MembershipCost,
 } from './memberships.ts'
@@ -464,7 +465,7 @@ function bestSimulation(
 
 const costs = (s: Simulation) => s.annualFees + s.membershipFees
 
-const byNet = (a: Simulation, b: Simulation) =>
+export const byNet = (a: Simulation, b: Simulation) =>
   b.net - a.net || costs(a) - costs(b)
 
 // Each card on its own with its best picks, best net first.
@@ -487,6 +488,26 @@ export type PairSimulation = Simulation & {
 export type CatalogSimulation = {
   singles: Simulation[] // one card each, best net first
   pairs: PairSimulation[] // the best two-card wallets, best net first
+  // Cards that need a membership the person hasn't given, each alone and
+  // simulated for a member: out of singles and pairs.
+  membersOnly: MembersOnly<Simulation>[]
+}
+
+export type MembersOnly<T> = T & { membership: string }
+
+// What the person has: memberships given, the ones their cards need, and the
+// ones their spending shows.
+function membersOf(
+  catalog: Catalog,
+  memberships: string[],
+  held: string[],
+  lines: ResolvedLine[],
+): Set<string> {
+  return paidMemberships(catalog, {
+    memberships,
+    heldCards: held,
+    merchantIds: lines.map((l) => l.merchant.merchantId),
+  })
 }
 
 // Pairs that tie and share their first card differ only in an
@@ -517,9 +538,22 @@ export function simulateCatalog(
   lines: ResolvedLine[],
   options: SimulateOptions,
 ): CatalogSimulation {
-  const eligible = catalog.cards.filter((c) =>
+  const has = membersOf(catalog, options.memberships, options.held ?? [], lines)
+  const matching = catalog.cards.filter((c) =>
     matchesFilters(c, options.filters),
   )
+  const eligible = matching.filter((c) => missingMembership(c, has) === null)
+  const membersOnly = matching
+    .flatMap((card) => {
+      const membership = missingMembership(card, has)
+      if (membership === null) return []
+      const sim = bestSimulation(catalog, [], card, lines, {
+        ...options,
+        memberships: [...options.memberships, membership],
+      })
+      return [{ ...sim, membership }]
+    })
+    .sort(byNet)
   const singles = eligible
     .map((card) => bestSimulation(catalog, [], card, lines, options))
     .sort(byNet)
@@ -552,7 +586,7 @@ export function simulateCatalog(
     }
   })
   pairs.sort(byNet)
-  return { singles, pairs: foldTies(pairs).slice(0, 10) }
+  return { singles, pairs: foldTies(pairs).slice(0, 10), membersOnly }
 }
 
 export type Addition = {
@@ -570,7 +604,14 @@ export type Addition = {
 export type WalletWhatIf = {
   current: Simulation
   additions: Addition[] // best gain first
+  // Cards that need a membership the wallet doesn't have, each simulated
+  // for a member: out of additions.
+  membersOnly: MembersOnly<Addition>[]
 }
+
+export const gainOrder = (a: Addition, b: Addition) =>
+  b.gain - a.gain ||
+  a.annualFee + a.membershipFee - (b.annualFee + b.membershipFee)
 
 // The person's own wallet, set up as it would run all year: their picks carry
 // over, rotating categories get activated, caps start fresh. A card earnrate
@@ -623,7 +664,9 @@ export function simulateAdditions(
     heldIds,
   )
   const held = new Set(heldIds)
+  const has = membersOf(catalog, wallet.memberships, heldIds, lines)
   const additions: Addition[] = []
+  const membersOnly: MembersOnly<Addition>[] = []
   for (const card of catalog.cards) {
     if (
       held.has(card.id) ||
@@ -631,9 +674,13 @@ export function simulateAdditions(
       (wallet.skipped_issuers ?? []).includes(card.issuer)
     )
       continue
+    const membership = missingMembership(card, has)
     const simulation = bestSimulation(catalog, projected.cards, card, lines, {
       ...options,
-      memberships: wallet.memberships,
+      memberships:
+        membership === null
+          ? wallet.memberships
+          : [...wallet.memberships, membership],
       valuations: wallet.valuations,
       held: heldIds,
     })
@@ -649,7 +696,7 @@ export function simulateAdditions(
       options.start,
       wallet.valuations,
     ).yearly
-    additions.push({
+    const addition: Addition = {
       cardId: card.id,
       picks: simulation.cards.at(-1)?.picks ?? {},
       extraRewards,
@@ -659,14 +706,13 @@ export function simulateAdditions(
       credits,
       gainIfCreditsUsed: roundCents(gain + credits),
       simulation,
-    })
+    }
+    if (membership === null) additions.push(addition)
+    else membersOnly.push({ ...addition, membership })
   }
-  additions.sort(
-    (a, b) =>
-      b.gain - a.gain ||
-      a.annualFee + a.membershipFee - (b.annualFee + b.membershipFee),
-  )
-  return { current, additions }
+  additions.sort(gainOrder)
+  membersOnly.sort(gainOrder)
+  return { current, additions, membersOnly }
 }
 
 // Rough monthly amounts for a U.S. household: the starting point when someone

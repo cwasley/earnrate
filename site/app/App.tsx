@@ -34,6 +34,7 @@ import {
   type Choice,
   type SyncView,
 } from './Sync.tsx'
+import { askText } from '../../src/engine/memberships.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
 import { listed } from '../../src/engine/text.ts'
@@ -78,8 +79,12 @@ function writeHash(tab: Tab, query: string) {
 }
 
 // Memberships the site asks about, from data/memberships.yaml: one checkbox
-// each, and one menu per group of tiers (BofA Preferred Rewards).
-const ASKED = catalog.memberships.filter((m) => m.ask !== undefined)
+// each (its `ask`, or for one a card needs, "I have a ..."), and one menu per
+// group of tiers (BofA Preferred Rewards).
+const ASKED = catalog.memberships.flatMap((m) => {
+  const ask = askText(catalog, m)
+  return ask === null ? [] : [{ id: m.id, ask }]
+})
 const TIER_GROUPS = [
   ...new Set(catalog.memberships.flatMap((m) => m.group ?? [])),
 ].map((group) => {

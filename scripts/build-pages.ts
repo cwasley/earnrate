@@ -7,6 +7,9 @@ import { DATA_DIR, loadCatalog, loadChanges } from '../src/data/load.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,
+  membersOnlyLines,
+  rankedForMember,
+  topOf,
   type Exploration,
   type ExploreEntry,
   type ExploreQuery,
@@ -45,6 +48,7 @@ import {
   freeNightText,
   freeNightValueText,
   possessive,
+  withArticle,
 } from '../src/engine/text.ts'
 import { allCreditsYear, nightValue } from '../src/engine/credits.ts'
 import { cardColor } from '../src/format/card-art.ts'
@@ -207,8 +211,18 @@ const options = {
 }
 
 // The cards that earn as much as the first, in ranking order.
-const tiedAtTop = (r: Exploration) => {
-  const list = r.ranked.filter((e) => !isUnverified(e))
+const tiedAtTop = (r: Exploration) =>
+  tiedIn(r.ranked.filter((e) => !isUnverified(e)))
+
+// The ranking a card's own page places it in: for a card that needs a
+// membership, the one a member sees.
+const rankingFor = (r: Exploration, card: Card) =>
+  (card.requires_membership === undefined
+    ? r.ranked
+    : rankedForMember(r, card.requires_membership)
+  ).filter((e) => !isUnverified(e))
+
+const tiedIn = (list: ExploreEntry[]) => {
   const [top] = list
   return top
     ? list.filter(
@@ -415,6 +429,24 @@ function creditGroup(r: Exploration): string {
 const ranked = (r: Exploration) =>
   r.ranked.filter((e) => !isUnverified(e)).slice(0, TOP)
 
+// "If you have a Verizon wireless or Fios account: Verizon Visa, 4%." for
+// the cards that need one and would have placed in the table.
+function membersOnly(r: Exploration): string {
+  const lines = membersOnlyLines(
+    catalog,
+    topOf(
+      {
+        ...r,
+        ranked: r.ranked.filter((e) => !isUnverified(e)),
+        membersOnly: r.membersOnly.filter((e) => !isUnverified(e)),
+      },
+      TOP,
+    ).membersOnly,
+    (e) => shortName(e.cardId),
+  )
+  return lines.map((l) => `<p>${esc(l)}</p>`).join('')
+}
+
 function renderPage(page: Page, all: Page[], r: Exploration): string {
   const hidden = r.ranked.filter(isUnverified)
   const shown = ranked(r)
@@ -477,6 +509,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       ${creditGroup(r)}
       <h2>Top ${String(shown.length)} cards${r.credits.length > 0 ? ' by rate' : ''} ${page.merchant === null ? 'for' : 'at'} ${esc(subject)}</h2>
       ${table(shown)}
+      ${membersOnly(r)}
       ${hidden.length > 0 ? `<p class="muted">Not ranked: ${hidden.map((e) => esc(shortName(e.cardId))).join(', ')}, whose rate here isn't confirmed against the issuer's terms yet.</p>` : ''}
       ${gotchas(r, page.merchant)}
       ${page.merchant ? howItCodes(ctx, page.merchant, categoryPageFor) : ''}
@@ -709,7 +742,7 @@ function placements(
   for (const page of all) {
     const r = byPage.get(page.slug)
     if (!r || r.categoryNote !== null) continue
-    const list = ranked(r)
+    const list = rankingFor(r, card).slice(0, TOP)
     const i = list.findIndex((e) => e.cardId === card.id)
     const entry = list[i]
     if (
@@ -872,7 +905,7 @@ function topAtBase(
     const r = byPage.get(page.slug)
     const entry =
       r?.categoryNote === null
-        ? tiedAtTop(r).find((e) => e.cardId === card.id)
+        ? tiedIn(rankingFor(r, card)).find((e) => e.cardId === card.id)
         : undefined
     return (
       entry !== undefined &&
@@ -904,6 +937,10 @@ function rankSection(
   const firsts = where.filter((w) => w.rank === 1)
   const others = where.filter((w) => w.rank > 1)
   const parts: string[] = []
+  if (card.requires_membership !== undefined)
+    parts.push(
+      `<p>Ranked for someone with ${esc(withArticle(membershipName(card.requires_membership)))}, which it needs. Without one, earnrate's rankings name it after the cards anyone can get.</p>`,
+    )
   if (firsts.length > 0)
     parts.push(
       `<h2>Where it's the best ${kind}</h2>${placementGroups(firsts, all)}`,

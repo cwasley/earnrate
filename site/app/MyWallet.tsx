@@ -22,12 +22,14 @@ import {
   type SetupNote,
 } from '../../src/engine/setup.ts'
 import {
+  gainOrder,
   resolveSpendLines,
   typicalSpendLines,
   simulateAdditions,
   TYPICAL_MONTHLY_SPEND,
   type Addition,
 } from '../../src/engine/simulate.ts'
+import { ifMemberLines, placedAmong } from '../../src/engine/memberships.ts'
 import {
   categoryPhrase,
   creditsCountedText,
@@ -41,6 +43,7 @@ import {
   minimumSpendText,
   offerPerksText,
   onlyIfText,
+  withArticle,
 } from '../../src/engine/text.ts'
 import { cardValuation, currencyValuation } from '../../src/engine/valuation.ts'
 import type { Recommendation } from '../../src/engine/types.ts'
@@ -90,6 +93,7 @@ import {
 } from '../../src/engine/checklist.ts'
 import {
   compareOffers,
+  offerOrder,
   OFFERS_MAY_DIFFER,
   offerTerms,
   type OfferPlan,
@@ -1338,10 +1342,40 @@ function WhatIf({
     [wallet, spent, view],
   )
   if (!result) return null
-  const gains = result.additions.filter((a) => a.gain > 0).slice(0, 3)
+  const positive = result.additions.filter((a) => a.gain > 0)
+  const gains = positive.slice(0, 3)
+  const members = ifMemberLines(
+    catalog,
+    placedAmong(
+      result.membersOnly.filter((a) => a.gain > 0),
+      positive,
+      3,
+      gainOrder,
+    ).map((a) => ({
+      membership: a.membership,
+      text: `${shortName(a.cardId)}, +${wholeDollars(a.gain)} a year`,
+    })),
+  )
   const focused = focus
     .filter((id) => !gains.some((a) => a.cardId === id))
-    .flatMap((id) => result.additions.filter((a) => a.cardId === id))
+    .flatMap((id) =>
+      [...result.additions, ...result.membersOnly].filter(
+        (a) => a.cardId === id,
+      ),
+    )
+  // A card that needs a membership the wallet doesn't have, placed as for a
+  // member.
+  const rankOf = (f: Addition) =>
+    result.additions.filter((a) => gainOrder(a, f) < 0).length + 1
+  const needs = (cardId: string) => {
+    const id = cards.get(cardId)?.requires_membership
+    return id !== undefined &&
+      [...result.membersOnly, ...(offers?.membersOnly ?? [])].some(
+        (m) => m.cardId === cardId,
+      )
+      ? `With ${withArticle(membershipName(id))}, which it needs, `
+      : ''
+  }
   const row = (a: (typeof result.additions)[number], rank: number) => (
     <li class="result" key={a.cardId} id={`whatif-${a.cardId}`}>
       <button
@@ -1386,13 +1420,33 @@ function WhatIf({
     </li>
   )
 
-  const planned = (offers?.offers ?? []).flatMap((o) =>
-    o.plan ? [{ offer: o, plan: o.plan }] : [],
+  const withPlans = (list: OfferSummary[]) =>
+    list.flatMap((o) => (o.plan ? [{ offer: o, plan: o.plan }] : []))
+  const planned = withPlans(offers?.offers ?? [])
+  const memberPlans = withPlans(offers?.membersOnly ?? [])
+  const ahead = planned.filter((p) => p.plan.twoYears > 0)
+  const topOffers = ahead.slice(0, 3)
+  const memberOffers = ifMemberLines(
+    catalog,
+    placedAmong(
+      (offers?.membersOnly ?? []).filter(
+        (o) => (o.plan?.twoYears ?? 0) > 0 && o.ineligible === null,
+      ),
+      ahead.map((p) => p.offer),
+      3,
+      offerOrder,
+    ).map((o) => ({
+      membership: o.membership,
+      text: `${shortName(o.cardId)}, about ${wholeDollars(o.plan?.twoYears ?? 0)} over the first two years`,
+    })),
   )
-  const topOffers = planned.filter((p) => p.plan.twoYears > 0).slice(0, 3)
   const focusedOffers = focus
     .filter((id) => !topOffers.some((p) => p.offer.cardId === id))
-    .flatMap((id) => planned.filter((p) => p.offer.cardId === id))
+    .flatMap((id) =>
+      [...planned, ...memberPlans].filter((p) => p.offer.cardId === id),
+    )
+  const offerRank = (p: (typeof planned)[number]) =>
+    planned.filter((x) => offerOrder(x.offer, p.offer) < 0).length + 1
   const offerRow = (p: (typeof planned)[number], rank: number) => (
     <OfferRow
       key={p.offer.cardId}
@@ -1455,20 +1509,21 @@ function WhatIf({
               {gains.map((a, i) => row(a, i + 1))}
             </ol>
           )}
+          {members.map((m) => (
+            <p class="muted" key={m}>
+              {m}
+            </p>
+          ))}
           {focused.map((f) => (
             <Fragment key={f.cardId}>
               <p class="muted">
+                {needs(f.cardId)}
                 {shortName(f.cardId)}{' '}
                 {f.gain > 0
                   ? 'would add this much, after its annual fee:'
                   : 'would add less than its annual fee costs:'}
               </p>
-              <ol class="result-list">
-                {row(
-                  f,
-                  result.additions.findIndex((a) => a.cardId === f.cardId) + 1,
-                )}
-              </ol>
+              <ol class="result-list">{row(f, rankOf(f))}</ol>
             </Fragment>
           ))}
         </>
@@ -1485,21 +1540,21 @@ function WhatIf({
               {topOffers.map((p, i) => offerRow(p, i + 1))}
             </ol>
           )}
+          {memberOffers.map((m) => (
+            <p class="muted" key={m}>
+              {m}
+            </p>
+          ))}
           {focusedOffers.map((p) => (
             <Fragment key={p.offer.cardId}>
               <p class="muted">
+                {needs(p.offer.cardId)}
                 {shortName(p.offer.cardId)}
                 {p.plan.twoYears > 0
                   ? ' over its first two years:'
                   : "'s first two years would add less than its fees cost:"}
               </p>
-              <ol class="result-list">
-                {offerRow(
-                  p,
-                  planned.findIndex((x) => x.offer.cardId === p.offer.cardId) +
-                    1,
-                )}
-              </ol>
+              <ol class="result-list">{offerRow(p, offerRank(p))}</ol>
             </Fragment>
           ))}
           <p class="muted small">{OFFERS_MAY_DIFFER}</p>

@@ -670,6 +670,59 @@ describe('wallet setup', () => {
     }
   })
 
+  test('a card that needs a membership is named after the ranking, unless the user has it or holds the card', async () => {
+    type Ranked = { cardId: string }[]
+    const ids = (r: Awaited<ReturnType<Client['callTool']>>) =>
+      (r.structuredContent as { ranked: Ranked }).ranked.map((e) => e.cardId)
+    const none = await connect(await missingWallet())
+    const casual = await none.callTool({
+      name: 'best_cards_for',
+      arguments: { category: 'grocery.supermarket' },
+    })
+    expect(ids(casual)).not.toContain('verizon-visa-card')
+    expect(text(casual)).toContain(
+      'If you have a Verizon wireless or Fios account: Verizon Visa Card, 4%.',
+    )
+    expect(
+      (casual.structuredContent as { membersOnly: Ranked }).membersOnly.map(
+        (e) => e.cardId,
+      ),
+    ).toContain('verizon-visa-card')
+    const member = await none.callTool({
+      name: 'best_cards_for',
+      arguments: {
+        category: 'grocery.supermarket',
+        memberships: ['verizon-account'],
+      },
+    })
+    expect(ids(member)).toContain('verizon-visa-card')
+    expect(text(member)).not.toMatch(/If you have a Verizon/)
+    const sim = await none.callTool({
+      name: 'simulate_spending',
+      arguments: {},
+    })
+    const singles = (
+      sim.structuredContent as { singles: { cards: Ranked }[] }
+    ).singles.map((s) => s.cards[0]?.cardId)
+    expect(singles).not.toContain('verizon-visa-card')
+    expect(text(sim)).toMatch(
+      /If you have a Verizon wireless or Fios account: Verizon Visa Card, \$\d+ a year\./,
+    )
+    const sheet = await none.callTool({ name: 'cheat_sheet', arguments: {} })
+    expect((sheet.structuredContent as CheatSheet).membersOnly).toContain(
+      "If you have a Sam's Club membership: Sam's Club Mastercard, 5% for gas.",
+    )
+
+    const holder = await connect(
+      await walletCopy('version: 1\ncards:\n  - id: verizon-visa-card\n'),
+    )
+    const held = await holder.callTool({
+      name: 'best_cards_for',
+      arguments: { category: 'grocery.supermarket' },
+    })
+    expect(ids(held)).toContain('verizon-visa-card')
+  })
+
   test('compares every card with no wallet at all', async () => {
     const client = await connect(await missingWallet())
     const best = await client.callTool({

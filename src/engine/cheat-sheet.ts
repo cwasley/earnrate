@@ -4,7 +4,14 @@ import {
 } from '../merchants/resolve.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
-import { exploreCards, matchesFilters, type ExploreOptions } from './explore.ts'
+import {
+  exploreCards,
+  matchesFilters,
+  topOf,
+  type Exploration,
+  type ExploreOptions,
+} from './explore.ts'
+import { ifMemberLines } from './memberships.ts'
 import { bonusStatus } from './bonus.ts'
 import { EPSILON, isClose } from './compare.ts'
 import { periodKey } from './periods.ts'
@@ -19,6 +26,7 @@ import {
   listed,
   money,
   paymentNote,
+  pct,
   shortDate,
   possessive,
 } from './text.ts'
@@ -72,6 +80,10 @@ export type CheatSheet = {
   date: string
   rows: CheatSheetRow[]
   notes: string[] // what the wallet still needs: picks, activations, missing quarters
+  // From every card: cards that need a membership the person hasn't given,
+  // where they'd beat a row's card. "If you have a Sam's Club membership:
+  // Sam's Club Mastercard, 5% for gas."
+  membersOnly: string[]
   assumptions: string[]
 }
 
@@ -183,6 +195,7 @@ export function cheatSheet(
     date,
     rows,
     notes,
+    membersOnly: [],
     assumptions: [CREDITS_LEFT_OUT],
   }
 }
@@ -236,8 +249,9 @@ export function catalogCheatSheet(
   options: ExploreOptions,
   items: CheatSheetItem[] = EVERYDAY_PURCHASES,
 ): CheatSheet {
+  const beaten: { phrase: string; r: Exploration }[] = []
   const rows = items.map((item): CheatSheetRow => {
-    const top = exploreCards(
+    const explored = exploreCards(
       catalog,
       'merchant' in item
         ? {
@@ -257,7 +271,9 @@ export function catalogCheatSheet(
             date,
           },
       options,
-    ).ranked[0]
+    )
+    beaten.push({ phrase: midSentence(item), r: explored })
+    const top = explored.ranked[0]
     const fee = top ? `${capitalize(feeText(top))}.` : null
     return {
       label: item.label,
@@ -270,7 +286,7 @@ export function catalogCheatSheet(
         : null,
     }
   })
-  const abroad = exploreCards(
+  const abroadExplored = exploreCards(
     catalog,
     {
       merchant: null,
@@ -281,7 +297,9 @@ export function catalogCheatSheet(
       country: ABROAD,
     },
     options,
-  ).ranked[0]
+  )
+  beaten.push({ phrase: 'spending abroad', r: abroadExplored })
+  const abroad = abroadExplored.ranked[0]
   rows.push({
     label: ABROAD_LABEL,
     cardId: abroad?.cardId ?? null,
@@ -305,6 +323,40 @@ export function catalogCheatSheet(
           .map((card) => ({ name: card.name, card })),
       ),
     ].filter((n) => n !== null),
+    membersOnly: membersOnlyRows(catalog, beaten),
     assumptions: [CREDITS_LEFT_OUT],
   }
+}
+
+// Each members-only card that beats a row's card, with the rows it beats
+// at one rate together: "Verizon Visa Card, 4% for groceries and gas".
+function membersOnlyRows(
+  catalog: Catalog,
+  rows: { phrase: string; r: Exploration }[],
+): string[] {
+  const found = new Map<
+    string,
+    { membership: string; card: string; rate: string; phrases: string[] }
+  >()
+  for (const { phrase, r } of rows) {
+    for (const e of topOf(r, 1).membersOnly) {
+      const rate = pct(e.effectiveReturnPct)
+      const key = `${e.cardId} ${rate}`
+      const entry = found.get(key) ?? {
+        membership: e.needsMembership ?? '',
+        card: e.cardName,
+        rate,
+        phrases: [],
+      }
+      entry.phrases.push(phrase)
+      found.set(key, entry)
+    }
+  }
+  return ifMemberLines(
+    catalog,
+    [...found.values()].map((f) => ({
+      membership: f.membership,
+      text: `${f.card}, ${f.rate} for ${listed(f.phrases)}`,
+    })),
+  )
 }

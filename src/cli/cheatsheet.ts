@@ -77,7 +77,7 @@ export async function runCheatSheet(argv: string[], io: Io): Promise<number> {
   if (loaded === null) return RUNTIME_ERROR
   const date = values.date ?? io.today
   if (loaded === 'none' || values['every-card']) {
-    const saved = await savedSettings(io)
+    const saved = await savedSettings(io, catalog)
     const sheet = catalogCheatSheet(catalog, date, {
       filters: ALL_PERSONAL_CARDS,
       memberships: values.member ?? saved.memberships,

@@ -309,15 +309,19 @@ describe('memberships a card implies', () => {
     expect(sim.rewards).toBe(60)
   })
 
-  test('with Prime Visa needing Prime: not held, Prime is still counted as a cost', () => {
-    const { singles } = simulateCatalog(requiring, amazon, {
+  test('with Prime Visa needing Prime: not held, it ranks apart, as for a member', () => {
+    const { singles, membersOnly } = simulateCatalog(requiring, amazon, {
       filters: ALL_PERSONAL_CARDS,
       memberships: [],
       valuations: {},
       start: TODAY,
     })
-    const prime = singles.find((s) => s.cards[0]?.cardId === 'chase-prime-visa')
-    expect(prime?.membershipFees).toBe(139)
+    const held = (s: { cards: { cardId: string }[] }) =>
+      s.cards[0]?.cardId === 'chase-prime-visa'
+    expect(singles.some(held)).toBe(false)
+    const prime = membersOnly.find(held)
+    expect(prime?.membership).toBe('amazon-prime')
+    expect(prime?.membershipFees).toBe(0)
     expect(prime?.rewards).toBe(60)
   })
 })

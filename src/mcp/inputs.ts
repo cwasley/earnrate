@@ -251,7 +251,7 @@ export function makeInputs(catalog: Catalog) {
     ...OfferFilters,
     issuer: z.enum(issuers).optional().describe("Only this issuer's cards."),
     memberships: Memberships.optional().describe(
-      "Memberships the user has, such as amazon-prime or costco. Rates that need one they don't have are listed separately; a card that needs one (Costco Anywhere) says so.",
+      "Memberships the user has, such as amazon-prime or costco. Cards and rates that need one they don't have are listed separately: a card that needs one (Verizon Visa, Costco Anywhere) is named after the ranking, not in it.",
     ),
     valuation: z
       .enum(['flat', 'points-heavy'])

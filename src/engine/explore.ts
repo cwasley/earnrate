@@ -11,9 +11,13 @@ import {
 } from './evaluate.ts'
 import { creditName } from './rule-text.ts'
 import {
+  ifMemberLines,
   membershipName,
   membershipNeeded,
+  missingMembership,
+  NO_MEMBERSHIPS,
   paidMemberships,
+  placedAmong,
 } from './memberships.ts'
 import { choicePeriod, periodKey } from './periods.ts'
 import {
@@ -40,6 +44,7 @@ import {
   paidText,
   PAYMENT_PHRASES,
   paymentUnknownText,
+  pct,
   pickCondition,
   pointValuesText,
 } from './text.ts'
@@ -168,6 +173,9 @@ export type Exploration = {
   categoryNote: string | null
   credits: CreditPick[]
   ranked: ExploreEntry[]
+  // Cards that need a membership the person hasn't given (Verizon Visa),
+  // ranked as for a member: out of `ranked`, and named after it.
+  membersOnly: ExploreEntry[]
   excluded: ExcludedCard[]
   assumptions: string[]
   warnings: string[]
@@ -467,11 +475,7 @@ export function exploreCards(
         ...membershipNeeded(catalog, card, members),
       ],
       evidence: evidence ? { quote: evidence.quote, url: evidence.url } : null,
-      needsMembership:
-        card.requires_membership !== undefined &&
-        !members.has(card.requires_membership)
-          ? card.requires_membership
-          : null,
+      needsMembership: missingMembership(card, members),
       withMembership: membershipUpgrades(
         catalog,
         card,
@@ -483,31 +487,74 @@ export function exploreCards(
       ),
     })
   }
-  ranked.sort(compareExplored)
+  const open = ranked
+    .filter((e) => e.needsMembership === null)
+    .sort(compareExplored)
+  const membersOnly = ranked
+    .filter((e) => e.needsMembership !== null)
+    .sort(compareExplored)
 
   return {
     merchant,
     categoryNote: categoryNote(catalog, merchant.category),
-    credits: creditPicks(catalog, merchant, ranked, query.date),
-    ranked,
+    credits: creditPicks(catalog, merchant, open, query.date),
+    ranked: open,
+    membersOnly,
     excluded,
     assumptions: exploreAssumptions(
       catalog,
       merchant,
-      ranked,
+      open,
       options,
       purchase,
       ifPaid,
       ifLarger,
     ),
     warnings: exploreWarnings(catalog, merchant),
-    ifPaying: paidAtTop(ranked, ifPaid).map(({ entry, paid }) => ({
+    ifPaying: paidAtTop(open, ifPaid).map(({ entry, paid }) => ({
       cardId: entry.cardId,
       cardName: entry.cardName,
       payment: paid.payment,
       earn: paid.earn,
     })),
   }
+}
+
+// The first `n` of the ranking, with the members-only cards that would have
+// placed among them.
+export function topOf(r: Exploration, n: number): Exploration {
+  return {
+    ...r,
+    ranked: r.ranked.slice(0, n),
+    membersOnly: placedAmong(r.membersOnly, r.ranked, n, compareExplored),
+  }
+}
+
+// "If you have a Verizon wireless or Fios account: Verizon Visa Card, 4%."
+export function membersOnlyLines(
+  catalog: Catalog,
+  entries: ExploreEntry[],
+  name: (e: ExploreEntry) => string = (e) => e.cardName,
+): string[] {
+  return ifMemberLines(
+    catalog,
+    entries.map((e) => ({
+      membership: e.needsMembership ?? '',
+      text: `${name(e)}, ${pct(e.effectiveReturnPct)}`,
+    })),
+  )
+}
+
+// The ranking a member of `membership` sees: the open cards and the ones it
+// lets them get.
+export function rankedForMember(
+  r: Exploration,
+  membership: string,
+): ExploreEntry[] {
+  return [
+    ...r.ranked,
+    ...r.membersOnly.filter((e) => e.needsMembership === membership),
+  ].sort(compareExplored)
 }
 
 // Cards a way of paying would lift to the top (or that are already there).
@@ -603,7 +650,7 @@ function exploreAssumptions(
   )
   assumptions.push(
     options.memberships.length === 0
-      ? 'Assumes no memberships (like Amazon Prime). Rates that need one are listed separately.'
+      ? NO_MEMBERSHIPS
       : `Assumes these memberships: ${listed(options.memberships.map((m) => membershipName(catalog, m)))}.`,
   )
   const values = pointValuesText(catalog, ranked.slice(0, 10))

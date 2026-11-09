@@ -21,6 +21,7 @@ export function formatCheatSheet(sheet: CheatSheet): string {
         `  ${' '.repeat(labelWidth)}  ${sheet.scope === 'wallet' ? '! ' : ''}${row.note}`,
       )
   }
+  if (sheet.membersOnly.length > 0) lines.push('', ...sheet.membersOnly)
   if (sheet.notes.length > 0) lines.push('', ...sheet.notes)
   if (sheet.assumptions.length > 0) lines.push('', ...sheet.assumptions)
   return `${lines.join('\n')}\n`

@@ -5,10 +5,16 @@ import { recommend } from '../../src/engine/recommend.ts'
 import { cardInfo } from '../../src/engine/setup.ts'
 import type { Spending } from '../../src/engine/renewal.ts'
 import { resolveMerchant } from '../../src/merchants/resolve.ts'
-import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
+import { catalogCheatSheet, cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
 import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
-import { ALL_PERSONAL_CARDS, exploreCards } from '../../src/engine/explore.ts'
+import {
+  ALL_PERSONAL_CARDS,
+  exploreCards,
+  topOf,
+} from '../../src/engine/explore.ts'
+import { formatExploration } from '../../src/format/explore.ts'
+import { formatCatalogSimulation } from '../../src/format/explore.ts'
 import { compareOffers } from '../../src/engine/offers.ts'
 import { minimumSpendText } from '../../src/engine/text.ts'
 import { withSkippedIssuers } from '../../src/engine/wallet-change.ts'
@@ -2741,4 +2747,192 @@ describe('#38 yearly free nights', () => {
       expect(it?.plan?.yearTwo).toBeCloseTo((it?.plan?.extraRewards ?? 0) - 150)
     },
   )
+})
+
+describe('#39 cards that need a membership, when every card is ranked', () => {
+  const GATED = new Set(
+    catalog.cards.filter((c) => c.requires_membership).map((c) => c.id),
+  )
+  const options = (memberships: string[] = []) => ({
+    filters: ALL_PERSONAL_CARDS,
+    memberships,
+    valuations: {},
+  })
+  const groceries = (memberships: string[] = []) =>
+    exploreCards(
+      catalog,
+      {
+        merchant: null,
+        category: 'grocery.supermarket',
+        amount: null,
+        channel: null,
+        date: TODAY,
+      },
+      options(memberships),
+    )
+
+  goldenTest(
+    '#39a groceries with no wallet: Verizon Visa ranks apart, named after the ranking',
+    () => {
+      const r = groceries()
+      expect(r.ranked.some((e) => GATED.has(e.cardId))).toBe(false)
+      const verizon = r.membersOnly.find(
+        (e) => e.cardId === 'verizon-visa-card',
+      )
+      expect(verizon?.effectiveReturnPct).toBe(4)
+      expect(verizon?.needsMembership).toBe('verizon-account')
+      const text = formatExploration(topOf(r, 10), catalog, true)
+      expect(text).toContain(
+        'If you have a Verizon wireless or Fios account: Verizon Visa Card, 4%.',
+      )
+      expect(text).toContain(
+        'Assumes no memberships (like Amazon Prime). Cards and rates that need one are listed separately.',
+      )
+      expect(text.indexOf('If you have')).toBeGreaterThan(text.indexOf(' 1. '))
+    },
+  )
+
+  goldenTest(
+    '#39b a card that needs a membership is named only where it would have placed',
+    () => {
+      const top3 = topOf(groceries(), 3)
+      expect(top3.membersOnly.map((e) => e.cardId)).toEqual([
+        'verizon-visa-card',
+      ])
+      const top1 = topOf(groceries(), 1)
+      expect(top1.membersOnly).toEqual([])
+    },
+  )
+
+  goldenTest(
+    '#39c with the membership given, Verizon Visa ranks normally and no line names it',
+    () => {
+      const r = groceries(['verizon-account'])
+      const ids = r.ranked.map((e) => e.cardId)
+      expect(ids.indexOf('verizon-visa-card')).toBe(2)
+      expect(r.membersOnly.some((e) => e.cardId === 'verizon-visa-card')).toBe(
+        false,
+      )
+      expect(formatExploration(topOf(r, 10), catalog, true)).not.toMatch(
+        /If you have a Verizon/,
+      )
+    },
+  )
+
+  goldenTest(
+    '#39d simulate_spending with no spending: no membership card in singles or pairs without the membership',
+    () => {
+      const sim = simulateCatalog(catalog, typicalSpendLines(catalog), {
+        ...options(),
+        start: TODAY,
+      })
+      const gated = (s: { cards: { cardId: string }[] }) =>
+        s.cards.some((c) => GATED.has(c.cardId))
+      expect(sim.singles.some(gated)).toBe(false)
+      expect(sim.pairs.some(gated)).toBe(false)
+      expect(sim.membersOnly.map((s) => s.cards[0]?.cardId)).toContain(
+        'verizon-visa-card',
+      )
+      expect(formatCatalogSimulation(sim, catalog, false)).toMatch(
+        /^If you have a Verizon wireless or Fios account: Verizon Visa Card, \$\d+ a year\.$/m,
+      )
+      const member = simulateCatalog(catalog, typicalSpendLines(catalog), {
+        ...options(['verizon-account']),
+        start: TODAY,
+      })
+      expect(member.singles[0]?.cards[0]?.cardId).toBe('verizon-visa-card')
+    },
+  )
+
+  goldenTest(
+    '#39e at Costco, buying there implies the membership: Costco Anywhere still ranks',
+    () => {
+      const r = exploreCards(
+        catalog,
+        {
+          merchant: 'Costco',
+          category: null,
+          amount: null,
+          channel: null,
+          date: TODAY,
+        },
+        options(),
+      )
+      expect(r.ranked[0]?.cardId).toBe('citi-costco-anywhere-visa')
+      expect(r.membersOnly.some((e) => e.needsMembership === 'costco')).toBe(
+        false,
+      )
+      const sheet = catalogCheatSheet(catalog, TODAY, options())
+      expect(sheet.rows.find((row) => row.label === 'Costco')?.cardId).toBe(
+        'citi-costco-anywhere-visa',
+      )
+      const gas = sheet.rows.find((row) => row.label === 'Gas')
+      expect(gas?.cardId).not.toBe('sams-club-mastercard')
+      expect(sheet.membersOnly).toContain(
+        "If you have a Sam's Club membership: Sam's Club Mastercard, 5% for gas.",
+      )
+      const withCostco = simulateCatalog(
+        catalog,
+        [
+          ...typicalSpendLines(catalog),
+          ...resolveSpendLines(catalog, [spendLineFor(catalog, 'Costco', 300)]),
+        ],
+        { ...options(), start: TODAY },
+      )
+      expect(
+        withCostco.singles.some(
+          (s) => s.cards[0]?.cardId === 'citi-costco-anywhere-visa',
+        ),
+      ).toBe(true)
+    },
+  )
+
+  goldenTest('#39f a card the user names, or holds, ranks normally', () => {
+    const named = recommend(
+      catalog,
+      withProfile(
+        WalletSchema.parse({
+          cards: [{ id: 'verizon-visa-card' }, { id: 'citi-double-cash' }],
+        }),
+        'flat',
+      ),
+      purchase('Safeway', { amount: 100, channel: 'in_store' }),
+    )
+    expect(named.decision?.cardId).toBe('verizon-visa-card')
+    expect(named.decision?.effectiveReturnPct).toBe(4)
+    const holder = WalletSchema.parse({
+      cards: [{ id: 'verizon-visa-card' }],
+    })
+    const additions = simulateAdditions(
+      catalog,
+      holder,
+      typicalSpendLines(catalog),
+      { ...options(), start: TODAY },
+    )
+    expect(additions.membersOnly.map((a) => a.cardId)).not.toContain(
+      'verizon-visa-card',
+    )
+    expect(additions.current.cards[0]?.cardId).toBe('verizon-visa-card')
+  })
+
+  goldenTest('#39g the next-card planner names a membership card apart', () => {
+    const r = compareOffers(
+      catalog,
+      withProfile(WalletSchema.parse({}), 'flat'),
+      { kind: 'any', business: false, noAnnualFee: false, includeHeld: false },
+      TODAY,
+    )
+    expect(r.offers.some((o) => GATED.has(o.cardId))).toBe(false)
+    expect(r.membersOnly.map((o) => o.cardId)).toContain('verizon-visa-card')
+    const member = compareOffers(
+      catalog,
+      withProfile(
+        WalletSchema.parse({ memberships: ['verizon-account'] }),
+        'flat',
+      ),
+      { kind: 'any', business: false, noAnnualFee: false, includeHeld: false },
+      TODAY,
+    )
+    expect(member.offers.map((o) => o.cardId)).toContain('verizon-visa-card')
+  })
 })

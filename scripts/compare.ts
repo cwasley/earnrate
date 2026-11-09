@@ -5,6 +5,7 @@ import {
   ALL_PERSONAL_CARDS,
   exploreCards,
   idealHolding,
+  matchesFilters,
   type CardFilters,
   type Exploration,
   type ExploreEntry,
@@ -13,7 +14,7 @@ import {
 import { inEffect } from '../src/engine/periods.ts'
 import { TRANSFER_VALUES } from '../src/engine/fee-worth.ts'
 import {
-  simulateCatalog,
+  simulateSingles,
   typicalSpendLines,
   type Simulation,
 } from '../src/engine/simulate.ts'
@@ -80,6 +81,10 @@ const lasting = (card: Card, rule: Rule) =>
   rule.requires?.membership === undefined &&
   namedCap(card, rule)?.rotating !== true
 
+// A comparison names its two cards, so one that needs a membership is
+// compared like any other.
+const named = (r: Exploration) => [...r.ranked, ...r.membersOnly]
+
 // Each card's lasting bonuses among PAIR_CATEGORIES, by label.
 export function lastingBonuses(
   catalog: Catalog,
@@ -101,7 +106,7 @@ export function lastingBonuses(
           memberships: [],
           valuations: {},
         })
-        for (const e of r.ranked) {
+        for (const e of named(r)) {
           const card = steady.cards.find((c) => c.id === e.cardId)
           if (!card) continue
           if (e.effectiveReturnPct <= card.base_rate * e.centsPerUnit + EPSILON)
@@ -313,32 +318,31 @@ export function comparer(catalog: Catalog, today: string) {
     return r
   }
   const lines = typicalSpendLines(catalog)
-  const singles = new Map<string, Simulation>()
-  for (const business of [false, true])
-    for (const s of simulateCatalog(catalog, lines, {
-      filters: filtersFor(business),
-      memberships: [],
-      valuations: {},
-      start: today,
-    }).singles) {
-      const id = s.cards[0]?.cardId
-      if (id) singles.set(id, s)
+  const typicalYears = (valuations: Record<string, number>) => {
+    const found = new Map<string, Simulation>()
+    for (const business of [false, true]) {
+      const options = {
+        filters: filtersFor(business),
+        memberships: [],
+        valuations,
+        start: today,
+      }
+      const cards = catalog.cards.filter((c) =>
+        matchesFilters(c, options.filters),
+      )
+      for (const s of simulateSingles(catalog, cards, lines, options)) {
+        const id = s.cards[0]?.cardId
+        if (id) found.set(id, s)
+      }
     }
+    return found
+  }
+  const singles = typicalYears({})
   const spend = lines.reduce((sum, l) => sum + l.monthly * 12, 0)
-  const transferred = new Map<string, Simulation>()
-  for (const business of [false, true])
-    for (const s of simulateCatalog(catalog, lines, {
-      filters: filtersFor(business),
-      memberships: [],
-      valuations: TRANSFER_VALUES,
-      start: today,
-    }).singles) {
-      const id = s.cards[0]?.cardId
-      if (id) transferred.set(id, s)
-    }
+  const transferred = typicalYears(TRANSFER_VALUES)
 
   const cell = (r: Exploration, id: string): CompareCell => ({
-    entry: r.ranked.find((e) => e.cardId === id) ?? null,
+    entry: named(r).find((e) => e.cardId === id) ?? null,
     excluded: r.excluded.find((e) => e.cardId === id)?.reason ?? null,
   })
 

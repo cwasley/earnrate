@@ -14,6 +14,7 @@ import {
 import { walletProblems } from '../data/integrity.ts'
 import { loadCatalog, loadWallet, walletPath } from '../data/load.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../engine/explore.ts'
+import { effectiveMemberships } from '../engine/memberships.ts'
 import {
   profileText,
   VALUATION_PROFILES,
@@ -162,7 +163,7 @@ export async function cardsToUse(
     return null
   }
   if (named.cards !== null) {
-    const saved = await savedSettings(io)
+    const saved = await savedSettings(io, catalog)
     const wallet = walletFromCards(
       catalog,
       {
@@ -213,14 +214,19 @@ export const NO_WALLET_HINT = `These are every card earnrate knows. For the best
 // can't be read, has none.
 export async function savedSettings(
   io: Io,
+  catalog: Catalog,
 ): Promise<Pick<Wallet, 'valuations' | 'memberships' | 'skipped_issuers'>> {
   try {
-    const { valuations, memberships, skipped_issuers } = await loadWallet(
-      walletPath(io.env),
-    )
+    const { valuations, memberships, skipped_issuers, cards } =
+      await loadWallet(walletPath(io.env))
     return {
       valuations,
-      memberships,
+      // A saved card's own membership counts: its holder has it.
+      memberships: effectiveMemberships(
+        catalog,
+        memberships,
+        cards.map((c) => c.id),
+      ),
       ...(skipped_issuers ? { skipped_issuers } : {}),
     }
   } catch {
@@ -337,7 +343,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
       io.today,
     )
   if (loaded === 'none') {
-    const saved = await savedSettings(io)
+    const saved = await savedSettings(io, catalog)
     const explored = exploreCards(
       catalog,
       {

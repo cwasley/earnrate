@@ -158,7 +158,7 @@ describe('best cards for a purchase', () => {
       /^Assumes Whole Foods Market codes as supermarkets/,
     )
     expect(r.assumptions).toContain(
-      'Assumes no memberships (like Amazon Prime). Rates that need one are listed separately.',
+      'Assumes no memberships (like Amazon Prime). Cards and rates that need one are listed separately.',
     )
     const unknown = exploreCards(
       catalog,

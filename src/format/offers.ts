@@ -1,4 +1,10 @@
-import { offerTerms, type OfferComparison } from '../engine/offers.ts'
+import { ifMemberLines, placedAmong } from '../engine/memberships.ts'
+import {
+  offerOrder,
+  offerTerms,
+  type OfferComparison,
+} from '../engine/offers.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import {
   capitalize,
   feeText,
@@ -16,9 +22,25 @@ export function formatOffers(
   c: OfferComparison,
   currencyName: (id: string) => string,
   all: boolean,
+  catalog?: Catalog,
 ): string {
+  const members =
+    catalog === undefined
+      ? []
+      : ifMemberLines(
+          catalog,
+          placedAmong(
+            c.membersOnly.filter((o) => o.ineligible === null),
+            c.offers.filter((o) => o.ineligible === null),
+            all ? Infinity : TOP,
+            offerOrder,
+          ).map((o) => ({
+            membership: o.membership,
+            text: `${o.cardName}, ${o.plan ? `about ${wholeDollars(o.plan.twoYears)} over the first two years` : `about ${wholeDollars(o.firstYearValue)} the first year`}`,
+          })),
+        )
   if (c.offers.length === 0) {
-    return `No published welcome offers match.${c.withoutOffer.length > 0 ? ` ${String(c.withoutOffer.length)} matching card(s) have none on file.` : ''}\n`
+    return `${[`No published welcome offers match.${c.withoutOffer.length > 0 ? ` ${String(c.withoutOffer.length)} matching card(s) have none on file.` : ''}`, ...members].join('\n')}\n`
   }
   const shown = all ? c.offers : c.offers.slice(0, TOP)
   const width = Math.max(...shown.map((o) => o.cardName.length))
@@ -57,6 +79,7 @@ export function formatOffers(
     lines.push(
       `  + ${String(c.offers.length - shown.length - ruledOut.length)} more (--all lists them)`,
     )
+  if (members.length > 0) lines.push('', ...members)
   if (c.withoutOffer.length > 0)
     lines.push(
       '',

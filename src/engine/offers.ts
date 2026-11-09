@@ -4,8 +4,16 @@ import { bonusDollars } from './bonus.ts'
 import { allCreditsYear } from './credits.ts'
 import { matchesFilters } from './explore.ts'
 import type { Spending } from './renewal.ts'
-import { simulateAdditions, typicalSpendLines } from './simulate.ts'
-import { membershipCosts, paidMemberships } from './memberships.ts'
+import {
+  simulateAdditions,
+  typicalSpendLines,
+  type MembersOnly,
+} from './simulate.ts'
+import {
+  membershipCosts,
+  missingMembership,
+  paidMemberships,
+} from './memberships.ts'
 import { inEffect } from './periods.ts'
 import { CREDITS_APART, heldName, listed, money, roundCents } from './text.ts'
 import { cardValuation } from './valuation.ts'
@@ -66,6 +74,9 @@ export type OfferPlan = {
 
 export type OfferComparison = {
   offers: OfferSummary[]
+  // Offers on cards that need a membership the person hasn't given, valued
+  // for a member: out of offers.
+  membersOnly: MembersOnly<OfferSummary>[]
   typical: boolean // the spending is typical U.S. amounts
   withoutOffer: string[] // card ids that match the filters but publish no offer
   notes: string[]
@@ -109,6 +120,12 @@ export function offerTerms(o: OfferTerms, currencyName: string): string {
   return `${o.varies ? 'Up to ' : ''}${amount} ${spend}`
 }
 
+export const offerOrder = (a: OfferSummary, b: OfferSummary) =>
+  Number(a.ineligible !== null) - Number(b.ineligible !== null) ||
+  (b.plan?.twoYears ?? -Infinity) - (a.plan?.twoYears ?? -Infinity) ||
+  b.firstYearValue - a.firstYearValue ||
+  a.cardId.localeCompare(b.cardId)
+
 const WEEKS_A_MONTH = 52 / 12
 
 function minimumSpend(
@@ -135,18 +152,27 @@ export function compareOffers(
   const held = new Set(wallet.cards.map((c) => c.id))
   const skipped = new Set(wallet.skipped_issuers ?? [])
   const monthly = spending.lines.reduce((sum, l) => sum + l.monthly, 0)
-  const { additions } = simulateAdditions(catalog, wallet, spending.lines, {
-    filters: { ...filters, issuer: null, includeClosed: true },
-    memberships: wallet.memberships,
-    valuations: wallet.valuations,
-    start: today,
-  })
-  const added = new Map(additions.map((a) => [a.cardId, a]))
+  const { additions, membersOnly: memberAdditions } = simulateAdditions(
+    catalog,
+    wallet,
+    spending.lines,
+    {
+      filters: { ...filters, issuer: null, includeClosed: true },
+      memberships: wallet.memberships,
+      valuations: wallet.valuations,
+      start: today,
+    },
+  )
+  const added = new Map(
+    [...additions, ...memberAdditions].map((a) => [a.cardId, a]),
+  )
   const paid = paidMemberships(catalog, {
     memberships: wallet.memberships,
     heldCards: [...held],
+    merchantIds: spending.lines.map((l) => l.merchant.merchantId),
   })
   const offers: OfferSummary[] = []
+  const membersOnly: MembersOnly<OfferSummary>[] = []
   const withoutOffer: string[] = []
   for (const card of catalog.cards) {
     if (card.network === 'store') continue
@@ -167,8 +193,11 @@ export function compareOffers(
       bonusDollars(card, valuation.centsPerUnit, offer.points, offer.dollars) ??
       0
     const firstYearFee = card.first_year_fee ?? card.annual_fee ?? null
+    const membership = missingMembership(card, paid)
     const membershipFee =
-      membershipCosts(catalog, [card], paid)[0]?.annualFee ?? 0
+      membership === null
+        ? (membershipCosts(catalog, [card], paid)[0]?.annualFee ?? 0)
+        : 0
     const firstYearValue = roundCents(
       value - (firstYearFee ?? 0) - membershipFee,
     )
@@ -198,7 +227,7 @@ export function compareOffers(
           }
         })()
       : null
-    offers.push({
+    const summary: OfferSummary = {
       cardId: card.id,
       cardName: card.name,
       issuer: card.issuer,
@@ -225,15 +254,12 @@ export function compareOffers(
       held: held.has(card.id),
       lastVerified: card.last_verified,
       verifiedBy: card.verified_by,
-    })
+    }
+    if (membership === null) offers.push(summary)
+    else membersOnly.push({ ...summary, membership })
   }
-  offers.sort(
-    (a, b) =>
-      Number(a.ineligible !== null) - Number(b.ineligible !== null) ||
-      (b.plan?.twoYears ?? -Infinity) - (a.plan?.twoYears ?? -Infinity) ||
-      b.firstYearValue - a.firstYearValue ||
-      a.cardId.localeCompare(b.cardId),
-  )
+  offers.sort(offerOrder)
+  membersOnly.sort(offerOrder)
 
   const notes = [
     `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`,
@@ -247,5 +273,5 @@ export function compareOffers(
         ]
       : []),
   ]
-  return { offers, withoutOffer, notes, typical: spending.typical }
+  return { offers, membersOnly, withoutOffer, notes, typical: spending.typical }
 }

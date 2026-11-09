@@ -217,7 +217,11 @@ export async function runBest(argv: string[], io: Io): Promise<number> {
     return USAGE_ERROR
   }
   const catalog = await loadCatalog()
-  const settings = settingsFrom(values, catalog, await savedSettings(io))
+  const settings = settingsFrom(
+    values,
+    catalog,
+    await savedSettings(io, catalog),
+  )
   if (typeof settings === 'string') {
     io.stderr(`${settings}\n`)
     return USAGE_ERROR
@@ -281,7 +285,11 @@ export async function runSimulate(argv: string[], io: Io): Promise<number> {
     return 0
   }
   const catalog = await loadCatalog()
-  const settings = settingsFrom(values, catalog, await savedSettings(io))
+  const settings = settingsFrom(
+    values,
+    catalog,
+    await savedSettings(io, catalog),
+  )
   if (typeof settings === 'string') {
     io.stderr(`${settings}\n`)
     return USAGE_ERROR

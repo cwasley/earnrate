@@ -352,6 +352,17 @@ export const OfferComparisonSchema = z.object({
       verifiedBy: z.string(),
     }),
   ),
+  // Offers on cards that need a membership the user hasn't given, valued for
+  // a member, that would have placed among those shown.
+  membersOnly: z.array(
+    z.object({
+      cardId: z.string(),
+      cardName: z.string(),
+      membership: z.string(),
+      twoYears: z.number().nullable(),
+      firstYearValue: z.number(),
+    }),
+  ),
   withoutOffer: z.array(z.string()),
   typical: z.boolean(),
   notes: z.array(z.string()),
@@ -480,6 +491,40 @@ const ExcludedCardSchema = z.object({
 
 const Picks = z.record(z.string(), z.array(z.string()))
 
+const ExploreEntrySchema = RankedCardSchema.extend({
+  issuer: z.string(),
+  network: CardNetwork,
+  annualFee: z.number().nullable(),
+  firstYearFee: z.number().nullable(),
+  picks: Picks,
+  requirements: z.object({
+    pick: z
+      .object({
+        choice: z.string(),
+        options: z.array(z.string()),
+        period: z.string(),
+        automatic: z.boolean(),
+      })
+      .nullable(),
+    activation: z.string().nullable(),
+    membership: z.string().nullable(),
+    cap: z
+      .object({
+        amount: z.number(),
+        period: z.string(),
+        thenRate: z.number(),
+        currency: z.string(),
+      })
+      .nullable(),
+  }),
+  conditions: z.array(z.string()),
+  evidence: z.object({ quote: z.string(), url: z.string() }).nullable(),
+  withMembership: z.array(
+    z.object({ membership: z.string(), effectiveReturnPct: z.number() }),
+  ),
+  needsMembership: z.string().nullable(),
+})
+
 export const ExplorationSchema = z.object({
   merchant: MerchantResolutionSchema,
   // About this kind of purchase; shown before the ranking.
@@ -506,41 +551,11 @@ export const ExplorationSchema = z.object({
       evidence: z.object({ quote: z.string(), url: z.string() }).nullable(),
     }),
   ),
-  ranked: z.array(
-    RankedCardSchema.extend({
-      issuer: z.string(),
-      network: CardNetwork,
-      annualFee: z.number().nullable(),
-      firstYearFee: z.number().nullable(),
-      picks: Picks,
-      requirements: z.object({
-        pick: z
-          .object({
-            choice: z.string(),
-            options: z.array(z.string()),
-            period: z.string(),
-            automatic: z.boolean(),
-          })
-          .nullable(),
-        activation: z.string().nullable(),
-        membership: z.string().nullable(),
-        cap: z
-          .object({
-            amount: z.number(),
-            period: z.string(),
-            thenRate: z.number(),
-            currency: z.string(),
-          })
-          .nullable(),
-      }),
-      conditions: z.array(z.string()),
-      evidence: z.object({ quote: z.string(), url: z.string() }).nullable(),
-      withMembership: z.array(
-        z.object({ membership: z.string(), effectiveReturnPct: z.number() }),
-      ),
-      needsMembership: z.string().nullable(),
-    }),
-  ),
+  ranked: z.array(ExploreEntrySchema),
+  // Cards that need a membership the user hasn't given, for a member, that
+  // would have placed in the ranking shown: name them after it, one line per
+  // membership ("If you have a Verizon wireless or Fios account: ...").
+  membersOnly: z.array(ExploreEntrySchema),
   excluded: z.array(ExcludedCardSchema),
   assumptions: z.array(z.string()),
   warnings: z.array(z.string()),
@@ -626,6 +641,16 @@ export const SpendingSimulationSchema = z.object({
       gainIfCreditsUsed: z.number(),
     }),
   ),
+  // Cards that need a membership the user hasn't given, for a member, that
+  // would have placed among the singles (or additions) shown: net a year, or
+  // the gain for an addition.
+  membersOnly: z.array(
+    z.object({
+      cardId: z.string(),
+      membership: z.string(),
+      net: z.number(),
+    }),
+  ),
 })
 
 export const CheatSheetSchema = z.object({
@@ -643,6 +668,9 @@ export const CheatSheetSchema = z.object({
     }),
   ),
   notes: z.array(z.string()),
+  // From every card: one line per membership the user hasn't given, naming
+  // the cards that need it where they'd beat a row's card.
+  membersOnly: z.array(z.string()),
   assumptions: z.array(z.string()),
 })
 

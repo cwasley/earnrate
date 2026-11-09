@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import {
   exploreCards,
+  membersOnlyLines,
+  topOf,
   type CreditPick,
   type Exploration,
   type ExploreEntry,
@@ -472,6 +474,15 @@ export function BestFor({
                 Show all {result.ranked.length} cards
               </button>
             ) : null}
+            {membersOnlyLines(
+              catalog,
+              all ? result.membersOnly : topOf(result, TOP).membersOnly,
+              (e) => shortName(e.cardId),
+            ).map((m) => (
+              <p class="muted" key={m}>
+                {m}
+              </p>
+            ))}
             <Excluded r={result} />
             <ul class="assumptions">
               {result.assumptions.map((a) => (

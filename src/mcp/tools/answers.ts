@@ -6,12 +6,15 @@ import {
   DETAILS_LEFT_OUT,
 } from '../../engine/card-details.ts'
 import { catalogCheatSheet, cheatSheet } from '../../engine/cheat-sheet.ts'
-import { exploreCards } from '../../engine/explore.ts'
-import { compareOffers } from '../../engine/offers.ts'
+import { exploreCards, topOf } from '../../engine/explore.ts'
+import { placedAmong } from '../../engine/memberships.ts'
+import { compareOffers, offerOrder } from '../../engine/offers.ts'
 import { withValuationProfile } from '../../engine/profiles.ts'
 import { recommend } from '../../engine/recommend.ts'
 import { searchCards } from '../../engine/setup.ts'
 import {
+  byNet,
+  gainOrder,
   resolveSpendLines,
   simulateAdditions,
   simulateCatalog,
@@ -170,7 +173,7 @@ export function registerAnswerTools(
           settings({ memberships, valuation }, await ctx.saved()),
           resolved.merchant,
         )
-        const allCards = { ...explored, ranked: explored.ranked.slice(0, TOP) }
+        const allCards = topOf(explored, TOP)
         const empty = recommend(
           catalog,
           EMPTY_WALLET,
@@ -296,7 +299,7 @@ export function registerAnswerTools(
     {
       title: 'Compare welcome offers',
       description:
-        "Ranks cards the user doesn't have by what they'd be worth over the first two years: what each adds to the user's cards (or, with none, earns) on their spending, plus the public welcome (sign-up) bonus in year one if its minimum spend fits in the window, less each year's annual fee and any membership it needs. Each offer also shows the bonus alone (first-year value), year one and year two, and how many weeks of spending the minimum takes. Offers the issuer rules out because of a card in the user's wallet are marked likely not eligible and listed last; issuers the user can't get cards from (skippedIssuers, or saved with set_memberships) are left out. Use it when the user asks which card to get next or which has the best sign-up bonus. Spending is optional (typical amounts otherwise). It covers only the cards earnrate knows, offers vary by person, and each offer's note gives the issuer's eligibility rules; pass those caveats on. Never suggest applying through a link.",
+        "Ranks cards the user doesn't have by what they'd be worth over the first two years: what each adds to the user's cards (or, with none, earns) on their spending, plus the public welcome (sign-up) bonus in year one if its minimum spend fits in the window, less each year's annual fee. A card that needs a membership the user hasn't given (Verizon Visa) is left out of the ranking and named after it, in `membersOnly`. Each offer also shows the bonus alone (first-year value), year one and year two, and how many weeks of spending the minimum takes. Offers the issuer rules out because of a card in the user's wallet are marked likely not eligible and listed last; issuers the user can't get cards from (skippedIssuers, or saved with set_memberships) are left out. Use it when the user asks which card to get next or which has the best sign-up bonus. Spending is optional (typical amounts otherwise). It covers only the cards earnrate knows, offers vary by person, and each offer's note gives the issuer's eligibility rules; pass those caveats on. Never suggest applying through a link.",
       inputSchema: z.object({
         ...OfferFilters,
         valuation: CatalogFilters.valuation,
@@ -343,12 +346,19 @@ export function registerAnswerTools(
         deps.today(),
         spending,
       )
+      const eligible = comparison.offers.filter((o) => o.ineligible === null)
       const trimmed = {
         ...comparison,
         // Offers ruled out by a card the user holds sort last; keep them in
         // view so the reason shows.
         offers: comparison.offers.filter(
           (o, i) => i < TOP || o.ineligible !== null,
+        ),
+        membersOnly: placedAmong(
+          comparison.membersOnly.filter((o) => o.ineligible === null),
+          eligible,
+          TOP,
+          offerOrder,
         ),
       }
       const more = comparison.offers.length - trimmed.offers.length
@@ -358,13 +368,27 @@ export function registerAnswerTools(
             type: 'text',
             text:
               (wallet === null ? '' : ctx.fromCards(args.cards)) +
-              formatOffers(trimmed, (id) => currencyName(catalog, id), true) +
+              formatOffers(
+                trimmed,
+                (id) => currencyName(catalog, id),
+                true,
+                catalog,
+              ) +
               (more > 0
                 ? `\nThe top ${String(TOP)} of ${String(comparison.offers.length)} offers${trimmed.offers.length > TOP ? `, plus ${String(trimmed.offers.length - TOP)} likely not eligible` : ''}. Narrow them with kind, noAnnualFee or business.\n`
                 : ''),
           },
         ],
-        structuredContent: trimmed,
+        structuredContent: {
+          ...trimmed,
+          membersOnly: trimmed.membersOnly.map((o) => ({
+            cardId: o.cardId,
+            cardName: o.cardName,
+            membership: o.membership,
+            twoYears: o.plan?.twoYears ?? null,
+            firstYearValue: o.firstYearValue,
+          })),
+        },
       }
     },
   )
@@ -374,7 +398,7 @@ export function registerAnswerTools(
     {
       title: 'Best cards for a purchase',
       description:
-        'Ranks every card earnrate knows that takes new applicants, not only the user\'s, for one purchase or category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Use it for questions like "what\'s the best card for groceries?" or "which card should I get for Amazon?". It needs no wallet. For which of the user\'s own cards to use, call best_card_for_purchase instead. Mention the annual fee and any conditions alongside each card. For a store, cards with a statement credit there come first in `credits` ("$75 back each quarter, then 1x Amex Membership Rewards"): present them first, in dollars and never as a percentage, saying when the cardholder must enroll, then the ranking by rate.',
+        'Ranks every card earnrate knows that takes new applicants, not only the user\'s, for one purchase or category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Use it for questions like "what\'s the best card for groceries?" or "which card should I get for Amazon?". It needs no wallet. For which of the user\'s own cards to use, call best_card_for_purchase instead. Mention the annual fee and any conditions alongside each card. Cards that need a membership the user hasn\'t given (Verizon Visa) are in `membersOnly`, not the ranking: name them after it, as the text does. For a store, cards with a statement credit there come first in `credits` ("$75 back each quarter, then 1x Amex Membership Rewards"): present them first, in dollars and never as a percentage, saying when the cardholder must enroll, then the ranking by rate.',
       inputSchema: z.object({
         merchant: Merchant.optional(),
         category: CatalogCategory.optional(),
@@ -419,7 +443,7 @@ export function registerAnswerTools(
               args.category ?? null,
             ),
       )
-      const trimmed = { ...result, ranked: result.ranked.slice(0, TOP) }
+      const trimmed = topOf(result, TOP)
       return {
         content: [
           { type: 'text', text: formatExploration(trimmed, catalog, true) },
@@ -434,7 +458,7 @@ export function registerAnswerTools(
     {
       title: 'Simulate a year of spending',
       description:
-        'Spends monthly amounts for a year across every card earnrate knows, and ranks single cards and two-card pairs by rewards minus annual fees, and minus a membership a card needs (a Costco membership) unless the user has it or spends at Costco. Spending is optional: without it, typical U.S. household amounts are used and the answer says so. With `cards` (named in the conversation) or compareToWallet (the saved wallet), it ranks the cards that would add the most to those cards instead. Use it for "which card fits my spending?" or "is it worth adding a card?". It leaves out welcome bonuses.',
+        'Spends monthly amounts for a year across every card earnrate knows, and ranks single cards and two-card pairs by rewards minus annual fees. A card that needs a membership the user hasn\'t given (Verizon Visa; spending at Costco counts as Costco\'s) is left out of singles and pairs and named after them, in `membersOnly`. Spending is optional: without it, typical U.S. household amounts are used and the answer says so. With `cards` (named in the conversation) or compareToWallet (the saved wallet), it ranks the cards that would add the most to those cards instead. Use it for "which card fits my spending?" or "is it worth adding a card?". It leaves out welcome bonuses.',
       inputSchema: z.object({
         spending: SpendingLines,
         cards: NamedCards,
@@ -487,6 +511,16 @@ export function registerAnswerTools(
             additions: result.additions
               .slice(0, TOP)
               .map(({ simulation: _, ...a }) => a),
+            membersOnly: placedAmong(
+              result.membersOnly.filter((a) => a.gain > 0),
+              result.additions.filter((a) => a.gain > 0),
+              TOP,
+              gainOrder,
+            ).map((a) => ({
+              cardId: a.cardId,
+              membership: a.membership,
+              net: a.gain,
+            })),
           },
         }
       }
@@ -501,6 +535,16 @@ export function registerAnswerTools(
           pairs: result.pairs.slice(0, 5),
           current: null,
           additions: [],
+          membersOnly: placedAmong(
+            result.membersOnly,
+            result.singles,
+            TOP,
+            byNet,
+          ).map((s) => ({
+            cardId: s.cards[0]?.cardId ?? '',
+            membership: s.membership,
+            net: s.net,
+          })),
         },
       }
     },

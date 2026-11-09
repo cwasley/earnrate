@@ -1,5 +1,6 @@
 import { walletProblems } from '../data/integrity.ts'
 import type { SetupResult } from '../data/store.ts'
+import { effectiveMemberships } from '../engine/memberships.ts'
 import { EMPTY_WALLET, walletFromCards } from '../engine/transient.ts'
 import type { Channel, MerchantResolution } from '../engine/types.ts'
 import { capitalize } from '../engine/text.ts'
@@ -112,7 +113,12 @@ export function makeContext(deps: ServerDeps) {
       const wallet = await deps.store.load()
       return {
         valuations: wallet?.valuations ?? {},
-        memberships: wallet?.memberships ?? [],
+        // A saved card's own membership counts: its holder has it.
+        memberships: effectiveMemberships(
+          catalog,
+          wallet?.memberships ?? [],
+          wallet?.cards.map((c) => c.id) ?? [],
+        ),
         ...(wallet?.skipped_issuers
           ? { skipped_issuers: wallet.skipped_issuers }
           : {}),
