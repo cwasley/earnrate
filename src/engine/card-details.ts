@@ -6,6 +6,15 @@ import {
   TRANSFER_VALUES,
   type FeeWorthAnswer,
 } from './fee-worth.ts'
+import {
+  changeHeadline,
+  changeSeen,
+  datedChanges,
+  HOLDER_NEWS_DAYS,
+  holderNews,
+} from './changes.ts'
+import { addDays } from './periods.ts'
+import { shortDate } from './text.ts'
 import { headlineRates } from './wallet-summary.ts'
 
 // A search weighs each card's fee only when it finds this many cards or
@@ -17,6 +26,27 @@ export const DETAILS_LEFT_OUT = `Earning rates and whether an annual fee is wort
 export type CardDetails = {
   earning: string[] // its rates now, best first, as the wallet list says them
   feeWorth: FeeWorthAnswer | null // null without an annual fee
+  // The issuer's changes and earnrate's corrections in the last
+  // HOLDER_NEWS_DAYS, newest first, as the to-do list points to them.
+  changes: string[]
+}
+
+function recentChanges(catalog: Catalog, id: string, today: string) {
+  const from = addDays(today, -HOLDER_NEWS_DAYS)
+  return datedChanges(catalog.changes ?? [])
+    .filter(
+      (d) =>
+        holderNews(d.change) &&
+        d.change.cards?.includes(id) === true &&
+        d.date <= today &&
+        changeSeen(d) >= from,
+    )
+    .sort((a, b) => changeSeen(b).localeCompare(changeSeen(a)))
+    .map((d) =>
+      d.change.cause === 'correction'
+        ? `${shortDate(d.date)}, earnrate corrected its own data (the issuer didn't change anything): ${d.change.summary ?? ''}`
+        : `${shortDate(changeSeen(d))}, the issuer changed it: ${changeHeadline(catalog, d.change)}${d.change.source === undefined ? '' : ` (${d.change.source})`}`,
+    )
 }
 
 // Rates count the saved memberships (and one the card itself needs); the
@@ -67,6 +97,7 @@ export function cardDetails(
         worth === null
           ? null
           : feeWorthAnswer(catalog, worth, valuations, transfer),
+      changes: recentChanges(catalog, id, today),
     }
   })
 }

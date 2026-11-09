@@ -11,7 +11,7 @@ export function formatCardInfo(
 ): string {
   const fee =
     card.annualFee === null
-      ? ''
+      ? ', annual fee not on file'
       : card.annualFee === 0
         ? ', no annual fee'
         : `, ${money(card.annualFee)} a year${card.firstYearFee === null ? '' : `, ${card.firstYearFee === 0 ? 'waived' : money(card.firstYearFee)} the first year`}`
@@ -48,6 +48,7 @@ export function formatCardInfo(
     ...(details?.feeWorth
       ? [`is the fee worth it? ${details.feeWorth.text}`]
       : []),
+    ...(details?.changes ?? []).map((c) => `recent change: ${c}`),
   ]
   return [
     `${card.id}: ${card.name} (${NETWORK_NAMES[card.network] ?? card.network}${fee})${card.held ? ' [in wallet]' : ''}`,

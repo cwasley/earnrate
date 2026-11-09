@@ -316,8 +316,38 @@ export const CAP_PERIODS: Record<Cap['period'], string> = {
 
 // "for 2026-Q4", or "this cardmember year": a cardmember year's key is the
 // year it started, which reads as the calendar year.
-export const periodPhrase = (kind: Credit['period'], key: string) =>
-  kind === 'cardmember_year' ? 'this cardmember year' : `for ${key}`
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+// A period key from periodKey in words: "for November 2026", "for Q4
+// 2026", "for July through December 2026", "for 2026".
+export function periodPhrase(kind: Credit['period'], key: string): string {
+  const year = key.slice(0, 4)
+  switch (kind) {
+    case 'cardmember_year':
+      return 'this cardmember year'
+    case 'month':
+      return `for ${MONTH_NAMES[Number(key.slice(5, 7)) - 1] ?? key} ${year}`
+    case 'quarter':
+      return `for ${key.slice(5)} ${year}`
+    case 'half_year':
+      return `for ${key.endsWith('H1') ? 'January through June' : 'July through December'} ${year}`
+    case 'calendar_year':
+      return `for ${key}`
+  }
+}
 
 export const CAP_ADJECTIVES: Record<Cap['period'], string> = {
   month: 'monthly',

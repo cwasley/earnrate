@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.09.3
+
+Wording only; no rates or terms changed. Two summaries of earlier corrections, which card pages and the to-do list now show cardholders, say what changed for them instead of how the data file is organized (`chase-prime-visa` in 2026.11.02.5, `citi-custom-cash`).
+
 ## 2026.11.09.2
 
 Evidence quotes only; no rates, fees, offers or credits changed. No issuer changes.

@@ -107,6 +107,11 @@ export function formatWalletSummary(summary: WalletSummary): string {
   return [...cards, memberships, ...skipped, values].join('\n')
 }
 
+// "its U.S. supermarkets cap"; a label that's a phrase of its own ("the
+// category you spend the most in each month") goes after the noun.
+const capPhrase = (label: string) =>
+  /^the /.test(label) ? `its cap on ${label}` : `its ${label} cap`
+
 export function formatBooking(
   amount: number,
   name: string, // the card's short name
@@ -124,7 +129,7 @@ export function formatBooking(
   if (cap) {
     const left = Math.max(0, cap.capAmount - cap.after)
     messages.push(
-      `Recorded ${money(amount)} on ${name} toward its ${capLabel ?? cap.capKey} cap: ${money(cap.before)} → ${money(cap.after)} of ${money(cap.capAmount)} ${periodPhrase(cap.periodKind, cap.period)}, ${money(left)} left.`,
+      `Recorded ${money(amount)} on ${name} toward ${capPhrase(capLabel ?? cap.capKey)}: ${money(cap.before)} → ${money(cap.after)} of ${money(cap.capAmount)} ${periodPhrase(cap.periodKind, cap.period)}, ${money(left)} left.`,
     )
   }
   if (bonus) {

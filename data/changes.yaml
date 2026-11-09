@@ -3,6 +3,13 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.09.3'
+  date: 2026-11-09
+  changes:
+    - cause: wording
+      cards: [chase-prime-visa, citi-custom-cash]
+      summary: Two earlier corrections' summaries say what changed for cardholders.
+
 - version: '2026.11.09.2'
   date: 2026-11-09
   changes:
@@ -1859,7 +1866,7 @@
     - cause: correction
       card: chase-prime-visa
       field: rules.amazon-without-prime.match
-      summary: Whole Foods moves to its own rule.
+      summary: Whole Foods purchases without Prime are no longer counted as Amazon.com purchases.
     - cause: correction
       card: chase-prime-visa
       field: rules.whole-foods-without-prime
@@ -2050,7 +2057,7 @@
     - cause: correction
       card: citi-custom-cash
       field: rules.top-category-restaurants
-      summary: The restaurants pick is its own rule, so Dodger Stadium and Bellagio earn 5% under their own picks.
+      summary: Dodger Stadium tickets and Bellagio stays earn 5% under the live entertainment and select travel picks, not the restaurants pick.
     - cause: correction
       card: usbank-cash-plus
       field: rules.two-percent.exclude

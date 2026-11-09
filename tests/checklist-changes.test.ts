@@ -242,7 +242,7 @@ test('corrections to several held cards share one line', () => {
     .filter((i) => i.kind === 'change')
     .filter((i) => i.text.startsWith('earnrate fixed '))
   expect(fixes.map((i) => i.text)).toEqual([
-    "earnrate fixed some of its own mistakes about Prime Visa and American Express Gold Card (their issuers didn't change anything); answers already use the fixed terms. Each card's page lists them under Recent changes.",
+    "earnrate fixed some of its own mistakes about Prime Visa and American Express Gold Card (their issuers didn't change anything); answers already use the fixed terms. Asking about a card shows what changed, and so does its page on earnrate.dev, under Recent changes.",
   ])
 })
 
