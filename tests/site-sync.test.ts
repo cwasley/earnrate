@@ -22,6 +22,7 @@ import {
   pointValueOp,
   removeOp,
   syncRequest,
+  disconnect,
   syncReturn,
   updateOp,
   type LocalOp,
@@ -314,6 +315,36 @@ describe('talking to /api/wallet', () => {
     expect(
       await syncRequest(null, () => Promise.reject(new TypeError('offline'))),
     ).toEqual({ kind: 'offline' })
+  })
+
+  test('requests go out one at a time, even when a page starts two', async () => {
+    const wallet = walletWith('amex-gold')
+    let open = 0
+    let most = 0
+    const slow: Parameters<typeof syncRequest>[1] = async () => {
+      open++
+      most = Math.max(most, open)
+      await new Promise((resolve) => setTimeout(resolve, 5))
+      open--
+      return new Response(JSON.stringify({ wallet, summary: {} }), {
+        status: 200,
+      })
+    }
+    const failing: Parameters<typeof syncRequest>[1] = () =>
+      Promise.reject(new TypeError('offline'))
+    const results = await Promise.all([
+      syncRequest(null, slow),
+      syncRequest(null, failing),
+      syncRequest(addOp('amex-gold'), slow),
+      disconnect(slow),
+    ])
+    expect(most).toBe(1)
+    expect(results.map((r) => (typeof r === 'boolean' ? r : r.kind))).toEqual([
+      'ok',
+      'offline',
+      'ok',
+      false,
+    ])
   })
 })
 

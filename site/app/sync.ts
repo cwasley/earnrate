@@ -341,11 +341,25 @@ function walletOf(raw: unknown): Wallet | null {
 
 type Fetch = (input: string, init: RequestInit) => Promise<Response>
 
+// One /api request at a time: two that refresh the same expired token at
+// once get two new refresh tokens, the second voiding the first, and the
+// browser may keep the void one and be signed out at the next refresh.
+let queue: Promise<unknown> = Promise.resolve()
+function inTurn<T>(run: () => Promise<T>): Promise<T> {
+  const next = queue.then(run, run)
+  queue = next.catch(() => undefined)
+  return next
+}
+
 // Reads the synced wallet (no op) or makes one change.
-export async function syncRequest(
+export function syncRequest(
   op: WalletOp | null,
   send: Fetch = (input, init) => fetch(input, init),
 ): Promise<SyncResult> {
+  return inTurn(() => request(op, send))
+}
+
+async function request(op: WalletOp | null, send: Fetch): Promise<SyncResult> {
   let response: Response
   try {
     response = await send('/api/wallet', {
@@ -380,17 +394,19 @@ export async function syncRequest(
 }
 
 // Signs this browser out; false when earnrate's server couldn't be reached.
-export async function disconnect(
+export function disconnect(
   send: Fetch = (input, init) => fetch(input, init),
 ): Promise<boolean> {
-  try {
-    const res = await send('/api/disconnect', {
-      method: 'POST',
-      headers: { [SYNC_HEADER]: '1' },
-      credentials: 'same-origin',
-    })
-    return res.status === 204
-  } catch {
-    return false
-  }
+  return inTurn(async () => {
+    try {
+      const res = await send('/api/disconnect', {
+        method: 'POST',
+        headers: { [SYNC_HEADER]: '1' },
+        credentials: 'same-origin',
+      })
+      return res.status === 204
+    } catch {
+      return false
+    }
+  })
 }
