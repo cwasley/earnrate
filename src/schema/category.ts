@@ -14,6 +14,9 @@ export const CategorySchema = z.strictObject({
   // "at". Subcategories inherit it.
   preposition: z.literal('on').optional(),
   slug: z.string().optional(), // its search page, when not from its name
+  // Answered by that category's search page instead of one of its own; its
+  // own address redirects there.
+  page: CategoryId.optional(),
 })
 
 export const CategoriesFileSchema = z.array(CategorySchema).min(1)

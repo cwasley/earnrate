@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.08.1
+
+Site pages only; no rates, rankings or merchant matches changed. The `grocery` category (grocery stores) gets a new `page: grocery.supermarket`: earnrate.dev had two near-duplicate pages, /best/grocery and /best/groceries, and the grocery stores one left out bonuses that pay only at supermarkets. /best/grocery now redirects to /best/groceries, which ranks every card at least as high and is where searches for "grocery" and "groceries" already land.
+
 ## 2026.11.08
 
 Yearly free nights, a new `free_nights:` list on a card: one certificate each year after the account anniversary, with no spending needed, valued at its point cap times your point value for the hotel program ("up to"). It counts against the annual fee in the renewal check, the fee math and the planner only once you say you use it, like a credit that needs no enrolling. Free nights earned by spending stay spend-bonus rewards, shown but not valued. Each quoted from the issuer:

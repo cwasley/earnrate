@@ -183,6 +183,30 @@ describe('the built static pages', () => {
     expect(page('groceries')).toContain('href="/best/aldi"')
   })
 
+  test('grocery stores and supermarkets share one page, and the other address redirects', () => {
+    const best = readdirSync(path.join(out, 'best'))
+    expect(best.filter((f) => /^grocer(y|ies)\.html$/.test(f))).toEqual([
+      'groceries.html',
+    ])
+    const redirects = readFileSync(path.join(out, '_redirects'), 'utf8')
+    expect(redirects).toContain('/best/grocery /best/groceries 301\n')
+    const sitemap = readFileSync(path.join(out, 'sitemap.xml'), 'utf8')
+    expect(sitemap).not.toContain('/best/grocery<')
+  })
+
+  test('every redirect leaves a missing address for a built page', () => {
+    const file = (p: string) => path.join(out, `${p}.html`)
+    const lines = readFileSync(path.join(out, '_redirects'), 'utf8')
+      .trim()
+      .split('\n')
+    for (const line of lines) {
+      const [from = '', to = '', status] = line.split(' ')
+      expect(status, line).toBe('301')
+      expect(existsSync(file(from)), line).toBe(false)
+      expect(existsSync(file(to)), line).toBe(true)
+    }
+  })
+
   test('pages carry breadcrumbs and no review, rating or FAQ markup', () => {
     for (const { file, html } of pages) {
       expect(html, file).not.toMatch(/FAQPage|"Review"|AggregateRating/)

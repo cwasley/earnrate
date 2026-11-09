@@ -50,6 +50,7 @@ import { allCreditsYear, nightValue } from '../src/engine/credits.ts'
 import { cardColor } from '../src/format/card-art.ts'
 import type { Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
+import type { Category } from '../src/schema/category.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
 import { milestoneStarts, milestoneWhat } from '../src/engine/milestones.ts'
@@ -151,6 +152,9 @@ type Page = {
 // question as their portal page, so they don't get pages of their own.
 const skipMerchant = (m: Merchant) => m.kind === 'booking'
 
+const categoryAddress = (cat: Category) =>
+  cat.slug ?? slugify(cat.aliases[0] ?? cat.name)
+
 function pages(c: Catalog): Page[] {
   const byId = new Map<string, Merchant>()
   for (const m of [...c.merchants.seed, ...c.merchants.overrides])
@@ -173,8 +177,9 @@ function pages(c: Catalog): Page[] {
     })
   }
   for (const cat of c.categories) {
+    if (cat.page !== undefined) continue
     list.push({
-      slug: cat.slug ?? slugify(cat.aliases[0] ?? cat.name),
+      slug: categoryAddress(cat),
       label: categoryPhrase(c, cat.id),
       query: {
         merchant: null,
@@ -1580,6 +1585,14 @@ const compareDate = (p: ComparePair) =>
 
 const comparisons = comparePairs(catalog, today)
 const all = pages(catalog)
+const bestSlug = (merchantId: string) =>
+  all.find((p) => p.merchant?.id === merchantId)?.slug ?? null
+const categorySlug = (id: string): string | null => {
+  const page = catalog.categories.find((c) => c.id === id)?.page ?? id
+  return (
+    all.find((p) => p.merchant === null && p.categoryId === page)?.slug ?? null
+  )
+}
 const results = new Map(
   all.map((p) => [p.slug, exploreCards(catalog, p.query, options)]),
 )
@@ -1662,11 +1675,18 @@ await writeFile(
   path.join(OUT, 'compare', 'index.html'),
   renderCompareIndex(comparisons),
 )
-// Either order of the two cards reaches the one page.
+// Either order of the two cards reaches the one page, and a category
+// answered by another's page sends its own address there.
 await writeFile(
   path.join(OUT, '_redirects'),
-  comparisons
-    .map((p) => `/compare/${p.b}-vs-${p.a} /compare/${p.slug} 301\n`)
+  [
+    ...catalog.categories.flatMap((cat) => {
+      const to = cat.page === undefined ? null : categorySlug(cat.page)
+      return to === null ? [] : [`/best/${categoryAddress(cat)} /best/${to}`]
+    }),
+    ...comparisons.map((p) => `/compare/${p.b}-vs-${p.a} /compare/${p.slug}`),
+  ]
+    .map((line) => `${line} 301\n`)
     .join(''),
 )
 await writeFile(
@@ -1684,10 +1704,6 @@ await writeFile(
   }),
 )
 
-const bestSlug = (merchantId: string) =>
-  all.find((p) => p.merchant?.id === merchantId)?.slug ?? null
-const categorySlug = (id: string) =>
-  all.find((p) => p.merchant === null && p.categoryId === id)?.slug ?? null
 const generated: GeneratedPage[] = [
   ...quarterlyPages(
     ctx,

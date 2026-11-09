@@ -219,6 +219,23 @@ describe('catalogProblems', () => {
     )
   })
 
+  test("catches a category answered by a page that isn't there", () => {
+    const c = catalog()
+    c.categories = CategoriesFileSchema.parse([
+      ...c.categories,
+      { id: 'dining.bars', name: 'Bars', page: 'dining.pubs' },
+      { id: 'dining.cafes', name: 'Cafes', page: 'dining.cafes' },
+      { id: 'dining.diners', name: 'Diners', page: 'dining.bars' },
+    ])
+    expect(catalogProblems(c)).toEqual(
+      expect.arrayContaining([
+        "category dining.bars: page 'dining.pubs' is not another category",
+        "category dining.cafes: page 'dining.cafes' is not another category",
+        "category dining.diners: page 'dining.bars' has no page of its own either",
+      ]),
+    )
+  })
+
   test('catches one alias naming two merchants', () => {
     const c = catalog()
     c.merchants.seed = MerchantsFileSchema.parse([

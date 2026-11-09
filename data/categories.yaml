@@ -28,8 +28,10 @@
 
 - id: grocery
   name: Grocery stores
-  # Keeps /best/grocery, the page's address before it had this name.
+  # Its old page, /best/grocery, redirects to the supermarkets page, which
+  # ranks every card at least as high and is where "groceries" searches land.
   slug: grocery
+  page: grocery.supermarket
 - id: grocery.supermarket
   name: Supermarkets
   aliases: [groceries, grocery, grocery stores, supermarket]

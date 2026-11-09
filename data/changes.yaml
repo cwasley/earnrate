@@ -3,6 +3,16 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.08.1'
+  date: 2026-11-08
+  changes:
+    - cause: wording
+      categories: [grocery]
+      field: page
+      was: null
+      now: grocery.supermarket
+      summary: The grocery stores page on earnrate.dev redirects to the supermarkets page, which ranks every card at least as high.
+
 - version: '2026.11.08'
   date: 2026-11-08
   changes:

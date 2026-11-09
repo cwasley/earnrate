@@ -334,6 +334,16 @@ export function catalogProblems(catalog: Catalog): string[] {
       problems.push(`category ${id}: parent '${id.slice(0, dot)}' is missing`)
     }
   }
+  for (const { id, page } of catalog.categories) {
+    if (page === undefined) continue
+    const target = catalog.categories.find((c) => c.id === page)
+    if (!target || page === id)
+      problems.push(`category ${id}: page '${page}' is not another category`)
+    else if (target.page !== undefined)
+      problems.push(
+        `category ${id}: page '${page}' has no page of its own either`,
+      )
+  }
 
   const { seed, overrides } = catalog.merchants
   problems.push(...merchantProblems('seed', seed, categories))
