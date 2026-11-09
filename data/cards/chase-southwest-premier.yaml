@@ -78,6 +78,7 @@ evidence:
   - rule: not_with
     url: https://creditcards.chase.com/travel-credit-cards/southwest/premier
     quote: 'not available to either (i) current Cardmembers of any Southwest Rapid Rewards® Credit Card'
+    in_collapsed: true
   - rule: annual_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64337.html
     quote: 'Annual Membership Fee $149'

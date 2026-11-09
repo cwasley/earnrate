@@ -49,9 +49,11 @@ evidence:
   - rule: welcome_offer
     url: https://www.target.com/circlecard
     quote: 'Earn $50 in Target Circle Rewards when you spend $50 or more on qualifying purchases'
+    in_collapsed: true
   - rule: welcome_offer
     url: https://www.target.com/circlecard
     quote: 'within 60 days of approval'
+    in_collapsed: true
   - rule: target
     url: https://www.target.com/c/target-circle-card-program-rules/-/N-4tgj0
     quote: 'Game On, DraftsKings, and other sports betting gift cards'
@@ -61,3 +63,4 @@ evidence:
   - rule: welcome_offer
     url: https://www.target.com/circlecard
     quote: 'Qualifying purchases exclude alcohol, Target GiftCards, Visa, American Express and Mastercard gift cards/prepaid cards'
+    in_collapsed: true

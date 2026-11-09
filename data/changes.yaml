@@ -3,6 +3,22 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.09.2'
+  date: 2026-11-09
+  changes:
+    - cause: quote
+      cards:
+        [
+          chase-ihg-one-rewards-premier,
+          chase-marriott-bonvoy-bold,
+          chase-southwest-plus,
+          chase-southwest-premier,
+          chase-southwest-priority,
+          td-bank-target-circle-card,
+        ]
+      field: evidence
+      summary: Offer quotes that live in a section of the page that opens on click are marked in_collapsed, after each was seen there, since offer quotes now have to be in the text the page shows.
+
 - version: '2026.11.09.1'
   date: 2026-11-09
   changes:

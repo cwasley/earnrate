@@ -53,6 +53,13 @@ describe('CardSchema', () => {
     )
   })
 
+  test('takes in_collapsed only on offer quotes', () => {
+    const quote = (rule: string) =>
+      `${goldYaml}evidence:\n  - { rule: ${rule}, url: 'https://www.americanexpress.com/', quote: 'three word quote', in_collapsed: true }\n`
+    expect(parseCard(quote('welcome_offer')).success).toBe(true)
+    expect(parseCard(quote('restaurants')).success).toBe(false)
+  })
+
   test('rejects a network that is not one of the four', () => {
     expect(
       parseCard(goldYaml.replace('network: amex', 'network: unknown')).success,

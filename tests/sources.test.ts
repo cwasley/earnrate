@@ -180,7 +180,7 @@ describe('compareSources', () => {
       expect(check('').missingEvidence[0]?.onlyInPageData).toBe(false)
     })
 
-    test('passes in a collapsed section', () => {
+    test('passes in a collapsed section, since it is not an offer quote', () => {
       expect(
         missing(`<details><summary>Terms</summary>${first.quote}</details>`),
       ).toEqual([])
@@ -192,6 +192,83 @@ describe('compareSources', () => {
           `<div role="dialog" style="display: none"><p>${first.quote}</p></div>`,
         ),
       ).toEqual([])
+    })
+  })
+
+  describe('an offer quote', () => {
+    const offer = 'Earn a $200 bonus after you spend $500 in the first 3 months'
+    const check = (
+      shown: string,
+      hidden: string,
+      flags: { in_collapsed?: true; in_popup?: true } = {},
+      rule = 'welcome_offer',
+    ) => {
+      const html = `<html><body><main>${PAGE}\n${shown}</main>${hidden}</body></html>`
+      const { text, data } = splitPage(html)
+      const load = {
+        innerText: `${PAGE}\n${shown}`,
+        fullText: text,
+        pageData: data,
+      }
+      const withOffer = {
+        ...card,
+        welcome_offer: { dollars: 200, spend: 500, months: 3 },
+        evidence: [...card.evidence, { rule, url, quote: offer, ...flags }],
+      }
+      return compareSources(
+        { ...catalog, cards: [withOffer] },
+        new Map([[url, { url, ok: true, loads: [load, load] }]]),
+        baseline(PAGE),
+        '2026-10-31',
+      ).report
+    }
+    const details = `<details><summary>Offer terms</summary>${offer}</details>`
+    const stale = `<div class="offer-v1" style="display: none">${offer}</div>`
+
+    test('passes where the page shows it', () => {
+      expect(check(offer, '').missingEvidence).toEqual([])
+    })
+
+    test('fails when only stale hidden copy has it, and says so', () => {
+      const report = check('Earn a $250 bonus after you spend $500', stale)
+      expect(report.missingEvidence).toEqual([
+        expect.objectContaining({
+          rule: 'welcome_offer',
+          onlyInHiddenText: true,
+          onlyInPageData: false,
+        }),
+      ])
+      expect(formatReport(report, '2026-10-31')).toMatch(
+        /only in the page's hidden text, not what it shows\. .*`in_collapsed: true`.*stale copy and the offer has changed/,
+      )
+    })
+
+    test('fails in a collapsed section unless marked in_collapsed', () => {
+      expect(check('', details).missingEvidence.map((m) => m.rule)).toEqual([
+        'welcome_offer',
+      ])
+      expect(
+        check('', details, { in_collapsed: true }).missingEvidence,
+      ).toEqual([])
+    })
+
+    test('holds the first-year fee and offer exclusions to the same rule', () => {
+      for (const rule of ['first_year_fee', 'not_with'])
+        expect(
+          check('', stale, {}, rule).missingEvidence.map((m) => m.rule),
+        ).toEqual([rule])
+    })
+
+    test('marked in_collapsed but gone from the page altogether still fails', () => {
+      const [m] = check('', '', { in_collapsed: true }).missingEvidence
+      expect(m).toMatchObject({ onlyInHiddenText: false })
+      expect(formatReport(check('', ''), '2026-10-31')).not.toMatch(
+        /hidden text/,
+      )
+    })
+
+    test('marked in_popup, it matches hidden text and page data as before', () => {
+      expect(check('', stale, { in_popup: true }).missingEvidence).toEqual([])
     })
   })
 

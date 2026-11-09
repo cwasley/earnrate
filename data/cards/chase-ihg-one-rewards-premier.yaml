@@ -103,6 +103,7 @@ evidence:
   - rule: not_with
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
     quote: 'not available to either (i) current cardmembers of any personal IHG One Rewards Credit Card'
+    in_collapsed: true
   - rule: flights-direct-and-car-rental
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Only purchases for airline tickets made directly with the airline will qualify'

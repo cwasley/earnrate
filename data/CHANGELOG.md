@@ -2,6 +2,12 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.09.2
+
+Evidence quotes only; no rates, fees, offers or credits changed. No issuer changes.
+
+- Offer quotes (`welcome_offer`, `not_with`, `first_year_fee`) now have to be in the text the page shows, since issuers leave old offers in hidden markup. 8 quotes on 6 cards live in a section that opens on click and now have `in_collapsed: true`, after each was seen there: the offer-details overlay's eligibility line on Chase's `chase-ihg-one-rewards-premier`, `chase-marriott-bonvoy-bold`, `chase-southwest-plus`, `chase-southwest-premier` and `chase-southwest-priority` pages, and the three welcome-offer quotes in the offer's accordion item on Target's page (`td-bank-target-circle-card`).
+
 ## 2026.11.09.1
 
 No rates changed. `td-bank-nordstrom-visa` gets its foreign transaction fee, none: TD's rates table (a PDF, read in Chrome) says "Foreign Transaction: None", and Nordstrom's card page, quoted, says the Visa shops abroad without the extra charges. The store-only `td-bank-nordstrom-credit-card` and `td-bank-target-circle-card` still have none on file: their rates tables, read in Chrome, have no foreign transaction row, and their notes now say so. Target's program rules page, which the source check can't read, was read in Chrome; its four quotes are still there. Source: [Nordstrom](https://www.nordstrom.com/becomecardmember).

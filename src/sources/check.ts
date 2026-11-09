@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { Catalog } from '../schema/catalog.ts'
+import { OFFER_RULES } from '../schema/card.ts'
 import { containsQuote, earningLines, lineKey, pageKey } from './text.ts'
 
 export type PageLoad = {
@@ -32,6 +33,9 @@ export type SourcesReport = {
     // In the page's embedded data but not its text: stale copy, or a popup
     // whose quote isn't marked `in_popup`.
     onlyInPageData: boolean
+    // An offer quote in the page's hidden text but not what it shows: stale
+    // copy, or a collapsed section whose quote isn't marked `in_collapsed`.
+    onlyInHiddenText: boolean
   }[]
   newLines: { url: string; lines: string[] }[]
   removedLines: { url: string; keys: string[] }[]
@@ -132,10 +136,16 @@ export function compareSources(
     for (const e of card.evidence) {
       const snap = snapshots.get(pageKey(e.url))
       if (!snap?.ok) continue
-      const texts = (l: PageLoad) =>
-        e.in_popup === true
-          ? [l.innerText, l.fullText, l.pageData]
-          : [l.innerText, l.fullText]
+      // An old offer left in hidden markup must not back the current one.
+      const hidden =
+        e.in_popup === true ||
+        e.in_collapsed === true ||
+        !OFFER_RULES.has(e.rule)
+      const texts = (l: PageLoad) => [
+        l.innerText,
+        ...(hidden ? [l.fullText] : []),
+        ...(e.in_popup === true ? [l.pageData] : []),
+      ]
       const found = containsQuote(snap.loads.flatMap(texts), e.quote)
       if (
         found &&
@@ -156,6 +166,10 @@ export function compareSources(
           quote: e.quote,
           onlyInPageData: containsQuote(
             snap.loads.map((l) => l.pageData),
+            e.quote,
+          ),
+          onlyInHiddenText: containsQuote(
+            snap.loads.map((l) => l.fullText),
             e.quote,
           ),
         })
@@ -183,6 +197,14 @@ const truncate = (s: string, n: number) =>
 // wording that disappeared instead of just a count.
 export type LineCache = Record<string, string[]>
 
+function whereFound(m: SourcesReport['missingEvidence'][number]): string {
+  if (m.onlyInHiddenText)
+    return ": only in the page's hidden text, not what it shows. If a section of the page that opens on click (offer details, a tab) shows it, add `in_collapsed: true` to the quote; otherwise it's stale copy and the offer has changed."
+  if (m.onlyInPageData)
+    return ": only in the page's embedded data, not its text. If a popup on the page shows it, add `in_popup: true` to the quote; otherwise the page no longer says it."
+  return ''
+}
+
 export function formatReport(
   report: SourcesReport,
   today: string,
@@ -203,7 +225,7 @@ export function formatReport(
     )
     for (const m of report.missingEvidence) {
       out.push(
-        `- **${m.cardId}** \`${m.rule}\`: "${m.quote}" (${m.url})${m.onlyInPageData ? ": only in the page's embedded data, not its text. If a popup on the page shows it, add `in_popup: true` to the quote; otherwise the page no longer says it." : ''}`,
+        `- **${m.cardId}** \`${m.rule}\`: "${m.quote}" (${m.url})${whereFound(m)}`,
       )
     }
     out.push('')

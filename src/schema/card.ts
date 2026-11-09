@@ -8,6 +8,14 @@ import {
   Mcc,
 } from './common.ts'
 
+// Evidence for the welcome offer's terms, which change more often than any
+// rate and are worse stale than missing.
+export const OFFER_RULES: ReadonlySet<string> = new Set([
+  'welcome_offer',
+  'not_with',
+  'first_year_fee',
+])
+
 // `month` stands in for a billing cycle, which earnrate can't see.
 export const CapPeriod = z.enum([
   'month',
@@ -317,14 +325,24 @@ export const CardSchema = z
     // disappears from its page.
     evidence: z
       .array(
-        z.strictObject({
-          rule: z.string().min(1),
-          url: z.url(),
-          quote: z.string().min(1),
-          // Set only after seeing the quote in a popup the page builds on
-          // click from its embedded data; other quotes must be in its text.
-          in_popup: z.literal(true).optional(),
-        }),
+        z
+          .strictObject({
+            rule: z.string().min(1),
+            url: z.url(),
+            quote: z.string().min(1),
+            // Set only after seeing the quote in a popup the page builds on
+            // click from its embedded data; other quotes must be in its text.
+            in_popup: z.literal(true).optional(),
+            // Offer quotes (OFFER_RULES) must be in the text the page shows,
+            // since issuers leave old offers in hidden markup. Set only after
+            // seeing the quote in a section of the current page that opens on
+            // click (an accordion or overlay of offer details, a closed tab).
+            in_collapsed: z.literal(true).optional(),
+          })
+          .refine(
+            (e) => e.in_collapsed !== true || OFFER_RULES.has(e.rule),
+            'in_collapsed is only for offer quotes; other quotes already match hidden text',
+          ),
       )
       .default([]),
     // Known gaps in this file, surfaced as warnings.

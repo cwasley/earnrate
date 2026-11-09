@@ -119,6 +119,7 @@ evidence:
   - rule: not_with
     url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
     quote: 'This credit card is not available to you if (1) you currently have any of the following cards'
+    in_collapsed: true
 todo:
   - Automatic Silver Elite status and 5 Elite Night Credits each calendar year aren't modeled; they don't depend on spending.
   - 'Pay Yourself Back redeems Bonvoy points at "$100 for every 12,500 points" (0.8 cents) against airline tickets bought directly and Marriott hotel purchases on this card, up to $750 of redemptions a year. earnrate values the currency, not a per-card redemption, so this isn''t modeled.'
