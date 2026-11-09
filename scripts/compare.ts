@@ -11,7 +11,7 @@ import {
   type ExploreQuery,
 } from '../src/engine/explore.ts'
 import { inEffect } from '../src/engine/periods.ts'
-import { VALUATION_PROFILES } from '../src/engine/profiles.ts'
+import { TRANSFER_VALUES } from '../src/engine/fee-worth.ts'
 import {
   simulateCatalog,
   typicalSpendLines,
@@ -204,11 +204,6 @@ export type Comparison = {
   // value, when either card earns them.
   transfer: { a: Simulation; b: Simulation; cents: number } | null
 }
-
-// Amex Membership Rewards and Chase Ultimate Rewards at what transferring
-// them can be worth, as the card pages' annual-fee section counts them.
-export const TRANSFER_VALUES: Record<string, number> =
-  VALUATION_PROFILES['points-heavy']
 
 type RowQuery = {
   key: string

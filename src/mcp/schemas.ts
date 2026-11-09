@@ -424,8 +424,31 @@ export const CardSearchSchema = z.object({
           text: z.string(),
         }),
       ),
+      // Null when the search found more cards than it details.
+      earning: z.array(z.string()).nullable(),
+      // Null without an annual fee. Dollars a month of the mix's spending.
+      feeWorth: z
+        .object({
+          annualFee: z.number(),
+          mix: z.array(z.object({ label: z.string(), share: z.number() })),
+          everywhere: z.boolean(),
+          breakEven: z.number().nullable(),
+          stopsAt: z.number().nullable(),
+          creditsYearly: z.number().nullable(),
+          creditsBreakEven: z.number().nullable(),
+          creditsStopAt: z.number().nullable(),
+          centsPerUnit: z.number(),
+          savedValue: z.boolean(),
+          rivals: z.number(),
+          transfer: z
+            .object({ cents: z.number(), breakEven: z.number().nullable() })
+            .nullable(),
+          text: z.string(),
+        })
+        .nullable(),
     }),
   ),
+  detailed: z.boolean(), // earning and feeWorth were worked out
 })
 
 export const WalletChangeSchema = z.object({

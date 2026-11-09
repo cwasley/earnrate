@@ -20,7 +20,7 @@ import {
   type FeeWorth,
   MAX_MONTHLY,
   STEP,
-} from '../scripts/pages/fee-worth.ts'
+} from '../src/engine/fee-worth.ts'
 import { quarterlyPages, quarters } from '../scripts/pages/quarterly.ts'
 import { DESCRIPTION_MAX, esc, TITLE_MAX } from '../scripts/pages/site.ts'
 import { ROOT } from './helpers.ts'

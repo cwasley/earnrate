@@ -13,7 +13,10 @@ import { parseWalletYaml } from '../src/format/wallet-yaml.ts'
 import { FileWalletStore } from '../src/data/file-store.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import { JsonWalletStore, type WalletStore } from '../src/data/store.ts'
+import { DETAILS_LEFT_OUT } from '../src/engine/card-details.ts'
 import type { CheatSheet } from '../src/engine/cheat-sheet.ts'
+import { feeWorthKit, TRANSFER_VALUES } from '../src/engine/fee-worth.ts'
+import { wholeDollars } from '../src/engine/text.ts'
 import type { Recommendation } from '../src/engine/types.ts'
 import type { WalletSummary } from '../src/engine/wallet-summary.ts'
 import { PROMPTS } from '../src/mcp/prompts.ts'
@@ -1975,5 +1978,108 @@ describe('skipped issuers', () => {
     expect((await store.load())?.skipped_issuers).toEqual(['amex'])
     const cleared = await store.setSkippedIssuers([])
     expect(cleared.ok && cleared.wallet.skipped_issuers).toBeUndefined()
+  })
+})
+
+describe('search_cards: is the annual fee worth it', () => {
+  type Found = {
+    detailed: boolean
+    cards: {
+      id: string
+      earning: string[] | null
+      feeWorth: {
+        breakEven: number | null
+        creditsBreakEven: number | null
+        centsPerUnit: number
+        savedValue: boolean
+        transfer: { cents: number; breakEven: number | null } | null
+        text: string
+      } | null
+    }[]
+  }
+  const search = async (wallet: string, query?: string) => {
+    const client = await connect(wallet)
+    const found = await client.callTool({
+      name: 'search_cards',
+      arguments: query === undefined ? {} : { query },
+    })
+    expect(found.isError, text(found)).toBeFalsy()
+    return { text: text(found), result: found.structuredContent as Found }
+  }
+  const gold = (r: Found) => r.cards.find((c) => c.id === 'amex-gold')
+  const card = (id: string) => {
+    const c = catalog.cards.find((x) => x.id === id)
+    if (!c) throw new Error(id)
+    return c
+  }
+
+  test("a fee card's rates and the card page's break-even", async () => {
+    const { text: answer, result } = await search(
+      await walletCopy(),
+      'amex gold',
+    )
+    const worth = feeWorthKit(catalog, TODAY).feeWorth(card('amex-gold'))
+    const breakEven = worth?.breakEven ?? null
+    expect(breakEven).not.toBeNull()
+    const found = gold(result)
+    expect(found?.earning?.join('; ')).toMatch(/4x .* at restaurants/)
+    expect(found?.feeWorth).toMatchObject({
+      breakEven,
+      creditsBreakEven: worth?.creditsBreakEven,
+      centsPerUnit: 1,
+      savedValue: false,
+    })
+    expect(answer).toContain('    earns: ')
+    expect(answer).toContain(
+      `is the fee worth it? On earning alone, the Amex Gold earns more than the best no-fee card, after its $325 fee, from about ${wholeDollars(breakEven ?? 0)} a month of spending on supermarkets and restaurants.`,
+    )
+    const transferred = feeWorthKit(catalog, TODAY, TRANSFER_VALUES).feeWorth(
+      card('amex-gold'),
+    )
+    expect(transferred?.breakEven).not.toBeNull()
+    expect(found?.feeWorth?.transfer).toEqual({
+      cents: 1.7,
+      breakEven: transferred?.breakEven,
+    })
+    expect(answer).toContain(
+      `If you transfer Amex Membership Rewards to airlines and hotels and count them at 1.7¢ each, it comes out ahead from about ${wholeDollars(transferred?.breakEven ?? 0)} a month.`,
+    )
+  }, 30_000)
+
+  test('a no-fee card gets its rates but no fee line', async () => {
+    const { text: answer, result } = await search(
+      await walletCopy(),
+      'double cash',
+    )
+    const [found] = result.cards
+    expect(found?.earning?.length).toBeGreaterThan(0)
+    expect(found?.feeWorth).toBeNull()
+    expect(answer).not.toMatch(/fee worth it/)
+  }, 30_000)
+
+  test('the saved point values count', async () => {
+    const { result } = await search(
+      await walletCopy('valuations:\n  MR: 2\ncards: []\n'),
+      'amex gold',
+    )
+    const worth = feeWorthKit(catalog, TODAY, { MR: 2 }).feeWorth(
+      card('amex-gold'),
+    )
+    expect(gold(result)?.feeWorth).toMatchObject({
+      breakEven: worth?.breakEven,
+      centsPerUnit: 2,
+      savedValue: true,
+    })
+    expect(gold(result)?.feeWorth?.text).toMatch(
+      /at 2¢ each \(the saved point value\)/,
+    )
+    expect(gold(result)?.feeWorth?.transfer).toBeNull()
+  }, 30_000)
+
+  test('a search that finds many cards leaves the details out', async () => {
+    const { text: answer, result } = await search(await walletCopy())
+    expect(result.detailed).toBe(false)
+    expect(result.cards.every((c) => c.feeWorth === null)).toBe(true)
+    expect(answer).toContain(DETAILS_LEFT_OUT)
   })
 })

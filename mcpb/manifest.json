@@ -72,7 +72,7 @@
     },
     {
       "name": "search_cards",
-      "description": "Finds a card by name or issuer."
+      "description": "Finds a card by name or issuer, with its rates and whether its annual fee is worth it."
     },
     {
       "name": "add_card",

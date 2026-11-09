@@ -1,5 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
+import {
+  cardDetails,
+  DETAILED_UP_TO,
+  DETAILS_LEFT_OUT,
+} from '../../engine/card-details.ts'
 import { catalogCheatSheet, cheatSheet } from '../../engine/cheat-sheet.ts'
 import { exploreCards } from '../../engine/explore.ts'
 import { compareOffers } from '../../engine/offers.ts'
@@ -573,8 +578,7 @@ export function registerAnswerTools(
     'search_cards',
     {
       title: 'Search cards',
-      description:
-        'Finds credit cards in earnrate\'s catalog by name or issuer, e.g. "sapphire", "amex gold" or "bofa". Returns each card\'s id (for add_card), network, annual fee (and any first-year waiver), foreign transaction fee, whether it\'s already in the wallet, what it needs set up (category picks and their options, memberships, activations), its yearly spend bonuses, first-year rates, statement credits and yearly free nights (valued at their point cap, "up to"), each with the id update_card takes. Leave the query out to list every card. US cards only.',
+      description: `Finds credit cards in earnrate's catalog by name or issuer, e.g. "sapphire", "amex gold" or "bofa". Returns each card's id (for add_card), network, annual fee (and any first-year waiver), foreign transaction fee, whether it's already in the wallet, what it needs set up (category picks and their options, memberships, activations), its yearly spend bonuses, first-year rates, statement credits and yearly free nights (valued at their point cap, "up to"), each with the id update_card takes. When it finds ${String(DETAILED_UP_TO)} cards or fewer, also each card's earning rates and, for a card with an annual fee, whether the fee is worth it: the monthly spending in its bonus categories at which it nets more than the best no-fee card, and the same with all its statement credits and free nights used, on typical U.S. spending at the saved point values (earnrate's defaults without them, and again at transfer value for Amex and Chase points). Call it for "is the <card> worth it?" or "is its annual fee worth it?" and quote that line. Leave the query out to list every card. US cards only.`,
       inputSchema: z.object({
         query: z
           .string()
@@ -591,22 +595,36 @@ export function registerAnswerTools(
     },
     async ({ query }) => {
       const held = await deps.store.load().catch(() => null)
-      const result = searchCards(catalog, query ?? '', held, deps.today())
+      const today = deps.today()
+      const result = searchCards(catalog, query ?? '', held, today)
+      const details = cardDetails(
+        catalog,
+        result.cards.map((c) => c.id),
+        held,
+        today,
+      )
       const header = result.exact
         ? ''
         : result.cards.length > 0
           ? 'No card matched every word. Closest:\n'
           : `No card matched "${query ?? ''}". earnrate covers ${String(catalog.cards.length)} US cards; list them all by leaving the query out.`
+      const cards = result.cards.map((c, i) => ({
+        ...c,
+        ...(details?.[i] ?? { earning: null, feeWorth: null }),
+      }))
       return {
         content: [
           {
             type: 'text',
             text:
               header +
-              result.cards.map((c) => formatCardInfo(catalog, c)).join('\n'),
+              result.cards
+                .map((c, i) => formatCardInfo(catalog, c, details?.[i]))
+                .join('\n') +
+              (details === null ? `\n\n${DETAILS_LEFT_OUT}` : ''),
           },
         ],
-        structuredContent: result,
+        structuredContent: { ...result, cards, detailed: details !== null },
       }
     },
   )

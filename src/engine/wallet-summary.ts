@@ -170,7 +170,7 @@ function capLimit(card: Card, shown: Rule[], rule: Rule): string {
 // Best first. Leaves out rates behind a membership the wallet lacks and a
 // lower tier an uncapped, always-on higher rate fully covers (Prime Visa's 3%
 // without Prime, once Prime is held). Rules at the same rate share a line.
-function headlineRates(
+export function headlineRates(
   catalog: Catalog,
   wallet: Wallet,
   card: Card,
@@ -237,6 +237,7 @@ function headlineRates(
         r.match.any &&
         r.geography !== 'foreign_only' &&
         r.requires?.payment === undefined &&
+        r.min_amount === undefined &&
         r.rate > card.base_rate,
     )
       ? []

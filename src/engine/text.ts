@@ -556,12 +556,18 @@ type CreditsTotal = {
 const nightCount = (c: CreditsTotal) => c.nightIds?.length ?? 0
 const upTo = (c: CreditsTotal) => ((c.nights ?? 0) > 0 ? 'up to ' : '')
 
-// "statement credits", "free night", "statement credits and free night"
-export function perksNoun(c: CreditsTotal, statement = true): string {
+// "statement credits", "free night", "statement credits and free night";
+// `counted` says "statement credit" for just one.
+export function perksNoun(
+  c: CreditsTotal,
+  statement = true,
+  counted = false,
+): string {
   const nights = nightCount(c)
   const credits = c.names.length - nights
+  const noun = statement ? 'statement credit' : 'credit'
   return listed([
-    ...(credits === 0 ? [] : [statement ? 'statement credits' : 'credits']),
+    ...(credits === 0 ? [] : [counted && credits === 1 ? noun : `${noun}s`]),
     ...(nights === 0 ? [] : [nights === 1 ? 'free night' : 'free nights']),
   ])
 }
@@ -607,8 +613,19 @@ export function onlyIfText(credits: boolean, nights: boolean): string {
     : "A free night is worth that only on a stay you'd make anyway, at a hotel that costs its full point cap."
 }
 
-export const creditsOnlyIf = (c: CreditsTotal) =>
-  onlyIfText(c.names.length > nightCount(c), nightCount(c) > 0)
+export const CREDIT_ONLY_IF =
+  "It's worth that only if you'd spend there anyway."
+
+// `counted` speaks of a lone credit in the singular.
+export function creditsOnlyIf(c: CreditsTotal, counted = false): string {
+  const nights = nightCount(c)
+  const credits = c.names.length - nights
+  if (counted && credits === 1)
+    return nights === 0
+      ? CREDIT_ONLY_IF
+      : "The credit is worth that only if you'd spend there anyway, and a free night only on a stay you'd make anyway, at a hotel that costs its full point cap."
+  return onlyIfText(credits > 0, nights > 0)
+}
 
 // Several cards' credits and free nights as one total.
 export const perksTotal = (list: CreditsTotal[]): CreditsTotal => ({

@@ -1,9 +1,14 @@
+import type { CardDetails } from '../engine/card-details.ts'
 import { membershipName } from '../engine/memberships.ts'
 import { foreignFeeText, money, NETWORK_NAMES } from '../engine/text.ts'
 import type { CardInfo, SetupNote } from '../engine/setup.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
-export function formatCardInfo(catalog: Catalog, card: CardInfo): string {
+export function formatCardInfo(
+  catalog: Catalog,
+  card: CardInfo,
+  details: CardDetails | null = null,
+): string {
   const fee =
     card.annualFee === null
       ? ''
@@ -11,6 +16,9 @@ export function formatCardInfo(catalog: Catalog, card: CardInfo): string {
         ? ', no annual fee'
         : `, ${money(card.annualFee)} a year${card.firstYearFee === null ? '' : `, ${card.firstYearFee === 0 ? 'waived' : money(card.firstYearFee)} the first year`}`
   const needs = [
+    ...(details && details.earning.length > 0
+      ? [`earns: ${details.earning.join('; ')}`]
+      : []),
     ...card.choices.map(
       (c) =>
         `${c.id}: pick ${String(c.pick)} of ${c.options.join(', ')}${c.default ? ` (default ${c.default.join(', ')})` : ''}`,
@@ -37,6 +45,9 @@ export function formatCardInfo(catalog: Catalog, card: CardInfo): string {
     ...card.freeNights.map((n) => `free night ${n.id}: ${n.text}`),
     ...(card.onlyAt ? [`works only at ${card.onlyAt.join(', ')}`] : []),
     foreignFeeText(card.foreignTransactionFee).toLowerCase(),
+    ...(details?.feeWorth
+      ? [`is the fee worth it? ${details.feeWorth.text}`]
+      : []),
   ]
   return [
     `${card.id}: ${card.name} (${NETWORK_NAMES[card.network] ?? card.network}${fee})${card.held ? ' [in wallet]' : ''}`,

@@ -1,0 +1,89 @@
+import { describe, expect, test } from 'vitest'
+import { loadCatalog } from '../src/data/load.ts'
+import { cardDetails, DETAILED_UP_TO } from '../src/engine/card-details.ts'
+import {
+  feeWorthCredits,
+  feeWorthKit,
+  feeWorthTransfer,
+  feeWorthVerdict,
+  TRANSFER_VALUES,
+} from '../src/engine/fee-worth.ts'
+import { shortCardName } from '../src/engine/text.ts'
+import { pageContext } from '../scripts/pages/context.ts'
+import { feeWorthSection } from '../scripts/pages/fee-worth.ts'
+import { TODAY } from './golden/fixtures.ts'
+
+const catalog = await loadCatalog()
+const cardOf = (id: string) => {
+  const card = catalog.cards.find((c) => c.id === id)
+  if (!card) throw new Error(id)
+  return card
+}
+const plain = (html: string) => html.replace(/<[^>]+>/g, '')
+
+describe('is the annual fee worth it', () => {
+  test('the card page and the answers say the same sentences', () => {
+    const ctx = pageContext(catalog, { today: TODAY, dataVersion: 'test' })
+    const { feeWorth } = feeWorthKit(catalog, TODAY)
+    const transferred = feeWorthKit(catalog, TODAY, TRANSFER_VALUES)
+    for (const id of ['amex-gold', 'chase-sapphire-preferred']) {
+      const worth = feeWorth(cardOf(id))
+      if (!worth) throw new Error(id)
+      const transfer = {
+        worth: transferred.feeWorth(cardOf(id)),
+        cents: TRANSFER_VALUES[worth.card.currency] ?? 0,
+      }
+      const page = plain(feeWorthSection(ctx, worth, transfer))
+      expect(page).toContain(
+        feeWorthVerdict(worth, shortCardName(worth.card.name)),
+      )
+      expect(page).toContain(feeWorthTransfer(catalog, worth.card, transfer))
+      expect(page).toContain(feeWorthCredits(catalog, worth))
+    }
+  }, 30_000)
+
+  test('one credit reads in the singular, several in the plural', () => {
+    const { feeWorth } = feeWorthKit(catalog, TODAY)
+    const one = feeWorth(cardOf('chase-sapphire-preferred'))
+    const several = feeWorth(cardOf('amex-gold'))
+    if (!one || !several) throw new Error('no fee math')
+    expect(feeWorthCredits(catalog, one)).toMatch(
+      /^If you'd use its statement credit \(\$100 a year at Chase Travel\), it's worth more .* It's worth that only if you'd spend there anyway\.$/,
+    )
+    expect(feeWorthCredits(catalog, several)).toMatch(
+      /^If you'd use all its statement credits \(\$424 a year: .*\), they're worth more .* They're worth that only if/,
+    )
+  }, 30_000)
+
+  test('point values change the amounts, not which categories are its bonus', () => {
+    const gold = cardOf('amex-gold')
+    const usual = feeWorthKit(catalog, TODAY).feeWorth(gold)
+    const higher = feeWorthKit(catalog, TODAY, { MR: 2 }).feeWorth(gold)
+    expect(higher?.lines.map((l) => l.label)).toEqual(
+      usual?.lines.map((l) => l.label),
+    )
+    expect(higher?.breakEven ?? Infinity).toBeLessThan(
+      usual?.breakEven ?? Infinity,
+    )
+  }, 30_000)
+
+  test('card details: rates for every card, fee math only with a fee', () => {
+    const details = cardDetails(
+      catalog,
+      ['amex-gold', 'citi-double-cash'],
+      null,
+      TODAY,
+    )
+    expect(details?.[0]?.feeWorth?.text).toMatch(/^On earning alone/)
+    expect(details?.[1]?.feeWorth).toBeNull()
+    expect(details?.[1]?.earning).toContain('2% cash back on everything else')
+    const many = catalog.cards.slice(0, DETAILED_UP_TO + 1).map((c) => c.id)
+    expect(cardDetails(catalog, many, null, TODAY)).toBeNull()
+  }, 30_000)
+
+  test('a rate only on big purchases still leaves the base rate listed', () => {
+    const [details] =
+      cardDetails(catalog, ['amex-business-platinum'], null, TODAY) ?? []
+    expect(details?.earning.at(-1)).toMatch(/on everything else$/)
+  }, 30_000)
+})

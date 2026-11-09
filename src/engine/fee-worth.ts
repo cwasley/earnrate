@@ -1,0 +1,362 @@
+// "Is the annual fee worth it?": the monthly spending in the card's bonus
+// categories at which it nets more than the best no-fee card on the same
+// spending, from the year-long simulation. earnrate.dev's card pages and the
+// card search answer both say it.
+import type { Card } from '../schema/card.ts'
+import type { Catalog } from '../schema/catalog.ts'
+import type { Wallet } from '../schema/wallet.ts'
+import { EPSILON } from './compare.ts'
+import { allCreditsYear, type CreditsYear } from './credits.ts'
+import { matchesFilters } from './explore.ts'
+import { VALUATION_PROFILES } from './profiles.ts'
+import { creditWhere } from './rule-text.ts'
+import {
+  resolveSpendLines,
+  simulateSingles,
+  typicalSpend,
+  type ResolvedLine,
+  type Simulation,
+} from './simulate.ts'
+import {
+  creditsOnlyIf,
+  creditsYearText,
+  currencyName,
+  listed,
+  num,
+  perksNoun,
+  pct,
+  shortCardName,
+  wholeDollars,
+} from './text.ts'
+import { currencyValuation } from './valuation.ts'
+
+export const STEP = 50 // dollars a month between the amounts tried
+export const MAX_MONTHLY = 5000
+
+// Amex Membership Rewards and Chase Ultimate Rewards at what transferring
+// them can be worth: a card earning one gets the fee math again at it.
+export const TRANSFER_VALUES: Record<string, number> =
+  VALUATION_PROFILES['points-heavy']
+
+export type FeeWorth = {
+  card: Card
+  lines: ResolvedLine[] // the typical mix, scaled to $1 a month in all
+  everywhere: boolean // no typical line is a bonus category: the whole mix
+  breakEven: number | null // dollars a month in those lines
+  stopsAt: number | null // past this a cap ends its lead
+  // The same with every statement credit used in full: 0 when the credits
+  // alone outweigh the fee. Null without credits.
+  credits: CreditsYear | null
+  creditsBreakEven: number | null
+  creditsStopAt: number | null
+  rivals: number // no-fee cards it was compared with
+  at: (monthly: number) => { card: Simulation; best: Simulation }
+}
+
+const scaled = (lines: ResolvedLine[], monthly: number) =>
+  lines.map((l) => ({ ...l, monthly: l.monthly * monthly }))
+
+// `valuations` overrides point values: the wallet's, or transfer values.
+export function feeWorthKit(
+  catalog: Catalog,
+  today: string,
+  valuations: Wallet['valuations'] = {},
+) {
+  const typical = resolveSpendLines(catalog, typicalSpend(catalog))
+  const cache = new Map<string, Simulation>()
+
+  const options = (card: Card) => ({
+    filters: {
+      kind: 'any' as const,
+      business: card.business,
+      noAnnualFee: false,
+      issuer: null,
+      includeClosed: false,
+    },
+    memberships: [],
+    valuations,
+    start: today,
+  })
+
+  // Only cards anyone can get: one that needs a membership (a Verizon
+  // account, a credit union, Costco) isn't the no-fee alternative for most.
+  const noFee = (card: Card) =>
+    catalog.cards.filter(
+      (c) =>
+        c.annual_fee === 0 &&
+        c.requires_membership === undefined &&
+        matchesFilters(c, { ...options(card).filters, noAnnualFee: true }),
+    )
+
+  function bestNoFee(card: Card, lines: ResolvedLine[], monthly: number) {
+    const key = `${String(card.business)}|${lines.map((l) => `${l.label}:${String(l.monthly)}`).join(',')}|${String(monthly)}`
+    const hit = cache.get(key)
+    if (hit) return hit
+    const [best] = simulateSingles(
+      catalog,
+      noFee(card),
+      scaled(lines, monthly),
+      options(card),
+    )
+    if (!best) throw new Error('no no-fee card to compare with')
+    cache.set(key, best)
+    return best
+  }
+
+  // The card's bonus lines: those where it earns more than its own base rate.
+  function bonusLines(card: Card): ResolvedLine[] {
+    const cents = currencyValuation(
+      catalog,
+      { valuations },
+      card.currency,
+    ).centsPerUnit
+    return typical.filter((line) => {
+      const [sim] = simulateSingles(
+        catalog,
+        [card],
+        [{ ...line, monthly: 100 }],
+        options(card),
+      )
+      return (sim?.lines[0]?.returnPct ?? 0) > card.base_rate * cents + EPSILON
+    })
+  }
+
+  function feeWorth(card: Card): FeeWorth | null {
+    if (!card.annual_fee || card.applications_closed !== undefined) return null
+    if (noFee(card).length === 0) return null
+    const bonus = bonusLines(card)
+    const everywhere = bonus.length === 0
+    const chosen = everywhere ? typical : bonus
+    const total = chosen.reduce((s, l) => s + l.monthly, 0)
+    const lines = chosen.map((l) => ({ ...l, monthly: l.monthly / total }))
+    const runs = new Map<number, { card: Simulation; best: Simulation }>()
+    const at = (monthly: number) => {
+      const hit = runs.get(monthly)
+      if (hit) return hit
+      const [own] = simulateSingles(
+        catalog,
+        [card],
+        scaled(lines, monthly),
+        options(card),
+      )
+      if (!own) throw new Error(`no simulation for ${card.id}`)
+      const run = { card: own, best: bestNoFee(card, lines, monthly) }
+      runs.set(monthly, run)
+      return run
+    }
+    const { breakEven, stopsAt } = firstLead(
+      (m) => at(m).card.net > at(m).best.net,
+      STEP,
+    )
+    const year = allCreditsYear(catalog, card, today, valuations)
+    const credits = year.creditIds.length > 0 ? year : null
+    const withCredits =
+      credits === null
+        ? { breakEven: null, stopsAt: null }
+        : firstLead((m) => at(m).card.netIfCreditsUsed > at(m).best.net, 0)
+    return {
+      card,
+      lines,
+      everywhere,
+      breakEven,
+      stopsAt,
+      credits,
+      creditsBreakEven: withCredits.breakEven,
+      creditsStopAt: withCredits.stopsAt,
+      rivals: noFee(card).length,
+      at,
+    }
+  }
+
+  return { feeWorth }
+}
+
+// The first monthly amount, from `from` up, at which `ahead` holds (to the
+// nearest $10), and the amount past which it stops holding, if it does.
+function firstLead(ahead: (monthly: number) => boolean, from: number) {
+  let breakEven: number | null = null
+  let stopsAt: number | null = null
+  for (let m = from; m <= MAX_MONTHLY; m += STEP) {
+    const lead = ahead(m)
+    if (breakEven === null && lead) {
+      let lo = m - STEP
+      let hi = m
+      while (m > 0 && hi - lo > 10) {
+        const mid = Math.round((lo + hi) / 20) * 10
+        if (mid <= lo || mid >= hi) break
+        if (ahead(mid)) hi = mid
+        else lo = mid
+      }
+      breakEven = hi
+    } else if (breakEven !== null && !lead) {
+      stopsAt = m - STEP
+      break
+    }
+  }
+  return { breakEven, stopsAt }
+}
+
+// The sentences take `esc` and `strong` so the card page can mark them up;
+// plain text by default.
+export type Markup = {
+  esc: (s: string) => string
+  strong: (s: string) => string
+}
+
+const PLAIN: Markup = { esc: (s) => s, strong: (s) => s }
+
+// "supermarkets" mid-sentence, but "Amazon" keeps its capital.
+export const lineWords = (l: ResolvedLine) =>
+  l.merchant.source === 'category' ? l.label.toLowerCase() : l.label
+
+const share = (l: ResolvedLine) => pct(Math.round(l.monthly * 100))
+
+// "67% supermarkets and 33% restaurants"
+export const feeWorthMix = (w: FeeWorth) =>
+  listed(w.lines.map((l) => `${share(l)} ${lineWords(l)}`))
+
+export const EARNING_ONLY =
+  'This counts only what the card earns, not lounge access or other benefits.'
+
+export function feeWorthVerdict(
+  w: FeeWorth,
+  name: string,
+  { esc, strong }: Markup = PLAIN,
+): string {
+  const fee = wholeDollars(w.card.annual_fee ?? 0)
+  const where = w.everywhere
+    ? 'spending'
+    : `spending on ${listed(w.lines.map(lineWords))}`
+  return w.breakEven === null
+    ? `On earning alone, the ${esc(name)} doesn't earn more than the best no-fee card after its ${esc(fee)} fee, at any amount up to ${esc(wholeDollars(MAX_MONTHLY))} a month of ${esc(where)}.`
+    : `On earning alone, the ${esc(name)} earns more than the best no-fee card, after its ${esc(fee)} fee, from about ${strong(`${esc(wholeDollars(w.breakEven))} a month`)} of ${esc(where)}${w.stopsAt === null ? '' : `, up to about ${esc(wholeDollars(w.stopsAt))} a month (past that, a spending cap ends its lead)`}.`
+}
+
+// The same math with points transferred to airlines and hotels.
+export function feeWorthTransfer(
+  catalog: Catalog,
+  card: Card,
+  transfer: { worth: FeeWorth | null; cents: number },
+  { esc, strong }: Markup = PLAIN,
+): string {
+  const points = currencyName(catalog, card.currency)
+  const breakEven = transfer.worth?.breakEven ?? null
+  return breakEven === null
+    ? `If you transfer ${esc(points)} to airlines and hotels and count them at ${esc(num(transfer.cents))}¢ each, it still doesn't come out ahead within ${esc(wholeDollars(MAX_MONTHLY))} a month.`
+    : `If you transfer ${esc(points)} to airlines and hotels and count them at ${esc(num(transfer.cents))}¢ each, it comes out ahead from about ${strong(`${esc(wholeDollars(breakEven))} a month`)}.`
+}
+
+// With every credit and free night used; empty for a card without them.
+export function feeWorthCredits(
+  catalog: Catalog,
+  w: FeeWorth,
+  { esc, strong }: Markup = PLAIN,
+): string {
+  if (w.credits === null) return ''
+  const fee = wholeDollars(w.card.annual_fee ?? 0)
+  const pastThat =
+    w.creditsStopAt === null
+      ? ''
+      : `; past about ${esc(wholeDollars(w.creditsStopAt))} a month, the best no-fee card earns more`
+  // "all its statement credits", "its statement credit", "its free night",
+  // "all its statement credits and free night", "its statement credit and
+  // free night"
+  const credits = w.credits.names.length - w.credits.nightIds.length
+  const perks = `${w.credits.names.length > 1 && credits !== 1 ? 'all ' : ''}its ${perksNoun(w.credits, true, true)}`
+  const worthMore =
+    w.credits.names.length === 1 ? "it's worth" : "they're worth"
+  // "$100 a year at Chase Travel" for one credit, else the list.
+  const lone =
+    w.credits.names.length === 1 && w.credits.nightIds.length === 0
+      ? w.card.credits.find((c) => c.id === w.credits?.creditIds[0])
+      : undefined
+  const year =
+    lone === undefined
+      ? creditsYearText(w.credits)
+      : `${wholeDollars(w.credits.yearly)} a year ${creditWhere(catalog, lone)}`
+  const sentence =
+    w.creditsBreakEven === null
+      ? `Even if you'd use ${esc(perks)} (${esc(year)}), it doesn't come out ahead within ${esc(wholeDollars(MAX_MONTHLY))} a month.`
+      : w.creditsBreakEven === 0 && w.creditsStopAt === 0
+        ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, but from about ${esc(wholeDollars(STEP))} a month of spending the best no-fee card earns more.`
+        : w.creditsBreakEven === 0
+          ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, so it comes out ahead ${w.creditsStopAt === null ? 'at any amount' : `up to about ${esc(wholeDollars(w.creditsStopAt))} a month; past that, the best no-fee card earns more`}.`
+          : `If you'd use ${esc(perks)} (${esc(year)}), the fee pays off from about ${strong(`${esc(wholeDollars(w.creditsBreakEven))} a month`)}${pastThat}.`
+  return `${sentence} ${esc(creditsOnlyIf(w.credits, true))}`
+}
+
+export type FeeWorthAnswer = {
+  annualFee: number
+  mix: { label: string; share: number }[] // share in percent
+  everywhere: boolean
+  breakEven: number | null
+  stopsAt: number | null
+  creditsYearly: number | null
+  creditsBreakEven: number | null
+  creditsStopAt: number | null
+  centsPerUnit: number
+  savedValue: boolean // the wallet's point value, not earnrate's default
+  rivals: number
+  // At transfer value, for points that transfer and have no saved value.
+  transfer: { cents: number; breakEven: number | null } | null
+  text: string
+}
+
+// The card page's verdict as plain text, with what it assumes, for answers.
+export function feeWorthAnswer(
+  catalog: Catalog,
+  w: FeeWorth,
+  valuations: Wallet['valuations'],
+  transfer: { worth: FeeWorth | null; cents: number } | null = null,
+): FeeWorthAnswer {
+  const { card } = w
+  const { centsPerUnit } = currencyValuation(
+    catalog,
+    { valuations },
+    card.currency,
+  )
+  const savedValue =
+    card.currency !== 'cash' && valuations[card.currency] !== undefined
+  const value =
+    card.currency === 'cash'
+      ? 'cash back at face value'
+      : `${currencyName(catalog, card.currency)} at ${num(centsPerUnit)}¢ each (${savedValue ? 'the saved point value' : "earnrate's default"})`
+  const mix = feeWorthMix(w)
+  const membership =
+    w.at(STEP).card.membershipFees > 0
+      ? ', the membership it needs counted like a fee'
+      : ''
+  const assumes = `Assumes typical U.S. spending (${w.everywhere ? `no typical category earns it a bonus, so earnrate's whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`}), the same every month for a year; ${value}; the regular annual fee${membership}; no welcome bonus or first-year rates. Compared with the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards that need no membership.`
+  return {
+    annualFee: card.annual_fee ?? 0,
+    mix: w.lines.map((l) => ({
+      label: l.label,
+      share: Math.round(l.monthly * 100),
+    })),
+    everywhere: w.everywhere,
+    breakEven: w.breakEven,
+    stopsAt: w.stopsAt,
+    creditsYearly: w.credits?.yearly ?? null,
+    creditsBreakEven: w.creditsBreakEven,
+    creditsStopAt: w.creditsStopAt,
+    centsPerUnit,
+    savedValue,
+    rivals: w.rivals,
+    transfer:
+      transfer === null
+        ? null
+        : {
+            cents: transfer.cents,
+            breakEven: transfer.worth?.breakEven ?? null,
+          },
+    text: [
+      feeWorthVerdict(w, shortCardName(card.name)),
+      transfer === null ? '' : feeWorthTransfer(catalog, card, transfer),
+      EARNING_ONLY,
+      feeWorthCredits(catalog, w),
+      assumes,
+    ]
+      .filter((s) => s !== '')
+      .join(' '),
+  }
+}

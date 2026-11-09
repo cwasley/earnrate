@@ -72,7 +72,8 @@ import {
   howItCodes,
   howStoresCodePage,
 } from './pages/coding.ts'
-import { feeWorthKit, feeWorthSection } from './pages/fee-worth.ts'
+import { feeWorthKit, TRANSFER_VALUES } from '../src/engine/fee-worth.ts'
+import { feeWorthSection } from './pages/fee-worth.ts'
 import { button, pageActions, textLink, type Visitor } from './pages/actions.ts'
 import { storeIndexReasons } from './pages/indexing.ts'
 import { drawImages, type OgImage } from './pages/og.ts'
@@ -88,7 +89,6 @@ import {
 import {
   comparePairs,
   comparer,
-  TRANSFER_VALUES,
   type CompareCell,
   type ComparePair,
   type CompareRow,

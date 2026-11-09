@@ -8,6 +8,7 @@ import {
   profileText,
   VALUATION_PROFILES,
 } from '../engine/profiles.ts'
+import { cardDetails, DETAILS_LEFT_OUT } from '../engine/card-details.ts'
 import { membershipName } from '../engine/memberships.ts'
 import { issuerName } from '../format/card-text.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
@@ -248,7 +249,8 @@ export async function runWalletCommand(
 
   if (command === 'cards') {
     const query = positionals.join(' ')
-    const result = searchCards(catalog, query, await heldWallet(io), io.today)
+    const held = await heldWallet(io)
+    const result = searchCards(catalog, query, held, io.today)
     if (result.cards.length === 0) {
       io.stderr(
         `No card matches "${query}". Run ${CLI_NAME} cards with no words to list all ${String(catalog.cards.length)}.\n`,
@@ -256,8 +258,15 @@ export async function runWalletCommand(
       return RUNTIME_ERROR
     }
     const header = result.exact ? '' : 'No card matches every word. Closest:\n'
+    const details = cardDetails(
+      catalog,
+      result.cards.map((c) => c.id),
+      held,
+      io.today,
+    )
+    const footer = details === null ? `\n${DETAILS_LEFT_OUT}\n` : ''
     io.stdout(
-      `${header}${result.cards.map((c) => formatCardInfo(catalog, c)).join('\n')}\n`,
+      `${header}${result.cards.map((c, i) => formatCardInfo(catalog, c, details?.[i])).join('\n')}\n${footer}`,
     )
     return 0
   }

@@ -173,6 +173,8 @@ Some credits pay only on a purchase of a certain size (Citi Strata Premier's $10
 
 Annual-fee math counts the credits you use on cards you hold, a full period's worth each period: simulating spending with your own cards says "Amex Gold's fee counts $204 a year of credits you use: Dunkin' and Uber." For a card you don't hold, the ranking leaves its credits out, since they're worth it only if you'd spend at those places anyway, and shows what it would net if you used them all beside it: in `simulate`, `offers`, the annual-fee math on each card's page and the site's spending tab. The cheat sheet picks by rate alone and leaves credits out.
 
+"Is the annual fee worth it?" has the same answer in `earnrate cards` and Claude's card search as on the card's page: the monthly spending in the card's bonus categories at which it nets more than the best no-fee card, then the same with all its credits used, at your point values (and for Amex and Chase points without a value of yours, again at what transferring them can be worth, 1.7¢). A search that finds 3 cards or fewer gives it with each card's rates; search for the card by name.
+
 ### Free nights
 
 Some hotel cards give a free night each year after the account anniversary, with no spending needed: IHG One Rewards Premier's Anniversary Free Night (up to 50,000 points), Marriott Bonvoy Boundless's Free Night Award (up to 35,000 points), and the same on IHG Premier Select and Business and Marriott Bonvoy Brilliant and Business. earnrate values one at its point cap times your value for the hotel's points, always "up to": at IHG's default 0.5¢, the Premier's night is up to $250 a year. `earnrate cards ihg` lists each card's, with the id to mark it by.

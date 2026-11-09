@@ -17,7 +17,7 @@ import { addToWallet, updateInWallet } from '../src/engine/wallet-change.ts'
 import { formatCardInfo } from '../src/format/cards.ts'
 import { CardSchema, type Card } from '../src/schema/card.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
-import { feeWorthKit } from '../scripts/pages/fee-worth.ts'
+import { feeWorthKit } from '../src/engine/fee-worth.ts'
 import { heldToInput } from '../site/app/sync.ts'
 
 const catalog = await loadCatalog()
