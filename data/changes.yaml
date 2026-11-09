@@ -3,6 +3,34 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.09.7'
+  date: 2026-11-09
+  changes:
+    - cause: wording
+      cards:
+        [
+          bank-of-america-customized-cash-rewards,
+          bank-of-america-premium-rewards,
+          bank-of-america-travel-rewards,
+          bank-of-america-unlimited-cash-rewards,
+          capital-one-rei-co-op-mastercard,
+          chase-prime-visa,
+          navy-federal-cash-rewards-plus,
+          navy-federal-cash-rewards,
+          navy-federal-more-rewards-amex,
+          penfed-power-cash-rewards,
+          td-bank-nordstrom-credit-card,
+          td-bank-nordstrom-visa,
+          usbank-altitude-connect,
+          usbank-altitude-go,
+          usbank-cash-plus,
+        ]
+      field: welcome_offer.note
+      summary: Offer notes say the offer's window plainly instead of how the data file stores it.
+    - cause: wording
+      card: chase-ihg-one-rewards
+      summary: Its 2026.11.03.2 correction is listed once for cardholders.
+
 - version: '2026.11.09.6'
   date: 2026-11-09
   changes:
@@ -1648,15 +1676,15 @@
       card: chase-ihg-one-rewards
       field: rules.bills-and-streaming-through-2026
       now: null
-      summary: "The bills and streaming bonus is now counted in two parts: bills keep their rate, and streaming earns it only at the services on Chase's select streaming list."
-    - cause: correction
+      summary: Bills keep their bonus rate, and streaming earns it only at the services on Chase's select streaming list.
+    - cause: wording
       card: chase-ihg-one-rewards
       field: rules.bills-through-2026
-      summary: Bills keep their bonus rate.
-    - cause: correction
+      summary: The bills part of the correction above, as its own entry.
+    - cause: wording
       card: chase-ihg-one-rewards
       field: rules.streaming-through-2026
-      summary: Streaming earns the bonus only at the services on Chase's select streaming list.
+      summary: The streaming part of the correction above, as its own entry.
 
 - version: '2026.11.03.1'
   date: 2026-11-03

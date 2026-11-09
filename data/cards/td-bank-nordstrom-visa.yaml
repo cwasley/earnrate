@@ -22,7 +22,7 @@ welcome_offer:
   months: 1
   valid_to: 2026-12-01
   not_with: [td-bank-nordstrom-credit-card]
-  note: A $60 Nordstrom Note, not a statement credit, for applying and getting approved for a new Nordstrom credit card between October 12 and December 1, 2026 (the terms say 9pm PT October 11 to 9pm PT December 1). No purchase is required; the Note posts to the Nordy Club account 7-10 business days after approval, so months is only a placeholder. Current and previous Nordstrom credit cardmembers and Nordstrom employees are not eligible.
+  note: A $60 Nordstrom Note, not a statement credit, for applying and getting approved for a new Nordstrom credit card between October 12 and December 1, 2026 (the terms say 9pm PT October 11 to 9pm PT December 1). No purchase is required; the Note posts to the Nordy Club account 7-10 business days after approval. Current and previous Nordstrom credit cardmembers and Nordstrom employees are not eligible.
 rules:
   - id: nordstrom
     match: { merchants: [nordstrom] }

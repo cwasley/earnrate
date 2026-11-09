@@ -20,7 +20,7 @@ welcome_offer:
   points: 60000
   spend: 4000
   months: 3
-  note: Online offer; the window is 90 days from account opening, modeled as 3 months. The offer may not be available elsewhere after leaving the page. The card may not be available to anyone who has or had it in the past 24 months.
+  note: Online offer; the window is 90 days from account opening (about 3 months). The offer may not be available elsewhere after leaving the page. The card may not be available to anyone who has or had it in the past 24 months.
 rules:
   - id: travel-dining
     match: { categories: [travel, transit, dining] }

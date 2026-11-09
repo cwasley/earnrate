@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.09.7
+
+Wording only; no offers or rates changed. Welcome-offer notes, which card search now shows, drop how the data file stores the offer ("modeled as 3 months", "spend 0", "months is only a placeholder") and say it plainly, such as "within 90 days of account opening (about 3 months)", on 15 cards: four Bank of America cards, three Navy Federal cards, three U.S. Bank cards, two Nordstrom cards, `capital-one-rei-co-op-mastercard`, `penfed-power-cash-rewards` and `chase-prime-visa`. `chase-ihg-one-rewards`' 2026.11.03.2 correction is one cardholder-facing entry: its summary says bills keep their bonus rate and streaming earns it only on Chase's list, and the two entries for the parts it was split into are recorded as wording, so the card lists the correction once.
+
 ## 2026.11.09.6
 
 Wording only; no rates changed. A rule matched only by merchant category codes can now say in words what kinds of stores it covers (`what`), so answers no longer read out the codes: `td-bank-nordstrom-visa`'s specialty food stores (meat markets, candy and nut stores, dairy stores, bakeries and liquor stores) and caterers, `verizon-visa-card`'s caterers, `citi-strata-premier`'s travel agencies, and `venmo-credit-card`'s other entertainment (bookstores and newsstands, digital goods, music and video stores, amusement parks, camps, bowling alleys, golf courses and arcades). Three earlier corrections' summaries (Nordstrom Visa's caterers, Bank of America's parking) drop the codes too.

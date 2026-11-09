@@ -18,7 +18,7 @@ welcome_offer:
   dollars: 100
   spend: 1500
   months: 3
-  note: The page says within 90 days of account opening, modeled as 3 months; one $100 statement credit per account.
+  note: The page says within 90 days of account opening (about 3 months); one $100 statement credit per account.
 rules:
   - id: honors-advantage
     match: { any: true }

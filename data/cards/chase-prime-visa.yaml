@@ -17,7 +17,7 @@ welcome_offer:
   dollars: 200
   spend: 0
   months: 1
-  note: 'Labeled a limited-time offer (up from $150), with no end date given. A $200 Amazon Gift Card loaded into your Amazon account on approval, not cash back; there''s no spend requirement, so spend 0 and months 1 stand in for "on approval". For Prime members; without Prime it''s $60. Chase: available "if you do not currently have an Amazon Visa or Prime Visa credit card", and the gift card "is only awarded to new cardmembers and at the time of card approval."'
+  note: 'Labeled a limited-time offer (up from $150), with no end date given. A $200 Amazon Gift Card loaded into your Amazon account on approval, not cash back; there''s no spend requirement. For Prime members; without Prime it''s $60. Chase: available "if you do not currently have an Amazon Visa or Prime Visa credit card", and the gift card "is only awarded to new cardmembers and at the time of card approval."'
 rules:
   - id: amazon
     match: { merchants: [amazon] }

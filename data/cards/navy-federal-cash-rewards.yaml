@@ -23,7 +23,7 @@ welcome_offer:
   spend: 2500
   months: 3
   valid_to: 2027-01-03
-  note: The page says within 90 days of account opening, modeled as 3 months. For accounts applied for from 07/01/2026 through 01/03/2027; one promotional offer per account opening.
+  note: The page says within 90 days of account opening (about 3 months). For accounts applied for from 07/01/2026 through 01/03/2027; one promotional offer per account opening.
 requires_membership: navy-federal # eligibility-based, no yearly fee
 evidence:
   - rule: base_rate

@@ -18,7 +18,7 @@ welcome_offer:
   points: 20000
   spend: 1000
   months: 3
-  note: The window is 90 days from account opening, modeled as 3 months. Not available to existing or previous Altitude Connect cardmembers who received a new account bonus for it in the last five years.
+  note: The window is 90 days from account opening (about 3 months). Not available to existing or previous Altitude Connect cardmembers who received a new account bonus for it in the last five years.
 rules:
   - id: travel-center-hotels-car-rentals
     match:

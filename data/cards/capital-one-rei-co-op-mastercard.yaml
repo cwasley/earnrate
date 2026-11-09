@@ -19,7 +19,7 @@ welcome_offer:
   dollars: 100
   spend: 0
   months: 2
-  note: A $100 REI gift card, not cash back, after the first purchase outside REI within 60 days of account opening (modeled as 2 months; any non-REI purchase qualifies, so spend 0). Existing or previous REI Co-op Mastercard cardmembers aren't eligible.
+  note: A $100 REI gift card, not cash back, after the first purchase outside REI within 60 days of account opening (about 2 months). Existing or previous REI Co-op Mastercard cardmembers aren't eligible.
 rules:
   - id: rei
     match: { merchants: [rei] }

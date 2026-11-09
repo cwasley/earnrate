@@ -17,7 +17,7 @@ welcome_offer:
   dollars: 200
   spend: 1000
   months: 3
-  note: The page says within 90 days of account opening, modeled as 3 months. Existing and previous Cash Rewards accounts don't qualify, and it can't be combined with any other bonus offer.
+  note: The page says within 90 days of account opening (about 3 months). Existing and previous Cash Rewards accounts don't qualify, and it can't be combined with any other bonus offer.
 caps:
   - id: five-percent-combined
     amount: 2000
