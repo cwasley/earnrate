@@ -46,7 +46,7 @@ describe('checklist', () => {
       (i) => i.kind === 'pick',
     )
     expect(pick?.text).toMatch(
-      /^Pick Citi Custom Cash Card's top category for this month;/,
+      /^Set Citi Custom Cash Card's top category for this month: Citi gives the bonus where you spend the most, and earnrate counts it only where you say\.$/,
     )
   })
 

@@ -59,6 +59,9 @@ export type ChecklistItem = {
   url?: string // where a change came from, also at the end of its text
 }
 
+const issuerOf = (catalog: Catalog, id: string) =>
+  catalog.issuers.find((i) => i.id === id)?.name ?? id
+
 // "5% and 2% categories", "top category": a choice already named for its
 // category isn't followed by "categories" again.
 function pickWhat(names: string[]): string {
@@ -123,7 +126,9 @@ export function checklist(
       items.push({
         kind: 'pick',
         cardId: card.id,
-        text: `Pick ${possessive(name)} ${pickWhat(unpicked.map((c) => choiceName(c.id)))} for this ${first.period.replace('_', ' ')}; until then they earn the base rate.`,
+        text: unpicked.every((c) => c.automatic)
+          ? `Set ${possessive(name)} ${pickWhat(unpicked.map((c) => choiceName(c.id)))} for this ${first.period.replace('_', ' ')}: ${issuerOf(catalog, card.issuer)} gives the bonus where you spend the most, and earnrate counts it only where you say.`
+          : `Pick ${possessive(name)} ${pickWhat(unpicked.map((c) => choiceName(c.id)))} for this ${first.period.replace('_', ' ')}; until then they earn the base rate.`,
         due,
       })
     } else {
@@ -140,7 +145,7 @@ export function checklist(
         items.push({
           kind: 'pick',
           cardId: card.id,
-          text: `Pick ${possessive(name)} categories for next ${ending.period.replace('_', ' ')}; this one ends ${shortDate(end)}.`,
+          text: `${ending.automatic ? 'Set' : 'Pick'} ${possessive(name)} categories for next ${ending.period.replace('_', ' ')}; this one ends ${shortDate(end)}.`,
           due: end,
         })
     }

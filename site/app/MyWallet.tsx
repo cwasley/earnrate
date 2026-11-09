@@ -1655,7 +1655,7 @@ function WhatIf({
 // and text.ts; an item whose wording doesn't match stays plain text.
 const SETTINGS_LINKS: Partial<Record<ChecklistItem['kind'], RegExp>> = {
   enroll: /mark (?:it|them) enrolled|Say (?:you use it|which you use)/,
-  pick: /^Pick .+? categor(?:y|ies)/,
+  pick: /^(?:Pick|Set) .+? categor(?:y|ies)/,
   activate: /^Activate .+?'s? bonus/,
 }
 
