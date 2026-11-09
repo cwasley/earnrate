@@ -271,6 +271,24 @@ describe("Aspire's Hilton Resort Credit", () => {
     )
   })
 
+  test('says so with no amount too', () => {
+    const r = recommend(
+      catalog,
+      WalletSchema.parse({ cards: [{ id: 'amex-hilton-honors-aspire' }] }),
+      {
+        merchant: 'Hilton resort',
+        amount: null,
+        channel: 'in_store',
+        date: TODAY,
+        country: 'US',
+        payment: null,
+      },
+    ).ranked[0]
+    expect(r?.reasoning.join(' ')).toMatch(
+      /give the amount to count it\. Purchases made directly with a participating Hilton Resort/,
+    )
+  })
+
   test('not at a plain Hilton, which earns the same', () => {
     const r = at('Hilton')
     expect(r?.rate).toBe(14)

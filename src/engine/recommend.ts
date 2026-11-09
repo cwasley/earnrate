@@ -376,8 +376,12 @@ function reasoningFor(
   for (const hit of entry.milestones)
     lines.push(reachedText(card, hit, valuation.centsPerUnit))
   if (entry.credit) {
-    const note = entry.credit.credit.note
-    const pays = (entry.creditDollars ?? 0) > 0 && note !== undefined
+    const { left, credit } = entry.credit
+    const note = credit.note
+    const pays =
+      note !== undefined &&
+      (left === null || left > 0) &&
+      (entry.creditDollars === null || entry.creditDollars > 0)
     lines.push(
       `${creditAnswerText(entry.credit, entry.creditDollars)}${pays ? ` ${note}` : ''}`,
     )
