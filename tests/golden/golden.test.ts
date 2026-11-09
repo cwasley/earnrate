@@ -2469,7 +2469,7 @@ describe('#36 the renewal check', () => {
         },
       )
       expect(item?.text).toMatch(
-        /\. On your spending, it earns about \$[\d,]+ a year (more|less) than U\.S\. Bank Altitude Go would: about \$[\d,]+ a year short of the fee\. Check with Chase before the fee posts\.$/,
+        /\. On your spending, it earns about \$[\d,]+ a year (more|less) than the best no-fee card \(U\.S\. Bank Altitude Go\) would: about \$[\d,]+ a year short of the fee\. Check with Chase before the fee posts\.$/,
       )
       expect(item?.text).not.toMatch(/your other cards/)
     },

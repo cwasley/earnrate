@@ -782,7 +782,9 @@ export function renewalText(
     return `${when}: it's paying for itself, about ${wholeDollars(r.net)} a year ahead after the fee.`
   const basis = r.typical ? 'At typical spending' : 'On your spending'
   const over =
-    r.against === null ? 'your other cards would' : `${r.against} would`
+    r.against === null
+      ? 'your other cards would'
+      : `the best no-fee card (${r.against}) would`
   const earns =
     Math.round(r.rewardsAdded) > 0
       ? `it earns about ${wholeDollars(r.rewardsAdded)} a year more than ${over}`
