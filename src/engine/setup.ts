@@ -49,6 +49,7 @@ export type CardInfo = {
   foreignTransactionFee: number | null // percent; 0 when none, null when unknown
   business: boolean
   onlyAt: string[] | null
+  ratesNote: string | null // how its rates are counted, when it needs saying
   held: boolean
   choices: CardChoiceInfo[]
   memberships: string[] // memberships some of its rules need
@@ -214,6 +215,7 @@ export function cardInfo(
     foreignTransactionFee: card.foreign_transaction_fee,
     business: card.business,
     onlyAt: card.only_at ?? null,
+    ratesNote: card.rates_note ?? null,
     held: wallet?.cards.some((c) => c.id === card.id) ?? false,
     choices: card.choices.map((c) => ({
       id: c.id,

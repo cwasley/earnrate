@@ -63,6 +63,7 @@ rules:
     match: { categories: [streaming, tv_internet] }
     rate: 2
     note: Cable, satellite and other TV, radio and streaming services billed by subscription.
+rates_note: 'At Nordstrom, these rates are what the card adds on top of the 1 point per dollar every Nordy Club member earns paying any way: a cardmember earns 2 points per dollar there in all, or 3 with Ambassador or Icon status.'
 todo:
   - 'The offer''s full terms ("Current and previous Nordstrom credit cardmembers and Nordstrom employees are not eligible for this offer") load only when "Terms Apply" is clicked, so the source check quotes the banner instead. Read in Chrome 2026-11-09.'
   - 'The foreign transaction fee is quoted from nordstrom.com. TD''s rates table, a PDF (td.com/nordstromcard/credit-card-agreement, read 2026-11-09 in Chrome), also says "Foreign Transaction: None"; the source check can''t read PDFs.'

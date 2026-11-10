@@ -115,3 +115,10 @@ test("the credits verdict says why a fee card's lead ends", () => {
     /past that, the best no-fee card earns more, since a spending cap ends its lead\./,
   )
 })
+
+test("a card's note on how its rates count comes with them", () => {
+  expect(search('td-bank-nordstrom-visa')).toMatch(
+    /about these rates: At Nordstrom, these rates are what the card adds on top of the 1 point per dollar every Nordy Club member earns paying any way/,
+  )
+  expect(search('amex-gold')).not.toMatch(/about these rates/)
+})

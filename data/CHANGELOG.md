@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.10.1
+
+Wording only; no rates changed. Cards can carry a `rates_note` on how their rates are counted, shown with them in card search. `td-bank-nordstrom-visa` and `td-bank-nordstrom-credit-card` say that at Nordstrom their rates are what the card adds on top of the 1 point per dollar every Nordy Club member earns, so a cardmember earns 2 points per dollar there in all, or 3 with Ambassador or Icon status.
+
 ## 2026.11.10
 
 Wording only; no rates changed. The car rental category (`travel.car_rental`) is named "Car rentals", like flights, hotels and cruises, so answers read "select car rentals". `chase-prime-visa` lists its Prime rates in the same order as the ones without Prime (Audible before Whole Foods Market), so the two lines compare at a glance.

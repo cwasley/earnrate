@@ -348,6 +348,9 @@ export const CardSchema = z
           ),
       )
       .default([]),
+    // How the card's rates are counted, when they'd otherwise read oddly:
+    // Nordstrom's are what the card adds on top of what any member earns.
+    rates_note: z.string().min(1).optional(),
     // Known gaps in this file, surfaced as warnings.
     todo: z.array(z.string()).default([]),
   })

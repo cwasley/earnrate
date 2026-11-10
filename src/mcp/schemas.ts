@@ -397,6 +397,7 @@ export const CardSearchSchema = z.object({
       foreignTransactionFee: z.number().nullable(),
       business: z.boolean(),
       onlyAt: z.array(z.string()).nullable(),
+      ratesNote: z.string().nullable(),
       held: z.boolean(),
       choices: z.array(
         z.object({

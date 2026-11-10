@@ -39,6 +39,7 @@ rules:
     match: { merchants: [nordstrom-rack] }
     rate: 5
     note: No points at Nordstrom Rack. Instead an instant 5% discount in Rack stores and on NordstromRack.com, counted here as 5 points per dollar because a point is worth 1¢ in Notes. Not through Apple Pay, PayPal or Afterpay, and not on gift cards.
+rates_note: 'At Nordstrom, these rates are what the card adds on top of the 1 point per dollar every Nordy Club member earns paying any way: a cardmember earns 2 points per dollar there in all, or 3 with Ambassador or Icon status.'
 todo:
   - 'The offer''s full terms ("Current and previous Nordstrom credit cardmembers and Nordstrom employees are not eligible for this offer") load only when "Terms Apply" is clicked, so the source check quotes the banner instead. Read in Chrome 2026-11-09.'
   - "Foreign transaction fee not on file: TD's rates table for this card (a PDF, read 2026-11-09) has no foreign transaction row. It works only at Nordstrom, so it doesn't matter abroad."

@@ -292,6 +292,7 @@ test("search_cards' description names what it returns", async () => {
     foreignTransactionFee: 'foreign transaction fee',
     business: null,
     onlyAt: null,
+    ratesNote: "how they're counted",
     held: 'already in the wallet',
     choices: 'category picks',
     memberships: 'memberships',
