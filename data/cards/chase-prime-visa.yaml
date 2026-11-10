@@ -29,16 +29,16 @@ rules:
     rate: 5
     requires: { membership: amazon-prime }
     note: Amazon Fresh's physical stores closed or became Whole Foods in 2026, so this is mostly online orders.
+  - id: audible
+    match: { merchants: [audible] }
+    rate: 5
+    requires: { membership: amazon-prime }
   - id: whole-foods
     match: { merchants: [whole-foods] }
     rate: 5
     geography: us_only
     requires: { membership: amazon-prime }
     note: Online or in-store in the U.S., but not through Instacart or other third-party sites.
-  - id: audible
-    match: { merchants: [audible] }
-    rate: 5
-    requires: { membership: amazon-prime }
   - id: amazon-without-prime
     match: { merchants: [amazon, amazon-fresh, audible] }
     rate: 3

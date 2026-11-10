@@ -285,10 +285,12 @@ function unlockedBy(
     const byRate = new Map<number, Rule[]>()
     for (const r of [...rules].sort((a, b) => b.rate - a.rate))
       byRate.set(r.rate, [...(byRate.get(r.rate) ?? []), r])
-    return [...byRate].map(
-      ([rate, same]) =>
-        `${earnText(catalog, rate, currency)} ${wherePhrase(catalog, card, same)} with ${membershipName(catalog, id)}`,
-    )
+    return [...byRate].map(([rate, same]) => {
+      const limit = [...new Set(same.map((r) => capLimit(card, rules, r)))]
+        .filter((l) => l !== '')
+        .join('; ')
+      return `${earnText(catalog, rate, currency)} ${wherePhrase(catalog, card, same)} with ${membershipName(catalog, id)}${limit === '' ? '' : ` (${limit})`}`
+    })
   })
 }
 

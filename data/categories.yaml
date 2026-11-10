@@ -96,9 +96,9 @@
   aliases: [hotel, hotels, motel, motels]
   mccs: [7011]
 - id: travel.car_rental
-  name: Car rental
+  name: Car rentals
   preposition: on
-  aliases: [car rentals, rental cars]
+  aliases: [car rental, rental cars]
   mccs: [7512]
 - id: travel.cruise
   name: Cruises

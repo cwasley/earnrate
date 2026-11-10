@@ -3,6 +3,19 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.10'
+  date: 2026-11-10
+  changes:
+    - cause: wording
+      categories: [travel.car_rental]
+      field: name
+      was: Car rental
+      now: Car rentals
+      summary: Named in the plural, like flights, hotels and cruises.
+    - cause: wording
+      card: chase-prime-visa
+      summary: Its Prime rates are listed in the same order as the ones without Prime.
+
 - version: '2026.11.09.7'
   date: 2026-11-09
   changes:
