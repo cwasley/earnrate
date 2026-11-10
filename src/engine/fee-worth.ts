@@ -290,10 +290,16 @@ function creditsSentences(
 ): string {
   if (w.credits === null) return ''
   const fee = wholeDollars(w.card.annual_fee ?? 0)
+  // Why the credits' lead ends: a cap on the card's rate, or a rate below
+  // the no-fee card's, so each dollar more narrows it.
+  const why =
+    w.stopsAt !== null
+      ? ', since a spending cap ends its lead'
+      : ', since each extra dollar earns less on this card than on that one'
   const pastThat =
     w.creditsStopAt === null
       ? ''
-      : `; past about ${esc(wholeDollars(w.creditsStopAt))} a month, the best no-fee card earns more`
+      : `; past about ${esc(wholeDollars(w.creditsStopAt))} a month, the best no-fee card earns more${why}`
   // "all its statement credits", "its statement credit", "its free night",
   // "all its statement credits and free night", "its statement credit and
   // free night"
@@ -314,9 +320,9 @@ function creditsSentences(
     w.creditsBreakEven === null
       ? `Even if you'd use ${esc(perks)} (${esc(year)}), it doesn't come out ahead within ${esc(wholeDollars(MAX_MONTHLY))} a month.`
       : w.creditsBreakEven === 0 && w.creditsStopAt === 0
-        ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, but from about ${esc(wholeDollars(STEP))} a month of spending the best no-fee card earns more.`
+        ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, but from about ${esc(wholeDollars(STEP))} a month of spending the best no-fee card earns more${why}.`
         : w.creditsBreakEven === 0
-          ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, so it comes out ahead ${w.creditsStopAt === null ? 'at any amount' : `up to about ${esc(wholeDollars(w.creditsStopAt))} a month; past that, the best no-fee card earns more`}.`
+          ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, so it comes out ahead ${w.creditsStopAt === null ? 'at any amount' : `up to about ${esc(wholeDollars(w.creditsStopAt))} a month; past that, the best no-fee card earns more${why}`}.`
           : `If you'd use ${esc(perks)} (${esc(year)}), the fee pays off from about ${strong(`${esc(wholeDollars(w.creditsBreakEven))} a month`)}${pastThat}.`
   const onlyIf = creditsOnlyIf(w.credits, true)
   return onlyIf === '' ? sentence : `${sentence} ${esc(onlyIf)}`

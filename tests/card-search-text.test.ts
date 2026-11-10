@@ -106,3 +106,12 @@ test('rules matched only by store codes are named, not read out as codes', () =>
     /at .*caterers, meat markets, candy and nut stores, dairy stores, bakeries and liquor stores/,
   )
 })
+
+test("the credits verdict says why a fee card's lead ends", () => {
+  expect(search('chase-sapphire-preferred')).toMatch(
+    /past that, the best no-fee card earns more, since each extra dollar earns less on this card than on that one\./,
+  )
+  expect(search('amex-blue-cash-preferred')).toMatch(
+    /past that, the best no-fee card earns more, since a spending cap ends its lead\./,
+  )
+})
