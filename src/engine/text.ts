@@ -349,6 +349,11 @@ export function periodPhrase(kind: Credit['period'], key: string): string {
   }
 }
 
+// "Cash+'s supermarkets cap"; a label that's a phrase of its own ("the 2
+// categories you pick each quarter") goes after the noun.
+export const capNamed = (owner: string, label: string) =>
+  /^the /.test(label) ? `${owner} cap on ${label}` : `${owner} ${label} cap`
+
 export const CAP_ADJECTIVES: Record<Cap['period'], string> = {
   month: 'monthly',
   quarter: 'quarterly',

@@ -5,6 +5,7 @@ import { cardInfo } from '../src/engine/setup.ts'
 import { formatCardInfo } from '../src/format/cards.ts'
 import { formatBooking, formatWalletSummary } from '../src/format/wallet.ts'
 import { walletSummary } from '../src/engine/wallet-summary.ts'
+import { capNamed } from '../src/engine/text.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 
 const catalog = await loadCatalog()
@@ -121,4 +122,44 @@ test("a card's note on how its rates count comes with them", () => {
     /about these rates: At Nordstrom, these rates are what the card adds on top of the 1 point per dollar every Nordy Club member earns paying any way/,
   )
   expect(search('amex-gold')).not.toMatch(/about these rates/)
+})
+
+test('a cap past its limit says so, and cap names read in a sentence', () => {
+  const booking = {
+    cardId: 'usbank-cash-plus',
+    capKey: 'five-percent',
+    ruleId: 'five-percent',
+    period: '2026-Q4',
+    periodKind: 'quarter' as const,
+    capAmount: 2000,
+    before: 1950,
+    after: 2050,
+  }
+  expect(
+    formatBooking(
+      100,
+      'Cash+',
+      booking,
+      null,
+      [],
+      null,
+      'the 2 categories you pick each quarter',
+    ),
+  ).toMatch(
+    /^Recorded \$100 on Cash\+ toward its cap on the 2 categories you pick each quarter: \$1,950 → \$2,000 of \$2,000 for Q4 2026, \$0 left; the \$50 past the cap earns the card's rate after it\./,
+  )
+  expect(capNamed("Cash+'s", 'the 2 categories you pick each quarter')).toBe(
+    "Cash+'s cap on the 2 categories you pick each quarter",
+  )
+  expect(capNamed("Blue Cash Preferred's", 'supermarkets')).toBe(
+    "Blue Cash Preferred's supermarkets cap",
+  )
+  const platinum = walletSummary(
+    catalog,
+    WalletSchema.parse({ cards: [{ id: 'amex-platinum' }] }),
+    TODAY,
+  ).cards[0]
+  expect(platinum?.caps.map((c) => c.label)).toContain(
+    'flights booked directly or through Amex Travel',
+  )
 })

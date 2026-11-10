@@ -314,7 +314,7 @@ export async function runWalletCommand(
       `Point values updated in ${where}: ${Object.entries(given.changes)
         .map(
           ([id, c]) =>
-            `${id} ${c === null ? 'back to the default' : `${String(c)}¢`}`,
+            `${id} ${c === null ? `back to earnrate's default, ${String(catalog.currencies.find((x) => x.id === id)?.value_cents ?? 1)}¢` : `${String(c)}¢`}`,
         )
         .join(', ')}.`,
       null,

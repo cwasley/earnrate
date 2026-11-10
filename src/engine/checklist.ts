@@ -24,6 +24,7 @@ import {
   useCreditText,
   wholeDollars,
   possessive,
+  capNamed,
 } from './text.ts'
 import { milestonePays } from './milestones.ts'
 import { renewalCheck, renewalDue, type Spending } from './renewal.ts'
@@ -170,7 +171,7 @@ export function checklist(
         cardId: card.id,
         text:
           cap.remaining === 0
-            ? `${possessive(name)} ${cap.label} cap is used up${resets === null ? '' : ` until ${shortDate(resets)}`}; another card may earn more there.`
+            ? `${capNamed(possessive(name), cap.label)} is used up${resets === null ? '' : ` until ${shortDate(resets)}`}; another card may earn more there.`
             : `${name}: ${money(cap.remaining)} left of ${money(cap.amount)} ${CAP_PERIODS[cap.period]} at the bonus rate on ${cap.label}.`,
         due: resets,
       })

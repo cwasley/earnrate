@@ -428,9 +428,11 @@ function capSummaries(
     const shared = card.caps.find((c) => c.id === key)
     const label = shared?.rotating
       ? 'the rotating bonus categories'
-      : listed([
-          ...new Set(covered.flatMap((r) => ruleParts(catalog, r, card))),
-        ]) || words(key)
+      : listed(
+          directOrThrough([
+            ...new Set(covered.flatMap((r) => ruleParts(catalog, r, card))),
+          ]),
+        ) || words(key)
     return {
       key,
       label,

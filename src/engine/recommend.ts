@@ -588,7 +588,7 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
       if (threshold < w.centsPerUnit && threshold >= w.range[0]) {
         consider(
           (w.centsPerUnit - threshold) / w.centsPerUnit,
-          `${displayName(other)} beats ${displayName(winner)} here if ${pointsName(currencyLabel(catalog, w.currency))} are worth less than ${roundDown(threshold)}¢ (you value them at ${num(w.centsPerUnit)}¢).`,
+          `${displayName(other)} beats ${displayName(winner)} here if ${pointsName(currencyLabel(catalog, w.currency))} are worth less than ${roundDown(threshold)}¢ (valued here at ${num(w.centsPerUnit)}¢).`,
         )
       }
     }
@@ -598,7 +598,7 @@ function sensitivity(catalog: Catalog, entries: Entry[]): string | null {
       if (threshold > o.centsPerUnit && threshold <= o.range[1]) {
         consider(
           (threshold - o.centsPerUnit) / o.centsPerUnit,
-          `${displayName(other)} beats ${displayName(winner)} here if ${pointsName(currencyLabel(catalog, o.currency))} are worth ${worthAbove(threshold)} (you value them at ${num(o.centsPerUnit)}¢).`,
+          `${displayName(other)} beats ${displayName(winner)} here if ${pointsName(currencyLabel(catalog, o.currency))} are worth ${worthAbove(threshold)} (valued here at ${num(o.centsPerUnit)}¢).`,
         )
       }
     }

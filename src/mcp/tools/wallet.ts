@@ -368,7 +368,7 @@ export function walletHandlers(
       const result = await store.setValuations(changes)
       const set = Object.entries(changes).map(([id, cents]) =>
         cents === null
-          ? `${currencyLabel(catalog, id)} back to the default`
+          ? `${currencyLabel(catalog, id)} back to earnrate's default, ${String(catalog.currencies.find((c) => c.id === id)?.value_cents ?? 1)}¢`
           : `${currencyLabel(catalog, id)} at ${String(cents)}¢`,
       )
       return ctx.changed(result, `Point values: ${set.join(', ')}.`, {
