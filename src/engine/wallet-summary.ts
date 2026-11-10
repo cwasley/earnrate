@@ -305,6 +305,26 @@ export type ActivationDue = {
 // activation group (one activation covers a quarter's categories).
 // "at gas stations and restaurants, and on transit": each rule's parts after
 // its own preposition, the "at" ones first.
+// "flights" beside "flights through Amex Travel" at one rate reads as
+// "flights booked directly or through Amex Travel".
+function directOrThrough(parts: string[]): string[] {
+  const via = new Map<string, string>()
+  for (const p of parts) {
+    const m = / through (.+)$/.exec(p)
+    if (m && parts.includes(p.slice(0, m.index)))
+      via.set(p.slice(0, m.index), m[1] ?? '')
+  }
+  return parts
+    .filter((p) => {
+      const m = / through (.+)$/.exec(p)
+      return !(m && via.has(p.slice(0, m.index)))
+    })
+    .map((p) => {
+      const site = via.get(p)
+      return site === undefined ? p : `${p} booked directly or through ${site}`
+    })
+}
+
 export function wherePhrase(
   catalog: Catalog,
   card: Card,
@@ -316,7 +336,8 @@ export function wherePhrase(
     for (const part of ruleParts(catalog, r, card))
       if (!list.includes(part)) list.push(part)
   }
-  const { at, on } = parts
+  const at = directOrThrough(parts.at)
+  const on = directOrThrough(parts.on)
   return [
     ...(at.length > 0 ? [`at ${listed(at)}`] : []),
     ...(on.length > 0 ? [`on ${listed(on)}`] : []),

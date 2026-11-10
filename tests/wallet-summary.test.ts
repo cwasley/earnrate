@@ -82,7 +82,7 @@ test('rates share a line, travel bookings read in lower case', () => {
   })
   const summary = walletSummary(catalog, wallet, '2026-11-01')
   expect(summary.cards[0]?.rates).toContain(
-    '3x Amex Membership Rewards on flights and flights through Amex Travel',
+    '3x Amex Membership Rewards on flights booked directly or through Amex Travel',
   )
   expect(formatWalletSummary(summary)).toMatch(
     /\(sofi-unlimited-2\): Mastercard, SoFi Member Rewards at 1¢/,
