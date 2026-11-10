@@ -46,6 +46,7 @@ The maintainer's full spec (data model, golden tests, milestones, competitive la
 2. Create a GitHub release tagged `v<version>`. `.github/workflows/release.yml` validates, checks the tag, and runs `npm stage publish --provenance` through npm trusted publishing (no npm token in the repo), then builds `earnrate.mcpb` (the Claude Desktop one-click install, `yarn mcpb:pack`), smoke-tests it and attaches it to the release.
 3. Collin approves the staged version on npmjs.com (Staged Packages) with 2FA. Nothing is live until then.
 4. Once `npm view earnrate version` shows it, `mcp-publisher publish` updates the MCP registry entry, including the hosted server in `remotes`.
+5. Redeploy the hosted server (`yarn remote:deploy`) and run `node scripts/live-check.ts`: it reports the version from `package.json` at build time (`list_wallet` says "Running earnrate <version>"), so until then it still names the previous release. The Claude plugin (`plugin/`) and the ChatGPT package (`chatgpt/`) keep their own versions.
 
 ## Working agreement
 
