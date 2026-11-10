@@ -18,6 +18,11 @@ const contentsOf = (catalog: Catalog, w: Wallet) => [
     ? [`${cardsText(w.cards.length)} (${w.cards.map((c) => c.id).join(', ')})`]
     : []),
   ...savedSettingsText(catalog, w),
+  ...((w.skipped_issuers ?? []).length > 0
+    ? [
+        `next-card answers leaving out ${listed((w.skipped_issuers ?? []).map((id) => catalog.issuers.find((i) => i.id === id)?.name ?? id))}`,
+      ]
+    : []),
 ]
 
 const ImportInput = z.object({
@@ -178,7 +183,7 @@ export function registerAccountTools(
         content: [
           {
             type: 'text',
-            text: "Deleted the saved wallet and its recovery code, and signed out every app connected to it, this one included. To keep using earnrate here, the user connects again on earnrate's page and starts a new wallet.",
+            text: "Deleted the saved wallet and its recovery code, and signed out every app connected to it, this one included. To keep using earnrate here, the user connects again on earnrate's page and starts a new wallet: call list_wallet now so the sign-in prompt appears in this turn.",
           },
         ],
         structuredContent: { deleted: true },
@@ -210,7 +215,7 @@ export function registerAccountTools(
         content: [
           {
             type: 'text',
-            text: "Disconnected from this saved wallet; nothing was deleted. earnrate's sign-in page opens on the next earnrate request (or reconnect earnrate in the app's connector settings). There the user chooses \"Already have a wallet?\" and types the other wallet's recovery code, or starts a new wallet. Other accounts connected to this wallet through the same app are signed out too.",
+            text: "Disconnected from this saved wallet; nothing was deleted. earnrate's sign-in page opens on the next earnrate request: call list_wallet now so the user gets the sign-in prompt in this turn (or they can reconnect earnrate in the app's connector settings). There the user chooses \"Already have a wallet?\" and types the other wallet's recovery code, or starts a new wallet. Other accounts connected to this wallet through the same app are signed out too.",
           },
         ],
         structuredContent: { disconnected: true },

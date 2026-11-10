@@ -16,6 +16,9 @@ import { optionName } from '../../engine/rule-text.ts'
 import { currencyChanges } from '../../engine/wallet-change.ts'
 import { walletSummary } from '../../engine/wallet-summary.ts'
 import { checklist } from '../../engine/checklist.ts'
+import { pickedCategories } from '../../engine/evaluate.ts'
+import { choicePeriod, periodKey } from '../../engine/periods.ts'
+import { periodPhrase } from '../../engine/text.ts'
 import { cardText, issuerName } from '../../format/card-text.ts'
 import {
   formatBooking,
@@ -197,6 +200,10 @@ export function walletHandlers(
         return fail(
           `"${cardId}" isn't in the wallet. Cards: ${w.cards.map((c) => c.id).join(', ')}.`,
         )
+      if (date !== undefined && date > deps.today())
+        return fail(
+          `${date} is after today (${deps.today()}). record_purchase is for purchases already made; nothing was recorded.`,
+        )
       const purchase = {
         cardId,
         merchant,
@@ -216,6 +223,18 @@ export function walletHandlers(
       const result = await store.record(purchase, resolved.merchant)
       if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
       const { cap: booking, bonus, milestones, credit } = result
+      // A purchase from an earlier period than the picks on file can't be
+      // matched to that period's categories.
+      const stalePicks = (date: string): string | null => {
+        const card = catalog.cards.find((c) => c.id === cardId)
+        const held = w.cards.find((c) => c.id === cardId)
+        if (!card || !held) return null
+        const { staleChoice } = pickedCategories(card, held, date)
+        const period = choicePeriod(card)
+        if (staleChoice === null || period === null) return null
+        const key = periodKey(period, date, null) ?? ''
+        return `Nothing was recorded: ${cardText(catalog).shortName(cardId)}'s category picks on file are ${periodPhrase(period, staleChoice)}, and this purchase is from ${periodPhrase(period, key).replace(/^for /, '')}, so it can't be matched to that period's picks or cap.`
+      }
       const capLabel = booking
         ? (walletSummary(catalog, w, purchase.date)
             .cards.find((c) => c.cardId === cardId)
@@ -237,7 +256,9 @@ export function walletHandlers(
               bonus: null,
               milestones: [],
               credit: null,
-              message: `Nothing to track: ${cardText(catalog).shortName(cardId)} has no spending cap, open welcome bonus, spend bonus or enrolled statement credit for this purchase, so the wallet wasn't changed.`,
+              message:
+                stalePicks(purchase.date) ??
+                `Nothing to track: ${cardText(catalog).shortName(cardId)} has no spending cap, open welcome bonus, spend bonus or enrolled statement credit for this purchase, so the wallet wasn't changed.`,
             }
       return {
         content: [

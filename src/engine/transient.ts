@@ -25,6 +25,10 @@ export function walletFromCards(
   today: string,
 ): Wallet | string {
   let wallet: Wallet | null = null
+  const ids = named.cards.map((c) => c.id)
+  const twice = ids.find((id, i) => ids.indexOf(id) !== i)
+  if (twice !== undefined)
+    return `${twice} is listed twice in cards; name each card once.`
   for (const input of named.cards) {
     const change = addToWallet(catalog, wallet, input, today)
     if (!change.ok) return change.error

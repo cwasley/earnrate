@@ -259,6 +259,47 @@ describe('tools', () => {
     expect(other.isError).toBeFalsy()
   })
 
+  test('a future purchase is refused, and an earlier period than the picks says why', async () => {
+    const client = await connect(await walletCopy())
+    const later = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'amex-gold',
+        merchant: 'Shake Shack',
+        amount: 30,
+        date: '2026-12-25',
+      },
+    })
+    expect(later.isError).toBe(true)
+    expect(text(later)).toMatch(
+      /2026-12-25 is after today .*nothing was recorded/,
+    )
+    const earlier = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'usbank-cash-plus',
+        merchant: 'Netflix',
+        amount: 20,
+        date: '2026-09-15',
+      },
+    })
+    expect(text(earlier)).toMatch(
+      /Nothing was recorded: U.S. Bank Cash\+'s category picks on file are for Q4 2026, and this purchase is from Q3 2026/,
+    )
+  })
+
+  test('a card named twice for one answer says so', async () => {
+    const client = await connect(await walletCopy())
+    const result = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: {
+        merchant: 'Costco',
+        cards: [{ cardId: 'amex-gold' }, { cardId: 'amex-gold' }],
+      },
+    })
+    expect(text(result)).toMatch(/amex-gold is listed twice in cards/)
+  })
+
   test('a cardmember-year cap is recorded for this cardmember year', async () => {
     const client = await connect(
       await walletCopy(

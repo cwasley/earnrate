@@ -312,6 +312,20 @@ export function searchCards(
       cards: one.map((c) => cardInfo(catalog, c, wallet, today)),
       exact: true,
     }
+  // A "+" searching drops ("cash+") narrows to the names that have it.
+  const literal = query.trim().toLowerCase()
+  if (literal.includes('+') && literal.replace(/[^a-z0-9]/g, '') !== '') {
+    const named = catalog.cards.filter((c) =>
+      [c.name, c.short_name ?? ''].some((n) =>
+        n.toLowerCase().includes(literal),
+      ),
+    )
+    if (named.length > 0)
+      return {
+        cards: named.map((c) => cardInfo(catalog, c, wallet, today)),
+        exact: true,
+      }
+  }
   const tokens = searchWords(query)
   const scored = catalog.cards.map((card) => {
     const matches = matcher(catalog, card)

@@ -352,11 +352,19 @@ function membersOnlyRows(
       found.set(key, entry)
     }
   }
+  // One card's rates share its line: "Costco Anywhere Visa Card by Citi,
+  // 4% for gas and 3% for travel".
+  const byCard = new Map<string, { membership: string; parts: string[] }>()
+  for (const f of found.values()) {
+    const entry = byCard.get(f.card) ?? { membership: f.membership, parts: [] }
+    entry.parts.push(`${f.rate} for ${listed(f.phrases)}`)
+    byCard.set(f.card, entry)
+  }
   return ifMemberLines(
     catalog,
-    [...found.values()].map((f) => ({
-      membership: f.membership,
-      text: `${f.card}, ${f.rate} for ${listed(f.phrases)}`,
+    [...byCard].map(([card, { membership, parts }]) => ({
+      membership,
+      text: `${card}, ${listed(parts)}`,
     })),
   )
 }

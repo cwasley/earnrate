@@ -163,3 +163,28 @@ test('a cap past its limit says so, and cap names read in a sentence', () => {
     'flights booked directly or through Amex Travel',
   )
 })
+
+test('"cash+" finds only the card with a + in its name', async () => {
+  const { searchCards } = await import('../src/engine/setup.ts')
+  expect(
+    searchCards(catalog, 'cash+', null, TODAY).cards.map((c) => c.id),
+  ).toEqual(['usbank-cash-plus'])
+  expect(
+    searchCards(catalog, 'cash plus', null, TODAY).cards.length,
+  ).toBeGreaterThan(1)
+})
+
+test("a members-only card's rates share one line on the cheat sheet", async () => {
+  const { catalogCheatSheet } = await import('../src/engine/cheat-sheet.ts')
+  const { ALL_PERSONAL_CARDS } = await import('../src/engine/explore.ts')
+  const sheet = catalogCheatSheet(catalog, TODAY, {
+    filters: { ...ALL_PERSONAL_CARDS, kind: 'cash' },
+    memberships: [],
+    valuations: {},
+  })
+  const costco = sheet.membersOnly.filter((l) => l.includes('Costco Anywhere'))
+  expect(costco).toHaveLength(1)
+  expect(costco[0]).toMatch(
+    /Costco Anywhere Visa Card by Citi, 4% for gas and 3% for travel\./,
+  )
+})
