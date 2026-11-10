@@ -156,3 +156,26 @@ test('a cardmember-year cap ends the day before the anniversary, or asks for it'
     /a cardmember year; give the card's anniversary to track it/,
   )
 })
+
+test('rates a membership unlocks are named, with only the top tier of a group', () => {
+  const rates = (id: string, memberships: string[] = []) =>
+    walletSummary(
+      catalog,
+      WalletSchema.parse({ memberships, cards: [{ id }] }),
+      '2026-11-10',
+    ).cards[0]?.rates ?? []
+  expect(rates('td-bank-nordstrom-visa')).toContain(
+    '2x Nordy Club points at Nordstrom with Nordy Club Ambassador',
+  )
+  expect(
+    rates('td-bank-nordstrom-visa', ['nordy-club-ambassador']),
+  ).not.toEqual(
+    expect.arrayContaining([expect.stringMatching(/ with Nordy Club/)]),
+  )
+  const ccr = rates('bank-of-america-customized-cash-rewards')
+  expect(ccr.filter((r) => r.includes(' with BofA'))).toEqual([
+    '5.25% cash back on the category you pick with BofA Rewards Premier',
+    '3.5% cash back at supermarkets and warehouse clubs with BofA Rewards Premier',
+    '1.75% cash back on everything else with BofA Rewards Premier',
+  ])
+})

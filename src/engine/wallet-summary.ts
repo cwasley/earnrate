@@ -247,7 +247,49 @@ export function headlineRates(
     )
       ? []
       : [`${earnText(catalog, card.base_rate, currency)} on everything else`]),
+    ...unlockedBy(catalog, card, has, currency, today),
   ]
+}
+
+// What a membership the person hasn't given would add: "2x Nordy Club
+// points at Nordstrom with Nordy Club Ambassador". Of tiers (BofA's), only
+// the one that pays the most.
+function unlockedBy(
+  catalog: Catalog,
+  card: Card,
+  has: string[],
+  currency: string,
+  today: string,
+): string[] {
+  const byMembership = new Map<string, Rule[]>()
+  for (const r of card.rules) {
+    const m = r.requires?.membership
+    if (m === undefined || has.includes(m) || !inEffect(r, today)) continue
+    if (r.rate <= card.base_rate && r.match.any !== true) continue
+    byMembership.set(m, [...(byMembership.get(m) ?? []), r])
+  }
+  const best = (rules: Rule[]) => Math.max(...rules.map((r) => r.rate))
+  const groupOf = (id: string) =>
+    catalog.memberships.find((m) => m.id === id)?.group
+  const kept = [...byMembership].filter(([id, rules]) => {
+    const group = groupOf(id)
+    if (group === undefined) return true
+    // A person holds one tier at a time: one already given rules the rest out.
+    if (has.some((h) => groupOf(h) === group)) return false
+    return ![...byMembership].some(
+      ([other, others]) =>
+        other !== id && groupOf(other) === group && best(others) > best(rules),
+    )
+  })
+  return kept.flatMap(([id, rules]) => {
+    const byRate = new Map<number, Rule[]>()
+    for (const r of [...rules].sort((a, b) => b.rate - a.rate))
+      byRate.set(r.rate, [...(byRate.get(r.rate) ?? []), r])
+    return [...byRate].map(
+      ([rate, same]) =>
+        `${earnText(catalog, rate, currency)} ${wherePhrase(catalog, card, same)} with ${membershipName(catalog, id)}`,
+    )
+  })
 }
 
 export type ActivationDue = {
