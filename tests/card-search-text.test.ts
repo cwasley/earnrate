@@ -188,3 +188,15 @@ test("a members-only card's rates share one line on the cheat sheet", async () =
     /Costco Anywhere Visa Card by Citi, 4% for gas and 3% for travel\./,
   )
 })
+
+test('a credit the user says they use gets its use-by reminder', async () => {
+  const { checklist } = await import('../src/engine/checklist.ts')
+  const items = (enrolled: string[]) =>
+    checklist(
+      catalog,
+      WalletSchema.parse({ cards: [{ id: 'amex-gold', enrolled }] }),
+      TODAY,
+    ).filter((i) => i.kind === 'credit')
+  expect(items([]).map((i) => i.ref)).not.toContain('uber-cash')
+  expect(items(['uber-cash']).map((i) => i.ref)).toContain('uber-cash')
+})

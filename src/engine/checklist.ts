@@ -225,9 +225,14 @@ export function checklist(
       })
     for (const c of s.credits) {
       if (!c.enrolled || c.skipped) continue
-      // One that needs no enrolling shows once the cardholder uses it, so a
-      // card's every credit isn't a to-do for someone who never shops there.
-      if (c.left !== null && c.left > 0 && (c.enroll || c.tracked))
+      // One that needs no enrolling shows once the cardholder says they use
+      // it or uses it, so a card's every credit isn't a to-do for someone
+      // who never shops there.
+      if (
+        c.left !== null &&
+        c.left > 0 &&
+        (c.enroll || c.tracked || c.confirmed)
+      )
         items.push({
           kind: 'credit',
           cardId: card.id,
