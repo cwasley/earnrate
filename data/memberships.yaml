@@ -40,7 +40,8 @@
   name: BofA Rewards Premier
   group: bofa-preferred-rewards
 - id: nordy-club-ambassador
-  name: Nordy Club Ambassador
+  # Icon, the status above Ambassador, earns the same with the card.
+  name: Nordy Club Ambassador or Icon status
 # Credit union memberships are by eligibility (employer, family, area), not
 # a yearly fee. Caltech EFCU's is a one-time $5 fee plus a $5 deposit; Navy
 # Federal's (the armed forces, veterans, DoD civilians and their families) a

@@ -3,6 +3,16 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.10.2'
+  date: 2026-11-10
+  changes:
+    - cause: wording
+      memberships: [nordy-club-ambassador]
+      field: name
+      was: Nordy Club Ambassador
+      now: Nordy Club Ambassador or Icon status
+      summary: Names Icon too, which earns the same with the card.
+
 - version: '2026.11.10.1'
   date: 2026-11-10
   changes:

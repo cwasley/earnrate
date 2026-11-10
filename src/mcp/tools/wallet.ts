@@ -162,10 +162,12 @@ export function walletHandlers(
       const found = await walletListing(deps, ctx)
       if (typeof found === 'string') return fail(found)
       const { start, summary } = found
+      const running =
+        deps.version === '' ? '' : ` Running earnrate ${deps.version}.`
       const when =
         summary.started === null
-          ? `This is ${ctx.walletName}.\n`
-          : `This is ${ctx.walletName}. ${startedText(summary.started, Date.now())}\n`
+          ? `This is ${ctx.walletName}.${running}\n`
+          : `This is ${ctx.walletName}. ${startedText(summary.started, Date.now())}${running}\n`
       return {
         content: [
           {
@@ -235,11 +237,12 @@ export function walletHandlers(
         const key = periodKey(period, date, null) ?? ''
         return `Nothing was recorded: ${cardText(catalog).shortName(cardId)}'s category picks on file are ${periodPhrase(period, staleChoice)}, and this purchase is from ${periodPhrase(period, key).replace(/^for /, '')}, so it can't be matched to that period's picks or cap.`
       }
-      const capLabel = booking
-        ? (walletSummary(catalog, w, purchase.date)
+      const capSummary = booking
+        ? walletSummary(catalog, w, purchase.date)
             .cards.find((c) => c.cardId === cardId)
-            ?.caps.find((c) => c.key === booking.capKey)?.label ?? null)
-        : null
+            ?.caps.find((c) => c.key === booking.capKey)
+        : undefined
+      const capLabel = capSummary?.label ?? null
       const output =
         booking || bonus || milestones.length > 0 || credit
           ? {
@@ -248,7 +251,7 @@ export function walletHandlers(
               bonus,
               milestones,
               credit,
-              message: `${formatBooking(amount, cardText(catalog).shortName(cardId), booking, bonus, milestones, credit, capLabel)} Saved in ${ctx.walletName}.`,
+              message: `${formatBooking(amount, cardText(catalog).shortName(cardId), booking, bonus, milestones, credit, capLabel, capSummary?.afterCap ?? null)} Saved in ${ctx.walletName}.`,
             }
           : {
               recorded: false,

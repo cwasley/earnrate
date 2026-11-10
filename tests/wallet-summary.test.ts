@@ -165,7 +165,7 @@ test('rates a membership unlocks are named, with only the top tier of a group', 
       '2026-11-10',
     ).cards[0]?.rates ?? []
   expect(rates('td-bank-nordstrom-visa')).toContain(
-    '2x Nordy Club points at Nordstrom with Nordy Club Ambassador',
+    '2x Nordy Club points at Nordstrom with Nordy Club Ambassador or Icon status',
   )
   expect(
     rates('td-bank-nordstrom-visa', ['nordy-club-ambassador']),

@@ -65,7 +65,7 @@ export function formatWalletSummary(summary: WalletSummary): string {
       lines.push(
         cap.remaining === null
           ? `  Cap on ${cap.label}: ${money(cap.amount)} ${CAP_PERIODS[cap.period]}; give the card's anniversary to track it (cap key ${cap.key}).`
-          : `  Cap on ${cap.label}: ${money(Math.min(cap.spent, cap.amount))} of ${money(cap.amount)} used ${periodPhrase(cap.period, cap.currentPeriod ?? '')}${cap.until === null ? '' : `, through ${shortDate(cap.until)}`}${cap.spent > cap.amount ? `; the ${money(cap.spent - cap.amount)} past it earned the card's rate after the cap` : ''} (cap key ${cap.key}).`,
+          : `  Cap on ${cap.label}: ${money(Math.min(cap.spent, cap.amount))} of ${money(cap.amount)} used ${periodPhrase(cap.period, cap.currentPeriod ?? '')}${cap.until === null ? '' : `, through ${shortDate(cap.until)}`}${cap.spent > cap.amount ? `; the ${money(cap.spent - cap.amount)} past it earned ${cap.afterCap}` : ''} (cap key ${cap.key}).`,
       )
     for (const m of c.milestones)
       lines.push(`  Spend bonus (${m.id}): ${m.text}`)
@@ -118,6 +118,7 @@ export function formatBooking(
   milestones: MilestoneBooking[] = [],
   credit: CreditBooking | null = null,
   capLabel: string | null = null, // what the cap covers, in words
+  afterCap: string | null = null, // what spending past it earns: "1% cash back"
 ): string {
   const messages: string[] = []
   if (credit)
@@ -127,7 +128,7 @@ export function formatBooking(
   if (cap) {
     const left = Math.max(0, cap.capAmount - cap.after)
     messages.push(
-      `Recorded ${money(amount)} on ${name} toward ${capNamed('its', capLabel ?? cap.capKey)}: ${money(Math.min(cap.before, cap.capAmount))} → ${money(Math.min(cap.after, cap.capAmount))} of ${money(cap.capAmount)} ${periodPhrase(cap.periodKind, cap.period)}, ${money(left)} left${cap.after > cap.capAmount ? `; the ${money(cap.after - Math.max(cap.before, cap.capAmount))} past the cap earns the card's rate after it` : ''}.`,
+      `Recorded ${money(amount)} on ${name} toward ${capNamed('its', capLabel ?? cap.capKey)}: ${money(Math.min(cap.before, cap.capAmount))} → ${money(Math.min(cap.after, cap.capAmount))} of ${money(cap.capAmount)} ${periodPhrase(cap.periodKind, cap.period)}, ${money(left)} left${cap.after > cap.capAmount ? `; the ${money(cap.after - Math.max(cap.before, cap.capAmount))} past the cap earns ${afterCap ?? "the card's rate after it"}` : ''}.`,
     )
   }
   if (bonus) {

@@ -288,6 +288,32 @@ describe('tools', () => {
     )
   })
 
+  test('list_wallet names the running version, and a cap reply its after-cap rate', async () => {
+    const client = await connect(await walletCopy())
+    const list = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(list)).toMatch(/^This is .*Running earnrate 0\.0\.0-test\./)
+    const first = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'usbank-cash-plus',
+        merchant: 'Netflix',
+        amount: 1950,
+      },
+    })
+    expect(first.isError).toBeFalsy()
+    const past = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'usbank-cash-plus',
+        merchant: 'Netflix',
+        amount: 100,
+      },
+    })
+    expect(text(past)).toMatch(
+      /\$2,000 of \$2,000 .*the \$50 past the cap earns 1% cash back\./,
+    )
+  })
+
   test('a card named twice for one answer says so', async () => {
     const client = await connect(await walletCopy())
     const result = await client.callTool({
@@ -472,7 +498,7 @@ describe('tools', () => {
       arguments: { memberships: ['amazon-prime', 'nordy-club-ambassador'] },
     })
     expect(text(memberships)).toMatch(
-      /Nordy Club Ambassador doesn't change any saved card's rates yet/,
+      /Nordy Club Ambassador or Icon status doesn't change any saved card's rates yet/,
     )
   })
 

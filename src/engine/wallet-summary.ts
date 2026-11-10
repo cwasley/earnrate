@@ -57,6 +57,7 @@ export type CapSummary = {
   until: string | null // the period's last day, YYYY-MM-DD
   spent: number
   remaining: number | null
+  afterCap: string // what spending past it earns: "1% cash back"
 }
 
 export type CreditSummary = {
@@ -447,6 +448,7 @@ function capSummaries(
       spent,
       remaining:
         currentPeriod === null ? null : Math.max(0, cap.amount - spent),
+      afterCap: earnText(catalog, cap.then_rate, card.currency),
     }
   })
 }

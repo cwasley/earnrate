@@ -190,6 +190,7 @@ export const WalletSummarySchema = z.object({
           until: z.string().nullable(),
           spent: z.number(),
           remaining: z.number().nullable(),
+          afterCap: z.string(),
         }),
       ),
       milestones: z.array(
