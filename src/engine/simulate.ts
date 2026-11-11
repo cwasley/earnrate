@@ -30,6 +30,7 @@ import {
   creditsCountedText,
   leftOutText,
   money,
+  namedStore,
   paymentNote,
   roundCents,
   shortCardName,
@@ -760,7 +761,9 @@ export const TYPICAL_MONTHLY_SPEND: { what: string; monthly: number }[] = [
   { what: 'Dining', monthly: 250 },
   { what: 'Gas', monthly: 150 },
   { what: 'Amazon', monthly: 100 },
-  { what: 'Streaming', monthly: 40 },
+  // Streaming bonuses follow each issuer's list of services, so the amount
+  // is spent at one on every list, as the cheat sheet's streaming row is.
+  { what: 'Streaming (Netflix)', monthly: 40 },
   { what: 'Flights', monthly: 60 },
   { what: 'Hotels', monthly: 60 },
   { what: 'Other travel', monthly: 30 },
@@ -776,6 +779,15 @@ export function spendLineFor(
 ): SpendLine {
   const direct = findCategory(catalog, what)
   if (direct !== null) return { merchant: null, category: direct, monthly }
+  // "Streaming (Netflix)": spent at that store, read as the kind before it.
+  const store = namedStore(what)
+  const kind =
+    store === null
+      ? null
+      : findCategory(catalog, what.slice(0, what.lastIndexOf('(')))
+  const kindName = catalog.categories.find((c) => c.id === kind)?.name
+  if (store !== null && kindName !== undefined)
+    return { merchant: store, category: null, monthly, label: kindName }
   // "Other travel" beside "Flights" and "Hotels": the rest of the category.
   const rest = /^other\s+(.+)$/i.exec(what.trim())?.[1]
   const category = rest === undefined ? null : findCategory(catalog, rest)

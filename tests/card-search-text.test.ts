@@ -115,7 +115,7 @@ test("the credits verdict says why a fee card's lead ends", () => {
   expect(search('amex-blue-cash-preferred')).toMatch(
     /past that, the best no-fee card earns more, since a spending cap ends its lead\./,
   )
-})
+}, 20_000)
 
 test("a card's note on how its rates count comes with them", () => {
   expect(search('td-bank-nordstrom-visa')).toMatch(

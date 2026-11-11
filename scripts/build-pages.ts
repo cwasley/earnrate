@@ -1639,6 +1639,15 @@ function compareAnswer(c: Comparison): string {
   return `<p class="answer">${lead}${transferText(c)}</p>`
 }
 
+// "groceries", "streaming (Netflix)", "Amazon": a typical line mid-sentence,
+// lower-cased unless it's a store's own name.
+function lineWords(what: string): string {
+  const line = spendLineFor(catalog, what, 1)
+  return line.merchant === null || line.label !== undefined
+    ? what.charAt(0).toLowerCase() + what.slice(1)
+    : what
+}
+
 // How the verdict is figured, below the rates: the spending, point values
 // and what credits would add.
 function compareBasis(c: Comparison): string {
@@ -1647,8 +1656,7 @@ function compareBasis(c: Comparison): string {
     ReturnType<typeof sideOf>,
   ]
   const spend = TYPICAL_MONTHLY_SPEND.map(
-    (t) =>
-      `${spendLineFor(catalog, t.what, t.monthly).merchant === null ? t.what.toLowerCase() : t.what} ${wholeDollars(t.monthly)}`,
+    (t) => `${lineWords(t.what)} ${wholeDollars(t.monthly)}`,
   ).join(', ')
   const credits = [x, y].flatMap((s) =>
     s.sim.credits

@@ -3421,12 +3421,31 @@ describe('#40 keep or replace a fee card', () => {
         'chase-sapphire-preferred',
       )
       expect(hiddenRatesText(preferred, ' in Find a card')).toBe(
+        'Chase Travel, Airbnb, Vrbo and 3 more earn more on the Chase Sapphire Preferred than the Other travel line counts; add them as their own lines in Find a card for a closer answer.',
+      )
+      const typedStreaming = ask(
+        wallet([
+          { id: 'chase-sapphire-preferred' },
+          { id: 'chase-freedom-unlimited' },
+          { id: 'citi-double-cash' },
+        ]),
+        'chase-sapphire-preferred',
+        TODAY,
+        {
+          lines: resolveSpendLines(catalog, [
+            spendLineFor(catalog, 'Streaming', 40),
+            spendLineFor(catalog, 'Other travel', 30),
+          ]),
+          typical: false,
+        },
+      )
+      expect(hiddenRatesText(typedStreaming, ' in Find a card')).toBe(
         'Apple Music, Apple TV, Disney+ and 15 more streaming services earn more on the Chase Sapphire Preferred than the Streaming services line counts; add them as their own lines in Find a card for a closer answer. Chase Travel, Airbnb, Vrbo and 3 more earn more on the Chase Sapphire Preferred than the Other travel line counts; add them as their own lines in Find a card for a closer answer.',
       )
       const many = {
-        ...preferred,
+        ...typedStreaming,
         hidden: [
-          ...preferred.hidden,
+          ...typedStreaming.hidden,
           { line: 'Gas stations', parts: ['Shell'], one: true, kind: null },
           { line: 'Hotels', parts: ['Hyatt'], one: true, kind: null },
         ],

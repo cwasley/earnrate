@@ -108,6 +108,11 @@ export function categoryPhrase(catalog: Catalog, id: string): string {
     : name.charAt(0).toLowerCase() + name.slice(1)
 }
 
+// The store in a label like "Streaming (Netflix)": what's spent or searched
+// for there, the label naming the kind of purchase. Null without one.
+export const namedStore = (label: string) =>
+  /\((.+)\)$/.exec(label.trim())?.[1] ?? null
+
 // One of a category, from its name: "Gas station" for "Gas stations", "Gym"
 // for "Gyms and fitness", but only when the engine reads that word back as
 // the same category. Null for a name with no such singular ("Travel",

@@ -12,6 +12,7 @@ import {
   type ExploreOptions,
 } from './explore.ts'
 import { ifMemberLines } from './memberships.ts'
+import { namedStore } from './text.ts'
 import { bonusStatus } from './bonus.ts'
 import { EPSILON, isClose } from './compare.ts'
 import { periodKey } from './periods.ts'
@@ -63,7 +64,7 @@ export const EVERYDAY_PURCHASES: CheatSheetItem[] = [
 // What a quick pick searches for: "Streaming (Netflix)" searches "Netflix",
 // since streaming bonuses follow each issuer's list of services.
 export const quickPickText = (item: CheatSheetItem) =>
-  /\((.+)\)$/.exec(item.label)?.[1] ?? item.label
+  namedStore(item.label) ?? item.label
 
 export type CheatSheetRow = {
   label: string
