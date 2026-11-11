@@ -353,6 +353,10 @@ ol.cards > li > .card-art {
   gap: 16px;
 }
 
+.crumbs + .card-head {
+  margin-top: 24px;
+}
+
 .card-head h1 {
   margin: 0;
 }
