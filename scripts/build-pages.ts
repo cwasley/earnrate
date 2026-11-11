@@ -95,6 +95,7 @@ import { button, pageActions, textLink, type Visitor } from './pages/actions.ts'
 import { storeIndexReasons } from './pages/indexing.ts'
 import { drawImages, type OgImage } from './pages/og.ts'
 import { quarterlyCardIds, quarterlyPages } from './pages/quarterly.ts'
+import { yearEndLinks, yearEndPages } from './pages/year-end.ts'
 import {
   chipLinks,
   esc,
@@ -1456,6 +1457,7 @@ function renderCard(
       ${choicesText(card)}
       ${milestonesText(card)}
       ${rotates ? `<p>Its categories quarter by quarter, with deadlines: <a href="/quarterly/">this quarter's bonus categories</a>.</p>` : ''}
+      ${yearEnd.get(card.id) ?? ''}
       ${
         worth
           ? feeWorthSection(
@@ -1555,6 +1557,7 @@ const { feeWorth: feeWorthTransferred } = feeWorthKit(
   TRANSFER_VALUES,
 )
 const quarterly = new Set(quarterlyCardIds(catalog))
+const yearEnd = yearEndLinks(ctx)
 const sideOf = (c: Comparison, side: 'a' | 'b') => ({
   card: c[side],
   sim: c.typical[side],
@@ -2165,6 +2168,7 @@ const generated: GeneratedPage[] = [
   ),
   ...categoryPages(ctx, categorySlug, filesDate),
   changesPage(ctx, releases),
+  ...yearEndPages(ctx, filesDate),
 ]
 for (const page of generated) {
   await mkdir(path.dirname(path.join(OUT, page.file)), { recursive: true })

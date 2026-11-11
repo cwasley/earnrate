@@ -222,7 +222,7 @@ function topFor(ctx: PageContext, t: Target, date: string): ExploreEntry[] {
     .slice(0, TOP)
 }
 
-function activationQuotes(card: Card, rules: Rule[]) {
+export function activationQuotes(card: Card, rules: Rule[]) {
   const ids = new Set(rules.map((r) => r.id))
   const seen = new Set<string>()
   return card.evidence.filter((e) => {
@@ -413,6 +413,7 @@ function renderQuarter(
       <h2>Rotating categories</h2>
       ${rotating.map((c) => cardSection(ctx, q, c)).join('')}
       ${picks.length > 0 ? `<h2>Categories you pick each quarter</h2>${picks.map((c) => cardSection(ctx, q, c)).join('')}` : ''}
+      ${q.end === `${ctx.today.slice(0, 4)}-12-31` ? `<p>Statement credits, spend bonuses and caps that end or start over with the year, on every card: <a href="/year-end/">year-end deadlines</a>.</p>` : ''}
       ${topSection(ctx, q, slugs)}
       ${nav}
       <p class="muted">Every rate, cap, date and quote here is from the card's file in earnrate, checked against the issuer's pages on the date each card page shows. Check the issuer's terms before you rely on them.</p>`

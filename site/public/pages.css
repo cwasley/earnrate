@@ -815,3 +815,70 @@ a.button,
     }
   }
 }
+
+/* The year-end page: one block per card in each list, the visitor's saved
+   cards moved first and marked by its script. */
+.ye-jump {
+  margin: 16px 0 8px;
+}
+.ye-jump summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+}
+.ye-yours {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+}
+.ye-yours p {
+  margin: 0;
+}
+.ye-yours .chip-links {
+  margin: 10px 0 0;
+}
+.ye-card {
+  margin: 0 0 8px;
+  padding: 16px 0 4px;
+  border-top: 1px solid var(--line);
+}
+.ye-card .card-head.small {
+  flex-wrap: wrap;
+}
+.ye-mark {
+  display: none;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+.ye-held .ye-mark {
+  display: inline-block;
+}
+ul.ye-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+ul.ye-items > li {
+  margin: 0 0 14px;
+}
+ul.ye-items p,
+.ye-card > p {
+  margin: 0 0 4px;
+}
+.ye-quote {
+  font-size: 15px;
+}
+.ye-quarter {
+  margin-top: 8px;
+}
+.ye-monthly > summary {
+  margin: 0 0 12px;
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+}

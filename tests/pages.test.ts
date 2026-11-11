@@ -16,8 +16,10 @@ import { simulateSingles } from '../src/engine/simulate.ts'
 import {
   earnText,
   longDate,
+  money,
   quarterYear,
   shortDate,
+  wholeDollars,
 } from '../src/engine/text.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../src/engine/explore.ts'
 import { pageContext } from '../scripts/pages/context.ts'
@@ -28,6 +30,9 @@ import {
   STEP,
 } from '../src/engine/fee-worth.ts'
 import { quarterlyPages, quarters } from '../scripts/pages/quarterly.ts'
+import { yearEnd, yearEndPages } from '../scripts/pages/year-end.ts'
+import { creditWhere } from '../src/engine/rule-text.ts'
+import { currentPeriodEnd, inEffect } from '../src/engine/periods.ts'
 import { recentChangesSection } from '../scripts/pages/changes.ts'
 import { cardChangesUrl } from '../src/engine/changes.ts'
 import { ChangesFileSchema } from '../src/schema/changes.ts'
@@ -177,6 +182,18 @@ describe('the built static pages', () => {
     // It reads the wallet saved in this browser and sends nothing.
     expect(actions).toContain("localStorage.getItem('earnrate:wallet')")
     expect(actions).not.toMatch(/fetch|sendBeacon|XMLHttpRequest/)
+  })
+
+  test('the year-end page is linked from the cards it lists and from the footer', () => {
+    const year = yearEnd(ctx, Number(today.slice(0, 4)))
+    for (const { card } of year.credits)
+      expect(
+        readFileSync(path.join(out, 'cards', `${card.id}.html`), 'utf8'),
+        card.id,
+      ).toContain(`href="/year-end/#credits-${card.id}"`)
+    expect(
+      readFileSync(path.join(out, 'cards', 'citi-double-cash.html'), 'utf8'),
+    ).toContain('<li><a href="/year-end/">')
   })
 
   test('only store pages with something of their own are indexed', () => {
@@ -351,6 +368,108 @@ describe('quarterly pages', () => {
     )
     expect(hub?.html).toContain(`/quarterly/${current?.slug ?? ''}`)
     expect(hub?.html).toContain(current?.label ?? '?')
+  })
+})
+
+describe('year-end pages', () => {
+  const year = Number(today.slice(0, 4))
+  const y = yearEnd(ctx, year)
+  const pages = yearEndPages(ctx, () => today)
+  const hub = pages.find((p) => p.path === '/year-end/')?.html ?? ''
+  const block = (section: string, cardId: string) => {
+    const start = hub.indexOf(`id="${section}-${cardId}"`)
+    return start === -1
+      ? ''
+      : hub.slice(start, hub.indexOf('</section>', start))
+  }
+
+  test('the hub and the permanent address are this year', () => {
+    expect(pages.map((p) => p.path)).toContain(`/year-end/${String(year)}`)
+    expect(hub).toContain(`December 31, ${String(year)}`)
+    expect(hub).toContain(`href="/year-end/${String(year)}"`)
+  })
+
+  test("list every credit whose period ends December 31, the monthly ones apart and collapsed, with the issuer's quote and note", () => {
+    for (const card of catalog.cards)
+      for (const credit of card.credits) {
+        const monthly = credit.period === 'month'
+        const section = monthly ? y.monthly : y.credits
+        const listed = section.some(
+          (c) =>
+            c.card.id === card.id &&
+            c.items.some((i) => i.credit.id === credit.id),
+        )
+        const ends =
+          inEffect(credit, y.end) &&
+          currentPeriodEnd(credit.period, y.end, null) === y.end
+        expect(listed, `${card.id}/${credit.id}`).toBe(ends)
+        if (!ends) continue
+        const html = block(monthly ? 'monthly' : 'credits', card.id)
+        expect(html, card.id).toContain(
+          esc(`${money(credit.amount)} back ${creditWhere(catalog, credit)}`),
+        )
+        if (credit.note) expect(html, credit.id).toContain(esc(credit.note))
+        const quote = card.evidence.find((e) => e.rule === credit.id)
+        if (quote) expect(html, credit.id).toContain(esc(quote.quote))
+      }
+    expect(
+      [...y.credits, ...y.monthly].flatMap((c) =>
+        c.items.filter((i) => i.credit.period === 'cardmember_year'),
+      ),
+    ).toEqual([])
+    const details = hub.indexOf('<details class="ye-monthly">')
+    expect(details).toBeGreaterThan(hub.indexOf('id="spend"'))
+    expect(hub.indexOf('id="monthly-')).toBeGreaterThan(details)
+    expect(
+      hub.slice(details + 1, hub.indexOf('</details>', details)),
+    ).not.toMatch(/<details/)
+  })
+
+  test('state each calendar-year spend bonus as what has to happen by December 31', () => {
+    for (const card of catalog.cards)
+      for (const m of card.milestones.filter(
+        (m) => m.period === 'calendar_year' && inEffect(m, y.end),
+      ))
+        expect(block('spend', card.id), m.id).toContain(
+          `${wholeDollars(m.spend)} on the card in ${String(year)}`,
+        )
+  })
+
+  test("give next quarter's rotating categories only where the data has them", () => {
+    const next = quarters(catalog, today).find(
+      (q) => q.key === `${String(year + 1)}-Q1`,
+    )
+    for (const r of y.rotation) {
+      const html = block('rotating', r.card.id)
+      const posted = next?.cards.find(
+        (qc) => qc.card.id === r.card.id && qc.kind === 'rotating',
+      )
+      if (posted?.kind !== 'rotating') continue
+      if (posted.rules.length === 0)
+        expect(html).not.toContain(next?.label ?? '?')
+      for (const rule of posted.rules)
+        if (rule.note) expect(html).toContain(esc(rule.note))
+    }
+  })
+
+  test('saved cards come first in the browser, and nothing is sent', () => {
+    const script = /<script>\(\(\) => \{[\s\S]*?<\/script>/.exec(hub)?.[0]
+    expect(script).toContain("localStorage.getItem('earnrate:wallet')")
+    expect(script).not.toMatch(/fetch|sendBeacon|XMLHttpRequest/)
+    expect(hub).toContain('data-ye-list')
+  })
+
+  test('in January the hub is the new year, and last year keeps an address', () => {
+    const january = pageContext(catalog, {
+      today: `${String(year + 1)}-01-05`,
+      dataVersion: 'test',
+    })
+    const later = yearEndPages(january, () => january.today)
+    const hubLater = later.find((p) => p.path === '/year-end/')?.html ?? ''
+    expect(hubLater).toContain(`December 31, ${String(year + 1)}`)
+    const past = later.find((p) => p.path === `/year-end/${String(year)}`)
+    expect(past?.html).toContain('href="/year-end/"')
+    expect(hubLater).toContain(`href="/year-end/${String(year)}"`)
   })
 })
 
