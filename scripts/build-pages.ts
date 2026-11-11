@@ -22,7 +22,12 @@ import {
   paidMemberships,
 } from '../src/engine/memberships.ts'
 import { findCategory, findMerchant } from '../src/merchants/resolve.ts'
-import { addDays, inEffect, localToday } from '../src/engine/periods.ts'
+import {
+  addDays,
+  currentPeriodEnd,
+  inEffect,
+  localToday,
+} from '../src/engine/periods.ts'
 import {
   capitalize,
   CATEGORY_CARDS_LEAD,
@@ -48,6 +53,10 @@ import {
   wholeDollars,
   words,
   foreignFeeText,
+  bareRate,
+  feeText,
+  inOrder,
+  NETWORK_NAMES,
   freeNightText,
   freeNightValueText,
   NIGHT_NO_CAP,
@@ -90,10 +99,12 @@ import {
   chipLinks,
   esc,
   fitDescription,
+  fitSentences,
   fitTitle,
   SITE,
   slugify,
 } from './pages/site.ts'
+import { ownCards } from './pages/store-cards.ts'
 import {
   comparePairs,
   comparer,
@@ -143,6 +154,11 @@ function untilText(entry: ExploreEntry): string | null {
   if (rule?.valid_to === undefined) return null
   return longDate(rule.valid_to)
 }
+
+// The last day of the rule that gives an entry its rate, if it has one.
+const ruleEnd = (entry: ExploreEntry) =>
+  cards.get(entry.cardId)?.rules.find((r) => r.id === entry.matchedRule)
+    ?.valid_to ?? null
 
 const isUnverified = (e: ExploreEntry) =>
   cards.get(e.cardId)?.rules.find((r) => r.id === e.matchedRule)?.unverified !==
@@ -238,6 +254,15 @@ const tiedIn = (list: ExploreEntry[]) => {
 
 const TIED_NAMED = 3
 
+function tiedFees(tied: ExploreEntry[]): string {
+  const free = tied.filter((e) => e.annualFee === 0).length
+  return free === tied.length
+    ? 'None of them has an annual fee.'
+    : free > 0
+      ? `${String(free)} of them ${free === 1 ? 'has' : 'have'} no annual fee.`
+      : ''
+}
+
 // "6 cards tie for the most at Gap: 2% cash back. Citi Double Cash,
 // Fidelity Rewards, SoFi Unlimited 2% and 3 more, all with no annual fee."
 function tieText(tied: ExploreEntry[], where: string): string {
@@ -256,9 +281,111 @@ function tieText(tied: ExploreEntry[], where: string): string {
     free === tied.length
       ? ', all with no annual fee'
       : free > 0
-        ? `; ${String(free)} of them have no annual fee`
+        ? `; ${String(free)} of them ${free === 1 ? 'has' : 'have'} no annual fee`
         : ''
   return `${String(tied.length)} cards tie for the most ${where}: ${pct(top.effectiveReturnPct)}${cash ? ' cash back' : ' back'}. ${rest > 0 ? `${names.join(', ')} and ${String(rest)} more` : listed(names)}${fees}.`
+}
+
+// The cards a members-only line names below the table.
+const membersShown = (r: Exploration) =>
+  topOf(
+    {
+      ...r,
+      ranked: r.ranked.filter((e) => !isUnverified(e)),
+      membersOnly: r.membersOnly.filter((e) => !isUnverified(e)),
+    },
+    TOP,
+  ).membersOnly
+
+// What a store page says about the store's own cards in the catalog, as a
+// sentence with links and as plain text. Null when the catalog holds none,
+// which says nothing about whether the store has one.
+function ownCardLine(
+  page: Page,
+  r: Exploration,
+  shown: ExploreEntry[],
+): { html: string; text: string } | null {
+  const own = page.merchant && ownCards(catalog, page.merchant)
+  if (!own) return null
+  const whose = possessive(own.owner)
+  const name = (id: string) => {
+    const short = shortName(id)
+    return short === own.owner || short === page.label
+      ? (cards.get(id)?.name ?? short)
+      : short
+  }
+  const link = (id: string) => `<a href="/cards/${id}">${esc(name(id))}</a>`
+  const both = (f: (n: (id: string) => string) => string) => ({
+    html: f(link),
+    text: f(name),
+  })
+  const ids = own.cards.map((c) => c.id)
+  const many = ids.length > 1
+  const tied = tiedAtTop(r).filter((e) => ids.includes(e.cardId))
+  if (tied.length > 0) {
+    const what =
+      tied.length === ids.length
+        ? `${tied.length > 1 ? 'are' : 'is'} ${whose} own ${many ? 'cards' : 'card'}`
+        : `${tied.length > 1 ? 'are among' : 'is one of'} ${whose} own cards`
+    return both((n) => `${listed(tied.map((e) => n(e.cardId)))} ${what}.`)
+  }
+  // A card whose rates count on top of something else, or whose better
+  // rate here needs a membership the ranking didn't assume, is named
+  // without a placement: the ranking would understate it.
+  const entryOf = (id: string) =>
+    [...r.ranked, ...r.membersOnly].find((e) => e.cardId === id)
+  const caveated = ids.filter(
+    (id) =>
+      cards.get(id)?.rates_note !== undefined ||
+      (entryOf(id)?.withMembership.length ?? 0) > 0,
+  )
+  const plain = ids.filter((id) => !caveated.includes(id))
+  const named = (list: string[], also: boolean) =>
+    both((n) =>
+      also
+        ? `${listed(list.map(n))} ${list.length > 1 ? 'are also among' : 'is also one of'} ${whose} own cards.`
+        : `${whose} own ${list.length > 1 ? 'cards are' : 'card is'} ${listed(list.map(n))}.`,
+    )
+  const placed = [...shown, ...membersShown(r)]
+    .filter((e) => plain.includes(e.cardId))
+    .sort((a, b) => b.effectiveReturnPct - a.effectiveReturnPct)
+  const [best] = placed
+  const placement = (() => {
+    if (plain.length === 0) return null
+    const several = plain.length > 1
+    if (!best)
+      return both(
+        (n) =>
+          `${whose} own ${several ? 'cards' : 'card'}, ${listed(plain.map(n))}, ${several ? "aren't" : "isn't"} among the top ${String(TOP)} here.`,
+      )
+    const same = tiedIn(placed)
+    const needs = best.needsMembership
+    const rate = `${pct(best.effectiveReturnPct)}${needs === null ? '' : ` with ${membershipName(needs)}`}`
+    const at = `${pct(best.effectiveReturnPct)} here${needs === null ? '' : ` with ${membershipName(needs)}`}`
+    const verb = same.length > 1 ? 'earn' : 'earns'
+    const sameNames = (n: (id: string) => string) =>
+      listed(same.map((e) => n(e.cardId)))
+    if (same.length === plain.length)
+      return both(
+        (n) =>
+          `${whose} own ${several ? 'cards' : 'card'}, ${sameNames(n)}, ${verb} ${at}.`,
+      )
+    if (caveated.length > 0)
+      return both(
+        (n) =>
+          `${whose} own ${same.length > 1 ? 'cards' : 'card'} ${sameNames(n)} ${verb} ${at}.`,
+      )
+    return both(
+      (n) =>
+        `Of ${whose} own cards, ${sameNames(n)} ${verb} the most here: ${rate}.`,
+    )
+  })()
+  const rest = caveated.length > 0 ? named(caveated, placement !== null) : null
+  const parts = [placement, rest].filter((p) => p !== null)
+  return {
+    html: parts.map((p) => p.html).join(' '),
+    text: parts.map((p) => p.text).join(' '),
+  }
 }
 
 function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
@@ -277,6 +404,7 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
       ? ''
       : ` ${esc(page.label)} usually codes as ${esc(categoryPhrase(catalog, r.merchant.category))}${r.merchant.likelyMcc === null ? '' : ` (MCC ${String(r.merchant.likelyMcc)})`}.`
   const credit = r.credits[0]
+  const own = ownCardLine(page, r, shown)
   const parts = [
     ...(credit
       ? [
@@ -305,6 +433,7 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   ]
   // With a tie, each card's conditions are in the table below.
   if (first.length > 0 && tied.length < 2) parts.push(`${first.join('. ')}.`)
+  if (own) parts.push(own.html)
   const noFee = shown.find(
     (e) => e.annualFee === 0 && !cards.get(e.cardId)?.requires_membership,
   )
@@ -440,17 +569,8 @@ const ranked = (r: Exploration) =>
 // "If you have a Verizon wireless or Fios account: Verizon Visa, 4%." for
 // the cards that need one and would have placed in the table.
 function membersOnly(r: Exploration): string {
-  const lines = membersOnlyLines(
-    catalog,
-    topOf(
-      {
-        ...r,
-        ranked: r.ranked.filter((e) => !isUnverified(e)),
-        membersOnly: r.membersOnly.filter((e) => !isUnverified(e)),
-      },
-      TOP,
-    ).membersOnly,
-    (e) => shortName(e.cardId),
+  const lines = membersOnlyLines(catalog, membersShown(r), (e) =>
+    shortName(e.cardId),
   )
   return lines.map((l) => `<p class="small">${esc(l)}</p>`).join('')
 }
@@ -460,40 +580,134 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   const shown = ranked(r)
   const top = shown[0]
   const subject = page.label
-  const lead = page.merchant === null ? 'for' : 'to use at'
+  const store = page.merchant !== null
   const only = noteOnly(r)
+  // "Best credit cards for gas" is how people ask about a kind of purchase;
+  // for a store it's one card.
+  const best = store ? 'Best credit card' : 'Best credit cards'
   const heading = only
     ? `Paying ${subject} by credit card`
-    : `Best credit card ${lead} ${subject}`
+    : store
+      ? `Best credit card to use at ${subject}`
+      : `${best} for ${subject}`
+  const where = `${!store && (page.categoryId === 'other' || readsOn(page.categoryId)) ? 'on' : 'at'} ${subject}`
+  const tied = tiedAtTop(r)
+  const own = ownCardLine(page, r, shown)
+  const owned = page.merchant ? ownCards(catalog, page.merchant) : null
+  const ownIds = new Set((owned?.cards ?? []).map((c) => c.id))
+  // A tie's title and description name the store's own card, if it's one of
+  // them.
+  const ownTied = tied.find((e) => ownIds.has(e.cardId))
+  const named = ownTied ?? top
+  // A rate with an end date (a rotating quarter, a promotion) is named in a
+  // title only with its quarter, since search results keep a title for weeks
+  // after the rate ends; otherwise the title leaves the rate out.
+  const ends = (tied.length > 1 ? tied : top ? [top] : []).map(ruleEnd)
+  const limited = ends.length > 0 && ends.every((d) => d !== null)
+  const quarterEnd = currentPeriodEnd('quarter', today, null)
+  const rateTitles =
+    !limited || ends.every((d) => d === quarterEnd)
+      ? limited
+        ? ` in ${thisQuarter}`
+        : ''
+      : null
+  const rate = top ? pct(top.effectiveReturnPct) : ''
+  const titleRate = `${rate}${rateTitles ?? ''}`
+  const shortest = (id: string) => cards.get(id)?.short_name ?? shortName(id)
+  const answerTitles =
+    top === undefined || only || rateTitles === null
+      ? []
+      : tied.length > 1
+        ? [
+            ...(ownTied
+              ? [
+                  `${best} for ${subject}: ${shortName(ownTied.cardId)} ties at ${titleRate}`,
+                  `Best card for ${subject}: ${shortName(ownTied.cardId)} ties at ${titleRate}`,
+                  `Best card for ${subject}: ${shortest(ownTied.cardId)} ties at ${titleRate}`,
+                ]
+              : []),
+            `${best} for ${subject}: ${String(tied.length)} cards tie at ${titleRate}`,
+            `Best card for ${subject}: ${String(tied.length)} cards tie at ${titleRate}`,
+          ]
+        : [
+            `${best} for ${subject}: ${shortName(top.cardId)}, ${titleRate}`,
+            `Best card for ${subject}: ${shortName(top.cardId)}, ${titleRate}`,
+            `Best card for ${subject}: ${shortest(top.cardId)}, ${titleRate}`,
+            `The best credit card for ${subject} earns ${titleRate}`,
+            `The best card for ${subject} earns ${titleRate}`,
+          ]
   const title = fitTitle(
     only
       ? [heading]
       : [
-          `Best credit card ${lead} ${subject} (${thisQuarter})`,
-          heading,
-          `Best card ${page.merchant === null ? 'for' : 'at'} ${subject}`,
+          ...answerTitles,
+          `${best} for ${subject} (${thisQuarter})`,
+          `${best} for ${subject}`,
+          `Best card for ${subject}`,
         ],
   )
-  const where = page.merchant === null ? 'on' : 'at'
-  const tied = tiedAtTop(r)
-  const ranking = fitDescription(
-    top && tied.length > 1
-      ? [
-          `${shortName(top.cardId)} and ${String(tied.length - 1)} other ${tied.length === 2 ? 'card' : 'cards'} earn ${pct(top.effectiveReturnPct)} ${where} ${subject}, the most of any card. Compare ${String(r.ranked.length)} cards by rate, annual fee and conditions, quoted from issuer terms. No affiliate links.`,
-          `${shortName(top.cardId)} and ${String(tied.length - 1)} other ${tied.length === 2 ? 'card' : 'cards'} earn ${pct(top.effectiveReturnPct)} ${where} ${subject}, the most of any card. ${String(r.ranked.length)} cards compared from issuer terms.`,
-          `${String(tied.length)} cards tie for the most ${where} ${subject}: ${pct(top.effectiveReturnPct)}.`,
-        ]
-      : top
-        ? [
-            `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}. Compare ${String(r.ranked.length)} cards by rate, annual fee and conditions, quoted from issuer terms. No affiliate links.`,
-            `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}. ${String(r.ranked.length)} cards compared from issuer terms. No affiliate links.`,
-            `${shortName(top.cardId)} earns ${pct(top.effectiveReturnPct)} ${where} ${subject}, of ${String(r.ranked.length)} cards compared.`,
-          ]
-        : [
-            `Which credit card earns the most ${where} ${subject}, compared across ${String(catalog.cards.length)} cards from issuer terms.`,
-            `Which credit card earns the most ${where} ${subject}.`,
-          ],
+  const count = String(r.ranked.length)
+  const back = (e: ExploreEntry) =>
+    e.currency === 'cash' ? ' cash back' : ' in points'
+  const credit = r.credits[0]
+  const noFee = shown.find(
+    (e) => e.annualFee === 0 && !cards.get(e.cardId)?.requires_membership,
   )
+  const conditions = top
+    ? requirementLines(top.cardId, top.requirements, null)
+    : []
+  // "This rate runs through December 31, 2026", right after the answer.
+  const until =
+    top && limited
+      ? requirementLines(
+          top.cardId,
+          {
+            ...top.requirements,
+            pick: null,
+            activation: null,
+            membership: null,
+            cap: null,
+          },
+          untilText(top),
+        )
+      : []
+  const ranking = !top
+    ? fitDescription([
+        `Which credit card earns the most ${where}, compared across ${String(catalog.cards.length)} cards from issuer terms.`,
+        `Which credit card earns the most ${where}.`,
+      ])
+    : fitSentences(
+        tied.length > 1
+          ? [
+              `${String(tied.length)} of ${count} credit cards tie for the most ${where}: ${rate}${tied.every((e) => e.currency === 'cash') ? ' cash back' : ' back'}, including ${ownTied && owned ? `${owned.cards.length > 1 ? 'one of ' : ''}${possessive(owned.owner)} own ${owned.cards.length > 1 ? 'cards' : 'card'}, ` : ''}${shortName(named?.cardId ?? top.cardId)}.`,
+              `${String(tied.length)} credit cards tie for the most ${where}: ${rate}.`,
+            ]
+          : [
+              `${shortName(top.cardId)} earns the most of ${count} credit cards ${where}: ${rate}${back(top)}.`,
+              `${shortName(top.cardId)} earns the most ${where}: ${rate}${back(top)}.`,
+            ],
+        [
+          until.map((l) => `${l}.`),
+          own && !(tied.length > 1 && ownTied) ? [own.text] : [],
+          credit
+            ? [
+                `${shortName(credit.cardId)} gives ${credit.back} ${where} with its statement credit.`,
+              ]
+            : [],
+          tied.length > 1
+            ? [tiedFees(tied)].filter((s) => s !== '')
+            : [
+                `${conditions.join('. ')}.`,
+                ...(conditions.length > 1 ? [`${conditions[0] ?? ''}.`] : []),
+              ].filter((c) => c !== '.'),
+          noFee && noFee !== top && !tied.includes(noFee)
+            ? [
+                `With no annual fee, ${shortName(noFee.cardId)} earns ${pct(noFee.effectiveReturnPct)}.`,
+              ]
+            : [],
+          ["Each rate is quoted from the issuer's terms."],
+        ],
+      )
   const description =
     r.categoryNote === null
       ? ranking
@@ -847,8 +1061,9 @@ const isPortal = (id: string) => findMerchant(catalog, id)?.kind !== undefined
 
 // The card's best everyday categories, then its best single-store bonus
 // (Prime Visa at Amazon) unless it's an issuer's travel site, which stay in
-// the full list below.
-function headlineFor(card: Card): string {
+// the full list below. The first clause names the currency; the rest give
+// the rate alone.
+function headlineFor(card: Card): { rate: number; text: string }[] {
   const current = card.rules.filter((r) => r.valid_to === undefined)
   const everyday = current
     .filter(
@@ -865,10 +1080,10 @@ function headlineFor(card: Card): string {
     const phrases = byRate.get(r.rate) ?? []
     if (!phrases.includes(phrase)) byRate.set(r.rate, [...phrases, phrase])
   }
-  const clauses = [...byRate].map(
-    ([rate, whats]) =>
-      `${earnText(catalog, rate, card.currency)} ${listed(whats)}`,
-  )
+  const clauses = [...byRate].map(([rate, whats]) => ({
+    rate,
+    what: listed(whats),
+  }))
 
   const stores = current
     .filter(
@@ -897,9 +1112,10 @@ function headlineFor(card: Card): string {
     ]
     const membership = best.requires?.membership
     const payment = best.requires?.payment
-    clauses.unshift(
-      `${earnText(catalog, best.rate, card.currency)} at ${listed(names)}${membership ? ` with ${membershipName(membership)}` : ''}${payment ? ` ${PAYMENT_PHRASES[payment]}` : ''}`,
-    )
+    clauses.unshift({
+      rate: best.rate,
+      what: `at ${listed(names)}${membership ? ` with ${membershipName(membership)}` : ''}${payment ? ` ${PAYMENT_PHRASES[payment]}` : ''}`,
+    })
   }
   for (const r of current)
     if (
@@ -907,22 +1123,27 @@ function headlineFor(card: Card): string {
       r.requires?.payment !== undefined &&
       r.rate > card.base_rate
     )
-      clauses.push(
-        `${earnText(catalog, r.rate, card.currency)} ${PAYMENT_PHRASES[r.requires.payment]}`,
-      )
+      clauses.push({ rate: r.rate, what: PAYMENT_PHRASES[r.requires.payment] })
 
   const rotating = card.caps.find((c) => c.rotating)
   const rotatingRates = rotating
     ? card.rules.filter((r) => r.cap === rotating.id).map((r) => r.rate)
     : []
   if (rotatingRates.length > 0)
-    clauses.unshift(
-      `${earnText(catalog, Math.max(...rotatingRates), card.currency)} on categories that rotate each quarter`,
-    )
+    clauses.unshift({
+      rate: Math.max(...rotatingRates),
+      what: 'on categories that rotate each quarter',
+    })
 
-  const base = `${earnText(catalog, card.base_rate, card.currency)} on everything${clauses.length > 0 ? ' else' : ''}`
-  if (card.only_at) return listed(clauses) || base
-  return clauses.length > 0 ? `${clauses.join('; ')}; and ${base}` : base
+  if (!card.only_at || clauses.length === 0)
+    clauses.push({
+      rate: card.base_rate,
+      what: `on everything${clauses.length > 0 ? ' else' : ''}`,
+    })
+  return clauses.map((c, i) => ({
+    rate: c.rate,
+    text: `${i === 0 ? earnText(catalog, c.rate, card.currency) : bareRate(c.rate, card.currency)} ${c.what}`,
+  }))
 }
 
 // Where its everyday rate is the most any card earns: a flat 2% card at
@@ -1063,15 +1284,49 @@ function renderCard(
   byPage: Map<string, Exploration>,
   transferByPage: Map<string, Exploration>,
 ): string {
-  const name = shortName(card.id)
+  // A store card's short name is the store's ("Kohl's").
+  const name = card.only_at ? card.name : shortName(card.id)
   const issuer = issuerName(card.issuer)
   const currency = catalog.currencies.find((c) => c.id === card.currency)
-  const headline = headlineFor(card)
+  const clauses = headlineFor(card)
+  const headline = inOrder(clauses.map((c) => c.text))
+  const firstClause = clauses[0]?.text ?? headline
   const closed = card.applications_closed !== undefined && !card.only_at
-  const value =
+  const transferred = currency?.range
+    ? `; transferred to airlines or hotels, up to about ${String(currency.range[1])}¢`
+    : ''
+  const pointValue =
     currency && card.currency !== 'cash'
-      ? ` earnrate counts ${esc(currency.name)} at ${String(currency.value_cents)}¢ each${currency.range ? `; transferring to airlines or hotels can be worth up to about ${String(currency.range[1])}¢` : ''}.`
-      : ''
+      ? `${String(currency.value_cents)}¢ each as earnrate counts them${transferred}`
+      : null
+  const pointSentence =
+    currency && card.currency !== 'cash'
+      ? `earnrate counts its points at ${String(currency.value_cents)}¢ each${transferred}.`
+      : null
+  const annualFee = card.annual_fee
+  const feeShort = feeText({ annualFee: annualFee ?? null, firstYearFee: null })
+  const needs =
+    card.requires_membership === undefined
+      ? ''
+      : ` and needs ${membershipText(catalog, card.requires_membership)}`
+  const feeSentence = `${
+    annualFee === undefined
+      ? "Its annual fee isn't on file"
+      : annualFee === 0
+        ? 'It has no annual fee'
+        : `It has ${withArticle(feeText({ annualFee, firstYearFee: card.first_year_fee ?? null }))}`
+  }${needs}.`
+  // The headline's rates, highest first.
+  const rateList = [...new Set(clauses.map((c) => c.rate))].sort(
+    (a, b) => b - a,
+  )
+  const ratesWords =
+    rateList.length > 4
+      ? `up to ${bareRate(rateList[0] ?? 0, card.currency)}`
+      : listed(rateList.map((r) => bareRate(r, card.currency)))
+  const cash = card.currency === 'cash'
+  const flat = earnText(catalog, rateList[0] ?? card.base_rate, card.currency)
+  const names = [...new Set([card.name, name, card.short_name ?? name])]
   // "Fidelity Rewards rates", not "Fidelity Rewards rewards rates".
   const rates = /rewards$/i.test(name) ? 'rates' : 'rewards rates'
   const worth = feeWorth(card)
@@ -1084,28 +1339,116 @@ function renderCard(
           `${name}: rates and is the ${fee} fee worth it?`,
           `${name}: is the ${fee} fee worth it?`,
         ]
-      : []),
+      : // A rotating quarter's rate ends with the quarter.
+        card.caps.some((c) => c.rotating)
+        ? []
+        : rateList.length === 1
+          ? names.flatMap((n) => [
+              `${n}: ${firstClause}, ${feeShort}`,
+              `${n}: ${flat}, ${feeShort}`,
+            ])
+          : names.flatMap((n) =>
+              cash
+                ? [
+                    `${n} cash back rates: ${ratesWords}, ${feeShort}`,
+                    `${n}: ${ratesWords} cash back, ${feeShort}`,
+                    `${n} cash back rates: ${ratesWords}`,
+                  ]
+                : [
+                    `${n} earning rates: ${ratesWords}, ${feeShort}`,
+                    `${n} earning rates: ${ratesWords}`,
+                  ],
+            )),
     `${name} ${rates} and annual fee (${thisQuarter})`,
     `${name} ${rates} and annual fee`,
     `${name} ${rates} and fee`,
     name,
   ])
-  const firstClause = headline.split('; ')[0] ?? headline
-  const description = fitDescription([
-    `${card.name}: ${headline}. ${feeLabel(card.id)}. Every earning rule quoted from ${possessive(issuer)} terms, and the stores where it beats other cards. No affiliate links.`,
-    `${card.name}: ${headline}. ${feeLabel(card.id)}.`,
-    `${name}: ${headline}. ${feeLabel(card.id)}.`,
-    `${name}: ${firstClause}. ${feeLabel(card.id)}. Every rule quoted from ${possessive(issuer)} terms.`,
-    `${name}: ${firstClause}. ${feeLabel(card.id)}.`,
-    `${name}: every earning rate, cap and fee, quoted from ${possessive(issuer)} terms. ${feeLabel(card.id)}.`,
-    `${name}: every earning rate, cap and fee, from ${possessive(issuer)} terms.`,
-  ])
+  const theName = (n: string) => (n.startsWith('The ') ? n : `The ${n}`)
+  const fx = card.foreign_transaction_fee
+  const fxPhrase =
+    fx === null
+      ? null
+      : fx === 0
+        ? 'no foreign transaction fee'
+        : withArticle(foreignFeeText(fx))
+  // The names people search for; an abbreviation ("NFCU cashRewards") only
+  // once every shorter wording with them is too long.
+  const spoken = [...new Set([card.name, name])]
+  const abbreviated =
+    card.short_name !== undefined && !spoken.includes(card.short_name)
+      ? [card.short_name]
+      : []
+  const leads = (says: string, ns: string[]) => [
+    ...new Set(
+      ns.flatMap((n) => [
+        `${theName(n)} earns ${says}.`,
+        `${n} earns ${says}.`,
+      ]),
+    ),
+  ]
+  const [top, ...lower] = rateList
+  const sayings = [
+    headline,
+    firstClause,
+    ...(top !== undefined && lower.length > 0 && !card.only_at
+      ? [
+          `${earnText(catalog, top, card.currency)} in its bonus categories and ${bareRate(card.base_rate, card.currency)} on everything else`,
+        ]
+      : []),
+    `up to ${flat}`,
+  ]
+  const description = fitSentences(
+    [
+      ...sayings.map((s) => leads(s, spoken)),
+      ...(abbreviated.length > 0
+        ? sayings.map((s) => leads(s, abbreviated))
+        : []),
+    ],
+    [
+      [
+        ...(annualFee !== undefined && fxPhrase !== null
+          ? [
+              `It has ${annualFee === 0 ? 'no annual fee' : withArticle(feeText({ annualFee, firstYearFee: card.first_year_fee ?? null }))} and ${fxPhrase}${needs === '' ? '' : `,${needs}`}.`,
+            ]
+          : []),
+        feeSentence,
+      ],
+      fxPhrase === null ? [`${foreignFeeText(fx)}.`] : [],
+      pointSentence === null ? [] : [pointSentence],
+      [`Every rate is quoted from ${possessive(issuer)} terms.`],
+    ],
+  )
   const canonical = `${SITE}/cards/${card.id}`
   const rotates = quarterly.has(card.id)
+  const facts: [string, string][] = [
+    [
+      'Annual fee',
+      annualFee === 0 ? 'None' : (feeLabel(card.id).split('; needs ')[0] ?? ''),
+    ],
+    ...(card.requires_membership === undefined
+      ? []
+      : [
+          [
+            'Membership needed',
+            capitalize(membershipText(catalog, card.requires_membership)),
+          ] as [string, string],
+        ]),
+    [
+      'Foreign transaction fee',
+      fx === null ? 'Not on file' : fx === 0 ? 'None' : pct(fx),
+    ],
+    ['Rewards', cash ? 'Cash back' : (currency?.name ?? card.currency)],
+    ...(pointValue === null
+      ? []
+      : [['Point value', capitalize(pointValue)] as [string, string]]),
+    ['Network', capitalize(NETWORK_NAMES[card.network] ?? card.network)],
+  ]
   const body = `
       <div class="card-head">${art(card.id, 112)}<h1>${esc(card.name)}</h1></div>
       <p class="updated">${esc(issuer)} · ${esc(card.business ? 'Business card' : 'Personal card')} · Checked against ${esc(possessive(issuer))} terms ${esc(shortDate(card.last_verified))}</p>
-      <p class="answer">The ${esc(name)} earns <strong>${esc(headline)}</strong>. ${esc(feeLabel(card.id))}.${value}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listed(card.only_at.map((id) => merchantName(id) ?? words(id))))}.` : ''}</p>
+      <p class="answer">${esc(theName(name))} earns <strong>${esc(headline)}</strong>. ${esc(feeSentence)}${closed ? ` ${esc(issuer)} stopped taking applications for it on ${esc(shortDate(card.applications_closed ?? ''))}; cardholders keep earning.` : ''}${card.only_at ? ` It works only at ${esc(listed(card.only_at.map((id) => merchantName(id) ?? words(id))))}.` : ''}</p>
+      <dl class="facts">${facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
       ${cardActions(card)}
       ${closed ? '' : rankSection(card, all, byPage, transferByPage)}
       <h2>Earning rates</h2>
@@ -1144,7 +1487,8 @@ function renderCard(
     url: canonical,
     provider: { '@type': 'BankOrCreditUnion', name: issuer },
     feesAndCommissionsSpecification: feeLabel(card.id),
-    description: `${headline}.`,
+    description: `${capitalize(headline)}.`,
+    dateModified: cardDate(card),
   }
   images.push({
     file: `og/cards/${card.id}.jpg`,
@@ -1492,21 +1836,39 @@ function renderCompare(c: Comparison): string {
     `${na} vs ${nb}`,
     `${c.a.short_name ?? na} vs ${c.b.short_name ?? nb}`,
   ])
-  const winner =
-    Math.round(c.typical.a.net) === Math.round(c.typical.b.net)
-      ? null
-      : c.typical.a.net > c.typical.b.net
-        ? na
-        : nb
-  const verdict = winner
-    ? `the ${winner} earns more at typical U.S. spending after fees`
-    : 'they come out even at typical U.S. spending after fees'
-  const description = fitDescription([
-    `${na} vs ${nb}, rate by rate from the issuers' terms: ${verdict}. Fees, welcome offers and who each card suits. No affiliate links.`,
-    `${na} vs ${nb}, rate by rate from the issuers' terms: ${verdict}.`,
-    `${na} vs ${nb}: ${verdict}.`,
-    `${na} vs ${nb}, rate by rate from the issuers' terms.`,
-  ])
+  const gap = Math.round(c.typical.a.net) - Math.round(c.typical.b.net)
+  const [sa, sb] = [c.a.short_name ?? na, c.b.short_name ?? nb]
+  // "A vs B" in the names people search for; the winner again by its short
+  // name. A dollar figure always comes with the spending it assumes: past
+  // 155 characters "after fees" goes first, then the figure.
+  const winner = gap > 0 ? sa : sb
+  const gapDollars = wholeDollars(Math.abs(gap))
+  const verdicts =
+    gap === 0
+      ? [
+          `they come out even at typical U.S. spending, about ${wholeDollars(c.typical.a.net)} a year each after fees.`,
+          `they come out even at typical U.S. spending, about ${wholeDollars(c.typical.a.net)} a year each.`,
+          'they come out even at typical U.S. spending.',
+        ]
+      : [
+          `the ${winner} earns ${gapDollars} a year more at typical U.S. spending, after fees.`,
+          `the ${winner} earns ${gapDollars} a year more at typical U.S. spending.`,
+          `the ${winner} earns more at typical U.S. spending.`,
+        ]
+  const description = fitSentences(
+    [
+      ...verdicts.map((v) => `${na} vs ${nb}: ${v}`),
+      ...(sa === na && sb === nb
+        ? []
+        : [`${sa} vs ${sb}: ${verdicts.at(-1) ?? ''}`]),
+    ],
+    [
+      [
+        "Rates by purchase, fees and welcome offers come from the issuers' terms.",
+        "Every rate is quoted from the issuers' terms.",
+      ],
+    ],
+  )
   const canonical = `${SITE}/compare/${c.pair.slug}`
   const body = `
       <div class="vs-head">${art(c.a.id, 96)}<span class="vs">vs</span>${art(c.b.id, 96)}</div>

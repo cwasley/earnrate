@@ -155,6 +155,10 @@ export function earnText(
     : `${num(rate)}x ${currencyName(catalog, currency)}`
 }
 
+// The rate alone, once earnText has named the currency: "2%", "3x".
+export const bareRate = (rate: number, currency: string) =>
+  currency === 'cash' ? pct(rate) : `${num(rate)}x`
+
 export function codesAs(
   catalog: Catalog,
   merchant: MerchantResolution,
@@ -272,9 +276,9 @@ export const shortCardName = (name: string) =>
     )
     .replace(/ Card by /, ' by ')
 
-// "Amex Platinum's", "Capital One Savor Rewards'".
+// "Amex Platinum's", "Capital One Savor Rewards'", and "Kohl's" as it is.
 export const possessive = (name: string) =>
-  name.endsWith('s') ? `${name}'` : `${name}'s`
+  /['’]s$/.test(name) ? name : name.endsWith('s') ? `${name}'` : `${name}'s`
 
 export const listed = (parts: string[], joiner = 'and') => {
   const anded = parts.filter((p) => p.includes(' and '))
@@ -284,6 +288,13 @@ export const listed = (parts: string[], joiner = 'and') => {
     ? parts.join(` ${joiner} `)
     : `${parts.slice(0, -1).join(', ')} ${joiner} ${parts.at(-1) ?? ''}`
 }
+
+// Like `listed`, in the given order: when a part has its own "and", the
+// last joiner takes a comma so the parts stay apart.
+export const inOrder = (parts: string[], joiner = 'and') =>
+  parts.length <= 1
+    ? (parts[0] ?? '')
+    : `${parts.slice(0, -1).join(', ')}${parts.some((p) => p.includes(` ${joiner} `)) ? ',' : ''} ${joiner} ${parts.at(-1) ?? ''}`
 
 const NUMBERS: Record<string, string> = {
   one: '1',

@@ -13,7 +13,13 @@ import { loadCatalog } from '../src/data/load.ts'
 import { localToday } from '../src/engine/periods.ts'
 import { rotationGapText } from '../src/engine/rotation.ts'
 import { simulateSingles } from '../src/engine/simulate.ts'
-import { earnText, shortDate } from '../src/engine/text.ts'
+import {
+  earnText,
+  longDate,
+  quarterYear,
+  shortDate,
+} from '../src/engine/text.ts'
+import { ALL_PERSONAL_CARDS, exploreCards } from '../src/engine/explore.ts'
 import { pageContext } from '../scripts/pages/context.ts'
 import {
   feeWorthKit,
@@ -184,6 +190,79 @@ describe('the built static pages', () => {
     expect(noindex('aldi')).toBe(true)
     // Its category page lists it, so it's still reachable and answerable.
     expect(page('groceries')).toContain('href="/best/aldi"')
+  })
+
+  test("a store page names the store's own cards earnrate holds, and claims nothing where it holds none", () => {
+    const page = (slug: string) =>
+      readFileSync(path.join(out, 'best', `${slug}.html`), 'utf8')
+    const kohls = page('kohls')
+    expect(kohls).toContain("Kohl's own cards, ")
+    expect(kohls).toContain('href="/cards/capital-one-kohls-card"')
+    expect(page('target')).toContain("is Target's own card.")
+    const nordstrom = page('nordstrom')
+    expect(nordstrom).toContain("Nordstrom's own cards are")
+    expect(nordstrom).not.toContain('among the top')
+    const vons = page('vons')
+    const said = [
+      /<p class="answer">[\s\S]*?<\/p>/.exec(vons)?.[0],
+      /<meta name="description" content="[^"]*"/.exec(vons)?.[0],
+    ].join(' ')
+    expect(said).not.toMatch(/own card|store card|no card/i)
+    expect(/<title>([^<]*)<\/title>/.exec(vons)?.[1]).toMatch(
+      /^Best credit card for Vons: .+, \d/,
+    )
+  })
+
+  test('a time-limited winning rate is titled only with its quarter, and the description gives its end', () => {
+    const html = readFileSync(path.join(out, 'best', 'dining.html'), 'utf8')
+    const title = unescape(/<title>([^<]*)<\/title>/.exec(html)?.[1] ?? '')
+    const description = unescape(
+      /<meta name="description" content="([^"]*)"/.exec(html)?.[1] ?? '',
+    )
+    const r = exploreCards(
+      catalog,
+      {
+        merchant: null,
+        category: 'dining',
+        amount: null,
+        channel: null,
+        date: today,
+      },
+      { filters: ALL_PERSONAL_CARDS, memberships: [], valuations: {} },
+    )
+    const [top] = r.ranked
+    const end = catalog.cards
+      .find((c) => c.id === top?.cardId)
+      ?.rules.find((rule) => rule.id === top?.matchedRule)?.valid_to
+    if (end === undefined) return
+    if (title.includes('%')) expect(title).toContain(`in ${quarterYear(today)}`)
+    expect(description).toContain(`through ${longDate(end)}`)
+  })
+
+  test('a comparison description gives a dollar figure only with the spending it assumes', () => {
+    const missing = htmlFiles(path.join(out, 'compare'))
+      .map((file) =>
+        unescape(
+          /<meta name="description" content="([^"]*)"/.exec(
+            readFileSync(file, 'utf8'),
+          )?.[1] ?? '',
+        ),
+      )
+      .filter((d) => d.includes('$') && !d.includes('at typical U.S. spending'))
+    expect(missing).toEqual([])
+  })
+
+  test('a card page lists its fees and rewards near the top', () => {
+    const html = readFileSync(
+      path.join(out, 'cards', 'paypal-cashback-mastercard.html'),
+      'utf8',
+    )
+    const facts = /<dl class="facts">[\s\S]*?<\/dl>/.exec(html)?.[0] ?? ''
+    expect(html.indexOf('<dl class="facts">')).toBeLessThan(
+      html.indexOf('<h2>'),
+    )
+    for (const label of ['Annual fee', 'Foreign transaction fee', 'Rewards'])
+      expect(facts).toContain(`<dt>${label}</dt>`)
   })
 
   test("rent's page links the cards its note names", () => {

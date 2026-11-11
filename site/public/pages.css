@@ -99,6 +99,36 @@ a {
   padding: 14px 16px;
 }
 
+.facts {
+  display: grid;
+  gap: 0;
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 16px;
+  padding: 10px 14px;
+}
+
+.facts > div + div {
+  border-top: 1px solid var(--line);
+}
+
+.facts dt {
+  color: var(--muted);
+}
+
+.facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
 /* A page's next step: one button and, beside it, a plain link. */
 .actions {
   display: flex;

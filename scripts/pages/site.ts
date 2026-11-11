@@ -85,6 +85,43 @@ export function fitTitle(candidates: string[]): string {
 export const fitDescription = (candidates: string[]): string =>
   candidates.find((c) => c.length <= DESCRIPTION_MAX) ?? candidates.at(-1) ?? ''
 
+// A description that leads with the first wording of `lead` that fits, then
+// adds each later sentence, in order, in the first wording that still fits.
+// A group of lead wordings that say the same thing (a long and a short card
+// name) counts as one, and the one that leaves room to say the most wins.
+export function fitSentences(
+  lead: (string | string[])[],
+  more: string[][],
+): string {
+  const extend = (start: string) => {
+    let text = start
+    let added = 0
+    for (const wordings of more) {
+      const next = wordings.find(
+        (w) => w !== '' && text.length + 1 + w.length <= DESCRIPTION_MAX,
+      )
+      if (next === undefined) continue
+      text = `${text} ${next}`
+      added += next.length
+    }
+    return { text, added }
+  }
+  for (const group of lead) {
+    const fits = (typeof group === 'string' ? [group] : group).filter(
+      (w) => w.length <= DESCRIPTION_MAX,
+    )
+    const best = fits
+      .map(extend)
+      .reduce<{ text: string; added: number } | null>(
+        (a, b) => (a === null || b.added > a.added ? b : a),
+        null,
+      )
+    if (best) return best.text
+  }
+  const last = lead.at(-1)
+  return (typeof last === 'string' ? last : last?.at(-1)) ?? ''
+}
+
 // Links as a row of chips, where a list would run on as a sentence.
 export const chipLinks = (links: string[]) =>
   `<ul class="chip-links">${links.map((l) => `<li>${l}</li>`).join('')}</ul>`
