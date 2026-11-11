@@ -116,8 +116,31 @@ function feeWords(cardId: string): string {
   return fee === undefined
     ? ''
     : fee === 0
-      ? ', with no annual fee'
-      : ` after its ${money(fee)} annual fee`
+      ? ', no annual fee'
+      : ` after its ${money(fee)} fee`
+}
+
+// The pair's cards with what each covers; the one that takes "Everything
+// else" covers the rest.
+function pairParts(sim: Simulation): { id: string; covers: string }[] {
+  const byCard = new Map<string, string[]>()
+  for (const line of sim.lines) {
+    const first = line.cards[0]
+    if (first !== undefined)
+      byCard.set(first, [...(byCard.get(first) ?? []), line.label])
+  }
+  return [...byCard]
+    .map(([id, labels]) => ({
+      id,
+      covers:
+        OTHER !== undefined && labels.includes(OTHER)
+          ? 'the rest'
+          : listed(labels.map(phrase)),
+    }))
+    .sort(
+      (a, b) =>
+        Number(a.covers === 'the rest') - Number(b.covers === 'the rest'),
+    )
 }
 
 function Answer({
@@ -125,52 +148,40 @@ function Answer({
   ties,
   pair,
   offer,
-  monthly,
-  typical,
 }: {
   single: Simulation
   ties: number
   pair: Simulation | undefined
   offer: OfferSummary | undefined
-  monthly: number
-  typical: boolean
 }) {
   const id = single.cards[0]?.cardId ?? ''
   const first = firstYear(offer, single.net)
-  const minimum = offer?.plan?.minimumSpend
-  const gain = pair ? pair.net - single.net : 0
+  const parts = pair ? pairParts(pair) : []
+  const better = pair !== undefined && pair.net - single.net >= 0.5
   return (
-    <div class="panel find-answer">
-      <p>
-        {typical
-          ? `On typical U.S. spending, about ${wholeDollars(monthly)} a month`
-          : `On your spending, ${wholeDollars(monthly)} a month`}
-        , the <strong>{shortName(id)}</strong> earns the most on its own
-        {ties > 0
-          ? `, tied with ${String(ties)} other card${ties === 1 ? '' : 's'}`
-          : ''}
-        : about {wholeDollars(single.net)} a year{feeWords(id)}.
-        {first !== null
-          ? ` Counting its welcome offer, the first year comes to about ${wholeDollars(first)}.`
-          : ''}
-      </p>
-      {offer && minimum && !minimum.reachable ? (
-        <p class="warn">
-          {minimumSpendText(offer.spend, offer.months, minimum, typical)}
-        </p>
-      ) : null}
-      {pair && gain >= 0.5 ? (
-        <>
-          <p>
-            Two cards together net about {wholeDollars(pair.net)} a year after
-            fees, {wholeDollars(gain)} more:
-          </p>
-          <Split sim={pair} />
-        </>
+    <dl class="panel find-answer">
+      <dt>One card</dt>
+      <dd>
+        <strong>{shortName(id)}</strong>
+        {ties > 0 ? ` (or ${String(ties)} more that tie)` : ''}:{' '}
+        {wholeDollars(single.net)} a year{feeWords(id)}
+        {first !== null ? `, ${wholeDollars(first)} the first year` : ''}
+      </dd>
+      <dt>Two cards</dt>
+      {pair && better && parts.length === 2 ? (
+        <dd>
+          {parts.map((part, i) => (
+            <Fragment key={part.id}>
+              {i > 0 ? ', ' : ''}
+              <strong>{shortName(part.id)}</strong> for {part.covers}
+            </Fragment>
+          ))}
+          : {wholeDollars(pair.net)} a year after fees
+        </dd>
       ) : (
-        <p>One card is enough here: no pair beats the {shortName(id)}.</p>
+        <dd>No pair beats the {shortName(id)} alone.</dd>
       )}
-    </div>
+    </dl>
   )
 }
 
@@ -318,19 +329,24 @@ export function Spending({
           <CardArt id={card.cardId} />
           <span class="result-name">
             <strong>{shortName(card.cardId)}</strong>
-            <span class="muted">
-              {wholeDollars(s.rewards)} back · {feeLabel(card.cardId)}
-            </span>
+            <span class="muted">{feeLabel(card.cardId)}</span>
           </span>
           <span class="rate">
             {wholeDollars(s.net)}
             <small>/yr</small>
             {first !== null ? (
               <small class="first-year">{wholeDollars(first)} first year</small>
+            ) : minimum && !minimum.reachable ? (
+              <small class="first-year">bonus out of reach</small>
             ) : null}
           </span>
         </button>
-        {offer ? (
+        {isOpen ? (
+          <p class="muted">
+            {wholeDollars(s.rewards)} back a year before the fee.
+          </p>
+        ) : null}
+        {isOpen && offer ? (
           <p class="muted">
             Welcome offer:{' '}
             {offerTerms(offer, currencyName(catalog, offer.currency))}.
@@ -339,19 +355,21 @@ export function Spending({
               : ''}
           </p>
         ) : null}
-        {offer && minimum && !minimum.reachable ? (
+        {isOpen && offer && minimum && !minimum.reachable ? (
           <p class="warn">
             {minimumSpendText(offer.spend, offer.months, minimum, typical)}
           </p>
         ) : null}
-        {picks ? <p class="muted">{picks}</p> : null}
-        {s.credits
-          .filter((c) => !c.held)
-          .map((c) => (
-            <p class="muted" key={c.cardId}>
-              {ifCreditsUsedText(c, s.netIfCreditsUsed)}
-            </p>
-          ))}
+        {isOpen && picks ? <p class="muted">{picks}</p> : null}
+        {isOpen
+          ? s.credits
+              .filter((c) => !c.held)
+              .map((c) => (
+                <p class="muted" key={c.cardId}>
+                  {ifCreditsUsedText(c, s.netIfCreditsUsed)}
+                </p>
+              ))
+          : null}
         {isOpen && offer ? (
           <p class="muted">
             {offer.validTo ? `Offer ends ${shortDate(offer.validTo)}. ` : ''}
@@ -392,8 +410,6 @@ export function Spending({
             }
             pair={pair}
             offer={offers.get(single.cards[0]?.cardId ?? '')}
-            monthly={monthly}
-            typical={typical}
           />
         ) : null}
       </div>
@@ -413,8 +429,12 @@ export function Spending({
         onToggle={(e) => setEditing(e.currentTarget.open)}
       >
         <summary>
-          Change the spending
-          <span class="muted"> · {wholeDollars(total)} a month</span>
+          <span class="basis">
+            {typical
+              ? `On typical U.S. spending, about ${wholeDollars(monthly)} a month.`
+              : `On your spending, ${wholeDollars(monthly)} a month.`}
+          </span>{' '}
+          Change it
         </summary>
         <div class="panel">
           <p class="muted">
@@ -578,7 +598,6 @@ export function Spending({
                           {p.cards.map((c) => shortName(c.cardId)).join(' + ')}
                         </strong>
                         <span class="muted">
-                          {wholeDollars(p.rewards)} back ·{' '}
                           {wholeDollars(p.annualFees)} in fees
                         </span>
                       </span>
@@ -587,8 +606,13 @@ export function Spending({
                         <small>/yr</small>
                       </span>
                     </button>
-                    <Split sim={p} />
-                    {p.otherCredits > 0 ? (
+                    {open === pairKey(p) ? (
+                      <p class="muted">
+                        {wholeDollars(p.rewards)} back a year before fees.
+                      </p>
+                    ) : null}
+                    {open === pairKey(p) ? <Split sim={p} /> : null}
+                    {open === pairKey(p) && p.otherCredits > 0 ? (
                       <p class="muted">
                         {pairCreditsUsedText(
                           p.credits
@@ -600,7 +624,7 @@ export function Spending({
                         )}
                       </p>
                     ) : null}
-                    {p.alternatives.length > 0 ? (
+                    {open === pairKey(p) && p.alternatives.length > 0 ? (
                       <p class="muted">
                         Same result with{' '}
                         {listed(p.alternatives.map(shortName), 'or')} instead.
@@ -633,23 +657,26 @@ export function Spending({
               ) : null}
             </>
           ) : null}
-          <ul class="assumptions">
-            <li>
-              Rewards minus annual fees over the next 12 months, with caps
-              filling and resetting as they would. Each card uses its best
-              category picks, with any bonus activations done.
-            </li>
-            <li>
-              Welcome offers pay once, so they don't change the order. A card's
-              first-year figure adds its public offer if this spending, all on
-              that card, reaches the minimum in time, and uses the first year's
-              fee. Pairs leave offers out. {OFFERS_MAY_DIFFER}
-            </li>
-            <li>{CREDITS_APART}</li>
-            {notes.map((n) => (
-              <li key={n}>{n}</li>
-            ))}
-          </ul>
+          <details class="how">
+            <summary>How this is figured</summary>
+            <ul class="assumptions">
+              <li>
+                Rewards minus annual fees over the next 12 months, with caps
+                filling and resetting as they would. Each card uses its best
+                category picks, with any bonus activations done.
+              </li>
+              <li>
+                Welcome offers pay once, so they don't change the order. A
+                card's first-year figure adds its public offer if this spending,
+                all on that card, reaches the minimum in time, and uses the
+                first year's fee. Pairs leave offers out. {OFFERS_MAY_DIFFER}
+              </li>
+              <li>{CREDITS_APART}</li>
+              {notes.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+            </ul>
+          </details>
         </section>
       ) : null}
     </div>

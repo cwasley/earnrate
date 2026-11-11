@@ -1701,23 +1701,45 @@ p.callout .link {
 }
 
 /* Find a card: the answer first, the spending folded under it. */
-.find-answer p {
-  margin: 0 0 10px;
+.find-answer {
+  margin: 0;
   font-size: 16.5px;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
-.find-answer .split {
-  margin: 0;
-  font-size: 15.5px;
+.find-answer dt {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.find-answer dd {
+  margin: 2px 0 12px;
 }
 
 .spend-edit[open] > summary {
   margin-bottom: 8px;
 }
 
-.spend-edit summary .muted {
+.spend-edit summary .basis {
+  color: var(--muted);
   font-weight: 400;
+}
+
+.how {
+  margin-top: 14px;
+}
+
+.how summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 14.5px;
+}
+
+.how[open] summary {
+  color: var(--accent);
 }
 
 .result .rate {
