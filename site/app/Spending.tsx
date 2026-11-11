@@ -640,11 +640,10 @@ export function Spending({
               category picks, with any bonus activations done.
             </li>
             <li>
-              The order leaves welcome offers out, since they pay once. A card's
-              first-year figure adds its public offer when this spending, all on
-              that one card, reaches the minimum in time, and takes the first
-              year's fee instead of the regular one; year one counts the card at
-              its standard rates. Pairs leave offers out. {OFFERS_MAY_DIFFER}
+              Welcome offers pay once, so they don't change the order. A card's
+              first-year figure adds its public offer if this spending, all on
+              that card, reaches the minimum in time, and uses the first year's
+              fee. Pairs leave offers out. {OFFERS_MAY_DIFFER}
             </li>
             <li>{CREDITS_APART}</li>
             {notes.map((n) => (
