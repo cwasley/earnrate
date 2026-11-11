@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "earnrate",
   "display_name": "earnrate",
-  "version": "0.2.25",
+  "version": "0.2.26",
   "description": "Which credit card earns the most at a store, from yours or every card, and why. Runs on your computer.",
   "long_description": "Ask which credit card to use before you pay. earnrate checks each card against the issuer's own terms and explains its answer: from every card it knows, from the cards you name, or from a wallet you save, where it also tracks the caps you've spent and the categories you've picked.\n\nYour wallet is a file on your computer, listing cards by product (like amex-gold). earnrate never asks for card numbers, expiry dates, security codes or bank logins, and sends nothing anywhere. No affiliate links.",
   "author": {
