@@ -3,6 +3,14 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.10.4'
+  date: 2026-11-10
+  changes:
+    - cause: quote
+      card: amex-gold
+      field: evidence
+      summary: The Resy credit's quote now covers both halves of the year, not only January through June.
+
 - version: '2026.11.10.3'
   date: 2026-11-10
   changes:
