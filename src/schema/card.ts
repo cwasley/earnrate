@@ -130,6 +130,17 @@ export const RuleSchema = z
     // The kinds of stores a rule matched only by MCC covers, in words, for
     // answers that would otherwise read out the codes: "caterers".
     what: z.string().min(1).optional(),
+    // Stores the issuer's own pages name as examples of where the rule pays
+    // or doesn't. What the issuer says, not matching: `match` and `exclude`
+    // still decide the rate and must agree with it. Evidence for each list
+    // is `<rule id>.earning` or `<rule id>.not_earning`.
+    named: z
+      .strictObject({
+        earning: z.array(KebabId).min(1).optional(),
+        not_earning: z.array(KebabId).min(1).optional(),
+      })
+      .refine(hasAny, 'named needs earning, not_earning or both')
+      .optional(),
     note: z.string().optional(),
   })
   .refine(

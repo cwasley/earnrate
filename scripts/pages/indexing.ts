@@ -3,6 +3,7 @@
 // visitors, marked noindex and left out of the sitemap, and come back on
 // their own once the data gives them something of their own.
 import type { ExploreEntry, Exploration } from '../../src/engine/explore.ts'
+import { namings } from '../../src/engine/named.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Merchant } from '../../src/schema/merchant.ts'
 import { hasCodingNotes } from './coding.ts'
@@ -18,6 +19,7 @@ export function storeIndexReasons(
   store: Exploration,
   category: Exploration | undefined,
   shown: (r: Exploration) => ExploreEntry[],
+  today: string,
 ): string[] {
   const reasons: string[] = []
   if (hasCodingNotes(merchant)) reasons.push('notes on how it codes')
@@ -34,6 +36,9 @@ export function storeIndexReasons(
     )
   )
     reasons.push("a card's terms name it")
+  const open = catalog.cards.filter((c) => c.applications_closed === undefined)
+  if (namings(open, merchant.id, today).length > 0)
+    reasons.push("an issuer's list of example stores names it")
   if (store.excluded.length > (category?.excluded.length ?? 0))
     reasons.push("cards it doesn't take")
   if (!category || rankingKey(shown(store)) !== rankingKey(shown(category)))

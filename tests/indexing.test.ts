@@ -36,6 +36,7 @@ function reasons(c: Catalog, id: string): string[] {
     explore(c, merchant.name, null),
     explore(c, null, merchant.category),
     top,
+    TODAY,
   )
 }
 
@@ -51,7 +52,16 @@ const withMerchant = (id: string, change: Partial<Merchant>): Catalog => ({
 
 describe('which store pages are indexed', () => {
   test('a store ranked like its category, with nothing of its own, is not', () => {
-    expect(reasons(catalog, 'aldi')).toEqual([])
+    expect(reasons(catalog, 'ralphs')).toEqual([])
+  })
+
+  test("a store an issuer's list of example stores names is", () => {
+    expect(reasons(catalog, 'vons')).toEqual([
+      "an issuer's list of example stores names it",
+    ])
+    expect(reasons(catalog, 'seven-eleven')).toContain(
+      "an issuer's list of example stores names it",
+    )
   })
 
   test('a store with notes, a credit or cards it refuses is', () => {
@@ -68,8 +78,8 @@ describe('which store pages are indexed', () => {
   test('a store page indexes itself once the data says something about it', () => {
     expect(
       reasons(
-        withMerchant('aldi', { note: 'Some locations take only debit.' }),
-        'aldi',
+        withMerchant('ralphs', { note: 'Some locations take only debit.' }),
+        'ralphs',
       ),
     ).toEqual(['notes on how it codes'])
   })

@@ -28,6 +28,23 @@ rules:
     geography: us_only
     cap: { amount: 6000, period: calendar_year, then_rate: 1 }
     note: Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+    named:
+      earning:
+        [
+          aldi,
+          gelsons,
+          hy-vee,
+          kings-food-markets,
+          meijer,
+          shoprite,
+          smart-and-final,
+          stop-and-shop,
+          trader-joes,
+          vons,
+          whole-foods,
+          winn-dixie,
+        ]
+      not_earning: [target, walmart, bjs-wholesale-club, seven-eleven]
   - id: us-streaming
     match:
       {
@@ -102,6 +119,18 @@ evidence:
   - rule: us-supermarkets
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
     quote: '6% cash back on the first $6,000 of eligible purchases in a calendar year'
+  - rule: us-supermarkets.earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "where you can earn additional rewards include: ALDI FreshDirect Gelson's Hy-Vee Kings Food Markets Meijer ShopRite"
+  - rule: us-supermarkets.earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "Smart & Final Stop & Shop Trader Joe's Vons Whole Foods Winn-Dixie This is not a complete list."
+  - rule: us-supermarkets.not_earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'Examples of merchants where you will NOT earn additional rewards include:'
+  - rule: us-supermarkets.not_earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "Superstores (e.g., Target, Walmart) Warehouse clubs (e.g., BJ's Club) Convenience stores (e.g., 7Eleven)"
   - rule: us-streaming
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0#offer-terms
     quote: '6% cash back on eligible purchases of U.S. streaming subscriptions'

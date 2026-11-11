@@ -59,6 +59,7 @@ import type {
 } from './types.ts'
 import { cardValuation } from './valuation.ts'
 import { EPSILON } from './compare.ts'
+import { namedBy } from './named.ts'
 
 export type CardFilters = {
   kind: 'any' | 'cash' | 'points'
@@ -647,7 +648,28 @@ function exploreAssumptions(
   if (merchant.source === 'category') {
     assumptions.push(`Ranks ${categoryPurchases(catalog, merchant.category)}.`)
   } else if (merchant.source !== 'none') {
-    assumptions.push(codesAs(catalog, merchant))
+    assumptions.push(
+      codesAs(
+        catalog,
+        merchant,
+        namedBy(
+          catalog,
+          merchant,
+          ranked.flatMap((e) => {
+            const card = catalog.cards.find((c) => c.id === e.cardId)
+            return card
+              ? [
+                  {
+                    card,
+                    rule: card.rules.find((r) => r.id === e.matchedRule),
+                    name: e.cardName,
+                  },
+                ]
+              : []
+          }),
+        ),
+      ),
+    )
   }
   assumptions.push(
     'Assumes each card is set up for this purchase: the right category pick, any activation done, and none of its cap used yet. A card you hold may differ.',

@@ -462,7 +462,7 @@
   category: grocery.supermarket
   ambiguity:
     may_code_as: [superstore]
-    note: Meijer is a supercenter that usually codes as a grocery store. Amex leaves superstores out of its supermarket category, so a purchase may not earn its supermarket rate.
+    note: Meijer is a supercenter that usually codes as a grocery store. Cards that leave superstores out of their grocery bonus may not pay it there, though American Express names Meijer as a supermarket.
 - id: fred-meyer
   name: Fred Meyer
   domains: [fredmeyer.com]

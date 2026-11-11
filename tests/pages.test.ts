@@ -204,10 +204,37 @@ describe('the built static pages', () => {
     // Notes on how it codes, a credit there, a ranking of its own.
     for (const slug of ['costco', 'lululemon', 'amazon', 'groceries'])
       expect(noindex(slug), slug).toBe(false)
-    // Ranked exactly like supermarkets, with nothing about Aldi itself.
-    expect(noindex('aldi')).toBe(true)
+    // Ranked exactly like supermarkets, with nothing about Ralphs itself.
+    expect(noindex('ralphs')).toBe(true)
     // Its category page lists it, so it's still reachable and answerable.
-    expect(page('groceries')).toContain('href="/best/aldi"')
+    expect(page('groceries')).toContain('href="/best/ralphs"')
+    // American Express names Aldi among its example supermarkets.
+    expect(noindex('aldi')).toBe(false)
+  })
+
+  test("a store page says what an issuer's list of example stores says about it, with the quote", () => {
+    const page = (slug: string) =>
+      readFileSync(path.join(out, 'best', `${slug}.html`), 'utf8')
+    const vons = page('vons')
+    expect(vons).toContain(
+      'American Express names Vons among its examples of stores that count as a supermarket for the bonus on these cards: ',
+    )
+    expect(vons).toMatch(/<a href="\/cards\/amex-gold">[^<]+<\/a> \(4x [^)]+\)/)
+    expect(vons).toContain(
+      "Trader Joe's Vons Whole Foods Winn-Dixie This is not a complete list.",
+    )
+    expect(vons).toContain(
+      'href="https://www.americanexpress.com/us/content/rewards-info/retail.html"',
+    )
+    const sevenEleven = page('seven-eleven')
+    expect(sevenEleven).toContain(
+      "American Express names 7-Eleven among its examples of stores that don't count as a supermarket for the bonus on these cards: ",
+    )
+    expect(sevenEleven).toContain('Convenience stores (e.g., 7Eleven)')
+    // The issuer settles how Meijer codes for its own cards.
+    const meijer = page('meijer')
+    expect(meijer).toContain('American Express names Meijer among its examples')
+    expect(meijer).not.toMatch(/amex-gold">[^<]+<\/a>: its [^<]* leaves it out/)
   })
 
   test("a store page names the store's own cards earnrate holds, and claims nothing where it holds none", () => {

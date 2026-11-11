@@ -2071,6 +2071,7 @@ const indexReasons = new Map(
             r,
             category && results.get(category.slug),
             ranked,
+            today,
           ),
     ]
   }),

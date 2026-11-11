@@ -28,6 +28,7 @@ import { daysBetween } from './periods.ts'
 import { creditAt, creditDollars, type CreditState } from './credits.ts'
 import { ruleWhat } from './rule-text.ts'
 import { heldRotationGap } from './rotation.ts'
+import { namedBy, namesAsItsCategory } from './named.ts'
 import { EPSILON, isClose } from './compare.ts'
 import {
   amountUnknownText,
@@ -665,7 +666,21 @@ function assumptionsFor(
         : `Assumes ${merchant.resolvedName} falls outside the usual bonus categories, except on cards that name it: ${listed(naming)}.`,
     )
   } else {
-    assumptions.push(codesAs(catalog, merchant))
+    assumptions.push(
+      codesAs(
+        catalog,
+        merchant,
+        namedBy(
+          catalog,
+          merchant,
+          entries.map((e) => ({
+            card: e.card,
+            rule: e.evaluation.best.rule,
+            name: displayName(e),
+          })),
+        ),
+      ),
+    )
   }
   if (merchant.inference) {
     assumptions.push(`Claude's reasoning: ${merchant.inference.rationale}`)
@@ -1046,6 +1061,14 @@ export function recommend(
 
   const note = categoryNote(catalog, merchant.category)
   let confidence: Confidence = note === null ? merchant.confidence : 'low'
+  // A store that may code another way is settled for a card whose issuer
+  // names it as its usual category.
+  if (
+    confidence === 'medium' &&
+    merchant.ambiguity !== null &&
+    namesAsItsCategory(chosen?.evaluation.best.rule, merchant)
+  )
+    confidence = 'high'
   if (confidence === 'high' && chosen && top) {
     const unverified = chosen.evaluation.best.rule?.unverified !== undefined
     const stale =

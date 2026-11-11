@@ -37,6 +37,23 @@ rules:
     rate: 6
     geography: us_only
     note: Not superstores or warehouse clubs.
+    named:
+      earning:
+        [
+          aldi,
+          gelsons,
+          hy-vee,
+          kings-food-markets,
+          meijer,
+          shoprite,
+          smart-and-final,
+          stop-and-shop,
+          trader-joes,
+          vons,
+          whole-foods,
+          winn-dixie,
+        ]
+      not_earning: [target, walmart, bjs-wholesale-club, seven-eleven]
   - id: us-gas
     match: { categories: [gas] }
     exclude: { categories: [gas.grocery_store, gas.superstore] }
@@ -96,6 +113,18 @@ evidence:
   - rule: us-supermarkets
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-surpass-credit-card/25330-10-0#offer-terms
     quote: 'supermarkets located in the U.S. and on gasoline at gas stations located in the U.S.'
+  - rule: us-supermarkets.earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "where you can earn additional rewards include: ALDI FreshDirect Gelson's Hy-Vee Kings Food Markets Meijer ShopRite"
+  - rule: us-supermarkets.earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "Smart & Final Stop & Shop Trader Joe's Vons Whole Foods Winn-Dixie This is not a complete list."
+  - rule: us-supermarkets.not_earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'Examples of merchants where you will NOT earn additional rewards include:'
+  - rule: us-supermarkets.not_earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "Superstores (e.g., Target, Walmart) Warehouse clubs (e.g., BJ's Club) Convenience stores (e.g., 7Eleven)"
   - rule: us-gas
     url: https://www.americanexpress.com/us/credit-cards/card/hilton-honors-surpass/
     quote: 'Earn 6X Hilton Honors Bonus Points at U.S. restaurants, U.S. gas stations, and U.S. supermarkets.'

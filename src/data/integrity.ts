@@ -1,7 +1,14 @@
-import type { Card } from '../schema/card.ts'
+import type { Card, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
-import { resolveMerchant } from '../merchants/resolve.ts'
+import {
+  findMerchant,
+  resolveMerchant,
+  resolveMerchantById,
+} from '../merchants/resolve.ts'
 import type { Merchant } from '../schema/merchant.ts'
+import { evaluateCard, purchaseContext } from '../engine/evaluate.ts'
+import { idealHolding } from '../engine/explore.ts'
+import { NAMED_LISTS, namedKey } from '../engine/named.ts'
 import { isAnniversary } from '../engine/periods.ts'
 import { WALLET_VERSION, type Wallet } from '../schema/wallet.ts'
 
@@ -78,6 +85,49 @@ function lookupProblems(catalog: Catalog): string[] {
         problems.push(`category ${c.id}: '${word}' resolves to ${found}`)
     }
   return problems
+}
+
+// Issuers spell names their own way ("BJ's Club", "7Eleven"), so a quote
+// names a store when any of its names appears, letters and digits only.
+const compact = (s: string) => s.toLowerCase().replace(/[^a-z0-9&]/g, '')
+
+const quoteNames = (quote: string, merchant: Merchant) =>
+  [merchant.name, ...merchant.aliases].some((n) =>
+    compact(quote).includes(compact(n)),
+  )
+
+// Whether the engine pays a rule at a store, with the card set up at its
+// best: every option picked, activated, any membership or payment it asks.
+function rulePaysAt(
+  catalog: Catalog,
+  card: Card,
+  rule: Rule,
+  merchantId: string,
+): boolean {
+  const date = rule.valid_from ?? rule.valid_to ?? '2026-01-01'
+  const choice = card.choices.find((c) => c.id === rule.match.choice)
+  const only = { ...card, rules: [rule] }
+  const held = idealHolding(
+    only,
+    date,
+    choice ? { [choice.id]: Object.keys(choice.options) } : {},
+  )
+  const wallet = {
+    valuations: {},
+    memberships: rule.requires?.membership ? [rule.requires.membership] : [],
+    cards: [held],
+  }
+  return (['in_store', 'online'] as const).some((channel) => {
+    const m = resolveMerchantById(catalog, merchantId, channel)
+    if (!m) return false
+    const p = purchaseContext(catalog, wallet, m, m.category, {
+      amount: rule.min_amount ?? null,
+      date,
+      country: rule.geography === 'foreign_only' ? 'ZZ' : 'US',
+      payment: rule.requires?.payment ?? null,
+    })
+    return evaluateCard(only, held, p).best.rule?.id === rule.id
+  })
 }
 
 function cardProblems(
@@ -198,6 +248,11 @@ function cardProblems(
     ...card.intro_rates.map((i) => i.id),
     ...card.credits.map((c) => c.id),
     ...card.free_nights.map((n) => n.id),
+    ...card.rules.flatMap((r) =>
+      NAMED_LISTS.filter((list) => r.named?.[list]).map((list) =>
+        namedKey(r.id, list),
+      ),
+    ),
   ])
   // A free night is valued at its cap, so a quote has to state it ("50,000
   // points", "up to 85K points"). One with no cap still needs its own quote.
@@ -293,6 +348,27 @@ function cardProblems(
     if (typeof rule.cap === 'string' && !capIds.has(rule.cap)) {
       problems.push(`${where} ${context}: unknown cap '${rule.cap}'`)
     }
+    for (const list of NAMED_LISTS)
+      for (const id of rule.named?.[list] ?? []) {
+        const merchant = findMerchant(catalog, id)
+        if (!merchant) {
+          checkMerchant(id, `${context} named.${list}`)
+          continue
+        }
+        const key = namedKey(rule.id, list)
+        const quotes = card.evidence.filter((e) => e.rule === key)
+        if (
+          quotes.length > 0 &&
+          !quotes.some((e) => quoteNames(e.quote, merchant))
+        )
+          problems.push(
+            `${where} ${context}: no ${key} quote names ${merchant.name}`,
+          )
+        if (rulePaysAt(catalog, card, rule, id) !== (list === 'earning'))
+          problems.push(
+            `${where} ${context}: the issuer names ${merchant.name} as ${list === 'earning' ? 'earning' : 'not earning'} it, but earnrate's data ${list === 'earning' ? "doesn't pay it there" : 'pays it there'}`,
+          )
+      }
   }
   for (const cap of card.caps.filter((c) => c.rotating)) {
     const rules = card.rules.filter((r) => r.cap === cap.id)

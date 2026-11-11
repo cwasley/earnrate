@@ -41,6 +41,23 @@ rules:
     rate: 2
     geography: us_only
     note: Superstores, convenience stores, warehouse clubs and meal-kit delivery services are not supermarkets.
+    named:
+      earning:
+        [
+          aldi,
+          gelsons,
+          hy-vee,
+          kings-food-markets,
+          meijer,
+          shoprite,
+          smart-and-final,
+          stop-and-shop,
+          trader-joes,
+          vons,
+          whole-foods,
+          winn-dixie,
+        ]
+      not_earning: [target, walmart, bjs-wholesale-club, seven-eleven]
 # Merchant statement credits, on top of what the purchase earns.
 credits:
   - id: resy
@@ -109,6 +126,18 @@ evidence:
   - rule: us-supermarkets
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0#offer-terms
     quote: 'warehouse clubs, and meal-kit delivery services are not considered supermarkets'
+  - rule: us-supermarkets.earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "where you can earn additional rewards include: ALDI FreshDirect Gelson's Hy-Vee Kings Food Markets Meijer ShopRite"
+  - rule: us-supermarkets.earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "Smart & Final Stop & Shop Trader Joe's Vons Whole Foods Winn-Dixie This is not a complete list."
+  - rule: us-supermarkets.not_earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'Examples of merchants where you will NOT earn additional rewards include:'
+  - rule: us-supermarkets.not_earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "Superstores (e.g., Target, Walmart) Warehouse clubs (e.g., BJ's Club) Convenience stores (e.g., 7Eleven)"
   - rule: annual_fee
     url: https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-platinum-american-express-card/
     quote: 'The annual fee for the Delta SkyMiles® Platinum American Express Card is $350.'

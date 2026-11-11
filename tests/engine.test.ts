@@ -766,3 +766,45 @@ test('half years run January to June and July to December', () => {
   expect(periodEnd('half_year', '2026-H1', null)).toBe('2026-06-30')
   expect(periodEnd('half_year', '2026-H2', null)).toBe('2026-12-31')
 })
+
+describe('stores an issuer names', () => {
+  const wallet = (...ids: string[]) =>
+    WalletSchema.parse({ cards: ids.map((id) => ({ id })) })
+
+  test("the answer says the issuer names the store as what it's assumed to count as", () => {
+    const rec = recommend(
+      realCatalog,
+      wallet('amex-gold', 'citi-double-cash'),
+      purchase('vons'),
+    )
+    expect(rec.assumptions).toContain(
+      'Assumes Vons counts as a supermarket (MCC 5411); for American Express Gold Card, American Express names it as one.',
+    )
+    const other = recommend(
+      realCatalog,
+      wallet('citi-double-cash'),
+      purchase('vons'),
+    )
+    expect(other.assumptions).toContain(
+      'Assumes Vons counts as a supermarket (MCC 5411).',
+    )
+  })
+
+  test('a store that may code another way is settled for a card whose issuer names it', () => {
+    const named = recommend(
+      realCatalog,
+      wallet('amex-blue-cash-preferred'),
+      purchase('meijer'),
+    )
+    expect(named.decision).toMatchObject({
+      cardId: 'amex-blue-cash-preferred',
+      confidence: 'high',
+    })
+    const unnamed = recommend(
+      realCatalog,
+      wallet('citi-double-cash'),
+      purchase('meijer'),
+    )
+    expect(unnamed.decision?.confidence).toBe('medium')
+  })
+})

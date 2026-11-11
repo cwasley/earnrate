@@ -7,6 +7,7 @@ import {
   purchaseContext,
 } from '../../src/engine/evaluate.ts'
 import { idealHolding, type Picks } from '../../src/engine/explore.ts'
+import { namedKey, namings, type Naming } from '../../src/engine/named.ts'
 import { inEffect } from '../../src/engine/periods.ts'
 import {
   categoryAs,
@@ -247,6 +248,71 @@ function treatmentItems(
   return items
 }
 
+// What issuers' own lists of example stores say about this one: a sentence
+// for each issuer, list and quote, naming every card that shares it, then
+// the quotes. A list of examples says nothing about the stores it leaves out.
+function issuerListsHtml(ctx: PageContext, merchant: Merchant): string {
+  const quotesOf = (n: Naming) =>
+    ctx.quotesFor(n.card, namedKey(n.rule.id, n.list))
+  const groups = new Map<string, Naming[]>()
+  for (const n of namings(openCards(ctx), merchant.id, ctx.today)) {
+    const key = JSON.stringify([
+      n.card.issuer,
+      n.list,
+      countsAs(ctx, n.rule) ?? ctx.ruleWhatRaw(n.card, n.rule),
+      quotesOf(n).map((q) => [q.url, q.quote]),
+    ])
+    groups.set(key, [...(groups.get(key) ?? []), n])
+  }
+  return [...groups.values()]
+    .map((list) => {
+      const [first] = list
+      if (!first) return ''
+      const earning = first.list === 'earning'
+      const as = countsAs(ctx, first.rule)
+      const store = esc(merchant.name)
+      const cards = list
+        .sort(
+          (a, b) =>
+            valueOf(ctx, b.card, b.rule.rate) -
+              valueOf(ctx, a.card, a.rule.rate) ||
+            a.card.name.localeCompare(b.card.name),
+        )
+        .map(
+          (n) =>
+            `${cardLink(ctx, n.card)}${earning ? ` (${esc(earnText(ctx.catalog, n.rule.rate, n.card.currency))})` : ''}`,
+        )
+      const one = cards.length === 1
+      const named = one ? (cards[0] ?? '') : namedList(cards)
+      const bonus = esc(ctx.ruleWhatRaw(first.card, first.rule))
+      const which = as
+        ? `stores that ${earning ? 'count' : "don't count"} ${esc(as)} for the bonus on ${one ? named : `these cards: ${named}`}`
+        : `stores where ${one ? `${named} ${earning ? 'pays' : "doesn't pay"} its` : `these cards ${earning ? 'pay' : "don't pay"} their`} bonus on ${bonus}${one ? '' : `: ${named}`}`
+      const sentence = `${esc(ctx.issuerName(first.card.issuer))} names ${store} among its examples of ${which}.`
+      const byUrl = new Map<string, Quote[]>()
+      for (const q of quotesOf(first))
+        byUrl.set(q.url, [...(byUrl.get(q.url) ?? []), q])
+      const quotes = [...byUrl.values()].map(
+        (qs) =>
+          `<li>${ctx.quoteHtml({ ...(qs[0] as Quote), quote: qs.map((q) => q.quote).join(' … ') })}</li>`,
+      )
+      return `<p>${sentence}</p><ul class="quotes">${quotes.join('')}</ul>`
+    })
+    .join('')
+}
+
+// "as a supermarket", for a rule that covers one category and nothing else.
+function countsAs(ctx: PageContext, rule: Rule): string | null {
+  const { categories, merchants, mccs, choice, any } = rule.match
+  return categories?.length === 1 &&
+    !merchants?.length &&
+    !mccs?.length &&
+    choice === undefined &&
+    any === undefined
+    ? categoryAs(ctx.catalog, categories[0] ?? '')
+    : null
+}
+
 // "as a supermarket (MCC 5411)"
 const codesText = (ctx: PageContext, category: string, mcc?: number) =>
   `${categoryAs(ctx.catalog, category)}${mcc === undefined ? '' : ` (MCC ${String(mcc)})`}`
@@ -262,7 +328,8 @@ export function howItCodes(
   merchant: Merchant,
   categorySlug: (id: string) => string | null,
 ): string {
-  if (!hasCodingNotes(merchant)) return ''
+  const lists = issuerListsHtml(ctx, merchant)
+  if (!hasCodingNotes(merchant) && lists === '') return ''
   const ways = [merchant.category, ...(merchant.ambiguity?.may_code_as ?? [])]
   const parts: string[] = []
   // "as <a>a supermarket</a>": the words after "as" link to the category.
@@ -281,6 +348,7 @@ export function howItCodes(
   )
   if (notes.length > 0)
     parts.push(`<ul>${notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>`)
+  parts.push(lists)
 
   const named: string[] = []
   const excluding: string[] = []
@@ -295,9 +363,11 @@ export function howItCodes(
           `<li>${cardLink(ctx, card)}: ${esc(earnText(ctx.catalog, rule.rate, card.currency))} ${rulePreposition(ctx.catalog, [rule])} ${esc(ctx.ruleWhatRaw(card, rule))}${quote[0] ? `. ${ctx.quoteHtml(quote[0])}` : '.'}</li>`,
         )
       const ex = rule.exclude
+      // An issuer that names the store as earning has settled how it codes.
       const leftOut =
-        ex?.merchants?.includes(merchant.id) ||
-        ways.some((w) => ex?.categories?.some((c) => categoryMatches(c, w)))
+        !rule.named?.earning?.includes(merchant.id) &&
+        (ex?.merchants?.includes(merchant.id) ||
+          ways.some((w) => ex?.categories?.some((c) => categoryMatches(c, w))))
       if (leftOut) {
         const why = exclusionText(
           ctx,

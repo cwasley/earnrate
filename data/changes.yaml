@@ -3,6 +3,48 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.11'
+  date: 2026-11-11
+  changes:
+    - cause: addition
+      cards:
+        [
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          amex-delta-skymiles-gold,
+          amex-delta-skymiles-platinum,
+          amex-gold,
+          amex-hilton-honors,
+          amex-hilton-honors-surpass,
+        ]
+      field: rules.us-supermarkets.named
+      was: null
+      now:
+        earning:
+          [
+            aldi,
+            gelsons,
+            hy-vee,
+            kings-food-markets,
+            meijer,
+            shoprite,
+            smart-and-final,
+            stop-and-shop,
+            trader-joes,
+            vons,
+            whole-foods,
+            winn-dixie,
+          ]
+        not_earning: [target, walmart, bjs-wholesale-club, seven-eleven]
+      summary: The stores American Express names as examples of where its U.S. supermarket rate is earned and where it isn't, each quoted from its rewards page. No rates changed.
+      source: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    - cause: wording
+      merchants: [meijer]
+      field: ambiguity.note
+      was: Meijer is a supercenter that usually codes as a grocery store. Amex leaves superstores out of its supermarket category, so a purchase may not earn its supermarket rate.
+      now: Meijer is a supercenter that usually codes as a grocery store. Cards that leave superstores out of their grocery bonus may not pay it there, though American Express names Meijer as a supermarket.
+      summary: Says American Express names Meijer as a supermarket, instead of that Amex's supermarket rate may not pay there.
+
 - version: '2026.11.10.5'
   date: 2026-11-10
   changes:

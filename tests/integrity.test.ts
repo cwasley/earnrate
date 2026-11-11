@@ -211,6 +211,108 @@ describe('catalogProblems', () => {
     ).toBe(true)
   })
 
+  describe('stores an issuer names', () => {
+    const named = (earning: string[], notEarning: string[], quotes: string[]) =>
+      catalog(
+        cashPlusYaml
+          .replace(
+            'evidence:\n',
+            `  - id: dining
+    match: { categories: [dining] }
+    exclude: { categories: [dining.fast_food] }
+    rate: 2
+    named: { earning: [${earning.join(', ')}], not_earning: [${notEarning.join(', ')}] }
+evidence:
+`,
+          )
+          .concat(
+            quotes
+              .map((q) => `  - { rule: ${q}, url: https://www.usbank.com/ }\n`)
+              .join(''),
+          ),
+      )
+    const withStores = (c: Catalog) => ({
+      ...c,
+      merchants: {
+        ...c.merchants,
+        seed: MerchantsFileSchema.parse([
+          ...c.merchants.seed,
+          { id: 'chez-panisse', name: 'Chez Panisse', category: 'dining' },
+          {
+            id: 'burger-hut',
+            name: "Burger Hut's",
+            aliases: ['burger hut'],
+            category: 'dining.fast_food',
+          },
+        ]),
+      },
+    })
+    const quotes = [
+      'dining, quote: 2% at restaurants',
+      'dining.earning, quote: Restaurants such as Chez Panisse earn 2%',
+      'dining.not_earning, quote: Not fast food (e.g. Burger-Hut) or Costco',
+    ]
+
+    test('agree with the rule and are named in their list’s quotes', () => {
+      expect(
+        catalogProblems(
+          withStores(named(['chez-panisse'], ['burger-hut', 'costco'], quotes)),
+        ),
+      ).toEqual([])
+    })
+
+    test('each list needs quotes, and each store has to be in them', () => {
+      const problems = catalogProblems(
+        withStores(
+          named(['chez-panisse'], ['burger-hut', 'tacos'], quotes.slice(0, 2)),
+        ),
+      )
+      expect(problems).toContain(
+        'card usbank-cash-plus: no evidence for dining.not_earning',
+      )
+      expect(problems).toContain(
+        "card usbank-cash-plus rule dining named.not_earning: unknown merchant 'tacos'",
+      )
+      expect(
+        catalogProblems(
+          withStores(
+            named(
+              ['chez-panisse'],
+              ['burger-hut'],
+              [
+                ...quotes.slice(0, 2),
+                'dining.not_earning, quote: Not at fast food restaurants',
+              ],
+            ),
+          ),
+        ),
+      ).toEqual([
+        "card usbank-cash-plus rule dining: no dining.not_earning quote names Burger Hut's",
+      ])
+    })
+
+    test("are refused when earnrate's data says otherwise", () => {
+      expect(
+        catalogProblems(
+          withStores(
+            named(
+              ['burger-hut'],
+              ['chez-panisse'],
+              [
+                quotes[0] ?? '',
+                'dining.earning, quote: Restaurants such as Burger Hut earn 2%',
+                'dining.not_earning, quote: Not at Chez Panisse either',
+              ],
+            ),
+          ),
+        ),
+      ).toEqual([
+        "card usbank-cash-plus rule dining: the issuer names Burger Hut's as earning it, but earnrate's data doesn't pay it there",
+        "card usbank-cash-plus rule dining: the issuer names Chez Panisse as not earning it, but earnrate's data pays it there",
+      ])
+    })
+  })
+
   test('catches a child category without its parent', () => {
     const c = catalog()
     c.categories = c.categories.filter((x) => x.id !== 'dining')

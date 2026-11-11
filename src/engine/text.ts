@@ -203,13 +203,24 @@ export function earnText(
 export const bareRate = (rate: number, currency: string) =>
   currency === 'cash' ? pct(rate) : `${num(rate)}x`
 
+// "Assumes Vons counts as a supermarket; for Amex Gold, American Express
+// names it as one." `namedBy` is the issuers whose own lists name the store
+// as its category, with the cards in the answer that earn by those lists.
 export function codesAs(
   catalog: Catalog,
   merchant: MerchantResolution,
+  namedBy: { issuer: string; cards: string[] }[] = [],
 ): string {
   const mcc = merchant.likelyMcc ?? singleMcc(catalog, merchant.category)
   const code = mcc === null ? '' : ` (MCC ${String(mcc)})`
-  return `Assumes ${merchant.resolvedName} counts ${categoryAs(catalog, merchant.category)}${code}.`
+  const named = namedBy
+    .map((n) =>
+      n.cards.length > 3
+        ? `; ${n.issuer} names it as one for ${String(n.cards.length)} of its cards`
+        : `; for ${listed(n.cards)}, ${n.issuer} names it as one`,
+    )
+    .join('')
+  return `Assumes ${merchant.resolvedName} counts ${categoryAs(catalog, merchant.category)}${code}${named}.`
 }
 
 // "Point values: Membership Rewards (MR) at 1¢." for the currencies an

@@ -37,6 +37,23 @@ rules:
     rate: 5
     geography: us_only
     note: Groceries at superstores, warehouse clubs and convenience stores, and meal-kit delivery services, earn the 3x base rate.
+    named:
+      earning:
+        [
+          aldi,
+          gelsons,
+          hy-vee,
+          kings-food-markets,
+          meijer,
+          shoprite,
+          smart-and-final,
+          stop-and-shop,
+          trader-joes,
+          vons,
+          whole-foods,
+          winn-dixie,
+        ]
+      not_earning: [target, walmart, bjs-wholesale-club, seven-eleven]
   - id: us-gas
     match: { categories: [gas] }
     exclude: { categories: [gas.grocery_store, gas.superstore] }
@@ -87,6 +104,18 @@ evidence:
   - rule: us-supermarkets
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'purchases of groceries made at superstores, warehouse clubs, and convenience stores'
+  - rule: us-supermarkets.earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "where you can earn additional rewards include: ALDI FreshDirect Gelson's Hy-Vee Kings Food Markets Meijer ShopRite"
+  - rule: us-supermarkets.earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "Smart & Final Stop & Shop Trader Joe's Vons Whole Foods Winn-Dixie This is not a complete list."
+  - rule: us-supermarkets.not_earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'Examples of merchants where you will NOT earn additional rewards include:'
+  - rule: us-supermarkets.not_earning
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: "Superstores (e.g., Target, Walmart) Warehouse clubs (e.g., BJ's Club) Convenience stores (e.g., 7Eleven)"
   - rule: us-gas
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'Purchases of gasoline at supermarkets, superstores, and warehouse clubs will only get 3 Bonus Points per dollar.'
