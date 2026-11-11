@@ -141,6 +141,29 @@ export function StatementCheck() {
           On your card's website, download your activity (sometimes called
           transactions) and choose CSV. A PDF statement won't be read.
         </p>
+        <details class="where">
+          <summary>Where the issuers say to find it</summary>
+          <ul class="muted small">
+            <li>
+              American Express says you can download your recent activity and
+              your past six billing statements as a CSV file through your online
+              account (
+              <a href="https://www.americanexpress.com/us/customer-service/faq.download-export-transactions-software.html">
+                its help page
+              </a>
+              ).
+            </li>
+            <li>
+              Chase says its website, opened on a computer, downloads
+              transactions as a spreadsheet (CSV) for the last two years, and
+              that on a phone it gives PDFs, which earnrate won't read (
+              <a href="https://www.chase.com/personal/banking/education/budgeting-saving/what-is-chase-spending-planner">
+                its page
+              </a>
+              ).
+            </li>
+          </ul>
+        </details>
       </section>
 
       {files.map((f) => (
