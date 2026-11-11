@@ -115,6 +115,7 @@ evidence:
   - rule: spend-10k
     url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
     quote: 'Earn $100 in United® TravelBank cash after you spend $10,000 on purchases each calendar year'
+    in_popup: true
   - rule: spend-20k
     url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
     quote: 'Earn a 10,000-mile award flight discount after spending $20,000 each calendar year'
@@ -124,9 +125,12 @@ evidence:
   - rule: rideshare
     url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
     quote: 'receive up to $5 back as a statement credit each month on rideshare purchases'
+    in_popup: true
   - rule: rideshare
     url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
     quote: 'Yearly opt-in is required.'
+    in_popup: true
   - rule: jsx
     url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
     quote: 'Get up to $100 back as a statement credit each anniversary year when you book flights directly with JSX'
+    in_popup: true

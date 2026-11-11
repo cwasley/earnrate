@@ -643,7 +643,7 @@
       ]
     },
     "https://www.bilt.com/card/blue": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-10",
       "lines": [
         "01ab730faa500c9a",
         "09334edc184eeaed",
@@ -658,9 +658,8 @@
       ]
     },
     "https://www.bilt.com/card": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-10",
       "lines": [
-        "335927c8f4d6f032",
         "3d39eb4f2b9ebd9a",
         "529910e52e50d881",
         "5ae6cd9a46b57098",
@@ -675,7 +674,7 @@
       ]
     },
     "https://www.bilt.com/card/obsidian": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-10",
       "lines": [
         "1c888107eb576740",
         "1d4b7fbd4c2c897e",
@@ -698,7 +697,7 @@
       ]
     },
     "https://www.bilt.com/card/palladium": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-10",
       "lines": [
         "462727986f0d33a2",
         "53ce0b19e2d1cddb",
@@ -907,7 +906,7 @@
       ]
     },
     "https://www.chase.com/personal/credit-cards/rewards-category-faq": {
-      "checked": "2026-11-09",
+      "checked": "2026-11-10",
       "lines": []
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65070.html": {
@@ -1420,7 +1419,7 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/united/united-explorer": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-10",
       "lines": [
         "06e43184dedb5443",
         "07b9d3215a046aec",
@@ -1431,7 +1430,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63218.html": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-10",
       "lines": [
         "07e263573004b121",
         "1661d1dd310f3cb0",
@@ -1850,17 +1849,18 @@
       ]
     },
     "https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-10",
       "lines": [
         "00842af7ccbbf061",
         "386263aa536e7495",
+        "6a557384b005a7f6",
         "c93f5ff24c14e214",
         "ea189f0599727bb2",
         "ef5d61e335fc38a4"
       ]
     },
     "https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=8BB5BD89H1&sourceCode=88416&page=terms": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-10",
       "lines": [
         "28f3a7958b0f39c6",
         "2edb34d356e8170c",
@@ -1871,7 +1871,7 @@
       ]
     },
     "https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-10",
       "lines": [
         "0f432cc5f17b1e58",
         "1dcb345b404fb068",

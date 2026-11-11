@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.10.3
+
+Evidence quotes only; no rates or credits changed. `chase-united-explorer`'s $10,000 spend bonus, rideshare credit and JSX credit are quoted from overlays that open on click on Chase's card page, which sometimes builds them from page data, so the quotes are marked `in_popup`, as on Chase's other United cards; each was read in its open overlay. Also read, unchanged: Bilt still states 1.25X on rent and mortgage, in a new layout.
+
 ## 2026.11.10.2
 
 Wording only; no rates changed. The `nordy-club-ambassador` membership is named "Nordy Club Ambassador or Icon status": Icon, the status above Ambassador, earns the same with the Nordstrom cards, and there's no separate Icon membership to save.
