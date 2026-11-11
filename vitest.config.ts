@@ -11,6 +11,9 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
+    // The fee-math tests take about three times as long on CI runners as on
+    // a laptop, and timed out at the 5-second default.
+    testTimeout: 20_000,
     // So the alias above reaches the library's own import.
     server: { deps: { inline: ['@cloudflare/workers-oauth-provider'] } },
   },

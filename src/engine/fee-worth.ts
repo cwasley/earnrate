@@ -57,6 +57,12 @@ export type FeeWorth = {
   at: (monthly: number) => { card: Simulation; best: Simulation }
 }
 
+// The best no-fee card for a mix and an amount doesn't depend on the fee
+// card asking, and finding it is the slow part, so it's kept per catalog
+// across calls. Cleared when it grows, to stay small on the hosted server.
+const BEST_NO_FEE_LIMIT = 1500
+const bestNoFeeRuns = new WeakMap<Catalog, Map<string, Simulation>>()
+
 const scaled = (lines: ResolvedLine[], monthly: number) =>
   lines.map((l) => ({ ...l, monthly: l.monthly * monthly }))
 
@@ -70,7 +76,13 @@ export function feeWorthKit(
   held: WalletCard[] = [],
 ) {
   const typical = resolveSpendLines(catalog, typicalSpend(catalog))
-  const cache = new Map<string, Simulation>()
+  let cache = bestNoFeeRuns.get(catalog)
+  if (!cache) {
+    cache = new Map()
+    bestNoFeeRuns.set(catalog, cache)
+  }
+  const shared = cache
+  const run = `${today}|${JSON.stringify(Object.entries(valuations).sort())}`
 
   const options = (card: Card) => ({
     filters: {
@@ -96,8 +108,8 @@ export function feeWorthKit(
     )
 
   function bestNoFee(card: Card, lines: ResolvedLine[], monthly: number) {
-    const key = `${String(card.business)}|${lines.map((l) => `${l.label}:${String(l.monthly)}`).join(',')}|${String(monthly)}`
-    const hit = cache.get(key)
+    const key = `${run}|${String(card.business)}|${lines.map((l) => `${l.label}:${String(l.monthly)}`).join(',')}|${String(monthly)}`
+    const hit = shared.get(key)
     if (hit) return hit
     const [best] = simulateSingles(
       catalog,
@@ -106,7 +118,8 @@ export function feeWorthKit(
       options(card),
     )
     if (!best) throw new Error('no no-fee card to compare with')
-    cache.set(key, best)
+    if (shared.size >= BEST_NO_FEE_LIMIT) shared.clear()
+    shared.set(key, best)
     return best
   }
 
