@@ -33,6 +33,16 @@ const NOT_A_CODE =
 const NO_MATCH = 'No saved wallet matches that recovery code.'
 const MAX_FORM = 8 * 1024
 
+// Which step of sign-in threw, for the error tally. It carries the step's
+// name and the error, never anything the person sent.
+export class SignInFailure extends Error {
+  readonly step: string
+  constructor(step: string, cause: unknown) {
+    super('sign-in failed', { cause })
+    this.step = step
+  }
+}
+
 // A sign-in form's fields; empty for anything else or anything too large.
 async function readForm(request: Request): Promise<URLSearchParams> {
   const text = await readBody(request, MAX_FORM)
@@ -315,9 +325,14 @@ export function makeAuth<Env extends AuthEnv>(
     )
   }
 
-  async function authorizePage(request: Request, env: Env): Promise<Response> {
+  async function authorizePage(
+    request: Request,
+    env: Env,
+    at: (step: string) => void,
+  ): Promise<Response> {
     const oauth = server.getOAuthApi(withClients(env))
     if (request.method === 'GET') {
+      at('page')
       const parsed = await oauth.parseAuthRequest(request)
       const details = verified(
         parsed.clientId,
@@ -335,23 +350,27 @@ export function makeAuth<Env extends AuthEnv>(
     const choice = form.get('choice')
 
     if (choice === 'deny') {
+      at('deny')
       const denied = await oauth.denyConsent(request, handle)
       return new Response(null, { status: 302, headers: denied.headers })
     }
 
     if (choice === 'new') {
+      at('new-consent')
       const approved = await oauth.approveConsent(request, handle, {
         scope: [SCOPE],
       })
       const code = newRecoveryCode()
       const keys = await keysFromCode(code)
       const walletKey = newWalletKey()
+      at('new-vault')
       const created = await vaultFor(env, keys.walletId).create(
         keys.walletId,
         await wrapWalletKey(walletKey, keys),
       )
       if (!created)
         return html(errorPage("Couldn't start a wallet. Try again."), 500)
+      at('new-connect')
       onWalletCreated(env, await clientKind(env, approved.request.clientId))
       const { redirectTo } = await connect(
         oauth,
@@ -366,12 +385,15 @@ export function makeAuth<Env extends AuthEnv>(
       const code = normalizeRecoveryCode(field('code'))
       if (!code) return chooseAgain(env, request, handle, NOT_A_CODE)
       const keys = await keysFromCode(code)
+      at('recover-vault')
       const wrapped = await vaultFor(env, keys.walletId).wrappedKey()
       const walletKey = wrapped && (await unwrapWalletKey(wrapped, keys))
       if (!walletKey) return chooseAgain(env, request, handle, NO_MATCH)
+      at('recover-consent')
       const approved = await oauth.approveConsent(request, handle, {
         scope: [SCOPE],
       })
+      at('recover-connect')
       const { redirectTo } = await connect(
         oauth,
         approved.request,
@@ -386,10 +408,13 @@ export function makeAuth<Env extends AuthEnv>(
   }
 
   async function authorize(request: Request, env: Env): Promise<Response> {
+    let step = 'form'
     try {
-      return await authorizePage(request, env)
+      return await authorizePage(request, env, (s) => {
+        step = s
+      })
     } catch (e) {
-      if (!(e instanceof AuthorizationError)) throw e
+      if (!(e instanceof AuthorizationError)) throw new SignInFailure(step, e)
       if (e.redirectTo) return Response.redirect(e.redirectTo, 302)
       return html(errorPage(e.description), 400)
     }

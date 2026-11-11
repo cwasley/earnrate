@@ -16,6 +16,7 @@ import {
   RESOURCE,
   resourceFor,
   SCOPE,
+  SignInFailure,
   type AuthEnv,
   type ExecutionContextLike,
   type VaultFor,
@@ -160,6 +161,21 @@ const unavailable = () =>
     { status: 503, headers: { 'retry-after': String(RATE_LIMIT_SECONDS) } },
   )
 
+// What a thrown sign-in error adds to its tally label: the step it was on
+// and the error's type. Never its message, which can quote what was sent.
+function failureDetail(e: unknown): string {
+  const step = e instanceof SignInFailure ? e.step : null
+  const cause: unknown = e instanceof SignInFailure ? e.cause : e
+  const name =
+    cause instanceof Error && /^[A-Za-z]{1,40}$/.test(cause.name)
+      ? cause.name
+      : 'unknown'
+  const flags = (['retryable', 'overloaded'] as const).filter(
+    (f) => (cause as Record<string, unknown> | null)?.[f] === true,
+  )
+  return [step, name, ...flags].flatMap((s) => (s ? [`:${s}`] : [])).join('')
+}
+
 // Sign-in depends on KV. Its failures are counted by path in the usage
 // tally and answered plainly.
 async function signInStep(
@@ -169,9 +185,11 @@ async function signInStep(
   isPage: boolean,
 ): Promise<Response> {
   let response: Response
+  let detail = ''
   try {
     response = await step()
-  } catch {
+  } catch (e) {
+    detail = failureDetail(e)
     response = isPage
       ? html(
           errorPage(
@@ -182,7 +200,8 @@ async function signInStep(
         )
       : unavailable()
   }
-  if (response.status >= 500) count(env, `error:${pathname}`, 'signed-out')
+  if (response.status >= 500)
+    count(env, `error:${pathname}${detail}`, 'signed-out')
   return response
 }
 

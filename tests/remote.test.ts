@@ -1382,9 +1382,52 @@ describe('anonymous saved wallets', () => {
     )
     expect(res.status).toBeGreaterThanOrEqual(500)
     expect(points.map((p) => p.blobs)).toContainEqual([
-      'error:/oauth/register',
+      expect.stringMatching(/^error:\/oauth\/register(:[A-Za-z-]+)*$/),
       'signed-out',
     ])
+  })
+
+  test("a sign-in page failure is counted with its step and the error's type, never its message", async () => {
+    const points: { blobs?: string[] }[] = []
+    const kv = memoryKv()
+    const d = deployment()
+    const registered = await d.fetch(
+      '/oauth/register',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          client_name: 'Claude',
+          redirect_uris: [CALLBACK],
+          token_endpoint_auth_method: 'none',
+        }),
+      },
+      { OAUTH_KV: kv },
+    )
+    const { client_id: clientId } = (await registered.json()) as {
+      client_id: string
+    }
+    const query = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: CALLBACK,
+      code_challenge: 'x'.repeat(43),
+      code_challenge_method: 'S256',
+      state: 'state-123',
+      scope: 'wallet',
+    })
+    const res = await d.fetch(`/authorize?${query.toString()}`, undefined, {
+      OAUTH_KV: {
+        ...kv,
+        put: () =>
+          Promise.reject(new TypeError('state-123 could not be saved')),
+      },
+      USAGE: { writeDataPoint: (p) => points.push(p) },
+    })
+    expect(res.status).toBe(503)
+    const labels = points.map((p) => p.blobs?.[0] ?? '')
+    expect(labels).toEqual(['error:/authorize:page:TypeError'])
+    expect(labels.join(' ')).not.toContain('state-123')
   })
 
   test('cancel goes back to the app with access_denied', async () => {

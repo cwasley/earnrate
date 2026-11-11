@@ -248,15 +248,17 @@
         <p>
           It counts how often each kind of request is made, like "best card for
           a purchase," and how often one fails, by tool or page, without what
-          was asked. Each count also notes the kind of app it came from: Claude,
-          ChatGPT, earnrate.dev, an app on your own computer, or another, judged
-          from the address the app signs in through. It also counts how many
-          wallets are started and how many are used each day, without saying
-          which. To stop abuse, Cloudflare, which runs the server, limits how
-          many requests one IP address can make per minute, and once you're
-          signed in, how many your wallet's connections can make per minute.
-          That limit counts under a one-way hash of the wallet's ID, not the ID
-          itself. earnrate doesn't store IP addresses or those hashes.
+          was asked. When signing in fails, the count also notes which step
+          failed and the kind of error, never anything you sent. Each count also
+          notes the kind of app it came from: Claude, ChatGPT, earnrate.dev, an
+          app on your own computer, or another, judged from the address the app
+          signs in through. It also counts how many wallets are started and how
+          many are used each day, without saying which. To stop abuse,
+          Cloudflare, which runs the server, limits how many requests one IP
+          address can make per minute, and once you're signed in, how many your
+          wallet's connections can make per minute. That limit counts under a
+          one-way hash of the wallet's ID, not the ID itself. earnrate doesn't
+          store IP addresses or those hashes.
         </p>
       </section>
 
@@ -423,7 +425,8 @@
           started and used each day; and the pass server counts passes made.
           November 6, 2026: earnrate.dev can sync your wallet with earnrate in
           Claude, if you turn it on, which stores the wallet encrypted on
-          earnrate's server.
+          earnrate's server. November 11, 2026: when signing in fails, the
+          server's count notes which step failed and the kind of error.
         </p>
       </section>
 
