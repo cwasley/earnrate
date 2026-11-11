@@ -25,7 +25,7 @@ const BOOKING =
 const plural = (kind: string) =>
   kind === 'Activity' ? 'activities' : `${kind.toLowerCase()}s`
 
-function merchantName(catalog: Catalog, id: string): string {
+export function merchantName(catalog: Catalog, id: string): string {
   const merchant = findMerchant(catalog, id)
   const name = merchant?.name ?? words(id)
   return merchant?.kind === 'booking' ? name.replace(BOOKING, plural) : name

@@ -16,7 +16,20 @@ import {
 import { formatExploration } from '../../src/format/explore.ts'
 import { formatCatalogSimulation } from '../../src/format/explore.ts'
 import { compareOffers } from '../../src/engine/offers.ts'
-import { minimumSpendText } from '../../src/engine/text.ts'
+import { minimumSpendText, wholeDollars } from '../../src/engine/text.ts'
+import {
+  keepOrReplace,
+  keepOrReplaceMath,
+  keepOrReplaceText,
+  keepOrReplaceUnsaid,
+  keepOrReplaceVerdict,
+  hiddenRatesText,
+  PERKS_NOT_COUNTED,
+  replacementExtras,
+  replacementLine,
+  samePointsText,
+  transferText,
+} from '../../src/engine/keep-or-replace.ts'
 import { withSkippedIssuers } from '../../src/engine/wallet-change.ts'
 import {
   resolveSpendLines,
@@ -2938,4 +2951,457 @@ describe('#39 cards that need a membership, when every card is ranked', () => {
     )
     expect(member.offers.map((o) => o.cardId)).toContain('verizon-visa-card')
   })
+})
+
+describe('#40 keep or replace a fee card', () => {
+  const wallet = (cards: object[], fields: object = {}) =>
+    withProfile(WalletSchema.parse({ cards, ...fields }), 'flat')
+  const RESERVE_CREDITS = ['travel', 'stubhub', 'lyft-credit', 'peloton-credit']
+  const PLATINUM_CREDITS = [
+    'lululemon',
+    'uber-cash',
+    'resy',
+    'digital-entertainment',
+    'walmart-plus',
+    'clear-plus',
+  ]
+  const HELD = [
+    'chase-sapphire-reserve',
+    'chase-freedom-unlimited',
+    'citi-double-cash',
+  ]
+  const reserve = (fields: object = {}, walletFields: object = {}) =>
+    wallet(
+      [
+        { id: 'chase-sapphire-reserve', ...fields },
+        { id: 'chase-freedom-unlimited' },
+        { id: 'citi-double-cash' },
+      ],
+      walletFields,
+    )
+  const ask = (
+    w: Wallet,
+    cardId = 'chase-sapphire-reserve',
+    today = TODAY,
+    spending?: Spending,
+  ) => {
+    const k = keepOrReplace(catalog, w, cardId, today, spending)
+    if (!k) throw new Error(`no answer for ${cardId}`)
+    return k
+  }
+  const everythingElse: Spending = {
+    lines: resolveSpendLines(catalog, [
+      spendLineFor(catalog, 'everything else', 800),
+    ]),
+    typical: false,
+  }
+
+  goldenTest(
+    '#40a Sapphire Reserve with its credits in use, beside two no-fee cards: the cheaper cards that add the most in its place',
+    () => {
+      const k = ask(reserve({ enrolled: RESERVE_CREDITS }))
+      expect(k.fee).toBe(795)
+      expect(k.alone).toBe(false)
+      expect(k.added).toBe(k.renewal.net)
+      expect(k.renewal.credits).toBeGreaterThan(0)
+      expect(k.replacements.length).toBeGreaterThan(0)
+      expect(k.replacements.length).toBeLessThanOrEqual(3)
+      for (const r of k.replacements) {
+        expect(HELD).not.toContain(r.cardId)
+        expect(r.annualFee).toBeLessThan(795)
+        expect(r.feeSaved).toBe(795 - r.annualFee)
+        expect(r.share).toBe(Math.round((r.net / k.added) * 100))
+      }
+      const nets = k.replacements.map((r) => r.net)
+      expect(nets).toEqual([...nets].sort((a, b) => b - a))
+      const text = keepOrReplaceText(catalog, k)
+      expect(text).toMatch(/^In its place, the .+ would /)
+      expect(text).toContain(PERKS_NOT_COUNTED)
+      expect(text).toMatch(
+        /Over the next 12 months at typical U\.S\. spending, the Chase Sapphire Reserve earns about .+, plus \$[\d,]+ in credits you use, against its \$795 fee\./,
+      )
+    },
+  )
+
+  goldenTest(
+    '#40b points worth more make the Reserve add more, so the best cheaper card keeps a share of it',
+    () => {
+      const flat = ask(reserve({ enrolled: RESERVE_CREDITS }))
+      const points = ask(
+        withProfile(reserve({ enrolled: RESERVE_CREDITS }), 'pointsHeavy'),
+      )
+      expect(points.added).toBeGreaterThan(flat.added)
+      expect(points.outcome).toBe('keeps')
+      expect(points.replacements[0]?.share).toBeLessThan(100)
+      expect(keepOrReplaceVerdict(catalog, points)).toMatch(
+        /^In its place, the .+ would keep the most of what the Chase Sapphire Reserve adds to your wallet: about \$[\d,]+ of \$[\d,]+ a year after fees \(\d+%\)\. (It has no annual fee|Its annual fee is \$[\d,]+), \$[\d,]+ a year less than the Chase Sapphire Reserve's\.$/,
+      )
+    },
+  )
+
+  goldenTest(
+    "#40c with nothing marked as used, the credits aren't counted and the other cards already cover what it earns",
+    () => {
+      const k = ask(reserve())
+      expect(k.outcome).toBe('not-needed')
+      expect(k.replacements).toEqual([])
+      expect(keepOrReplaceVerdict(catalog, k)).toMatch(
+        /^Your other cards already cover what the Chase Sapphire Reserve earns: it adds (nothing beyond them, against its \$795 fee|about \$[\d,]+ a year beyond them, \$[\d,]+ less than its \$795 fee), so no card needs to take its place\.$/,
+      )
+      const marked = ask(reserve({ enrolled: RESERVE_CREDITS }))
+      expect(k.unsaid.yearly).toBe(marked.renewal.credits)
+      expect(keepOrReplaceUnsaid(k)).toBe(
+        `The Chase Sapphire Reserve's credits you haven't marked as used (${wholeDollars(k.unsaid.yearly)} a year: travel, StubHub, Lyft and Peloton membership) aren't counted; with them all, it would add about ${wholeDollars(marked.added)} a year.`,
+      )
+    },
+  )
+
+  goldenTest(
+    '#40d a card whose value is mostly credits: Platinum counts the ones in use, and a cheaper card keeps only part',
+    () => {
+      const k = ask(
+        wallet([
+          { id: 'amex-platinum', enrolled: PLATINUM_CREDITS },
+          { id: 'chase-freedom-unlimited' },
+          { id: 'citi-double-cash' },
+        ]),
+        'amex-platinum',
+      )
+      expect(k.renewal.credits).toBeGreaterThan(k.renewal.rewardsAdded)
+      expect(k.renewal.credits).toBeGreaterThan(k.fee)
+      expect(k.outcome).toBe('keeps')
+      for (const r of k.replacements) {
+        expect(r.share).toBeLessThan(100)
+        expect(r.netIfCreditsUsed).toBe(
+          Math.round((r.net + (r.credits?.yearly ?? 0)) * 100) / 100,
+        )
+      }
+      expect(keepOrReplaceUnsaid(k)).toMatch(
+        /^The Amex Platinum's credits you haven't marked as used \(\$[\d,]+ a year: .+\) aren't counted; with them all, it would add about \$[\d,]+ a year\.$/,
+      )
+    },
+  )
+
+  goldenTest(
+    "#40e a wallet that doesn't need a replacement: Gold beside Blue Cash Preferred and Savor, its credits not used",
+    () => {
+      const k = ask(
+        wallet([
+          {
+            id: 'amex-gold',
+            skipped_credits: ['dunkin', 'uber-cash', 'dining', 'resy'],
+          },
+          { id: 'amex-blue-cash-preferred' },
+          { id: 'capital-one-savor' },
+        ]),
+        'amex-gold',
+      )
+      expect(k.outcome).toBe('not-needed')
+      expect(k.replacements).toEqual([])
+      expect(k.members).toEqual([])
+      expect(keepOrReplaceUnsaid(k)).toBe('')
+      expect(keepOrReplaceText(catalog, k)).toMatch(
+        /^Your other cards already cover what the Amex Gold earns: .+, so no card needs to take its place\. (.+ )?Over the next 12 months at typical U\.S\. spending, the Amex Gold earns about .+ against its \$325 fee\. This counts only earning/,
+      )
+    },
+  )
+
+  goldenTest(
+    '#40f nothing cheaper comes close: Platinum with its credits in use, beside a flat 2% card, on everyday spending',
+    () => {
+      const k = ask(
+        wallet([
+          { id: 'amex-platinum', enrolled: PLATINUM_CREDITS },
+          { id: 'citi-double-cash' },
+        ]),
+        'amex-platinum',
+        TODAY,
+        everythingElse,
+      )
+      expect(k.added).toBeGreaterThan(0)
+      expect(k.outcome).toBe('none-close')
+      expect(k.replacements).toEqual([])
+      expect(keepOrReplaceVerdict(catalog, k)).toBe(
+        `Nothing with a lower fee comes close: in its place, no such card would add anything to your wallet after its fee, while the Amex Platinum adds about ${wholeDollars(k.added)} a year.`,
+      )
+      expect(keepOrReplaceMath(k)).toMatch(
+        /^Over the next 12 months on your spending, /,
+      )
+    },
+  )
+
+  goldenTest(
+    '#40g a welcome offer is its own line, never in the figures or the share kept',
+    () => {
+      const k = ask(reserve({ enrolled: RESERVE_CREDITS }))
+      const withOffer = k.replacements.find((r) => r.offer !== null)
+      if (!withOffer) throw new Error('no replacement with an offer')
+      const stripped = keepOrReplace(
+        {
+          ...catalog,
+          cards: catalog.cards.map((c) => {
+            if (c.id !== withOffer.cardId) return c
+            const { welcome_offer: _, ...rest } = c
+            return rest
+          }),
+        },
+        reserve({ enrolled: RESERVE_CREDITS }),
+        'chase-sapphire-reserve',
+        TODAY,
+      )
+      const same = stripped?.replacements.find(
+        (r) => r.cardId === withOffer.cardId,
+      )
+      expect(same?.net).toBe(withOffer.net)
+      expect(same?.share).toBe(withOffer.share)
+      expect(same?.offer).toBeNull()
+      expect(replacementExtras(catalog, withOffer).at(-1)).toMatch(
+        /^Welcome offer, once and not in the figures: /,
+      )
+    },
+  )
+
+  goldenTest(
+    '#40h it never calls a cheaper card as good, or suggests changing one card into another',
+    () => {
+      for (const w of [
+        reserve(),
+        reserve({ enrolled: RESERVE_CREDITS }),
+        withProfile(reserve({ enrolled: RESERVE_CREDITS }), 'pointsHeavy'),
+      ]) {
+        const text = keepOrReplaceText(catalog, ask(w))
+        expect(text).toContain(PERKS_NOT_COUNTED)
+        expect(text).not.toMatch(
+          /as good|downgrade|product change|switch to|convert/i,
+        )
+      }
+    },
+  )
+
+  goldenTest(
+    "#40i it leaves out issuers the wallet skips and cards that need a membership it doesn't have",
+    () => {
+      const k = ask(reserve({ enrolled: RESERVE_CREDITS }))
+      expect(k.replacements.some((r) => r.cardId.startsWith('amex-'))).toBe(
+        true,
+      )
+      const skipped = ask(
+        reserve({ enrolled: RESERVE_CREDITS }, { skipped_issuers: ['amex'] }),
+      )
+      expect(
+        skipped.replacements.some((r) => r.cardId.startsWith('amex-')),
+      ).toBe(false)
+      expect(k.replacements.map((r) => r.cardId)).not.toContain(
+        'verizon-visa-card',
+      )
+      expect(k.members).toEqual([
+        expect.stringMatching(
+          /^If you have a Verizon wireless or Fios account: Verizon Visa, about \$[\d,]+ a year after its fee\.$/,
+        ),
+      ])
+      const member = ask(
+        reserve(
+          { enrolled: RESERVE_CREDITS },
+          { memberships: ['verizon-account'] },
+        ),
+      )
+      expect(member.members).toEqual([])
+    },
+  )
+
+  goldenTest(
+    '#40j near its anniversary it counts the year after the renewal, with the same figures as the to-do',
+    () => {
+      const w = reserve({ enrolled: RESERVE_CREDITS, anniversary: '11-15' })
+      const k = ask(w, 'chase-sapphire-reserve', '2026-11-07')
+      expect(k.due).toBe('2026-11-15')
+      expect(k.start).toBe('2026-11-15')
+      const [item] = checklist(catalog, w, '2026-11-07').filter(
+        (i) => i.kind === 'renewal',
+      )
+      expect(item?.text).toContain(`${wholeDollars(k.added)} a year ahead`)
+      expect(keepOrReplaceMath(k)).toMatch(
+        /^For the year after it renews around Nov 15, 2026 at typical U\.S\. spending, /,
+      )
+      expect(ask(w, 'chase-sapphire-reserve', '2026-06-01').due).toBeNull()
+    },
+  )
+
+  goldenTest(
+    '#40k held alone, it is weighed against having no card, so a no-fee card in its place keeps part or comes out ahead',
+    () => {
+      const k = ask(
+        wallet([{ id: 'chase-sapphire-reserve', enrolled: RESERVE_CREDITS }]),
+      )
+      expect(k.alone).toBe(true)
+      expect(k.added).toBe(
+        Math.round(
+          (k.renewal.walletRewards + k.renewal.credits - k.fee) * 100,
+        ) / 100,
+      )
+      expect(k.replacements.some((r) => r.annualFee === 0)).toBe(true)
+      expect(keepOrReplaceMath(k)).toMatch(
+        /the Chase Sapphire Reserve earns about \$[\d,]+ a year, plus \$[\d,]+ in credits you use, against its \$795 fee\.$/,
+      )
+    },
+  )
+
+  goldenTest(
+    '#40l a card with no annual fee, or not in the wallet, gets none',
+    () => {
+      expect(
+        keepOrReplace(catalog, reserve(), 'citi-double-cash', TODAY),
+      ).toBeNull()
+      expect(keepOrReplace(catalog, reserve(), 'amex-gold', TODAY)).toBeNull()
+    },
+  )
+
+  goldenTest(
+    '#40m the cheaper card that earns the same points always gets its own line: Sapphire Preferred for the Reserve',
+    () => {
+      const k = ask(reserve({ enrolled: RESERVE_CREDITS }))
+      expect(k.replacements.map((r) => r.cardId)).not.toContain(
+        'chase-sapphire-preferred',
+      )
+      const same = k.samePoints
+      expect(same?.cardId).toBe('chase-sapphire-preferred')
+      expect(same?.samePoints).toBe(true)
+      expect(same?.feeSaved).toBe(700)
+      expect(same?.share).toBe(Math.round(((same?.net ?? 0) / k.added) * 100))
+      const text = samePointsText(catalog, k)
+      expect(text).toMatch(
+        /^The Chase Sapphire Preferred earns Chase Ultimate Rewards too: in its place, it would .+, with \$700 less in fees\.$/,
+      )
+      expect(keepOrReplaceText(catalog, k)).toContain(text)
+      expect(keepOrReplaceText(catalog, k)).not.toMatch(
+        /switch|product change|downgrade|upgrade|convert/i,
+      )
+      const unmarked = ask(reserve())
+      expect(unmarked.outcome).toBe('not-needed')
+      expect(unmarked.samePoints?.cardId).toBe('chase-sapphire-preferred')
+      expect(samePointsText(catalog, unmarked)).toMatch(
+        /^The Chase Sapphire Preferred earns Chase Ultimate Rewards too: /,
+      )
+    },
+  )
+
+  goldenTest(
+    '#40n among the best cheaper cards, the same-points card is marked there instead of repeated',
+    () => {
+      const k = ask(
+        withProfile(reserve({ enrolled: RESERVE_CREDITS }), 'pointsHeavy'),
+      )
+      const listed = k.replacements.find(
+        (r) => r.cardId === 'chase-sapphire-preferred',
+      )
+      if (!listed) throw new Error('Sapphire Preferred is not listed')
+      expect(listed.samePoints).toBe(true)
+      expect(k.samePoints?.cardId).toBe('chase-sapphire-preferred')
+      expect(samePointsText(catalog, k)).toBe('')
+      expect(replacementLine(catalog, k, listed)).toMatch(
+        /^Chase Sapphire Preferred, which earns Chase Ultimate Rewards too: /,
+      )
+    },
+  )
+
+  goldenTest(
+    '#40o a card with no cheaper card on the same points has no such line',
+    () => {
+      const k = ask(
+        wallet([
+          { id: 'chase-aeroplan' },
+          { id: 'chase-freedom-unlimited' },
+          { id: 'citi-double-cash' },
+        ]),
+        'chase-aeroplan',
+      )
+      expect(k.samePoints).toBeNull()
+      expect(k.replacements.some((r) => r.samePoints)).toBe(false)
+      expect(samePointsText(catalog, k)).toBe('')
+      expect(keepOrReplaceText(catalog, k)).not.toMatch(/ too: /)
+    },
+  )
+
+  goldenTest(
+    '#40p without a saved point value, the answer at transfer value is said too, from the same math as points-heavy',
+    () => {
+      const plain = (fields: object = {}) =>
+        WalletSchema.parse({
+          cards: [
+            { id: 'chase-sapphire-reserve', enrolled: RESERVE_CREDITS },
+            { id: 'chase-freedom-unlimited' },
+            { id: 'citi-double-cash' },
+          ],
+          ...fields,
+        })
+      const k = ask(plain())
+      const heavy = ask(withProfile(plain(), 'pointsHeavy'))
+      expect(k.transfer?.cents).toBe(1.7)
+      expect(k.transfer?.result.added).toBe(heavy.added)
+      expect(k.transfer?.result.replacements[0]?.cardId).toBe(
+        heavy.replacements[0]?.cardId,
+      )
+      const lead = heavy.replacements[0]
+      expect(transferText(catalog, k)).toBe(
+        `If you transfer Chase Ultimate Rewards to airlines and hotels and count them at 1.7¢ each, the Chase Sapphire Reserve adds about ${wholeDollars(heavy.added)} a year after its fee, and the Amex Blue Cash Preferred would keep about ${wholeDollars(lead?.net ?? 0)} of it (${String(lead?.share)}%).`,
+      )
+      expect(keepOrReplaceText(catalog, k)).toContain(transferText(catalog, k))
+      expect(ask(plain({ valuations: { UR: 1.2 } })).transfer).toBeNull()
+      expect(heavy.transfer).toBeNull()
+      expect(
+        ask(
+          WalletSchema.parse({
+            cards: [
+              { id: 'amex-blue-cash-preferred' },
+              { id: 'citi-double-cash' },
+            ],
+          }),
+          'amex-blue-cash-preferred',
+        ).transfer,
+      ).toBeNull()
+    },
+  )
+
+  goldenTest(
+    "#40q rates the spending lines can't reach: the Reserve's flights, hotels and Chase Travel under the Travel line",
+    () => {
+      const k = ask(reserve({ enrolled: RESERVE_CREDITS }))
+      expect(hiddenRatesText(k)).toBe(
+        'Chase Travel, flights and hotels earn more on the Chase Sapphire Reserve than the Travel line counts; add them as their own lines for a closer answer.',
+      )
+      expect(hiddenRatesText(k, ' in Find a card')).toBe(
+        'Chase Travel, flights and hotels earn more on the Chase Sapphire Reserve than the Travel line counts; add them as their own lines in Find a card for a closer answer.',
+      )
+      expect(keepOrReplaceText(catalog, k)).toContain(hiddenRatesText(k))
+      const own = (lines: [string, number][]) =>
+        ask(reserve({ enrolled: RESERVE_CREDITS }), undefined, TODAY, {
+          lines: resolveSpendLines(
+            catalog,
+            lines.map(([what, monthly]) =>
+              spendLineFor(catalog, what, monthly),
+            ),
+          ),
+          typical: false,
+        })
+      expect(
+        hiddenRatesText(
+          own([
+            ['travel', 300],
+            ['flights', 200],
+          ]),
+        ),
+      ).toBe(
+        'Chase Travel and hotels earn more on the Chase Sapphire Reserve than the Travel line counts; add them as their own lines for a closer answer.',
+      )
+      expect(hiddenRatesText(own([['everything else', 800]]))).toBe('')
+      expect(hiddenRatesText(own([['dining', 800]]))).toBe('')
+      const platinum = ask(
+        wallet([{ id: 'amex-platinum' }, { id: 'citi-double-cash' }]),
+        'amex-platinum',
+      )
+      expect(hiddenRatesText(platinum)).toBe(
+        'Flights and bookings through Amex Travel earn more on the Amex Platinum than the Travel line counts; add them as their own lines for a closer answer.',
+      )
+    },
+  )
 })

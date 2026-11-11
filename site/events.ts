@@ -20,6 +20,7 @@ export const EVENTS = [
   'apple-wallet',
   'wallet-two-years',
   'wallet-skip-issuers',
+  'wallet-keep-or-replace',
   'wallet-sync-on',
   'wallet-sync-off',
   // Calls to action

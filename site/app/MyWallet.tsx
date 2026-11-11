@@ -58,6 +58,7 @@ import { resolvePlace } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { anniversaryOf, type Spending } from '../../src/engine/renewal.ts'
 import { CardArt } from './CardArt.tsx'
+import { KeepOrReplace } from './KeepOrReplace.tsx'
 import { QuickCards } from './QuickCards.tsx'
 import { Logo } from './Logo.tsx'
 import { track } from './track.ts'
@@ -489,11 +490,15 @@ function UseChoices({
 function CardEditor({
   wallet,
   held,
+  asked,
+  onAsk,
   onChange,
   onRemove,
 }: {
   wallet: Wallet
   held: WalletCard
+  asked: boolean // "Keep or replace?" is showing its answer
+  onAsk: () => void
   onChange: (input: CardInput) => void
   onRemove: (cardId: string) => void
 }) {
@@ -860,6 +865,30 @@ function CardEditor({
           />
         </label>
       ) : null}
+      {hasFee(held) ? (
+        <fieldset class="keep" id={`keep-${held.id}`}>
+          <legend>Keep or replace?</legend>
+          {asked ? (
+            <KeepOrReplace
+              wallet={wallet}
+              cardId={held.id}
+              spending={spending}
+            />
+          ) : (
+            <>
+              <p class="muted small">
+                What it adds to your wallet after its fee, and which cards with
+                a lower fee would keep the most of that.
+              </p>
+              <div class="row-buttons">
+                <button type="button" onClick={onAsk}>
+                  Compare with cheaper cards
+                </button>
+              </div>
+            </>
+          )}
+        </fieldset>
+      ) : null}
       <div class="row-buttons">
         <button type="button" class="primary" onClick={save}>
           Save
@@ -901,6 +930,8 @@ function CardList({
   wallet,
   open,
   setOpen,
+  asked,
+  onAsk,
   onChange,
   onRemove,
 }: {
@@ -908,6 +939,9 @@ function CardList({
   // The card whose Settings are showing; the to-do list can open one.
   open: string | null
   setOpen: (cardId: string | null) => void
+  // Cards whose "Keep or replace?" answer shows when their Settings do.
+  asked: string[]
+  onAsk: (cardId: string) => void
   onChange: (op: LocalOp, cardId: string) => Promise<boolean>
   onRemove: (cardId: string) => void
 }) {
@@ -953,6 +987,8 @@ function CardList({
                 <CardEditor
                   wallet={wallet}
                   held={held}
+                  asked={asked.includes(held.id)}
+                  onAsk={() => onAsk(held.id)}
                   onChange={(input) => {
                     void onChange(updateOp(input), held.id).then((ok) => {
                       if (ok) setOpen(null)
@@ -1723,7 +1759,7 @@ function ThisQuarter({
   onOpenCard,
 }: {
   wallet: Wallet
-  onOpenCard: (cardId: string) => void
+  onOpenCard: (cardId: string, keep?: boolean) => void
 }) {
   const items = useMemo(
     () =>
@@ -1754,6 +1790,21 @@ function ThisQuarter({
                 onOpenCard(i.cardId)
               }}
             />
+            {i.kind === 'renewal' ? (
+              <>
+                {' '}
+                <a
+                  href="#wallet"
+                  class="link"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    onOpenCard(i.cardId, true)
+                  }}
+                >
+                  Keep or replace?
+                </a>
+              </>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -1986,6 +2037,11 @@ export function MyWallet({
   const [amount, setAmount] = useState('')
   const { abroad, payment } = purchase
   const [openCard, setOpenCard] = useState<string | null>(null)
+  const [keepAsked, setKeepAsked] = useState<string[]>([])
+  const askKeep = (cardId: string) => {
+    track('wallet-keep-or-replace')
+    setKeepAsked((ids) => (ids.includes(cardId) ? ids : [...ids, cardId]))
+  }
   const [asked, setAsked] = useState<{
     text: string
     amount: number | null
@@ -2079,12 +2135,13 @@ export function MyWallet({
 
   // Opens a card's Settings in Your cards and scrolls to it: from the to-do
   // list, from a card page's "Add it to your wallet", and from "Would another
-  // card help?".
-  const openCardSettings = (cardId: string) => {
+  // card help?". `keep` opens its "Keep or replace?" answer.
+  const openCardSettings = (cardId: string, keep = false) => {
     setOpenCard(cardId)
+    if (keep) askKeep(cardId)
     requestAnimationFrame(() => {
       document
-        .getElementById(`held-${cardId}`)
+        .getElementById(keep ? `keep-${cardId}` : `held-${cardId}`)
         ?.scrollIntoView({ block: 'start' })
     })
   }
@@ -2297,6 +2354,8 @@ export function MyWallet({
             wallet={wallet}
             open={openCard}
             setOpen={setOpenCard}
+            asked={keepAsked}
+            onAsk={askKeep}
             onChange={apply}
             onRemove={remove}
           />

@@ -1728,3 +1728,43 @@ p.callout .link {
   display: block;
   margin-top: 2px;
 }
+
+/* Keep or replace? in a fee card's Settings. */
+.editor fieldset.keep {
+  scroll-margin-top: 12px;
+}
+
+.keep-answer > p {
+  margin: 6px 0;
+}
+
+.keep-answer strong {
+  font-weight: 600;
+}
+
+.keep-answer .keep-unsaid {
+  color: var(--accent);
+  font-size: 15px;
+}
+
+.keep-list {
+  margin: 10px 0 4px;
+}
+
+.keep-list .result {
+  background: var(--bg);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.keep-list .result-top {
+  grid-template-columns: auto 1fr auto;
+}
+
+.keep-list .result p {
+  margin-left: 0;
+}
+
+.keep-assumes {
+  margin-top: 4px;
+}

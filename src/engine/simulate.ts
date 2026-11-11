@@ -687,6 +687,8 @@ export function simulateAdditions(
   wallet: Wallet,
   lines: ResolvedLine[],
   options: SimulateOptions,
+  // Only these cards are tried, beyond the filters.
+  consider: (card: Card) => boolean = () => true,
 ): WalletWhatIf {
   const projected = projectedWallet(wallet, catalog, options.start)
   const heldIds = wallet.cards.map((c) => c.id)
@@ -705,6 +707,7 @@ export function simulateAdditions(
     if (
       held.has(card.id) ||
       !matchesFilters(card, options.filters) ||
+      !consider(card) ||
       (wallet.skipped_issuers ?? []).includes(card.issuer)
     )
       continue

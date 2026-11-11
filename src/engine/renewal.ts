@@ -79,6 +79,7 @@ export type Renewal = {
   // Nights not skipped with no cap and no value of the cardholder's.
   nightsUnvalued: number
   net: number // rewardsAdded + credits - fee
+  walletRewards: number // what the wallet earns a year with the card
   against: string | null // the no-fee card compared with, for a card held alone
   typical: boolean
 }
@@ -167,6 +168,7 @@ export function renewalCheck(
       notCounted.length > 0 && notCounted.every((n) => n.own !== null),
     nightsUnvalued: nights.filter((n) => !n.skipped && n.worth === null).length,
     net: roundCents(rewardsAdded + credits - fee),
+    walletRewards: withCard.rewards,
     against,
     typical: spending.typical,
   }

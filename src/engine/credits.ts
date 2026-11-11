@@ -336,3 +336,26 @@ export const usedCreditsYear = (
     date,
     held,
   )
+
+// The credits and free nights a cardholder hasn't said they use or don't:
+// left out of the fee math until they do.
+export const unsaidCreditsYear = (
+  catalog: Catalog,
+  card: Card,
+  held: WalletCard,
+  date: string,
+  valuations: Wallet['valuations'],
+) =>
+  creditsYear(
+    catalog,
+    card,
+    card.credits.filter(
+      (c) => !creditConfirmed(c, held) && !isSkipped(c, held),
+    ),
+    card.free_nights.filter(
+      (n) => !nightConfirmed(n, held) && !nightSkipped(n, held),
+    ),
+    valuations,
+    date,
+    held,
+  )

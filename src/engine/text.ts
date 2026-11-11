@@ -796,6 +796,46 @@ export function ifCreditsUsedText(
   return `If you'd use ${all}${owner} ${perksNoun(c)} (${creditsYearText(c)}), it ${verb} ${upTo(c)}${wholeDollars(dollars)} a year.`
 }
 
+// What a fee card earns beside the others: "it earns about $80 a year more
+// than your other cards would". Without `over`, what it earns on its own.
+export function feeCardEarnsText(
+  rewardsAdded: number,
+  over: string | null,
+  subject = 'it',
+): string {
+  if (over === null)
+    return `${subject} earns about ${wholeDollars(rewardsAdded)} a year`
+  return Math.round(rewardsAdded) > 0
+    ? `${subject} earns about ${wholeDollars(rewardsAdded)} a year more than ${over}`
+    : Math.round(rewardsAdded) < 0
+      ? `${subject} earns about ${wholeDollars(-rewardsAdded)} a year less than ${over}`
+      : `${subject} earns about the same as ${over}`
+}
+
+// ", plus $300 in credits you use and up to $150 for its anniversary free
+// night", or empty.
+export function feeCardExtrasText(r: {
+  credits: number
+  freeNights: number
+  ownNights: number
+}): string {
+  const creditDollars = roundCents(r.credits - r.freeNights - r.ownNights)
+  const extras = [
+    ...(creditDollars > 0
+      ? [`${wholeDollars(creditDollars)} in credits you use`]
+      : []),
+    ...(r.freeNights > 0
+      ? [`up to ${wholeDollars(r.freeNights)} for its ${FREE_NIGHT_NAME}`]
+      : []),
+    ...(r.ownNights > 0
+      ? [
+          `the ${wholeDollars(r.ownNights)} its ${FREE_NIGHT_NAME} is worth to you`,
+        ]
+      : []),
+  ]
+  return extras.length > 0 ? `, plus ${listed(extras)}` : ''
+}
+
 // The renewal check on the to-do list. A card well ahead gets one short
 // line; one that's close or behind gets the parts of the math.
 export function renewalText(
@@ -831,27 +871,8 @@ export function renewalText(
     r.against === null
       ? 'your other cards would'
       : `the best no-fee card (${r.against}) would`
-  const earns =
-    Math.round(r.rewardsAdded) > 0
-      ? `it earns about ${wholeDollars(r.rewardsAdded)} a year more than ${over}`
-      : Math.round(r.rewardsAdded) < 0
-        ? `it earns about ${wholeDollars(-r.rewardsAdded)} a year less than ${over}`
-        : `it earns about the same as ${over}`
-  const creditDollars = roundCents(r.credits - r.freeNights - r.ownNights)
-  const extras = [
-    ...(creditDollars > 0
-      ? [`${wholeDollars(creditDollars)} in credits you use`]
-      : []),
-    ...(r.freeNights > 0
-      ? [`up to ${wholeDollars(r.freeNights)} for its ${FREE_NIGHT_NAME}`]
-      : []),
-    ...(r.ownNights > 0
-      ? [
-          `the ${wholeDollars(r.ownNights)} its ${FREE_NIGHT_NAME} is worth to you`,
-        ]
-      : []),
-  ]
-  const credits = extras.length > 0 ? `, plus ${listed(extras)}` : ''
+  const earns = feeCardEarnsText(r.rewardsAdded, over)
+  const credits = feeCardExtrasText(r)
   const withNight = roundCents(r.net + r.nightsNotCounted)
   const upTo = r.nightsNotCountedOwn ? '' : 'up to '
   const uncounted =

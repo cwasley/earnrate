@@ -250,6 +250,11 @@ export function feeWorthVerdict(
     : `On earning alone, the ${esc(name)} earns more than the best no-fee card, after its ${esc(fee)} fee, from about ${strong(`${esc(wholeDollars(w.breakEven))} a month`)} of ${esc(where)}${w.stopsAt === null ? '' : `, up to about ${esc(wholeDollars(w.stopsAt))} a month (past that, a spending cap ends its lead)`}.`
 }
 
+// "If you transfer Chase Ultimate Rewards to airlines and hotels and count
+// them at 1.7¢ each": `points` as it should appear, escaped if need be.
+export const transferIfText = (points: string, cents: number) =>
+  `If you transfer ${points} to airlines and hotels and count them at ${num(cents)}¢ each`
+
 // The same math with points transferred to airlines and hotels.
 export function feeWorthTransfer(
   catalog: Catalog,
@@ -260,8 +265,8 @@ export function feeWorthTransfer(
   const points = currencyName(catalog, card.currency)
   const breakEven = transfer.worth?.breakEven ?? null
   return breakEven === null
-    ? `If you transfer ${esc(points)} to airlines and hotels and count them at ${esc(num(transfer.cents))}¢ each, it still doesn't come out ahead within ${esc(wholeDollars(MAX_MONTHLY))} a month.`
-    : `If you transfer ${esc(points)} to airlines and hotels and count them at ${esc(num(transfer.cents))}¢ each, it comes out ahead from about ${strong(`${esc(wholeDollars(breakEven))} a month`)}.`
+    ? `${transferIfText(esc(points), transfer.cents)}, it still doesn't come out ahead within ${esc(wholeDollars(MAX_MONTHLY))} a month.`
+    : `${transferIfText(esc(points), transfer.cents)}, it comes out ahead from about ${strong(`${esc(wholeDollars(breakEven))} a month`)}.`
 }
 
 // A free night with no point cap, which the math leaves out.

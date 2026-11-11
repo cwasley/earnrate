@@ -77,7 +77,7 @@ export type OfferComparison = {
   notes: string[]
 }
 
-function ineligibleText(
+export function ineligibleText(
   catalog: Catalog,
   wallet: Wallet,
   notWith: string[],
