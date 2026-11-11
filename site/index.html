@@ -223,14 +223,6 @@
         font-size: 17px;
         margin: 0 0 4px;
       }
-      .eyebrow {
-        font-size: 12.5px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin: 0 0 8px;
-      }
       .lede {
         font-size: 19px;
         color: var(--muted);
@@ -260,11 +252,6 @@
         margin: 24px 0 0;
         padding: 0;
         list-style: none;
-      }
-      @media (min-width: 640px) {
-        .stats {
-          grid-template-columns: repeat(4, 1fr);
-        }
       }
       .stats li {
         background: var(--surface);
@@ -855,8 +842,6 @@
           <li>
             <b><!--earnrate:stores--></b>stores it recognizes
           </li>
-          <li><b>100%</b>of rates quoted from the issuer</li>
-          <li><b>0</b>affiliate links</li>
         </ul>
         <ul class="popular-links" aria-label="Popular comparisons">
           <li><a href="/best/whole-foods">Whole Foods</a></li>
@@ -872,8 +857,7 @@
       </header>
 
       <section>
-        <p class="eyebrow">Why I built it</p>
-        <h2>A ghost card, almost</h2>
+        <h2>Why I built it</h2>
         <p>
           A few cards into the points hobby, I was standing in Whole Foods
           trying to work out whether my Prime Visa or my Amex Gold earned more
@@ -902,13 +886,12 @@
       </section>
 
       <section>
-        <p class="eyebrow">What it does</p>
-        <h2>It knows what changes the answer</h2>
+        <h2>What it does</h2>
         <p class="intro">
-          Ask about a store, or a kind of place like a coffee shop. earnrate
-          answers from every card it knows, or from yours, and shows the rule
-          behind it. If you transfer points to airlines, value them higher, like
-          1.7¢ each, and the answer changes with it.
+          Ask about a store, or just a kind of place: a coffee shop, a pharmacy.
+          earnrate answers from every card it knows, or from yours, and shows
+          the rule behind it. If you transfer points to airlines, value them at
+          1.7¢ each instead of 1¢ and the answer changes with it.
         </p>
         <ul class="tiles">
           <li class="tile">
@@ -919,11 +902,11 @@
               </div>
               <div class="bar"><span style="width: 36%"></span></div>
             </div>
-            <h3>It remembers what you've spent</h3>
+            <h3>Caps and spend bonuses</h3>
             <p>
-              Many bonus rates stop at a cap, and some cards add a bonus once
-              you spend enough in a year, like IHG's and Delta's. earnrate keeps
-              track, so the answer changes when it should.
+              Many bonus rates stop at a cap, and some cards, IHG's and Delta's
+              among them, add a bonus once you spend enough in a year. earnrate
+              keeps track, so the answer changes when it should.
             </p>
           </li>
           <li class="tile">
@@ -931,7 +914,7 @@
               <span class="pill">Costco · Visa only</span>
               <span class="pill no">Amex Gold</span>
             </div>
-            <h3>It reads the fine print</h3>
+            <h3>The fine print</h3>
             <p>
               Costco takes only Visa. DoorDash isn't dining on Custom Cash.
               Abroad, each card's foreign transaction fee comes off.
@@ -949,10 +932,10 @@
               </div>
               <div class="bar"><span style="width: 45%"></span></div>
             </div>
-            <h3>It keeps your welcome bonus on track</h3>
+            <h3>Welcome bonus pace</h3>
             <p>
-              It counts spending toward a welcome bonus, shows the weekly pace,
-              and sends purchases there when you're behind.
+              earnrate counts spending toward a welcome bonus, shows the weekly
+              pace and sends purchases there when you're behind.
             </p>
           </li>
           <li class="tile">
@@ -963,9 +946,9 @@
               </div>
               <span class="todo-item"><!--earnrate:credit_viz_todo--></span>
             </div>
-            <h3>It counts statement credits</h3>
+            <h3>Statement credits</h3>
             <p>
-              It knows
+              earnrate knows
               <!--earnrate:credit_count-->
               statement credits on
               <!--earnrate:credit_cards-->
@@ -991,11 +974,11 @@
                 </tr>
               </table>
             </div>
-            <h3>It finds your next card</h3>
+            <h3>Your next card</h3>
             <p>
-              It runs a year of your spending through every card and every pair,
-              and ranks welcome offers by their first-year value. Answers point
-              out first-year rates too, like Discover's Cashback Match.
+              earnrate runs a year of your spending through every card and every
+              pair, and ranks welcome offers by their first-year value. Answers
+              point out first-year rates too, like Discover's Cashback Match.
             </p>
           </li>
           <li class="tile">
@@ -1004,7 +987,7 @@
                 <!--earnrate:cheat-->
               </table>
             </div>
-            <h3>It makes you a cheat sheet</h3>
+            <h3>A cheat sheet</h3>
             <p>
               Which card for groceries, dining, gas and more this quarter. Put
               it in Apple Wallet, or save it as an image.
@@ -1019,7 +1002,7 @@
                 >Pick next quarter's Cash+ categories</span
               >
             </div>
-            <h3>It tells you what to do</h3>
+            <h3>This quarter's to-dos</h3>
             <p>
               Bonuses to activate, categories to pick, caps running low. Add the
               dates to your calendar in one tap.
@@ -1042,7 +1025,7 @@
                 </div>
               </div>
             </div>
-            <h3>It's on your phone</h3>
+            <h3>On your phone</h3>
             <p>
               Add earnrate.dev to your Home Screen. It opens to your wallet and
               works offline, and your cheat sheet can go in Apple Wallet, for
@@ -1088,7 +1071,6 @@
       </section>
 
       <section>
-        <p class="eyebrow">Why you can trust it</p>
         <h2>Every rate, in the issuer's words</h2>
         <div class="receipt">
           <div class="answer">
@@ -1135,7 +1117,7 @@
                 <path d="M7 17 17 7" /></svg
             ></span>
             <div>
-              <h3>No affiliate links, ever</h3>
+              <h3>No affiliate links</h3>
               <p>
                 earnrate earns nothing when you apply for a card. Rankings
                 depend only on the terms and your cards.
@@ -1156,7 +1138,7 @@
                 /></svg
             ></span>
             <div>
-              <h3>The issuer's own words</h3>
+              <h3>Quoted and re-checked</h3>
               <p>
                 Every rate, cap and exclusion is quoted from the issuer's pages,
                 and an automatic check flags anything that changes.
@@ -1176,10 +1158,11 @@
                 <path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg
             ></span>
             <div>
-              <h3>Private by design</h3>
+              <h3>Runs in your browser</h3>
               <p>
-                No card numbers or bank logins, ever. The comparison runs in
-                your browser. <a href="/privacy">Privacy details</a>.
+                The comparison runs on your device, and earnrate never asks for
+                a card number or a bank login.
+                <a href="/privacy">Privacy details</a>.
               </p>
             </div>
           </li>
@@ -1207,8 +1190,7 @@
       </section>
 
       <section id="claude">
-        <p class="eyebrow">Use it anywhere</p>
-        <h2>In your browser, in Claude, or on your computer</h2>
+        <h2>Use it in Claude or on your computer</h2>
         <div class="where">
           <input type="radio" name="where" id="tab-claude" checked />
           <input type="radio" name="where" id="tab-code" />
@@ -1244,7 +1226,7 @@
                 recovery code to keep, and no email or sign-up.
               </li>
               <li>
-                Ask, like the Trader Joe's example above. It works in Claude on
+                Ask, as in the Trader Joe's example above. It works in Claude on
                 your phone too.
               </li>
             </ol>
@@ -1354,7 +1336,6 @@
       </section>
 
       <section>
-        <p class="eyebrow">Cards it knows</p>
         <h2>
           <!--earnrate:cards-->
           cards from
@@ -1401,8 +1382,7 @@
       </section>
 
       <section>
-        <p class="eyebrow">Questions</p>
-        <h2>The short answers</h2>
+        <h2>Questions</h2>
         <div class="faq">
           <details>
             <summary>Do I have to enter my cards?</summary>
@@ -1415,7 +1395,7 @@
           <details>
             <summary>Does it ever see my card numbers?</summary>
             <p>
-              No. Cards are saved by product, like "Amex Gold". earnrate never
+              No. Cards are saved by product name: "Amex Gold". earnrate never
               asks for card numbers, expiry dates, security codes or bank
               logins, and won't save a name that looks like a card number.
             </p>
@@ -1468,10 +1448,8 @@
       </section>
 
       <section class="closing">
-        <h2>Which card for your next purchase?</h2>
-        <p class="intro">
-          Ask here, with no sign-up, or from Claude wherever you are.
-        </p>
+        <h2>Free, with no sign-up</h2>
+        <p class="intro">Compare cards on this page, or ask from Claude.</p>
         <p class="closing-links">
           <a class="button" href="#app" data-count="cta-bottom"
             >Compare cards now</a
