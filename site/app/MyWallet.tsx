@@ -19,6 +19,7 @@ import {
   knownMemberships,
   membershipsUsed,
   searchCards,
+  setupNotes,
   type SetupNote,
 } from '../../src/engine/setup.ts'
 import {
@@ -57,11 +58,13 @@ import { resolvePlace } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { anniversaryOf, type Spending } from '../../src/engine/renewal.ts'
 import { CardArt } from './CardArt.tsx'
+import { QuickCards } from './QuickCards.tsx'
 import { Logo } from './Logo.tsx'
 import { track } from './track.ts'
 import { cheatSheetImage } from './sheet-image.ts'
 import { lineFor, type Row } from './Spending.tsx'
 import {
+  cardCount,
   cards,
   feeLabel,
   issuerName,
@@ -980,12 +983,21 @@ function CardList({
   )
 }
 
+// Every card added from the grid or the search counts the same way.
+function countAdded() {
+  track('wallet-card-added')
+  if (!load<boolean>('counted-first-card', false)) {
+    track('wallet-first-card')
+    save('counted-first-card', true)
+  }
+}
+
 function AddCard({
   wallet,
-  onChange,
+  onAdd,
 }: {
   wallet: Wallet | null
-  onChange: (op: LocalOp, cardId: string) => Promise<boolean>
+  onAdd: (cardId: string) => Promise<boolean>
 }) {
   const [query, setQuery] = useState('')
   const found = useMemo(
@@ -1026,12 +1038,9 @@ function AddCard({
               <button
                 type="button"
                 onClick={() => {
-                  track('wallet-card-added')
-                  if (!load<boolean>('counted-first-card', false)) {
-                    track('wallet-first-card')
-                    save('counted-first-card', true)
-                  }
-                  void onChange(addOp(c.id), c.id)
+                  void onAdd(c.id).then((ok) => {
+                    if (ok) countAdded()
+                  })
                   setQuery('')
                 }}
               >
@@ -2015,6 +2024,58 @@ export function MyWallet({
     return true
   }
 
+  // The common-cards grid stays up from its first add, or from "Pick from
+  // common cards", until Done. `gridAdded` is what it added: the only cards
+  // it may take back out.
+  const [building, setBuilding] = useState(false)
+  const [gridAdded, setGridAdded] = useState<string[]>([])
+  const openGrid = () => {
+    setGridAdded([])
+    setBuilding(true)
+    setMessage(null)
+    requestAnimationFrame(() => {
+      document.querySelector('.tabs')?.scrollIntoView({ block: 'start' })
+    })
+  }
+
+  // What the cards need is said once, at Done, under Your cards.
+  const addFromGrid = async (cardId: string): Promise<boolean> => {
+    setBuilding(true)
+    const result = await perform(addOp(cardId))
+    setMessage(result.ok ? null : { text: result.error, error: true })
+    if (result.ok)
+      setGridAdded((ids) => (ids.includes(cardId) ? ids : [...ids, cardId]))
+    return result.ok
+  }
+  const removeFromGrid = async (cardId: string) => {
+    if (!gridAdded.includes(cardId)) return
+    const result = await perform(removeOp(cardId))
+    setMessage(result.ok ? null : { text: result.error, error: true })
+  }
+  const doneBuilding = () => {
+    setBuilding(false)
+    setGridAdded([])
+    const today = localToday()
+    const needs = wallet
+      ? wallet.cards.flatMap((held) =>
+          setupNotes(catalog, wallet, held, today).map((n) =>
+            noteText(n, shortName(held.id)),
+          ),
+        )
+      : []
+    setMessage(
+      needs.length > 0
+        ? { text: [...new Set(needs)].join(' '), error: false }
+        : null,
+    )
+    requestAnimationFrame(() => {
+      const answers = asked
+        ? askSection.current
+        : document.getElementById('cheat-sheet')
+      answers?.scrollIntoView({ block: 'start' })
+    })
+  }
+
   // Opens a card's Settings in Your cards and scrolls to it: from the to-do
   // list, from a card page's "Add it to your wallet", and from "Would another
   // card help?".
@@ -2030,6 +2091,8 @@ export function MyWallet({
   // Adds a card the person chose elsewhere, opens its Settings (picks, an
   // opening date, a welcome bonus) and offers Undo. Already held: says so.
   const addAndOpen = async (cardId: string) => {
+    setBuilding(false)
+    setGridAdded([])
     if (wallet?.cards.some((c) => c.id === cardId)) {
       openCardSettings(cardId)
       setMessage({
@@ -2157,26 +2220,59 @@ export function MyWallet({
   }
 
   // Memberships and point values can be saved before any card.
-  if (!wallet || wallet.cards.length === 0) {
+  const count = wallet?.cards.length ?? 0
+  if (!wallet || count === 0 || building) {
     return (
       <div class="panels">
         {syncTop}
-        <section class="panel first">
+        <section class="panel first" aria-labelledby="quick-title">
+          <h3 id="quick-title">Which cards do you have?</h3>
           <p>
             {synced
-              ? "Add the cards you have, and earnrate tells you which one to use anywhere. They're saved in your Claude wallet too: never a card number."
-              : 'Add the cards you have, and earnrate tells you which one to use anywhere. Your wallet is saved only in this browser: no account, and never a card number.'}
+              ? "Tap the ones you have, and earnrate tells you which to use anywhere. They're saved in your Claude wallet too: never a card number."
+              : 'Tap the ones you have, and earnrate tells you which to use anywhere. Your wallet is saved only in this browser: no account, and never a card number.'}
           </p>
           {asked ? (
             <p>
               Add yours, and earnrate says which one to use at {asked.text}.
             </p>
           ) : null}
+          {wallet?.cards.some((c) => !gridAdded.includes(c.id)) ? (
+            <p class="muted small">
+              Cards you already had show In your wallet: change or remove those
+              under Your cards.
+            </p>
+          ) : null}
           <fieldset class="lock" disabled={locked}>
-            <AddCard wallet={wallet} onChange={apply} />
+            <QuickCards
+              wallet={wallet}
+              added={gridAdded}
+              onAdd={(cardId) => {
+                void addFromGrid(cardId).then((ok) => {
+                  if (!ok) return
+                  countAdded()
+                  track('wallet-quick-add')
+                })
+              }}
+              onRemove={(cardId) => void removeFromGrid(cardId)}
+            />
+            <p class="quick-search-lead">
+              Not here? Find any of the {catalog.cards.length} cards earnrate
+              knows.
+            </p>
+            <AddCard wallet={wallet} onAdd={addFromGrid} />
           </fieldset>
           {messageLine}
-          <InstallHint />
+          {count === 0 ? (
+            <InstallHint />
+          ) : (
+            <div class="quick-done">
+              <span>{cardCount(count)} in your wallet</span>
+              <button type="button" class="primary" onClick={doneBuilding}>
+                Done
+              </button>
+            </div>
+          )}
         </section>
         {connect}
         {transfer}
@@ -2203,7 +2299,15 @@ export function MyWallet({
             onChange={apply}
             onRemove={remove}
           />
-          <AddCard wallet={wallet} onChange={apply} />
+          <AddCard
+            wallet={wallet}
+            onAdd={(cardId) => apply(addOp(cardId), cardId)}
+          />
+          <p class="quick-open">
+            <button type="button" class="link" onClick={openGrid}>
+              Pick from common cards
+            </button>
+          </p>
         </fieldset>
         {messageLine}
         <p class="pass-hint">

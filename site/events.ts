@@ -11,6 +11,7 @@ export const EVENTS = [
   'spending-edit',
   'wallet-first-card',
   'wallet-card-added',
+  'wallet-quick-add',
   'wallet-which-card',
   'wallet-export',
   'wallet-import',

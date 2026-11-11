@@ -900,6 +900,137 @@ input::-webkit-list-button {
   font-weight: 600;
 }
 
+/* An empty wallet's common cards, tapped in or out (QuickCards.tsx). */
+.quick-cards {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .quick-cards {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+}
+
+.quick-cards li {
+  display: flex;
+}
+
+.quick-card {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  cursor: pointer;
+}
+
+/* Past `.app button`'s inherited font, so a tile and a held tile match. */
+.app .quick-card {
+  font-size: 14px;
+}
+
+/* Held before the grid opened: shown, not a control, so it has no press. */
+.quick-card.kept {
+  cursor: default;
+}
+
+.quick-held {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.kept .quick-check {
+  background: var(--muted);
+}
+
+.quick-open {
+  margin: 10px 0 12px;
+  font-size: 15px;
+}
+
+.quick-open .link {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Color only: a bolder name would rewrap and shift the row. */
+.quick-card[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.quick-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--surface);
+}
+
+.quick-check svg {
+  width: 12px;
+  height: 12px;
+}
+
+.quick-search-lead {
+  margin: 18px 0 8px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* Stays at the bottom of the screen while the grid scrolls by. */
+.panel > .quick-done {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 14px -18px -14px;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 16px 16px;
+  background: var(--surface);
+  font-weight: 600;
+}
+
+.quick-done button {
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 10px 22px;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .small {
   font-size: 14px;
 }
@@ -1001,7 +1132,9 @@ button:disabled:active {
     .result > .row-buttons,
     .result > p,
     .message-line,
-    .row-buttons
+    .row-buttons,
+    .quick-check,
+    .quick-done
   ) {
   transition:
     opacity var(--arrive) var(--ease-out),

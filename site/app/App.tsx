@@ -10,7 +10,7 @@ import {
   type Purchase,
 } from './ThisPurchase.tsx'
 import { track } from './track.ts'
-import { issuerName, issuers } from './format.ts'
+import { cardCount, issuerName, issuers } from './format.ts'
 import { load, loadState, save, saveWallet, type Settings } from './settings.ts'
 import {
   applyLocally,
@@ -316,9 +316,6 @@ function initialSync(back: SyncReturn | null): SyncView {
   }
 }
 
-const cardCount = (w: Wallet) =>
-  `${String(w.cards.length)} card${w.cards.length === 1 ? '' : 's'}`
-
 async function yamlOf(wallet: Wallet): Promise<string> {
   const { walletYaml } = await import('../../src/format/wallet-yaml.ts')
   return walletYaml(wallet)
@@ -402,7 +399,7 @@ export function App() {
       case 'claude':
         finish(
           claude,
-          `Synced: My wallet now shows your Claude wallet (${cardCount(claude)}).`,
+          `Synced: My wallet now shows your Claude wallet (${cardCount(claude.cards.length)}).`,
         )
         return
       case 'browser': {
@@ -459,7 +456,7 @@ export function App() {
       latest,
       refused.length > 0
         ? `Combined, except: ${refused.join(' ')}`
-        : `Combined: your wallet now has every card from both (${cardCount(latest)}).`,
+        : `Combined: your wallet now has every card from both (${cardCount(latest.cards.length)}).`,
     )
   }
 
