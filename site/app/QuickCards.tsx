@@ -28,11 +28,13 @@ export function QuickCards({
   added,
   onAdd,
   onRemove,
+  keptLabel = 'In your wallet',
 }: {
   wallet: Wallet | null
   added: string[]
   onAdd: (cardId: string) => void
   onRemove: (cardId: string) => void
+  keptLabel?: string
 }) {
   const held = new Set(wallet?.cards.map((c) => c.id) ?? [])
   const shown = [
@@ -49,7 +51,7 @@ export function QuickCards({
               <div class="quick-card kept">
                 <CardArt id={id} width={64} />
                 <span class="quick-name">{shortName(id)}</span>
-                <span class="quick-held">In your wallet</span>
+                <span class="quick-held">{keptLabel}</span>
                 <Check />
               </div>
             ) : (

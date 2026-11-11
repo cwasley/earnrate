@@ -38,3 +38,29 @@ export function cleanDescriptor(description: string): string {
     .replace(/\s+\d{3}-\d{3}-\d{4}(\s+[A-Z]{2})?$/, '')
     .trim()
 }
+
+// A name whose apostrophe the statement dropped: "TRADER JOE S", "KOHL S".
+const SPLIT_POSSESSIVE = /\b([A-Z]{2,}) S\b/gi
+// From the first word that starts with "#" or has a digit in it: store
+// numbers and the location after them ("#552 LOS ANGELES CA").
+const STORE_NUMBER_ON = /\s+(#|\S*\d).*$/
+// A web address's ending glued to the name: "NETFLIX.COM".
+const WEB_SUFFIX = /\b([A-Z0-9&-]{2,})\.(COM|NET|ORG|CO|IO|TV|US)\b/gi
+
+// The names to look a statement line up by, in order: the cleaned
+// description and the part before an asterisk ("NAME-CHEAP.COM* LV0I6X")
+// as they are, then each with a dropped apostrophe restored, its store
+// number and location cut, and a web ending removed. Each is looked up as a
+// whole merchant name or alias (or one followed by more words), never as a
+// fragment, so a name that only contains a chain's name doesn't match it.
+export function descriptorNames(description: string): string[] {
+  const cleaned = cleanDescriptor(description)
+  const head = cleaned.split('*')[0]?.trim() ?? ''
+  const bases = [cleaned, head].filter((b) => b !== '')
+  const variants = bases.flatMap((base) => {
+    const joined = base.replace(SPLIT_POSSESSIVE, '$1S')
+    const cut = joined.replace(STORE_NUMBER_ON, '')
+    return [joined, cut, cut.replace(WEB_SUFFIX, '$1')]
+  })
+  return [...new Set([...bases, ...variants])].filter((n) => n !== '')
+}

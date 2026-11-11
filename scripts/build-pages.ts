@@ -2209,10 +2209,12 @@ const urls: [string, string][] = [
     `${SITE}/compare/${p.slug}`,
     compareDate(p),
   ]),
-  ...['privacy', 'terms', 'support'].map((page): [string, string] => [
-    `${SITE}/${page}`,
-    changed(`site/${page}.html`),
-  ]),
+  ...['privacy', 'terms', 'support', 'statement'].map(
+    (page): [string, string] => [
+      `${SITE}/${page}`,
+      changed(`site/${page}.html`),
+    ],
+  ),
   // Its freshness line and recent changes follow the change record.
   [`${SITE}/companies`, latest([changed('site/companies.html'), changesDate])],
 ]

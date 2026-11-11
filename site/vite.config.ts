@@ -9,13 +9,13 @@ import {
 import { localToday } from '../src/engine/periods.ts'
 import { landingFacts, renderLanding } from '../scripts/landing.ts'
 import { companyParts } from '../scripts/pages/changes.ts'
-import { siteFooter } from '../scripts/pages/site.ts'
+import { PAGE_HEADER, siteFooter } from '../scripts/pages/site.ts'
 
 const CATALOG = 'virtual:catalog'
 
 // The card data ships inside the bundle, built from data/ at build time, so
 // the page never fetches anything about cards or wallets.
-function catalogModule(): Plugin {
+export function catalogModule(): Plugin {
   return {
     name: 'earnrate-catalog',
     resolveId: (id) => (id === CATALOG ? `\0${CATALOG}` : null),
@@ -39,11 +39,13 @@ const FILLED = ['/index.html', '/companies.html']
 // fills). The home page's counts, sample cheat sheet and quoted answer, and the
 // companies page's counts and recent changes, come from the card data, the
 // change record and the example wallet, filled in when the page is built.
-function landingPage(): Plugin {
+export function landingPage(): Plugin {
   return {
     name: 'earnrate-landing',
     async transformIndexHtml(source, ctx) {
-      const html = source.replace('<!--earnrate:footer-->', siteFooter())
+      const html = source
+        .replace('<!--earnrate:footer-->', siteFooter())
+        .replace('<!--earnrate:header-->', PAGE_HEADER)
       if (!FILLED.some((f) => ctx.filename.endsWith(f))) return html
       const [catalog, sample, releases] = await Promise.all([
         loadCatalog(),

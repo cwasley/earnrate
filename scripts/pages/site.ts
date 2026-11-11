@@ -20,6 +20,7 @@ const FOOTER_GROUPS: [string, [string, string][]][] = [
       ['/compare/', 'Card comparisons'],
       ['/quarterly/', "This quarter's 5% categories"],
       ['/year-end/', 'Credits that end Dec 31'],
+      ['/statement', 'Check a statement'],
     ],
   ],
   [
@@ -74,6 +75,9 @@ export const slugify = (s: string) =>
 // The app's tabs, so a visitor who lands here from a search can see what
 // else the site does. The home page has the tabs themselves.
 const APP_NAV = `<nav class="app-nav" aria-label="earnrate.dev">${TABS.map((t) => `<a href="${t.href}">${esc(t.name)}</a>`).join('')}</nav>`
+
+// The wordmark and the tabs, on every static page and the statement check.
+export const PAGE_HEADER = `<header><a class="wordmark" href="/"><svg class="mark" viewBox="0 -20 120 120" aria-hidden="true"><rect x="24" y="8" width="88" height="56" rx="10" fill="none" stroke="currentColor" stroke-width="7" opacity=".35"/><rect x="8" y="22" width="92" height="58" rx="10" fill="currentColor"/><rect x="20" y="38" width="18" height="13" rx="3" fill="var(--surface)"/></svg>earnrate</a>${APP_NAV}</header>`
 
 const BRAND = ' | earnrate'
 
@@ -209,7 +213,7 @@ ${page.noindex ? '    <meta name="robots" content="noindex, follow" />\n' : ''} 
   </head>
   <body>
     <main>
-      <header><a class="wordmark" href="/"><svg class="mark" viewBox="0 -20 120 120" aria-hidden="true"><rect x="24" y="8" width="88" height="56" rx="10" fill="none" stroke="currentColor" stroke-width="7" opacity=".35"/><rect x="8" y="22" width="92" height="58" rx="10" fill="currentColor"/><rect x="20" y="38" width="18" height="13" rx="3" fill="var(--surface)"/></svg>earnrate</a>${APP_NAV}</header>
+      ${PAGE_HEADER}
       ${page.crumbs.length > 0 ? crumbsHtml(page.crumbs) : ''}
 ${page.body}
       <aside class="next">

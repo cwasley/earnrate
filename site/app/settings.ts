@@ -4,6 +4,7 @@ import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
 import { effectiveMemberships } from '../../src/engine/memberships.ts'
 import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
+import { loadWallet } from './saved-wallet.ts'
 
 export type Settings = {
   kind: CardFilters['kind']
@@ -82,24 +83,7 @@ export function save(key: string, value: unknown): void {
   }
 }
 
-export function loadWallet(): Wallet | null {
-  try {
-    const raw = localStorage.getItem('earnrate:wallet')
-    if (raw === null) return null
-    const parsed = JSON.parse(raw) as Partial<Wallet> | null
-    if (!parsed || !Array.isArray(parsed.cards)) return null
-    return {
-      valuations: parsed.valuations ?? {},
-      memberships: parsed.memberships ?? [],
-      ...(parsed.skipped_issuers
-        ? { skipped_issuers: parsed.skipped_issuers }
-        : {}),
-      cards: parsed.cards,
-    }
-  } catch {
-    return null
-  }
-}
+export { loadWallet }
 
 export function saveWallet(wallet: Wallet | null): void {
   try {

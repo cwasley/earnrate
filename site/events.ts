@@ -36,6 +36,8 @@ export const EVENTS = [
   'page-settings',
   'page-add',
   'page-check',
+  // Links to the statement check, which itself counts nothing
+  'statement-check',
   // Links for choosing a card
   'decide-fee',
   'decide-compare',

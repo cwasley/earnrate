@@ -86,7 +86,7 @@
           only your recovery code or the apps you connect can open it. Here's
           where your data goes, and where it doesn't.
         </p>
-        <p class="updated">Updated November 6, 2026.</p>
+        <p class="updated">Updated November 11, 2026.</p>
       </header>
 
       <section>
@@ -158,6 +158,25 @@
           too. Using the wallet from the site counts as use, so a synced wallet
           is still deleted only after 13 months unused.
         </p>
+        <h3 id="statement">Checking a statement</h3>
+        <p>
+          The <a href="/statement">statement check</a> reads an American Express
+          or Chase activity file (a CSV) in your browser and works out what its
+          purchases earned on your cards. The file never leaves your device. The
+          page is a single file with everything it needs written into it, and
+          its security policy, which your browser enforces, lets it make no
+          request at all once it has loaded: not to earnrate.dev, not anywhere.
+          It reads only the date, description, amount and category columns (and,
+          for Chase, the type), and ignores the rest. It saves nothing: no copy
+          of the file or the result, and nothing in your browser's storage or
+          cookies. If a wallet is saved in this browser it reads that wallet to
+          know your cards, and doesn't change it. It counts nothing, and
+          Cloudflare's analytics script is blocked there. Loading the page is an
+          ordinary request for it, made before you choose a file. earnrate's
+          server and the site's other pages never receive the file, its
+          purchases or the result. It doesn't open PDFs, since a PDF statement
+          can carry the full card number.
+        </p>
         <h3>What the site counts</h3>
         <p>
           So I can tell which parts of earnrate.dev people use, the page counts
@@ -217,6 +236,10 @@
             <code>page-settings</code> (to a held card's Settings),
             <code>page-add</code> (adding a card),
             <code>page-check</code> (checking a store with your own cards)
+          </li>
+          <li>
+            Following a link to the statement check from My wallet or the home
+            page: <code>statement-check</code>. The check itself counts nothing.
           </li>
           <li>
             Following a home-page link for choosing a card:
@@ -396,7 +419,8 @@
           and, like any host, handles your IP address and request details to
           serve the page and block abuse. Its dashboard shows me aggregate
           counts, not who visited. Logging is off. The sign-in pages on
-          mcp.earnrate.dev don't load the analytics script.
+          mcp.earnrate.dev don't load the analytics script, and the statement
+          check's policy blocks it.
         </p>
       </section>
 
@@ -426,7 +450,9 @@
           November 6, 2026: earnrate.dev can sync your wallet with earnrate in
           Claude, if you turn it on, which stores the wallet encrypted on
           earnrate's server. November 11, 2026: when signing in fails, the
-          server's count notes which step failed and the kind of error.
+          server's count notes which step failed and the kind of error. Also
+          November 11: earnrate.dev can check an activity file against your
+          cards, reading it only on your device.
         </p>
       </section>
 

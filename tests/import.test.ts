@@ -6,10 +6,14 @@ import { WALLET_ENV_VAR } from '../src/brand.ts'
 import { run } from '../src/cli/run.ts'
 import { loadCatalog, loadWallet } from '../src/data/load.ts'
 import { mapAmexCategory } from '../src/import/amex.ts'
-import { analyzeStatement } from '../src/import/analyze.ts'
+import { analyzeStatement, resolveLine } from '../src/import/analyze.ts'
 import { mapChaseCategory } from '../src/import/chase.ts'
 import { parseCsv } from '../src/import/csv.ts'
-import { cleanDescriptor, parseStatement } from '../src/import/statement.ts'
+import {
+  cleanDescriptor,
+  descriptorNames,
+  parseStatement,
+} from '../src/import/statement.ts'
 import { TODAY } from './golden/fixtures.ts'
 
 const HEADER =
@@ -198,6 +202,68 @@ test.each([
   expect(cleanDescriptor(input)).toBe(expected)
 })
 
+describe('a statement line names its store', () => {
+  const store = async (description: string) => {
+    const { known } = resolveLine(await loadCatalog(), {
+      date: '2026-01-15',
+      description,
+      amount: 10,
+      issuerCategory: null,
+      category: null,
+    })
+    return known.source === 'none' ? null : known.resolvedName
+  }
+
+  test.each([
+    // A dropped apostrophe, with a store number and location after it
+    ['TRADER JOE S #552', "Trader Joe's"],
+    ['TRADER JOE S #552 LOS ANGELES CA', "Trader Joe's"],
+    ['KOHL S #0123', "Kohl's"],
+    ['DICK S SPORTING GOODS 123', "Dick's Sporting Goods"],
+    ['MCDONALD S F1234', "McDonald's"],
+    // A web ending glued to the name
+    ['NETFLIX.COM', 'Netflix'],
+    ['NETFLIX.COM LOS GATOS CA', 'Netflix'],
+    ['HULU.COM', 'Hulu'],
+    // A name that is a web address keeps it
+    ['HOTELS.COM 1234', 'Hotels.com'],
+    ['BOOKING.COM', 'Booking.com'],
+    // Store numbers and locations
+    ['CHEVRON 0204567 HOUSTON TX', 'Chevron'],
+    ['7-ELEVEN 12345', '7-Eleven'],
+    ['WALGREENS #1234', 'Walgreens'],
+    // Payment processors and order numbers
+    ['TST* CHIPOTLE 1234', 'Chipotle'],
+    ['AMAZON.COM*AB12CD34', 'Amazon'],
+    ['UBER *EATS', 'Uber Eats'],
+  ])('%j is %j', async (description, name) => {
+    expect(await store(description)).toBe(name)
+  })
+
+  test.each([
+    'TST* SHELLS SEAFOOD SHACK',
+    'SQ *JOE S DINER #12',
+    'THE TARGET ROOM BAR',
+    'PIZZA HUTCH BBQ',
+    'SUBWAYSIDE GRILL',
+    'NETFLIXANDCHILL CAFE',
+  ])('%j only contains a chain name, so it is no known store', async (d) => {
+    expect(await store(d)).toBeNull()
+  })
+
+  test('the names tried, in order', () => {
+    expect(descriptorNames('TRADER JOE S #552 LOS ANGELES CA')).toEqual([
+      'TRADER JOE S #552 LOS ANGELES CA',
+      'TRADER JOES #552 LOS ANGELES CA',
+      'TRADER JOES',
+    ])
+    expect(descriptorNames('AMAZON.COM*AB12CD34').slice(0, 2)).toEqual([
+      'AMAZON.COM*AB12CD34',
+      'AMAZON.COM',
+    ])
+  })
+})
+
 test.each([
   ['Merchandise & Supplies-Groceries', 'grocery.supermarket'],
   ['Restaurant-Bar & Café', 'dining'],
@@ -309,6 +375,35 @@ describe('analyzeStatement', () => {
     ).toEqual([
       ['CORNER MARKET', 'amex-blue-cash-preferred', true],
       ['DoorDash', 'amex-gold', false],
+    ])
+  })
+})
+
+describe('a purchase at a store that earnrate has not taking the card', () => {
+  const costco = (amount: number) => ({
+    date: '2026-01-20',
+    description: 'COSTCO WHSE #0123',
+    amount,
+    issuerCategory: 'Merchandise & Supplies-Wholesale Stores',
+    category: 'warehouse_club',
+  })
+
+  test('counts what it earned on both sides and is listed', async () => {
+    const { wallet } = await setup()
+    const a = analyzeStatement(
+      await loadCatalog(),
+      await loadWallet(wallet),
+      [
+        { cardId: 'amex-gold', line: costco(100) },
+        { cardId: 'amex-gold', line: costco(50) },
+      ],
+      TODAY,
+    )
+    expect(a.purchases).toBe(2)
+    expect(a.earned).toBeGreaterThan(0)
+    expect(a.best).toBeGreaterThanOrEqual(a.earned)
+    expect(a.notTaken).toEqual([
+      { merchant: 'Costco', cardId: 'amex-gold', count: 2, spend: 150 },
     ])
   })
 })

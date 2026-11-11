@@ -9,6 +9,7 @@ const DESCRIPTION = 'Description'
 const CATEGORY = 'Category'
 const TYPE = 'Type'
 const AMOUNT = 'Amount'
+export const CHASE_COLUMNS = [DATE, DESCRIPTION, CATEGORY, TYPE, AMOUNT]
 
 export function isChaseCsv(header: string[]): boolean {
   return [DATE, DESCRIPTION, TYPE, AMOUNT].every((c) => header.includes(c))

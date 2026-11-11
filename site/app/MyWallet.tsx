@@ -2014,8 +2014,11 @@ function Transfer({
         </p>
       ) : null}
       <p class="muted small">
-        Statement import stays in the command line version: never upload a card
-        statement to a website, this one included.
+        Have an American Express or Chase activity file?{' '}
+        <a href="/statement" onClick={() => track('statement-check')}>
+          Check it against your cards
+        </a>
+        : it's read on this device and never sent anywhere.
       </p>
     </section>
   )

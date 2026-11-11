@@ -8,5 +8,12 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
   },
-  "include": ["app", "vite.config.ts"]
+  "include": [
+    "app",
+    "check-statement.ts",
+    "statement",
+    "statement-policy.ts",
+    "statement.config.ts",
+    "vite.config.ts"
+  ]
 }

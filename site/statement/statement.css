@@ -1,0 +1,194 @@
+/* The statement check (site/statement.html): pages.css for the page, the
+   app's styles (app.css) for the controls it shares with My wallet, and
+   these. The app's colors beyond pages.css's are the home page's. */
+:root {
+  --accent-strong: #7f4119;
+  --accent-faint: #fbf3ed;
+  --tab-track: #efe3d8;
+  --placeholder: #9c958f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent-strong: #f1bd94;
+    --accent-faint: #201a16;
+    --tab-track: #31251c;
+    --placeholder: #77716b;
+  }
+}
+
+.lede {
+  font-size: 19px;
+  color: var(--muted);
+  max-width: 36em;
+}
+
+.check {
+  display: grid;
+  gap: 20px;
+}
+
+.check h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+
+.check h3 {
+  font-size: 17px;
+  margin: 22px 0 8px;
+}
+
+.check p {
+  margin: 0 0 12px;
+}
+
+.file-button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+
+.file-name {
+  margin-top: -6px;
+  overflow-wrap: anywhere;
+}
+
+.which {
+  margin: 16px 0 8px;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  min-width: 0;
+}
+
+.which legend {
+  padding: 0 6px;
+  margin-left: -6px;
+  font-weight: 600;
+}
+
+.which .chips {
+  margin: 4px 0 10px;
+}
+
+.finder {
+  margin-top: 8px;
+}
+
+.app .finder input.search {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 16px;
+}
+
+.lines {
+  margin: 8px 0 4px;
+}
+
+.lines summary,
+.check-result details summary,
+.how details summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 4px 0;
+}
+
+/* The lines scroll sideways inside their box on a phone, never the page. */
+.table-scroll {
+  overflow-x: auto;
+  margin: 8px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.table-scroll table {
+  width: 100%;
+  min-width: 38em;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table-scroll th,
+.table-scroll td {
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+.table-scroll tr:last-child td {
+  border-bottom: 0;
+}
+
+.table-scroll th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.table-scroll .num,
+.table-scroll .date,
+.table-scroll .category {
+  white-space: nowrap;
+}
+
+.table-scroll .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.check-result .facts dd {
+  font-variant-numeric: tabular-nums;
+}
+
+.stores,
+.by-card {
+  margin: 0 0 12px;
+  padding-left: 1.1em;
+}
+
+.stores li,
+.by-card li {
+  margin-bottom: 8px;
+}
+
+.store {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.how pre {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.how code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.how li {
+  margin-bottom: 8px;
+}
+
+/* Arrive, from app.css's motion vocabulary: a file's panel and the answer
+   appear because the visitor chose a file. */
+.settled .arrive {
+  transition:
+    opacity var(--arrive) var(--ease-out),
+    transform var(--arrive) var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(var(--rise));
+  }
+}

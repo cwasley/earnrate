@@ -7,6 +7,7 @@ const DATE = 'Date'
 const DESCRIPTION = 'Description'
 const AMOUNT = 'Amount'
 const CATEGORY = 'Category'
+export const AMEX_COLUMNS = [DATE, DESCRIPTION, AMOUNT, CATEGORY]
 
 export function isAmexCsv(header: string[]): boolean {
   return [DATE, DESCRIPTION, AMOUNT].every((c) => header.includes(c))

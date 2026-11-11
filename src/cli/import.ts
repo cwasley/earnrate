@@ -165,6 +165,17 @@ function formatAnalysis(
       )
     }
   }
+  if (a.notTaken.length > 0) {
+    out.push(
+      '',
+      "Where earnrate's data says the store doesn't take the card you used (counted anyway: the statement shows it did):",
+    )
+    for (const n of a.notTaken) {
+      out.push(
+        `  ${n.merchant}: ${labelOf(n.cardId)}, ${String(n.count)} × ${dollarsAndCents(n.spend)}`,
+      )
+    }
+  }
   out.push('')
   if (a.bookings.length > 0) {
     const last = new Map<string, number>()

@@ -4,6 +4,7 @@
 // recording. /api/* is the same wallet sync as earnrate.dev's, bound to the
 // same hosted server, so sync can be tried here with a test wallet.
 import { api, type ApiEnv } from './api.ts'
+import { headerPolicy, STATEMENT_PATHS } from './statement-policy.ts'
 
 type Assets = { fetch(request: Request): Promise<Response> }
 
@@ -23,6 +24,18 @@ export default {
     const response = await env.ASSETS.fetch(request)
     const headers = new Headers(response.headers)
     headers.set('x-robots-tag', 'noindex, nofollow')
+    if (STATEMENT_PATHS.includes(pathname) && response.ok) {
+      // The page's own policy, which names its hashes, as earnrate.dev's
+      // _headers sends it.
+      const html = await response.text()
+      headers.set('content-security-policy', headerPolicy(html))
+      headers.delete('content-length')
+      return new Response(html, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      })
+    }
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,

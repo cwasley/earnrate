@@ -223,6 +223,8 @@ It totals what each card earned against the best card in your wallet for each pu
 - For a merchant earnrate doesn't know, it uses the statement's category and marks the row, since another issuer may code it differently.
 - `--valuation points-heavy` values Amex and Chase points at transfer rates instead of your wallet's values, which can change which card wins.
 
+On earnrate.dev, the [statement check](https://earnrate.dev/statement) runs the same comparison in your browser, against the wallet saved there or cards you tap for that check. The page is a single file whose security policy forbids every request once it has loaded, so the file never leaves your device, and it saves nothing. Recording totals from a statement (`--apply`) stays on the command line.
+
 ## Supported cards
 
 101 cards, each modeled from the issuer's own terms and checked weekly against them:

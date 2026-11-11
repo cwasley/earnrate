@@ -1,6 +1,6 @@
 import { bonusStatus, countsTowardBonus } from '../engine/bonus.ts'
 import { HALF_CENT } from '../engine/compare.ts'
-import { capByKey, categoryMatches } from '../engine/evaluate.ts'
+import { capByKey, categoryMatches, usableAt } from '../engine/evaluate.ts'
 import { milestoneProgress } from '../engine/milestones.ts'
 import { periodKey } from '../engine/periods.ts'
 import { recommend } from '../engine/recommend.ts'
@@ -18,7 +18,11 @@ import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
 import type { Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
-import { cleanDescriptor, type StatementLine } from './statement.ts'
+import {
+  cleanDescriptor,
+  descriptorNames,
+  type StatementLine,
+} from './statement.ts'
 
 export type CardLine = { cardId: string; line: StatementLine }
 
@@ -41,6 +45,15 @@ export type MissedRewards = {
   best: number // on earnrate's pick
   bestCardId: string
   bestCard: string
+}
+
+// A purchase on a card earnrate's data says the store doesn't take. The
+// statement shows it did, so the purchase counts on both sides.
+export type NotTaken = {
+  merchant: string
+  cardId: string
+  count: number
+  spend: number
 }
 
 export type CodingMismatch = {
@@ -86,6 +99,7 @@ export type StatementAnalysis = {
   byCard: CardTotals[]
   missed: MissedRewards[]
   coding: CodingMismatch[]
+  notTaken: NotTaken[]
   bookings: (CardLine & { booking: CapBooking })[]
   // Enrolled statement credits used this period, like record_purchase books.
   credits: (CardLine & { booking: CreditBooking })[]
@@ -95,18 +109,19 @@ export type StatementAnalysis = {
   milestones: MilestoneImport[]
 }
 
-function resolveLine(
+export function resolveLine(
   catalog: Catalog,
   line: StatementLine,
 ): { name: string; merchant: MerchantResolution; known: MerchantResolution } {
-  const cleaned = cleanDescriptor(line.description)
-  // "NAME-CHEAP.COM* LV0I6X": the part before the asterisk names the merchant.
-  const head = cleaned.split('*')[0]?.trim() ?? ''
-  let known = resolveMerchant(catalog, cleaned, null)
-  if (known.source === 'none' && head !== '' && head !== cleaned) {
-    const retry = resolveMerchant(catalog, head, null)
+  const names = descriptorNames(line.description)
+  let known = resolveMerchant(catalog, names[0] ?? '', null)
+  for (const n of names.slice(1)) {
+    if (known.source !== 'none') break
+    const retry = resolveMerchant(catalog, n, null)
     if (retry.source !== 'none') known = retry
   }
+  const cleaned = cleanDescriptor(line.description)
+  const head = cleaned.split('*')[0]?.trim() ?? ''
   const merchant = withCallerCategory(known, line.category)
   const name =
     known.source === 'none'
@@ -158,6 +173,7 @@ export function analyzeStatement(
   const byCard = new Map<string, CardTotals>()
   const missed = new Map<string, MissedRewards>()
   const coding = new Map<string, CodingMismatch>()
+  const notTaken = new Map<string, NotTaken>()
   const bookings: StatementAnalysis['bookings'] = []
   const credits: StatementAnalysis['credits'] = []
   let outsideCurrentPeriod = 0
@@ -305,6 +321,29 @@ export function analyzeStatement(
       coding.set(name, mismatch)
     }
 
+    const card = catalog.cards.find((c) => c.id === cardId)
+    const network =
+      card && !card.only_at && card.network !== 'store' ? card.network : null
+    const refused =
+      card !== undefined && network !== null && !usableAt(card, merchant)
+    // The statement shows the store took the card's network here.
+    const took: MerchantResolution =
+      refused && merchant.accepts
+        ? { ...merchant, accepts: [...merchant.accepts, network] }
+        : merchant
+    if (refused) {
+      const key = `${name}|${cardId}`
+      const entry = notTaken.get(key) ?? {
+        merchant: name,
+        cardId,
+        count: 0,
+        spend: 0,
+      }
+      entry.count++
+      entry.spend += line.amount
+      notTaken.set(key, entry)
+    }
+
     const purchase: Purchase = {
       merchant: line.description,
       amount: line.amount,
@@ -313,10 +352,10 @@ export function analyzeStatement(
       country: 'US',
     }
     // Past statements don't say which credits were used, so they're left out.
-    const used = recommend(catalog, actual, purchase, merchant, {
+    const used = recommend(catalog, actual, purchase, took, {
       credits: false,
     }).ranked.find((r) => r.cardId === cardId)
-    const top = recommend(catalog, simulated, purchase, merchant, {
+    const top = recommend(catalog, simulated, purchase, took, {
       credits: false,
     }).ranked[0]
     if (!used || !top) continue
@@ -379,6 +418,9 @@ export function analyzeStatement(
       }))
       .sort((a, b) => b.best - b.earned - (a.best - a.earned)),
     coding: [...coding.values()].sort((a, b) => b.count - a.count),
+    notTaken: [...notTaken.values()]
+      .map((n) => ({ ...n, spend: roundCents(n.spend) }))
+      .sort((a, b) => b.spend - a.spend),
     bookings,
     credits,
     outsideCurrentPeriod,

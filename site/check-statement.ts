@@ -1,0 +1,493 @@
+// Checks the built statement check (yarn site:build first) in real browsers:
+// served with site-dist/_headers the way earnrate.dev serves it, it makes no
+// request after it loads, its policy blocks one when the page's own code
+// tries, it reads a file and answers with the network off, and it leaves the
+// browser's storage as it found it. Synthetic files only.
+//
+//   yarn site:check-statement [--shots <dir>]
+//
+// --shots also saves screenshots at 390px and 1280px, light and dark, and
+// the page's text as page-text.md, for review.
+import { readFile, mkdir, writeFile } from 'node:fs/promises'
+import { createServer, type IncomingMessage } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import path from 'node:path'
+import { parseArgs } from 'node:util'
+import type { Browser, Page } from 'playwright'
+import { AMEX_CSV, CHASE_CSV, OTHER_CSV } from '../tests/statement-fixtures.ts'
+import { headerPolicy } from './statement-policy.ts'
+
+const DIST = path.join(import.meta.dirname, '..', 'site-dist')
+const { values } = parseArgs({ options: { shots: { type: 'string' } } })
+const shots = values.shots ? path.resolve(values.shots) : null
+
+let failed = 0
+function check(name: string, ok: boolean, detail = '') {
+  if (!ok) failed++
+  console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}${detail ? `: ${detail}` : ''}`)
+}
+
+// site-dist/_headers, applied as Cloudflare does: every matching block, so a
+// header two blocks set is sent twice and both apply.
+async function headerRules() {
+  const rules: { path: string; headers: [string, string][] }[] = []
+  for (const line of (
+    await readFile(path.join(DIST, '_headers'), 'utf8')
+  ).split('\n')) {
+    if (line.startsWith('/')) rules.push({ path: line.trim(), headers: [] })
+    else if (line.startsWith('  ') && rules.length > 0) {
+      const [name = '', ...rest] = line.trim().split(':')
+      rules.at(-1)?.headers.push([name, rest.join(':').trim()])
+    }
+  }
+  return (url: string) =>
+    rules
+      .filter((r) => r.path === url || r.path === '/*')
+      .flatMap((r) => r.headers)
+}
+
+type Logged = { at: number; method: string; url: string }
+
+async function serve() {
+  const headersFor = await headerRules()
+  const log: Logged[] = []
+  const server = createServer((req: IncomingMessage, res) => {
+    const url = new URL(req.url ?? '/', 'http://localhost')
+    log.push({ at: Date.now(), method: req.method ?? '', url: url.pathname })
+    if (url.pathname === '/count') {
+      res.writeHead(204).end()
+      return
+    }
+    const file =
+      url.pathname === '/statement'
+        ? 'statement.html'
+        : url.pathname === '/blank'
+          ? null
+          : url.pathname.slice(1)
+    const headers = new Map<string, string[]>()
+    for (const [name, value] of headersFor(url.pathname))
+      headers.set(name, [...(headers.get(name) ?? []), value])
+    for (const [name, list] of headers) res.setHeader(name, list)
+    if (file === null) {
+      res.setHeader('content-type', 'text/html')
+      res.end('<!doctype html><title>blank</title>')
+      return
+    }
+    readFile(path.join(DIST, file))
+      .then((body) => {
+        res.setHeader(
+          'content-type',
+          file.endsWith('.html') ? 'text/html; charset=utf-8' : 'text/plain',
+        )
+        res.end(body)
+      })
+      .catch(() => res.writeHead(404).end())
+  })
+  await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
+  const { port } = server.address() as AddressInfo
+  return { origin: `http://127.0.0.1:${String(port)}`, log, server }
+}
+
+const WALLET = JSON.stringify({
+  valuations: {},
+  memberships: [],
+  cards: [
+    'amex-gold',
+    'amex-blue-cash-preferred',
+    'chase-sapphire-preferred',
+    'chase-freedom-unlimited',
+    'citi-double-cash',
+  ].map((id) => ({ id, cap_usage: {}, activated: [] })),
+})
+
+const csv = (name: string, text: string) => ({
+  name,
+  mimeType: 'text/csv',
+  buffer: Buffer.from(text),
+})
+
+type Storage = {
+  local: Record<string, string>
+  session: number
+  cookie: string
+  databases: string[]
+  caches: string[]
+}
+
+const storage = (page: Page) =>
+  page.evaluate(async (): Promise<Storage> => {
+    const local: Record<string, string> = {}
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i) ?? ''
+      local[key] = localStorage.getItem(key) ?? ''
+    }
+    const databases =
+      'databases' in indexedDB
+        ? (await indexedDB.databases()).map((d) => d.name ?? '')
+        : []
+    return {
+      local,
+      session: sessionStorage.length,
+      cookie: document.cookie,
+      databases,
+      caches: 'caches' in globalThis ? await caches.keys() : [],
+    }
+  })
+
+async function open(
+  browser: Browser,
+  origin: string,
+  options: {
+    width: number
+    dark?: boolean
+    wallet?: boolean
+  },
+) {
+  const context = await browser.newContext({
+    viewport: { width: options.width, height: 900 },
+    colorScheme: options.dark ? 'dark' : 'light',
+    ...(options.wallet
+      ? {
+          storageState: {
+            cookies: [],
+            origins: [
+              {
+                origin,
+                localStorage: [{ name: 'earnrate:wallet', value: WALLET }],
+              },
+            ],
+          },
+        }
+      : {}),
+  })
+  const page = await context.newPage()
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  const requests: string[] = []
+  const response = await page.goto(`${origin}/statement`, {
+    waitUntil: 'load',
+  })
+  const policy = (await response?.headersArray())
+    ?.filter((h) => h.name.toLowerCase() === 'content-security-policy')
+    .map((h) => h.value)
+  await page.locator('#choose-title').waitFor()
+  page.on('request', (r) => requests.push(r.url()))
+  return { context, page, errors, requests, policy: policy ?? [] }
+}
+
+const fileInput = (page: Page) => page.locator('input[type=file]')
+
+async function pickFileCard(page: Page, nth: number, name: string) {
+  await page
+    .locator('fieldset.which')
+    .nth(nth)
+    .getByRole('button', { name, exact: true })
+    .click()
+}
+
+async function tapCard(page: Page, name: string) {
+  await page
+    .locator('.quick-cards')
+    .getByRole('button', { name, exact: true })
+    .click()
+}
+
+async function privacyChecks(
+  browser: Browser,
+  label: string,
+  origin: string,
+  log: Logged[],
+) {
+  const { context, page, errors, requests, policy } = await open(
+    browser,
+    origin,
+    { width: 390, wallet: true },
+  )
+  const expected = headerPolicy(
+    await readFile(path.join(DIST, 'statement.html'), 'utf8'),
+  )
+  check(
+    `${label}: the page arrives with its own policy as a header`,
+    expected.includes("script-src 'sha256-") && policy.includes(expected),
+    policy.join(' | '),
+  )
+  const loaded = Date.now()
+  const before = await storage(page)
+
+  // Code run in the page tries to send something; the policy stops it.
+  const attempt = await page.evaluate(async () => {
+    const seen: string[] = []
+    document.addEventListener('securitypolicyviolation', (e) =>
+      seen.push(e.effectiveDirective),
+    )
+    let fetched = 'sent'
+    try {
+      await fetch('/count', { method: 'POST', body: 'statement-check' })
+    } catch {
+      fetched = 'blocked'
+    }
+    navigator.sendBeacon('/count', 'statement-check')
+    const image = new Image()
+    image.src = '/count?image'
+    const script = document.createElement('script')
+    script.src = '/count?script'
+    document.head.append(script)
+    // A script and a style written into the page after it loaded, as an
+    // injection would: neither matches a hash the policy names.
+    const injected = document.createElement('script')
+    injected.textContent = 'document.body.dataset.injected = "ran"'
+    document.head.append(injected)
+    const style = document.createElement('style')
+    style.textContent = 'body { outline: 9px solid red }'
+    document.head.append(style)
+    await new Promise((r) => setTimeout(r, 500))
+    return {
+      fetched,
+      seen: [...new Set(seen)],
+      injectedRan: document.body.dataset.injected === 'ran',
+      styled: getComputedStyle(document.body).outlineWidth === '9px',
+    }
+  })
+  check(
+    `${label}: fetch('/count') run in the page is refused`,
+    attempt.fetched === 'blocked',
+  )
+  check(
+    `${label}: the browser reports its policy stopped a fetch, a beacon, an image and a script`,
+    ['connect-src', 'img-src', 'script-src-elem'].every((d) =>
+      attempt.seen.includes(d),
+    ),
+    attempt.seen.join(', '),
+  )
+  check(
+    `${label}: a script added to the page doesn't run, and a style added isn't applied`,
+    !attempt.injectedRan &&
+      !attempt.styled &&
+      attempt.seen.includes('style-src-elem'),
+  )
+  check(
+    `${label}: none of those reached the server`,
+    !log.some((l) => l.at >= loaded),
+  )
+
+  // Online: two files for two cards, an answer, then Forget.
+  requests.length = 0
+  await fileInput(page).setInputFiles([csv('activity.csv', AMEX_CSV)])
+  await pickFileCard(page, 0, 'Amex Gold')
+  await page.locator('#result-title').waitFor({ timeout: 10_000 })
+  await fileInput(page).setInputFiles([csv('Chase_Activity.CSV', CHASE_CSV)])
+  await pickFileCard(page, 1, 'Chase Sapphire Preferred')
+  const byCard = await page.locator('.by-card li').count()
+  check(`${label}: two files for two cards`, byCard === 2, String(byCard))
+  await page.getByRole('button', { name: 'Forget this file' }).first().click()
+  await page.getByRole('button', { name: 'Forget this file' }).first().click()
+  check(
+    `${label}: Forget clears both files`,
+    (await page.locator('#result-title').count()) === 0 &&
+      (await page.locator('fieldset.which').count()) === 0,
+  )
+  check(
+    `${label}: reading files and answering made no request`,
+    requests.length === 0,
+    requests.join(', '),
+  )
+  check(
+    `${label}: the server received nothing after the page loaded`,
+    !log.some((l) => l.at >= loaded),
+    log
+      .filter((l) => l.at >= loaded)
+      .map((l) => `${l.method} ${l.url}`)
+      .join(', '),
+  )
+  const after = await storage(page)
+  check(
+    `${label}: storage is the same before and after`,
+    JSON.stringify(before) === JSON.stringify(after),
+    JSON.stringify(after).slice(0, 100),
+  )
+  check(`${label}: no page errors`, errors.length === 0, errors.join(' | '))
+  await context.close()
+
+  // Offline: a visitor with no saved wallet turns the network off after the
+  // page loads, then checks a file.
+  const offline = await open(browser, origin, { width: 390 })
+  const empty = await storage(offline.page)
+  await offline.context.setOffline(true)
+  await fileInput(offline.page).setInputFiles([csv('activity.csv', AMEX_CSV)])
+  await pickFileCard(offline.page, 0, 'Amex Platinum')
+  await tapCard(offline.page, 'Amex Blue Cash Preferred')
+  const answer = offline.page.locator('#result-title')
+  await answer.waitFor({ timeout: 10_000 })
+  check(
+    `${label}: offline, with no saved wallet, an Amex file gets an answer`,
+    (await offline.page.locator('.stores li').count()) > 0,
+  )
+  check(
+    `${label}: offline, no request was attempted`,
+    offline.requests.length === 0,
+    offline.requests.join(', '),
+  )
+  check(
+    `${label}: offline, storage stays empty`,
+    JSON.stringify(empty) === JSON.stringify(await storage(offline.page)),
+  )
+  check(
+    `${label}: offline, no page errors`,
+    offline.errors.length === 0,
+    offline.errors.join(' | '),
+  )
+  await offline.context.close()
+}
+
+type State = {
+  name: string
+  wallet: boolean
+  run: (page: Page) => Promise<void>
+}
+
+const STATES: State[] = [
+  { name: '1-before-a-file', wallet: false, run: async () => {} },
+  {
+    name: '2-amex-no-saved-wallet',
+    wallet: false,
+    run: async (page) => {
+      await fileInput(page).setInputFiles([csv('activity.csv', AMEX_CSV)])
+      await pickFileCard(page, 0, 'Amex Platinum')
+      await tapCard(page, 'Amex Blue Cash Preferred')
+      await tapCard(page, 'Chase Freedom Unlimited')
+      await tapCard(page, 'Citi Double Cash')
+      await page.locator('details.lines summary').first().click()
+    },
+  },
+  {
+    name: '3-chase-saved-wallet',
+    wallet: true,
+    run: async (page) => {
+      await fileInput(page).setInputFiles([
+        csv('Chase_Activity.CSV', CHASE_CSV),
+      ])
+      await pickFileCard(page, 0, 'Chase Sapphire Preferred')
+    },
+  },
+  {
+    name: '4-two-files-two-cards',
+    wallet: true,
+    run: async (page) => {
+      await fileInput(page).setInputFiles([
+        csv('activity.csv', AMEX_CSV),
+        csv('Chase_Activity.CSV', CHASE_CSV),
+      ])
+      await pickFileCard(page, 0, 'Amex Gold')
+      await pickFileCard(page, 1, 'Chase Sapphire Preferred')
+    },
+  },
+  {
+    name: '5-wrong-file-types',
+    wallet: false,
+    run: async (page) => {
+      await fileInput(page).setInputFiles([
+        {
+          name: 'Statement.pdf',
+          mimeType: 'application/pdf',
+          buffer: Buffer.from('%PDF-1.4 synthetic'),
+        },
+        {
+          name: 'activity.xlsx',
+          mimeType:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          buffer: Buffer.from('synthetic'),
+        },
+        csv('other-bank.csv', OTHER_CSV),
+      ])
+    },
+  },
+  {
+    name: '6-after-forget',
+    wallet: false,
+    run: async (page) => {
+      await fileInput(page).setInputFiles([csv('activity.csv', AMEX_CSV)])
+      await pickFileCard(page, 0, 'Amex Platinum')
+      await page.getByRole('button', { name: 'Forget this file' }).click()
+    },
+  },
+]
+
+async function screenshots(browser: Browser, origin: string, dir: string) {
+  await mkdir(dir, { recursive: true })
+  const text: string[] = ['# The statement check, every sentence', '']
+  for (const state of STATES)
+    for (const width of [390, 1280])
+      for (const dark of [false, true]) {
+        const { context, page, errors } = await open(browser, origin, {
+          width,
+          dark,
+          wallet: state.wallet,
+        })
+        await state.run(page)
+        await page.waitForTimeout(400)
+        await page.screenshot({
+          path: path.join(
+            dir,
+            `${state.name}-${String(width)}-${dark ? 'dark' : 'light'}.png`,
+          ),
+          fullPage: true,
+        })
+        const wide = await page.evaluate(
+          () => document.documentElement.scrollWidth > window.innerWidth,
+        )
+        check(`${state.name} at ${String(width)}px: no sideways scroll`, !wide)
+        check(
+          `${state.name}: no page errors`,
+          errors.length === 0,
+          errors.join(' | '),
+        )
+        if (width === 390 && !dark) {
+          await page.evaluate(() => {
+            for (const d of document.querySelectorAll('details')) d.open = true
+          })
+          await page.waitForTimeout(400)
+          const body =
+            state.name === '1-before-a-file'
+              ? await page.locator('main').innerText()
+              : await page.locator('#check').innerText()
+          text.push(
+            `## ${state.name}${state.wallet ? ' (a wallet saved in the browser)' : ' (no saved wallet)'}`,
+            '',
+            state.name === '1-before-a-file'
+              ? 'The whole page, before a file is chosen, with every collapsed section opened:'
+              : 'The check itself (the part of the page that changes), with every collapsed section opened:',
+            '',
+            '```text',
+            body.trim(),
+            '```',
+            '',
+          )
+        }
+        await context.close()
+      }
+  await writeFile(path.join(dir, 'page-text.md'), text.join('\n'))
+}
+
+const { chromium, webkit } = await import('playwright')
+const { origin, log, server } = await serve()
+try {
+  for (const [label, type] of [
+    ['Chromium', chromium],
+    ['WebKit', webkit],
+  ] as const) {
+    const browser = await type.launch()
+    try {
+      await privacyChecks(browser, label, origin, log)
+      if (shots && label === 'Chromium')
+        await screenshots(browser, origin, shots)
+    } finally {
+      await browser.close()
+    }
+  }
+} finally {
+  server.close()
+}
+if (failed > 0) {
+  console.log(`${String(failed)} check(s) failed`)
+  process.exitCode = 1
+}

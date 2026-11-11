@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Check a statement against your cards · earnrate</title>
+    <meta
+      name="description"
+      content="See what an Amex or Chase activity file earned, and what the best of your cards would have. The file is read on your device and never sent."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://earnrate.dev/statement" />
+    <meta name="theme-color" content="#9a5020" />
+    <link rel="icon" href="/favicon.svg?v=2" />
+    <link rel="stylesheet" href="/pages.css" />
+    <script type="module" src="./statement/main.tsx"></script>
+  </head>
+  <body>
+    <main>
+      <!--earnrate:header-->
+      <h1>Check a statement against your cards</h1>
+      <p class="lede">
+        Choose an American Express or Chase activity file. earnrate works out
+        what those purchases earned on the card you used, what the best of your
+        cards would have earned, and the stores where it made a difference.
+      </p>
+      <p>
+        The file is read by this page, on your device, and it can't leave: once
+        the page has loaded, your browser won't let it send or load anything. To
+        see for yourself, turn on airplane mode before you choose a file. It
+        works the same.
+      </p>
+      <div id="check" class="app">
+        <noscript>
+          <p class="callout">
+            The check runs as a script in this page, so it needs JavaScript
+            turned on.
+          </p>
+        </noscript>
+      </div>
+
+      <section class="how">
+        <h2>What happens to your file</h2>
+        <p>
+          Your browser reads the file you choose and hands it to this page's
+          script, which works through it in memory. Nothing is uploaded:
+          earnrate's server never receives the file, its purchases or the
+          result. Nothing is saved: not the file, not the result, nothing in
+          your browser's storage or cookies. If a wallet is saved in this
+          browser, the page reads it to know your cards and doesn't change it.
+          The page counts nothing about your visit.
+        </p>
+        <p>
+          Forget this file drops a file and everything read from it. Reloading
+          or closing the page does the same.
+        </p>
+        <h2>How you can check</h2>
+        <ul>
+          <li>
+            Airplane mode. Everything the page needs is inside it, so once it
+            has loaded it works with no connection at all.
+          </li>
+          <li>
+            Your browser's developer tools. The Network tab shows one request,
+            for the page itself, and choosing a file adds none. Cloudflare,
+            which hosts earnrate.dev, adds its visit-counting script to the
+            site's pages; on this one the console shows the browser refused it.
+          </li>
+          <li>
+            The page source. It's one file, with the code that reads your
+            statement written into it, and its security policy is the first meta
+            tag after the character set.
+          </li>
+        </ul>
+        <p>
+          The policy, which your browser enforces whatever the page's code
+          tries:
+        </p>
+        <pre><code><!--earnrate:statement-policy--></code></pre>
+        <details>
+          <summary>What each part means</summary>
+          <ul>
+            <li>
+              <code>default-src 'none'</code>: the page may load nothing, from
+              anywhere, unless a rule below allows it.
+            </li>
+            <li>
+              <code>script-src 'sha256-…'</code>: it runs only the one script
+              written into the page, the one with that SHA-256 fingerprint. If a
+              single character of it changed, or another script were added, your
+              browser would refuse to run it. It can't load a script from
+              anywhere, even earnrate.dev.
+            </li>
+            <li>
+              <code>style-src 'sha256-…'</code>: the same for the page's styles,
+              so they can't be changed or added to either.
+            </li>
+            <li>
+              <code>img-src data:</code>: images only from inside the page, like
+              its icon.
+            </li>
+            <li>
+              <code>connect-src 'none'</code>: its code can't make a request of
+              any kind, so it can't upload or report anything.
+            </li>
+            <li>
+              <code>form-action 'none'</code>: no form on it can send anything.
+            </li>
+            <li>
+              <code>base-uri 'none'</code> and
+              <code>frame-ancestors 'none'</code>: nothing can change where its
+              links lead, and no other site can show it inside its own page.
+            </li>
+          </ul>
+          <p>
+            Links still work: following one opens another page and leaves the
+            file behind.
+          </p>
+        </details>
+        <p>
+          The page's code is open source, in
+          <a href="https://github.com/cwasley/earnrate/tree/main/site/statement"
+            >earnrate's repository</a
+          >. The <a href="/privacy#statement">privacy page</a> covers the rest
+          of earnrate.dev.
+        </p>
+      </section>
+      <!--earnrate:footer-->
+    </main>
+  </body>
+</html>
