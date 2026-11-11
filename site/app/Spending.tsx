@@ -198,8 +198,8 @@ export function Spending({
     loadList<Row>('spending', TYPICAL_MONTHLY_SPEND),
   )
   const [adding, setAdding] = useState('')
-  // Once the amounts are someone's own, they stay in view.
-  const [editing, setEditing] = useState(() => !isTypical(rows))
+  // Closed on every visit: the line above them says what they add up to.
+  const [editing, setEditing] = useState(false)
   const [moreSingles, setMoreSingles] = useState(false)
   const [morePairs, setMorePairs] = useState(false)
   // Cards a card or comparison page asked about (#spending&card=<id>):

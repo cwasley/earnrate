@@ -2,7 +2,7 @@ import type { PaymentMethod } from '../../src/schema/card.ts'
 import { AbroadToggle } from './AbroadToggle.tsx'
 import { PayingWith } from './PayingWith.tsx'
 
-// How one purchase is made. Best for and My wallet share it for the visit;
+// How one purchase is made. At a store and My wallet share it for the visit;
 // it isn't saved, so the next visit starts at "Not sure" in the U.S.
 export type Purchase = { abroad: boolean; payment: PaymentMethod | null }
 

@@ -63,6 +63,7 @@ import { anniversaryOf, type Spending } from '../../src/engine/renewal.ts'
 import { CardArt } from './CardArt.tsx'
 import { KeepOrReplace } from './KeepOrReplace.tsx'
 import { PlaceKinds } from './PlaceKinds.tsx'
+import { kindCategory } from './place-kinds.ts'
 import { QuickCards } from './QuickCards.tsx'
 import { Logo } from './Logo.tsx'
 import { track } from './track.ts'
@@ -178,7 +179,10 @@ function ask(
     catalog,
     wallet,
     purchase,
-    withCallerCategory(resolvePlace(catalog, text, null), kind),
+    withCallerCategory(
+      resolvePlace(catalog, text, null),
+      kind === null ? null : kindCategory(kind),
+    ),
   )
 }
 
@@ -2370,48 +2374,8 @@ export function MyWallet({
   return (
     <div class="panels">
       {syncTop}
-      <section class="panel first">
-        <h3>Your cards</h3>
-        <fieldset class="lock" disabled={locked}>
-          <CardList
-            wallet={wallet}
-            open={openCard}
-            setOpen={setOpenCard}
-            asked={keepAsked}
-            onAsk={askKeep}
-            onChange={apply}
-            onRemove={remove}
-          />
-          <AddCard
-            wallet={wallet}
-            onAdd={(cardId) => apply(addOp(cardId), cardId)}
-          />
-          <p class="quick-open">
-            <button type="button" class="link" onClick={openGrid}>
-              Pick from common cards
-            </button>
-          </p>
-        </fieldset>
-        {messageLine}
-        <p class="pass-hint">
-          At the register: your{' '}
-          <button
-            type="button"
-            class="link"
-            onClick={() => {
-              track('cta-pass-hint')
-              document.getElementById('cheat-sheet')?.scrollIntoView()
-            }}
-          >
-            cheat sheet
-          </button>{' '}
-          shows which card to use for everything, and goes in Apple Wallet.
-        </p>
-        <InstallHint />
-      </section>
-
       <section
-        class="panel"
+        class="panel first"
         aria-labelledby="wallet-ask-title"
         ref={askSection}
       >
@@ -2516,6 +2480,46 @@ export function MyWallet({
             </div>
           ) : null}
         </div>
+      </section>
+
+      <section class="panel">
+        <h3>Your cards</h3>
+        <fieldset class="lock" disabled={locked}>
+          <CardList
+            wallet={wallet}
+            open={openCard}
+            setOpen={setOpenCard}
+            asked={keepAsked}
+            onAsk={askKeep}
+            onChange={apply}
+            onRemove={remove}
+          />
+          <AddCard
+            wallet={wallet}
+            onAdd={(cardId) => apply(addOp(cardId), cardId)}
+          />
+          <p class="quick-open">
+            <button type="button" class="link" onClick={openGrid}>
+              Pick from common cards
+            </button>
+          </p>
+        </fieldset>
+        {messageLine}
+        <p class="pass-hint">
+          At the register: your{' '}
+          <button
+            type="button"
+            class="link"
+            onClick={() => {
+              track('cta-pass-hint')
+              document.getElementById('cheat-sheet')?.scrollIntoView()
+            }}
+          >
+            cheat sheet
+          </button>{' '}
+          shows which card to use for everything, and goes in Apple Wallet.
+        </p>
+        <InstallHint />
       </section>
 
       <ThisQuarter wallet={wallet} onOpenCard={openCardSettings} />

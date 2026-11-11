@@ -853,7 +853,7 @@ function renderIndex(all: Page[]): string {
         <label for="filter">Find a store or category</label>
         <input id="filter" type="search" placeholder="Costco, gas, Netflix…" autocomplete="off" spellcheck="false" />
       </div>
-      <p id="no-match" class="next" hidden>No page for that yet. <a href="/">Ask earnrate.dev</a>, which also knows stores without a page.</p>
+      <p id="no-match" class="next" hidden>No page for that yet. <a href="/#best">Ask earnrate.dev</a>, which also knows stores without a page.</p>
       ${section(
         'Categories',
         all.filter((p) => p.merchant === null),
@@ -2148,7 +2148,7 @@ await writeFile(
     noindex: true,
     body: `
       <h1>That page doesn't exist</h1>
-      <p>Try the <a href="/">card comparison</a>, or the <a href="/best/">best card for every store and category</a>.</p>`,
+      <p>Try the <a href="/#best">card comparison</a>, or the <a href="/best/">best card for every store and category</a>.</p>`,
     jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage' },
   }),
 )

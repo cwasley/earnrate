@@ -24,6 +24,7 @@
   preposition: on
   aliases:
     [fast food restaurants, coffee shop, coffee shops, coffee, cafe, cafes]
+  places: [Coffee shop]
   mccs: [5814]
 
 - id: grocery

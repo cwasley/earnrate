@@ -10,6 +10,10 @@ export const CategorySchema = z
     mccs: z.array(Mcc).default([]),
     // Everyday words people search by ("groceries"), besides the name.
     aliases: z.array(z.string().min(1)).default([]),
+    // Kinds of place this category covers that earnrate.dev offers by name
+    // for a store it doesn't know, besides the category itself: "Coffee
+    // shop" for fast food. Each is one of the aliases, so search finds it too.
+    places: z.array(z.string().min(1)).optional(),
     // What a ranking here can't express, like whether the purchase can go on a
     // card at all. Answers lead with it and their pick is low confidence.
     // Subcategories without one inherit it.
@@ -33,6 +37,13 @@ export const CategorySchema = z
   .refine((c) => c.cards === undefined || c.note !== undefined, {
     message: "a category's cards are the ones its note names",
   })
+  .refine(
+    (c) =>
+      (c.places ?? []).every((p) =>
+        c.aliases.some((a) => a.toLowerCase() === p.toLowerCase()),
+      ),
+    { message: "each of a category's places is one of its aliases" },
+  )
 
 export const CategoriesFileSchema = z.array(CategorySchema).min(1)
 

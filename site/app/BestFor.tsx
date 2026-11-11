@@ -44,6 +44,7 @@ import { CardArt } from './CardArt.tsx'
 import { track } from './track.ts'
 import { SearchInput } from './SearchInput.tsx'
 import { PlaceKinds } from './PlaceKinds.tsx'
+import { kindCategory } from './place-kinds.ts'
 import { engineOptions, type Saved, type Settings } from './settings.ts'
 import {
   EVERYDAY_PURCHASES,
@@ -91,7 +92,10 @@ function explore(
     engineOptions(settings, saved),
     kind === null
       ? undefined
-      : withCallerCategory(resolvePlace(catalog, merchant, null), kind),
+      : withCallerCategory(
+          resolvePlace(catalog, merchant, null),
+          kindCategory(kind),
+        ),
   )
 }
 

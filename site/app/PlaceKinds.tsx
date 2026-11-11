@@ -22,7 +22,7 @@ export function PlaceKinds({
     if (next !== null) track('place-kind')
     onKind(next)
   }
-  const inMore = KINDS.more.some((k) => k.category === kind)
+  const inMore = KINDS.more.some((k) => k.key === kind)
   return (
     <div class="place-kinds" role="group" aria-labelledby="place-kinds-ask">
       <p id="place-kinds-ask">
@@ -32,10 +32,10 @@ export function PlaceKinds({
         {KINDS.quick.map((k) => (
           <button
             type="button"
-            class={kind === k.category ? 'chip on' : 'chip'}
-            aria-pressed={kind === k.category}
-            key={k.category}
-            onClick={() => pick(kind === k.category ? null : k.category)}
+            class={kind === k.key ? 'chip on' : 'chip'}
+            aria-pressed={kind === k.key}
+            key={k.key}
+            onClick={() => pick(kind === k.key ? null : k.key)}
           >
             {k.label}
           </button>
@@ -48,7 +48,7 @@ export function PlaceKinds({
         >
           <option value="">Something else</option>
           {KINDS.more.map((k) => (
-            <option value={k.category} key={k.category}>
+            <option value={k.key} key={k.key}>
               {k.label}
             </option>
           ))}

@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.10.5
+
+No rates changed. Categories can name the kinds of place they cover in a new `places` field, each one of the category's aliases. When earnrate.dev doesn't know a store and asks what kind of place it is, each place is offered by name beside the category. Fast food (`dining.fast_food`) names "Coffee shop", since that's where coffee shops already code (its aliases), so a coffee shop earnrate doesn't know is one tap from the fast food ranking.
+
 ## 2026.11.10.4
 
 An evidence quote only; no rates or credits changed. `amex-gold`'s Resy credit is $50 for each half of the year, but its quote covered only January through June. The quote now takes in both halves, from the same sentence of American Express' offer terms (https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0#offer-terms), read 2026-11-10.

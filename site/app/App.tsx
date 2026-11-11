@@ -12,7 +12,14 @@ import {
 import { track } from './track.ts'
 import { TABS, type Tab } from '../tabs.ts'
 import { cardCount, issuerName, issuers } from './format.ts'
-import { load, loadState, save, saveWallet, type Settings } from './settings.ts'
+import {
+  load,
+  loadState,
+  loadWallet,
+  save,
+  saveWallet,
+  type Settings,
+} from './settings.ts'
 import {
   applyLocally,
   combineOps,
@@ -45,10 +52,21 @@ import { listed } from '../../src/engine/text.ts'
 import { EMPTY_WALLET } from '../../src/engine/transient.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 
+// Someone with saved cards who opens the bare address lands on My wallet.
+// Only the first load decides, from the wallet cached in this browser, so a
+// sync coming back doesn't move them; links to the first tab say #best.
+const holdsCards = () => (loadWallet()?.cards.length ?? 0) > 0
+
 // State lives in the URL fragment, which browsers never send to a server.
 // `focus`: a link sent a store to My wallet ("Check with your own cards"),
 // so it opens at the answer rather than the top of the wallet.
-function readHash(): { tab: Tab; query: string; focus?: boolean } {
+function readHash(landing = false): {
+  tab: Tab
+  query: string
+  focus?: boolean
+} {
+  if (landing && location.hash.length <= 1 && holdsCards())
+    return { tab: 'wallet', query: '' }
   const hash = new URLSearchParams(location.hash.slice(1))
   if (hash.has('spending')) return { tab: 'spending', query: '' }
   if (hash.has('wallet')) {
@@ -65,18 +83,22 @@ function readHash(): { tab: Tab; query: string; focus?: boolean } {
 // fragment, and scrolls there once the app above it has rendered.
 function linkedSection(): HTMLElement | null {
   const id = location.hash.slice(1)
-  return /^[a-z-]+$/.test(id) && id !== 'wallet' && id !== 'spending'
+  return /^[a-z-]+$/.test(id) && !TABS.some((t) => t.id === id)
     ? document.getElementById(id)
     : null
 }
 
+// The first tab with no search keeps #best for someone with saved cards,
+// so reloading it doesn't land on My wallet.
 function writeHash(tab: Tab, query: string) {
   const hash =
     tab !== 'best'
       ? `#${tab}`
-      : query === ''
-        ? ''
-        : `#best=${encodeURIComponent(query).replace(/%20/g, '+')}`
+      : query !== ''
+        ? `#best=${encodeURIComponent(query).replace(/%20/g, '+')}`
+        : holdsCards()
+          ? '#best'
+          : ''
   history.replaceState(null, '', `${location.pathname}${hash}`)
 }
 
@@ -325,7 +347,7 @@ export function App() {
     tab: Tab
     query: string
     focus?: boolean
-  }>(readHash)
+  }>(() => readHash(true))
   const [initial] = useState(loadState)
   const [settings, setSettings] = useState<Settings>(initial.settings)
   const [wallet, setWallet] = useState<Wallet | null>(initial.wallet)

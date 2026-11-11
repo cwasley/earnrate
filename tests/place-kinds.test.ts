@@ -11,17 +11,24 @@ describe('kinds of place for an unknown store', () => {
       'Supermarket',
       'Restaurant',
       'Fast food',
+      'Coffee shop',
       'Gas station',
       'Drugstore',
     ])
     for (const k of quick)
       expect(findCategory(catalog, k.label), k.label).toBe(k.category)
+    expect(new Set(quick.map((k) => k.key)).size).toBe(quick.length)
+    expect(quick.find((k) => k.label === 'Coffee shop')?.category).toBe(
+      'dining.fast_food',
+    )
   })
 
   test('the rest offer every other category a ranking answers, once each', async () => {
     const catalog = await loadCatalog()
     const { quick, more } = placeKinds(catalog)
-    const offered = [...quick, ...more].map((k) => k.category)
+    const offered = [...quick, ...more]
+      .filter((k) => k.key === k.category)
+      .map((k) => k.category)
     expect(new Set(offered).size).toBe(offered.length)
     expect(offered).toContain('travel.hotels')
     expect(offered).toContain('convenience_store')
