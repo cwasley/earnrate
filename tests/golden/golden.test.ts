@@ -3046,7 +3046,7 @@ describe('#40 keep or replace a fee card', () => {
       expect(k.outcome).toBe('not-needed')
       expect(k.replacements).toEqual([])
       expect(keepOrReplaceVerdict(catalog, k)).toMatch(
-        /^Your other cards already cover what the Chase Sapphire Reserve earns: it adds (nothing beyond them, against its \$795 fee|about \$[\d,]+ a year beyond them, \$[\d,]+ less than its \$795 fee), so no card needs to take its place\.$/,
+        /^Your other cards already cover what the Chase Sapphire Reserve earns: it adds (nothing beyond them, against its \$795 fee|about \$[\d,]+ a year beyond them, less than its \$795 fee), so no card needs to take its place\.$/,
       )
       const marked = ask(reserve({ enrolled: RESERVE_CREDITS }))
       expect(k.unsaid.yearly).toBe(marked.renewal.credits)
@@ -3269,8 +3269,8 @@ describe('#40 keep or replace a fee card', () => {
       expect(same?.feeSaved).toBe(700)
       expect(same?.share).toBe(Math.round(((same?.net ?? 0) / k.added) * 100))
       const text = samePointsText(catalog, k)
-      expect(text).toMatch(
-        /^The Chase Sapphire Preferred earns Chase Ultimate Rewards too: in its place, it would .+, with \$700 less in fees\.$/,
+      expect(text).toBe(
+        `The Chase Sapphire Preferred earns Chase Ultimate Rewards too: in its place, it would add about ${wholeDollars((same?.net ?? 0) + 95)} a year, less than its $95 fee, which is $700 less than the Chase Sapphire Reserve's.`,
       )
       expect(keepOrReplaceText(catalog, k)).toContain(text)
       expect(keepOrReplaceText(catalog, k)).not.toMatch(
@@ -3348,6 +3348,20 @@ describe('#40 keep or replace a fee card', () => {
       expect(keepOrReplaceText(catalog, k)).toContain(transferText(catalog, k))
       expect(ask(plain({ valuations: { UR: 1.2 } })).transfer).toBeNull()
       expect(heavy.transfer).toBeNull()
+      const unmarked = ask(
+        WalletSchema.parse({
+          cards: [
+            { id: 'chase-sapphire-reserve' },
+            { id: 'chase-freedom-unlimited' },
+            { id: 'citi-double-cash' },
+          ],
+        }),
+      )
+      const below = unmarked.transfer?.result
+      expect(below?.outcome).toBe('not-needed')
+      expect(transferText(catalog, unmarked)).toBe(
+        `If you transfer Chase Ultimate Rewards to airlines and hotels and count them at 1.7¢ each, the Chase Sapphire Reserve adds about ${wholeDollars((below?.added ?? 0) + 795)} a year, less than its $795 fee.`,
+      )
       expect(
         ask(
           WalletSchema.parse({
@@ -3363,14 +3377,14 @@ describe('#40 keep or replace a fee card', () => {
   )
 
   goldenTest(
-    "#40q rates the spending lines can't reach: the Reserve's flights, hotels and Chase Travel under the Travel line",
+    "#40q rates the spending lines can't reach: the Reserve's Chase Travel under the other-travel line, and its flights and hotels under a single travel line",
     () => {
       const k = ask(reserve({ enrolled: RESERVE_CREDITS }))
       expect(hiddenRatesText(k)).toBe(
-        'Chase Travel, flights and hotels earn more on the Chase Sapphire Reserve than the Travel line counts; add them as their own lines for a closer answer.',
+        'Chase Travel earns more on the Chase Sapphire Reserve than the Other travel line counts; add it as its own line for a closer answer.',
       )
       expect(hiddenRatesText(k, ' in Find a card')).toBe(
-        'Chase Travel, flights and hotels earn more on the Chase Sapphire Reserve than the Travel line counts; add them as their own lines in Find a card for a closer answer.',
+        'Chase Travel earns more on the Chase Sapphire Reserve than the Other travel line counts; add it as its own line in Find a card for a closer answer.',
       )
       expect(keepOrReplaceText(catalog, k)).toContain(hiddenRatesText(k))
       const own = (lines: [string, number][]) =>
@@ -3383,6 +3397,9 @@ describe('#40 keep or replace a fee card', () => {
           ),
           typical: false,
         })
+      expect(hiddenRatesText(own([['travel', 150]]))).toBe(
+        'Chase Travel, flights and hotels earn more on the Chase Sapphire Reserve than the Travel line counts; add them as their own lines for a closer answer.',
+      )
       expect(
         hiddenRatesText(
           own([
@@ -3400,7 +3417,7 @@ describe('#40 keep or replace a fee card', () => {
         'amex-platinum',
       )
       expect(hiddenRatesText(platinum)).toBe(
-        'Flights and bookings through Amex Travel earn more on the Amex Platinum than the Travel line counts; add them as their own lines for a closer answer.',
+        'Bookings through Amex Travel earn more on the Amex Platinum than the Other travel line counts; add them as their own lines for a closer answer.',
       )
     },
   )

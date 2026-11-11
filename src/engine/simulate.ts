@@ -48,6 +48,7 @@ export type SpendLine = {
   merchant: string | null
   category: string | null // used when merchant is null
   monthly: number // dollars
+  label?: string // in place of the category's name: "Other travel"
 }
 
 export type ResolvedLine = {
@@ -121,7 +122,11 @@ export function resolveSpendLines(
         l.merchant !== null
           ? resolvePlace(catalog, l.merchant, null)
           : categoryResolution(catalog, l.category ?? 'other', null)
-      return { label: merchant.resolvedName, monthly: l.monthly, merchant }
+      return {
+        label: l.label ?? merchant.resolvedName,
+        monthly: l.monthly,
+        merchant,
+      }
     })
 }
 
@@ -756,19 +761,32 @@ export const TYPICAL_MONTHLY_SPEND: { what: string; monthly: number }[] = [
   { what: 'Gas', monthly: 150 },
   { what: 'Amazon', monthly: 100 },
   { what: 'Streaming', monthly: 40 },
-  { what: 'Travel', monthly: 150 },
+  { what: 'Flights', monthly: 60 },
+  { what: 'Hotels', monthly: 60 },
+  { what: 'Other travel', monthly: 30 },
   { what: 'Everything else', monthly: 800 },
 ]
 
 // A spending line from everyday words: a category when one matches
-// ("groceries"), otherwise a merchant ("Amazon").
+// ("groceries", "other travel"), otherwise a merchant ("Amazon").
 export function spendLineFor(
   catalog: Catalog,
   what: string,
   monthly: number,
 ): SpendLine {
-  const category = findCategory(catalog, what)
-  return { merchant: category === null ? what : null, category, monthly }
+  const direct = findCategory(catalog, what)
+  if (direct !== null) return { merchant: null, category: direct, monthly }
+  // "Other travel" beside "Flights" and "Hotels": the rest of the category.
+  const rest = /^other\s+(.+)$/i.exec(what.trim())?.[1]
+  const category = rest === undefined ? null : findCategory(catalog, rest)
+  if (category === null) return { merchant: what, category: null, monthly }
+  const name = catalog.categories.find((c) => c.id === category)?.name ?? ''
+  return {
+    merchant: null,
+    category,
+    monthly,
+    label: `Other ${name.charAt(0).toLowerCase()}${name.slice(1)}`,
+  }
 }
 
 export const typicalSpend = (catalog: Catalog): SpendLine[] =>

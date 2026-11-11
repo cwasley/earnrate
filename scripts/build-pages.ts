@@ -21,7 +21,7 @@ import {
   membershipText,
   paidMemberships,
 } from '../src/engine/memberships.ts'
-import { findCategory, findMerchant } from '../src/merchants/resolve.ts'
+import { findMerchant } from '../src/merchants/resolve.ts'
 import {
   addDays,
   currentPeriodEnd,
@@ -116,6 +116,7 @@ import {
 } from './compare.ts'
 import {
   type Simulation,
+  spendLineFor,
   TYPICAL_MONTHLY_SPEND,
 } from '../src/engine/simulate.ts'
 
@@ -1645,7 +1646,7 @@ function compareBasis(c: Comparison): string {
   ]
   const spend = TYPICAL_MONTHLY_SPEND.map(
     (t) =>
-      `${findCategory(catalog, t.what) === null ? t.what : t.what.toLowerCase()} ${wholeDollars(t.monthly)}`,
+      `${spendLineFor(catalog, t.what, t.monthly).merchant === null ? t.what.toLowerCase() : t.what} ${wholeDollars(t.monthly)}`,
   ).join(', ')
   const credits = [x, y].flatMap((s) =>
     s.sim.credits

@@ -463,7 +463,9 @@ describe('nothing entered, or cards named for one answer', () => {
       ['Gas stations', 150],
       ['Amazon', 100],
       ['Streaming services', 40],
-      ['Travel', 150],
+      ['Flights', 60],
+      ['Hotels', 60],
+      ['Other travel', 30],
       ['Everything else', 800],
     ])
     expect(TYPICAL_SPEND_NOTE).toMatch(/^No spending was given/)

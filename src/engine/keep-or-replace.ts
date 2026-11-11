@@ -118,7 +118,8 @@ export type KeepOrReplace = {
   transfer: { cents: number; result: KeepOrReplace } | null
   // Spending lines that cover a category only as a whole, where the card
   // earns more on parts of it: "Travel" and its flights and hotels.
-  hidden: { line: string; parts: string[] }[]
+  // `one` when the parts are a single store, said in the singular.
+  hidden: { line: string; parts: string[]; one: boolean }[]
 }
 
 const whole = (n: number) => Math.round(n)
@@ -299,7 +300,7 @@ function hiddenRates(
   held: WalletCard,
   lines: ResolvedLine[],
   date: string,
-): { line: string; parts: string[] }[] {
+): KeepOrReplace['hidden'] {
   const holding = idealHolding(card, date, held.chosen?.picks ?? {})
   const own: Wallet = { ...wallet, cards: [holding] }
   const named = (category: string | null, merchant: string | null) =>
@@ -335,7 +336,15 @@ function hiddenRates(
       return [...merchants, ...categories]
     })
     const unique = bookingsTogether([...new Set(parts)])
-    return unique.length === 0 ? [] : [{ line: line.label, parts: unique }]
+    const [first] = unique
+    if (first === undefined) return []
+    const store = (m: string) =>
+      merchantName(catalog, m) === first &&
+      findMerchant(catalog, m)?.kind !== 'booking'
+    const one =
+      unique.length === 1 &&
+      card.rules.some((r) => (r.match.merchants ?? []).some(store))
+    return [{ line: line.label, parts: unique, one }]
   })
 }
 
@@ -400,14 +409,32 @@ function offerOf(
   }
 }
 
-// "the Chase Sapphire Reserve adds about $35 a year", or how far short of
-// its fee it comes.
+// A card that adds no more than its fee, by the two figures a person can
+// check: "adds about $18 a year, less than its $95 fee", "adds nothing
+// beyond your other cards, against its $95 fee". `net` is after the fee.
+function belowFee(
+  verb: string,
+  net: number,
+  fee: number,
+  beyond = ' beyond your other cards',
+  // Said after the amount too: "adds about $30 a year beyond them".
+  amountBeyond = '',
+): string {
+  const gross = net + fee
+  if (whole(gross) <= 0)
+    return `${verb} nothing${beyond}, against its ${money(fee)} fee`
+  const adds = `${verb} about ${wholeDollars(gross)} a year${amountBeyond}`
+  return whole(net) === 0
+    ? `${adds}, about what its ${money(fee)} fee costs`
+    : `${adds}, less than its ${money(fee)} fee`
+}
+
+// "the Chase Sapphire Reserve adds about $35 a year", or what it adds
+// against its fee when that's no more.
 function heldAdds(k: KeepOrReplace): string {
   return whole(k.added) > 0
     ? `the ${k.name} adds about ${wholeDollars(k.added)} a year`
-    : whole(k.added) === 0
-      ? `the ${k.name} about pays for its fee and no more`
-      : `the ${k.name} comes out about ${wholeDollars(-k.added)} a year short of its fee`
+    : `the ${k.name} ${belowFee('adds', k.added, k.fee, k.alone ? '' : undefined)}`
 }
 
 export function feeSavedText(k: KeepOrReplace, r: Replacement): string {
@@ -432,13 +459,13 @@ export function keepOrReplaceVerdict(
 export function keepOrReplaceLead(catalog: Catalog, k: KeepOrReplace): string {
   const [best] = k.replacements
   if (k.outcome === 'not-needed') {
-    const gross = k.added + k.fee
-    const adds =
-      whole(gross) <= 0
-        ? `it adds nothing beyond them, against its ${money(k.fee)} fee`
-        : whole(k.added) === 0
-          ? `it adds about ${wholeDollars(gross)} a year beyond them, about what its ${money(k.fee)} fee costs`
-          : `it adds about ${wholeDollars(gross)} a year beyond them, ${wholeDollars(-k.added)} less than its ${money(k.fee)} fee`
+    const adds = belowFee(
+      'it adds',
+      k.added,
+      k.fee,
+      ' beyond them',
+      ' beyond them',
+    )
     return `Your other cards already cover what the ${k.name} earns: ${adds}, so no card needs to take its place.`
   }
   if (best === undefined)
@@ -481,7 +508,7 @@ export function keepOrReplaceUnsaid(k: KeepOrReplace): string {
     const withAll = roundCents(k.added + u.yearly)
     const upTo = u.nights > 0 ? 'up to ' : ''
     parts.push(
-      `${capitalize(possessive(`the ${k.name}`))} ${perksNoun(u, false, true)} you haven't marked as used (${creditsYearText(u)}) ${one ? "isn't" : "aren't"} counted; with ${one ? 'it' : 'them all'}, it would ${withAll >= 0 ? `add ${upTo}about ${wholeDollars(withAll)}` : `still come out about ${wholeDollars(-withAll)} short of its fee`} a year.`,
+      `${capitalize(possessive(`the ${k.name}`))} ${perksNoun(u, false, true)} you haven't marked as used (${creditsYearText(u)}) ${one ? "isn't" : "aren't"} counted; with ${one ? 'it' : 'them all'}, it would ${whole(withAll) > 0 ? `add ${upTo}about ${wholeDollars(withAll)} a year` : belowFee('add', withAll, k.fee).replace(/^add about/, `add ${upTo}about`)}.`,
     )
   }
   if (k.renewal.nightsUnvalued > 0 && u.unvaluedNightIds.length > 0)
@@ -532,17 +559,16 @@ export function samePointsText(catalog: Catalog, k: KeepOrReplace): string {
   const r = k.samePoints
   if (r === null || k.replacements.some((x) => x.cardId === r.cardId)) return ''
   const net = wholeDollars(r.net)
+  const lead = `The ${nameOf(catalog, r.cardId)} earns ${pointsName(catalog, k)} too: in its place, it would`
+  if (whole(r.net) <= 0)
+    return `${lead} ${belowFee('add', r.net, r.annualFee)}, which is ${money(r.feeSaved)} less than ${possessive(`the ${k.name}`)}.`
   const would =
-    whole(r.net) <= 0
-      ? whole(r.net) === 0
-        ? `add nothing after its ${money(r.annualFee)} fee`
-        : `come out about ${wholeDollars(-r.net)} a year short of its ${money(r.annualFee)} fee`
-      : r.share === null
-        ? `add about ${net} a year after its fee`
-        : whole(r.net) >= whole(k.added)
-          ? `add about ${net} a year after its fee, ${whole(r.net) === whole(k.added) ? 'about as much as' : 'more than'} the ${k.name} adds`
-          : `keep about ${net} of the ${wholeDollars(k.added)} the ${k.name} adds a year after fees (${String(r.share)}%)`
-  return `The ${nameOf(catalog, r.cardId)} earns ${pointsName(catalog, k)} too: in its place, it would ${would}, with ${money(r.feeSaved)} less in fees.`
+    r.share === null
+      ? `add about ${net} a year after its fee`
+      : whole(r.net) >= whole(k.added)
+        ? `add about ${net} a year after its fee, ${whole(r.net) === whole(k.added) ? 'about as much as' : 'more than'} the ${k.name} adds`
+        : `keep about ${net} of the ${wholeDollars(k.added)} the ${k.name} adds a year after fees (${String(r.share)}%)`
+  return `${lead} ${would}, with ${money(r.feeSaved)} less in fees.`
 }
 
 // The answer again with points at transfer value; empty without one.
@@ -552,9 +578,7 @@ export function transferText(catalog: Catalog, k: KeepOrReplace): string {
   const held =
     whole(t.added) > 0
       ? `the ${t.name} adds about ${wholeDollars(t.added)} a year after its fee`
-      : whole(t.added) === 0
-        ? `the ${t.name} about pays for its fee and no more`
-        : `the ${t.name} comes out about ${wholeDollars(-t.added)} a year short of its fee`
+      : heldAdds(t)
   const [best] = t.replacements
   const rest =
     t.outcome === 'not-needed'
@@ -572,8 +596,7 @@ export function transferText(catalog: Catalog, k: KeepOrReplace): string {
 // answer." `where` names the place to add them, like " in Find a card".
 export function hiddenRatesText(k: KeepOrReplace, where = ''): string {
   return k.hidden
-    .map(({ line, parts }) => {
-      const one = parts.length === 1
+    .map(({ line, parts, one }) => {
       return `${capitalize(listed(parts))} ${one ? 'earns' : 'earn'} more on the ${k.name} than the ${line} line counts; add ${one ? 'it as its own line' : 'them as their own lines'}${where} for a closer answer.`
     })
     .join(' ')

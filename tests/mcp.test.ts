@@ -2209,7 +2209,7 @@ describe('search_cards: is the annual fee worth it', () => {
     })
     expect(answer).toContain('    earns: ')
     expect(answer).toContain(
-      `is the fee worth it? On earning alone, the Amex Gold earns more than the best no-fee card, after its $325 fee, from about ${wholeDollars(breakEven ?? 0)} a month of spending on supermarkets and restaurants.`,
+      `is the fee worth it? On earning alone, the Amex Gold earns more than the best no-fee card, after its $325 fee, from about ${wholeDollars(breakEven ?? 0)} a month of spending on supermarkets, restaurants and flights.`,
     )
     const transferred = feeWorthKit(catalog, TODAY, TRANSFER_VALUES).feeWorth(
       card('amex-gold'),
