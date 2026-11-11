@@ -3,6 +3,7 @@
 // title and description lengths search results show.
 import type { Catalog } from '../../src/schema/catalog.ts'
 import { cardArtSvg, cardColor } from '../../src/format/card-art.ts'
+import { TABS } from '../../site/tabs.ts'
 
 export const SITE = 'https://earnrate.dev'
 const ICON = '/favicon.svg?v=2'
@@ -69,6 +70,10 @@ export const slugify = (s: string) =>
     .replace(/['’.+]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
+
+// The app's tabs, so a visitor who lands here from a search can see what
+// else the site does. The home page has the tabs themselves.
+const APP_NAV = `<nav class="app-nav" aria-label="earnrate.dev">${TABS.map((t) => `<a href="${t.href}">${esc(t.name)}</a>`).join('')}</nav>`
 
 const BRAND = ' | earnrate'
 
@@ -204,7 +209,7 @@ ${page.noindex ? '    <meta name="robots" content="noindex, follow" />\n' : ''} 
   </head>
   <body>
     <main>
-      <header><a class="wordmark" href="/"><svg class="mark" viewBox="0 -20 120 120" aria-hidden="true"><rect x="24" y="8" width="88" height="56" rx="10" fill="none" stroke="currentColor" stroke-width="7" opacity=".35"/><rect x="8" y="22" width="92" height="58" rx="10" fill="currentColor"/><rect x="20" y="38" width="18" height="13" rx="3" fill="var(--surface)"/></svg>earnrate</a></header>
+      <header><a class="wordmark" href="/"><svg class="mark" viewBox="0 -20 120 120" aria-hidden="true"><rect x="24" y="8" width="88" height="56" rx="10" fill="none" stroke="currentColor" stroke-width="7" opacity=".35"/><rect x="8" y="22" width="92" height="58" rx="10" fill="currentColor"/><rect x="20" y="38" width="18" height="13" rx="3" fill="var(--surface)"/></svg>earnrate</a>${APP_NAV}</header>
       ${page.crumbs.length > 0 ? crumbsHtml(page.crumbs) : ''}
 ${page.body}
       <aside class="next">

@@ -1,5 +1,5 @@
 import { Fragment, type ComponentChildren } from 'preact'
-import { useEffect, useMemo, useState } from 'preact/hooks'
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import {
   exploreCards,
@@ -10,7 +10,11 @@ import {
   type ExploreEntry,
 } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
-import { splitPurchaseText } from '../../src/merchants/resolve.ts'
+import {
+  resolvePlace,
+  splitPurchaseText,
+  withCallerCategory,
+} from '../../src/merchants/resolve.ts'
 import { ABROAD, noteOnly } from '../../src/engine/recommend.ts'
 import {
   capitalize,
@@ -39,6 +43,7 @@ import type { Purchase } from './ThisPurchase.tsx'
 import { CardArt } from './CardArt.tsx'
 import { track } from './track.ts'
 import { SearchInput } from './SearchInput.tsx'
+import { PlaceKinds } from './PlaceKinds.tsx'
 import { engineOptions, type Saved, type Settings } from './settings.ts'
 import {
   EVERYDAY_PURCHASES,
@@ -48,6 +53,9 @@ import {
 const QUICK = EVERYDAY_PURCHASES.map(quickPickText)
 
 const TOP = 8
+// Below this width the search, chips and filters fill the first screen, so
+// a search the visitor runs scrolls its answer up to the top.
+const SMALL = '(max-width: 639px)'
 // The ranking shown before anyone asks, so the first screen has an answer.
 const EXAMPLE = QUICK[0] ?? 'Groceries'
 const EXAMPLE_ROWS = 3
@@ -66,6 +74,7 @@ function explore(
   payment: PaymentMethod | null,
   settings: Settings,
   saved: Saved,
+  kind: string | null = null,
 ): Exploration {
   const { merchant, amount } = splitPurchaseText(text)
   return exploreCards(
@@ -80,6 +89,9 @@ function explore(
       payment,
     },
     engineOptions(settings, saved),
+    kind === null
+      ? undefined
+      : withCallerCategory(resolvePlace(catalog, merchant, null), kind),
   )
 }
 
@@ -301,13 +313,19 @@ export function BestFor({
 }) {
   const [text, setText] = useState(query)
   const [all, setAll] = useState(false)
+  // A kind of place picked for a store earnrate doesn't know, for this
+  // search only.
+  const [picked, setPicked] = useState<{ query: string; kind: string } | null>(
+    null,
+  )
+  const kind = picked?.query === query ? picked.kind : null
   const { abroad, payment } = purchase
   const result = useMemo(
     () =>
       query.trim() === ''
         ? null
-        : explore(query, abroad, payment, settings, saved),
-    [query, abroad, payment, settings, saved],
+        : explore(query, abroad, payment, settings, saved, kind),
+    [query, abroad, payment, settings, saved, kind],
   )
   const example = useMemo(
     () => (result ? null : explore(EXAMPLE, false, null, settings, saved)),
@@ -319,10 +337,23 @@ export function BestFor({
   // Back, Forward or a link can change the search without the box.
   useEffect(() => setText(query), [query])
 
-  const ask = (q: string) => {
+  // Counts the searches the visitor runs (not Back, Forward, a link or the
+  // tab opening), so each one can bring its answer into view.
+  const [asked, setAsked] = useState(0)
+  const heading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    if (asked === 0 || !matchMedia(SMALL).matches) return
+    // Closes the phone's keyboard, which would cover the answer.
+    if (document.activeElement instanceof HTMLInputElement)
+      document.activeElement.blur()
+    heading.current?.scrollIntoView({ block: 'start' })
+  }, [asked])
+
+  const ask = (q: string, show = true) => {
     setText(q)
     setAll(false)
     onQuery(q)
+    if (show) setAsked((n) => n + 1)
   }
 
   const shown = result
@@ -358,7 +389,13 @@ export function BestFor({
               if (
                 SUGGESTIONS.some((s) => s.toLowerCase() === value.toLowerCase())
               )
-                ask(value)
+                // A suggestion picked from the list moves to the answer; one
+                // typed out in full doesn't, while the keyboard is in use.
+                ask(
+                  value,
+                  (e as unknown as InputEvent).inputType ===
+                    'insertReplacementText',
+                )
             }}
             onClear={() => setText('')}
           />
@@ -398,7 +435,7 @@ export function BestFor({
             // A new question arrives; changing how you pay updates it in place.
             key={query}
           >
-            <h3>
+            <h3 ref={heading}>
               {noteOnly(result)
                 ? capitalize(title(result))
                 : `Best cards for ${title(result)}`}
@@ -433,6 +470,11 @@ export function BestFor({
                 {w}
               </p>
             ))}
+            <PlaceKinds
+              merchant={result.merchant}
+              kind={kind}
+              onKind={(k) => setPicked(k === null ? null : { query, kind: k })}
+            />
             {result.ranked.length === 0 && !noteOnly(result) ? (
               <p class="callout">
                 No card matches your filters. Open Filters and memberships to

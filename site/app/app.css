@@ -1788,3 +1788,31 @@ p.callout .link {
 .keep-assumes {
   margin-top: 4px;
 }
+
+/* A first visit on a phone: what kind of place an unknown store is. */
+.place-kinds {
+  margin: 12px 0;
+}
+
+.place-kinds > p {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 16px: iOS zooms into a smaller select when it's tapped. */
+.place-kinds select.chip {
+  max-width: 100%;
+  padding: 5px 10px;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.place-kinds select.chip.on {
+  color: var(--accent);
+}
+
+/* Where a search scrolls its answer to on a phone. */
+.results > h3 {
+  scroll-margin-top: 12px;
+}

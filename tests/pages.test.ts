@@ -23,6 +23,7 @@ import {
 } from '../src/engine/text.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../src/engine/explore.ts'
 import { pageContext } from '../scripts/pages/context.ts'
+import { TABS } from '../site/tabs.ts'
 import {
   feeWorthKit,
   type FeeWorth,
@@ -319,6 +320,15 @@ describe('the built static pages', () => {
         expect(html, file).toContain('"@type":"BreadcrumbList"')
         expect(html, file).toContain('aria-label="Breadcrumb"')
       }
+    }
+  })
+
+  test("every built page's header opens the app's tabs by their names, and the home page has only the tabs", () => {
+    const nav = TABS.map((t) => `<a href="${t.href}">${t.name}</a>`).join('')
+    for (const { file, html } of pages) {
+      if (file.startsWith(out)) expect(html, file).toContain(nav)
+      if (file === path.join(ROOT, 'site', 'index.html'))
+        expect(html, file).not.toContain('class="app-nav"')
     }
   })
 })

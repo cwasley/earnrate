@@ -54,11 +54,15 @@ import {
   MAX_NIGHT_VALUE,
   type CardInput,
 } from '../../src/engine/wallet-change.ts'
-import { resolvePlace } from '../../src/merchants/resolve.ts'
+import {
+  resolvePlace,
+  withCallerCategory,
+} from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { anniversaryOf, type Spending } from '../../src/engine/renewal.ts'
 import { CardArt } from './CardArt.tsx'
 import { KeepOrReplace } from './KeepOrReplace.tsx'
+import { PlaceKinds } from './PlaceKinds.tsx'
 import { QuickCards } from './QuickCards.tsx'
 import { Logo } from './Logo.tsx'
 import { track } from './track.ts'
@@ -160,6 +164,7 @@ function ask(
   amount: number | null,
   abroad: boolean,
   payment: PaymentMethod | null,
+  kind: string | null,
 ) {
   const purchase = {
     merchant: text,
@@ -169,17 +174,24 @@ function ask(
     country: abroad ? ABROAD : 'US',
     payment,
   }
-  return recommend(catalog, wallet, purchase, resolvePlace(catalog, text, null))
+  return recommend(
+    catalog,
+    wallet,
+    purchase,
+    withCallerCategory(resolvePlace(catalog, text, null), kind),
+  )
 }
 
 function Answer({
   wallet,
   rec,
   onPayment,
+  kinds,
 }: {
   wallet: Wallet
   rec: Recommendation
   onPayment: (payment: PaymentMethod) => void
+  kinds: ComponentChildren
 }) {
   const decided = rec.decision
   const top = rec.ranked.find((r) => r.cardId === decided?.cardId)
@@ -214,10 +226,13 @@ function Answer({
       ) : (
         <p class="verdict">None of your cards work here.</p>
       )}
-      {rec.warnings.map((w) => (
-        <p class="callout" key={w}>
-          {w}
-        </p>
+      {/* The engine warns about a store it doesn't know first, and what kind
+          of place it is gets asked right under that. */}
+      {rec.warnings.map((w, i) => (
+        <Fragment key={w}>
+          <p class="callout">{w}</p>
+          {i === 0 ? kinds : null}
+        </Fragment>
       ))}
       <PayingHints answer={rec} onPick={onPayment} />
       {rec.notes.map((n) => (
@@ -2045,6 +2060,7 @@ export function MyWallet({
   const [asked, setAsked] = useState<{
     text: string
     amount: number | null
+    kind?: string // for a store earnrate doesn't know
   } | null>(
     initialQuery.trim() === ''
       ? null
@@ -2235,7 +2251,14 @@ export function MyWallet({
   const rec = useMemo(
     () =>
       wallet && wallet.cards.length > 0 && asked && problems.length === 0
-        ? ask(wallet, asked.text, asked.amount, abroad, payment)
+        ? ask(
+            wallet,
+            asked.text,
+            asked.amount,
+            abroad,
+            payment,
+            asked.kind ?? null,
+          )
         : null,
     [wallet, asked, abroad, payment, problems.length],
   )
@@ -2475,6 +2498,20 @@ export function MyWallet({
                 wallet={wallet}
                 rec={rec}
                 onPayment={(p) => onPurchase({ ...purchase, payment: p })}
+                kinds={
+                  <PlaceKinds
+                    merchant={rec.merchant}
+                    kind={asked?.kind ?? null}
+                    onKind={(kind) =>
+                      asked &&
+                      setAsked(
+                        kind === null
+                          ? { text: asked.text, amount: asked.amount }
+                          : { ...asked, kind },
+                      )
+                    }
+                  />
+                }
               />
             </div>
           ) : null}

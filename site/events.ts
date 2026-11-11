@@ -8,6 +8,7 @@ export const EVENTS = [
   'tab-wallet',
   'search',
   'example-search',
+  'place-kind',
   'spending-edit',
   'wallet-first-card',
   'wallet-card-added',

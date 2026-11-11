@@ -23,6 +23,7 @@
     "scripts",
     "*.config.ts",
     "site/events.ts",
+    "site/tabs.ts",
     "site/worker.ts"
   ]
 }

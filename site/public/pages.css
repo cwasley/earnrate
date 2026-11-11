@@ -882,3 +882,32 @@ ul.ye-items p,
   color: var(--accent);
   font-weight: 600;
 }
+
+/* The app's tabs in the header, beside the wordmark. On a phone too narrow
+   for both, they move under it as one row. */
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.app-nav {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.app-nav a {
+  padding: 8px 0;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color var(--fade) ease;
+}
+
+.app-nav a:hover {
+  color: var(--accent);
+}

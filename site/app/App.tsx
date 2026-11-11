@@ -10,6 +10,7 @@ import {
   type Purchase,
 } from './ThisPurchase.tsx'
 import { track } from './track.ts'
+import { TABS, type Tab } from '../tabs.ts'
 import { cardCount, issuerName, issuers } from './format.ts'
 import { load, loadState, save, saveWallet, type Settings } from './settings.ts'
 import {
@@ -43,8 +44,6 @@ import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
 import { listed } from '../../src/engine/text.ts'
 import { EMPTY_WALLET } from '../../src/engine/transient.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
-
-type Tab = 'best' | 'spending' | 'wallet'
 
 // State lives in the URL fragment, which browsers never send to a server.
 // `focus`: a link sent a store to My wallet ("Check with your own cards"),
@@ -636,30 +635,17 @@ export function App() {
   return (
     <div class="app">
       <div class="tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'best'}
-          onClick={() => setView({ tab: 'best', query })}
-        >
-          Best for…
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'spending'}
-          onClick={() => setView({ tab: 'spending', query })}
-        >
-          Find a card
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'wallet'}
-          onClick={() => setView({ tab: 'wallet', query })}
-        >
-          My wallet
-        </button>
+        {TABS.map((t) => (
+          <button
+            type="button"
+            role="tab"
+            key={t.id}
+            aria-selected={tab === t.id}
+            onClick={() => setView({ tab: t.id, query })}
+          >
+            {t.name}
+          </button>
+        ))}
       </div>
       <div role="tabpanel" class={settled === tab ? 'settled' : undefined}>
         {tab === 'best' ? (
