@@ -872,7 +872,8 @@ function CardEditor({
   )
 }
 
-// The My spending tab's rows, and whether they're still its typical amounts.
+// The Find a card tab's spending rows, and whether they're still its typical
+// amounts.
 function spending(fallback = true): Spending {
   const rows = loadList<Row>('spending', TYPICAL_MONTHLY_SPEND)
   const typical =
@@ -1549,8 +1550,8 @@ function WhatIf({
       <h3>Would another card help?</h3>
       <p class="muted">
         {spent.typical
-          ? `On typical U.S. spending, your cards earn about ${wholeDollars(result.current.rewards)} a year. Put in your own on the My spending tab.`
-          : `On your spending from the My spending tab, your cards earn about ${wholeDollars(result.current.rewards)} a year.`}
+          ? `On typical U.S. spending, your cards earn about ${wholeDollars(result.current.rewards)} a year. Put in your own on the Find a card tab.`
+          : `On your spending from the Find a card tab, your cards earn about ${wholeDollars(result.current.rewards)} a year.`}
       </p>
       {result.current.credits
         .filter((c) => c.held)

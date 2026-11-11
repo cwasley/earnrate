@@ -1699,3 +1699,32 @@ p.callout .link {
 .filter-group label.check.abroad {
   margin-top: 0;
 }
+
+/* Find a card: the answer first, the spending folded under it. */
+.find-answer p {
+  margin: 0 0 10px;
+  font-size: 16.5px;
+  line-height: 1.5;
+}
+
+.find-answer .split {
+  margin: 0;
+  font-size: 15.5px;
+}
+
+.spend-edit[open] > summary {
+  margin-bottom: 8px;
+}
+
+.spend-edit summary .muted {
+  font-weight: 400;
+}
+
+.result .rate {
+  text-align: right;
+}
+
+.rate .first-year {
+  display: block;
+  margin-top: 2px;
+}

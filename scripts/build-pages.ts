@@ -751,7 +751,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       ${page.merchant ? howItCodes(ctx, page.merchant, categoryPageFor) : ''}
       ${sources(shown)}
       <h2>How this is ranked</h2>
-      <p>Every personal card earnrate tracks that's open to new applicants, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, use <a href="/#spending">My spending</a>.</p>
+      <p>Every personal card earnrate tracks that's open to new applicants, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, use <a href="/#spending">Find a card</a>.</p>
       ${related(page, all)}
       ${definitions ? `<p>What counts as ${esc(definitions)} for each issuer: <a href="/categories/${definitions}">their definitions, side by side</a>.</p>` : ''}`
   const jsonLd = {
@@ -1266,7 +1266,7 @@ function cardActions(card: Card): string {
     [
       {
         when: ['none'],
-        html: `${button(`/#spending&card=${id}`, 'See it on your spending')} ${textLink(add, 'Already have it? Add it to your wallet')}`,
+        html: `${button(`/#spending&card=${id}`, 'See where it ranks on your spending')} ${textLink(add, 'Already have it? Add it to your wallet')}`,
       },
       {
         when: ['other'],
@@ -1880,12 +1880,12 @@ function renderCompare(c: Comparison): string {
           when: ['none'],
           html: button(
             `/#spending&card=${c.a.id}&card=${c.b.id}`,
-            'Compare them on your spending',
+            'See where they rank on your spending',
           ),
         },
         {
           when: ['other', 'holds'],
-          html: `${button(`/#spending&card=${c.a.id}&card=${c.b.id}`, 'Compare them on your spending')} ${textLink(`/#wallet&whatif=${c.a.id}&whatif=${c.b.id}`, 'See what each adds to your cards')}`,
+          html: `${button(`/#spending&card=${c.a.id}&card=${c.b.id}`, 'See where they rank on your spending')} ${textLink(`/#wallet&whatif=${c.a.id}&whatif=${c.b.id}`, 'See what each adds to your cards')}`,
         },
       ])}
       <h2>Rates by purchase</h2>

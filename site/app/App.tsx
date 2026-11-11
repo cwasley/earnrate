@@ -650,7 +650,7 @@ export function App() {
           aria-selected={tab === 'spending'}
           onClick={() => setView({ tab: 'spending', query })}
         >
-          My spending
+          Find a card
         </button>
         <button
           type="button"
