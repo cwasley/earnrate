@@ -18,8 +18,11 @@ import { AMEX_CSV, CHASE_CSV, OTHER_CSV } from '../tests/statement-fixtures.ts'
 import { headerPolicy } from './statement-policy.ts'
 
 const DIST = path.join(import.meta.dirname, '..', 'site-dist')
-const { values } = parseArgs({ options: { shots: { type: 'string' } } })
+const { values } = parseArgs({
+  options: { shots: { type: 'string' }, prefix: { type: 'string' } },
+})
 const shots = values.shots ? path.resolve(values.shots) : null
+const prefix = values.prefix ?? ''
 
 let failed = 0
 function check(name: string, ok: boolean, detail = '') {
@@ -160,6 +163,13 @@ async function open(
         }
       : {}),
   })
+  await context.addInitScript(() => {
+    const seen: string[] = []
+    Object.defineProperty(window, '__violations', { value: seen })
+    document.addEventListener('securitypolicyviolation', (e) =>
+      seen.push(`${e.effectiveDirective} ${e.blockedURI}`),
+    )
+  })
   const page = await context.newPage()
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
@@ -172,7 +182,11 @@ async function open(
     .map((h) => h.value)
   await page.locator('#choose-title').waitFor()
   page.on('request', (r) => requests.push(r.url()))
-  return { context, page, errors, requests, policy: policy ?? [] }
+  const violations = () =>
+    page.evaluate(
+      () => (window as unknown as { __violations: string[] }).__violations,
+    )
+  return { context, page, errors, requests, violations, policy: policy ?? [] }
 }
 
 const fileInput = (page: Page) => page.locator('input[type=file]')
@@ -277,7 +291,9 @@ async function privacyChecks(
   await page.locator('#result-title').waitFor({ timeout: 10_000 })
   await fileInput(page).setInputFiles([csv('Chase_Activity.CSV', CHASE_CSV)])
   await pickFileCard(page, 1, 'Chase Sapphire Preferred')
-  const byCard = await page.locator('.by-card li').count()
+  const byCard = await page
+    .locator('table[aria-label="By card used"] tbody tr')
+    .count()
   check(`${label}: two files for two cards`, byCard === 2, String(byCard))
   await page.getByRole('button', { name: 'Forget this file' }).first().click()
   await page.getByRole('button', { name: 'Forget this file' }).first().click()
@@ -320,7 +336,7 @@ async function privacyChecks(
   await answer.waitFor({ timeout: 10_000 })
   check(
     `${label}: offline, with no saved wallet, an Amex file gets an answer`,
-    (await offline.page.locator('.stores li').count()) > 0,
+    (await offline.page.locator('table.missed tbody tr').count()) > 0,
   )
   check(
     `${label}: offline, no request was attempted`,
@@ -330,6 +346,11 @@ async function privacyChecks(
   check(
     `${label}: offline, storage stays empty`,
     JSON.stringify(empty) === JSON.stringify(await storage(offline.page)),
+  )
+  check(
+    `${label}: offline, nothing the page did broke its policy`,
+    (await offline.violations()).length === 0,
+    (await offline.violations()).join(', '),
   )
   check(
     `${label}: offline, no page errors`,
@@ -418,17 +439,21 @@ async function screenshots(browser: Browser, origin: string, dir: string) {
   for (const state of STATES)
     for (const width of [390, 1280])
       for (const dark of [false, true]) {
-        const { context, page, errors } = await open(browser, origin, {
-          width,
-          dark,
-          wallet: state.wallet,
-        })
+        const { context, page, errors, violations } = await open(
+          browser,
+          origin,
+          {
+            width,
+            dark,
+            wallet: state.wallet,
+          },
+        )
         await state.run(page)
         await page.waitForTimeout(400)
         await page.screenshot({
           path: path.join(
             dir,
-            `${state.name}-${String(width)}-${dark ? 'dark' : 'light'}.png`,
+            `${prefix}${state.name}-${String(width)}-${dark ? 'dark' : 'light'}.png`,
           ),
           fullPage: true,
         })
@@ -441,7 +466,18 @@ async function screenshots(browser: Browser, origin: string, dir: string) {
           errors.length === 0,
           errors.join(' | '),
         )
+        check(
+          `${state.name}: nothing on the page broke its policy`,
+          (await violations()).length === 0,
+          (await violations()).join(', '),
+        )
         if (width === 390 && !dark) {
+          await page.evaluate(() => {
+            for (const d of document.querySelectorAll('details')) d.open = false
+          })
+          const words = (await page.locator('main').innerText())
+            .split(/\s+/)
+            .filter((w) => /[A-Za-z0-9$]/.test(w)).length
           await page.evaluate(() => {
             for (const d of document.querySelectorAll('details')) d.open = true
           })
@@ -452,6 +488,8 @@ async function screenshots(browser: Browser, origin: string, dir: string) {
               : await page.locator('#check').innerText()
           text.push(
             `## ${state.name}${state.wallet ? ' (a wallet saved in the browser)' : ' (no saved wallet)'}`,
+            '',
+            `Words a visitor sees at 390px with every disclosure closed: ${String(words)}.`,
             '',
             state.name === '1-before-a-file'
               ? 'The whole page, before a file is chosen, with every collapsed section opened:'

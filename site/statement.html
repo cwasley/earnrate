@@ -41,44 +41,83 @@
 
       <section class="how">
         <h2>What happens to your file</h2>
-        <p>
-          Your browser reads the file you choose and hands it to this page's
-          script, which works through it in memory. Nothing is uploaded:
-          earnrate's server never receives the file, its purchases or the
-          result. Nothing is saved: not the file, not the result, nothing in
-          your browser's storage or cookies. If a wallet is saved in this
-          browser, the page reads it to know your cards and doesn't change it.
-          The page counts nothing about your visit.
-        </p>
-        <p>
-          Forget this file drops a file and everything read from it. Reloading
-          or closing the page does the same.
-        </p>
-        <h2>How you can check</h2>
-        <ul>
-          <li>
-            Airplane mode. Everything the page needs is inside it, so once it
-            has loaded it works with no connection at all.
-          </li>
-          <li>
-            Your browser's developer tools. The Network tab shows one request,
-            for the page itself, and choosing a file adds none. Cloudflare,
-            which hosts earnrate.dev, adds its visit-counting script to the
-            site's pages; on this one the console shows the browser refused it.
-          </li>
-          <li>
-            The page source. It's one file, with the code that reads your
-            statement written into it, and its security policy is the first meta
-            tag after the character set.
-          </li>
-        </ul>
-        <p>
-          The policy, which your browser enforces whatever the page's code
-          tries:
-        </p>
-        <pre><code><!--earnrate:statement-policy--></code></pre>
+        <table
+          class="promises"
+          role="table"
+          aria-label="What happens to your file"
+        >
+          <tbody>
+            <tr role="row">
+              <th scope="row" role="rowheader">Uploaded</th>
+              <td role="cell">No</td>
+              <td role="cell">
+                It's read on this device. earnrate's server never gets it.
+              </td>
+            </tr>
+            <tr role="row">
+              <th scope="row" role="rowheader">Saved</th>
+              <td role="cell">No</td>
+              <td role="cell">
+                Not the file, not the result, nothing in your browser.
+              </td>
+            </tr>
+            <tr role="row">
+              <th scope="row" role="rowheader">Counted</th>
+              <td role="cell">No</td>
+              <td role="cell">This page counts nothing about your visit.</td>
+            </tr>
+            <tr role="row">
+              <th scope="row" role="rowheader">Your saved wallet</th>
+              <td role="cell">Read</td>
+              <td role="cell">To know your cards. It isn't changed.</td>
+            </tr>
+            <tr role="row">
+              <th scope="row" role="rowheader">Forget this file</th>
+              <td role="cell">Drops it</td>
+              <td role="cell">So does reloading or closing the page.</td>
+            </tr>
+          </tbody>
+        </table>
         <details>
-          <summary>What each part means</summary>
+          <summary>How it works, and how you can check</summary>
+          <p>
+            Your browser reads the file you choose and hands it to this page's
+            script, which works through it in memory. Nothing is uploaded:
+            earnrate's server never receives the file, its purchases or the
+            result. Nothing is saved: not the file, not the result, nothing in
+            your browser's storage or cookies. If a wallet is saved in this
+            browser, the page reads it to know your cards and doesn't change it.
+            The page counts nothing about your visit.
+          </p>
+          <p>
+            Forget this file drops a file and everything read from it. Reloading
+            or closing the page does the same.
+          </p>
+          <h3>How you can check</h3>
+          <ul>
+            <li>
+              Airplane mode. Everything the page needs is inside it, so once it
+              has loaded it works with no connection at all.
+            </li>
+            <li>
+              Your browser's developer tools. The Network tab shows one request,
+              for the page itself, and choosing a file adds none. Cloudflare,
+              which hosts earnrate.dev, adds its visit-counting script to the
+              site's pages; on this one the console shows the browser refused
+              it.
+            </li>
+            <li>
+              The page source. It's one file, with the code that reads your
+              statement written into it, and its security policy is the first
+              meta tag after the character set.
+            </li>
+          </ul>
+          <p>
+            The policy, which your browser enforces whatever the page's code
+            tries:
+          </p>
+          <pre><code><!--earnrate:statement-policy--></code></pre>
+          <h3>What each part means</h3>
           <ul>
             <li>
               <code>default-src 'none'</code>: the page may load nothing, from
@@ -116,14 +155,15 @@
             Links still work: following one opens another page and leaves the
             file behind.
           </p>
+          <p>
+            The page's code is open source, in
+            <a
+              href="https://github.com/cwasley/earnrate/tree/main/site/statement"
+              >earnrate's repository</a
+            >. The <a href="/privacy#statement">privacy page</a> covers the rest
+            of earnrate.dev.
+          </p>
         </details>
-        <p>
-          The page's code is open source, in
-          <a href="https://github.com/cwasley/earnrate/tree/main/site/statement"
-            >earnrate's repository</a
-          >. The <a href="/privacy#statement">privacy page</a> covers the rest
-          of earnrate.dev.
-        </p>
       </section>
       <!--earnrate:footer-->
     </main>

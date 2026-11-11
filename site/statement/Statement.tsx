@@ -1,18 +1,8 @@
 import { useEffect, useId, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
-import { HALF_CENT } from '../../src/engine/compare.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { searchCards } from '../../src/engine/setup.ts'
-import {
-  categoryAs,
-  dollarsAndCents,
-  listed,
-  pointValuesText,
-  roundCents,
-  shortDate,
-  wholeDollars,
-} from '../../src/engine/text.ts'
-import { cardValuation } from '../../src/engine/valuation.ts'
+import { dollarsAndCents, listed, shortDate } from '../../src/engine/text.ts'
 import type { CardLine } from '../../src/import/analyze.ts'
 import type { Issuer } from '../../src/import/statement.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
@@ -24,15 +14,15 @@ import { loadWallet } from '../app/saved-wallet.ts'
 import { SearchInput } from '../app/SearchInput.tsx'
 import {
   checkWallet,
+  dateRange,
   LEFT_OUT,
   readStatement,
   refusal,
   runCheck,
   savedCards,
-  yearlyPace,
-  type Check,
   type ReadFile,
 } from './check.ts'
+import { Result } from './Result.tsx'
 
 type LoadedFile = ReadFile & {
   key: number
@@ -42,7 +32,6 @@ type LoadedFile = ReadFile & {
 
 const ACCEPT =
   '.csv,text/csv,.pdf,application/pdf,.xls,.xlsx,.qfx,.qif,.qbo,.ofx'
-const SHOWN_STORES = 10
 
 const plural = (n: number, one: string, many = `${one}s`) =>
   `${String(n)} ${n === 1 ? one : many}`
@@ -255,33 +244,50 @@ function FilePanel({
     <section class="panel arrive" aria-labelledby={`${id}-title`}>
       <h2 id={`${id}-title`}>{issuer} activity</h2>
       <p class="muted small file-name">{file.name}</p>
-      <p>
-        earnrate read {plural(purchases.length, 'purchase')}
-        {refunds > 0
-          ? ` and ${plural(refunds, 'refund or credit', 'refunds or credits')}`
-          : ''}
-        {dates.length > 0
-          ? `, from ${shortDate(dates[0] ?? '')} to ${shortDate(dates.at(-1) ?? '')}`
-          : ''}
-        .
-      </p>
-      <p>
-        {`It read ${plural(file.read.length, 'column')}: ${listed(file.read)}.`}
-        {file.read.includes('Type')
-          ? ' Type tells purchases from payments.'
-          : ''}
-        {file.ignored.length > 0
-          ? ` It ignored the file's other columns and kept nothing from them: ${listed(file.ignored)}.`
-          : ''}
-      </p>
-      {skipped > 0 ? (
-        <p>
-          It left out {plural(skipped, 'other row')}: {LEFT_OUT[file.issuer]}.
-        </p>
-      ) : null}
+      <dl class="figures">
+        <div>
+          <dt>Purchases</dt>
+          <dd>{purchases.length}</dd>
+        </div>
+        <div>
+          <dt>Refunds</dt>
+          <dd>{refunds}</dd>
+        </div>
+        <div class="wide">
+          <dt>Dates</dt>
+          <dd>
+            {dates.length > 0
+              ? dateRange(dates[0] ?? '', dates.at(-1) ?? '')
+              : 'None'}
+          </dd>
+        </div>
+        <div>
+          <dt>Columns read</dt>
+          <dd>{file.read.length}</dd>
+        </div>
+        <div>
+          <dt>Columns ignored</dt>
+          <dd>{file.ignored.length}</dd>
+        </div>
+      </dl>
       {file.lines.length > 0 ? (
         <details class="lines">
-          <summary>The {plural(file.lines.length, 'line')} it read</summary>
+          <summary>What it read, line by line</summary>
+          <p>
+            {`It read ${listed(file.read)}.`}
+            {file.read.includes('Type')
+              ? ' Type tells purchases from payments.'
+              : ''}
+            {file.ignored.length > 0
+              ? ` It ignored the file's other columns and kept nothing from them: ${listed(file.ignored)}.`
+              : ''}
+          </p>
+          {skipped > 0 ? (
+            <p>
+              It left out {plural(skipped, 'other row')}:{' '}
+              {LEFT_OUT[file.issuer]}.
+            </p>
+          ) : null}
           {file.issuer === 'chase' ? (
             <p class="muted small">
               Chase lists purchases as negative amounts; here they're positive,
@@ -432,213 +438,5 @@ function CardFinder({
         ))}
       </ul>
     </div>
-  )
-}
-
-function Result({
-  check,
-  wallet,
-  saved,
-  nameOf,
-}: {
-  check: Check
-  wallet: Wallet
-  saved: Wallet | null
-  nameOf: (id: string) => string
-}) {
-  const a = check.analysis
-  if (a.purchases === 0) return null
-  const one = a.byCard.length === 1 ? a.byCard[0] : undefined
-  const gain = roundCents(a.best - a.earned)
-  const pace = yearlyPace(a)
-  const shown = a.missed.slice(0, SHOWN_STORES)
-  const rest = a.missed.slice(SHOWN_STORES)
-  const values = pointValuesText(
-    catalog,
-    [
-      ...a.byCard.map((t) => t.cardId),
-      ...a.missed.map((m) => m.bestCardId),
-    ].flatMap((id) => {
-      const card = cards.get(id)
-      return card ? [cardValuation(catalog, wallet, card)] : []
-    }),
-  )
-  const unknownCount = check.unknown.reduce((n, s) => n + s.count, 0)
-  const unknownSpend = roundCents(
-    check.unknown.reduce((n, s) => n + s.spend, 0),
-  )
-  const missedItem = (m: (typeof a.missed)[number]) => (
-    <li key={`${m.merchant}|${m.usedCardId}|${m.bestCardId}`}>
-      <span class="store">{m.merchant}</span>
-      <span class="muted">
-        {' '}
-        · {plural(m.count, 'purchase')}, {dollarsAndCents(m.spend)}
-        {one ? '' : ` on ${nameOf(m.usedCardId)}`}
-      </span>
-      <br />
-      Use <b>{nameOf(m.bestCardId)}</b>: about {dollarsAndCents(m.best)} instead
-      of {dollarsAndCents(m.earned)} (+
-      {dollarsAndCents(roundCents(m.best - m.earned))}).
-      {m.categoryFromStatement ? (
-        <span class="row-note">
-          earnrate doesn't know this store, so this goes by the statement's
-          category.
-        </span>
-      ) : null}
-    </li>
-  )
-  return (
-    <section class="panel arrive check-result" aria-labelledby="result-title">
-      <h2 id="result-title">What these purchases earned</h2>
-      <p>
-        {plural(a.purchases, 'purchase')}, {dollarsAndCents(a.spend)}, from{' '}
-        {shortDate(a.from)} to {shortDate(a.to)}.
-        {a.refunds > 0
-          ? ` Refunds and credits came to ${dollarsAndCents(a.refunds)}; they aren't counted here.`
-          : ''}
-      </p>
-      <dl class="facts">
-        <div>
-          <dt>
-            {one
-              ? `Earned on ${nameOf(one.cardId)}`
-              : 'Earned on the cards you used'}
-          </dt>
-          <dd>about {dollarsAndCents(a.earned)}</dd>
-        </div>
-        <div>
-          <dt>With the best of your cards for each purchase</dt>
-          <dd>about {dollarsAndCents(a.best)}</dd>
-        </div>
-        <div>
-          <dt>Difference</dt>
-          <dd>
-            {Math.abs(gain) <= HALF_CENT
-              ? 'none'
-              : gain > 0
-                ? `${dollarsAndCents(gain)} more`
-                : dollarsAndCents(gain)}
-          </dd>
-        </div>
-      </dl>
-      {pace !== null ? (
-        <p class="pace">At this pace, about {wholeDollars(pace)} a year.</p>
-      ) : null}
-      {one ? null : (
-        <ul class="by-card">
-          {a.byCard.map((t) => (
-            <li key={t.cardId}>
-              {nameOf(t.cardId)}: {plural(t.purchases, 'purchase')},{' '}
-              {dollarsAndCents(t.spend)}, earned about{' '}
-              {dollarsAndCents(t.earned)}
-            </li>
-          ))}
-        </ul>
-      )}
-      <p class="muted small">
-        {values
-          ? `${values} ${saved ? 'These are the values My wallet uses.' : "These are earnrate's values."} `
-          : ''}
-        Each card is counted at its rewards rates. Statement credits, welcome
-        bonuses and yearly spend bonuses aren't included.{' '}
-        {saved
-          ? "Spending caps start empty at the file's first purchase: the totals and bonus progress saved in My wallet describe today and may already include these purchases."
-          : "Spending caps start empty at the file's first purchase."}
-      </p>
-
-      {a.missed.length > 0 ? (
-        <>
-          <h3>Where another of your cards would have earned more</h3>
-          <ul class="stores">{shown.map(missedItem)}</ul>
-          {rest.length > 0 ? (
-            <details>
-              <summary>{plural(rest.length, 'more store')}</summary>
-              <ul class="stores">{rest.map(missedItem)}</ul>
-            </details>
-          ) : null}
-        </>
-      ) : (
-        <p>For every purchase, the card you used was the best of your cards.</p>
-      )}
-
-      {check.unknown.length > 0 ? (
-        <>
-          <h3>Stores earnrate didn't recognize</h3>
-          <p>
-            {plural(check.unknown.length, 'store')}, with{' '}
-            {plural(unknownCount, 'purchase')} ({dollarsAndCents(unknownSpend)}
-            ). earnrate counted each by the category on the statement, the way
-            the issuer coded it, and as an everyday purchase where that category
-            doesn't say what kind of store it is. Another issuer may code the
-            same store differently.
-          </p>
-          <details>
-            <summary>How each was counted</summary>
-            <ul class="stores">
-              {check.unknown.map((s) => (
-                <li key={s.name}>
-                  <span class="store">{s.name}</span>
-                  <span class="muted">
-                    {' '}
-                    · {plural(s.count, 'purchase')}, {dollarsAndCents(s.spend)}
-                  </span>
-                  <br />
-                  Counted {categoryAs(catalog, s.category ?? 'other')}
-                  {s.issuerCategory
-                    ? ` (the statement says ${s.issuerCategory})`
-                    : ''}
-                  .
-                </li>
-              ))}
-            </ul>
-          </details>
-        </>
-      ) : null}
-
-      {a.coding.length > 0 ? (
-        <>
-          <h3>Stores the statement coded differently than earnrate expects</h3>
-          <p>
-            earnrate counted these the way it expects the store to code. If your
-            issuer keeps coding them as this statement does, what a card earns
-            there may differ. <a href="/support">Tell us</a> if earnrate has a
-            store wrong.
-          </p>
-          <ul class="stores">
-            {a.coding.map((c) => (
-              <li key={c.merchant}>
-                <span class="store">{c.merchant}</span>: earnrate counts it{' '}
-                {categoryAs(catalog, c.earnrateCategory)}; the statement says{' '}
-                {c.issuerCategory} ({plural(c.count, 'purchase')}).
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-
-      {a.notTaken.length > 0 ? (
-        <>
-          <h3>Stores earnrate has down as not taking your card</h3>
-          <p>
-            earnrate's data says these stores don't take the card you used, but
-            your statement shows they did, so these purchases count with what
-            that card earned. <a href="/support">Tell us</a> so we can correct
-            the store.
-          </p>
-          <ul class="stores">
-            {a.notTaken.map((n) => (
-              <li key={`${n.merchant}|${n.cardId}`}>
-                <span class="store">{n.merchant}</span>
-                <span class="muted">
-                  {' '}
-                  · {plural(n.count, 'purchase')}, {dollarsAndCents(n.spend)} on{' '}
-                  {nameOf(n.cardId)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-    </section>
   )
 }

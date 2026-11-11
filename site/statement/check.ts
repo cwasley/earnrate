@@ -17,7 +17,7 @@ import {
 } from '../../src/import/statement.ts'
 import { HALF_CENT } from '../../src/engine/compare.ts'
 import { daysBetween } from '../../src/engine/periods.ts'
-import { roundCents } from '../../src/engine/text.ts'
+import { roundCents, shortDate } from '../../src/engine/text.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import {
   WalletSchema,
@@ -198,4 +198,55 @@ export function yearlyPace(analysis: StatementAnalysis): number | null {
   const gain = analysis.best - analysis.earned
   if (days < PACE_MIN_DAYS || gain <= HALF_CENT) return null
   return roundCents((gain * 365) / days)
+}
+
+// The gain chart needs enough purchases to say something, and more than one
+// card to switch to (one bar would only repeat the difference).
+export const GAIN_CHART_MIN_PURCHASES = 10
+
+export type CardGain = {
+  cardId: string
+  gain: number
+  stores: number
+  purchases: number
+}
+
+// Where the difference comes from, by the card that would have earned more.
+export function gainByCard(analysis: StatementAnalysis): CardGain[] | null {
+  const byCard = new Map<
+    string,
+    { gain: number; stores: Set<string>; purchases: number }
+  >()
+  for (const m of analysis.missed) {
+    const entry = byCard.get(m.bestCardId) ?? {
+      gain: 0,
+      stores: new Set<string>(),
+      purchases: 0,
+    }
+    entry.gain += m.best - m.earned
+    entry.stores.add(m.merchant)
+    entry.purchases += m.count
+    byCard.set(m.bestCardId, entry)
+  }
+  const gains = [...byCard]
+    .map(([cardId, g]) => ({
+      cardId,
+      gain: roundCents(g.gain),
+      stores: g.stores.size,
+      purchases: g.purchases,
+    }))
+    .sort((a, b) => b.gain - a.gain)
+  return analysis.purchases >= GAIN_CHART_MIN_PURCHASES && gains.length >= 2
+    ? gains
+    : null
+}
+
+// "Oct 2 – Nov 1, 2026", or with both years when they differ.
+export function dateRange(from: string, to: string): string {
+  const start = shortDate(from)
+  const end = shortDate(to)
+  if (from === to) return end
+  return from.slice(0, 4) === to.slice(0, 4)
+    ? `${start.replace(/, \d{4}$/, '')} – ${end}`
+    : `${start} – ${end}`
 }

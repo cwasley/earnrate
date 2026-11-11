@@ -1,3 +1,4 @@
+import './jitless.ts'
 import { render } from 'preact'
 import '../app/app.css'
 import './statement.css'

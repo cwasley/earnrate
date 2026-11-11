@@ -2,6 +2,9 @@
    app's styles (app.css) for the controls it shares with My wallet, and
    these. The app's colors beyond pages.css's are the home page's. */
 :root {
+  /* The de-emphasized bar: what the card used earned. Its amount is always
+     printed beside it, so it needn't reach 3:1 against the panel. */
+  --bar-quiet: #a1978e;
   --accent-strong: #7f4119;
   --accent-faint: #fbf3ed;
   --tab-track: #efe3d8;
@@ -10,6 +13,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    --bar-quiet: #6d655e;
     --accent-strong: #f1bd94;
     --accent-faint: #201a16;
     --tab-track: #31251c;
@@ -140,24 +144,327 @@
   font-variant-numeric: tabular-nums;
 }
 
-.check-result .facts dd {
+/* The answer's headline: the difference, then the two totals as bars on
+   one scale from zero. */
+.hero {
+  margin: 4px 0 16px;
+}
+
+.hero p {
+  margin: 0;
+}
+
+.hero-figure {
+  font-size: clamp(36px, 9vw, 48px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.hero-caption {
+  color: var(--muted);
+}
+
+.hero .hero-pace {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+/* A label, a bar and its amount per row; every bar in one list shares a
+   scale. On a phone the label takes its own line. */
+.compare {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+.compare-row {
+  display: grid;
+  grid-template-columns: minmax(9em, 19em) minmax(0, 1fr) 6.5em;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.compare-amount {
+  text-align: right;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-.stores,
-.by-card {
-  margin: 0 0 12px;
-  padding-left: 1.1em;
+@media (max-width: 559px) {
+  .compare-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .compare-label {
+    grid-column: 1 / -1;
+  }
 }
 
-.stores li,
-.by-card li {
+svg.bar {
+  display: block;
+  height: 10px;
+}
+
+.bar-accent rect {
+  fill: var(--accent);
+}
+
+.bar-quiet rect {
+  fill: var(--bar-quiet);
+}
+
+.sub {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.mark {
+  margin-left: 2px;
+  color: var(--muted);
+}
+
+button.link.more {
+  display: block;
+  text-align: left;
+  margin: 2px 0 10px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* A file's counts, as a row of figures. */
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5em, 1fr));
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.figures > div {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--accent-faint);
+}
+
+.figures .wide {
+  grid-column: span 2;
+}
+
+.figures dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.figures dd {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The answer's tables. On a phone a row becomes a block: the store as its
+   title, the other cells under it, named by their column. */
+table.data,
+table.missed {
+  width: 100%;
+  margin: 4px 0 8px;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+:is(table.data, table.missed) :is(th, td) {
+  padding: 8px 8px 8px 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+:is(table.data, table.missed) thead th {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+:is(table.data, table.missed) tbody th {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+:is(table.data, table.missed) .num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+table.missed td.gain {
+  font-weight: 600;
+  padding-right: 0;
+}
+
+table.missed td.gain-bar {
+  width: 22%;
+  vertical-align: middle;
+}
+
+table.missed .phone {
+  display: none;
+}
+
+@media (max-width: 559px) {
+  :is(table.data, table.missed) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  :is(table.data, table.missed) :is(tbody, tr, th, td) {
+    display: block;
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  :is(table.data, table.missed) tbody tr {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  table.data td {
+    display: inline-block;
+    margin: 4px 16px 0 0;
+    font-size: 14px;
+  }
+
+  table.data td.num {
+    text-align: left;
+  }
+
+  table.data td::before {
+    content: attr(data-label) ': ';
+    color: var(--muted);
+  }
+
+  table.missed tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+  }
+
+  table.missed .store {
+    flex: 1 1 60%;
+  }
+  table.missed td.gain {
+    order: 1;
+    margin-left: auto;
+    text-align: right;
+  }
+  table.missed td.gain-bar {
+    order: 2;
+    flex: 0 0 100%;
+    width: auto;
+    margin: 2px 0;
+  }
+  table.missed :is(td.used, td.better) {
+    order: 3;
+    font-size: 14px;
+  }
+  table.missed :is(td.used, td.better) .sub {
+    display: inline;
+    margin-left: 4px;
+  }
+  table.missed td.better::before {
+    content: '→ ';
+    content: '→ ' / '';
+    color: var(--muted);
+  }
+  table.missed td.spent {
+    display: none;
+  }
+  table.missed .phone {
+    display: inline;
+  }
+}
+
+/* What happens to the file, before one is chosen. */
+table.promises {
+  width: 100%;
+  margin: 8px 0 12px;
+  border-collapse: collapse;
+}
+
+table.promises :is(th, td) {
+  padding: 10px 10px 10px 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+table.promises th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+table.promises td:first-of-type {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+table.promises td:last-child {
+  color: var(--muted);
+}
+
+/* On a phone each row is the question and its answer, the note below. */
+@media (max-width: 559px) {
+  table.promises :is(tbody, tr, th, td) {
+    display: block;
+  }
+  table.promises tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  table.promises :is(th, td) {
+    padding: 0;
+    border: 0;
+  }
+  table.promises td:first-of-type {
+    text-align: right;
+  }
+  table.promises td:last-child {
+    grid-column: 1 / -1;
+    font-size: 15px;
+  }
+}
+
+.how > details {
+  margin: 8px 0 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+}
+
+.how > details > summary {
+  font-size: 17px;
+}
+
+.how > details[open] > summary {
   margin-bottom: 8px;
 }
 
-.store {
-  font-weight: 600;
-  overflow-wrap: anywhere;
+.how h3 {
+  font-size: 17px;
+  margin: 18px 0 8px;
 }
 
 .how pre {

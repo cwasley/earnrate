@@ -20,6 +20,9 @@ import {
   TOO_BIG_REFUSED,
   UNKNOWN_FORMAT,
   yearlyPace,
+  gainByCard,
+  GAIN_CHART_MIN_PURCHASES,
+  dateRange,
 } from '../site/statement/check.ts'
 import preview from '../site/preview-worker.ts'
 import {
@@ -450,5 +453,68 @@ describe('the check', () => {
       ((both.best - both.earned) * 365) / days,
       1,
     )
+  })
+
+  test('the gain by card to use adds up to the stores where another card wins', () => {
+    const wallet = checkWallet(
+      null,
+      ['amex-blue-cash-preferred', 'citi-double-cash'],
+      ['amex-platinum', 'chase-sapphire-preferred'],
+    )
+    const { analysis } = runCheck(catalog, wallet, entries, '2026-11-11')
+    const gains = gainByCard(analysis)
+    if (!gains) throw new Error('no chart')
+    expect(gains.length).toBeGreaterThanOrEqual(2)
+    expect(gains.map((g) => g.gain)).toEqual(
+      [...gains.map((g) => g.gain)].sort((a, b) => b - a),
+    )
+    const total = analysis.missed.reduce((n, m) => n + m.best - m.earned, 0)
+    expect(gains.reduce((n, g) => n + g.gain, 0)).toBeCloseTo(total, 1)
+  })
+
+  test('the gain chart waits for enough purchases and two cards to switch to', () => {
+    const wallet = checkWallet(
+      null,
+      ['amex-blue-cash-preferred', 'citi-double-cash'],
+      ['amex-platinum'],
+    )
+    const few = runCheck(
+      catalog,
+      wallet,
+      entries.filter((e) => e.cardId === 'amex-platinum').slice(0, 5),
+      '2026-11-11',
+    ).analysis
+    expect(few.purchases).toBeLessThan(GAIN_CHART_MIN_PURCHASES)
+    expect(gainByCard(few)).toBeNull()
+    const oneCard = checkWallet(
+      null,
+      ['amex-blue-cash-preferred'],
+      ['amex-platinum'],
+    )
+    const single = runCheck(
+      catalog,
+      oneCard,
+      [...entries, ...entries]
+        .filter((e) => e.cardId === 'amex-platinum')
+        .map((e, i) => ({
+          ...e,
+          line: {
+            ...e.line,
+            description: `${e.line.description} ${String(i)}`,
+          },
+        })),
+      '2026-11-11',
+    ).analysis
+    expect(single.purchases).toBeGreaterThanOrEqual(GAIN_CHART_MIN_PURCHASES)
+    expect(new Set(single.missed.map((m) => m.bestCardId)).size).toBe(1)
+    expect(gainByCard(single)).toBeNull()
+  })
+
+  test('date ranges name the year once when they share it', () => {
+    expect(dateRange('2026-10-02', '2026-11-01')).toBe('Oct 2 – Nov 1, 2026')
+    expect(dateRange('2025-12-20', '2026-01-05')).toBe(
+      'Dec 20, 2025 – Jan 5, 2026',
+    )
+    expect(dateRange('2026-10-02', '2026-10-02')).toBe('Oct 2, 2026')
   })
 })
