@@ -95,7 +95,7 @@ const cases: GoldenCase[] = [
     flat: { winner: 'amex-blue-cash-preferred', returnPct: 6 },
     pointsHeavy: { winner: 'amex-gold', returnPct: 6.8 },
     check: (rec, profile) => {
-      expectSome(rec.assumptions, /Whole Foods Market codes as .*supermarket/i)
+      expectSome(rec.assumptions, /Whole Foods Market counts as a supermarket/)
       expectSome(rec.assumptions, /5411/)
       expect(entry(rec, 'chase-prime-visa').effectiveReturnPct).toBeCloseTo(5)
       expect(rec.sensitivity).toMatch(/MR/)
@@ -247,14 +247,14 @@ const cases: GoldenCase[] = [
     },
   },
   {
-    name: '#11 Stadium: warns it may not code as dining, and who wins if it does',
+    name: '#11 Stadium: warns it may not count as dining, and who wins if it does',
     purchase: purchase('Dodger Stadium', { channel: 'in_store' }),
     flat: { winner: 'sofi-unlimited-2', returnPct: 2 },
     pointsHeavy: { winner: 'chase-freedom-unlimited', returnPct: 2.55 },
     check: (rec, profile) => {
-      expectSome(rec.warnings, /may code as/i)
+      expectSome(rec.warnings, /may count as a restaurant instead/)
       if (profile === 'flat') {
-        expectSome(rec.warnings, /restaurants.*Freedom Unlimited/i)
+        expectSome(rec.warnings, /a restaurant, .*Freedom Unlimited/i)
       }
       expect(rec.warnings.join(' ')).not.toMatch(/Gold/)
     },
@@ -3412,6 +3412,29 @@ describe('#40 keep or replace a fee card', () => {
       )
       expect(hiddenRatesText(own([['everything else', 800]]))).toBe('')
       expect(hiddenRatesText(own([['dining', 800]]))).toBe('')
+      const preferred = ask(
+        wallet([
+          { id: 'chase-sapphire-preferred' },
+          { id: 'chase-freedom-unlimited' },
+          { id: 'citi-double-cash' },
+        ]),
+        'chase-sapphire-preferred',
+      )
+      expect(hiddenRatesText(preferred, ' in Find a card')).toBe(
+        'Apple Music, Apple TV, Disney+ and 15 more streaming services earn more on the Chase Sapphire Preferred than the Streaming services line counts; add them as their own lines in Find a card for a closer answer. Chase Travel, Airbnb, Vrbo and 3 more earn more on the Chase Sapphire Preferred than the Other travel line counts; add them as their own lines in Find a card for a closer answer.',
+      )
+      const many = {
+        ...preferred,
+        hidden: [
+          ...preferred.hidden,
+          { line: 'Gas stations', parts: ['Shell'], one: true, kind: null },
+          { line: 'Hotels', parts: ['Hyatt'], one: true, kind: null },
+        ],
+      }
+      expect(hiddenRatesText(many)).toMatch(
+        /for a closer answer\. The same goes for 2 other spending lines\.$/,
+      )
+      expect(hiddenRatesText(many).split('. ').length).toBe(3)
       const platinum = ask(
         wallet([{ id: 'amex-platinum' }, { id: 'citi-double-cash' }]),
         'amex-platinum',

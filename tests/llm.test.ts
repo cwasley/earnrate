@@ -104,7 +104,7 @@ describe('golden #10 with the classifier', () => {
       confidence: 'low',
     })
     expect(rec.assumptions.join(' ')).toMatch(
-      /codes as home improvement \(MCC 5251\).*Claude's reasoning: The name suggests/,
+      /counts as home improvement \(MCC 5251\).*Claude's reasoning: The name suggests/,
     )
     expect(rec.warnings.join(' ')).toMatch(/Claude's guess \(fake-model\)/)
     expect(rec.warnings.join(' ')).not.toMatch(/Couldn't identify/)
@@ -132,7 +132,7 @@ describe('golden #10 with the classifier', () => {
   test('other possible codings become ambiguity warnings', async () => {
     const { classifier } = fakeClassifier()
     const rec = await recommendWith(classifier, 'Hotel Bar Downtown')
-    expect(rec.warnings.join(' ')).toMatch(/may code as hotels instead/)
+    expect(rec.warnings.join(' ')).toMatch(/may count as a hotel instead/)
   })
 })
 

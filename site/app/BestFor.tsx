@@ -20,6 +20,7 @@ import {
   capitalize,
   CATEGORY_CARDS_LEAD,
   categoryCards,
+  categoryAs,
   categoryPhrase,
   CREDIT_GROUP,
   CREDIT_PERIODS,
@@ -457,7 +458,7 @@ export function BestFor({
               result.merchant.source !== 'none' ? (
                 <span class="muted">
                   {' '}
-                  · codes as {categoryPhrase(catalog, result.merchant.category)}
+                  · counts {categoryAs(catalog, result.merchant.category)}
                 </span>
               ) : null}
             </h3>

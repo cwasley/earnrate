@@ -155,7 +155,7 @@ describe('best cards for a purchase', () => {
   test('says what it assumed about the merchant and the cards', () => {
     const r = exploreCards(catalog, query({ merchant: 'whole foods' }), casual)
     expect(r.assumptions[0]).toMatch(
-      /^Assumes Whole Foods Market codes as supermarkets/,
+      /^Assumes Whole Foods Market counts as a supermarket/,
     )
     expect(r.assumptions).toContain(
       'Assumes no memberships (like Amazon Prime). Cards and rates that need one are listed separately.',

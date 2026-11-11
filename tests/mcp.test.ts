@@ -1668,7 +1668,9 @@ describe('category from the caller', () => {
       cardId: 'amex-blue-cash-preferred',
       confidence: 'medium',
     })
-    expect(rec.warnings.join(' ')).toMatch(/category given with the request/)
+    expect(rec.warnings).toContain(
+      `earnrate doesn't know "Lucky's Market", so it's treated as a supermarket here; your statement shows how it really counts.`,
+    )
   })
 
   test('a merchant earnrate knows ignores it', async () => {

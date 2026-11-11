@@ -33,7 +33,8 @@ import {
   amountUnknownText,
   capSentence,
   categoryNote,
-  categoryPhrase,
+  categoryAs,
+  categoryPurchases,
   categoryUnranked,
   choiceName,
   codesAs,
@@ -644,9 +645,7 @@ function exploreAssumptions(
 ): string[] {
   const assumptions: string[] = []
   if (merchant.source === 'category') {
-    assumptions.push(
-      `Ranks purchases that code as ${categoryPhrase(catalog, merchant.category)}.`,
-    )
+    assumptions.push(`Ranks ${categoryPurchases(catalog, merchant.category)}.`)
   } else if (merchant.source !== 'none') {
     assumptions.push(codesAs(catalog, merchant))
   }
@@ -702,10 +701,10 @@ function exploreWarnings(
   }
   if (merchant.ambiguity) {
     const alternatives = merchant.ambiguity.mayCodeAs.map((c) =>
-      categoryPhrase(catalog, c),
+      categoryAs(catalog, c),
     )
     warnings.push(
-      `${merchant.resolvedName} may code as ${alternatives.join(' or ')} instead: ${merchant.ambiguity.note}`,
+      `${merchant.resolvedName} may count ${alternatives.join(' or ')} instead: ${merchant.ambiguity.note}`,
     )
   }
   return warnings

@@ -8,7 +8,12 @@ import {
 } from '../../src/engine/evaluate.ts'
 import { idealHolding, type Picks } from '../../src/engine/explore.ts'
 import { inEffect } from '../../src/engine/periods.ts'
-import { categoryPhrase, earnText, listed } from '../../src/engine/text.ts'
+import {
+  categoryAs,
+  categoryPhrase,
+  earnText,
+  listed,
+} from '../../src/engine/text.ts'
 import { resolveMerchantById } from '../../src/merchants/resolve.ts'
 import type { Card, Rule } from '../../src/schema/card.ts'
 import type { Merchant } from '../../src/schema/merchant.ts'
@@ -231,19 +236,20 @@ function treatmentItems(
     )
   if (silent.length > 0 && outside)
     items.push(
-      `<strong>Doesn't count</strong> for the other ${String(silent.length)} cards with a bonus on ${esc(familyWords)}: none of them covers ${esc(codesAs)}.`,
+      `<strong>Doesn't count</strong> for the other ${String(silent.length)} cards with a bonus on ${esc(familyWords)}: none of them pays when it counts ${esc(codesAs)}.`,
     )
   else if (silent.length > 0)
     items.push(
       `<strong>Doesn't count</strong> for ${namedList(
         silent.map((t) => cardLink(ctx, t.card)),
-      )}: ${silent.length === 1 ? 'its' : 'their'} bonus on ${esc(familyWords)} doesn't pay when it codes as ${esc(codesAs)}.`,
+      )}: ${silent.length === 1 ? 'its' : 'their'} bonus on ${esc(familyWords)} doesn't pay when it counts ${esc(codesAs)}.`,
     )
   return items
 }
 
+// "as a supermarket (MCC 5411)"
 const codesText = (ctx: PageContext, category: string, mcc?: number) =>
-  `${categoryPhrase(ctx.catalog, category)}${mcc === undefined ? '' : ` (MCC ${String(mcc)})`}`
+  `${categoryAs(ctx.catalog, category)}${mcc === undefined ? '' : ` (MCC ${String(mcc)})`}`
 
 // Where a merchant's notes say how it codes.
 export const hasCodingNotes = (m: Merchant) =>
@@ -259,14 +265,16 @@ export function howItCodes(
   if (!hasCodingNotes(merchant)) return ''
   const ways = [merchant.category, ...(merchant.ambiguity?.may_code_as ?? [])]
   const parts: string[] = []
-  const catLink = (id: string) => {
+  // "as <a>a supermarket</a>": the words after "as" link to the category.
+  const asLink = (id: string) => {
     const slug = categorySlug(id)
+    const words = categoryAs(ctx.catalog, id).replace(/^as /, '')
     return slug
-      ? `<a href="/categories/${slug}">${esc(categoryPhrase(ctx.catalog, id))}</a>`
-      : esc(categoryPhrase(ctx.catalog, id))
+      ? `as <a href="/categories/${slug}">${esc(words)}</a>`
+      : `as ${esc(words)}`
   }
   parts.push(
-    `<p>${esc(merchant.name)} usually codes as ${catLink(merchant.category)}${merchant.likely_mcc === undefined ? '' : ` (MCC ${String(merchant.likely_mcc)})`}${merchant.ambiguity ? `, and may code as ${listed(merchant.ambiguity.may_code_as.map(catLink), 'or')}` : ''}.</p>`,
+    `<p>${esc(merchant.name)} usually counts ${asLink(merchant.category)}${merchant.likely_mcc === undefined ? '' : ` (MCC ${String(merchant.likely_mcc)})`}${merchant.ambiguity ? `, and may count ${listed(merchant.ambiguity.may_code_as.map(asLink), 'or')}` : ''}.</p>`,
   )
   const notes = [merchant.note, merchant.ambiguity?.note].filter(
     (n) => n !== undefined,
@@ -332,7 +340,7 @@ export function howItCodes(
       )
     if (paying.length === 0) continue
     parts.push(
-      `<p>${way === merchant.category ? 'Coded' : 'If it codes'} as ${esc(codesText(ctx, way))}, ${String(paying.length)} ${paying.length === 1 ? 'card pays' : 'cards pay'} a category bonus here: ${namedList(
+      `<p>${way === merchant.category ? 'Counted' : 'If it counts'} ${esc(codesText(ctx, way))}, ${String(paying.length)} ${paying.length === 1 ? 'card pays' : 'cards pay'} a category bonus here: ${namedList(
         paying.map(
           (p) =>
             `${cardLink(ctx, p.card)} (${esc(earnText(ctx.catalog, p.rule.rate, p.card.currency))}${p.rule.requires?.membership ? ` with ${esc(ctx.membershipName(p.rule.requires.membership))}` : ''})`,
@@ -437,8 +445,8 @@ function answerQuestion(
       )
       const lead =
         way === m.category
-          ? `Coded as ${esc(codesText(ctx, way, m.likely_mcc))}:`
-          : `If it posts as ${esc(codesText(ctx, way))}:`
+          ? `Counted ${esc(codesText(ctx, way, m.likely_mcc))}:`
+          : `If it counts ${esc(codesText(ctx, way))}:`
       return `<p>${lead}</p><ul class="quotes">${items.map((i) => `<li>${i}</li>`).join('')}</ul>`
     })
     const key = blocks.join('')
@@ -486,7 +494,7 @@ export function howStoresCodePage(
   const body = `
       <h1>How stores code</h1>
       <p class="updated">Updated ${esc(ctx.dayWords(lastmod))}</p>
-      <p>A card's bonus depends on how the store's charge is coded (its merchant category code), not on what you bought. These answers come from earnrate's notes on each store and from each card's own rules, checked by earnrate's engine. A store's page shows every card's rate there.</p>
+      <p>A card's bonus depends on how the store's charge is coded: the merchant category code on the charge decides what the purchase counts as, a supermarket or a restaurant or something else, whatever you bought. These answers come from earnrate's notes on each store and from each card's own rules, checked by earnrate's engine. A store's page shows every card's rate there.</p>
       <ul>${answers.map((a) => `<li><a href="#${questionId(a.q.heading)}">${esc(a.q.heading)}</a></li>`).join('')}</ul>
       ${answers.map((a) => a.html).join('')}
       <p class="muted">Only cards open to new applicants are listed. A card "counts" a store when one of its rules in that category pays there, set up at its best: categories picked, bonuses activated, any membership it asks for.</p>`

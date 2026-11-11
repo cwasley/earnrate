@@ -8,6 +8,7 @@ import type {
 } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { WalletCard } from '../schema/wallet.ts'
+import { findCategory } from '../merchants/resolve.ts'
 import { singleMcc } from './evaluate.ts'
 import type { MerchantResolution } from './types.ts'
 
@@ -107,6 +108,44 @@ export function categoryPhrase(catalog: Catalog, id: string): string {
     : name.charAt(0).toLowerCase() + name.slice(1)
 }
 
+// One of a category, from its name: "Gas station" for "Gas stations", "Gym"
+// for "Gyms and fitness", but only when the engine reads that word back as
+// the same category. Null for a name with no such singular ("Travel",
+// "Home utilities").
+export function categorySingular(catalog: Catalog, id: string): string | null {
+  const name = catalog.categories.find((c) => c.id === id)?.name
+  if (name === undefined) return null
+  const first = name.split(' and ')[0] ?? name
+  if (!/[^s]s$/.test(first) || /ies$/.test(first)) return null
+  const one = first.slice(0, -1)
+  return findCategory(catalog, one) === id ? one : null
+}
+
+// What a purchase counts as, for "counts as a supermarket": "as a
+// supermarket", "as travel", "as a purchase at grocery stores" (a plural
+// with no reliable singular), and "as an everyday purchase" for the rest.
+export function categoryAs(catalog: Catalog, id: string): string {
+  if (id === 'other') return 'as an everyday purchase'
+  const one = categorySingular(catalog, id)
+  if (one !== null && !one.includes(' at '))
+    return `as ${withArticle(/^[A-Z]{2}/.test(one) ? one : one.charAt(0).toLowerCase() + one.slice(1))}`
+  const phrase = categoryPhrase(catalog, id)
+  const first = phrase.split(' and ')[0] ?? phrase
+  if (/[^s]s$/.test(first) && !phrase.includes(' at '))
+    return `as a purchase ${categoryReadsOn(catalog, id) ? 'on' : 'at'} ${phrase}`
+  return `as ${phrase}`
+}
+
+// "purchases at supermarkets", "purchases on travel", "everyday purchases".
+export const categoryPurchases = (catalog: Catalog, id: string) =>
+  id === 'other'
+    ? 'everyday purchases'
+    : `purchases ${categoryReadsOn(catalog, id) ? 'on' : 'at'} ${categoryPhrase(catalog, id)}`
+
+// The same for several stores: "stores that count as supermarkets".
+export const categoryAsMany = (catalog: Catalog, id: string) =>
+  id === 'other' ? 'as everyday purchases' : `as ${categoryPhrase(catalog, id)}`
+
 // A category bought as a service reads "on" (streaming services); its own
 // preposition or a parent's says so. Everything else reads "at".
 export function categoryReadsOn(catalog: Catalog, id: string): boolean {
@@ -165,7 +204,7 @@ export function codesAs(
 ): string {
   const mcc = merchant.likelyMcc ?? singleMcc(catalog, merchant.category)
   const code = mcc === null ? '' : ` (MCC ${String(mcc)})`
-  return `Assumes ${merchant.resolvedName} codes as ${categoryPhrase(catalog, merchant.category)}${code}.`
+  return `Assumes ${merchant.resolvedName} counts ${categoryAs(catalog, merchant.category)}${code}.`
 }
 
 // "Point values: Membership Rewards (MR) at 1¢." for the currencies an

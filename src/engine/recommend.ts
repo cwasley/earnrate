@@ -33,10 +33,11 @@ import {
   amountUnknownText,
   CAP_ADJECTIVES,
   categoryNote,
-  categoryPhrase,
   categoryUnranked,
   codesAs,
   creditAnswerText,
+  categoryAs,
+  categoryPurchases,
   creditFirstText,
   currencyLabel,
   currencyName,
@@ -645,9 +646,7 @@ function assumptionsFor(
       `Treats "${merchant.input}" as an everyday purchase with no bonus category.`,
     )
   } else if (merchant.source === 'category') {
-    assumptions.push(
-      `Ranks purchases that code as ${categoryPhrase(catalog, merchant.category)}.`,
-    )
+    assumptions.push(`Ranks ${categoryPurchases(catalog, merchant.category)}.`)
   } else if (merchant.category === 'other') {
     // A card whose rule names this store by name (Audible on Amex's
     // streaming list) earns its bonus there anyway.
@@ -818,7 +817,7 @@ export function recommend(
   }
   if (merchant.source === 'caller') {
     warnings.push(
-      `"${merchant.input}" isn't in earnrate's merchant list, so it uses the category given with the request. Check how it codes on your statement.`,
+      `earnrate doesn't know "${merchant.input}", so it's treated ${categoryAs(catalog, merchant.category)} here; your statement shows how it really counts.`,
     )
   }
   if (merchant.inference) {
@@ -832,10 +831,10 @@ export function recommend(
 
   if (merchant.ambiguity) {
     const alternatives = merchant.ambiguity.mayCodeAs.map((c) =>
-      categoryPhrase(catalog, c),
+      categoryAs(catalog, c),
     )
     warnings.push(
-      `${merchant.resolvedName} may code as ${alternatives.join(' or ')} instead: ${merchant.ambiguity.note}`,
+      `${merchant.resolvedName} may count ${alternatives.join(' or ')} instead: ${merchant.ambiguity.note}`,
     )
     for (const category of merchant.ambiguity.mayCodeAs) {
       const alts = rankEntries(
@@ -848,7 +847,7 @@ export function recommend(
       ).entries
       const alt = alts[0]
       if (!alt || !winner) continue
-      const as = `If it codes as ${categoryPhrase(catalog, category)}`
+      const as = `If it counts ${categoryAs(catalog, category)}`
       // The same pick there may share the top with another card.
       const twin = alts.find(
         (e) =>

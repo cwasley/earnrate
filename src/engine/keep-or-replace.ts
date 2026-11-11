@@ -54,6 +54,11 @@ import { cardValuation } from './valuation.ts'
 // How many cheaper cards the answer names.
 export const REPLACEMENTS = 3
 
+// Rates the spending lines hide: the most named on one line, and the most
+// lines given a sentence of their own.
+export const HIDDEN_NAMED = 3
+export const HIDDEN_LINES = 2
+
 export const PERKS_NOT_COUNTED =
   'This counts only earning, statement credits, free nights and fees: earnrate has nothing on lounge access, travel insurance, elite status or other perks, so weigh those yourself.'
 
@@ -119,7 +124,8 @@ export type KeepOrReplace = {
   // Spending lines that cover a category only as a whole, where the card
   // earns more on parts of it: "Travel" and its flights and hotels.
   // `one` when the parts are a single store, said in the singular.
-  hidden: { line: string; parts: string[]; one: boolean }[]
+  // `kind` names more of them: "and 15 more streaming services".
+  hidden: { line: string; parts: string[]; one: boolean; kind: string | null }[]
 }
 
 const whole = (n: number) => Math.round(n)
@@ -320,11 +326,13 @@ function hiddenRates(
       country: 'US',
     })
     const wholeRate = evaluateCard(card, holding, ctx).best.rate
+    // Kinds of purchase and travel sites first, then single stores, each in
+    // the card's own order.
     const parts = card.rules.flatMap((rule) => {
       if (!inEffect(rule, date) || rule.rate <= wholeRate) return []
       const categories = (rule.match.categories ?? [])
         .filter((c) => under(parent, c) && !named(c, null))
-        .map((c) => categoryPhrase(catalog, c))
+        .map((c) => ({ text: categoryPhrase(catalog, c), store: false }))
       const merchants = (rule.match.merchants ?? [])
         .filter((m) => {
           const category = findMerchant(catalog, m)?.category
@@ -332,10 +340,20 @@ function hiddenRates(
             (category === parent || under(parent, category)) && !named(null, m)
           )
         })
-        .map((m) => merchantName(catalog, m))
+        .map((m) => {
+          const kind = findMerchant(catalog, m)?.kind
+          return {
+            text: merchantName(catalog, m),
+            store: kind !== 'portal' && kind !== 'booking',
+          }
+        })
       return [...merchants, ...categories]
     })
-    const unique = bookingsTogether([...new Set(parts)])
+    const ordered = [
+      ...parts.filter((p) => !p.store),
+      ...parts.filter((p) => p.store),
+    ].map((p) => p.text)
+    const unique = bookingsTogether([...new Set(ordered)])
     const [first] = unique
     if (first === undefined) return []
     const store = (m: string) =>
@@ -344,7 +362,9 @@ function hiddenRates(
     const one =
       unique.length === 1 &&
       card.rules.some((r) => (r.match.merchants ?? []).some(store))
-    return [{ line: line.label, parts: unique, one }]
+    const name = categoryPhrase(catalog, parent)
+    const kind = /[^s]s$/.test(name.split(' and ')[0] ?? name) ? name : null
+    return [{ line: line.label, parts: unique, one, kind }]
   })
 }
 
@@ -595,11 +615,22 @@ export function transferText(catalog: Catalog, k: KeepOrReplace): string {
 // than the Travel line counts; add them as their own lines for a closer
 // answer." `where` names the place to add them, like " in Find a card".
 export function hiddenRatesText(k: KeepOrReplace, where = ''): string {
-  return k.hidden
-    .map(({ line, parts, one }) => {
-      return `${capitalize(listed(parts))} ${one ? 'earns' : 'earn'} more on the ${k.name} than the ${line} line counts; add ${one ? 'it as its own line' : 'them as their own lines'}${where} for a closer answer.`
+  const sentences = k.hidden
+    .slice(0, HIDDEN_LINES)
+    .map(({ line, parts, one, kind }) => {
+      const more = parts.length - HIDDEN_NAMED
+      const what =
+        more > 0
+          ? `${parts.slice(0, HIDDEN_NAMED).join(', ')} and ${String(more)} more${kind === null ? '' : ` ${kind}`}`
+          : listed(parts)
+      return `${capitalize(what)} ${one ? 'earns' : 'earn'} more on the ${k.name} than the ${line} line counts; add ${one ? 'it as its own line' : 'them as their own lines'}${where} for a closer answer.`
     })
-    .join(' ')
+  const rest = k.hidden.length - HIDDEN_LINES
+  if (rest > 0)
+    sentences.push(
+      `The same goes for ${rest === 1 ? 'one other spending line' : `${String(rest)} other spending lines`}.`,
+    )
+  return sentences.join(' ')
 }
 
 // For a short row under the card's name: "Keeps 20%, $795 less in fees",

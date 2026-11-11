@@ -54,7 +54,7 @@ Use Blue Cash Preferred: 6% back, about $4.80. High confidence.
 
 Amex Gold beats Blue Cash Preferred here if Amex Membership Rewards (MR) points are worth more than 1.5¢ (you value them at 1¢).
 
-Assumes Whole Foods Market codes as supermarkets (MCC 5411).
+Assumes Whole Foods Market counts as a supermarket (MCC 5411).
 Point values: Amex Membership Rewards (MR) at 1¢, SoFi Member Rewards at 1¢ and Chase Ultimate Rewards (UR) at 1¢.
 ```
 
@@ -312,7 +312,7 @@ merchant text
 ```
 
 - **Card terms are data, not code.** Each card is a YAML file of rules (category, rate, cap, channel, dates, activation, required membership), validated with Zod. Every rule carries a short quote from the issuer's own page, and a test fails if one is missing. The engine has no card-specific branches.
-- **Merchants resolve to a category plus the assumption behind it.** "Whole Foods codes as a supermarket (MCC 5411)" is stated in the answer, and venues that can code more than one way (a restaurant inside a stadium or hotel) come back at medium confidence with the alternative spelled out. Unknown merchants fall back to base rates, or to an opt-in, cached and labeled Claude guess.
+- **Merchants resolve to a category plus the assumption behind it.** "Whole Foods counts as a supermarket (MCC 5411)" is stated in the answer, and venues that can code more than one way (a restaurant inside a stadium or hotel) come back at medium confidence with the alternative spelled out. Unknown merchants fall back to base rates, or to an opt-in, cached and labeled Claude guess.
 - **The engine is pure and deterministic.** Given a purchase, a date and a set of cards (yours, or every card), it checks every rule against network acceptance, the date window, caps already used (split when a purchase straddles one), quarterly picks and activations, then values points at your cents-per-point, including pooling (Freedom Unlimited points are worth Sapphire points when you hold both). Ties, the valuation at which the runner-up would win, stale data, and a rotating card whose new quarter isn't in the data yet all show up in the answer.
 - **Wallet edits keep your file intact.** Adding or changing a card, or recording a purchase, splices in only the lines that changed and checks the result before saving, so comments and formatting in your YAML survive.
 - **Drift detection.** A weekly GitHub Action opens each issuer page in a headless browser, checks every quote is still there, and opens an issue when terms move. It stores only hashes of issuer text. An hourly check confirms earnrate.dev and the hosted server are up, and a daily one checks them end to end (a browser load of the site, sign in, ask, save a card, delete the wallet, and the server's error counts), opening an issue if anything fails.

@@ -626,7 +626,7 @@ describe('gas sold at stores', () => {
     expect(rate(rec, 'usbank-cash-plus')).toBe(2)
     expect(rec.decision?.cardId).toBe('chase-sapphire-preferred')
     expect(rec.warnings.join(' ')).toMatch(
-      /If it codes as supermarkets, American Express Blue Cash Preferred Card wins \(6%\)/,
+      /If it counts as a supermarket, American Express Blue Cash Preferred Card wins \(6%\)/,
     )
   })
 

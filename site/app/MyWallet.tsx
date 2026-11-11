@@ -32,6 +32,7 @@ import {
 } from '../../src/engine/simulate.ts'
 import { ifMemberLines, placedAmong } from '../../src/engine/memberships.ts'
 import {
+  categoryAs,
   categoryPhrase,
   creditsCountedText,
   creditsOnlyIf,
@@ -2454,7 +2455,7 @@ export function MyWallet({
                 rec.merchant.source !== 'none' ? (
                   <span class="muted">
                     {' '}
-                    · codes as {categoryPhrase(catalog, rec.merchant.category)}
+                    · counts {categoryAs(catalog, rec.merchant.category)}
                   </span>
                 ) : null}
               </h4>

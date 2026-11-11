@@ -2,6 +2,7 @@ import { findMerchant } from '../merchants/resolve.ts'
 import type { Card, Credit, IntroRate, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import {
+  categoryAs,
   categoryPhrase,
   categoryReadsOn,
   choiceName,
@@ -81,7 +82,12 @@ export function ruleParts(
     merchants.map((id) => merchantName(catalog, id))
   // A rule naming both matches a purchase that is both.
   if (merchants.length > 0 && categories.length > 0)
-    return [`${listed(merchantParts)} when it codes as ${listed(categories)}`]
+    return [
+      `${listed(merchantParts)} when it counts ${listed(
+        (m.categories ?? []).map((c) => categoryAs(catalog, c)),
+        'or',
+      )}`,
+    ]
   const parts = [...categories, ...(merchants.length > 0 ? merchantParts : [])]
   if (parts.length > 0) return parts
   if (rule.what !== undefined) return [rule.what]

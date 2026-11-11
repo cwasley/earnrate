@@ -32,6 +32,8 @@ import {
   capitalize,
   CATEGORY_CARDS_LEAD,
   categoryCards,
+  categoryAs,
+  categoryAsMany,
   categoryPhrase,
   creditBack,
   creditTerms,
@@ -404,7 +406,7 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   const codes =
     page.merchant === null || r.merchant.source === 'none'
       ? ''
-      : ` ${esc(page.label)} usually codes as ${esc(categoryPhrase(catalog, r.merchant.category))}${r.merchant.likelyMcc === null ? '' : ` (MCC ${String(r.merchant.likelyMcc)})`}.`
+      : ` ${esc(page.label)} usually counts ${esc(categoryAs(catalog, r.merchant.category))}${r.merchant.likelyMcc === null ? '' : ` (MCC ${String(r.merchant.likelyMcc)})`}.`
   const credit = r.credits[0]
   const own = ownCardLine(page, r, shown)
   const parts = [
@@ -514,7 +516,7 @@ function sources(shown: ExploreEntry[]): string {
     : `<h2>From the issuers' terms</h2><ul class="quotes">${items}</ul>`
 }
 
-// A category page lists every store that usually codes as it, so it can
+// A category page lists every store that usually counts as it, so it can
 // answer for stores whose own pages aren't indexed.
 const STORES_OPEN = 24
 
@@ -523,7 +525,7 @@ function categoryStores(page: Page, all: Page[]): string {
     .filter((p) => p.merchant !== null && p.categoryId === page.categoryId)
     .sort((a, b) => a.label.localeCompare(b.label))
   if (stores.length === 0) return ''
-  const heading = `${String(stores.length)} ${stores.length === 1 ? 'store' : 'stores'} that usually code as ${esc(page.label)}`
+  const heading = `${String(stores.length)} ${stores.length === 1 ? `store that usually counts ${esc(categoryAs(catalog, page.categoryId))}` : `stores that usually count ${esc(categoryAsMany(catalog, page.categoryId))}`}`
   const chips = chipLinks(
     stores.map((p) => `<a href="/best/${p.slug}">${esc(p.label)}</a>`),
   )
