@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 import { catalog, dataVersion } from 'virtual:catalog'
 import { BestFor, SUGGESTIONS } from './BestFor.tsx'
 import { MyWallet } from './MyWallet.tsx'
+import { answerFor, jobFor } from './find/run.ts'
 import { Spending } from './Spending.tsx'
+import { loadSpendingRows } from './spending-rows.ts'
 import {
   ANY_PURCHASE,
   purchaseCount,
@@ -644,6 +646,26 @@ export function App() {
     })
     return () => cancelAnimationFrame(frame)
   }, [tab])
+  // Find a card's answer, started off the page's thread while the page is
+  // idle and again when its tab is pressed, so the tab opens with it.
+  const prepareFind = () => {
+    if (tab !== 'spending')
+      answerFor(
+        catalog,
+        jobFor(loadSpendingRows(), settings, saved, localToday()),
+      )
+  }
+  const prepareRef = useRef(prepareFind)
+  prepareRef.current = prepareFind
+  useEffect(() => {
+    const later = () => prepareRef.current()
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(later, { timeout: 4000 })
+      return () => cancelIdleCallback(id)
+    }
+    const timer = setTimeout(later, 2000)
+    return () => clearTimeout(timer)
+  }, [])
   useEffect(() => {
     // A link to a section below (#claude) scrolls there and keeps the app
     // as it is.
@@ -663,6 +685,8 @@ export function App() {
             role="tab"
             key={t.id}
             aria-selected={tab === t.id}
+            onPointerDown={t.id === 'spending' ? prepareFind : undefined}
+            onFocus={t.id === 'spending' ? prepareFind : undefined}
             onClick={() => setView({ tab: t.id, query })}
           >
             {t.name}

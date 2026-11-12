@@ -2030,10 +2030,45 @@ p.callout .link,
   font-weight: 400;
 }
 
-.spend-edit summary .basis .sync-dot {
-  display: inline-block;
-  margin-right: 6px;
-  vertical-align: middle;
+/* Stand-ins for an answer not worked out yet, the size of a typical one: a
+   still bar a line of text, swapped for the answer in place. */
+.skel {
+  display: block;
+}
+
+.skel > span {
+  display: block;
+  background: linear-gradient(var(--line), var(--line)) left center / 100% 0.6em
+    no-repeat;
+}
+
+.skel > span:last-child:not(:first-child) {
+  background-size: 62% 0.6em;
+}
+
+.skel-art {
+  width: 40px;
+  height: 25px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.skel-rate {
+  width: 3.2em;
+}
+
+.skel-rate .skel > span {
+  background-position: right center;
+}
+
+.more.skel-more {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.skel-more .skel > span {
+  width: 9em;
+  margin: 0 auto;
 }
 
 .how {

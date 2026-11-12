@@ -6,7 +6,12 @@ import type { Picks } from '../../src/engine/explore.ts'
 import { followingOwnLink } from './add-from-link.ts'
 import { CardArt } from './CardArt.tsx'
 import { debouncer } from './debounce.ts'
-import { runAnswer } from './find/run.ts'
+import {
+  answerFor,
+  jobFor,
+  readyAnswer,
+  type Answer as FindAnswer,
+} from './find/run.ts'
 import { track } from './track.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import {
@@ -48,7 +53,7 @@ import {
   saveSpendingRows,
   type Row as SpendingRow,
 } from './spending-rows.ts'
-import { engineOptions, type Saved, type Settings } from './settings.ts'
+import type { Saved, Settings } from './settings.ts'
 
 export type Row = SpendingRow
 
@@ -142,17 +147,97 @@ function pairParts(sim: Simulation): { id: string; covers: string }[] {
     )
 }
 
+// Stand-ins for text still being worked out, a line each, so the answer
+// takes about the room they held.
+function Lines({ n }: { n: number }) {
+  return (
+    <span class="skel" aria-hidden="true">
+      {Array.from({ length: n }, (_, i) => (
+        <span key={i}>{'\u00a0'}</span>
+      ))}
+    </span>
+  )
+}
+
+// The top rows' shapes in typical spending's answer at phone width: lines
+// of name and fee, and whether a first-year figure sits under the amount.
+const SKEL_SINGLES = [
+  { name: 2, fee: 2, first: true },
+  { name: 1, fee: 1, first: true },
+  { name: 1, fee: 1 },
+]
+const SKEL_PAIRS = [{ name: 3 }, { name: 3 }, { name: 3 }]
+
+// A result row before the answer is in.
+function SkelRow({
+  rank,
+  name,
+  fee = 1,
+  first = false,
+  pair = false,
+}: {
+  rank: number
+  name: number
+  fee?: number
+  first?: boolean
+  pair?: boolean
+}) {
+  return (
+    <div class="result-top" aria-hidden="true">
+      <span class="rank">{rank}</span>
+      {pair ? (
+        <span class="art-pair">
+          <span class="card-art skel-art" />
+          <span class="card-art skel-art" />
+        </span>
+      ) : (
+        <span class="card-art skel-art" />
+      )}
+      <span class="result-name">
+        <strong>
+          <Lines n={name} />
+        </strong>
+        <span class="muted">
+          <Lines n={fee} />
+        </span>
+      </span>
+      <span class="rate skel-rate">
+        <Lines n={1} />
+        {first ? (
+          <small class="first-year">
+            <Lines n={1} />
+          </small>
+        ) : null}
+      </span>
+    </div>
+  )
+}
+
 function Answer({
   single,
   ties,
   pair,
   offer,
 }: {
-  single: Simulation
+  single: Simulation | undefined
   ties: number
   pair: Simulation | undefined
   offer: OfferSummary | undefined
 }) {
+  // Before the first answer: the same panel, about the answer's size.
+  if (!single)
+    return (
+      <dl class="panel find-answer">
+        <dt>One card</dt>
+        <dd>
+          <Lines n={2} />
+        </dd>
+        <dt>Two cards</dt>
+        <dd>
+          <Lines n={4} />
+        </dd>
+      </dl>
+    )
   const id = single.cards[0]?.cardId ?? ''
   const first = firstYear(offer, single.net)
   const parts = pair ? pairParts(pair) : []
@@ -184,6 +269,24 @@ function Answer({
   )
 }
 
+type Shown = {
+  rows: Row[]
+  found: FindAnswer
+  result: CatalogSimulation | null
+  offers: Map<string, OfferSummary>
+}
+
+function shownAnswer(rows: Row[], found: FindAnswer | null): Shown | null {
+  return found
+    ? {
+        rows,
+        found,
+        result: found.result,
+        offers: new Map(found.offers.map((o) => [o.cardId, o])),
+      }
+    : null
+}
+
 export function Spending({
   settings,
   saved,
@@ -194,9 +297,19 @@ export function Spending({
   filters: ComponentChildren
 }) {
   const [rows, setStateRows] = useState<Row[]>(loadSpendingRows)
+  const today = localToday()
+  // The answer on screen and the rows it's for, from the start when the
+  // home page worked it out before the tab opened. Each card alone, as the
+  // next-card planner values it, comes with it: the same spending all on
+  // it, with its welcome offer in the first year.
+  const [answer, setAnswer] = useState<Shown | null>(() =>
+    shownAnswer(rows, readyAnswer(jobFor(rows, settings, saved, today))),
+  )
   // The rows the answer is for. Null until the tab has painted, so it shows
   // before the first answer is worked out.
-  const [settled, setSettled] = useState<Row[] | null>(null)
+  const [settled, setSettled] = useState<Row[] | null>(() =>
+    answer ? rows : null,
+  )
   const settle = useMemo(() => debouncer(SETTLE_MS), [])
   useEffect(() => {
     setSettled(rows)
@@ -231,46 +344,17 @@ export function Spending({
   // The open row: a card id, or a pair's ids joined with "+".
   const [open, setOpen] = useState<string | null>(focus[0] ?? null)
   const toggle = (key: string) => setOpen(open === key ? null : key)
-  const today = localToday()
-  const options = useMemo(
-    () => engineOptions(settings, saved),
-    [settings, saved],
-  )
-  // The answer on screen and the rows it's for. Each card alone, as the
-  // next-card planner values it, comes with it: the same spending all on
-  // it, with its welcome offer in the first year.
-  const [answer, setAnswer] = useState<{
-    rows: Row[]
-    result: CatalogSimulation | null
-    offers: Map<string, OfferSummary>
-  } | null>(null)
   useEffect(() => {
     if (settled === null) return
     // A newer answer stops this one; the one on screen stays until it's in.
-    return runAnswer(
-      catalog,
-      {
-        rows: settled,
-        typical: isTypicalRows(settled),
-        options,
-        offerFilters: {
-          kind: settings.kind,
-          business: settings.business,
-          noAnnualFee: settings.noFee,
-          includeHeld: true,
-        },
-        today,
-      },
-      (part) => {
-        if (part.part !== 'answer') return
-        setAnswer({
-          rows: settled,
-          result: part.result,
-          offers: new Map(part.offers.map((o) => [o.cardId, o])),
-        })
-      },
+    return answerFor(catalog, jobFor(settled, settings, saved, today), (a) =>
+      setAnswer((was) =>
+        was?.found === a && was.rows === settled
+          ? was
+          : shownAnswer(settled, a),
+      ),
     )
-  }, [settled, options, settings, today])
+  }, [settled, settings, saved, today])
   const working = settled !== rows || answer?.rows !== settled
   const result = answer?.result ?? null
   const offers = answer?.offers ?? new Map<string, OfferSummary>()
@@ -291,6 +375,10 @@ export function Spending({
     [lines],
   )
   const leftOut = useMemo(() => nothingCounted(catalog, known), [known])
+  // Known before it's worked out: the answer has no result for this.
+  const nothing = known.length === 0 || leftOut !== null
+  // Nothing shown yet: the answer's parts hold its room.
+  const pending = answer === null && !nothing
   const shownSingles = moreSingles ? MORE : SHOWN
   const shownPairs = morePairs ? MORE : SHOWN
   const members = result
@@ -343,7 +431,8 @@ export function Spending({
     const minimum = offer?.plan?.minimumSpend
     const isOpen = open === card.cardId
     return (
-      <li class="result" key={card.cardId} data-single={card.cardId}>
+      // Keyed by rank, so a new answer changes the rows in place.
+      <li class="result" key={rank} data-single={card.cardId}>
         <button
           type="button"
           class="result-top result-toggle"
@@ -436,19 +525,34 @@ export function Spending({
   const singlesLeft = result ? Math.min(MORE, result.singles.length) - SHOWN : 0
   const pairsLeft = result ? Math.min(MORE, result.pairs.length) - SHOWN : 0
 
+  const skelRows = (pairs: boolean) =>
+    (pairs ? SKEL_PAIRS : SKEL_SINGLES).map((shape, i) => (
+      <li class="result" key={i + 1}>
+        <SkelRow rank={i + 1} pair={pairs} {...shape} />
+      </li>
+    ))
+  const skelMore = (
+    <div class="more skel-more" aria-hidden="true">
+      <Lines n={1} />
+    </div>
+  )
+
   return (
     <div>
       <div aria-live="polite" aria-busy={working}>
-        {result && single ? (
+        {pending || (result && single) ? (
           <Answer
             single={single}
             ties={
-              result.singles.filter(
-                (s) => s !== single && Math.abs(s.net - single.net) < HALF_CENT,
-              ).length
+              result && single
+                ? result.singles.filter(
+                    (s) =>
+                      s !== single && Math.abs(s.net - single.net) < HALF_CENT,
+                  ).length
+                : 0
             }
             pair={pair}
-            offer={offers.get(single.cards[0]?.cardId ?? '')}
+            offer={offers.get(single?.cards[0]?.cardId ?? '')}
           />
         ) : null}
       </div>
@@ -464,12 +568,11 @@ export function Spending({
 
       <details
         class="filters spend-edit"
-        open={editing || (answer !== null && answer.result === null)}
+        open={editing || nothing}
         onToggle={(e) => setEditing(e.currentTarget.open)}
       >
         <summary>
           <span class="basis">
-            {working ? <span class="sync-dot busy" aria-hidden="true" /> : null}
             {typical
               ? `On typical U.S. spending, about ${wholeDollars(monthly)} a month.`
               : `On your spending, ${wholeDollars(monthly)} a month.`}
@@ -562,15 +665,17 @@ export function Spending({
       </details>
       {filters}
 
-      {result && single ? (
-        <section class="results">
+      {pending || (result && single) ? (
+        <section class="results" aria-busy={working}>
           <h3>Each card on its own</h3>
           <ol class="result-list">
-            {result.singles
+            {result?.singles
               .slice(0, shownSingles)
-              .map((s, i) => singleRow(s, i + 1))}
+              .map((s, i) => singleRow(s, i + 1)) ?? skelRows(false)}
           </ol>
-          {!moreSingles && singlesLeft > 0 ? (
+          {pending ? (
+            skelMore
+          ) : !moreSingles && singlesLeft > 0 ? (
             <button
               type="button"
               class="more"
@@ -579,68 +684,76 @@ export function Spending({
               Show {singlesLeft} more cards
             </button>
           ) : null}
-          {members.map((m) => (
-            <p class="muted" key={m}>
-              {m}
-            </p>
-          ))}
-          {focus
-            .filter(
-              (id) =>
-                !result.singles
-                  .slice(0, shownSingles)
-                  .some((s) => s.cards[0]?.cardId === id),
-            )
-            .map((id) => {
-              const rank = result.singles.findIndex(
-                (s) => s.cards[0]?.cardId === id,
-              )
-              const s = result.singles[rank]
-              const member = result.membersOnly.find(
-                (m) => m.cards[0]?.cardId === id,
-              )
-              if (!s && member)
-                return (
-                  <Fragment key={id}>
-                    <p class="muted">
-                      Where the {shortName(id)} ranks on this spending, with{' '}
-                      {withArticle(membershipName(catalog, member.membership))},
-                      which it needs:
-                    </p>
-                    <ol class="result-list">
-                      {singleRow(
-                        member,
-                        result.singles.filter((x) => byNet(x, member) < 0)
-                          .length + 1,
-                      )}
-                    </ol>
-                  </Fragment>
-                )
-              return s ? (
-                <Fragment key={id}>
-                  <p class="muted">
-                    Where the {shortName(id)} ranks on this spending:
-                  </p>
-                  <ol class="result-list">{singleRow(s, rank + 1)}</ol>
-                </Fragment>
-              ) : (
-                <p class="muted" key={id}>
-                  {catalog.cards.find((c) => c.id === id)?.business
-                    ? `${shortName(id)} is a business card: choose Business cards instead in Filters to see it.`
-                    : `${shortName(id)} isn't among the cards your Filters compare.`}
+          {/* Lists in both cases, or Preact can move what follows. */}
+          {pending
+            ? [
+                <p class="muted" key="">
+                  <Lines n={2} />
+                </p>,
+              ]
+            : members.map((m) => (
+                <p class="muted" key={m}>
+                  {m}
                 </p>
-              )
-            })}
+              ))}
+          {!result
+            ? []
+            : focus
+                .filter(
+                  (id) =>
+                    !result.singles
+                      .slice(0, shownSingles)
+                      .some((s) => s.cards[0]?.cardId === id),
+                )
+                .map((id) => {
+                  const rank = result.singles.findIndex(
+                    (s) => s.cards[0]?.cardId === id,
+                  )
+                  const s = result.singles[rank]
+                  const member = result.membersOnly.find(
+                    (m) => m.cards[0]?.cardId === id,
+                  )
+                  if (!s && member)
+                    return (
+                      <Fragment key={id}>
+                        <p class="muted">
+                          Where the {shortName(id)} ranks on this spending, with{' '}
+                          {withArticle(
+                            membershipName(catalog, member.membership),
+                          )}
+                          , which it needs:
+                        </p>
+                        <ol class="result-list">
+                          {singleRow(
+                            member,
+                            result.singles.filter((x) => byNet(x, member) < 0)
+                              .length + 1,
+                          )}
+                        </ol>
+                      </Fragment>
+                    )
+                  return s ? (
+                    <Fragment key={id}>
+                      <p class="muted">
+                        Where the {shortName(id)} ranks on this spending:
+                      </p>
+                      <ol class="result-list">{singleRow(s, rank + 1)}</ol>
+                    </Fragment>
+                  ) : (
+                    <p class="muted" key={id}>
+                      {catalog.cards.find((c) => c.id === id)?.business
+                        ? `${shortName(id)} is a business card: choose Business cards instead in Filters to see it.`
+                        : `${shortName(id)} isn't among the cards your Filters compare.`}
+                    </p>
+                  )
+                })}
 
-          {pair ? (
+          {pending || pair ? (
             <>
               <h3>Two cards together</h3>
               <ol class="result-list">
-                {result.pairs.slice(0, shownPairs).map((p, i) => (
-                  <li
-                    class="result"
-                    key={p.cards.map((c) => c.cardId).join('+')}
-                  >
+                {result?.pairs.slice(0, shownPairs).map((p, i) => (
+                  <li class="result" key={i + 1}>
                     <button
                       type="button"
                       class="result-top result-toggle"
@@ -704,9 +817,11 @@ export function Spending({
                       </div>
                     ) : null}
                   </li>
-                ))}
+                )) ?? skelRows(true)}
               </ol>
-              {!morePairs && pairsLeft > 0 ? (
+              {pending ? (
+                skelMore
+              ) : !morePairs && pairsLeft > 0 ? (
                 <button
                   type="button"
                   class="more"
