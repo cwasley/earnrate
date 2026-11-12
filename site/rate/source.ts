@@ -1,8 +1,10 @@
 // Where /rate's report comes from. A shared link is read from the address
-// alone: with one, nothing of the visitor's own is read, so their saved
-// wallet is never shown, mixed in or changed.
+// alone, or from what a short link saved: with either, nothing of the
+// visitor's own is read, so their saved wallet is never shown, mixed in or
+// changed.
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
+import { REPORT_RETENTION_MONTHS } from '../report-policy.ts'
 import { decodeReport, reportPart, type ReportLink } from './link.ts'
 
 export type Row = { what: string; monthly: number }
@@ -10,7 +12,8 @@ export type Row = { what: string; monthly: number }
 export type Saved = { wallet: Wallet | null; rows: Row[] | null }
 
 export type Source =
-  | { kind: 'shared'; link: ReportLink }
+  | { kind: 'loading' } // a short link, being read
+  | { kind: 'shared'; link: ReportLink; stored: boolean }
   | { kind: 'bad'; message: string }
   | { kind: 'own'; wallet: Wallet; rows: Row[] | null }
   | { kind: 'pick'; rows: Row[] | null }
@@ -24,7 +27,7 @@ export function reportSource(
   if (reportPart(fragment) !== null) {
     const decoded = decodeReport(catalog, fragment)
     return decoded.ok
-      ? { kind: 'shared', link: decoded.link }
+      ? { kind: 'shared', link: decoded.link, stored: false }
       : { kind: 'bad', message: decoded.message }
   }
   const { wallet, rows } = readSaved()
@@ -34,6 +37,24 @@ export function reportSource(
   return wallet && held && held.length > 0
     ? { kind: 'own', wallet: { ...wallet, cards: held }, rows }
     : { kind: 'pick', rows }
+}
+
+export const GONE = `This link has been deleted, or it went ${String(REPORT_RETENTION_MONTHS)} months without being opened, so there's no report to show.`
+export const UNREACHABLE =
+  "This link's report couldn't be loaded. Check your connection, then reload the page."
+
+// A short link's report, from what the server returned for its id.
+export function storedSource(
+  catalog: Catalog,
+  loaded:
+    { kind: 'found'; report: string } | { kind: 'gone' } | { kind: 'offline' },
+): Source {
+  if (loaded.kind === 'gone') return { kind: 'bad', message: GONE }
+  if (loaded.kind === 'offline') return { kind: 'bad', message: UNREACHABLE }
+  const decoded = decodeReport(catalog, `w=${loaded.report}`)
+  return decoded.ok
+    ? { kind: 'shared', link: decoded.link, stored: true }
+    : { kind: 'bad', message: decoded.message }
 }
 
 // The spending rows Find a card saved, read only.

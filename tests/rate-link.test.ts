@@ -13,7 +13,13 @@ import {
   shortCode,
   type ReportLink,
 } from '../site/rate/link.ts'
-import { reportSource, savedRows } from '../site/rate/source.ts'
+import {
+  GONE,
+  reportSource,
+  savedRows,
+  storedSource,
+} from '../site/rate/source.ts'
+import { storedId } from '../site/rate/store.ts'
 import { ROOT } from './helpers.ts'
 
 const catalog = await loadCatalog()
@@ -234,18 +240,41 @@ describe('report links', () => {
     expect(reads).toBe(0)
   })
 
-  test("the page's code never writes the browser's storage or makes a request, beyond the event counter", () => {
+  test("the page's code never writes the browser's storage, and its only requests are the short links' own, beyond the event counter", () => {
     const dir = path.join(ROOT, 'site/rate')
     const files = readdirSync(dir).filter((f) => /\.tsx?$/.test(f))
     expect(files).toContain('Rate.tsx')
     for (const f of files) {
       const source = readFileSync(path.join(dir, f), 'utf8')
       expect(source, f).not.toMatch(
-        /\.(setItem|removeItem)\s*\(|localStorage\.clear|sessionStorage|indexedDB|document\.cookie|\bfetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket/,
+        /\.(setItem|removeItem)\s*\(|localStorage\.clear|sessionStorage|indexedDB|document\.cookie|XMLHttpRequest|sendBeacon|WebSocket/,
       )
+      if (f !== 'store.ts') expect(source, f).not.toMatch(/\bfetch\s*\(/)
       expect(source, f).not.toMatch(/app\/(settings|sync)\.ts/)
       expect(source, f).not.toMatch(/from '\.\.\/statement/)
     }
+    const store = readFileSync(path.join(dir, 'store.ts'), 'utf8')
+    const targets = [...store.matchAll(/\bfetch\(\s*([^,]+),/g)].map(
+      (m) => m[1],
+    )
+    expect(targets).toEqual(["'/r'", '`/r/${id}/data`', '`/r/${saved.id}`'])
+    expect(store.match(/credentials: 'omit'/g)?.length).toBe(3)
+  })
+
+  test('a short link is read by its id alone, and a gone one says so plainly', () => {
+    expect(storedId('/r/7kq3mdx9')).toBe('7kq3mdx9')
+    for (const p of ['/rate', '/r/', '/r/7kq3md', '/r/7kq3mdx0', '/r/a/b'])
+      expect(storedId(p), p).toBeNull()
+    const report = encodeReport(catalog, EIGHT).slice(2)
+    const found = storedSource(catalog, { kind: 'found', report })
+    expect(found.kind === 'shared' && found.stored).toBe(true)
+    expect(storedSource(catalog, { kind: 'gone' })).toEqual({
+      kind: 'bad',
+      message: GONE,
+    })
+    expect(storedSource(catalog, { kind: 'found', report: 'junk' }).kind).toBe(
+      'bad',
+    )
   })
 
   test('without a link, the saved wallet is rated, or cards are picked when there is none', () => {
