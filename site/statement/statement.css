@@ -513,3 +513,23 @@ table.promises td:last-child {
     transform: translateY(var(--rise));
   }
 }
+
+/* Save as image, under the headline, with a preview of the picture. */
+.save-row {
+  margin: 0 0 14px;
+}
+
+.row-buttons button.save-image {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 6px;
+}
+
+.save-image .thumb {
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}

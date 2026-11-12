@@ -5,6 +5,7 @@ import { localToday } from '../../src/engine/periods.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { encodeSheet, sendable } from '../sheet/link.ts'
 import { pct, shortName } from './format.ts'
+import { download, prefersDark } from './picture.ts'
 import { cheatSheetImage } from './sheet-image.ts'
 import { track } from './track.ts'
 
@@ -47,16 +48,12 @@ export function WalletPass({ wallet }: { wallet: Wallet }) {
 }
 
 async function saveSheet(sheet: CheatSheet) {
-  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const blob = await cheatSheetImage(sheet, shortName, pct, dark)
+  const blob = await cheatSheetImage(sheet, shortName, pct, prefersDark())
   if (!blob) return
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `earnrate-cheat-sheet-${sheet.quarter.toLowerCase().replace(/\s+/g, '-')}.png`
-  a.click()
-  // Some browsers start the download after click() returns.
-  setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  download(
+    blob,
+    `earnrate-cheat-sheet-${sheet.quarter.toLowerCase().replace(/\s+/g, '-')}.png`,
+  )
 }
 
 const ICON = {

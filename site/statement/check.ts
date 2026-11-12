@@ -17,7 +17,7 @@ import {
 } from '../../src/import/statement.ts'
 import { HALF_CENT } from '../../src/engine/compare.ts'
 import { daysBetween } from '../../src/engine/periods.ts'
-import { roundCents, shortDate } from '../../src/engine/text.ts'
+import { monthYear, roundCents, shortDate } from '../../src/engine/text.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import {
   WalletSchema,
@@ -249,4 +249,15 @@ export function dateRange(from: string, to: string): string {
   return from.slice(0, 4) === to.slice(0, 4)
     ? `${start.replace(/, \d{4}$/, '')} – ${end}`
     : `${start} – ${end}`
+}
+
+// "October 2026", "Oct – Nov 2026", "Dec 2025 – Jan 2026": the months the
+// files cover, never the days.
+export function monthSpan(from: string, to: string): string {
+  if (from.slice(0, 7) === to.slice(0, 7)) return monthYear(to)
+  const month = (date: string) => shortDate(date).split(' ')[0] ?? ''
+  const year = (date: string) => date.slice(0, 4)
+  return year(from) === year(to)
+    ? `${month(from)} – ${month(to)} ${year(to)}`
+    : `${month(from)} ${year(from)} – ${month(to)} ${year(to)}`
 }

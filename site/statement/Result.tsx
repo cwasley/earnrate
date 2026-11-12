@@ -10,9 +10,11 @@ import {
 import { cardValuation } from '../../src/engine/valuation.ts'
 import type { MissedRewards } from '../../src/import/analyze.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
-import { cards } from '../app/format.ts'
+import { cards, shortName } from '../app/format.ts'
 import { Bar, DataTable, useMore } from './charts.tsx'
 import { dateRange, gainByCard, yearlyPace, type Check } from './check.ts'
+import { pictureText } from './picture-text.ts'
+import { SaveImage } from './SaveImage.tsx'
 
 const plural = (n: number, one: string, many = `${one}s`) =>
   `${String(n)} ${n === 1 ? one : many}`
@@ -54,6 +56,7 @@ export function Result({
     }),
   )
   const byCard = gainByCard(a)
+  const picture = pictureText(a, shortName, values)
   return (
     <section class="panel arrive check-result" aria-labelledby="result-title">
       <h2 id="result-title">What these purchases earned</h2>
@@ -88,6 +91,7 @@ export function Result({
           <span class="compare-amount">{dollarsAndCents(a.best)}</span>
         </div>
       </div>
+      {picture ? <SaveImage text={picture} /> : null}
       <p class="muted small">
         {plural(a.purchases, 'purchase')}, {dollarsAndCents(a.spend)},{' '}
         {dateRange(a.from, a.to)}.

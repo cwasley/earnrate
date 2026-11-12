@@ -206,13 +206,74 @@ async function tapCard(page: Page, name: string) {
     .click()
 }
 
+// A PNG's width and height, from its header.
+const pngSize = (bytes: Buffer) =>
+  bytes.subarray(1, 4).toString() === 'PNG'
+    ? { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }
+    : null
+
+// Save as image where the browser can't share a file: a download.
+async function saveByDownload(page: Page) {
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'canShare', {
+      value: undefined,
+      configurable: true,
+    })
+  })
+  const [saved] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Save as image' }).click(),
+  ])
+  const file = await saved.path()
+  return {
+    name: saved.suggestedFilename(),
+    bytes: await readFile(file),
+  }
+}
+
+type Shared = {
+  keys: string[]
+  files: { name: string; type: string; size: number }[]
+}
+
+// Save as image where it can: what reaches the share sheet, which is
+// stubbed so no real one opens.
+async function saveByShare(page: Page): Promise<Shared | null> {
+  await page.evaluate(() => {
+    const record = window as unknown as { __shared?: Shared }
+    Object.defineProperty(navigator, 'canShare', {
+      value: () => true,
+      configurable: true,
+    })
+    Object.defineProperty(navigator, 'share', {
+      value: (data: ShareData) => {
+        record.__shared = {
+          keys: Object.keys(data),
+          files: (data.files ?? []).map((f) => ({
+            name: f.name,
+            type: f.type,
+            size: f.size,
+          })),
+        }
+        return Promise.resolve()
+      },
+      configurable: true,
+    })
+  })
+  await page.getByRole('button', { name: 'Save as image' }).click()
+  await page.waitForTimeout(300)
+  return page.evaluate(
+    () => (window as unknown as { __shared?: Shared }).__shared ?? null,
+  )
+}
+
 async function privacyChecks(
   browser: Browser,
   label: string,
   origin: string,
   log: Logged[],
 ) {
-  const { context, page, errors, requests, policy } = await open(
+  const { context, page, errors, requests, violations, policy } = await open(
     browser,
     origin,
     { width: 390, wallet: true },
@@ -295,6 +356,47 @@ async function privacyChecks(
     .locator('table[aria-label="By card used"] tbody tr')
     .count()
   check(`${label}: two files for two cards`, byCard === 2, String(byCard))
+  const canShare = await page.evaluate(
+    () =>
+      typeof navigator.canShare === 'function' &&
+      navigator.canShare({
+        files: [new File([''], 'x.png', { type: 'image/png' })],
+      }),
+  )
+  console.log(`     ${label} can share files itself: ${String(canShare)}`)
+  const violationsBefore = (await violations()).length
+  const saved = await saveByDownload(page)
+  const size = pngSize(saved.bytes)
+  check(
+    `${label}: Save as image downloads a 1080px square PNG`,
+    saved.name === 'earnrate-statement-check.png' &&
+      size?.width === 1080 &&
+      size.height === 1080,
+    `${saved.name} ${JSON.stringify(size)}`,
+  )
+  if (shots) {
+    await mkdir(shots, { recursive: true })
+    await writeFile(
+      path.join(shots, `${prefix}picture-${label.toLowerCase()}.png`),
+      saved.bytes,
+    )
+  }
+  const shared = await saveByShare(page)
+  check(
+    `${label}: where files can be shared, the share sheet gets the PNG alone`,
+    shared !== null &&
+      shared.keys.join() === 'files' &&
+      shared.files.length === 1 &&
+      shared.files[0]?.type === 'image/png' &&
+      shared.files[0].name === 'earnrate-statement-check.png' &&
+      shared.files[0].size > 0,
+    JSON.stringify(shared),
+  )
+  check(
+    `${label}: saving the image broke nothing in the page's policy`,
+    (await violations()).length === violationsBefore,
+    (await violations()).slice(violationsBefore).join(', '),
+  )
   await page.getByRole('button', { name: 'Forget this file' }).first().click()
   await page.getByRole('button', { name: 'Forget this file' }).first().click()
   check(
@@ -303,7 +405,7 @@ async function privacyChecks(
       (await page.locator('fieldset.which').count()) === 0,
   )
   check(
-    `${label}: reading files and answering made no request`,
+    `${label}: reading files, answering and saving the image made no request`,
     requests.length === 0,
     requests.join(', '),
   )
@@ -457,6 +559,14 @@ async function screenshots(browser: Browser, origin: string, dir: string) {
           ),
           fullPage: true,
         })
+        if (width === 390 && state.name >= '2' && state.name < '5')
+          await writeFile(
+            path.join(
+              dir,
+              `${prefix}${state.name}-picture-${dark ? 'dark' : 'light'}.png`,
+            ),
+            (await saveByDownload(page)).bytes,
+          )
         const wide = await page.evaluate(
           () => document.documentElement.scrollWidth > window.innerWidth,
         )

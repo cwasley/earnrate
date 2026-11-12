@@ -87,6 +87,7 @@ describe("the statement check's code", () => {
   test('has nothing in its module graph that sends, stores or loads later', () => {
     expect(rel).toContain('site/statement/Statement.tsx')
     expect(rel).toContain('src/import/analyze.ts')
+    expect(rel).toContain('site/app/picture.ts')
     const found: string[] = []
     for (const file of graph.files) {
       const source = readFileSync(file, 'utf8')

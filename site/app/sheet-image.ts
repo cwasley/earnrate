@@ -1,102 +1,36 @@
 import type { CheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { longDate } from '../../src/engine/text.ts'
-
-// A branded, shareable picture of a cheat sheet, drawn in the browser so
-// nothing leaves the device. Colors match the page in light and dark mode.
+import {
+  drawFooter,
+  drawHeader,
+  fit,
+  FONT,
+  newPicture,
+  PAD,
+  pngBlob,
+} from './picture.ts'
 
 const W = 1080
 const H = 1350
-const PAD = 72
-const LIGHT = {
-  paper: '#ffffff',
-  ink: '#1d1b19',
-  muted: '#625d58',
-  line: '#e8e1d9',
-  accent: '#9a5020',
-}
-const DARK = {
-  paper: '#1c1a18',
-  ink: '#eeebe6',
-  muted: '#a8a29c',
-  line: '#2e2a27',
-  accent: '#e8a877',
-}
-const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
 
-function fit(ctx: CanvasRenderingContext2D, text: string, width: number) {
-  if (ctx.measureText(text).width <= width) return text
-  let out = text
-  while (out.length > 1 && ctx.measureText(`${out}…`).width > width)
-    out = out.slice(0, -1)
-  return `${out.trimEnd()}…`
-}
-
-// The stacked-cards mark (Logo.tsx), in its 120 × 80 box at (x, y): stroke
-// and fill in the current stroke color, the chip in `chip`.
-function drawLogo(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  scale: number,
-  chip: string,
-) {
-  const box = (bx: number, by: number, w: number, h: number, r: number) => {
-    ctx.beginPath()
-    ctx.roundRect(
-      x + bx * scale,
-      y + by * scale,
-      w * scale,
-      h * scale,
-      r * scale,
-    )
-  }
-  ctx.save()
-  ctx.lineWidth = 2 * scale
-  ctx.globalAlpha = 0.3
-  box(22, 6, 92, 58, 9)
-  ctx.stroke()
-  ctx.globalAlpha = 0.55
-  box(14, 12, 92, 58, 9)
-  ctx.stroke()
-  ctx.globalAlpha = 1
-  ctx.fillStyle = ctx.strokeStyle
-  box(6, 18, 92, 58, 9)
-  ctx.fill()
-  ctx.fillStyle = chip
-  box(18, 34, 16, 12, 2)
-  ctx.fill()
-  ctx.restore()
-}
-
+// A branded, shareable picture of a cheat sheet, in the page's light or dark
+// colors.
 export function cheatSheetImage(
   sheet: CheatSheet,
   cardName: (cardId: string) => string,
   pct: (n: number) => string,
   dark: boolean,
 ): Promise<Blob | null> {
-  const { paper, ink, muted, line, accent } = dark ? DARK : LIGHT
-  const canvas = document.createElement('canvas')
-  canvas.width = W
-  canvas.height = H
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return Promise.resolve(null)
+  const picture = newPicture(W, H, dark)
+  if (!picture) return Promise.resolve(null)
+  const { ctx } = picture
+  const { ink, muted, line, accent } = picture.colors
 
-  ctx.fillStyle = paper
-  ctx.fillRect(0, 0, W, H)
-
-  ctx.fillStyle = accent
-  ctx.fillRect(0, 0, W, 280)
-  ctx.fillStyle = paper
-  ctx.font = `700 40px ${FONT}`
-  ctx.fillText('earnrate', PAD, 104)
-  ctx.font = `700 66px ${FONT}`
-  ctx.fillText('My card cheat sheet', PAD, 192)
-  ctx.globalAlpha = 0.82
-  ctx.font = `400 30px ${FONT}`
-  ctx.fillText(`${sheet.quarter} · the card to use for each purchase`, PAD, 240)
-  ctx.globalAlpha = 1
-  ctx.strokeStyle = paper
-  drawLogo(ctx, W - PAD - 205, 52, 1.8, accent)
+  drawHeader(
+    picture,
+    'My card cheat sheet',
+    `${sheet.quarter} · the card to use for each purchase`,
+  )
 
   const top = 330
   const bottom = H - 190
@@ -126,21 +60,13 @@ export function cheatSheetImage(
     }
   })
 
-  ctx.textBaseline = 'alphabetic'
-  ctx.fillStyle = muted
-  ctx.font = `400 26px ${FONT}`
-  const asOf = longDate(sheet.date)
-  ctx.fillText(
-    `Rates from each issuer's own terms, as of ${asOf}.`,
-    PAD,
-    H - 148,
+  drawFooter(
+    picture,
+    [
+      `Rates from each issuer's own terms, as of ${longDate(sheet.date)}.`,
+      'No affiliate links.',
+    ],
+    'earnrate.dev',
   )
-  ctx.fillText('No affiliate links.', PAD, H - 112)
-  ctx.fillStyle = accent
-  ctx.font = `700 32px ${FONT}`
-  ctx.fillText('earnrate.dev', PAD, H - 64)
-
-  return new Promise((resolve) => {
-    canvas.toBlob(resolve, 'image/png')
-  })
+  return pngBlob(picture.canvas)
 }

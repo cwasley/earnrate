@@ -1,4 +1,4 @@
-// The stacked-cards mark from the top of earnrate.dev; sheet-image.ts draws
+// The stacked-cards mark from the top of earnrate.dev; picture.ts draws
 // the same shapes. The chip is cut out in the color behind the mark.
 export function Logo({ class: cls, chip }: { class?: string; chip: string }) {
   return (
