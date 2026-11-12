@@ -23,6 +23,7 @@ import {
   currencyName,
   FREE_NIGHT_NAME,
   inOrder,
+  midSentence,
   num,
   perksNoun,
   pct,
@@ -245,7 +246,7 @@ const PLAIN: Markup = { esc: (s) => s, strong: (s) => s }
 // as the kind.
 export const lineWords = (l: ResolvedLine) =>
   l.merchant.source === 'category' || l.label !== l.merchant.resolvedName
-    ? l.label.toLowerCase()
+    ? midSentence(l.label)
     : l.label
 
 // Whole percents of `lines` that add up to 100: each share rounded down,

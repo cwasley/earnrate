@@ -102,11 +102,12 @@ export function currencyLabel(catalog: Catalog, id: string): string {
 
 // Mid-sentence form: "Supermarkets" becomes "supermarkets", but "TV and
 // internet service" and "EV charging" keep their acronyms.
+// A name mid-sentence: "gas stations", but "TV and internet service".
+export const midSentence = (name: string) =>
+  /^[A-Z]{2}/.test(name) ? name : name.charAt(0).toLowerCase() + name.slice(1)
+
 export function categoryPhrase(catalog: Catalog, id: string): string {
-  const name = catalog.categories.find((c) => c.id === id)?.name ?? id
-  return /^[A-Z]{2}/.test(name)
-    ? name
-    : name.charAt(0).toLowerCase() + name.slice(1)
+  return midSentence(catalog.categories.find((c) => c.id === id)?.name ?? id)
 }
 
 // The store in a label like "Streaming (Netflix)": what's spent or searched

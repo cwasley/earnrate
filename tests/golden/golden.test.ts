@@ -3381,10 +3381,10 @@ describe('#40 keep or replace a fee card', () => {
     () => {
       const k = ask(reserve({ enrolled: RESERVE_CREDITS }))
       expect(hiddenRatesText(k)).toBe(
-        'Chase Travel earns more on the Chase Sapphire Reserve than the Other travel line counts; add it as its own line for a closer answer.',
+        'Chase Travel earns more on the Chase Sapphire Reserve than the Other travel line counts; add it as its own line for a closer answer. Lyft earns more on the Chase Sapphire Reserve than the Transit line counts; add it as its own line for a closer answer.',
       )
       expect(hiddenRatesText(k, ' in Find a card')).toBe(
-        'Chase Travel earns more on the Chase Sapphire Reserve than the Other travel line counts; add it as its own line in Find a card for a closer answer.',
+        'Chase Travel earns more on the Chase Sapphire Reserve than the Other travel line counts; add it as its own line in Find a card for a closer answer. Lyft earns more on the Chase Sapphire Reserve than the Transit line counts; add it as its own line in Find a card for a closer answer.',
       )
       expect(keepOrReplaceText(catalog, k)).toContain(hiddenRatesText(k))
       const own = (lines: [string, number][]) =>
@@ -3421,7 +3421,7 @@ describe('#40 keep or replace a fee card', () => {
         'chase-sapphire-preferred',
       )
       expect(hiddenRatesText(preferred, ' in Find a card')).toBe(
-        'Chase Travel, Airbnb, Vrbo and 3 more earn more on the Chase Sapphire Preferred than the Other travel line counts; add them as their own lines in Find a card for a closer answer.',
+        'Chase Travel, Airbnb, Vrbo and 3 more earn more on the Chase Sapphire Preferred than the Other travel line counts; add them as their own lines in Find a card for a closer answer. Lyft earns more on the Chase Sapphire Preferred than the Transit line counts; add it as its own line in Find a card for a closer answer.',
       )
       const typedStreaming = ask(
         wallet([

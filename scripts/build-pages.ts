@@ -62,6 +62,7 @@ import {
   freeNightText,
   freeNightValueText,
   NIGHT_NO_CAP,
+  midSentence,
   onlineAssumption,
   possessive,
   sellsOnline,
@@ -1651,7 +1652,7 @@ function compareAnswer(c: Comparison): string {
 function lineWords(what: string): string {
   const line = spendLineFor(catalog, what, 1)
   return line.merchant === null || line.label !== undefined
-    ? what.charAt(0).toLowerCase() + what.slice(1)
+    ? midSentence(what)
     : what
 }
 

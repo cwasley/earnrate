@@ -774,7 +774,15 @@ export const TYPICAL_MONTHLY_SPEND: { what: string; monthly: number }[] = [
   { what: 'Flights', monthly: 60 },
   { what: 'Hotels', monthly: 60 },
   { what: 'Other travel', monthly: 30 },
-  { what: 'Everything else', monthly: 800 },
+  // From BLS Consumer Expenditure Survey 2025, Table 2500 (all consumer
+  // units), yearly means over 12: cellular phone service; internet plus cable
+  // and satellite TV; intracity transit plus taxi fares; prescription plus
+  // nonprescription drugs. Taken out of "Everything else", so the total stays.
+  { what: 'Cell phone', monthly: 115 },
+  { what: 'TV and internet service', monthly: 95 },
+  { what: 'Transit', monthly: 25 },
+  { what: 'Drugstores', monthly: 40 },
+  { what: 'Everything else', monthly: 525 },
 ]
 
 // A spending line from everyday words: a category when one matches

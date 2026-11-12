@@ -39,6 +39,21 @@ export const PAST_TYPICAL: Row[][] = [
     { what: 'Other travel', monthly: 30 },
     { what: 'Everything else', monthly: 800 },
   ],
+  [
+    { what: 'Groceries', monthly: 500 },
+    { what: 'Dining', monthly: 250 },
+    { what: 'Gas', monthly: 150 },
+    { what: 'Amazon', monthly: 100 },
+    { what: 'Streaming (Netflix)', monthly: 40 },
+    { what: 'Flights', monthly: 60 },
+    { what: 'Hotels', monthly: 60 },
+    { what: 'Other travel', monthly: 30 },
+    { what: 'Cell phone', monthly: 115 },
+    { what: 'TV and internet service', monthly: 95 },
+    { what: 'Transit', monthly: 25 },
+    { what: 'Drugstores', monthly: 40 },
+    { what: 'Everything else', monthly: 525 },
+  ],
 ]
 
 // The same rows in any order: removing a row and adding it back puts it last.

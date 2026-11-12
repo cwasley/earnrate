@@ -47,6 +47,7 @@ const UNREACHED: Record<string, string> = {
   'travel.cruise': 'other travel is travel in general',
   'gas.superstore': 'gas is bought at gas stations',
   'gas.grocery_store': 'gas is bought at gas stations',
+  'transit.rideshare': 'transit is transit in general',
 }
 
 // A gap is fine when the rule needs something a household isn't assumed to
