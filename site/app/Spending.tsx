@@ -5,6 +5,7 @@ import { HALF_CENT } from '../../src/engine/compare.ts'
 import type { Picks } from '../../src/engine/explore.ts'
 import { CardArt } from './CardArt.tsx'
 import { debouncer } from './debounce.ts'
+import { runAnswer } from './find/run.ts'
 import { track } from './track.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import {
@@ -13,7 +14,6 @@ import {
   placedAmong,
 } from '../../src/engine/memberships.ts'
 import {
-  compareOffers,
   OFFERS_MAY_DIFFER,
   offerTerms,
   type OfferSummary,
@@ -23,9 +23,9 @@ import {
   countedLines,
   nothingCounted,
   resolveSpendLines,
-  simulateCatalog,
   spendLineFor,
   TYPICAL_MONTHLY_SPEND,
+  type CatalogSimulation,
   type Simulation,
 } from '../../src/engine/simulate.ts'
 import {
@@ -212,7 +212,6 @@ export function Spending({
       setSettled(next)
     }
   }
-  const working = settled !== rows
   const [adding, setAdding] = useState('')
   // Closed on every visit: the line above them says what they add up to.
   const [editing, setEditing] = useState(false)
@@ -231,15 +230,59 @@ export function Spending({
   // The open row: a card id, or a pair's ids joined with "+".
   const [open, setOpen] = useState<string | null>(focus[0] ?? null)
   const toggle = (key: string) => setOpen(open === key ? null : key)
-  const typical = isTypicalRows(settled ?? rows)
   const today = localToday()
+  const options = useMemo(
+    () => engineOptions(settings, saved),
+    [settings, saved],
+  )
+  // The answer on screen and the rows it's for. Each card alone, as the
+  // next-card planner values it, comes with it: the same spending all on
+  // it, with its welcome offer in the first year.
+  const [answer, setAnswer] = useState<{
+    rows: Row[]
+    result: CatalogSimulation | null
+    offers: Map<string, OfferSummary>
+  } | null>(null)
+  useEffect(() => {
+    if (settled === null) return
+    // A newer answer stops this one; the one on screen stays until it's in.
+    return runAnswer(
+      catalog,
+      {
+        rows: settled,
+        typical: isTypicalRows(settled),
+        options,
+        offerFilters: {
+          kind: settings.kind,
+          business: settings.business,
+          noAnnualFee: settings.noFee,
+          includeHeld: true,
+        },
+        today,
+      },
+      (part) => {
+        if (part.part !== 'answer') return
+        setAnswer({
+          rows: settled,
+          result: part.result,
+          offers: new Map(part.offers.map((o) => [o.cardId, o])),
+        })
+      },
+    )
+  }, [settled, options, settings, today])
+  const working = settled !== rows || answer?.rows !== settled
+  const result = answer?.result ?? null
+  const offers = answer?.offers ?? new Map<string, OfferSummary>()
+  // What the answer on screen is for, or before the first one, the rows.
+  const shown = answer?.rows ?? settled ?? rows
+  const typical = isTypicalRows(shown)
   const lines = useMemo(
     () =>
       resolveSpendLines(
         catalog,
-        (settled ?? rows).map((r) => lineFor(r.what, r.monthly)),
+        shown.map((r) => lineFor(r.what, r.monthly)),
       ),
-    [settled ?? rows],
+    [shown],
   )
   const unknown = lines.filter((l) => l.merchant.source === 'none')
   const known = useMemo(
@@ -247,44 +290,6 @@ export function Spending({
     [lines],
   )
   const leftOut = useMemo(() => nothingCounted(catalog, known), [known])
-  const options = useMemo(
-    () => engineOptions(settings, saved),
-    [settings, saved],
-  )
-  const result = useMemo(
-    () =>
-      settled === null || known.length === 0 || leftOut !== null
-        ? null
-        : simulateCatalog(catalog, known, { ...options, start: today }),
-    [settled, known, leftOut, options, today],
-  )
-  // Each card alone, as the next-card planner values it: the same spending
-  // all on it, with its welcome offer in the first year.
-  const offers = useMemo(() => {
-    if (!result) return new Map<string, OfferSummary>()
-    const comparison = compareOffers(
-      catalog,
-      {
-        valuations: options.valuations,
-        memberships: options.memberships,
-        cards: [],
-      },
-      {
-        kind: settings.kind,
-        business: settings.business,
-        noAnnualFee: settings.noFee,
-        includeHeld: true,
-      },
-      today,
-      { lines: known, typical },
-    )
-    return new Map(
-      [...comparison.offers, ...comparison.membersOnly].map((o) => [
-        o.cardId,
-        o,
-      ]),
-    )
-  }, [result, options, settings, known, typical, today])
   const shownSingles = moreSingles ? MORE : SHOWN
   const shownPairs = morePairs ? MORE : SHOWN
   const members = result
@@ -454,7 +459,7 @@ export function Spending({
 
       <details
         class="filters spend-edit"
-        open={editing || (!result && settled !== null)}
+        open={editing || (answer !== null && answer.result === null)}
         onToggle={(e) => setEditing(e.currentTarget.open)}
       >
         <summary>

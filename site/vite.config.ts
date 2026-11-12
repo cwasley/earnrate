@@ -63,10 +63,13 @@ export function landingPage(): Plugin {
   }
 }
 
+// Find a card works out its answer in a worker, which gets the card data
+// from the page rather than a second copy of it.
 export default defineConfig({
   root: import.meta.dirname,
   plugins: [catalogModule(), landingPage()],
   oxc: { jsx: { runtime: 'automatic', importSource: 'preact' } },
+  worker: { format: 'es' },
   build: {
     outDir: '../site-dist',
     emptyOutDir: true,
