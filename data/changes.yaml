@@ -3,6 +3,115 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.11.2'
+  date: 2026-11-11
+  changes:
+    - cause: correction
+      card: amex-platinum
+      field: credits.uber-cash.month_amounts
+      was: null
+      now: { 12: 35 }
+      summary: Uber Cash is $35 in December ($15 plus $20 more), not $15, so it comes to $200 a year, not $180.
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    - cause: correction
+      card: chase-united-business
+      field: credits.rideshare.month_amounts
+      was: null
+      now: { 12: 12 }
+      summary: The rideshare credit is $12 in December, not $8, so it comes to $100 a year, not $96.
+      source: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    - cause: correction
+      card: chase-united-club
+      field: credits.rideshare.month_amounts
+      was: null
+      now: { 12: 18 }
+      summary: The rideshare credit is $18 in December, not $12, so it comes to $150 a year, not $144.
+      source: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    - cause: correction
+      card: chase-united-club-business
+      field: credits.rideshare.month_amounts
+      was: null
+      now: { 12: 18 }
+      summary: The rideshare credit is $18 in December, not $12, so it comes to $150 a year, not $144.
+      source: https://creditcards.chase.com/business-credit-cards/united/united-club-business
+    - cause: correction
+      card: chase-united-quest
+      field: credits.rideshare.month_amounts
+      was: null
+      now: { 12: 12 }
+      summary: The rideshare credit is $12 in December, not $8, so it comes to $100 a year, not $96.
+      source: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    - cause: wording
+      card: amex-platinum
+      field: credits.uber-cash.note
+      was: 'Uber Cash, added to your Uber account each month once the card is in it, plus an extra $20 in December (modeled at $15). Only on U.S. rides and orders paid with an Amex card; not for a card added through Apple Pay or PayPal.'
+      now: 'Uber Cash, added to your Uber account each month once the card is in it, plus an extra $20 in December. Only on U.S. rides and orders paid with an Amex card; not for a card added through Apple Pay or PayPal.'
+      summary: The note no longer says December is counted at the usual amount.
+    - cause: wording
+      card: chase-united-business
+      field: credits.rideshare.note
+      was: 'Rideshare rides. Opt in each year. December allows $12 (modeled at $8).'
+      now: 'Rideshare rides. Opt in each year.'
+      summary: The December amount moves from the note into the credit itself.
+    - cause: wording
+      card: chase-united-club
+      field: credits.rideshare.note
+      was: 'Rideshare rides. Opt in each year. December allows $18 (modeled at $12).'
+      now: 'Rideshare rides. Opt in each year.'
+      summary: The December amount moves from the note into the credit itself.
+    - cause: wording
+      card: chase-united-club-business
+      field: credits.rideshare.note
+      was: 'Rideshare rides. Opt in each year. December allows $18 (modeled at $12).'
+      now: 'Rideshare rides. Opt in each year.'
+      summary: The December amount moves from the note into the credit itself.
+    - cause: wording
+      card: chase-united-quest
+      field: credits.rideshare.note
+      was: 'Rideshare rides. Opt in each year. December allows $12 (modeled at $8).'
+      now: 'Rideshare rides. Opt in each year.'
+      summary: The December amount moves from the note into the credit itself.
+    - cause: quote
+      cards:
+        [
+          chase-united-business,
+          chase-united-club,
+          chase-united-club-business,
+          chase-united-quest,
+        ]
+      field: evidence
+      summary: Each rideshare credit gains a quote stating its December amount.
+    - cause: addition
+      card: chase-freedom-flex
+      field: rules.q1-2027-grocery.activate_from
+      was: null
+      now: 2026-12-15
+      summary: Activation for the first quarter of 2027 opens December 15, 2026, as Chase states.
+      source: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
+    - cause: wording
+      card: chase-freedom-flex
+      field: rules.q1-2027-grocery.note
+      was: 'Grocery stores excluding Walmart and Target. Activation opens December 15, 2026.'
+      now: 'Grocery stores excluding Walmart and Target.'
+      summary: The activation date moves from the note into the rule.
+    - cause: addition
+      card: chase-freedom-flex
+      field: rules.q1-2027-streaming.activate_from
+      was: null
+      now: 2026-12-15
+      summary: Activation for the first quarter of 2027 opens December 15, 2026, as Chase states.
+      source: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
+    - cause: wording
+      card: chase-freedom-flex
+      field: rules.q1-2027-streaming.note
+      was: 'Only the "top streaming services" Chase lists at chase.com/RewardsCategoryFAQs. Activation opens December 15, 2026.'
+      now: 'Only the "top streaming services" Chase lists at chase.com/RewardsCategoryFAQs.'
+      summary: The activation date moves from the note into the rule.
+    - cause: quote
+      card: chase-freedom-flex
+      field: evidence
+      summary: The first quarter of 2027's rules gain Chase's quote on when activation opens.
+
 - version: '2026.11.11.1'
   date: 2026-11-11
   changes:

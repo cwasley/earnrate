@@ -22,7 +22,7 @@ import {
   simulateWallet,
   spendLineFor,
 } from '../src/engine/simulate.ts'
-import { creditsYearText } from '../src/engine/text.ts'
+import { creditBack, creditsYearText } from '../src/engine/text.ts'
 import { addToWallet, updateInWallet } from '../src/engine/wallet-change.ts'
 import type { Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
@@ -110,6 +110,85 @@ describe('a credit over a year', () => {
         {},
       ),
     ).toMatchObject({ yearly: 100, creditIds: ['resy'] })
+  })
+})
+
+describe('a monthly credit that pays more in one month', () => {
+  const uber = {
+    id: 'uber-cash',
+    match: { merchants: ['uber', 'uber-eats'] },
+    amount: 15,
+    period: 'month' as const,
+    month_amounts: { '12': 35 },
+  }
+  const withCredits = (credits: Card['credits']): Card => ({
+    ...cardOf(catalog, 'amex-gold'),
+    credits,
+  })
+  const ride = {
+    merchantId: 'uber',
+    category: 'transit.rideshare',
+    source: 'seed' as const,
+  }
+  const holding = held({ enrolled: ['uber-cash'] })
+
+  test("pays December's amount in December and its own amount otherwise", () => {
+    const card = withCredits([uber])
+    expect(creditAt(catalog, card, holding, ride, '2026-12-05')).toMatchObject({
+      amount: 15,
+      periodAmount: 35,
+      left: 35,
+      until: '2026-12-31',
+    })
+    expect(creditAt(catalog, card, holding, ride, '2026-11-05')).toMatchObject({
+      amount: 15,
+      periodAmount: 15,
+      left: 15,
+    })
+  })
+
+  test('counts every month once in a year, from any starting month', () => {
+    const card = withCredits([uber])
+    expect(creditPerYear(uber)).toBe(200)
+    for (const date of ['2026-01-01', '2026-06-15', '2026-12-31'])
+      expect(allCreditsYear(catalog, card, date, {}).yearly, date).toBe(200)
+  })
+
+  test('a credit that ends before December never counts the larger month', () => {
+    const card = withCredits([{ ...uber, valid_to: '2027-10-31' }])
+    expect(allCreditsYear(catalog, card, '2026-06-15', {}).yearly).toBe(200)
+    expect(allCreditsYear(catalog, card, '2027-06-15', {}).yearly).toBe(75)
+    expect(allCreditsYear(catalog, card, '2026-12-15', {}).yearly).toBe(
+      35 + 15 * 10,
+    )
+  })
+
+  test('says the larger month wherever the credit is described', () => {
+    const states = creditStates(catalog, withCredits([uber]), holding, TODAY)
+    expect(creditBack(uber)).toBe('$15 back each month ($35 in December)')
+    expect(states[0] && creditBack(states[0])).toBe(
+      '$15 back each month ($35 in December)',
+    )
+  })
+
+  test("the Amex Platinum's Uber Cash comes to $200 a year", () => {
+    const platinum = cardOf(catalog, 'amex-platinum')
+    const credit = platinum.credits.find((c) => c.id === 'uber-cash')
+    expect(credit && creditPerYear(credit)).toBe(200)
+    expect(credit?.note ?? '').not.toMatch(/modeled/i)
+  })
+
+  test('the to-do list counts what is left of the larger month', () => {
+    const card = withCredits([uber])
+    const wallet = WalletSchema.parse({
+      cards: [{ id: 'amex-gold', enrolled: ['uber-cash'] }],
+    })
+    const items = checklist(
+      { ...catalog, cards: [card] },
+      wallet,
+      '2026-12-20',
+    ).filter((i) => i.kind === 'credit')
+    expect(items.map((i) => i.text).join(' ')).toContain('$35')
   })
 })
 

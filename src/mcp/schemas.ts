@@ -212,6 +212,7 @@ export const WalletSummarySchema = z.object({
           id: z.string(),
           name: z.string(),
           amount: z.number(),
+          periodAmount: z.number(), // this period's: a month can pay more
           period: CreditPeriod,
           enroll: z.boolean(),
           enrolled: z.boolean(),

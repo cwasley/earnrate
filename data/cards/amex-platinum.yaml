@@ -67,7 +67,8 @@ credits:
     match: { merchants: [uber, uber-eats] }
     amount: 15
     period: month
-    note: 'Uber Cash, added to your Uber account each month once the card is in it, plus an extra $20 in December (modeled at $15). Only on U.S. rides and orders paid with an Amex card; not for a card added through Apple Pay or PayPal.'
+    month_amounts: { 12: 35 }
+    note: 'Uber Cash, added to your Uber account each month once the card is in it, plus an extra $20 in December. Only on U.S. rides and orders paid with an Amex card; not for a card added through Apple Pay or PayPal.'
   - id: uber-one
     match: { merchants: [uber-one] }
     amount: 120

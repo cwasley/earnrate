@@ -38,7 +38,8 @@ import {
   yearEndRedirects,
 } from '../scripts/pages/year-end.ts'
 import { creditWhere } from '../src/engine/rule-text.ts'
-import { currentPeriodEnd, inEffect } from '../src/engine/periods.ts'
+import { currentPeriodEnd, inEffect, periodKey } from '../src/engine/periods.ts'
+import { periodAmount } from '../src/engine/credits.ts'
 import { recentChangesSection } from '../scripts/pages/changes.ts'
 import { cardChangesUrl } from '../src/engine/changes.ts'
 import { ChangesFileSchema } from '../src/schema/changes.ts'
@@ -485,10 +486,17 @@ describe('year-end pages', () => {
         if (!ends) continue
         const html = block(monthly ? 'monthly' : 'credits', card.id)
         expect(html, card.id).toContain(
-          esc(`${money(credit.amount)} back ${creditWhere(catalog, credit)}`),
+          esc(
+            `${money(periodAmount(credit, periodKey(credit.period, y.end, null)))} back ${creditWhere(catalog, credit)}`,
+          ),
         )
         if (credit.note) expect(html, credit.id).toContain(esc(credit.note))
-        const quote = card.evidence.find((e) => e.rule === credit.id)
+        const quotes = card.evidence.filter((e) => e.rule === credit.id)
+        const december = credit.month_amounts?.['12'] !== undefined
+        const quote =
+          (december
+            ? quotes.find((e) => e.quote.includes('December'))
+            : undefined) ?? quotes[0]
         if (quote) expect(html, credit.id).toContain(esc(quote.quote))
       }
     expect(
@@ -574,7 +582,9 @@ describe('year-end pages', () => {
         const html = pageOf(card.id)?.html ?? ''
         for (const { credit } of items)
           expect(html, credit.id).toContain(
-            esc(`${money(credit.amount)} back ${creditWhere(catalog, credit)}`),
+            esc(
+              `${money(periodAmount(credit, periodKey(credit.period, y.end, null)))} back ${creditWhere(catalog, credit)}`,
+            ),
           )
       }
       const platinum = pageOf('amex-platinum')?.html ?? ''
@@ -586,6 +596,31 @@ describe('year-end pages', () => {
       expect(platinum).toContain(
         `"item":"https://earnrate.dev/year-end/${String(year)}"`,
       )
+    })
+
+    test("counts a monthly credit at December's own amount, and says when next quarter's activation opens", () => {
+      const platinum = pageOf('amex-platinum')?.html ?? ''
+      const card = catalog.cards.find((c) => c.id === 'amex-platinum')
+      const credits = [...y.credits, ...y.monthly]
+        .filter((c) => c.card.id === 'amex-platinum')
+        .flatMap((c) => c.items)
+      const total = credits.reduce(
+        (sum, i) => sum + periodAmount(i.credit, i.key),
+        0,
+      )
+      expect(card?.credits.find((c) => c.id === 'uber-cash')).toMatchObject({
+        month_amounts: { '12': 35 },
+      })
+      if (year === 2026) expect(platinum).toContain('$35 back at Uber')
+      expect(platinum).toContain(`worth up to ${money(total)} in all`)
+      const flex = pageOf('chase-freedom-flex')?.html ?? ''
+      const opens = catalog.cards
+        .find((c) => c.id === 'chase-freedom-flex')
+        ?.rules.find((r) => r.activate_from !== undefined)?.activate_from
+      if (opens !== undefined && opens > today && flex !== '')
+        expect(flex).toContain(
+          `Activate with Chase starting ${shortDate(opens)}`,
+        )
     })
 
     test('is indexed only when something on it ends with the year', () => {

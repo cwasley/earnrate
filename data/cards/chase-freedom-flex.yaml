@@ -90,7 +90,8 @@ rules:
     requires: { activation: true }
     valid_from: 2027-01-01
     valid_to: 2027-03-31
-    note: Grocery stores excluding Walmart and Target. Activation opens December 15, 2026.
+    activate_from: 2026-12-15
+    note: Grocery stores excluding Walmart and Target.
   - id: q1-2027-streaming
     match:
       merchants:
@@ -119,7 +120,8 @@ rules:
     requires: { activation: true }
     valid_from: 2027-01-01
     valid_to: 2027-03-31
-    note: Only the "top streaming services" Chase lists at chase.com/RewardsCategoryFAQs. Activation opens December 15, 2026.
+    activate_from: 2026-12-15
+    note: Only the "top streaming services" Chase lists at chase.com/RewardsCategoryFAQs.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -167,9 +169,15 @@ evidence:
   - rule: q1-2027-grocery
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'NEXT QUARTER Grocery Stores'
+  - rule: q1-2027-grocery
+    url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
+    quote: "You can activate the next quarter's categories starting December 15, 2026"
   - rule: q1-2027-streaming
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'Top Streaming Services'
+  - rule: q1-2027-streaming
+    url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
+    quote: "You can activate the next quarter's categories starting December 15, 2026"
   - rule: q1-2027-streaming
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Only subscriptions paid for, or purchases made with the following select merchants will qualify'

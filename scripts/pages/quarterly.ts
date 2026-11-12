@@ -222,6 +222,25 @@ function topFor(ctx: PageContext, t: Target, date: string): ExploreEntry[] {
     .slice(0, TOP)
 }
 
+// When to activate a quarter's bonus with the issuer, from its rules' dates.
+export function activationText(
+  issuer: string,
+  rules: Rule[],
+  today: string,
+): string {
+  const dates = (of: (r: Rule) => string | undefined) =>
+    [...new Set(rules.map(of).filter((d) => d !== undefined))].sort()
+  const deadlines = dates((r) => r.activate_by)
+  const opens = dates((r) => r.activate_from).filter((d) => d > today)
+  const from =
+    opens.length === 0 ? '' : ` starting ${listed(opens.map(shortDate), 'or')}`
+  if (deadlines.length === 0)
+    return `Activate with ${issuer}${from === '' ? ' first' : from}; it's free. ${issuer} hasn't given a deadline in the pages earnrate reads.`
+  if (deadlines.every((d) => d < today))
+    return `${issuer}'s deadline to activate was ${listed(deadlines.map(shortDate), 'or')}.`
+  return `Activate with ${issuer}${from === '' ? '' : `${from} and`} by ${listed(deadlines.map(shortDate), 'or')}; it's free.`
+}
+
 export function activationQuotes(card: Card, rules: Rule[]) {
   const ids = new Set(rules.map((r) => r.id))
   const seen = new Set<string>()
@@ -282,11 +301,6 @@ function cardSection(ctx: PageContext, q: Quarter, qc: QuarterCard): string {
   if (qc.rules.length === 0)
     return `<section class="quarter-card">${head}<p class="answer">${esc(rotationGapText(ctx.shortName(card.id), qc.gap ?? q.key))}</p></section>`
   const { cap } = qc
-  const deadlines = [
-    ...new Set(
-      qc.rules.map((r) => r.activate_by).filter((d) => d !== undefined),
-    ),
-  ]
   const needsActivation = qc.rules.some((r) => r.requires?.activation === true)
   const from = qc.rules.map((r) => r.valid_from ?? q.start).sort()[0] ?? q.start
   const to =
@@ -295,9 +309,7 @@ function cardSection(ctx: PageContext, q: Quarter, qc: QuarterCard): string {
       .sort()
       .at(-1) ?? q.end
   const activation = needsActivation
-    ? deadlines.length > 0
-      ? `Activate with ${issuer} by ${listed(deadlines.map(shortDate), 'or')}; it's free.`
-      : `Activate with ${issuer} first; it's free. ${issuer} hasn't given a deadline in the pages earnrate reads.`
+    ? activationText(issuer, qc.rules, ctx.today)
     : 'No activation needed.'
   const quotes = activationQuotes(card, qc.rules)
   // The issuer's page that says how to activate, for the next step.

@@ -77,6 +77,23 @@ describe('checklist', () => {
       expect((item.due ?? '9999-12-31') >= '2026-12-20').toBe(true)
   })
 
+  test("next quarter's activation says when the issuer opens it, and is due then", () => {
+    const flex = WalletSchema.parse({
+      cards: [{ id: 'chase-freedom-flex', activated: ['q4-2026-grocery'] }],
+    })
+    const next = checklist(catalog, flex, '2026-12-01').find(
+      (i) => i.kind === 'activate',
+    )
+    expect(next?.text).toMatch(
+      /starting Dec 15, 2026 \(it starts Jan 1, 2027\)\.$/,
+    )
+    expect(next?.due).toBe('2026-12-15')
+    const open = checklist(catalog, flex, '2026-12-16').find(
+      (i) => i.kind === 'activate',
+    )
+    expect(open?.text).not.toMatch(/starting/)
+  })
+
   test('caps with room left, assumed picks and the next period', () => {
     const w = WalletSchema.parse({
       memberships: ['bofa-rewards-preferred-plus'],

@@ -64,6 +64,7 @@ export type CreditSummary = {
   id: string // what enrolled and credit_usage call it
   name: string // what it's for: "Lululemon"
   amount: number // dollars each period
+  periodAmount: number // this period's dollars: a month can pay more
   period: Credit['period']
   enroll: boolean // the cardholder must enroll first
   enrolled: boolean // enrolled, or no enrollment needed
@@ -301,6 +302,7 @@ export type ActivationDue = {
   where: string
   from: string | null
   to: string | null
+  activateFrom: string | null // when the issuer opens activation
   activateBy: string | null
 }
 
@@ -368,6 +370,7 @@ export function activationsDue(
       where: wherePhrase(catalog, card, rules),
       from: first?.valid_from ?? null,
       to: first?.valid_to ?? null,
+      activateFrom: first?.activate_from ?? null,
       activateBy: first?.activate_by ?? null,
     })
   }
@@ -381,8 +384,14 @@ function toActivate(
   today: string,
 ): string[] {
   return activationsDue(catalog, card, held, today).map((a) => {
-    const deadline =
-      a.activateBy === null ? '' : `activate by ${shortDate(a.activateBy)}`
+    const deadline = [
+      a.activateFrom !== null && a.activateFrom > today
+        ? `activate from ${shortDate(a.activateFrom)}`
+        : '',
+      a.activateBy === null ? '' : `activate by ${shortDate(a.activateBy)}`,
+    ]
+      .filter((x) => x !== '')
+      .join(', ')
     const dates =
       a.from !== null && a.to !== null
         ? `${shortDate(a.from)} to ${shortDate(a.to)}`
@@ -612,6 +621,7 @@ function creditSummaries(
       id: s.credit.id,
       name: s.name,
       amount: s.amount,
+      periodAmount: s.periodAmount,
       period: s.period,
       enroll: s.credit.enroll === true,
       enrolled: s.enrolled,

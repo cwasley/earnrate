@@ -62,6 +62,8 @@ export type RankedCard = {
     id: string
     name: string
     amount: number
+    month_amounts?: Credit['month_amounts']
+    periodAmount: number // this period's: a month can pay more
     period: Credit['period']
     enrolled: boolean
     left: number | null // this period, before this purchase

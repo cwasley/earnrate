@@ -56,8 +56,9 @@ credits:
     match: { categories: [transit.rideshare] }
     amount: 12
     period: month
+    month_amounts: { 12: 18 }
     enroll: true
-    note: 'Rideshare rides. Opt in each year. December allows $18 (modeled at $12).'
+    note: 'Rideshare rides. Opt in each year.'
   - id: jsx
     match: { merchants: [jsx] }
     amount: 200
@@ -118,6 +119,9 @@ evidence:
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'Yearly opt-in is required.'
     in_popup: true
+  - rule: rideshare
+    url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
+    quote: 'up to $18 back as a statement credit in December when you pay for rideshare purchases'
   - rule: jsx
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'Get up to $200 back as a statement credit each anniversary year when you book flights directly with JSX'

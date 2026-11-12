@@ -192,7 +192,7 @@ export type CreditBooking = {
   name: string // what the credit is for, in words
   period: string
   periodKind: Credit['period']
-  amount: number // the credit's dollars each period
+  amount: number // the credit's dollars this period
   before: number // dollars of credit used this period before the purchase
   after: number
 }
@@ -221,7 +221,7 @@ export function creditBooking(
     name: state.name,
     period: state.key,
     periodKind: state.period,
-    amount: state.amount,
+    amount: state.periodAmount,
     before: state.used,
     after: roundCents(state.used + back),
   }

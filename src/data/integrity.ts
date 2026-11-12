@@ -10,6 +10,7 @@ import { evaluateCard, purchaseContext } from '../engine/evaluate.ts'
 import { idealHolding } from '../engine/explore.ts'
 import { NAMED_LISTS, namedKey } from '../engine/named.ts'
 import { isAnniversary } from '../engine/periods.ts'
+import { MONTH_NAMES } from '../engine/text.ts'
 import { WALLET_VERSION, type Wallet } from '../schema/wallet.ts'
 
 function duplicates(ids: string[]): string[] {
@@ -224,6 +225,31 @@ function cardProblems(
       checkCategory(c, `credit ${credit.id}`)
     for (const m of credit.match.merchants ?? [])
       checkMerchant(m, `credit ${credit.id}`)
+    // A month that pays differently is the issuer's word too: a quote names
+    // the month and its amount, or the extra on top of the usual one.
+    for (const [month, amount] of Object.entries(credit.month_amounts ?? {})) {
+      const name = MONTH_NAMES[Number(month) - 1] ?? month
+      if (credit.period !== 'month')
+        problems.push(
+          `${where} ${credit.id}: month_amounts on a ${credit.period} credit`,
+        )
+      if (amount === credit.amount)
+        problems.push(
+          `${where} ${credit.id}: ${name}'s amount is its usual one`,
+        )
+      const said = [amount, amount - credit.amount].map((n) => `$${String(n)}`)
+      if (
+        !card.evidence.some(
+          (e) =>
+            e.rule === credit.id &&
+            e.quote.includes(name) &&
+            said.some((d) => new RegExp(`\\${d}(\\D|$)`).test(e.quote)),
+        )
+      )
+        problems.push(
+          `${where} ${credit.id}: no evidence quote states ${name}'s amount`,
+        )
+    }
   }
   if (
     card.foreign_transaction_fee === null &&
@@ -276,6 +302,7 @@ function cardProblems(
   for (const [id, date] of [
     ...card.credits.map((c) => [c.id, c.valid_to] as const),
     ...card.milestones.map((m) => [m.id, m.valid_from] as const),
+    ...card.rules.map((r) => [r.id, r.activate_from] as const),
   ]) {
     if (date === undefined) continue
     const year = date.slice(0, 4)

@@ -122,7 +122,8 @@ export const RuleSchema = z
       .optional(),
     valid_from: IsoDate.optional(),
     valid_to: IsoDate.optional(),
-    // The issuer's last day to activate a bonus that needs it.
+    // The issuer's first and last days to activate a bonus that needs it.
+    activate_from: IsoDate.optional(),
     activate_by: IsoDate.optional(),
     // Set when a rule isn't confirmed against the issuer's terms. The engine
     // warns when an unverified rule decides the winner.
@@ -150,6 +151,15 @@ export const RuleSchema = z
   .refine(
     (r) => r.activate_by === undefined || r.requires?.activation === true,
     'activate_by needs requires.activation',
+  )
+  .refine(
+    (r) => r.activate_from === undefined || r.requires?.activation === true,
+    'activate_from needs requires.activation',
+  )
+  .refine(
+    (r) =>
+      !r.activate_from || !r.activate_by || r.activate_from <= r.activate_by,
+    'activate_from must not be after activate_by',
   )
 
 // The public sign-up bonus on the issuer's page. Offers vary by person and
@@ -260,6 +270,11 @@ export const CreditSchema = z.strictObject({
     ),
   amount: z.number().positive(), // dollars of credit per period
   period: CreditPeriod,
+  // A monthly credit's months that pay a different amount, by month number
+  // (Uber Cash's $35 in December: { 12: 35 }).
+  month_amounts: z
+    .record(z.string().regex(/^(?:[1-9]|1[0-2])$/), z.number().positive())
+    .optional(),
   // The cardholder must enroll with the issuer before it pays.
   enroll: z.literal(true).optional(),
   // It pays only on a purchase of at least this many dollars.

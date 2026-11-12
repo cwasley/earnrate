@@ -807,7 +807,7 @@ function CardEditor({
                 type="number"
                 inputMode="decimal"
                 min="0"
-                max={String(c.amount)}
+                max={String(c.periodAmount)}
                 placeholder="0"
                 value={creditUsed[c.credit.id] ?? ''}
                 onInput={(e) => {

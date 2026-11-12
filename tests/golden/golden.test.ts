@@ -2134,7 +2134,7 @@ describe('#33 merchant credits across issuers', () => {
         cardId: 'amex-platinum',
         creditId: 'uber-cash',
         enroll: false,
-        text: '$15 back each month, then 1x Amex Membership Rewards',
+        text: '$15 back each month ($35 in December), then 1x Amex Membership Rewards',
       })
       const cards = credits.map((c) => c.cardId)
       expect(cards).toEqual(

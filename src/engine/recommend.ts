@@ -527,6 +527,8 @@ function toRanked(
       id: entry.credit.credit.id,
       name: entry.credit.name,
       amount: entry.credit.amount,
+      month_amounts: entry.credit.month_amounts,
+      periodAmount: entry.credit.periodAmount,
       period: entry.credit.period,
       enrolled: entry.credit.enrolled,
       left: entry.credit.left,

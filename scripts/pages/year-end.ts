@@ -4,6 +4,7 @@
 // categories and next quarter's) and the calendar-year caps that start over
 // on January 1, straight from the card files. Cards saved on earnrate.dev
 // come first, chosen in the visitor's browser.
+import { periodAmount } from '../../src/engine/credits.ts'
 import { creditWhere } from '../../src/engine/rule-text.ts'
 import { milestonePays, milestoneWhat } from '../../src/engine/milestones.ts'
 import { offerTerms, OFFERS_MAY_DIFFER } from '../../src/engine/offers.ts'
@@ -24,6 +25,7 @@ import {
   listed,
   longDate,
   money,
+  MONTH_NAMES,
   periodPhrase,
   shortDate,
   wholeDollars,
@@ -38,6 +40,7 @@ import type {
 import type { GeneratedPage, PageContext } from './context.ts'
 import {
   activationQuotes,
+  activationText,
   quarters,
   type Quarter,
   type QuarterCard,
@@ -136,7 +139,7 @@ export function yearEnd(ctx: PageContext, year: number): YearEnd {
             (a, b) =>
               PERIOD_ORDER.indexOf(a.credit.period) -
                 PERIOD_ORDER.indexOf(b.credit.period) ||
-              b.credit.amount - a.credit.amount,
+              periodAmount(b.credit, b.key) - periodAmount(a.credit, a.key),
           ),
       }))
       .filter((c) => c.items.length > 0)
@@ -321,8 +324,12 @@ function shortPays(m: Milestone): string | null {
   return pays.length <= 60 && !pays.includes(':') ? pays : null
 }
 
-const creditTotal = (credits: Credit[]) =>
-  money(credits.reduce((sum, c) => sum + c.amount, 0))
+// A credit's dollars for its period that ends with the year.
+const atYearEnd = (one: YearEnd, c: Credit) =>
+  periodAmount(c, periodKey(c.period, one.end, null))
+
+const creditTotal = (one: YearEnd, credits: Credit[]) =>
+  money(credits.reduce((sum, c) => sum + atYearEnd(one, c), 0))
 
 // What one card's page leads with, without the card's name: wordings for
 // the title, longest first, and the line on its preview image.
@@ -355,7 +362,7 @@ function headline(one: YearEnd): { lead: string[]; line: string } {
         `${w} ${verb} ${by}${end}`,
         `${w} ${verb} ${by}${day}`,
       ]),
-      line: `${capitalize(what[0] ?? '')} ${verb} ${by}${day}, worth up to ${creditTotal(credits)}`,
+      line: `${capitalize(what[0] ?? '')} ${verb} ${by}${day}, worth up to ${creditTotal(one, credits)}`,
     }
   }
   if (lead === 'ending' && ending) {
@@ -471,12 +478,12 @@ function cardSummary(ctx: PageContext, one: YearEnd, card: Card): string[][] {
     const lines: string[][] = [
       n === 1 && single
         ? [
-            `One credit on ${theCard} ends ${end}: ${money(single.amount)} back ${creditWhere(ctx.catalog, single)}.`,
-            `One credit on ${theCard} ends ${end}, worth up to ${money(single.amount)}.`,
+            `One credit on ${theCard} ends ${end}: ${money(atYearEnd(one, single))} back ${creditWhere(ctx.catalog, single)}.`,
+            `One credit on ${theCard} ends ${end}, worth up to ${money(atYearEnd(one, single))}.`,
           ]
         : [
-            `${String(n)} credits on ${theCard} end ${end}, worth up to ${creditTotal(credits)} in all.`,
-            `${String(n)} credits on ${theCard} end ${by}${dayOf(one.end)}, worth up to ${creditTotal(credits)}.`,
+            `${String(n)} credits on ${theCard} end ${end}, worth up to ${creditTotal(one, credits)} in all.`,
+            `${String(n)} credits on ${theCard} end ${by}${dayOf(one.end)}, worth up to ${creditTotal(one, credits)}.`,
           ],
     ]
     const periodic = count(one.credits)
@@ -649,8 +656,19 @@ function cardBlock(
   return `<section class="ye-card" data-card="${esc(card.id)}" id="${section}-${esc(card.id)}"><div class="card-head small">${v.ctx.art(card.id, 64)}<h3><a href="/cards/${card.id}">${esc(card.name)}</a></h3><span class="ye-mark">Your card</span></div>${inner}${sendRow(v.y, card, v.titles.get(card.id) ?? '')}</section>`
 }
 
-const firstQuote = (ctx: PageContext, card: Card, id: string) => {
-  const q = ctx.quotesFor(card, id)[0]
+// `prefer`: words the quote should name when one does (a month with its own
+// amount).
+const firstQuote = (
+  ctx: PageContext,
+  card: Card,
+  id: string,
+  prefer?: string,
+) => {
+  const quotes = ctx.quotesFor(card, id)
+  const q =
+    (prefer === undefined
+      ? undefined
+      : quotes.find((e) => e.quote.includes(prefer))) ?? quotes[0]
   return q ? `<p class="muted ye-quote">${ctx.quoteHtml(q)}</p>` : ''
 }
 
@@ -659,12 +677,12 @@ const noteHtml = (note: string | undefined) =>
 
 function creditItem(ctx: PageContext, card: Card, item: CreditItem): string {
   const { credit } = item
-  const what = `${money(credit.amount)} back ${creditWhere(ctx.catalog, credit)}`
+  const what = `${money(periodAmount(credit, item.key))} back ${creditWhere(ctx.catalog, credit)}`
   const min = creditTerms({ min_amount: credit.min_amount })
   const enroll = credit.enroll
     ? ` ${capitalize(ENROLL_FIRST)} with ${ctx.issuerName(card.issuer)}.`
     : ''
-  return `<li><p><strong>${esc(what)}</strong> ${esc(periodPhrase(credit.period, item.key))}${esc(min)}.${esc(enroll)}</p>${noteHtml(credit.note)}${firstQuote(ctx, card, credit.id)}</li>`
+  return `<li><p><strong>${esc(what)}</strong> ${esc(periodPhrase(credit.period, item.key))}${esc(min)}.${esc(enroll)}</p>${noteHtml(credit.note)}${firstQuote(ctx, card, credit.id, periodAmount(credit, item.key) === credit.amount ? undefined : MONTH_NAMES[Number(item.key.slice(5, 7)) - 1])}</li>`
 }
 
 const creditBlocks = (v: View, section: string, list: YearEnd['credits']) =>
@@ -784,19 +802,10 @@ function quarterPart(
   const issuer = ctx.issuerName(card.issuer)
   const head = `<p class="ye-quarter"><strong>${esc(q.label)}</strong> · ${esc(`${shortDate(q.start)} to ${shortDate(q.end)}`)}</p>`
   const link = `<p><a href="/quarterly/${q.slug}">${esc(q.label)} in full</a></p>`
-  const deadlines = [
-    ...new Set(
-      qc.rules.map((r) => r.activate_by).filter((d) => d !== undefined),
-    ),
-  ].sort()
   const needs = qc.rules.some((r) => r.requires?.activation === true)
-  const activation = !needs
-    ? 'No activation needed.'
-    : deadlines.length === 0
-      ? `Activate with ${issuer} first; it's free. ${issuer} hasn't given a deadline in the pages earnrate reads.`
-      : deadlines.every((d) => d < ctx.today)
-        ? `${issuer}'s deadline to activate was ${listed(deadlines.map(shortDate), 'or')}.`
-        : `Activate with ${issuer} by ${listed(deadlines.map(shortDate), 'or')}; it's free.`
+  const activation = needs
+    ? activationText(issuer, qc.rules, ctx.today)
+    : 'No activation needed.'
   const rules = [...qc.rules]
     .sort((a, b) => b.rate - a.rate)
     .map((r) => `<li><p>${ruleLine(ctx, card, r)}</p>${noteHtml(r.note)}</li>`)

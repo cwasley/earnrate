@@ -9,13 +9,14 @@ import {
 import { addMonths } from './bonus.ts'
 import { capByKey } from './evaluate.ts'
 import { choicePeriod, isAnniversary, periodKey } from './periods.ts'
+import { periodAmount } from './credits.ts'
 import {
   knownMemberships,
   searchCards,
   setupNotes,
   type SetupNote,
 } from './setup.ts'
-import { CREDIT_PERIODS, idList, money } from './text.ts'
+import { CREDIT_PERIODS, CREDIT_THIS_PERIOD, idList, money } from './text.ts'
 
 // Node-free: earnrate.dev runs these on the wallet it keeps in the browser.
 
@@ -335,11 +336,12 @@ export function cardFields(
         )
         continue
       }
-      if (!(used >= 0 && used <= credit.amount))
-        problems.push(
-          `The '${id}' credit is ${money(credit.amount)} ${CREDIT_PERIODS[credit.period]}, so what's used must be $0 to ${money(credit.amount)}.`,
-        )
       const period = periodKey(credit.period, today, anniversary)
+      const most = periodAmount(credit, period)
+      if (!(used >= 0 && used <= most))
+        problems.push(
+          `The '${id}' credit is ${money(most)} ${most === credit.amount ? CREDIT_PERIODS[credit.period] : CREDIT_THIS_PERIOD[credit.period]}, so what's used must be $0 to ${money(most)}.`,
+        )
       if (period === null) {
         problems.push(
           `The '${id}' credit resets on the card's anniversary; give the anniversary (MM-DD) too.`,

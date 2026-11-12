@@ -62,6 +62,18 @@ export const creditConfirmed = (credit: Credit, held: WalletCard) =>
 export const creditInUse = (credit: Credit, held: WalletCard) =>
   creditConfirmed(credit, held) && !isSkipped(credit, held)
 
+// The credit's dollars for one period: a monthly credit can pay more in some
+// months (Uber Cash's December).
+export function periodAmount(
+  credit: Pick<Credit, 'amount' | 'period' | 'month_amounts'>,
+  key: string | null,
+): number {
+  if (credit.period !== 'month' || key === null) return credit.amount
+  return (
+    credit.month_amounts?.[String(Number(key.slice(5, 7)))] ?? credit.amount
+  )
+}
+
 function creditState(
   catalog: Catalog,
   credit: Credit,
@@ -75,19 +87,21 @@ function creditState(
     period !== null && usage !== undefined && usage.period === period
       ? usage.used
       : 0
+  const amount = periodAmount(credit, period)
   return {
     credit,
     key: period,
     name: creditName(catalog, credit),
     amount: credit.amount,
+    month_amounts: credit.month_amounts,
+    periodAmount: amount,
     period: credit.period,
     enrolled: isEnrolled(credit, held),
     skipped: isSkipped(credit, held),
     confirmed: creditConfirmed(credit, held),
     used,
     minAmount: credit.min_amount ?? null,
-    left:
-      period === null ? null : roundCents(Math.max(0, credit.amount - used)),
+    left: period === null ? null : roundCents(Math.max(0, amount - used)),
     until:
       period === null ? null : periodEnd(credit.period, period, anniversary),
   }
@@ -164,9 +178,31 @@ function payoutsAYear(credit: Credit, date: string): number {
   return Math.min(all, starts)
 }
 
+const monthKey = (index: number) =>
+  `${String(Math.floor(index / 12))}-${String((index % 12) + 1).padStart(2, '0')}`
+
+// The credit's dollars over the 12 months from `date`, at face value.
+function yearDollars(credit: Credit, date: string): number {
+  const payouts = payoutsAYear(credit, date)
+  if (credit.period !== 'month' || credit.month_amounts === undefined)
+    return credit.amount * payouts
+  let total = 0
+  for (let i = 0; i < payouts; i++)
+    total += periodAmount(credit, monthKey(monthIndex(date) + i))
+  return total
+}
+
 // Dollars a year at face value, the most first: for ordering cards by credit.
-export const creditPerYear = (c: Pick<Credit, 'amount' | 'period'>) =>
-  c.amount * PER_YEAR[c.period]
+export const creditPerYear = (
+  c: Pick<Credit, 'amount' | 'period' | 'month_amounts'>,
+) =>
+  c.amount * PER_YEAR[c.period] +
+  (c.period === 'month'
+    ? Object.values(c.month_amounts ?? {}).reduce(
+        (sum, v) => sum + v - c.amount,
+        0,
+      )
+    : 0)
 
 // A free night at its point cap, at the person's value for the card's own
 // currency: the most it's worth, so always said as "up to". Null for a night
@@ -277,7 +313,7 @@ function creditsYear(
   return {
     cardId: card.id,
     yearly: roundCents(
-      live.reduce((total, c) => total + c.amount * payoutsAYear(c, date), 0) +
+      live.reduce((total, c) => total + yearDollars(c, date), 0) +
         nightDollars +
         ownDollars,
     ),

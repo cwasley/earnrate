@@ -397,7 +397,7 @@ export const CAP_PERIODS: Record<Cap['period'], string> = {
 
 // "for 2026-Q4", or "this cardmember year": a cardmember year's key is the
 // year it started, which reads as the calendar year.
-const MONTH_NAMES = [
+export const MONTH_NAMES = [
   'January',
   'February',
   'March',
@@ -552,9 +552,17 @@ export const CREDIT_GROUP = 'With a statement credit'
 // A credit the cardholder said they don't use, in list_wallet.
 export const CREDIT_SKIPPED = "marked as one you don't use, so it isn't counted"
 
-// "$75 back each quarter"
-export const creditBack = (c: Pick<Credit, 'amount' | 'period'>) =>
-  `${money(c.amount)} back ${CREDIT_PERIODS[c.period]}`
+// "$75 back each quarter", "$15 back each month ($35 in December)"
+export const creditBack = (
+  c: Pick<Credit, 'amount' | 'period'> & {
+    month_amounts?: Credit['month_amounts']
+  },
+) => {
+  const months = Object.entries(c.month_amounts ?? {})
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([m, v]) => `${money(v)} in ${MONTH_NAMES[Number(m) - 1] ?? m}`)
+  return `${money(c.amount)} back ${CREDIT_PERIODS[c.period]}${months.length > 0 ? ` (${listed(months)})` : ''}`
+}
 
 const minPurchase = (amount: number) =>
   `a purchase of ${wholeDollars(amount)} or more`
@@ -578,7 +586,9 @@ export const creditLeft = (left: number, period: Credit['period']) =>
 
 export type CreditWords = {
   name: string // "lululemon"
-  amount: number
+  amount: number // each period's, but for the months in month_amounts
+  month_amounts?: Credit['month_amounts']
+  periodAmount: number // this period's
   period: Credit['period']
   enrolled: boolean
   left: number | null // this period, before the purchase
@@ -643,7 +653,7 @@ export function creditShort(c: CreditWords, dollars: number | null): string {
 // For the to-do list: "Use your $75 lululemon credit on Amex Platinum by Dec
 // 31, 2026: $35 left."
 export const useCreditText = (card: string, c: CreditWords, left: number) =>
-  `Use your ${money(c.amount)} ${c.name} credit on ${card}${c.until === null ? '' : ` by ${shortDate(c.until)}`}: ${money(left)} left.`
+  `Use your ${money(c.periodAmount)} ${c.name} credit on ${card}${c.until === null ? '' : ` by ${shortDate(c.until)}`}: ${money(left)} left.`
 
 export const enrollCreditText = (card: string, names: string[]) =>
   names.length === 1
