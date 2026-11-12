@@ -123,22 +123,21 @@ export function feeWorthKit(
     return best
   }
 
-  // The card's bonus lines: those where it earns more than its own base rate.
+  // The card's bonus lines: those where it earns more than its own base
+  // rate on the typical month, all at once with its best picks. A card that
+  // picks two categories of six earns a bonus on two of them, not all six.
   function bonusLines(card: Card): ResolvedLine[] {
     const cents = currencyValuation(
       catalog,
       { valuations },
       card.currency,
     ).centsPerUnit
-    return typical.filter((line) => {
-      const [sim] = simulateSingles(
-        catalog,
-        [card],
-        [{ ...line, monthly: 100 }],
-        options(card),
-      )
-      return (sim?.lines[0]?.returnPct ?? 0) > card.base_rate * cents + EPSILON
-    })
+    const [sim] = simulateSingles(catalog, [card], typical, options(card))
+    return typical.filter(
+      (line) =>
+        (sim?.lines.find((l) => l.label === line.label)?.returnPct ?? 0) >
+        card.base_rate * cents + EPSILON,
+    )
   }
 
   function feeWorth(card: Card): FeeWorth | null {

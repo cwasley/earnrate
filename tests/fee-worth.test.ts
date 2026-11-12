@@ -99,6 +99,16 @@ describe('is the annual fee worth it', () => {
 })
 
 describe("the annual-fee section's numbers", () => {
+  test('a card that picks its bonus category counts only the category it picks', () => {
+    const { feeWorth } = feeWorthKit(catalog, TODAY)
+    const obsidian = feeWorth(cardOf('bilt-obsidian'))
+    expect(obsidian?.lines.map((l) => l.label)).toEqual([
+      'Supermarkets',
+      'Flights',
+      'Hotels',
+    ])
+  })
+
   test('a flat 2% card on the typical mix earns round figures at every amount in the table', () => {
     const lines = typicalSpendLines(catalog)
     const total = lines.reduce((s, l) => s + l.monthly, 0)
