@@ -9,7 +9,7 @@ import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { findMerchant } from '../merchants/resolve.ts'
-import { HALF_CENT, isClose } from './compare.ts'
+import { EPSILON, HALF_CENT, isClose } from './compare.ts'
 import {
   ALL_PERSONAL_CARDS,
   idealHolding,
@@ -23,6 +23,7 @@ import {
   OTHER_PERKS,
   type KeepOrReplaceOutcome,
 } from './keep-or-replace.ts'
+import { unsaidCreditsYear, type CreditsYear } from './credits.ts'
 import { missingMembership, paidMemberships } from './memberships.ts'
 import { inEffect } from './periods.ts'
 import type { Spending } from './renewal.ts'
@@ -50,6 +51,8 @@ import {
   listed,
   money,
   pct,
+  perksNoun,
+  perksTotal,
   possessive,
   roundCents,
   shortCardName,
@@ -82,7 +85,11 @@ export type FeeVerdict = {
   // What it adds beyond the other cards after its fee; held alone, beyond
   // the best no-fee card.
   net: number
+  // On rewards alone, after its fee.
   paysForItself: boolean
+  // It doesn't on rewards, but its credits would cover the rest if used.
+  creditsCover: boolean
+  perks: string // "statement credits", "free night"; empty for none
   outcome: KeepOrReplaceOutcome
   verdict: string // keep-or-replace's answer
   credits: string // what its statement credits would add, or empty
@@ -95,6 +102,7 @@ export type Gap = {
   heldCardId: string | null
   bestCardId: string
   bestPct: number
+  fee: number // its annual fee
   dollars: number // a year more with the best card on this line
 }
 
@@ -109,6 +117,9 @@ export type ReportStart = {
   simulation: Simulation
   net: number
   flat: FlatComparison | null
+  // Each held card's statement credits and free nights, as if all were
+  // used: left out of `net`, since a report doesn't know which are.
+  credits: CreditsYear[]
 }
 
 // The best two cards for the spending, and the best one, which is the
@@ -291,6 +302,18 @@ export function reportStart(
       simulation.rewards - simulation.annualFees - simulation.membershipFees,
     ),
     flat: flatComparison(catalog, input, today, spending),
+    credits: wallet.cards.flatMap((held) => {
+      const card = catalog.cards.find((c) => c.id === held.id)
+      if (!card) return []
+      const year = unsaidCreditsYear(
+        catalog,
+        card,
+        held,
+        today,
+        input.valuations,
+      )
+      return year.yearly > 0 ? [year] : []
+    }),
   }
 }
 
@@ -299,13 +322,33 @@ export function reportBest(
   input: ReportInput,
   today: string,
   spending: Spending,
+  // The card to add: beside one held card it makes a pair, which the
+  // catalog's shortlist of pairs can miss.
+  next: Addition | null = null,
 ): BestCards {
   const { pairs, singles } = simulateCatalog(
     catalog,
     spending.lines,
     options(catalog, input, today),
   )
-  return { pair: pairs[0] ?? null, single: singles[0] ?? null }
+  const [pair = null] = pairs
+  const [single = null] = singles
+  const held = known(catalog, input)
+  const withNext =
+    next !== null && held.length === 1
+      ? { ...next.simulation, alternatives: [] }
+      : null
+  const bestPair =
+    withNext !== null && (pair === null || withNext.net > pair.net + EPSILON)
+      ? withNext
+      : pair
+  const bestSingle =
+    next !== null &&
+    held.length === 0 &&
+    (single === null || next.simulation.net > single.net + EPSILON)
+      ? next.simulation
+      : single
+  return { pair: bestPair, single: bestSingle }
 }
 
 // A pair beats one card when it nets at least half a dollar more, as Find a
@@ -342,6 +385,9 @@ export function reportFeeCards(
         fee: k.fee,
         net: k.renewal.net,
         paysForItself: whole(k.renewal.net) > 0,
+        creditsCover:
+          whole(k.renewal.net) <= 0 && whole(k.renewal.net + unsaid.yearly) > 0,
+        perks: unsaid.yearly > 0 ? perksNoun(unsaid) : '',
         outcome: k.outcome,
         verdict: keepOrReplaceVerdict(catalog, k),
         credits,
@@ -374,6 +420,7 @@ export function reportGaps(
   today: string,
   spending: Spending,
   simulation: Simulation,
+  nextCardId: string | null,
 ): Gap[] {
   const ids = known(catalog, input).map((c) => c.id)
   if (ids.length === 0) return []
@@ -387,31 +434,42 @@ export function reportGaps(
     (c) =>
       matchesFilters(c, opts.filters) && missingMembership(c, has) === null,
   )
+  const pctOf = (s: Simulation) => s.lines[0]?.returnPct ?? 0
   return countedLines(catalog, spending.lines)
     .flatMap((line): Gap[] => {
       const held = simulation.lines.find((l) => l.label === line.label)
-      const [best] = simulateSingles(catalog, eligible, [line], opts)
-      const bestCardId = best?.cards[0]?.cardId
-      const bestLine = best?.lines[0]
-      if (!held || !bestLine || bestCardId === undefined) return []
-      if (
-        ids.includes(bestCardId) ||
-        isClose(held.returnPct, bestLine.returnPct)
+      if (!held) return []
+      const ranked = simulateSingles(catalog, eligible, [line], opts).sort(
+        (a, b) => pctOf(b) - pctOf(a),
       )
-        return []
-      return [
-        {
-          label: line.label,
-          spend: held.spend,
-          heldPct: held.returnPct,
-          heldCardId: held.cards[0] ?? null,
-          bestCardId,
-          bestPct: bestLine.returnPct,
-          dollars: roundCents(
-            ((bestLine.returnPct - held.returnPct) / 100) * held.spend,
-          ),
-        },
-      ]
+      const [top] = ranked
+      if (!top || isClose(held.returnPct, pctOf(top))) return []
+      // The best card on the line that would pay its own fee from the line
+      // alone, or that is the card to add, so the two never disagree.
+      const gaps = ranked.flatMap((s): Gap[] => {
+        const cardId = s.cards[0]?.cardId
+        if (cardId === undefined || ids.includes(cardId)) return []
+        if (isClose(held.returnPct, pctOf(s))) return []
+        const dollars = roundCents(
+          ((pctOf(s) - held.returnPct) / 100) * held.spend,
+        )
+        const fee = catalog.cards.find((c) => c.id === cardId)?.annual_fee ?? 0
+        if (fee > 0 && whole(dollars - fee) <= 0 && cardId !== nextCardId)
+          return []
+        return [
+          {
+            label: line.label,
+            spend: held.spend,
+            heldPct: held.returnPct,
+            heldCardId: held.cards[0] ?? null,
+            bestCardId: cardId,
+            bestPct: pctOf(s),
+            fee,
+            dollars,
+          },
+        ]
+      })
+      return gaps.slice(0, 1)
     })
     .sort((a, b) => b.dollars - a.dollars)
 }
@@ -424,12 +482,20 @@ export function walletReport(
   dataVersion: string,
 ): WalletReport {
   const start = reportStart(catalog, input, today, spending)
+  const next = reportNext(catalog, input, today, spending)
   return {
     ...start,
-    best: reportBest(catalog, input, today, spending),
+    best: reportBest(catalog, input, today, spending, next),
     feeCards: reportFeeCards(catalog, input, today, spending),
-    next: reportNext(catalog, input, today, spending),
-    gaps: reportGaps(catalog, input, today, spending, start.simulation),
+    next,
+    gaps: reportGaps(
+      catalog,
+      input,
+      today,
+      spending,
+      start.simulation,
+      next?.cardId ?? null,
+    ),
     dataVersion,
   }
 }
@@ -542,11 +608,34 @@ export function bestText(
       : `${lead}, about ${wholeDollars(-diff)} more than yours.`
 }
 
+// "Doesn't pay for itself" is about rewards on this spending, so a card
+// whose credits would cover the rest says so first.
+export function feeCardLead(catalog: Catalog, v: FeeVerdict): string {
+  const name = nameOf(catalog, v.cardId)
+  if (v.paysForItself) return ''
+  if (v.perks === '')
+    return `The ${name} doesn't pay for itself on this spending.`
+  return v.creditsCover
+    ? `On rewards alone, the ${name} doesn't pay for itself on this spending; its ${v.perks} would cover the rest if you'd use them.`
+    : `On rewards alone, the ${name} doesn't pay for itself on this spending, and its ${v.perks} wouldn't cover the rest.`
+}
+
 export function feeCardText(catalog: Catalog, v: FeeVerdict): string {
-  const lead = v.paysForItself
-    ? ''
-    : `The ${nameOf(catalog, v.cardId)} doesn't pay for itself on this spending. `
-  return `${lead}${v.verdict}${v.credits === '' ? '' : ` ${v.credits}`}`
+  return [feeCardLead(catalog, v), v.verdict, v.credits]
+    .filter((t) => t !== '')
+    .join(' ')
+}
+
+// Right under the headline: the credits the figure leaves out, and what the
+// cards would net with every one used.
+export function creditsText(catalog: Catalog, r: ReportStart): string {
+  if (r.empty || r.credits.length === 0) return ''
+  const total = perksTotal(r.credits)
+  const upTo = (total.nights ?? 0) > 0 ? 'up to ' : ''
+  const one = total.names.length === 1
+  const on = listed(r.credits.map((c) => `the ${nameOf(catalog, c.cardId)}`))
+  const subject = r.cards.length === 1 ? 'it' : 'these cards'
+  return `This figure leaves out the ${perksNoun(total, true, true)} on ${on}. If you'd use ${one ? 'it' : 'every one'} (${upTo}${wholeDollars(total.yearly)} a year), ${subject} would net ${upTo}about ${wholeDollars(r.net + total.yearly)} a year. ${creditsOnlyIf(total)}`.trim()
 }
 
 export function nextText(catalog: Catalog, next: Addition | null): string {
@@ -561,8 +650,9 @@ export function nextText(catalog: Catalog, next: Addition | null): string {
 
 const pctText = (n: number) => pct(Math.round(n * 10) / 10)
 
-export function gapText(catalog: Catalog, r: ReportStart, g: Gap): string {
-  return `On ${lineName(catalog, g.label)}, your cards earn ${pctText(g.heldPct)}; the ${nameOf(catalog, g.bestCardId)} earns ${pctText(g.bestPct)}, about ${wholeDollars(g.dollars)} a year more on ${wholeDollars(g.spend)}.`
+export function gapText(catalog: Catalog, g: Gap): string {
+  const fee = g.fee > 0 ? ` (its annual fee is ${money(g.fee)})` : ''
+  return `On ${lineName(catalog, g.label)}, your cards earn ${pctText(g.heldPct)}; the ${nameOf(catalog, g.bestCardId)} earns ${pctText(g.bestPct)}${fee}, about ${wholeDollars(g.dollars)} a year more on ${wholeDollars(g.spend)}.`
 }
 
 // "Assumes the best picks for this spending: Citi Custom Cash, restaurants."
@@ -607,11 +697,12 @@ export function reportNotes(
 export function walletReportText(catalog: Catalog, r: WalletReport): string {
   return [
     headlineText(catalog, r),
+    creditsText(catalog, r),
     flatText(catalog, r),
     bestText(catalog, r, r.best),
     ...r.feeCards.map((v) => feeCardText(catalog, v)),
     nextText(catalog, r.next),
-    ...r.gaps.map((g) => gapText(catalog, r, g)),
+    ...r.gaps.map((g) => gapText(catalog, g)),
     ...reportNotes(catalog, r, r.dataVersion),
   ]
     .filter((s) => s !== '')

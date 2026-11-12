@@ -1,5 +1,6 @@
-// The report's slower parts, in the order the page shows them: the best two
-// cards, each fee card, the next card, then the gaps.
+// The report's slower parts, in the order the page gets them: the card to
+// add first, since the best two cards and the gaps both use it, then the
+// best two cards, each fee card, and the gaps.
 import type { Spending } from '../../src/engine/renewal.ts'
 import type { Addition } from '../../src/engine/simulate.ts'
 import {
@@ -33,20 +34,21 @@ export function steps(catalog: Catalog, job: Job): (() => Part)[] {
     .filter(
       (id) => (catalog.cards.find((c) => c.id === id)?.annual_fee ?? 0) > 0,
     )
+  let next: Addition | null = null
   return [
+    () => {
+      next = reportNext(catalog, input, today, spending)
+      return { part: 'next', value: next }
+    },
     () => ({
       part: 'best',
-      value: reportBest(catalog, input, today, spending),
+      value: reportBest(catalog, input, today, spending, next),
     }),
     ...fees.map((cardId) => (): Part => ({
       part: 'fee',
       cardId,
       value: reportFeeCards(catalog, input, today, spending, cardId)[0] ?? null,
     })),
-    () => ({
-      part: 'next',
-      value: reportNext(catalog, input, today, spending),
-    }),
     () => ({
       part: 'gaps',
       value: reportGaps(
@@ -55,6 +57,7 @@ export function steps(catalog: Catalog, job: Job): (() => Part)[] {
         today,
         spending,
         reportStart(catalog, input, today, spending).simulation,
+        next?.cardId ?? null,
       ),
     }),
     () => ({ part: 'done' }),

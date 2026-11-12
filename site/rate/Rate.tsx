@@ -17,6 +17,8 @@ import { currencyValuation } from '../../src/engine/valuation.ts'
 import {
   assumedPicksText,
   bestText,
+  creditsText,
+  feeCardLead,
   flatText,
   gapText,
   headlineText,
@@ -255,7 +257,9 @@ function FeeCards({
                   <span class={v.paysForItself ? 'tag' : 'tag warn'}>
                     {v.paysForItself
                       ? 'Pays for itself'
-                      : "Doesn't pay for itself"}
+                      : v.creditsCover
+                        ? "Rewards don't cover the fee"
+                        : "Doesn't pay for itself"}
                   </span>
                 ) : null}
               </div>
@@ -263,6 +267,11 @@ function FeeCards({
                 <p class="muted">Working it out…</p>
               ) : v === null ? null : (
                 <>
+                  {v.paysForItself ? null : (
+                    <p>
+                      <strong>{feeCardLead(catalog, v)}</strong>
+                    </p>
+                  )}
                   <p>{v.verdict}</p>
                   {v.credits === '' ? null : (
                     <p class="muted small">{v.credits}</p>
@@ -277,7 +286,7 @@ function FeeCards({
   )
 }
 
-function Gaps({ start, gaps }: { start: ReportStart; gaps: Gap[] }) {
+function Gaps({ gaps }: { gaps: Gap[] }) {
   const [all, setAll] = useState(false)
   const shown = all ? gaps : gaps.slice(0, GAPS_SHOWN)
   return (
@@ -294,7 +303,7 @@ function Gaps({ start, gaps }: { start: ReportStart; gaps: Gap[] }) {
             {shown.map((g) => (
               <li key={g.label}>
                 <CardArt id={g.bestCardId} width={32} />
-                <span>{gapText(catalog, start, g)}</span>
+                <span>{gapText(catalog, g)}</span>
               </li>
             ))}
           </ul>
@@ -324,6 +333,7 @@ function Report({
   editors: ComponentChildren
 }) {
   const { best, fees, next, gaps } = parts
+  const credits = creditsText(catalog, start)
   const lead = [
     flatText(catalog, start),
     best ? bestText(catalog, start, best) : '',
@@ -342,8 +352,9 @@ function Report({
       </ul>
       <p class="rate-figure">
         {wholeDollars(start.net)}
-        <span class="rate-per"> a year after fees</span>
+        <span class="rate-per"> a year in rewards, after fees</span>
       </p>
+      {credits === '' ? null : <p class="rate-credits">{credits}</p>}
       <p class="rate-lead">{headlineText(catalog, start)}</p>
       <Comparison start={start} best={best} />
       <p>{lead}</p>
@@ -373,7 +384,7 @@ function Report({
           <p class="muted">Working it out…</p>
         </section>
       ) : (
-        <Gaps start={start} gaps={gaps} />
+        <Gaps gaps={gaps} />
       )}
       <details class="filters rate-notes">
         <summary>What this assumes</summary>
@@ -971,6 +982,9 @@ export function Rate() {
           Someone shared this report on their cards, so it's written to them.
           Your browser worked it out from the link alone: earnrate's server
           never saw it, and nothing saved in this browser was read or changed.
+        </p>
+        <p class="rate-yours">
+          <a href="/rate">Rate your own cards</a>
         </p>
         <Shared
           key={location.hash}

@@ -248,3 +248,12 @@ svg.rate-bar {
   font-size: 17px;
   color: var(--text);
 }
+
+.rate-credits {
+  margin: 2px 0 8px;
+  font-weight: 600;
+}
+
+#rate .lede + .rate-yours {
+  margin: -8px 0 18px;
+}

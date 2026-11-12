@@ -125,8 +125,14 @@ describe('#41 rate my wallet', () => {
         /^If you'd use all the Amex Platinum's statement credits \(.+\), it adds/,
       )
       const text = walletReportText(catalog, r)
+      expect(platinum?.creditsCover).toBe(true)
       expect(text).toContain(
-        "The Amex Platinum doesn't pay for itself on this spending.",
+        "On rewards alone, the Amex Platinum doesn't pay for itself on this spending; its statement credits would cover the rest if you'd use them.",
+      )
+      const credits = r.credits.reduce((sum, c) => sum + c.yearly, 0)
+      expect(credits).toBe(k.unsaid.yearly)
+      expect(text).toContain(
+        `a month. This figure leaves out the statement credits on the Amex Platinum. If you'd use every one (${wholeDollars(credits)} a year), these cards would net about ${wholeDollars(r.net + credits)} a year. They're worth that only if you'd spend at those places anyway.`,
       )
       expect(text).toContain(OTHER_PERKS)
     },
@@ -143,6 +149,8 @@ describe('#41 rate my wallet', () => {
       expect(r.flat?.net).toBe(240)
       expect(r.flat?.returnPct).toBeCloseTo(2)
       expect(r.feeCards).toEqual([])
+      expect(r.credits).toEqual([])
+      expect(walletReportText(catalog, r)).not.toContain('leaves out')
       const flat = catalog.cards.find((c) => c.id === r.flat?.cardId)
       expect(flat?.annual_fee).toBe(0)
       expect(flat && flatRateCard(catalog, flat, TODAY)).toBe(true)
@@ -216,7 +224,7 @@ describe('#41 rate my wallet', () => {
         roundCents(((gas.bestPct - gas.heldPct) / 100) * 3600),
       )
       expect(walletReportText(catalog, r)).toMatch(
-        /On gas stations, your cards earn 2%; the .+ earns [\d.]+%, about \$[\d,]+ a year more on \$3,600\./,
+        /On gas stations, your cards earn 2%; the .+ earns [\d.]+%( \(its annual fee is \$[\d,]+\))?, about \$[\d,]+ a year more on \$3,600\./,
       )
     },
   )
@@ -253,6 +261,36 @@ describe('#41 rate my wallet', () => {
         'three-percent': ['gas-ev-charging'],
       })
       expect(given.net).toBeLessThan(assumed.net)
+    },
+  )
+
+  goldenTest(
+    "#41i a gap names a card only when the line alone pays its fee, or when it's the card to add, so the two agree",
+    () => {
+      const r = report(
+        input(['citi-double-cash']),
+        spending(['groceries', 150], ['everything else', 500]),
+      )
+      expect(r.next?.cardId).not.toBe('amex-blue-cash-preferred')
+      expect(r.gaps.map((g) => g.bestCardId)).not.toContain(
+        'amex-blue-cash-preferred',
+      )
+      for (const g of r.gaps) {
+        expect(g.fee).toBe(
+          catalog.cards.find((c) => c.id === g.bestCardId)?.annual_fee ?? 0,
+        )
+        if (g.bestCardId !== r.next?.cardId)
+          expect(Math.round(g.dollars - g.fee)).toBeGreaterThan(0)
+      }
+      const text = walletReportText(catalog, r)
+      expect(r.next).not.toBeNull()
+      expect(r.best.pair?.net ?? 0).toBeGreaterThanOrEqual(
+        r.net + (r.next?.gain ?? 0) - 0.01,
+      )
+      expect(text).not.toContain('No pair of cards nets more')
+      for (const g of r.gaps.filter((x) => x.fee > 0))
+        expect(text).toContain(`(its annual fee is $${String(g.fee)})`)
+      expect(r.gaps.find((g) => g.label === 'Supermarkets')?.fee ?? 0).toBe(0)
     },
   )
 
