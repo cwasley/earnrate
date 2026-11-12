@@ -2400,7 +2400,7 @@ export function MyWallet({
             id="wallet-ask"
             type="search"
             list="suggestions"
-            placeholder="Which store?"
+            placeholder="Store or category"
             autocomplete="off"
             enterkeyhint="search"
             value={query}
