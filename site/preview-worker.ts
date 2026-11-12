@@ -29,6 +29,10 @@ export default {
       const response = await reports(request, env, codes)
       const headers = new Headers(response.headers)
       headers.set('x-robots-tag', 'noindex, nofollow')
+      headers.set(
+        'cache-control',
+        `${headers.get('cache-control') ?? 'no-store'}, no-transform`,
+      )
       return new Response(response.body, { status: response.status, headers })
     }
     const response = await env.ASSETS.fetch(request)
