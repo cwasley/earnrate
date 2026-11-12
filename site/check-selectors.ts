@@ -127,6 +127,16 @@ const STEPS: Step[] = [
   },
   { name: 'a card page', url: '/cards/amex-platinum', ready: 'main' },
   {
+    name: 'Rate my wallet on the saved wallet, with the share box',
+    url: '/rate',
+    ready: '.rate-share',
+    act: async (page) => {
+      await page.waitForFunction(
+        () => !document.body.innerText.includes('Working it out'),
+      )
+    },
+  },
+  {
     name: 'the year-end page',
     url: '/year-end/',
     ready: 'main',
@@ -174,6 +184,33 @@ for (const [name, type] of [
     ]
     check(`${name}: ${step.name}`, found.length === 0, found.join(' '))
   }
+
+  // Rate my wallet with no saved wallet: cards tapped in, then rated, with
+  // the share box showing. Nothing here should name a card in an id or class.
+  const named = async () =>
+    (await marks(plain)).filter((m) => HELD.some((id) => m.includes(id)))
+  await plain.goto(`${BASE}/rate`)
+  await plain.waitForSelector('.quick-cards')
+  for (const card of ['Chase Freedom Flex', 'Amex Platinum'])
+    await plain
+      .getByRole('button', { name: new RegExp(card) })
+      .first()
+      .click()
+  check(
+    `${name}: Rate my wallet's picker after tapping cards`,
+    (await named()).length === 0,
+    (await named()).join(' '),
+  )
+  await plain.getByRole('button', { name: /^Rate them$/ }).click()
+  await plain.waitForSelector('.rate-share')
+  await plain.waitForFunction(
+    () => !document.body.innerText.includes('Working it out'),
+  )
+  check(
+    `${name}: the rated cards and the share box`,
+    (await named()).length === 0,
+    (await named()).join(' '),
+  )
   await browser.close()
 }
 server.close()

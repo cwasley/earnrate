@@ -24,7 +24,10 @@ const ALLOWED_IDS = [/^`[a-z-]+-\$\{String\(i\)\}`$/]
 describe('ids and classes say nothing about the visitor', () => {
   test("the app's elements get no id made from a card or anything else the visitor has", () => {
     const bad: string[] = []
-    for (const { file, text } of sources('site/app', /\.tsx$/))
+    for (const { file, text } of [
+      ...sources('site/app', /\.tsx$/),
+      ...sources('site/rate', /\.tsx$/),
+    ])
       for (const m of text.matchAll(
         /<([a-z][a-z0-9]*)\b[^<]*?\sid=\{(`[^`]*`|[^}]*)\}/g,
       )) {
@@ -37,7 +40,10 @@ describe('ids and classes say nothing about the visitor', () => {
 
   test("the app's classes are fixed words, never a card or a value", () => {
     const bad: string[] = []
-    for (const { file, text } of sources('site/app', /\.tsx$/))
+    for (const { file, text } of [
+      ...sources('site/app', /\.tsx$/),
+      ...sources('site/rate', /\.tsx$/),
+    ])
       for (const m of text.matchAll(/\sclass(?:Name)?=\{(`[^`]*`|[^}]*)\}/g))
         if (/\.id\b|cardId|held|\$\{(?![a-z.]*\s*\?)/i.test(m[1] ?? ''))
           bad.push(`${file}: class={${m[1] ?? ''}}`)
