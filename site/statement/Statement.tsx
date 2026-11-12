@@ -142,27 +142,42 @@ export function StatementCheck() {
           transactions) and choose CSV. A PDF statement won't be read.
         </p>
         <details class="where">
-          <summary>Where the issuers say to find it</summary>
+          <summary>Where to find the file</summary>
           <ul class="muted small">
             <li>
-              American Express says you can download your recent activity and
-              your past six billing statements as a CSV file through your online
-              account (
-              <a href="https://www.americanexpress.com/us/customer-service/faq.download-export-transactions-software.html">
-                its help page
+              <strong>American Express.</strong> Sign in and open your
+              statements at{' '}
+              <a href="https://global.americanexpress.com/activity/statements">
+                global.americanexpress.com/activity/statements
               </a>
-              ).
+              . Choose Download on a monthly or yearly statement, pick CSV, and
+              tick “Include all additional transaction details”. That box adds
+              the category earnrate reads; the merchant addresses that come with
+              it are ignored.
             </li>
             <li>
-              Chase says its website, opened on a computer, downloads
-              transactions as a spreadsheet (CSV) for the last two years, and
-              that on a phone it gives PDFs, which earnrate won't read (
-              <a href="https://www.chase.com/personal/banking/education/budgeting-saving/what-is-chase-spending-planner">
-                its page
+              <strong>Chase.</strong> Sign in on a computer and open the
+              download page at{' '}
+              <a href="https://secure.chase.com/web/auth/dashboard#/dashboard/accountDetails/downloadAccountTransactions/index">
+                secure.chase.com
               </a>
-              ).
+              . Set the file type to “Spreadsheet (Excel, CSV)”. Chase says the
+              CSV download is on its website from a computer, and that on a
+              phone it gives PDFs.
             </li>
           </ul>
+          <p class="muted small">
+            Checked in signed-in accounts on November 11, 2026. The issuers' own
+            notes:{' '}
+            <a href="https://www.americanexpress.com/us/customer-service/faq.download-export-transactions-software.html">
+              American Express
+            </a>
+            ,{' '}
+            <a href="https://www.chase.com/personal/banking/education/budgeting-saving/what-is-chase-spending-planner">
+              Chase
+            </a>
+            .
+          </p>
         </details>
       </section>
 
