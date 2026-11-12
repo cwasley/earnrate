@@ -46,14 +46,8 @@ import { Bar } from './Bar.tsx'
 import { creditIds, encodeReport, reportPart, roundedLines } from './link.ts'
 import { REPORT_RETENTION_MONTHS } from '../report-policy.ts'
 import { runReport } from './run.ts'
-import {
-  deleteReport,
-  loadReport,
-  saveReport,
-  shortUrl,
-  storedId,
-  type Saved,
-} from './store.ts'
+import { linkFor, longUrl, NO_SHORT_LINK, type Attempt } from './share.ts'
+import { deleteReport, loadReport, saveReport, storedId } from './store.ts'
 import type { Job, Part } from './steps.ts'
 import {
   reportSource,
@@ -627,7 +621,8 @@ function PicksEditor({
 
 // A short link is made only when Copy link or Share is pressed, and kept in
 // this page's memory for the inputs it was made from, so pressing again
-// saves nothing new. The delete key never leaves memory either.
+// saves nothing new. The delete key never leaves memory either. When no
+// short link can be made, the box hands out the longer link instead.
 function ShareBox({
   input,
   spending,
@@ -641,8 +636,8 @@ function ShareBox({
   include: boolean
   setInclude: (on: boolean) => void
 }) {
-  const made = useRef(new Map<string, Saved>())
-  const pending = useRef(new Map<string, Promise<Saved | null>>())
+  const made = useRef(new Map<string, Attempt>())
+  const pending = useRef(new Map<string, Promise<Attempt>>())
   const [, redraw] = useState(0)
   const [note, setNote] = useState<string | null>(null)
   const [copied, setCopied] = useState<'short' | 'long' | null>(null)
@@ -651,9 +646,12 @@ function ShareBox({
     input,
     lines: spending.typical ? null : spending.lines,
   }).slice(2)
-  const longUrl = `${location.origin}/rate#w=${report}`
-  const saved = made.current.get(report) ?? null
-  const shortLink = saved ? shortUrl(location.origin, saved.id) : null
+  const long = longUrl(location.origin, report)
+  const attempt = made.current.get(report)
+  const unavailable = attempt === 'unavailable'
+  const saved = attempt === undefined || unavailable ? null : attempt
+  const boxed =
+    attempt === undefined ? null : linkFor(location.origin, report, attempt).url
   const items = [
     input.cards.length === 1 ? 'Your card' : 'Your cards',
     ...(input.cards.some((c) => Object.keys(c.picks).length > 0)
@@ -672,20 +670,17 @@ function ShareBox({
   ]
   const canShare = typeof navigator.share === 'function'
 
-  const ensure = (): Promise<Saved | null> => {
+  const ensure = (): Promise<Attempt> => {
     const have = made.current.get(report)
     if (have) return Promise.resolve(have)
     const waiting = pending.current.get(report)
     if (waiting) return waiting
-    const promise = saveReport(report).then((s) => {
+    const promise = saveReport(report).then((s): Attempt => {
       pending.current.delete(report)
-      if (s) made.current.set(report, s)
-      else
-        setNote(
-          "Couldn't make a short link: earnrate.dev didn't answer. The longer link below works without it.",
-        )
+      const result = s ?? 'unavailable'
+      made.current.set(report, result)
       redraw((n) => n + 1)
-      return s
+      return result
     })
     pending.current.set(report, promise)
     return promise
@@ -701,56 +696,58 @@ function ShareBox({
   // so browsers that need the tap for it (Safari) allow it.
   const copyShort = () => {
     setNote(null)
-    const link = ensure().then((s) => {
-      if (!s) throw new Error('not saved')
-      return shortUrl(location.origin, s.id)
-    })
+    setShown(null)
+    const link = ensure().then((a) => linkFor(location.origin, report, a))
     const clipboard = navigator.clipboard as Clipboard | undefined
     const write =
       typeof ClipboardItem === 'function' && clipboard?.write
         ? clipboard.write([
             new ClipboardItem({
               'text/plain': link.then(
-                (t) => new Blob([t], { type: 'text/plain' }),
+                (l) => new Blob([l.url], { type: 'text/plain' }),
               ),
             }),
           ])
-        : link.then((t) =>
-            clipboard ? clipboard.writeText(t) : Promise.reject(new Error()),
+        : link.then((l) =>
+            clipboard
+              ? clipboard.writeText(l.url)
+              : Promise.reject(new Error()),
           )
-    write.then(
-      () => flash('short'),
-      () => {
-        void link.then(setShown, () => undefined)
-      },
-    )
+    void Promise.allSettled([write, link]).then(([w, l]) => {
+      if (l.status !== 'fulfilled') return
+      if (w.status === 'fulfilled') flash(l.value.short ? 'short' : 'long')
+      else if (l.value.short) setShown(l.value.url)
+    })
   }
 
   const share = () => {
     setNote(null)
-    if (saved) {
-      navigator.share({ url: shortUrl(location.origin, saved.id) }).then(
-        () => track('report-made'),
-        () => undefined,
-      )
+    if (attempt !== undefined) {
+      navigator
+        .share({ url: linkFor(location.origin, report, attempt).url })
+        .then(
+          () => track('report-made'),
+          () => undefined,
+        )
       return
     }
     // Saving takes a moment, and a share sheet needs the tap it came from:
     // once the link is made, the button opens the sheet straight away.
-    void ensure().then((s) => {
-      if (s) setNote('The short link is ready: press Share to send it.')
+    void ensure().then((a) => {
+      if (a !== 'unavailable')
+        setNote('The short link is ready: press Share to send it.')
     })
   }
 
   const copyLong = () => {
     const clipboard = navigator.clipboard as Clipboard | undefined
     if (!clipboard) {
-      setShown(longUrl)
+      setShown(long)
       return
     }
-    clipboard.writeText(longUrl).then(
+    clipboard.writeText(long).then(
       () => flash('long'),
-      () => setShown(longUrl),
+      () => setShown(long),
     )
   }
 
@@ -771,7 +768,7 @@ function ShareBox({
   return (
     <section class="panel rate-share" aria-labelledby="rate-share-title">
       <h2 id="rate-share-title">Share this report</h2>
-      {shortLink === null ? (
+      {boxed === null ? (
         <p class="small">
           Copy link saves this report on earnrate.dev under a short random name,
           so the link is short. Nothing in it says who you are, and it's deleted{' '}
@@ -779,18 +776,21 @@ function ShareBox({
           whenever you delete it here.
         </p>
       ) : (
-        <input
-          class="rate-url"
-          type="text"
-          readOnly
-          aria-label="The short link"
-          value={shortLink}
-          onFocus={(e) => e.currentTarget.select()}
-        />
+        <>
+          {unavailable ? <p class="small">{NO_SHORT_LINK}</p> : null}
+          <input
+            class="rate-url"
+            type="text"
+            readOnly
+            aria-label={unavailable ? 'The link' : 'The short link'}
+            value={boxed}
+            onFocus={(e) => e.currentTarget.select()}
+          />
+        </>
       )}
       <div class="row-buttons">
         <button type="button" class="primary" onClick={copyShort}>
-          {copied === 'short' ? 'Copied' : 'Copy link'}
+          {copied === null ? 'Copy link' : 'Copied'}
         </button>
         {canShare ? (
           <button type="button" onClick={share}>
@@ -798,7 +798,7 @@ function ShareBox({
           </button>
         ) : null}
       </div>
-      {shortLink === null ? null : (
+      {saved === null ? null : (
         <p class="small muted">
           Saved on earnrate.dev with nothing about who made it, until{' '}
           {String(REPORT_RETENTION_MONTHS)} months after it was last opened.{' '}
@@ -807,7 +807,7 @@ function ShareBox({
           </button>
         </p>
       )}
-      {shown === null ? null : (
+      {shown === null || shown === boxed ? null : (
         <input
           class="rate-url"
           type="text"
@@ -835,18 +835,20 @@ function ShareBox({
           typical spending, as the link would.
         </label>
       ) : null}
-      <p class="small muted">
-        Or{' '}
-        <button type="button" class="link" onClick={copyLong}>
-          {copied === 'long'
-            ? 'copied'
-            : 'copy a link that isn’t saved anywhere'}
-        </button>
-        . It's longer, because the report is written into the address after the
-        #, which browsers don't send to a server, so earnrate never receives it.
-        Either way, whoever opens the link sees this report, worked out in their
-        own browser.
-      </p>
+      {unavailable ? null : (
+        <p class="small muted">
+          Or{' '}
+          <button type="button" class="link" onClick={copyLong}>
+            {copied === 'long'
+              ? 'copied'
+              : 'copy a link that isn’t saved anywhere'}
+          </button>
+          . It's longer, because the report is written into the address after
+          the #, which browsers don't send to a server, so earnrate never
+          receives it. Either way, whoever opens the link sees this report,
+          worked out in their own browser.
+        </p>
+      )}
     </section>
   )
 }

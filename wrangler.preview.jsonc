@@ -3,6 +3,7 @@
 {
   "name": "earnrate-preview",
   "main": "site/preview-worker.ts",
+  "alias": { "earnrate:report-codes": "./site/report-codes.gen.json" },
   "compatibility_date": "2026-10-01",
   "observability": { "enabled": false },
   "workers_dev": false,

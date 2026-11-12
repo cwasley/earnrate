@@ -52,7 +52,7 @@
     "pass:deploy": "yarn pass:build && WRANGLER_SEND_METRICS=false wrangler deploy --config pass/wrangler.jsonc",
     "monitor:check": "WRANGLER_SEND_METRICS=false wrangler deploy --config monitor/wrangler.jsonc --dry-run --outdir dist",
     "monitor:deploy": "WRANGLER_SEND_METRICS=false wrangler deploy --config monitor/wrangler.jsonc",
-    "site:build": "vite build site && vite build site --config site/statement.config.ts && node scripts/build-pages.ts",
+    "site:build": "vite build site && vite build site --config site/statement.config.ts && node scripts/build-pages.ts && node scripts/build-report-codes.ts",
     "site:dev": "vite site",
     "site:check-statement": "node site/check-statement.ts",
     "site:check-selectors": "node site/check-selectors.ts",

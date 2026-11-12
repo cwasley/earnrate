@@ -2,6 +2,8 @@
   "name": "earnrate",
   // Static files; the Worker runs only for /count and /api/* (site/worker.ts).
   "main": "site/worker.ts",
+  // The codes a short report link may name (yarn site:build writes it).
+  "alias": { "earnrate:report-codes": "./site/report-codes.gen.json" },
   "compatibility_date": "2026-10-01",
   "observability": { "enabled": false },
   // earnrate.dev is the only address; no workers.dev or preview copies.

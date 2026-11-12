@@ -4,6 +4,7 @@
 // Analytics Engine, no IP address, user agent, cookie or id. /api/* is
 // opt-in wallet sync with Claude (api.ts), and stores nothing here. /r is
 // short report links (reports.ts), the one thing this Worker stores.
+import codes from 'earnrate:report-codes'
 import { api, type ApiEnv } from './api.ts'
 import { deviceOf, isEvent } from './events.ts'
 import { reports, type ReportsEnv } from './reports.ts'
@@ -44,7 +45,7 @@ export default {
     if (pathname === '/count') return count(request, env)
     if (pathname.startsWith('/api/')) return api(request, env)
     if (pathname === '/r' || pathname.startsWith('/r/'))
-      return reports(request, env)
+      return reports(request, env, codes)
     return env.ASSETS.fetch(request)
   },
 }

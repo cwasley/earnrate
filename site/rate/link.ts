@@ -14,6 +14,8 @@ import type { ResolvedLine } from '../../src/engine/simulate.ts'
 import { num } from '../../src/engine/text.ts'
 import type { ReportInput } from '../../src/engine/wallet-report.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
+import type { ReportCodes } from '../report-check.ts'
+import { MAX_CARDS, MAX_LINES, MAX_TENS } from '../report-policy.ts'
 
 export const LINK_VERSION = '1'
 
@@ -24,10 +26,6 @@ export type ReportLink = {
 
 export type Decoded =
   { ok: true; link: ReportLink } | { ok: false; message: string }
-
-export const MAX_CARDS = 30
-export const MAX_LINES = 40
-const MAX_TENS = 100_000 // $1,000,000 a month on one line
 
 // Codes never change once a link carries them. If a new id's code is taken
 // in its kind (tests/rate-link.test.ts fails), pin the new id to an unused
@@ -85,6 +83,51 @@ export function codeTables(catalog: Catalog) {
       'currency',
       catalog.currencies.map((c) => c.id),
     ),
+  }
+}
+
+// The codes the short-link Worker checks a report against.
+export function reportCodes(catalog: Catalog): ReportCodes {
+  const tables = codeTables(catalog)
+  const codes = (map: Map<string, string | null>) =>
+    [...map].flatMap(([c, id]) => (id === null ? [] : [c])).sort()
+  const once = (all: string[]) =>
+    all.filter((c, i, a) => a.indexOf(c) === a.lastIndexOf(c))
+  const cards: ReportCodes['cards'] = {}
+  for (const [code, id] of tables.card) {
+    const card = catalog.cards.find((c) => c.id === id)
+    if (!card) continue
+    const options = once(
+      card.choices.flatMap((choice) =>
+        Object.keys(choice.options).map((o) =>
+          shortCode('option', optionKey(choice.id, o)),
+        ),
+      ),
+    )
+    const p = card.choices.map((choice) => ({
+      n: choice.pick,
+      o: Object.keys(choice.options)
+        .map((o) => shortCode('option', optionKey(choice.id, o)))
+        .filter((c) => options.includes(c)),
+    }))
+    const c = once(creditIds(card).map((x) => shortCode('credit', x)))
+    cards[code] = {
+      ...(p.length > 0 ? { p } : {}),
+      ...(c.length > 0 ? { c } : {}),
+    }
+  }
+  return {
+    cards,
+    memberships: codes(tables.membership),
+    currencies: codes(tables.currency),
+    categories: codes(tables.category),
+    merchants: [
+      ...new Set(
+        [...catalog.merchants.overrides, ...catalog.merchants.seed].map(
+          (m) => m.id,
+        ),
+      ),
+    ].sort(),
   }
 }
 

@@ -5,6 +5,7 @@
 // script isn't added. /api/* is the same wallet sync as earnrate.dev's, bound to the
 // same hosted server, so sync can be tried here with a test wallet. /r is
 // the same short report links as earnrate.dev's, in a store of its own.
+import codes from 'earnrate:report-codes'
 import { api, type ApiEnv } from './api.ts'
 import { reports, type ReportsEnv } from './reports.ts'
 import { headerPolicy, STATEMENT_PATHS } from './statement-policy.ts'
@@ -25,7 +26,7 @@ export default {
     if (pathname === '/count') return new Response(null, { status: 204 })
     if (pathname.startsWith('/api/')) return api(request, env)
     if (pathname === '/r' || pathname.startsWith('/r/')) {
-      const response = await reports(request, env)
+      const response = await reports(request, env, codes)
       const headers = new Headers(response.headers)
       headers.set('x-robots-tag', 'noindex, nofollow')
       return new Response(response.body, { status: response.status, headers })

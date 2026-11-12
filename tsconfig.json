@@ -24,6 +24,7 @@
     "*.config.ts",
     "site/events.ts",
     "site/tabs.ts",
-    "site/worker.ts"
+    "site/worker.ts",
+    "site/worker-env.d.ts"
   ]
 }

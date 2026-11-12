@@ -22,7 +22,8 @@ export function storedId(pathname: string): string | null {
 
 export const shortUrl = (origin: string, id: string) => `${origin}/r/${id}`
 
-// `report` is the w= link's contents without the "w=".
+// `report` is the w= link's contents without the "w=". Null when no short
+// link was made, whatever the reason: a limit, a refusal or no answer.
 export async function saveReport(report: string): Promise<Saved | null> {
   try {
     const res = await fetch('/r', {

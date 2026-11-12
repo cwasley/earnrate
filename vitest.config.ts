@@ -7,6 +7,9 @@ export default defineConfig({
       'cloudflare:workers': fileURLToPath(
         new URL('tests/stubs/cloudflare-workers.ts', import.meta.url),
       ),
+      'earnrate:report-codes': fileURLToPath(
+        new URL('tests/stubs/report-codes.ts', import.meta.url),
+      ),
     },
   },
   test: {

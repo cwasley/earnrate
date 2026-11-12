@@ -9,6 +9,14 @@ export const REPORT_REFRESH_DAYS = 30
 export const REPORT_MAX_LENGTH = 600
 // Links one IP address can make per minute (wrangler.jsonc, REPORT_LIMITER).
 export const REPORT_LINKS_PER_MINUTE = 10
+// Links the whole site makes in a day (UTC), counted in the Worker's store.
+export const REPORT_LINKS_PER_DAY = 300
+
+// The most cards and spending lines a report link may name. The page and the
+// Worker both refuse longer ones.
+export const MAX_CARDS = 30
+export const MAX_LINES = 40
+export const MAX_TENS = 100_000 // $1,000,000 a month on one line
 
 export const REPORT_RETENTION_SECONDS = Math.round(
   ((REPORT_RETENTION_MONTHS * 365.25) / 12) * 24 * 60 * 60,
