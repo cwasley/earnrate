@@ -156,6 +156,21 @@ describe('the built static pages', () => {
     expect(missing).toEqual([])
   })
 
+  test('Rate my wallet is in the sitemap, linked from every page, with its own title and one preview image', () => {
+    const sitemap = readFileSync(path.join(out, 'sitemap.xml'), 'utf8')
+    expect(sitemap).toContain('<loc>https://earnrate.dev/rate</loc>')
+    const rate = readFileSync(path.join(ROOT, 'site/rate.html'), 'utf8')
+    expect(unescape(/<title>([^<]*)<\/title>/.exec(rate)?.[1] ?? '')).toBe(
+      'Rate my wallet: what your cards earn in a year · earnrate',
+    )
+    expect(rate).toContain('<!--earnrate:header-->')
+    expect(rate).toContain('<!--earnrate:footer-->')
+    expect(rate).toContain('content="https://earnrate.dev/og/rate.jpg"')
+    const card = readFileSync(path.join(out, 'cards', 'amex-gold.html'), 'utf8')
+    expect(card).toContain('<a href="/rate">Rate my wallet</a>')
+    for (const t of TABS) expect(card).toContain(`href="${t.href}"`)
+  })
+
   test("a category page gives a shared pick rule's terms for that category only", () => {
     const dining = readFileSync(
       path.join(out, 'categories', 'dining.html'),

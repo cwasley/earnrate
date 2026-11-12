@@ -2205,6 +2205,37 @@ export function MyWallet({
     }))
   }
 
+  // Rate my wallet's "Save these cards" names several: each one not already
+  // held is added, and what the cards still need is said once.
+  const addSeveral = async (ids: string[]) => {
+    setBuilding(false)
+    setGridAdded([])
+    if (locked) {
+      setMessage({
+        text: `The cards weren't added: ${lockNote ?? 'changes need a connection.'}`,
+        error: true,
+      })
+      return
+    }
+    const added: string[] = []
+    for (const id of ids) {
+      if (wallet?.cards.some((c) => c.id === id)) continue
+      const result = await perform(addOp(id))
+      if (!result.ok) {
+        setMessage({ text: result.error, error: true })
+        return
+      }
+      added.push(id)
+    }
+    setMessage({
+      text:
+        added.length === 0
+          ? 'Those cards are already in your wallet.'
+          : `Added ${listed(added.map(shortName))}.`,
+      error: false,
+    })
+  }
+
   // A card page's "Add it to your wallet" arrives as #wallet&add=<card id>,
   // on load or as a change to the address. The id is read once and cleared.
   // `whatif=<card>` opens "Would another card help?" at that card, and
@@ -2224,7 +2255,10 @@ export function MyWallet({
     history.replaceState(null, '', `#${rest || 'wallet'}`)
     const [cardId] = ids
     if (cardId === undefined) return
-    if (param === 'add') {
+    if (param === 'add' && ids.length > 1) {
+      track('page-add')
+      void addSeveral(ids)
+    } else if (param === 'add') {
       track('page-add')
       void addAndOpen(cardId)
     } else if (param === 'whatif') {
@@ -2507,6 +2541,11 @@ export function MyWallet({
           </p>
         </fieldset>
         {messageLine}
+        <div class="row-buttons">
+          <a class="row-link" href="/rate" data-count="wallet-rate">
+            Rate my wallet
+          </a>
+        </div>
         <p class="pass-hint">
           At the register: your{' '}
           <button
