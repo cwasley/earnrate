@@ -245,6 +245,22 @@ for (const [name, type] of [
     (await named()).length === 0,
     (await named()).join(' '),
   )
+  await plain.evaluate(() => {
+    Object.defineProperty(navigator, 'canShare', {
+      value: undefined,
+      configurable: true,
+    })
+  })
+  const [image] = await Promise.all([
+    plain.waitForEvent('download'),
+    plain.getByRole('button', { name: 'Save as image' }).click(),
+  ])
+  check(
+    `${name}: Save as image on Rate my wallet, then the page`,
+    image.suggestedFilename() === 'earnrate-wallet-report.png' &&
+      (await named()).length === 0,
+    `${image.suggestedFilename()} ${(await named()).join(' ')}`,
+  )
 
   // A cheat sheet someone sent, in an empty profile and beside a saved
   // wallet: its cards come from the link, so no page without one shows

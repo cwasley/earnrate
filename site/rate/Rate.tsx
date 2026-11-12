@@ -24,7 +24,6 @@ import {
   lineName,
   netFigure,
   nextText,
-  pairBeats,
   reportNotes,
   reportStart,
   type BestCards,
@@ -53,6 +52,14 @@ import {
 import { Bar } from './Bar.tsx'
 import { encodeReport, reportPart, roundedLines } from './link.ts'
 import { OWN_WALLET } from './own-wallet.ts'
+import {
+  comparisonRows,
+  countedNote,
+  perYear,
+  ratePictureText,
+  type RatePicture,
+} from './picture-text.ts'
+import { SaveImage } from './SaveImage.tsx'
 import { REPORT_RETENTION_MONTHS } from '../report-policy.ts'
 import { runReport } from './run.ts'
 import { linkFor, longUrl, NO_SHORT_LINK, type Attempt } from './share.ts'
@@ -252,34 +259,7 @@ function Comparison({
   start: ReportStart
   best: BestCards | null
 }) {
-  const one = start.cards.length === 1
-  const top = best === null ? null : pairBeats(best) ? best.pair : best.single
-  const rows = [
-    {
-      label: one ? shortName(start.cards[0]?.cardId ?? '') : 'Your cards',
-      value: start.net as number | null,
-      mine: true,
-    },
-    {
-      label:
-        top === null
-          ? 'The best two cards'
-          : top.cards.length === 2
-            ? `Best two: ${top.cards.map((c) => shortName(c.cardId)).join(' + ')}`
-            : `Best one: ${shortName(top.cards[0]?.cardId ?? '')}`,
-      value: top?.net ?? null,
-      mine: false,
-    },
-    ...(start.flat === null
-      ? []
-      : [
-          {
-            label: `${shortName(start.flat.cardId)} alone`,
-            value: start.flat.net as number | null,
-            mine: false,
-          },
-        ]),
-  ]
+  const rows = comparisonRows(start, best, shortName)
   const max = Math.max(0, ...rows.map((r) => r.value ?? 0))
   return (
     <div class="rate-compare" role="list">
@@ -430,19 +410,13 @@ function Report({
       </ul>
       <p class="rate-figure" data-range={start.range === null ? undefined : ''}>
         {netFigure(start)}
-        <span class="rate-per">
-          {start.range !== null
-            ? ' a\u00a0year after fees, depending on which credits you\u00a0use'
-            : start.counted.length > 0
-              ? ' a\u00a0year in rewards and credits you use, after\u00a0fees'
-              : ' a\u00a0year in rewards, after\u00a0fees'}
-        </span>
+        <span class="rate-per">{perYear(start)}</span>
       </p>
       {answers}
       <p class="rate-lead">{headlineText(catalog, start)}</p>
       <Comparison start={start} best={best} />
       <p class="muted small rate-like" hidden={start.counted.length === 0}>
-        Your figure counts the credits you use; the other two count none.
+        {countedNote()}
       </p>
       <p>{lead}</p>
       {editors}
@@ -677,12 +651,14 @@ function ShareBox({
   ownSpending,
   include,
   setInclude,
+  picture,
 }: {
   input: ReportInput
   spending: Spending
   ownSpending: boolean
   include: boolean
   setInclude: (on: boolean) => void
+  picture: RatePicture | null
 }) {
   const made = useRef(new Map<string, Attempt>())
   const pending = useRef(new Map<string, Promise<Attempt>>())
@@ -845,6 +821,7 @@ function ShareBox({
             Share
           </button>
         ) : null}
+        <SaveImage picture={picture} />
       </div>
       {saved === null ? null : (
         <p class="small muted">
@@ -972,6 +949,10 @@ function Rated({
     [input, start],
   )
   const parts = useParts(linked, spending, today)
+  const picture = useMemo(
+    () => ratePictureText(start, parts.best, shortName, today),
+    [start, parts.best, today],
+  )
   return (
     <>
       <Report
@@ -996,6 +977,7 @@ function Rated({
             ownSpending={!own.typical}
             include={include}
             setInclude={setInclude}
+            picture={picture}
           />
         }
       />
@@ -1036,12 +1018,23 @@ function Shared({
     [input, spending, today],
   )
   const parts = useParts(input, spending, today)
+  const picture = useMemo(
+    () => ratePictureText(start, parts.best, shortName, today),
+    [start, parts.best, today],
+  )
   return (
     <Report
       start={start}
       input={input}
       parts={parts}
-      share={null}
+      share={
+        <section class="panel rate-share" aria-labelledby="rate-share-title">
+          <h2 id="rate-share-title">Share this report</h2>
+          <div class="row-buttons">
+            <SaveImage picture={picture} />
+          </div>
+        </section>
+      }
       editors={null}
       answers={<Answers start={start} answers={answers} />}
     />
