@@ -137,10 +137,19 @@ const QUICK = EVERYDAY_PURCHASES.slice(0, 6).map(quickPickText)
 // Setup notes name what to set in CLI terms; this says where on the page.
 // "Grocery stores and American Red Cross, Oct 1 to Dec 31": an activation
 // in the engine's words, with its dates.
+// One activation can turn on several rules (a Freedom Flex quarter), so the
+// label names every rule in its group.
 function activationLabel(card: Card, ruleId: string): string {
   const rule = card.rules.find((r) => r.id === ruleId)
   if (!rule) return words(ruleId)
-  const what = capitalize(ruleWhat(catalog, rule, card))
+  const what = capitalize(
+    listed(
+      activationGroup(card, ruleId).flatMap((id) => {
+        const r = card.rules.find((x) => x.id === id)
+        return r ? [ruleWhat(catalog, r, card)] : []
+      }),
+    ),
+  )
   return rule.valid_from !== undefined && rule.valid_to !== undefined
     ? `${what}, ${shortDate(rule.valid_from).replace(/, \d{4}$/, '')} to ${shortDate(rule.valid_to)}`
     : what
@@ -598,26 +607,33 @@ function CardEditor({
           <legend>
             Bonuses you've activated with {issuerName(info.issuer)}
           </legend>
-          {info.activation.map((rule) => (
-            <label class="check" key={rule}>
-              <input
-                type="checkbox"
-                checked={activationGroup(card, rule).some((r) =>
-                  activated.includes(r),
-                )}
-                onChange={(e) => {
-                  const checked = e.currentTarget.checked
-                  const group = activationGroup(card, rule)
-                  setActivated((prev) =>
-                    checked
-                      ? [...prev, rule]
-                      : prev.filter((r) => !group.includes(r)),
-                  )
-                }}
-              />
-              {activationLabel(card, rule)}
-            </label>
-          ))}
+          {info.activation
+            .filter(
+              (rule, i) =>
+                info.activation.findIndex((r) =>
+                  activationGroup(card, r).includes(rule),
+                ) === i,
+            )
+            .map((rule) => (
+              <label class="check" key={rule}>
+                <input
+                  type="checkbox"
+                  checked={activationGroup(card, rule).some((r) =>
+                    activated.includes(r),
+                  )}
+                  onChange={(e) => {
+                    const checked = e.currentTarget.checked
+                    const group = activationGroup(card, rule)
+                    setActivated((prev) =>
+                      checked
+                        ? [...prev, rule]
+                        : prev.filter((r) => !group.includes(r)),
+                    )
+                  }}
+                />
+                {activationLabel(card, rule)}
+              </label>
+            ))}
         </fieldset>
       ) : null}
       {info.introRates.length > 0 ? (

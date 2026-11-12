@@ -97,7 +97,10 @@ export function useSheetSend(wallet: Wallet) {
     if (typeof navigator.share === 'function') {
       navigator.share({ url }).then(
         () => track('cheat-sheet-link'),
-        () => undefined,
+        (e: unknown) => {
+          if (!(e instanceof DOMException && e.name === 'AbortError'))
+            setShown(url)
+        },
       )
       return
     }
