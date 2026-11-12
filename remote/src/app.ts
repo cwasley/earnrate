@@ -41,6 +41,9 @@ type Dataset = {
 export type Env = AuthEnv & {
   LIMITER?: RateLimit // every request: per wallet once signed in, else per IP
   SIGN_IN_LIMITER?: RateLimit // sign-in steps and rejected tokens
+  // Per IP, a credential not yet accepted: the grant a token names is the
+  // caller's to choose, so made-up ones would otherwise never be limited.
+  UNCHECKED_LIMITER?: RateLimit
   // Counts only: the method or tool name and the kind of app, never
   // arguments, wallets or people.
   USAGE?: Dataset
@@ -302,7 +305,10 @@ export function makeWorker<E extends Env>(
       return whenDown()
     }
     if (!found) {
-      if (await limited(env.SIGN_IN_LIMITER, request, claimed, fromClaude))
+      if (
+        (await limited(env.UNCHECKED_LIMITER, request, null, fromClaude)) ||
+        (await limited(env.SIGN_IN_LIMITER, request, claimed, fromClaude))
+      )
         return tooMany()
       return challenge(resource, true)
     }
@@ -510,6 +516,16 @@ export function makeWorker<E extends Env>(
         key = await claimedLimitKey(
           form.get('refresh_token') ?? form.get('code') ?? form.get('token'),
         )
+        if (
+          key !== null &&
+          (await limited(
+            env.UNCHECKED_LIMITER,
+            request,
+            null,
+            CLAUDE_CALLS.has(pathname),
+          ))
+        )
+          return tooMany()
         request = new Request(request.url, {
           method: 'POST',
           headers: request.headers,

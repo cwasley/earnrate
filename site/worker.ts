@@ -5,6 +5,7 @@
 // opt-in wallet sync with Claude (api.ts), and stores nothing here. /r is
 // short report links (reports.ts), the one thing this Worker stores.
 import codes from 'earnrate:report-codes'
+import { readBody } from '../remote/src/requests.ts'
 import { api, type ApiEnv } from './api.ts'
 import { deviceOf, isEvent } from './events.ts'
 import { reports, type ReportsEnv } from './reports.ts'
@@ -21,7 +22,7 @@ export type SiteEnv = ApiEnv &
   ReportsEnv & {
     ASSETS: Assets
     USAGE?: Dataset
-    LIMITER?: RateLimit // per IP, so one script can't skew the counts
+    LIMITER?: RateLimit // per IP: counts, and opening or deleting report links
   }
 
 const done = () =>
@@ -29,7 +30,7 @@ const done = () =>
 
 export async function count(request: Request, env: SiteEnv): Promise<Response> {
   if (request.method !== 'POST') return new Response(null, { status: 405 })
-  const body = (await request.text()).slice(0, 64).trim()
+  const body = ((await readBody(request, 64)) ?? '').trim()
   if (!isEvent(body)) return done()
   const ip = request.headers.get('cf-connecting-ip')
   if (env.LIMITER && ip && !(await env.LIMITER.limit({ key: ip })).success)

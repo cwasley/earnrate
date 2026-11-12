@@ -314,6 +314,34 @@ describe('short report links', () => {
     expect(s.entries.size).toBe(0)
   })
 
+  test("a link is handed back when the day's count can't be written, and refused when the link can't be", async () => {
+    const s = site()
+    const put = s.env.REPORTS?.put.bind(s.env.REPORTS)
+    if (!s.env.REPORTS || !put) throw new Error('no store')
+    s.env.REPORTS.put = (key, value, options) =>
+      key.startsWith('links:')
+        ? Promise.reject(new Error('one write a second'))
+        : put(key, value, options)
+    const { res, made } = await s.make()
+    expect(res.status).toBe(201)
+    expect(reportKeys(s.entries)).toEqual([`report:${made?.id ?? ''}`])
+
+    const t = site()
+    if (!t.env.REPORTS) throw new Error('no store')
+    t.env.REPORTS.put = () => Promise.reject(new Error('store down'))
+    expect((await t.make()).res.status).toBe(503)
+  })
+
+  test('opening and deleting links is limited per address', async () => {
+    const s = site()
+    const { made } = await s.make()
+    s.env.LIMITER = { limit: () => Promise.resolve({ success: false }) }
+    const id = made?.id ?? ''
+    expect((await s.call(`/r/${id}/data`)).status).toBe(429)
+    expect((await s.call(`/r/${id}`, { method: 'DELETE' })).status).toBe(429)
+    expect(reportKeys(s.entries)).toHaveLength(1)
+  })
+
   test('the link itself serves the rate page, marked noindex', async () => {
     const s = site()
     const { made } = await s.make()

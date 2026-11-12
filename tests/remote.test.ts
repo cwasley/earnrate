@@ -965,6 +965,50 @@ describe('rate limits', () => {
     expect(key).not.toContain(walletId ?? '')
   })
 
+  test('made-up tokens and refreshes also count against the address they come from', async () => {
+    const d = deployment()
+    const unchecked = recording()
+    const env = { UNCHECKED_LIMITER: unchecked.limiter }
+    for (const n of [1, 2])
+      expect(
+        (await from(d, OPENAI_IP, '/', mcpCall(`a${String(n)}:b:c`), env))
+          .status,
+      ).toBe(401)
+    const refresh = await from(
+      d,
+      OPENAI_IP,
+      '/oauth/token',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: 'x:y:z',
+          client_id: 'someone',
+        }).toString(),
+      },
+      env,
+    )
+    expect(refresh.status).toBe(401)
+    expect(unchecked.keys).toEqual([OPENAI_IP, OPENAI_IP, OPENAI_IP])
+
+    const refused = { UNCHECKED_LIMITER: recording(false).limiter }
+    expect(
+      (await from(d, OPENAI_IP, '/', mcpCall('a3:b:c'), refused)).status,
+    ).toBe(429)
+  })
+
+  test('an accepted token never counts against its address', async () => {
+    const d = deployment()
+    const { token } = await startWallet(d)
+    const unchecked = recording(false)
+    const env = { UNCHECKED_LIMITER: unchecked.limiter }
+    expect((await from(d, OPENAI_IP, '/', mcpCall(token), env)).status).toBe(
+      200,
+    )
+    expect(unchecked.keys).toEqual([])
+  })
+
   test('discovery documents are never limited', async () => {
     vi.stubGlobal('Cloudflare', {
       compatibilityFlags: { global_fetch_strictly_public: true },
@@ -988,7 +1032,11 @@ describe('rate limits', () => {
     const { token } = await startWallet(d)
     const general = recording(false)
     const signIn = recording(false)
-    const env = { LIMITER: general.limiter, SIGN_IN_LIMITER: signIn.limiter }
+    const env = {
+      LIMITER: general.limiter,
+      SIGN_IN_LIMITER: signIn.limiter,
+      UNCHECKED_LIMITER: recording(false).limiter,
+    }
     expect((await from(d, ANTHROPIC_IP, '/', mcpCall(token), env)).status).toBe(
       200,
     )

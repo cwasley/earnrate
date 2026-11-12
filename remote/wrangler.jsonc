@@ -24,6 +24,12 @@
       "namespace_id": "1102",
       "simple": { "limit": 10, "period": 60 },
     },
+    // Per IP: tokens, codes and refreshes not yet accepted (remote/src/app.ts).
+    {
+      "name": "UNCHECKED_LIMITER",
+      "namespace_id": "1107",
+      "simple": { "limit": 120, "period": 60 },
+    },
   ],
   // Counts by method, tool or path and kind of app, never content
   // (Workers Analytics Engine).

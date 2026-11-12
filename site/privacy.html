@@ -211,11 +211,12 @@
           below, record the address of each page opened, which for a short link
           includes its name. A short link is deleted 13 months after it was last
           opened. While the page that made it is still open, Delete this link
-          removes it at once; once that page is closed, earnrate has no way to
-          tell which link was yours, so it stays until it expires. One IP
-          address can make 10 links a minute, and the whole site makes at most
-          300 a day, counted as one number; past either limit, the page offers
-          the link that isn't saved anywhere instead.
+          removes it (copies Cloudflare holds elsewhere can still open it for
+          about a minute); once that page is closed, earnrate has no way to tell
+          which link was yours, so it stays until it expires. One IP address can
+          make 10 links a minute, and the whole site makes at most 300 a day,
+          counted as one number; past either limit, the page offers the link
+          that isn't saved anywhere instead.
         </p>
         <p>
           If you'd rather nothing be stored, choose the link that isn't saved

@@ -6,6 +6,7 @@
 // delete key its maker's page holds. These paths sit outside /api, so the
 // sync cookie (scoped to /api) is never sent here, and nothing here reads
 // a cookie.
+import { readBody } from '../remote/src/requests.ts'
 import { checkReport, type ReportCodes } from './report-check.ts'
 import {
   REPORT_LINKS_PER_DAY,
@@ -35,6 +36,7 @@ export type ReportsEnv = {
   ASSETS: { fetch(request: Request): Promise<Response> }
   REPORTS?: ReportStore
   REPORT_LIMITER?: RateLimit
+  LIMITER?: RateLimit // per IP, for opening and deleting links
 }
 
 // The delete key's SHA-256, and the day (since 1970) the deletion date was
@@ -116,8 +118,8 @@ async function create(
     const { success } = await env.REPORT_LIMITER.limit({ key: ip })
     if (!success) return plain(429, BUSY)
   }
-  const body = await request.text()
-  if (body.length > REPORT_MAX_LENGTH) return plain(413)
+  const body = await readBody(request, REPORT_MAX_LENGTH)
+  if (body === null) return plain(413)
   if (!checkReport(body, codes)) return plain(400)
   // Sitewide, not per person: the per-IP limit is approximate, and a count
   // per person would mean keeping something about them.
@@ -128,13 +130,24 @@ async function create(
     const id = randomFrom(ID_ALPHABET, ID_LENGTH)
     if ((await store.get(storeKey(id))) !== null) continue
     const key = deleteKey()
-    await store.put(storeKey(id), body, {
-      expirationTtl: REPORT_RETENTION_SECONDS,
-      metadata: { key: await sha256(key), opened: day },
-    })
-    await store.put(countKey(day), String(made + 1), {
-      expirationTtl: COUNT_SECONDS,
-    })
+    try {
+      await store.put(storeKey(id), body, {
+        expirationTtl: REPORT_RETENTION_SECONDS,
+        metadata: { key: await sha256(key), opened: day },
+      })
+    } catch {
+      return plain(503)
+    }
+    // KV takes one write a second to a key, so links made in the same second
+    // can fail this; the link is kept and handed back all the same, since a
+    // stored link its maker never learns of couldn't be deleted.
+    try {
+      await store.put(countKey(day), String(made + 1), {
+        expirationTtl: COUNT_SECONDS,
+      })
+    } catch {
+      // the day's count stays one short
+    }
     return new Response(JSON.stringify({ id, key }), {
       status: 201,
       headers: {
@@ -152,11 +165,16 @@ async function read(id: string, env: ReportsEnv): Promise<Response> {
   const { value, metadata } = await store.getWithMetadata(storeKey(id))
   if (value === null || metadata === null) return plain(404)
   const now = today()
-  if (now - metadata.opened > REPORT_REFRESH_DAYS)
-    await store.put(storeKey(id), value, {
-      expirationTtl: REPORT_RETENTION_SECONDS,
-      metadata: { key: metadata.key, opened: now },
-    })
+  if (now - metadata.opened > REPORT_REFRESH_DAYS) {
+    try {
+      await store.put(storeKey(id), value, {
+        expirationTtl: REPORT_RETENTION_SECONDS,
+        metadata: { key: metadata.key, opened: now },
+      })
+    } catch {
+      // opened twice in a second: the other opening pushed it back
+    }
+  }
   return plain(200, value)
 }
 
@@ -173,6 +191,14 @@ async function remove(
   if (key === '' || (await sha256(key)) !== metadata.key) return plain(403)
   await store.delete(storeKey(id))
   return plain(204)
+}
+
+// Opening and deleting links each read the store, so one address can't
+// read it without end.
+async function busy(request: Request, env: ReportsEnv): Promise<boolean> {
+  const ip = request.headers.get('cf-connecting-ip')
+  if (!env.LIMITER || !ip) return false
+  return !(await env.LIMITER.limit({ key: ip })).success
 }
 
 // The site's own 404 page, for an address under /r that isn't a link.
@@ -209,6 +235,11 @@ export async function reports(
         : plain(403)
   if (id === undefined || !ID.test(id) || parts.length > 3)
     return notFound(request, env)
+  if (
+    (data === 'data' || request.method === 'DELETE') &&
+    (await busy(request, env))
+  )
+    return plain(429, BUSY)
   if (data === 'data' && request.method === 'GET')
     return fromThePage(request) ? read(id, env) : plain(403)
   if (data !== undefined) return notFound(request, env)
