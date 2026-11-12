@@ -181,6 +181,25 @@ describe('the built static pages', () => {
     for (const t of TABS) expect(card).toContain(`href="${t.href}"`)
   })
 
+  test('the store index links every store and category page, each store inside its closed category', () => {
+    const index = readFileSync(path.join(out, 'best', 'index.html'), 'utf8')
+    const built = readdirSync(path.join(out, 'best'))
+      .filter((f) => f.endsWith('.html') && f !== 'index.html')
+      .map((f) => `/best/${f.replace(/\.html$/, '')}`)
+    const linked = new Set(
+      [...index.matchAll(/href="(\/best\/[^"]+)"/g)].map((m) => m[1]),
+    )
+    expect(built.filter((p) => !linked.has(p))).toEqual([])
+    expect(index).not.toMatch(/<details[^>]*\sopen/)
+    const groups = [
+      ...index.matchAll(/<details class="cat"[^>]*>(.*?)<\/details>/g),
+    ]
+    expect(groups.length).toBeGreaterThan(0)
+    const costco = groups.find((g) => g[1]?.includes('href="/best/costco"'))
+    expect(costco?.[1]).toContain('<h2>Warehouse clubs</h2>')
+    expect(costco?.[1]).toContain('href="/best/warehouse-club"')
+  })
+
   test("a category page gives a shared pick rule's terms for that category only", () => {
     const dining = readFileSync(
       path.join(out, 'categories', 'dining.html'),

@@ -274,9 +274,95 @@ ol.cards ul {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
-.count {
+
+/* The store index: a closed row per category, its stores inside. An open
+   row's name sticks under the filter (--stick, set by the page's script). */
+.cats {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.cat {
+  border-bottom: 1px solid var(--line);
+}
+.cat > summary,
+.cat > h2 > a {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 30px 12px 4px;
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  list-style: none;
+}
+.cat > summary::-webkit-details-marker {
+  display: none;
+}
+.cat h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.cat-count {
+  flex: none;
   color: var(--muted);
-  font-weight: 400;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.cat > summary::after,
+.cat > h2 > a::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border: solid var(--muted);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-70%) rotate(45deg);
+}
+.cat > h2 > a::after {
+  transform: translateY(-50%) rotate(-45deg);
+}
+.cat[open] > summary::after {
+  transform: translateY(-30%) rotate(-135deg);
+}
+.cat > summary {
+  scroll-margin-top: var(--stick, 0px);
+}
+.cat[open] > summary {
+  position: sticky;
+  top: var(--stick, 0px);
+  background: var(--bg);
+  box-shadow: 0 1px 0 var(--line);
+}
+.cat > summary:focus-visible,
+.cat > h2 > a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+.cat > summary:hover::after,
+.cat > h2 > a:hover::after {
+  border-color: var(--accent);
+}
+.cat .link-list {
+  padding: 10px 4px 18px;
+}
+.cat-all {
+  flex-basis: 100%;
+  font-weight: 600;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cat > summary::after {
+    transition:
+      transform var(--arrive) var(--ease-out),
+      border-color var(--fade) ease;
+  }
 }
 
 .next {

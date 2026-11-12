@@ -816,45 +816,95 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   })
 }
 
-// Narrows the lists as you type, matching names and aliases. It runs only in
-// the page: nothing typed is sent anywhere, and without it the lists still work.
+// Narrows the lists as you type and opens each category with a match. It runs
+// only in the page: nothing typed is sent anywhere, and without it the
+// categories still open and close. Closing a category whose name was stuck
+// to the top scrolls back to it, so the visitor isn't left far down the page.
 const FILTER_SCRIPT = `(() => {
   const input = document.getElementById('filter')
   const wrap = input.closest('.filter')
   const none = document.getElementById('no-match')
   const ask = none.querySelector('a')
-  const sections = [...document.querySelectorAll('[data-section]')]
+  const list = document.querySelector('.cats')
+  const sections = [...list.querySelectorAll('[data-section]')]
   wrap.hidden = false
+  new ResizeObserver(() => {
+    list.style.setProperty('--stick', wrap.offsetHeight + 'px')
+  }).observe(wrap)
+  list.addEventListener('click', (e) => {
+    const summary = e.target.closest('summary')
+    const details = summary && summary.parentElement
+    if (!details || !details.open) return
+    if (details.getBoundingClientRect().top >= summary.getBoundingClientRect().top - 1) return
+    details.addEventListener('toggle', () => summary.scrollIntoView({ block: 'start' }), { once: true })
+  })
+  let before = null
   input.addEventListener('input', () => {
     const q = input.value.trim().toLowerCase()
+    if (q !== '' && before === null) before = sections.filter((s) => s.open)
     let total = 0
     for (const s of sections) {
       let shown = 0
-      for (const li of s.querySelectorAll('li')) {
-        const hit = q === '' || li.dataset.q.includes(q)
-        li.hidden = !hit
+      let stores = 0
+      for (const el of s.querySelectorAll('[data-q]')) {
+        const hit = q === '' || el.dataset.q.includes(q)
+        el.hidden = !hit
         if (hit) shown++
+        if (hit && el.dataset.store !== undefined) stores++
       }
       s.hidden = shown === 0
-      s.querySelector('.count').textContent = q === '' ? '' : ' (' + shown + ')'
+      const count = s.querySelector('.cat-count')
+      if (count) count.textContent = q === '' ? count.dataset.all : stores + ' of ' + count.dataset.all
+      if (s.tagName === 'DETAILS') s.open = q === '' ? before !== null && before.includes(s) : shown > 0
       total += shown
     }
+    if (q === '') before = null
     none.hidden = total > 0
+    const first = none.hidden ? list : none
+    const above = first.getBoundingClientRect().top - wrap.getBoundingClientRect().bottom
+    if (above < 0) window.scrollBy({ top: above, behavior: 'instant' })
     ask.href = '/#best=' + encodeURIComponent(input.value.trim())
     ask.textContent = 'Ask earnrate.dev about \u201c' + input.value.trim() + '\u201d'
   })
 })()`
 
+const storeCount = (n: number) => `${String(n)} ${n === 1 ? 'store' : 'stores'}`
+
 function renderIndex(all: Page[]): string {
-  const section = (heading: string, list: Page[]) =>
-    `<section data-section><h2>${heading}<span class="count"></span></h2><ul class="link-list">${list
-      .slice()
-      .sort((a, b) => a.label.localeCompare(b.label))
+  const byLabel = (a: Page, b: Page) => a.label.localeCompare(b.label)
+  const stores = new Map<string, Page[]>()
+  for (const p of all) {
+    if (p.merchant === null) continue
+    const slug = categorySlug(p.categoryId)
+    if (slug === null)
+      throw new Error(`/best/${p.slug} has no category page to list it under`)
+    stores.set(slug, [...(stores.get(slug) ?? []), p])
+  }
+  const words = (p: Page) =>
+    esc(
+      [
+        p.label,
+        ...((p.merchant
+          ? p.merchant.aliases
+          : catalog.categories.find((c) => c.id === p.categoryId)?.aliases) ??
+          []),
+      ]
+        .join(' ')
+        .toLowerCase(),
+    )
+  const category = (cat: Page) => {
+    const list = (stores.get(cat.slug) ?? []).sort(byLabel)
+    const name = esc(capitalize(cat.label))
+    if (list.length === 0)
+      return `<div class="cat" data-section><h2><a href="/best/${cat.slug}" data-q="${words(cat)}">${name}</a></h2></div>`
+    const count = storeCount(list.length)
+    return `<details class="cat" data-section><summary><h2>${name}</h2><span class="cat-count" data-all="${count}">${count}</span></summary><ul class="link-list"><li class="cat-all" data-q="${words(cat)}"><a href="/best/${cat.slug}">Best cards for ${esc(cat.label)}</a></li>${list
       .map(
         (p) =>
-          `<li data-q="${esc([p.label, ...(p.merchant?.aliases ?? [])].join(' ').toLowerCase())}"><a href="/best/${p.slug}">${esc(p.label)}</a></li>`,
+          `<li data-q="${words(p)}" data-store><a href="/best/${p.slug}">${esc(p.label)}</a></li>`,
       )
-      .join('')}</ul></section>`
+      .join('')}</ul></details>`
+  }
   const body = `
       <h1>Best credit card for every store and category</h1>
       <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
@@ -864,14 +914,11 @@ function renderIndex(all: Page[]): string {
         <input id="filter" type="search" placeholder="Costco, gas, Netflix…" autocomplete="off" spellcheck="false" />
       </div>
       <p id="no-match" class="next" hidden>No page for that yet. <a href="/#best">Ask earnrate.dev</a>, which also knows stores without a page.</p>
-      ${section(
-        'Categories',
-        all.filter((p) => p.merchant === null),
-      )}
-      ${section(
-        'Stores',
-        all.filter((p) => p.merchant !== null),
-      )}
+      <div class="cats">${all
+        .filter((p) => p.merchant === null)
+        .sort(byLabel)
+        .map(category)
+        .join('')}</div>
       <script>${FILTER_SCRIPT}</script>`
   return layout({
     title: fitTitle(['Best credit card for every store and category']),
