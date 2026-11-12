@@ -1,13 +1,21 @@
-// Short links to a Rate my wallet report (earnrate.dev/r/<id>), made only
-// when someone presses Copy link or Share. What's kept is the report's
-// versioned string, the same one a /rate#w= link carries, and nothing else:
-// no IP address, user agent, cookie or wallet. Each link is deleted
-// REPORT_RETENTION_MONTHS after it was last opened, or sooner with the
-// delete key its maker's page holds. These paths sit outside /api, so the
-// sync cookie (scoped to /api) is never sent here, and nothing here reads
-// a cookie.
+// Short links to a Rate my wallet report (earnrate.dev/r/<id>). The page
+// names a link (report-ids.ts) when someone first presses Copy link or
+// Share, and the browser that made it updates it with the same request when
+// its saved wallet changes. What's kept is the report's versioned string,
+// the same one a /rate#w= link carries, and nothing else: no IP address,
+// user agent, cookie or wallet. Each link is deleted REPORT_RETENTION_MONTHS
+// after it was last opened or updated, or sooner with the delete key its
+// maker's browser holds. These paths sit outside /api, so the sync cookie
+// (scoped to /api) is never sent here, and nothing here reads a cookie.
 import { readBody } from '../remote/src/requests.ts'
 import { checkReport, type ReportCodes } from './report-check.ts'
+import {
+  DELETE_HEADER,
+  ID,
+  ID_HEADER,
+  KEY,
+  REPORT_HEADER,
+} from './report-ids.ts'
 import {
   REPORT_LINKS_PER_DAY,
   REPORT_MAX_LENGTH,
@@ -43,38 +51,19 @@ export type ReportsEnv = {
 // last pushed back.
 export type ReportMeta = { key: string; opened: number }
 
-export const REPORT_HEADER = 'x-earnrate-report'
-export const DELETE_HEADER = 'x-earnrate-delete-key'
-
-// No 0/o, 1/l/i: an id read aloud or retyped can't be mistaken.
-export const ID_ALPHABET = '23456789abcdefghjkmnpqrstuvwxyz'
-export const ID_LENGTH = 8
-const ID = new RegExp(`^[${ID_ALPHABET}]{${String(ID_LENGTH)}}$`)
+export {
+  DELETE_HEADER,
+  ID_ALPHABET,
+  ID_HEADER,
+  ID_LENGTH,
+  REPORT_HEADER,
+} from './report-ids.ts'
 
 const storeKey = (id: string) => `report:${id}`
 const today = () => Math.floor(Date.now() / 86_400_000)
 // Links made that day, sitewide; nothing about who made them.
 const countKey = (day: number) => `links:${String(day)}`
 const COUNT_SECONDS = 2 * 86_400
-
-function randomFrom(alphabet: string, length: number): string {
-  const out: string[] = []
-  // Rejection sampling, so each character is equally likely.
-  const limit = 256 - (256 % alphabet.length)
-  while (out.length < length) {
-    for (const b of crypto.getRandomValues(new Uint8Array(length * 2))) {
-      if (b < limit && out.length < length)
-        out.push(alphabet[b % alphabet.length] ?? '')
-    }
-  }
-  return out.join('')
-}
-
-const deleteKey = () =>
-  btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(24))))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '')
 
 async function sha256(text: string): Promise<string> {
   const digest = await crypto.subtle.digest(
@@ -106,7 +95,11 @@ function fromThePage(request: Request): boolean {
   return origin === null || origin === new URL(request.url).origin
 }
 
-async function create(
+// One request makes a link or updates it: an unused id is made, counted
+// toward the day's links; a used one is replaced only with the key that made
+// it, and an update isn't counted. A refusal says no more about whether an
+// id is used than opening /r/<id> already does.
+async function write(
   request: Request,
   env: ReportsEnv,
   codes: ReportCodes,
@@ -118,45 +111,51 @@ async function create(
     const { success } = await env.REPORT_LIMITER.limit({ key: ip })
     if (!success) return plain(429, BUSY)
   }
+  const id = request.headers.get(ID_HEADER) ?? ''
+  const key = request.headers.get(DELETE_HEADER) ?? ''
+  if (!ID.test(id) || !KEY.test(key)) return plain(400)
   const body = await readBody(request, REPORT_MAX_LENGTH)
   if (body === null) return plain(413)
   if (!checkReport(body, codes)) return plain(400)
-  // Sitewide, not per person: the per-IP limit is approximate, and a count
-  // per person would mean keeping something about them.
+  const hash = await sha256(key)
   const day = today()
-  const made = Number((await store.get(countKey(day))) ?? 0) || 0
-  if (made >= REPORT_LINKS_PER_DAY) return plain(503, FULL)
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const id = randomFrom(ID_ALPHABET, ID_LENGTH)
-    if ((await store.get(storeKey(id))) !== null) continue
-    const key = deleteKey()
+  const kept = { expirationTtl: REPORT_RETENTION_SECONDS }
+  const { value, metadata } = await store.getWithMetadata(storeKey(id))
+  if (value !== null) {
+    if (metadata?.key !== hash) return plain(403)
     try {
       await store.put(storeKey(id), body, {
-        expirationTtl: REPORT_RETENTION_SECONDS,
-        metadata: { key: await sha256(key), opened: day },
+        ...kept,
+        metadata: { key: hash, opened: day },
       })
     } catch {
       return plain(503)
     }
-    // KV takes one write a second to a key, so links made in the same second
-    // can fail this; the link is kept and handed back all the same, since a
-    // stored link its maker never learns of couldn't be deleted.
-    try {
-      await store.put(countKey(day), String(made + 1), {
-        expirationTtl: COUNT_SECONDS,
-      })
-    } catch {
-      // the day's count stays one short
-    }
-    return new Response(JSON.stringify({ id, key }), {
-      status: 201,
-      headers: {
-        'cache-control': 'no-store',
-        'content-type': 'application/json',
-      },
-    })
+    return plain(204)
   }
-  return plain(503)
+  // Sitewide, not per person: the per-IP limit is approximate, and a count
+  // per person would mean keeping something about them.
+  const made = Number((await store.get(countKey(day))) ?? 0) || 0
+  if (made >= REPORT_LINKS_PER_DAY) return plain(503, FULL)
+  try {
+    await store.put(storeKey(id), body, {
+      ...kept,
+      metadata: { key: hash, opened: day },
+    })
+  } catch {
+    return plain(503)
+  }
+  // KV takes one write a second to a key, so links made in the same second
+  // can fail this; the link is kept all the same, since its maker already
+  // holds its address.
+  try {
+    await store.put(countKey(day), String(made + 1), {
+      expirationTtl: COUNT_SECONDS,
+    })
+  } catch {
+    // the day's count stays one short
+  }
+  return plain(201)
 }
 
 async function read(id: string, env: ReportsEnv): Promise<Response> {
@@ -212,7 +211,7 @@ async function notFound(request: Request, env: ReportsEnv): Promise<Response> {
   return new Response(page.body, { status: 404, headers })
 }
 
-// /r (POST: make a link), /r/<id> (the page; DELETE: delete it) and
+// /r (POST: make or update a link), /r/<id> (the page; DELETE: delete it) and
 // /r/<id>/data (the report's string, for the page). Reading a link never
 // checks it against `codes`, so a link made before the card data changed
 // still opens.
@@ -231,7 +230,7 @@ export async function reports(
     return url.pathname !== '/r'
       ? plain(404)
       : fromThePage(request)
-        ? create(request, env, codes)
+        ? write(request, env, codes)
         : plain(403)
   if (id === undefined || !ID.test(id) || parts.length > 3)
     return notFound(request, env)

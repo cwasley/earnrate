@@ -6,14 +6,11 @@ import { localToday } from '../../src/engine/periods.ts'
 import type { Spending } from '../../src/engine/renewal.ts'
 import { searchCards } from '../../src/engine/setup.ts'
 import {
-  resolveSpendLines,
-  spendLineFor,
   TYPICAL_MONTHLY_SPEND,
   typicalSpendLines,
   type Addition,
   type ResolvedLine,
 } from '../../src/engine/simulate.ts'
-import { currencyValuation } from '../../src/engine/valuation.ts'
 import {
   assumedPicksText,
   bestNote,
@@ -47,7 +44,9 @@ import {
 import { QuickCards } from '../app/QuickCards.tsx'
 import { loadWallet } from '../app/saved-wallet.ts'
 import { SearchInput } from '../app/SearchInput.tsx'
-import { isTypicalRows } from '../app/spending-rows.ts'
+import { myLink, startMyLink } from '../app/my-link.ts'
+import type { LinkState, LinkUpdater } from '../app/report-link.ts'
+import { sameRows } from '../app/spending-rows.ts'
 import { track } from '../app/track.ts'
 import {
   answerSaver,
@@ -57,8 +56,9 @@ import {
   type Saver,
 } from './answers.ts'
 import { Bar } from './Bar.tsx'
-import { encodeReport, reportPart, roundedLines } from './link.ts'
+import { decodeReport, encodeReport, reportPart } from './link.ts'
 import { OWN_WALLET } from './own-wallet.ts'
+import { spendingLines, walletReportInput } from './own-report.ts'
 import {
   comparisonRows,
   countedNote,
@@ -70,8 +70,23 @@ import {
 import { SaveImage } from './SaveImage.tsx'
 import { REPORT_RETENTION_MONTHS } from '../report-policy.ts'
 import { runReport } from './run.ts'
-import { linkFor, longUrl, NO_SHORT_LINK, type Attempt } from './share.ts'
-import { deleteReport, loadReport, saveReport, storedId } from './store.ts'
+import {
+  DEAD_LINK,
+  longUrl,
+  NO_SHORT_LINK,
+  ownLink,
+  pickLink,
+  type Have,
+} from './share.ts'
+import {
+  deleteReport,
+  loadReport,
+  newLink,
+  storedId,
+  writeReport,
+  type Saved,
+  type Written,
+} from './store.ts'
 import type { Job, Part } from './steps.ts'
 import {
   reportSource,
@@ -102,53 +117,8 @@ const TYPICAL: Spending = { lines: typicalSpendLines(catalog), typical: true }
 // The person's rows as the report counts them: known lines, rounded to $5
 // as a link carries them; typical amounts when there are none of their own.
 function spendingOf(rows: Row[] | null): Spending {
-  if (rows === null || isTypicalRows(rows)) return TYPICAL
-  const lines = roundedLines(
-    resolveSpendLines(
-      catalog,
-      rows.map((r) => spendLineFor(catalog, r.what, r.monthly)),
-    ),
-  )
-  return lines.length === 0 ? TYPICAL : { lines, typical: false }
-}
-
-// Picks that still name the card's options.
-function validPicks(cardId: string, picks: Picks | undefined): Picks {
-  const card = cards.get(cardId)
-  if (!card || !picks) return {}
-  return Object.fromEntries(
-    card.choices.flatMap((c) => {
-      const chosen = (picks[c.id] ?? [])
-        .filter((o) => o in c.options)
-        .slice(0, c.pick)
-      return chosen.length > 0 ? [[c.id, chosen]] : []
-    }),
-  )
-}
-
-// A saved wallet as a report reads it: cards, picks, memberships and the
-// point values it sets, as numbers.
-function walletInput(
-  wallet: Wallet,
-  picks: Record<string, Picks>,
-): ReportInput {
-  return {
-    cards: wallet.cards.map((h) => {
-      const card = cards.get(h.id)
-      return withMarks(
-        { id: h.id, picks: picks[h.id] ?? validPicks(h.id, h.chosen?.picks) },
-        card ? heldMarks(card, h) : undefined,
-      )
-    }),
-    memberships: wallet.memberships.filter((m) =>
-      catalog.memberships.some((x) => x.id === m),
-    ),
-    valuations: Object.fromEntries(
-      Object.keys(wallet.valuations)
-        .filter((id) => catalog.currencies.some((c) => c.id === id))
-        .map((id) => [id, currencyValuation(catalog, wallet, id).centsPerUnit]),
-    ),
-  }
+  const lines = spendingLines(catalog, rows)
+  return lines === null ? TYPICAL : { lines, typical: false }
 }
 
 type ReportCard = ReportInput['cards'][number]
@@ -781,42 +751,9 @@ function PicksEditor({
   )
 }
 
-// A short link is made only when Copy link or Share is pressed, and kept in
-// this page's memory for the inputs it was made from, so pressing again
-// saves nothing new. The delete key never leaves memory either. When no
-// short link can be made, the box hands out the longer link instead.
-function ShareBox({
-  input,
-  spending,
-  ownSpending,
-  include,
-  setInclude,
-  picture,
-}: {
-  input: ReportInput
-  spending: Spending
-  ownSpending: boolean
-  include: boolean
-  setInclude: (on: boolean) => void
-  picture: RatePicture | null
-}) {
-  const made = useRef(new Map<string, Attempt>())
-  const pending = useRef(new Map<string, Promise<Attempt>>())
-  const [, redraw] = useState(0)
-  const [note, setNote] = useState<string | null>(null)
-  const [copied, setCopied] = useState<'short' | 'long' | null>(null)
-  const [shown, setShown] = useState<string | null>(null)
-  const report = encodeReport(catalog, {
-    input,
-    lines: spending.typical ? null : spending.lines,
-  }).slice(2)
-  const long = longUrl(location.origin, report)
-  const attempt = made.current.get(report)
-  const unavailable = attempt === 'unavailable'
-  const saved = attempt === undefined || unavailable ? null : attempt
-  const boxed =
-    attempt === undefined ? null : linkFor(location.origin, report, attempt).url
-  const items = [
+// What a link holds, as a list for the box.
+function holds(input: ReportInput, lines: ResolvedLine[] | null): string[] {
+  return [
     input.cards.length === 1 ? 'Your card' : 'Your cards',
     ...(input.cards.some((c) => Object.keys(c.picks).length > 0)
       ? ['Your category picks']
@@ -830,25 +767,72 @@ function ShareBox({
     )
       ? ['Which statement credits you use']
       : []),
-    ...(spending.typical ? [] : ['Your monthly spending, rounded to $5']),
+    ...(lines === null ? [] : ['Your monthly spending, rounded to $5']),
   ]
-  const canShare = typeof navigator.share === 'function'
+}
 
-  const ensure = (): Promise<Attempt> => {
-    const have = made.current.get(report)
-    if (have) return Promise.resolve(have)
-    const waiting = pending.current.get(report)
-    if (waiting) return waiting
-    const promise = saveReport(report).then((s): Attempt => {
-      pending.current.delete(report)
-      const result = s ?? 'unavailable'
-      made.current.set(report, result)
-      redraw((n) => n + 1)
-      return result
-    })
-    pending.current.set(report, promise)
-    return promise
-  }
+function useLinkState(mine: LinkUpdater | null): LinkState | null {
+  const [state, setState] = useState(() => mine?.state() ?? null)
+  useEffect(() => {
+    if (!mine) return
+    setState(mine.state())
+    return mine.subscribe(setState)
+  }, [mine])
+  return state
+}
+
+// Copy link and Share name a short link on the page, so its address is
+// ready inside the tap; the report is saved just after. Your own wallet has
+// one link, which this browser keeps and updates when the wallet changes
+// (app/my-link.ts). Cards tapped in get a link per report, kept only in this
+// page's memory with its delete key. When no short link can be made, the
+// box hands out the longer link instead.
+function ShareBox({
+  input,
+  spending,
+  ownSpending,
+  include,
+  setInclude,
+  picture,
+  mine,
+  edited,
+}: {
+  input: ReportInput
+  spending: Spending
+  ownSpending: boolean
+  include: boolean
+  setInclude: (on: boolean) => void
+  picture: RatePicture | null
+  mine: LinkUpdater | null
+  edited: boolean
+}) {
+  const made = useRef(new Map<string, Saved | 'unavailable'>())
+  const [, redraw] = useState(0)
+  const [note, setNote] = useState<string | null>(null)
+  const [copied, setCopied] = useState<'short' | 'long' | null>(null)
+  const [shown, setShown] = useState<string | null>(null)
+  const linkState = useLinkState(mine)
+  const own = linkState?.link ?? null
+  const pageReport = encodeReport(catalog, {
+    input,
+    lines: spending.typical ? null : spending.lines,
+  }).slice(2)
+  const report = (mine ? mine.report(include) : null) ?? pageReport
+  const linked = mine ? decodeReport(catalog, `w=${report}`) : null
+  const items =
+    linked?.ok === true
+      ? holds(linked.link.input, linked.link.lines)
+      : holds(input, spending.typical ? null : spending.lines)
+  const long = longUrl(location.origin, report)
+  const failed = made.current.get(report) === 'unavailable'
+  const have: Have = mine
+    ? (own ?? (failed ? 'unavailable' : null))
+    : (made.current.get(report) ?? null)
+  const saved = have === null || have === 'unavailable' ? null : have
+  const unavailable = have === 'unavailable'
+  const boxed =
+    have === null ? null : pickLink(location.origin, report, have, newLink).url
+  const canShare = typeof navigator.share === 'function'
 
   const flash = (which: 'short' | 'long') => {
     track('report-made')
@@ -856,51 +840,53 @@ function ShareBox({
     setTimeout(() => setCopied(null), 1500)
   }
 
-  // The clipboard write starts during the tap, with the link still to come,
-  // so browsers that need the tap for it (Safari) allow it.
-  const copyShort = () => {
-    setNote(null)
-    setShown(null)
-    const link = ensure().then((a) => linkFor(location.origin, report, a))
-    const clipboard = navigator.clipboard as Clipboard | undefined
-    const write =
-      typeof ClipboardItem === 'function' && clipboard?.write
-        ? clipboard.write([
-            new ClipboardItem({
-              'text/plain': link.then(
-                (l) => new Blob([l.url], { type: 'text/plain' }),
-              ),
-            }),
-          ])
-        : link.then((l) =>
-            clipboard
-              ? clipboard.writeText(l.url)
-              : Promise.reject(new Error()),
-          )
-    void Promise.allSettled([write, link]).then(([w, l]) => {
-      if (l.status !== 'fulfilled') return
-      if (w.status === 'fulfilled') flash(l.value.short ? 'short' : 'long')
-      else if (l.value.short) setShown(l.value.url)
+  // Saves a link named in this tap; if it can't be, says so and offers the
+  // long link, which never stops working.
+  const save = (fresh: Saved) => {
+    if (!mine) made.current.set(report, fresh)
+    const done: Promise<Written> = mine
+      ? mine.make(fresh, include)
+      : writeReport(fresh, report)
+    redraw((n) => n + 1)
+    void done.then((result) => {
+      if (result === 'ok') return
+      made.current.set(report, 'unavailable')
+      setShown(long)
+      setNote(DEAD_LINK)
+      redraw((n) => n + 1)
     })
   }
 
-  const share = () => {
+  const target = () => {
     setNote(null)
-    if (attempt !== undefined) {
-      navigator
-        .share({ url: linkFor(location.origin, report, attempt).url })
-        .then(
-          () => track('report-made'),
-          () => undefined,
-        )
-      return
-    }
-    // Saving takes a moment, and a share sheet needs the tap it came from:
-    // once the link is made, the button opens the sheet straight away.
-    void ensure().then((a) => {
-      if (a !== 'unavailable')
-        setNote('The short link is ready: press Share to send it.')
-    })
+    setShown(null)
+    mine?.flush()
+    return pickLink(location.origin, report, have, newLink)
+  }
+
+  // Both run inside the tap: Safari allows the clipboard and the share
+  // sheet only there, so nothing is awaited first.
+  const copy = () => {
+    const t = target()
+    const clipboard = navigator.clipboard as Clipboard | undefined
+    const write = clipboard
+      ? clipboard.writeText(t.url)
+      : Promise.reject(new Error())
+    if (t.fresh) save(t.fresh)
+    write.then(
+      () => flash(t.short ? 'short' : 'long'),
+      () => setShown(t.url),
+    )
+  }
+
+  const share = () => {
+    const t = target()
+    const sheet = navigator.share({ url: t.url })
+    if (t.fresh) save(t.fresh)
+    sheet.then(
+      () => track('report-made'),
+      () => undefined,
+    )
   }
 
   const copyLong = () => {
@@ -917,9 +903,10 @@ function ShareBox({
 
   const remove = () => {
     if (!saved) return
-    void deleteReport(saved).then((ok) => {
+    const done = mine ? mine.remove() : deleteReport(saved)
+    void done.then((ok) => {
       if (ok) {
-        made.current.delete(report)
+        if (!mine) made.current.delete(report)
         setShown(null)
         setNote(
           'Deleted. That link now says the report is gone, and nothing of it is kept.',
@@ -934,10 +921,9 @@ function ShareBox({
       <h2 id="rate-share-title">Share this report</h2>
       {boxed === null ? (
         <p class="small">
-          Copy link saves this report on earnrate.dev under a short random name,
-          so the link is short. Nothing in it says who you are, and it's deleted{' '}
-          {String(REPORT_RETENTION_MONTHS)} months after it was last opened, or
-          whenever you delete it here.
+          {mine
+            ? 'Copy link makes your own short link. It stays the same, and updates when you change your wallet.'
+            : 'Copy link saves this report on earnrate.dev under a short random name. Nothing in it says who you are.'}
         </p>
       ) : (
         <>
@@ -946,14 +932,16 @@ function ShareBox({
             class="rate-url"
             type="text"
             readOnly
-            aria-label={unavailable ? 'The link' : 'The short link'}
+            aria-label={
+              unavailable ? 'The link' : mine ? 'Your link' : 'The short link'
+            }
             value={boxed}
             onFocus={(e) => e.currentTarget.select()}
           />
         </>
       )}
       <div class="row-buttons">
-        <button type="button" class="primary" onClick={copyShort}>
+        <button type="button" class="primary" onClick={copy}>
           {copied === null ? 'Copy link' : 'Copied'}
         </button>
         {canShare ? (
@@ -965,13 +953,19 @@ function ShareBox({
       </div>
       {saved === null ? null : (
         <p class="small muted">
-          Saved on earnrate.dev with nothing about who made it, until{' '}
-          {String(REPORT_RETENTION_MONTHS)} months after it was last opened.{' '}
+          {mine
+            ? 'Your link stays the same, and updates when you change your wallet. '
+            : `Saved on earnrate.dev with nothing about who made it, until ${String(REPORT_RETENTION_MONTHS)} months after it was last opened. `}
           <button type="button" class="link" onClick={remove}>
             Delete this link
           </button>
+          {mine ? ' removes it from earnrate.dev.' : null}
         </p>
       )}
+      {mine && saved !== null && edited ? (
+        <p class="small">Changes made only on this page aren’t in your link.</p>
+      ) : null}
+      {linkState?.trouble ? <p class="small">{linkState.trouble}</p> : null}
       {shown === null || shown === boxed ? null : (
         <input
           class="rate-url"
@@ -1008,10 +1002,9 @@ function ShareBox({
               ? 'copied'
               : 'copy a link that isn’t saved anywhere'}
           </button>
-          . It's longer, because the report is written into the address after
-          the #, which browsers don't send to a server, so earnrate never
-          receives it. Either way, whoever opens the link sees this report,
-          worked out in their own browser.
+          {mine
+            ? '. It’s longer, and doesn’t change with your wallet.'
+            : '. It’s longer, because it holds the report itself.'}
         </p>
       )}
     </section>
@@ -1047,18 +1040,27 @@ function Rated({
   rows: savedRows,
   saveCards,
   save,
+  mine,
 }: {
   initial: ReportInput
   rows: Row[] | null
   saveCards: boolean
   save: Saver | null
+  mine: LinkUpdater | null
 }) {
   const today = useMemo(() => localToday(), [])
-  const [rows, setRows] = useState<Row[]>(
+  const [firstRows] = useState<Row[]>(
     () => savedRows ?? TYPICAL_MONTHLY_SPEND.map((t) => ({ ...t })),
   )
+  const [rows, setRows] = useState<Row[]>(firstRows)
   const [picks, setPicks] = useState<Record<string, Picks>>({})
-  const [include, setInclude] = useState(SHARE_SPENDING)
+  const [include, setIncluded] = useState(
+    () => mine?.state().link?.spending ?? SHARE_SPENDING,
+  )
+  const setInclude = (on: boolean) => {
+    setIncluded(on)
+    mine?.setSpending(on)
+  }
   const answers = useAnswers(initial, save)
   const own = useMemo(() => spendingOf(rows), [rows])
   const spending = include ? own : TYPICAL
@@ -1122,6 +1124,11 @@ function Rated({
             include={include}
             setInclude={setInclude}
             picture={picture}
+            mine={mine}
+            edited={
+              Object.keys(picks).length > 0 ||
+              (include && !sameRows(rows, firstRows))
+            }
           />
         }
       />
@@ -1285,7 +1292,7 @@ function Pick({ rows }: { rows: Row[] | null }) {
             Change cards
           </button>
         </p>
-        <Rated initial={input} rows={rows} saveCards save={null} />
+        <Rated initial={input} rows={rows} saveCards save={null} mine={null} />
       </>
     )
   const wallet: Wallet = {
@@ -1344,7 +1351,8 @@ export function Rate() {
       : reportSource(catalog, location.hash, readSaved),
   )
   const ownInput = useMemo(
-    () => (source.kind === 'own' ? walletInput(source.wallet, {}) : null),
+    () =>
+      source.kind === 'own' ? walletReportInput(catalog, source.wallet) : null,
     [source],
   )
   useEffect(() => {
@@ -1365,6 +1373,9 @@ export function Rate() {
     addEventListener('hashchange', onHash)
     return () => removeEventListener('hashchange', onHash)
   }, [])
+  useEffect(() => {
+    if (ownLink(source, myLink)) startMyLink()
+  }, [source])
   const shared =
     source.kind === 'shared' ||
     source.kind === 'bad' ||
@@ -1421,6 +1432,7 @@ export function Rate() {
             rows={source.kind === 'own' ? source.rows : null}
             saveCards={false}
             save={answerSaver(source, OWN_WALLET)}
+            mine={ownLink(source, myLink)}
           />
         </>
       ) : (

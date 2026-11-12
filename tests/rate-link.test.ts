@@ -19,7 +19,9 @@ import {
   savedRows,
   storedSource,
 } from '../site/rate/source.ts'
+import { ownLink } from '../site/rate/share.ts'
 import { storedId } from '../site/rate/store.ts'
+import type { LinkUpdater } from '../site/app/report-link.ts'
 import { isTypicalRows, PAST_TYPICAL } from '../site/app/spending-rows.ts'
 import { TYPICAL_MONTHLY_SPEND } from '../src/engine/simulate.ts'
 import { ROOT } from './helpers.ts'
@@ -283,6 +285,40 @@ describe('report links', () => {
     )
     expect(targets).toEqual(["'/r'", '`/r/${id}/data`', '`/r/${saved.id}`'])
     expect(store.match(/credentials: 'omit'/g)?.length).toBe(3)
+    expect(rate.match(/\bmyLink\b/g)?.length).toBe(3)
+    expect(rate.match(/ownLink\(source, myLink\)/g)?.length).toBe(2)
+    const mine = readFileSync(path.join(ROOT, 'site/app/my-link.ts'), 'utf8')
+    expect(mine.match(/\.(setItem|removeItem)\s*\(/g)).toEqual([
+      '.removeItem(',
+      '.setItem(',
+    ])
+    expect(mine).toContain('localStorage.setItem(LINK_KEY,')
+  })
+
+  test("only the visitor's own saved wallet has a link that is kept and updated", () => {
+    const link = new Proxy({} as LinkUpdater, {
+      get: () => {
+        throw new Error('touched the saved link')
+      },
+    })
+    const wallet = {
+      valuations: {},
+      memberships: [],
+      cards: [{ id: 'amex-gold', cap_usage: {}, activated: [] }],
+    }
+    const fragment = `#${encodeReport(catalog, EIGHT)}`
+    const shared = reportSource(catalog, fragment, () => {
+      throw new Error('read the saved wallet')
+    })
+    const sources = [
+      shared,
+      storedSource(catalog, { kind: 'gone' }),
+      { kind: 'loading' as const },
+      reportSource(catalog, '', () => ({ wallet: null, rows: null })),
+    ]
+    for (const source of sources) expect(ownLink(source, link)).toBeNull()
+    const own = reportSource(catalog, '', () => ({ wallet, rows: null }))
+    expect(ownLink(own, link)).toBe(link)
   })
 
   test('a short link is read by its id alone, and a gone one says so plainly', () => {

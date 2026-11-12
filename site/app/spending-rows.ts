@@ -1,4 +1,5 @@
 import { TYPICAL_MONTHLY_SPEND } from '../../src/engine/simulate.ts'
+import { walletSaved } from './wallet-events.ts'
 
 export type Row = { what: string; monthly: number }
 
@@ -101,4 +102,5 @@ export function saveSpendingRows(rows: Row[]): void {
   } catch {
     // Storage is a convenience; without it the rows last until reload.
   }
+  walletSaved()
 }

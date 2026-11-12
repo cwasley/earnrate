@@ -40,7 +40,7 @@ export function reportSource(
     : { kind: 'pick', rows }
 }
 
-export const GONE = `This link has been deleted, or it went ${String(REPORT_RETENTION_MONTHS)} months without being opened, so there's no report to show.`
+export const GONE = `This link has been deleted, or it went ${String(REPORT_RETENTION_MONTHS)} months without being opened or updated, so there's no report to show.`
 export const UNREACHABLE =
   "This link's report couldn't be loaded. Check your connection, then reload the page."
 

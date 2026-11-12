@@ -1,13 +1,18 @@
-// The page's only requests: saving a report as a short link when someone
-// presses Copy link or Share, reading one by its id, and deleting one with
-// the key that saved it. Nothing else goes with them: no cookie, and the id
-// is the only thing a read sends.
+// The page's only requests: writing a report under a short link the page
+// names (made when someone presses Copy link or Share, then updated by the
+// browser that made it), reading one by its id, and deleting one with the
+// key that made it. Nothing else goes with them: no cookie, and the id is
+// the only thing a read sends.
 import {
   DELETE_HEADER,
   ID_ALPHABET,
+  ID_HEADER,
   ID_LENGTH,
+  newId,
+  newKey,
   REPORT_HEADER,
-} from '../reports.ts'
+} from '../report-ids.ts'
+import { FULL } from '../reports.ts'
 
 export type Saved = { id: string; key: string }
 
@@ -22,23 +27,39 @@ export function storedId(pathname: string): string | null {
 
 export const shortUrl = (origin: string, id: string) => `${origin}/r/${id}`
 
-// `report` is the w= link's contents without the "w=". Null when no short
-// link was made, whatever the reason: a limit, a refusal or no answer.
-export async function saveReport(report: string): Promise<Saved | null> {
+export const newLink = (): Saved => ({ id: newId(), key: newKey() })
+
+// How a write went: 'busy' and 'offline' may go through later; 'full' (the
+// site's links for the day) and 'refused' won't for this report.
+export type Written = 'ok' | 'busy' | 'full' | 'refused' | 'offline'
+
+// `report` is the w= link's contents without the "w=". An unused id is
+// made; a used one is replaced, with its key.
+export async function writeReport(
+  saved: Saved,
+  report: string,
+  keepalive = false,
+): Promise<Written> {
   try {
     const res = await fetch('/r', {
       method: 'POST',
       credentials: 'omit',
-      headers: { ...HEADERS, 'content-type': 'text/plain' },
+      keepalive,
+      headers: {
+        ...HEADERS,
+        [ID_HEADER]: saved.id,
+        [DELETE_HEADER]: saved.key,
+        'content-type': 'text/plain',
+      },
       body: report,
     })
-    if (res.status !== 201) return null
-    const saved = (await res.json()) as Partial<Saved>
-    return typeof saved.id === 'string' && typeof saved.key === 'string'
-      ? { id: saved.id, key: saved.key }
-      : null
+    if (res.ok) return 'ok'
+    if (res.status === 429) return 'busy'
+    if (res.status === 503)
+      return (await res.text()) === FULL ? 'full' : 'offline'
+    return res.status >= 500 ? 'offline' : 'refused'
   } catch {
-    return null
+    return 'offline'
   }
 }
 

@@ -1,10 +1,12 @@
 import { render } from 'preact'
 import { App } from './App.tsx'
+import { startMyLink } from './my-link.ts'
 import { copyButtons, trackClicks } from './track.ts'
 import './app.css'
 
 trackClicks()
 copyButtons()
+startMyLink()
 
 const root = document.getElementById('app')
 if (root) {

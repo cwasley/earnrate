@@ -5,6 +5,7 @@ import { effectiveMemberships } from '../../src/engine/memberships.ts'
 import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { loadWallet } from './saved-wallet.ts'
+import { walletSaved } from './wallet-events.ts'
 
 export type Settings = {
   kind: CardFilters['kind']
@@ -92,6 +93,7 @@ export function saveWallet(wallet: Wallet | null): void {
   } catch {
     // Without storage the wallet lasts until the page closes.
   }
+  walletSaved()
 }
 
 // Memberships used to be saved with the filters. They belong to the wallet
