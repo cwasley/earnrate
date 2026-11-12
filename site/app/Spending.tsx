@@ -214,7 +214,7 @@ export function Spending({
     track('page-spending')
     requestAnimationFrame(() => {
       document
-        .getElementById(`single-${focus[0] ?? ''}`)
+        .querySelector(`[data-single="${CSS.escape(focus[0] ?? '')}"]`)
         ?.scrollIntoView({ block: 'center' })
     })
   }, [focus])
@@ -318,7 +318,7 @@ export function Spending({
     const minimum = offer?.plan?.minimumSpend
     const isOpen = open === card.cardId
     return (
-      <li class="result" key={card.cardId} id={`single-${card.cardId}`}>
+      <li class="result" key={card.cardId} data-single={card.cardId}>
         <button
           type="button"
           class="result-top result-toggle"

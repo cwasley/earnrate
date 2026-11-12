@@ -502,7 +502,7 @@ const WALLET_SCRIPT = `(() => {
   const mine = (el) => held.includes(el.dataset.card)
   for (const list of document.querySelectorAll('[data-ye-list]')) {
     const blocks = [...list.children].filter(mine)
-    for (const b of blocks) b.classList.add('ye-held')
+    for (const b of blocks) b.dataset.held = ''
     for (const b of [...blocks].reverse()) list.prepend(b)
   }
   const box = document.querySelector('[data-ye-yours]')

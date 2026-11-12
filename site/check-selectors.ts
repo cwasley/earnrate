@@ -1,0 +1,181 @@
+// Checks the built site (yarn site:build first) in Chromium and WebKit: a
+// saved wallet adds no element id or class that names a card the visitor
+// holds or marks one as held. Cloudflare's analytics script sends the id and
+// class path of the element behind the slowest interaction and the biggest
+// layout shift, so those must say nothing about the visitor. Ids every
+// visitor gets, like a public page's anchor for each card, are page content.
+//
+//   yarn site:check-selectors
+import { readFile, stat } from 'node:fs/promises'
+import { createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import path from 'node:path'
+import type { Browser, Page } from 'playwright'
+
+const DIST = path.join(import.meta.dirname, '..', 'site-dist')
+const HELD = ['chase-freedom-flex', 'amex-platinum', 'citi-custom-cash']
+// Classes that once marked a held card; that state goes in data-* now.
+const STATE = /(^|\s)(kept|ye-held)(\s|$)/
+const SAVED = {
+  'earnrate:wallet': JSON.stringify({
+    valuations: {},
+    memberships: ['amazon-prime'],
+    cards: HELD.map((id) => ({ id, cap_usage: {}, activated: [] })),
+  }),
+  'earnrate:spending': JSON.stringify([
+    { what: 'Groceries', monthly: 500 },
+    { what: 'Everything else', monthly: 900 },
+  ]),
+}
+
+let failed = 0
+function check(name: string, ok: boolean, detail = '') {
+  if (!ok) failed++
+  console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}${detail ? `: ${detail}` : ''}`)
+}
+
+const TYPES: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.svg': 'image/svg+xml',
+}
+
+const server = createServer((req, res) => {
+  void (async () => {
+    const url = new URL(req.url ?? '/', 'http://localhost')
+    if (url.pathname === '/count') {
+      res.writeHead(204).end()
+      return
+    }
+    const base = path.join(DIST, decodeURIComponent(url.pathname))
+    for (const file of [base, `${base}.html`, path.join(base, 'index.html')])
+      try {
+        if (!(await stat(file)).isFile()) continue
+        res.writeHead(200, {
+          'content-type': TYPES[path.extname(file)] ?? 'text/plain',
+        })
+        res.end(await readFile(file))
+        return
+      } catch {
+        // the next candidate
+      }
+    res.writeHead(404).end()
+  })()
+})
+await new Promise<void>((r) => server.listen(0, r))
+const BASE = `http://localhost:${String((server.address() as AddressInfo).port)}`
+
+// Each element's id and class, as Cloudflare's selector would read them.
+const marks = (page: Page): Promise<string[]> =>
+  page.evaluate(() =>
+    [...document.querySelectorAll('[id], [class]')].map(
+      (el) => `id="${el.id}" class="${el.getAttribute('class') ?? ''}"`,
+    ),
+  )
+
+async function wallet(browser: Browser) {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+  })
+  await context.addInitScript((saved: Record<string, string>) => {
+    if (sessionStorage.getItem('seeded')) return
+    for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v)
+    sessionStorage.setItem('seeded', '1')
+  }, SAVED)
+  return context
+}
+
+type Step = {
+  name: string
+  url: string
+  ready: string
+  act?: (page: Page) => Promise<void>
+}
+
+const STEPS: Step[] = [
+  { name: 'My wallet', url: '/#wallet', ready: '.held-row' },
+  {
+    name: "a held card's Settings and Keep or replace?",
+    url: '/#wallet&card=amex-platinum',
+    ready: 'fieldset.keep',
+    act: async (page) => {
+      await page
+        .getByRole('button', { name: 'Compare with cheaper cards' })
+        .click()
+      await page.waitForSelector('.keep-answer')
+    },
+  },
+  {
+    name: 'Would another card help?',
+    url: '/#wallet&whatif=chase-sapphire-preferred',
+    ready: '#whatif .result',
+  },
+  {
+    name: 'the common cards grid with held cards in it',
+    url: '/#wallet',
+    ready: '.held-row',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Pick from common cards' }).click()
+      await page.waitForSelector('.quick-cards')
+    },
+  },
+  {
+    name: 'Find a card at a card',
+    url: '/#spending&card=amex-platinum',
+    ready: '.result-list',
+  },
+  { name: 'a card page', url: '/cards/amex-platinum', ready: 'main' },
+  {
+    name: 'the year-end page',
+    url: '/year-end/',
+    ready: 'main',
+    act: async (page) => {
+      const shown = await page.evaluate(() =>
+        [...document.querySelectorAll('.ye-mark')].map(
+          (m) =>
+            (m.closest('[data-held]') !== null) ===
+            (getComputedStyle(m).display !== 'none'),
+        ),
+      )
+      check(
+        'the year-end page marks your cards, and only those',
+        shown.length > 0 && shown.every(Boolean),
+      )
+    },
+  },
+]
+
+const { chromium, webkit } = await import('playwright')
+for (const [name, type] of [
+  ['chromium', chromium],
+  ['webkit', webkit],
+] as const) {
+  const browser = await type.launch()
+  const plain = await (
+    await browser.newContext({ viewport: { width: 390, height: 844 } })
+  ).newPage()
+  const saved = await (await wallet(browser)).newPage()
+  for (const step of STEPS) {
+    await plain.goto(`${BASE}${step.url}`)
+    await plain.waitForSelector('main')
+    const everyone = new Set(await marks(plain))
+    await saved.goto(`${BASE}${step.url}`)
+    await saved.waitForSelector(step.ready)
+    await step.act?.(saved)
+    const found = [
+      ...new Set(
+        (await marks(saved)).filter(
+          (m) =>
+            STATE.test(/class="([^"]*)"/.exec(m)?.[1] ?? '') ||
+            (!everyone.has(m) && HELD.some((id) => m.includes(id))),
+        ),
+      ),
+    ]
+    check(`${name}: ${step.name}`, found.length === 0, found.join(' '))
+  }
+  await browser.close()
+}
+server.close()
+console.log(failed === 0 ? 'All checks passed.' : `${String(failed)} failed.`)
+process.exit(failed === 0 ? 0 : 1)

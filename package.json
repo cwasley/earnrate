@@ -55,6 +55,7 @@
     "site:build": "vite build site && vite build site --config site/statement.config.ts && node scripts/build-pages.ts",
     "site:dev": "vite site",
     "site:check-statement": "node site/check-statement.ts",
+    "site:check-selectors": "node site/check-selectors.ts",
     "site:preview": "yarn site:build && WRANGLER_SEND_METRICS=false wrangler deploy --config wrangler.preview.jsonc",
     "site:deploy": "yarn site:build && WRANGLER_SEND_METRICS=false wrangler deploy && node scripts/indexnow.ts",
     "test": "vitest run",

@@ -414,10 +414,13 @@
           wallet to earnrate's server; that sign-in cookie is its only cookie.
           It counts visits with Cloudflare Web Analytics, a small script that
           records which page you opened, the site that linked you here, how fast
-          the page loaded, and your country, browser and device type. It doesn't
-          recognize you from one visit to the next. Cloudflare hosts the site
-          and, like any host, handles your IP address and request details to
-          serve the page and block abuse. Its dashboard shows me aggregate
+          the page loaded, and your country, browser and device type. Its speed
+          figures also name the part of the page that was slowest to respond or
+          moved while loading, by that element's labels in the page's code;
+          those labels never include your cards or anything you typed. It
+          doesn't recognize you from one visit to the next. Cloudflare hosts the
+          site and, like any host, handles your IP address and request details
+          to serve the page and block abuse. Its dashboard shows me aggregate
           counts, not who visited. Logging is off. The sign-in pages on
           mcp.earnrate.dev don't load the analytics script, and the statement
           check's policy blocks it.

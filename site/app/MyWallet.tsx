@@ -886,7 +886,7 @@ function CardEditor({
         </label>
       ) : null}
       {hasFee(held) ? (
-        <fieldset class="keep" id={`keep-${held.id}`}>
+        <fieldset class="keep" data-keep={held.id}>
           <legend>Keep or replace?</legend>
           {asked ? (
             <KeepOrReplace
@@ -980,7 +980,7 @@ function CardList({
           )
           const note = bonusLine(wallet, held) ?? milestoneLine(held)
           return (
-            <li key={held.id} id={`held-${held.id}`}>
+            <li key={held.id} data-held={held.id}>
               <button
                 type="button"
                 class="held-row"
@@ -1358,7 +1358,7 @@ function OfferRow({
   onAdd: (cardId: string) => void
 }) {
   return (
-    <li class="result" id={`whatif-${o.cardId}`}>
+    <li class="result" data-whatif={o.cardId}>
       <button
         type="button"
         class="result-top result-toggle"
@@ -1450,7 +1450,7 @@ function WhatIf({
     setOpen(first)
     requestAnimationFrame(() => {
       document
-        .getElementById(`whatif-${first}`)
+        .querySelector(`[data-whatif="${CSS.escape(first)}"]`)
         ?.scrollIntoView({ block: 'center' })
     })
   }, [focus])
@@ -1517,7 +1517,7 @@ function WhatIf({
       : ''
   }
   const row = (a: (typeof result.additions)[number], rank: number) => (
-    <li class="result" key={a.cardId} id={`whatif-${a.cardId}`}>
+    <li class="result" key={a.cardId} data-whatif={a.cardId}>
       <button
         type="button"
         class="result-top result-toggle"
@@ -2165,7 +2165,9 @@ export function MyWallet({
     if (keep) askKeep(cardId)
     requestAnimationFrame(() => {
       document
-        .getElementById(keep ? `keep-${cardId}` : `held-${cardId}`)
+        .querySelector(
+          `[data-${keep ? 'keep' : 'held'}="${CSS.escape(cardId)}"]`,
+        )
         ?.scrollIntoView({ block: 'start' })
     })
   }

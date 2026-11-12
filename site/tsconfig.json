@@ -10,6 +10,7 @@
   },
   "include": [
     "app",
+    "check-selectors.ts",
     "check-statement.ts",
     "statement",
     "statement-policy.ts",

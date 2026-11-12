@@ -946,7 +946,7 @@ input::-webkit-list-button {
 }
 
 /* Held before the grid opened: shown, not a control, so it has no press. */
-.quick-card.kept {
+.quick-card[data-kept] {
   cursor: default;
 }
 
@@ -955,7 +955,7 @@ input::-webkit-list-button {
   color: var(--muted);
 }
 
-.kept .quick-check {
+[data-kept] .quick-check {
   background: var(--muted);
 }
 

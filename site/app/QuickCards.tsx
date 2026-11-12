@@ -48,7 +48,7 @@ export function QuickCards({
         return (
           <li key={id}>
             {on && !added.includes(id) ? (
-              <div class="quick-card kept">
+              <div class="quick-card" data-kept>
                 <CardArt id={id} width={64} />
                 <span class="quick-name">{shortName(id)}</span>
                 <span class="quick-held">{keptLabel}</span>
