@@ -123,26 +123,33 @@ const feeWords = (fee: unknown) =>
 export function changeHeadline(catalog: Catalog, change: Change): string {
   const id = change.cards?.[0] ?? ''
   const card = catalog.cards.find((c) => c.id === id)
+  if (!card) throw new Error(`no headline for a change to ${id}`)
+  return `${possessive(card.short_name ?? shortCardName(card.name))} ${changeWhat(catalog, change)}`
+}
+
+// The headline after the card's name: "welcome offer: $150 → $200 …".
+export function changeWhat(catalog: Catalog, change: Change): string {
+  const id = change.cards?.[0] ?? ''
+  const card = catalog.cards.find((c) => c.id === id)
   if (!card || change.field === undefined)
     throw new Error(`no headline for a change to ${id}`)
-  const name = possessive(card.short_name ?? shortCardName(card.name))
   const [kind, item] = change.field.split('.')
   const { was, now } = change
   switch (kind) {
     case 'welcome_offer':
-      if (was === null) return `${name} new welcome offer: ${terms(now)}`
-      if (now === null) return `${name} welcome offer ended: ${terms(was)}`
-      return `${name} welcome offer: ${offerChange(catalog, card, was as Offer, now as Offer)}`
+      if (was === null) return `new welcome offer: ${terms(now)}`
+      if (now === null) return `welcome offer ended: ${terms(was)}`
+      return `welcome offer: ${offerChange(catalog, card, was as Offer, now as Offer)}`
     case 'annual_fee':
     case 'first_year_fee':
-      return `${name} ${kind === 'annual_fee' ? 'annual fee' : 'first-year fee'}: ${feeWords(was)} → ${feeWords(now)}`
+      return `${kind === 'annual_fee' ? 'annual fee' : 'first-year fee'}: ${feeWords(was)} → ${feeWords(now)}`
     case 'foreign_transaction_fee': {
       const fee = (v: unknown) =>
         typeof v === 'number' ? (v === 0 ? 'none' : pct(v)) : 'not on file'
-      return `${name} foreign transaction fee: ${fee(was)} → ${fee(now)}`
+      return `foreign transaction fee: ${fee(was)} → ${fee(now)}`
     }
     case 'applications_closed':
-      return `${name} applications closed ${shortDate(String(now))}`
+      return `applications closed ${shortDate(String(now))}`
     case 'rules': {
       const rule = (card.rules.find((r) => r.id === item) ?? now ?? was) as Rule
       const rate = (v: unknown) =>
@@ -153,7 +160,7 @@ export function changeHeadline(catalog: Catalog, change: Change): string {
               typeof v === 'number' ? v : (v as Rule).rate,
               card.currency,
             )
-      return `${name} rate ${rulePreposition(catalog, [rule])} ${ruleWhat(catalog, rule, card)}: ${rate(was)} → ${rate(now)}`
+      return `rate ${rulePreposition(catalog, [rule])} ${ruleWhat(catalog, rule, card)}: ${rate(was)} → ${rate(now)}`
     }
     case 'credits': {
       const credit = (card.credits.find((c) => c.id === item) ??
@@ -161,7 +168,7 @@ export function changeHeadline(catalog: Catalog, change: Change): string {
         was) as Credit
       const back = (v: unknown) =>
         v === null ? 'none' : creditBack(v as Credit)
-      return `${name} ${creditName(catalog, credit)} credit: ${back(was)} → ${back(now)}`
+      return `${creditName(catalog, credit)} credit: ${back(was)} → ${back(now)}`
     }
   }
   throw new Error(`no headline for an issuer change to ${change.field}`)

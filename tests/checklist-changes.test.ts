@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
-import { checklist } from '../src/engine/checklist.ts'
+import { checklist, checklistRows } from '../src/engine/checklist.ts'
 import { cardText } from '../src/format/card-text.ts'
 import { ChangesFileSchema } from '../src/schema/changes.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
@@ -268,4 +268,46 @@ test("today's real record shows only issuer changes and corrections, for held ca
     if (!fixed.includes(i))
       expect(i.text.endsWith(` Source: ${i.url ?? '-'}`)).toBe(true)
   }
+})
+
+describe('rows for the site', () => {
+  const rows = (cards: unknown[]) =>
+    checklistRows(
+      catalog,
+      WalletSchema.parse({ cards }),
+      TODAY,
+      undefined,
+      shortName,
+    )
+      .filter((i) => i.kind === 'change')
+      .map((i) => i.row)
+
+  test("an issuer's change names what changed, with its source as the button", () => {
+    expect(rows([{ id: 'chase-sapphire-preferred' }])).toEqual([
+      {
+        title:
+          'Rate at restaurants: 2x Chase Ultimate Rewards → 3x Chase Ultimate Rewards',
+        card: 'Chase Sapphire Preferred',
+        when: null,
+        amount: null,
+        button: 'Details',
+        url: 'https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred',
+      },
+    ])
+  })
+
+  test("earnrate's corrections are a note linking to the card's recent changes", () => {
+    expect(rows([{ id: 'chase-prime-visa' }])).toEqual([
+      {
+        title:
+          'earnrate fixed some of its own mistakes about Prime Visa. Answers already use the fixed terms.',
+        card: 'Prime Visa',
+        when: null,
+        amount: null,
+        button: 'What changed',
+        url: 'https://earnrate.dev/cards/chase-prime-visa#recent-changes',
+        note: true,
+      },
+    ])
+  })
 })

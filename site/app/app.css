@@ -278,13 +278,145 @@ input::-webkit-list-button {
   font-size: 15px;
 }
 
-.todo {
-  margin: 0 0 12px;
-  padding-left: 1.2em;
+/* To do: a row a task, soonest first, folded under its header on request. */
+.app .todo-panel {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
-.todo li {
-  margin-bottom: 6px;
+.todo-panel > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.todo-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.app .todo-panel > summary h3 {
+  margin: 0;
+}
+
+.todo-panel > summary .badge {
+  margin-left: 0;
+}
+
+.todo-panel > summary::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin: -4px 4px 0 auto;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform var(--arrive) var(--ease-out);
+}
+
+.todo-panel[open] > summary::after {
+  margin-top: 4px;
+  transform: rotate(-135deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .todo-panel > summary::after {
+    transition: none;
+  }
+}
+
+.todo-body {
+  padding-bottom: 14px;
+}
+
+.todo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.todo-row .card-art {
+  align-self: flex-start;
+  margin-top: 3px;
+}
+
+.todo-text {
+  flex: 1;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.todo-text strong {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.todo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.todo-when {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.todo-go {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.app .todo-more {
+  margin: 4px 0 0;
+}
+
+.todo-note {
+  margin: 12px 0 0;
+}
+
+.todo-foot {
+  display: flex;
+  margin-top: 12px;
+}
+
+.todo-foot .todo-go {
+  color: var(--muted);
+  font-size: 13.5px;
 }
 
 .install-hint {
@@ -1336,6 +1468,7 @@ html {
 
 button:not(.link),
 a.button,
+a.todo-go,
 .header-cta,
 .popular-links a,
 .file-button,
@@ -1351,6 +1484,7 @@ a.button,
 :is(
   button:not(.link),
   a.button,
+  a.todo-go,
   .header-cta,
   .popular-links a,
   .file-button,
@@ -1374,6 +1508,7 @@ button:disabled:active {
     .results,
     .result-list > li,
     .held > li,
+    .todo-row,
     .editor,
     .result > .row-buttons,
     .result > p,
@@ -1648,7 +1783,6 @@ button:disabled:active {
 
 .next-steps .link,
 .pass-hint .link,
-.todo .link,
 .skip-saved .link,
 p.muted .link,
 p.callout .link,

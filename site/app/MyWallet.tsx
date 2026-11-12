@@ -38,9 +38,7 @@ import {
   currencyName,
   choiceName,
   feeText,
-  hostname,
   ifCreditsUsedText,
-  possessive,
   listed,
   minimumSpendText,
   offerPerksText,
@@ -103,9 +101,9 @@ import {
 } from './sync.ts'
 import type { ComponentChildren } from 'preact'
 import {
-  checklist,
   checklistCalendar,
-  type ChecklistItem,
+  checklistRows,
+  type ChecklistRowItem,
 } from '../../src/engine/checklist.ts'
 import {
   compareOffers,
@@ -1662,65 +1660,50 @@ function WhatIf({
   )
 }
 
-// The part of a to-do item that opens the card's Settings, where it's done:
-// "mark them enrolled", "Pick Cash+'s 5% and 2% categories", "Activate Freedom
-// Flex's bonus". Tied to the checklist's wording in src/engine/checklist.ts
-// and text.ts; an item whose wording doesn't match stays plain text.
-const SETTINGS_LINKS: Partial<Record<ChecklistItem['kind'], RegExp>> = {
-  enroll: /mark (?:it|them) enrolled|Say (?:you use it|which you use)/,
-  pick: /^(?:Pick|Set) .+? categor(?:y|ies)/,
-  activate: /^Activate .+?'s? bonus/,
-}
+// Rows past these wait behind "N more"; the list is soonest first.
+const TODO_SHOWN = 3
 
-function SettingsLinkText({
+// A row's button: a link for a change (the issuer's page or the card's),
+// "Keep or replace?" for a renewal, and the card's Settings for the rest.
+function TodoButton({
   item,
-  onOpen,
+  onOpenCard,
 }: {
-  item: ChecklistItem
-  onOpen: () => void
+  item: ChecklistRowItem
+  onOpenCard: (cardId: string, keep?: boolean) => void
 }) {
-  const { url } = item
-  if (url !== undefined && item.text.endsWith(` ${url}`)) {
+  const { button, url } = item.row
+  if (button === null) return null
+  if (url !== undefined) {
     const own = url.startsWith('https://earnrate.dev/')
       ? url.slice('https://earnrate.dev'.length)
       : null
-    return (
-      <>
-        {item.text.slice(0, -url.length)}
-        {own === null ? (
-          <a href={url} rel="noopener" target="_blank">
-            {hostname(url)}
-          </a>
-        ) : (
-          <a href={own}>{`${possessive(shortName(item.cardId))} page`}</a>
-        )}
-      </>
+    return own === null ? (
+      <a class="todo-go" href={url} rel="noopener" target="_blank">
+        {button}
+      </a>
+    ) : (
+      <a class="todo-go" href={own}>
+        {button}
+      </a>
     )
   }
-  const pattern = SETTINGS_LINKS[item.kind]
-  const match = pattern?.exec(item.text)
-  if (!match) return <>{item.text}</>
   return (
-    <>
-      {item.text.slice(0, match.index)}
-      {/* A link, not a button: a button can't wrap mid-sentence on a phone. */}
-      <a
-        href="#wallet"
-        class="link"
-        onClick={(e) => {
-          e.preventDefault()
-          onOpen()
-        }}
-      >
-        {match[0]}
-      </a>
-      {item.text.slice(match.index + match[0].length)}
-    </>
+    <button
+      type="button"
+      class="todo-go"
+      onClick={() => {
+        onOpenCard(item.cardId, item.kind === 'renewal')
+      }}
+    >
+      {button}
+    </button>
   )
 }
 
-// What the cards need this period, with a calendar file of the dates. The
-// file is built here and saved by the browser; nothing is sent anywhere.
+// What the cards need this period, soonest first, folded behind its header
+// when the person closes it. The calendar file is built here and saved by the
+// browser; nothing is sent anywhere.
 function ThisQuarter({
   wallet,
   onOpenCard,
@@ -1730,7 +1713,7 @@ function ThisQuarter({
 }) {
   const items = useMemo(
     () =>
-      checklist(
+      checklistRows(
         catalog,
         wallet,
         localToday(),
@@ -1741,63 +1724,106 @@ function ThisQuarter({
     // The spending rows come from storage and change only on the other tab.
     [wallet],
   )
+  const [open, setOpen] = useState(() => load('todo', { open: true }).open)
+  const [all, setAll] = useState(false)
   if (items.length === 0) return null
+  const tasks = items.filter((i) => i.row.note !== true)
+  const notes = items.filter((i) => i.row.note === true)
+  const shown = all ? tasks : tasks.slice(0, TODO_SHOWN)
   const dated = items.some(
     (i) => i.due !== null && i.kind !== 'cap' && i.kind !== 'rotation',
   )
   return (
-    <section class="panel">
-      <h3>To do now</h3>
-      <ul class="todo">
-        {items.map((i) => (
-          <li key={`${i.kind}-${i.cardId}-${i.ref ?? i.text}`}>
-            <SettingsLinkText
-              item={i}
-              onOpen={() => {
-                onOpenCard(i.cardId)
-              }}
-            />
-            {i.kind === 'renewal' ? (
-              <>
-                {' '}
-                <a
-                  href="#wallet"
-                  class="link"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    onOpenCard(i.cardId, true)
-                  }}
-                >
-                  Keep or replace?
-                </a>
-              </>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-      {dated ? (
-        <div class="row-buttons">
+    <details
+      class="panel todo-panel"
+      open={open}
+      onToggle={(e) => {
+        const now = e.currentTarget.open
+        if (now === open) return
+        setOpen(now)
+        save('todo', { open: now })
+      }}
+    >
+      <summary>
+        <h3>To do</h3>
+        {tasks.length > 0 ? <span class="badge">{tasks.length}</span> : null}
+      </summary>
+      <div class="todo-body">
+        {tasks.length > 0 ? (
+          <ul class="todo-list">
+            {shown.map((i) => (
+              <li
+                key={`${i.kind}-${i.cardId}-${i.ref ?? i.text}`}
+                class="todo-row"
+                data-kind={i.kind}
+              >
+                <CardArt id={i.cardId} width={32} />
+                <span class="todo-text">
+                  <strong>{i.row.title}</strong>
+                  <span class="todo-meta">
+                    <span>
+                      {i.row.amount === null
+                        ? i.row.card
+                        : `${i.row.card} · ${i.row.amount}`}
+                    </span>
+                    {i.row.when === null ? null : (
+                      <span class="todo-when">{i.row.when}</span>
+                    )}
+                  </span>
+                </span>
+                <TodoButton item={i} onOpenCard={onOpenCard} />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {tasks.length > TODO_SHOWN ? (
           <button
             type="button"
-            onClick={() => {
-              const stamp = `${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`
-              const url = URL.createObjectURL(
-                new Blob([checklistCalendar(items, stamp)], {
-                  type: 'text/calendar',
-                }),
-              )
-              const a = document.createElement('a')
-              a.href = url
-              a.download = 'earnrate.ics'
-              a.click()
-              setTimeout(() => URL.revokeObjectURL(url), 10_000)
-            }}
+            class="more todo-more"
+            aria-expanded={all}
+            onClick={() => setAll(!all)}
           >
-            Add the dates to your calendar
+            {all ? 'Show fewer' : `${String(tasks.length - TODO_SHOWN)} more`}
           </button>
-        </div>
-      ) : null}
-    </section>
+        ) : null}
+        {notes.map((i) => (
+          <p class="muted small todo-note" key={i.ref ?? i.text}>
+            {i.row.title}
+            {i.row.url === undefined || i.row.button === null ? null : (
+              <>
+                {' '}
+                <a href={i.row.url.slice('https://earnrate.dev'.length)}>
+                  {i.row.button}
+                </a>
+              </>
+            )}
+          </p>
+        ))}
+        {dated ? (
+          <div class="todo-foot">
+            <button
+              type="button"
+              class="todo-go"
+              onClick={() => {
+                const stamp = `${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`
+                const url = URL.createObjectURL(
+                  new Blob([checklistCalendar(items, stamp)], {
+                    type: 'text/calendar',
+                  }),
+                )
+                const a = document.createElement('a')
+                a.href = url
+                a.download = 'earnrate.ics'
+                a.click()
+                setTimeout(() => URL.revokeObjectURL(url), 10_000)
+              }}
+            >
+              Add the dates to your calendar
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </details>
   )
 }
 

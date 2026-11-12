@@ -300,6 +300,7 @@ function unlockedBy(
 
 export type ActivationDue = {
   what: string // the bonus categories, in words: "grocery stores and restaurants"
+  parts: string[] // the same, one a category
   // With each part's own preposition: "at restaurants, and on home utilities"
   where: string
   from: string | null
@@ -365,10 +366,12 @@ export function activationsDue(
     for (const g of group) seen.add(g)
     const rules = card.rules.filter((r) => group.includes(r.id))
     const first = rules[0]
+    const parts = [
+      ...new Set(rules.flatMap((r) => ruleParts(catalog, r, card))),
+    ]
     out.push({
-      what: listed([
-        ...new Set(rules.flatMap((r) => ruleParts(catalog, r, card))),
-      ]),
+      what: listed(parts),
+      parts,
       where: wherePhrase(catalog, card, rules),
       from: first?.valid_from ?? null,
       to: first?.valid_to ?? null,

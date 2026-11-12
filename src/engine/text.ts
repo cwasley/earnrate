@@ -47,6 +47,12 @@ export const longDate = (date: string) =>
 export const monthYear = (date: string) =>
   dateWords(date, { month: 'long', year: 'numeric' })
 
+// "Nov 30", with the year only when it isn't this one: "Apr 1, 2027".
+export const nearDate = (date: string, today: string) =>
+  date.slice(0, 4) === today.slice(0, 4)
+    ? dateWords(date, { month: 'short', day: 'numeric' })
+    : shortDate(date)
+
 // "Q4 2026", from an ISO date.
 export const quarterYear = (date: string) =>
   `Q${String(Math.floor((Number(date.slice(5, 7)) - 1) / 3) + 1)} ${date.slice(0, 4)}`
@@ -363,6 +369,18 @@ export const listed = (parts: string[], joiner = 'and') => {
   return parts.length <= 2
     ? parts.join(` ${joiner} `)
     : `${parts.slice(0, -1).join(', ')} ${joiner} ${parts.at(-1) ?? ''}`
+}
+
+// Like `listed`, for a short line: all of them when they fit in a few words,
+// else the first one or two and a count: "Lululemon, Resy and 4 more".
+export const listedFew = (parts: string[], room = 36) => {
+  if (parts.length <= 1 || listed(parts).length <= room) return listed(parts)
+  const first = [
+    ...parts.filter((p) => !p.includes(' and ')),
+    ...parts.filter((p) => p.includes(' and ')),
+  ].slice(0, 2)
+  if (first.join(', ').length > room - 8) first.splice(1)
+  return `${first.join(', ')} and ${String(parts.length - first.length)} more`
 }
 
 // Like `listed`, in the given order: when a part has its own "and", the

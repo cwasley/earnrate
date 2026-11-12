@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
-import { checklist, checklistCalendar } from '../src/engine/checklist.ts'
+import {
+  checklist,
+  checklistCalendar,
+  checklistRows,
+} from '../src/engine/checklist.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
 
 const catalog = { ...(await loadCatalog()), changes: [] }
@@ -225,4 +229,62 @@ test('an activation over stores and services gives each its own preposition', ()
   expect(items.find((i) => i.kind === 'activate')?.text).toMatch(
     /bonus at restaurants, .*, and on home utilities, /,
   )
+})
+
+describe('rows for the site', () => {
+  const amexWallet = WalletSchema.parse({
+    cards: [
+      { id: 'amex-gold', enrolled: ['dunkin'] },
+      { id: 'amex-platinum' },
+      { id: 'chase-freedom-flex' },
+    ],
+  })
+  const items = checklistRows(catalog, amexWallet, TODAY, undefined, (id) =>
+    id === 'amex-gold' ? 'Amex Gold' : id,
+  )
+  const row = (kind: string, cardId: string, ref?: string) =>
+    items.find(
+      (i) =>
+        i.kind === kind &&
+        i.cardId === cardId &&
+        (ref === undefined || i.ref === ref),
+    )?.row
+
+  test('a credit to use gives its amount left and its date, without the year', () => {
+    expect(row('credit', 'amex-gold', 'dunkin')).toEqual({
+      title: "Use Dunkin' credit",
+      card: 'Amex Gold',
+      when: 'by Nov 30',
+      amount: '$7 left',
+      button: 'Mark used',
+    })
+  })
+
+  test('long lists of credits are cut short', () => {
+    expect(
+      items
+        .filter((i) => i.kind === 'enroll' && i.cardId === 'amex-platinum')
+        .map((i) => i.row.title),
+    ).toEqual([
+      'Do you use the Uber, Uber One and 3 more credits?',
+      'Enroll in Lululemon, Resy and 4 more credits',
+    ])
+    expect(row('enroll', 'amex-gold', 'uber-cash')?.button).toBe('Answer')
+  })
+
+  test('an activation names its categories and its deadline', () => {
+    expect(row('activate', 'chase-freedom-flex')).toMatchObject({
+      title: 'Activate bonus: grocery stores, restaurants and 1 more',
+      when: 'by Dec 14',
+      button: 'Activate',
+    })
+  })
+
+  test('the checklist itself carries only the sentences', () => {
+    const plain = checklist(catalog, amexWallet, TODAY)
+    expect(plain.every((i) => !('row' in i))).toBe(true)
+    expect(plain.map((i) => i.text)).toEqual(
+      checklistRows(catalog, amexWallet, TODAY).map((i) => i.text),
+    )
+  })
 })
