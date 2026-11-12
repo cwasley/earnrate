@@ -95,6 +95,24 @@ function fromThePage(request: Request): boolean {
   return origin === null || origin === new URL(request.url).origin
 }
 
+// KV takes one write a second to a key, so two of the maker's own tabs
+// writing the same report at once can see this fail; it counts as written
+// when the store already holds that report under the same key.
+async function put(
+  store: ReportStore,
+  id: string,
+  body: string,
+  options: { expirationTtl: number; metadata: ReportMeta },
+): Promise<boolean> {
+  try {
+    await store.put(storeKey(id), body, options)
+    return true
+  } catch {
+    const now = await store.getWithMetadata(storeKey(id))
+    return now.value === body && now.metadata?.key === options.metadata.key
+  }
+}
+
 // One request makes a link or updates it: an unused id is made, counted
 // toward the day's links; a used one is replaced only with the key that made
 // it, and an update isn't counted. A refusal says no more about whether an
@@ -123,28 +141,26 @@ async function write(
   const { value, metadata } = await store.getWithMetadata(storeKey(id))
   if (value !== null) {
     if (metadata?.key !== hash) return plain(403)
-    try {
-      await store.put(storeKey(id), body, {
+    if (
+      !(await put(store, id, body, {
         ...kept,
         metadata: { key: hash, opened: day },
-      })
-    } catch {
+      }))
+    )
       return plain(503)
-    }
     return plain(204)
   }
   // Sitewide, not per person: the per-IP limit is approximate, and a count
   // per person would mean keeping something about them.
   const made = Number((await store.get(countKey(day))) ?? 0) || 0
   if (made >= REPORT_LINKS_PER_DAY) return plain(503, FULL)
-  try {
-    await store.put(storeKey(id), body, {
+  if (
+    !(await put(store, id, body, {
       ...kept,
       metadata: { key: hash, opened: day },
-    })
-  } catch {
+    }))
+  )
     return plain(503)
-  }
   // KV takes one write a second to a key, so links made in the same second
   // can fail this; the link is kept all the same, since its maker already
   // holds its address.

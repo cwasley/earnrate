@@ -419,6 +419,20 @@ describe('short report links', () => {
     expect((await t.make()).res.status).toBe(503)
   })
 
+  test('a write refused because another tab just wrote the same report counts as written', async () => {
+    const s = site()
+    const put = s.env.REPORTS?.put.bind(s.env.REPORTS)
+    if (!s.env.REPORTS || !put) throw new Error('no store')
+    s.env.REPORTS.put = async (key, value, options) => {
+      await put(key, value, options)
+      if (key.startsWith('report:')) throw new Error('one write a second')
+    }
+    const { res, made } = await s.make()
+    expect(res.status).toBe(201)
+    if (!made) throw new Error('no link')
+    expect((await s.write(made, REPORT)).status).toBe(204)
+  })
+
   test('opening and deleting links is limited per address', async () => {
     const s = site()
     const { made } = await s.make()
