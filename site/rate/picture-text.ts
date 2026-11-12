@@ -7,8 +7,9 @@ import {
 } from '../../src/engine/wallet-report.ts'
 
 // Who the report talks to: "you" on the page, "I" in the picture someone
-// posts of their own report.
-export type Voice = 'you' | 'I'
+// posts of their own report, and neither in a picture of a report someone
+// else shared.
+export type Voice = 'you' | 'I' | 'neutral'
 
 // What follows the headline figure: "a year after fees, depending on which
 // credits you use".
@@ -17,10 +18,14 @@ export function perYear(
   voice: Voice = 'you',
 ): string {
   if (start.range !== null)
-    return ` a\u00a0year after fees, depending on which credits ${voice}\u00a0use`
-  return start.counted.length > 0
-    ? ` a\u00a0year in rewards and credits ${voice} use, after\u00a0fees`
-    : ' a\u00a0year in rewards, after\u00a0fees'
+    return voice === 'neutral'
+      ? ' a\u00a0year after fees, depending on which credits are\u00a0used'
+      : ` a\u00a0year after fees, depending on which credits ${voice}\u00a0use`
+  if (start.counted.length === 0)
+    return ' a\u00a0year in rewards, after\u00a0fees'
+  return voice === 'neutral'
+    ? ' a\u00a0year in rewards and credits used, after\u00a0fees'
+    : ` a\u00a0year in rewards and credits ${voice} use, after\u00a0fees`
 }
 
 export type CompareRow = { label: string; value: number | null; mine: boolean }
@@ -41,7 +46,9 @@ export function comparisonRows(
           ? cardName(start.cards[0]?.cardId ?? '')
           : voice === 'you'
             ? 'Your cards'
-            : 'My cards',
+            : voice === 'I'
+              ? 'My cards'
+              : 'These cards',
       value: start.net,
       mine: true,
     },
@@ -70,7 +77,9 @@ export function comparisonRows(
 export const countedNote = (voice: Voice = 'you') =>
   voice === 'you'
     ? 'Your figure counts the credits you use; the other two count none.'
-    : 'My figure counts the credits I use; the other two count none.'
+    : voice === 'I'
+      ? 'My figure counts the credits I use; the other two count none.'
+      : 'The first figure counts the credits used; the other two count none.'
 
 export type RatePicture = {
   title: string
@@ -84,26 +93,35 @@ export type RatePicture = {
 }
 
 // Every word the report's picture holds: the headline and the comparison as
-// the page shows them, in the first person. Never an amount of spending,
-// a point value, a card id, a credit's answer or a link.
+// the page shows them, in the first person, or neutral for a report someone
+// else shared. Never an amount of spending, a point value, a card id, a
+// credit's answer or a link.
 export function ratePictureText(
   start: ReportStart,
   best: BestCards | null,
   cardName: (cardId: string) => string,
   today: string,
+  voice: Exclude<Voice, 'you'> = 'I',
 ): RatePicture | null {
   if (start.empty || best === null) return null
-  const rows = comparisonRows(start, best, cardName, 'I')
+  const rows = comparisonRows(start, best, cardName, voice)
   const n = start.cards.length
+  const mine = voice === 'I'
+  const cards =
+    n === 1
+      ? mine
+        ? 'My card'
+        : 'This card'
+      : `${mine ? 'My' : 'These'} ${String(n)} cards`
   return {
     title: 'Rate my wallet',
-    subtitle: `${n === 1 ? 'My card' : `My ${String(n)} cards`} · ${monthYear(today)}`,
+    subtitle: `${cards} · ${monthYear(today)}`,
     cards: start.cards.map((c) => ({
       cardId: c.cardId,
       name: cardName(c.cardId),
     })),
     figure: netFigure(start),
-    per: perYear(start, 'I').trim(),
+    per: perYear(start, voice).trim(),
     rows: rows.flatMap((r) =>
       r.value === null
         ? []
@@ -117,8 +135,8 @@ export function ratePictureText(
           ],
     ),
     notes: [
-      ...(start.counted.length > 0 ? [countedNote('I')] : []),
-      `${start.typical ? 'On typical U.S. spending' : 'On my own spending'}. Credits count only once marked used.`,
+      ...(start.counted.length > 0 ? [countedNote(voice)] : []),
+      `${start.typical ? 'On typical U.S. spending' : mine ? 'On my own spending' : 'On the cardholder’s spending'}. Credits count only once marked used.`,
     ],
     link: 'earnrate.dev/rate',
   }

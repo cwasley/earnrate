@@ -589,25 +589,63 @@ export function headlineText(catalog: Catalog, r: ReportStart): string {
     : sentence
 }
 
+// What makes up the headline figure, for a page that shows the figure and
+// the spending beside it: "$688 in rewards, plus $304 in credits you use,
+// less $420 in annual fees."
+export function breakdownText(catalog: Catalog, r: ReportStart): string {
+  if (r.empty) return headlineText(catalog, r)
+  const one = r.cards.length === 1
+  const fees = r.simulation.annualFees + r.simulation.membershipFees
+  const counted = perksTotal(r.counted)
+  const extras =
+    r.counted.length === 0
+      ? ''
+      : feeCardExtrasText({
+          credits: counted.yearly,
+          freeNights: counted.nights ?? 0,
+          ownNights: 0,
+        })
+  const less =
+    fees > 0
+      ? `, less ${one ? `its ${money(fees)} annual fee` : `${money(fees)} in annual fees`}`
+      : `, with no annual fee${one ? '' : 's'}`
+  const sentence = `${wholeDollars(r.simulation.rewards)} in rewards${extras}${less}.`
+  return r.range !== null && r.counted.length === 0
+    ? `Without credits: ${sentence}`
+    : sentence
+}
+
 // Against the best no-fee card with one rate for everything, held alone.
-export function flatText(catalog: Catalog, r: ReportStart): string {
-  const f = r.flat
-  if (f === null || r.empty) return ''
+// "(2%; 4 others earn the same)"
+function flatRate(f: FlatComparison): string {
   const rate = pct(Math.round(f.returnPct * 100) / 100)
   const others =
     f.ties.length === 0
       ? ''
       : `; ${f.ties.length === 1 ? 'one other earns' : `${String(f.ties.length)} others earn`} the same`
+  return `(${rate}${others})`
+}
+
+export function flatText(catalog: Catalog, r: ReportStart): string {
+  const f = r.flat
+  if (f === null || r.empty) return ''
   const held = r.cards.map((c) => c.cardId)
   if (held.length === 1 && [f.cardId, ...f.ties].includes(held[0] ?? ''))
-    return `It's the best no-fee card with one rate for everything (${rate}${others}).`
+    return `It's the best no-fee card with one rate for everything ${flatRate(f)}.`
   const name = nameOf(catalog, f.cardId)
   const diff = r.net - f.net
   const than =
     whole(diff) === 0
       ? `That's about what the ${name} alone would earn`
       : `That's about ${wholeDollars(Math.abs(diff))} a year ${diff > 0 ? 'more' : 'less'} than the ${name} alone`
-  return `${than}, the best no-fee card with one rate for everything (${rate}${others}).`
+  return `${than}, the best no-fee card with one rate for everything ${flatRate(f)}.`
+}
+
+// Under the flat-rate card's bar, which shows its amount: why it's the one.
+export function flatNote(r: ReportStart): string {
+  const f = r.flat
+  if (f === null || r.empty) return ''
+  return `The best no-fee card with one rate for everything ${flatRate(f)}.`
 }
 
 // A spending line mid-sentence: "supermarkets", "other travel", "TV and
@@ -670,6 +708,26 @@ export function bestText(
     : diff > 0
       ? `${lead}; your cards earn about ${wholeDollars(diff)} more.`
       : `${lead}, about ${wholeDollars(-diff)} more than yours.`
+}
+
+// Under the best cards' bar, which shows their amount: which card takes
+// which spending.
+export function bestNote(
+  catalog: Catalog,
+  r: ReportStart,
+  best: BestCards,
+): string {
+  const top = pairBeats(best) ? best.pair : best.single
+  if (top === null) return ''
+  const ids = top.cards.map((c) => c.cardId)
+  const held = r.cards.map((c) => c.cardId)
+  if (held.length === ids.length && ids.every((id) => held.includes(id)))
+    return ids.length === 2
+      ? 'These are the best two cards earnrate finds for this spending.'
+      : 'No pair of cards nets more on this spending than this one alone.'
+  return ids.length === 2
+    ? `${capitalize(pairSplit(catalog, top))}.`
+    : 'No pair of cards nets more on this spending.'
 }
 
 // "Doesn't pay for itself" is about rewards and the credits marked as used,

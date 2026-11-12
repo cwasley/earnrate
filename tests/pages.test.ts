@@ -166,6 +166,16 @@ describe('the built static pages', () => {
     expect(rate).toContain('<!--earnrate:header-->')
     expect(rate).toContain('<!--earnrate:footer-->')
     expect(rate).toContain('content="https://earnrate.dev/og/rate.jpg"')
+    const descriptions = [
+      ...rate.matchAll(
+        /<meta\s+(?:name="description"|property="og:description")\s+content="([^"]*)"/g,
+      ),
+    ].map((m) => m[1] ?? '')
+    expect(descriptions).toHaveLength(2)
+    for (const d of descriptions) {
+      expect(d.length).toBeLessThanOrEqual(155)
+      expect(d).not.toMatch(/flat-rate|best two/)
+    }
     const card = readFileSync(path.join(out, 'cards', 'amex-gold.html'), 'utf8')
     expect(card).toContain('<a href="/rate">Rate my wallet</a>')
     for (const t of TABS) expect(card).toContain(`href="${t.href}"`)

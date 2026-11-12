@@ -36,26 +36,39 @@
   margin: 28px 0 8px;
 }
 
+/* The cards rated, as chips: each name stays on one line, and only whole
+   chips wrap. */
 .rate-cards {
   list-style: none;
   padding: 0;
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 14px;
+  gap: 6px;
 }
 
 .rate-cards li {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 0;
-  font-size: 15px;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 10px 3px 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 13.5px;
   font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
-.rate-card-name {
-  overflow-wrap: anywhere;
+.rate-cards li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nowrap {
+  white-space: nowrap;
 }
 
 .rate-figure {
@@ -68,7 +81,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* What the figure means, on the line below it. */
 .rate-per {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.3;
   font-size: 17px;
   font-weight: 600;
   letter-spacing: 0;
@@ -81,22 +98,86 @@
   font-size: clamp(30px, 8.6vw, 48px);
 }
 
-.rate-figure[data-range] .rate-per {
-  display: block;
-  margin-top: 4px;
-  line-height: 1.3;
+.rate-lead {
+  margin: 10px 0 4px;
 }
 
-.rate-lead {
-  margin: 4px 0 16px;
+.rate-basis {
+  margin: 0;
+}
+
+/* The panels under the figure, spaced like the home page's. */
+.rate-blocks {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.rate-blocks > * {
+  margin: 0;
+}
+
+#rate .panel > h2 {
+  margin-top: 0;
+}
+
+.rate-credits {
+  background: var(--accent-faint);
+}
+
+.rate-hint {
+  margin: -4px 0 14px;
+}
+
+/* While a part is worked out again, the last answer stays where it is,
+   dimmed after a moment so a quick one doesn't flicker. */
+.rate-part > :not(h2, .rate-fees),
+.rate-fees > li {
+  transition: opacity var(--fade) ease;
+}
+
+.rate-part[aria-busy='true'] > :not(h2, .rate-fees),
+.rate-fees > li[aria-busy='true'] {
+  opacity: 0.5;
+  transition-delay: 120ms;
+}
+
+/* Stand-ins for what isn't worked out yet: a bar a line of text. */
+.rate-skel span {
+  display: block;
+  background: linear-gradient(var(--line), var(--line)) left center / 100% 0.6em
+    no-repeat;
+}
+
+.rate-skel span:last-child:not(:first-child) {
+  background-size: 62% 0.6em;
+}
+
+.rate-skel-amount {
+  justify-self: end;
+  width: 3.5em;
+  background: linear-gradient(var(--line), var(--line)) right center / 100%
+    0.7em no-repeat;
+}
+
+.tag.rate-skel-tag {
+  color: transparent;
+  background: var(--line);
+}
+
+.rate-skel-art {
+  width: 32px;
+  height: 20px;
+  margin-top: 3px;
+  border-radius: 3px;
+  background: var(--line);
 }
 
 /* A label, a bar and its amount per row, all on one scale from zero. On a
    phone the label takes its own line. */
 .rate-compare {
   display: grid;
-  gap: 12px;
-  margin: 0 0 14px;
+  gap: 16px;
 }
 
 .rate-row {
@@ -112,14 +193,31 @@
 }
 
 .rate-amount {
+  white-space: nowrap;
   text-align: right;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-.rate-wait {
-  grid-column: 2 / -1;
+.rate-note {
+  grid-column: 1 / -1;
+  margin: 0;
   font-size: 14px;
+}
+
+.rate-note .rate-skel {
+  margin: 0;
+}
+
+/* A note takes one line beside a wide bar, three on a phone. */
+@media (min-width: 560px) {
+  .rate-note .rate-skel span:nth-child(n + 2) {
+    display: none;
+  }
+}
+
+.rate-compare + p {
+  margin: 14px 0 0;
 }
 
 @media (max-width: 559px) {
@@ -127,9 +225,6 @@
     grid-template-columns: minmax(0, 1fr) auto;
   }
   .rate-label {
-    grid-column: 1 / -1;
-  }
-  .rate-wait {
     grid-column: 1 / -1;
   }
 }
@@ -145,10 +240,6 @@ svg.rate-bar {
 
 .rate-bar.quiet rect {
   fill: var(--bar-quiet);
-}
-
-.rate-share {
-  margin: 20px 0 8px;
 }
 
 #rate .rate-share h2 {
@@ -182,15 +273,26 @@ svg.rate-bar {
   padding-top: 0;
 }
 
-.rate-fees p {
+.rate-fees > li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.rate-fees :is(p, .rate-skel) {
   margin: 6px 0 0;
 }
 
+/* The art beside the name, and the verdict under the name. */
 .rate-fee-head {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 6px 10px;
+}
+
+.rate-fee-head .tag {
+  grid-column: 2;
+  justify-self: start;
 }
 
 .tag {
@@ -207,6 +309,10 @@ svg.rate-bar {
   color: var(--warn-text);
 }
 
+.rate-gaps .rate-skel {
+  margin: 0;
+}
+
 .rate-gaps li {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -220,7 +326,7 @@ svg.rate-bar {
 }
 
 .rate-notes {
-  margin-top: 24px;
+  margin-top: 4px;
 }
 
 .rate-picks .field {
@@ -266,14 +372,6 @@ svg.rate-bar {
   margin: -8px 0 18px;
 }
 
-.rate-answers {
-  margin: 12px 0 18px;
-}
-
-.rate-answers p {
-  margin: 10px 0 0;
-}
-
-.rate-like {
-  margin: -6px 0 14px;
+.rate-credits .callout {
+  margin: 12px 0 0;
 }

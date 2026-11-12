@@ -115,6 +115,26 @@ describe("the report's picture", () => {
     expect(text.notes.at(-1)).toMatch(/^On my own spending\./)
   })
 
+  test("a picture of someone else's report never says my or I", () => {
+    for (const [given, spending] of [
+      [input(), typical],
+      [answered(own), own],
+    ] as const) {
+      const start = reportStart(catalog, given, TODAY, spending)
+      const best = reportBest(catalog, given, TODAY, spending)
+      const text = ratePictureText(start, best, name, TODAY, 'neutral')
+      if (!text) throw new Error('no picture')
+      const words = everyWord(text).replace(/^Rate my wallet$/m, '')
+      expect(words).not.toMatch(/\b(my|I|me|mine)\b/i)
+      expect(text.subtitle).toMatch(/^These 3 cards · /)
+      expect(text.rows[0]?.label).toBe('These cards')
+    }
+    const { start, best } = picture(answered(own), own)
+    const text = ratePictureText(start, best, name, TODAY, 'neutral')
+    expect(text?.per).toBe('a year in rewards and credits used, after fees')
+    expect(text?.notes.at(-1)).toMatch(/^On the cardholder’s spending\./)
+  })
+
   test('never holds spending, point values, card ids, credit answers or a link id', () => {
     const { start: open } = picture(input(), own)
     const choices = open.creditChoices.flatMap((c) => c.choices)

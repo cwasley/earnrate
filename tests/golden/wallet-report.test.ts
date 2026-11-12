@@ -19,11 +19,16 @@ import { usedCreditsYear } from '../../src/engine/credits.ts'
 import { inEffect } from '../../src/engine/periods.ts'
 import { roundCents, wholeDollars } from '../../src/engine/text.ts'
 import {
+  bestNote,
+  breakdownText,
   feeCardLead,
+  flatNote,
   flatRateCard,
   gapText,
   lineName,
   netFigure,
+  reportBest,
+  reportStart,
   type FeeVerdict,
   reportWallet,
   walletReport,
@@ -581,4 +586,63 @@ describe('#42 rate my wallet: credits not answered yet', () => {
       )
     },
   )
+})
+
+describe("rate my wallet: the page's shorter lines", () => {
+  test('the breakdown gives what makes up the figure, without repeating it', () => {
+    const i = input(['amex-blue-cash-preferred', 'citi-double-cash'])
+    const r = reportStart(catalog, i, TODAY, EVERYDAY)
+    expect(breakdownText(catalog, r)).toBe(
+      `Without credits: ${wholeDollars(r.simulation.rewards)} in rewards, less ${wholeDollars(r.simulation.annualFees)} in annual fees.`,
+    )
+    expect(breakdownText(catalog, r)).not.toContain(wholeDollars(r.net))
+    const one = reportStart(
+      catalog,
+      input(['citi-double-cash']),
+      TODAY,
+      EVERYDAY,
+    )
+    expect(breakdownText(catalog, one)).toBe(
+      `${wholeDollars(one.simulation.rewards)} in rewards, with no annual fee.`,
+    )
+  })
+
+  test('with credits unanswered it explains the low end; once some are used, it counts them', () => {
+    const open = reportStart(catalog, input(['amex-gold']), TODAY, typical())
+    expect(open.range).not.toBeNull()
+    expect(breakdownText(catalog, open)).toMatch(
+      /^Without credits: \$[\d,]+ in rewards, less its \$325 annual fee\.$/,
+    )
+    const first = open.creditChoices[0]?.choices[0]?.id ?? ''
+    const used = reportStart(
+      catalog,
+      input([{ id: 'amex-gold', picks: {}, used: [first] }]),
+      TODAY,
+      typical(),
+    )
+    expect(breakdownText(catalog, used)).toMatch(
+      /^\$[\d,]+ in rewards, plus \$[\d,]+ in credits you use, less its \$325 annual fee\.$/,
+    )
+  })
+
+  test('the notes under the bars say what each card is, not its amount again', () => {
+    const i = input(['amex-gold', 'chase-sapphire-preferred'])
+    const r = reportStart(catalog, i, TODAY, typical())
+    const best = reportBest(catalog, i, TODAY, typical())
+    expect(flatNote(r)).toMatch(
+      /^The best no-fee card with one rate for everything \(\d+(\.\d+)?%(; .+ the same)?\)\.$/,
+    )
+    const note = bestNote(catalog, r, best)
+    expect(note).toMatch(/^The .+ for .+\.$/)
+    expect(note).not.toMatch(/\$/)
+    const top = best.pair ?? best.single
+    const theirs = input((top?.cards ?? []).map((c) => c.cardId))
+    expect(
+      bestNote(
+        catalog,
+        reportStart(catalog, theirs, TODAY, typical()),
+        reportBest(catalog, theirs, TODAY, typical()),
+      ),
+    ).toMatch(/^(These are|No pair)/)
+  })
 })

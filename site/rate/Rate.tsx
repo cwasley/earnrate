@@ -16,14 +16,15 @@ import {
 import { currencyValuation } from '../../src/engine/valuation.ts'
 import {
   assumedPicksText,
-  bestText,
+  bestNote,
+  breakdownText,
   feeCardLead,
-  flatText,
+  flatNote,
   gapText,
-  headlineText,
   lineName,
   netFigure,
   nextText,
+  pairBeats,
   reportNotes,
   reportStart,
   type BestCards,
@@ -36,7 +37,13 @@ import { optionName } from '../../src/engine/rule-text.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { CardArt } from '../app/CardArt.tsx'
 import { CreditPicks, type CreditAnswer } from '../app/CreditPicks.tsx'
-import { cards, feeLabel, shortName, wholeDollars } from '../app/format.ts'
+import {
+  cards,
+  feeLabel,
+  shortestName,
+  shortName,
+  wholeDollars,
+} from '../app/format.ts'
 import { QuickCards } from '../app/QuickCards.tsx'
 import { loadWallet } from '../app/saved-wallet.ts'
 import { SearchInput } from '../app/SearchInput.tsx'
@@ -57,6 +64,7 @@ import {
   countedNote,
   perYear,
   ratePictureText,
+  type CompareRow,
   type RatePicture,
 } from './picture-text.ts'
 import { SaveImage } from './SaveImage.tsx'
@@ -228,77 +236,169 @@ function withPart(was: Parts, p: Part): Parts {
   }
 }
 
-// Parts belong to the job that made them, so a change never shows the new
-// headline beside the old job's parts.
+const partKey = (p: Part) => (p.part === 'fee' ? `fee:${p.cardId}` : p.part)
+
+// Which parts the current job has sent; 'done' once it has sent them all.
+type Fresh = ReadonlySet<string>
+
+const NOTHING_FRESH: Fresh = new Set()
+
+type Busy = (key: string) => boolean
+
+// Each part stays as the last job left it until the new job sends its own,
+// so a change dims what's being worked out instead of clearing it, and
+// nothing moves. A part no job has sent yet is undefined or null, and its
+// section holds a placeholder the size of the answer.
 function useParts(input: ReportInput, spending: Spending, today: string) {
   const job = useMemo(
     () => ({ input, spending, today }),
     [input, spending, today],
   )
-  const [state, setState] = useState<{ job: Job | null; parts: Parts }>({
-    job: null,
-    parts: NO_PARTS,
-  })
+  const [state, setState] = useState<{
+    job: Job | null
+    parts: Parts
+    fresh: Fresh
+  }>({ job: null, parts: NO_PARTS, fresh: NOTHING_FRESH })
   useEffect(() => {
-    setState({ job, parts: NO_PARTS })
+    setState((was) => ({ job, parts: was.parts, fresh: NOTHING_FRESH }))
     if (job.input.cards.length === 0) return
     return runReport(catalog, job, (p) => {
       setState((was) =>
-        was.job === job ? { job, parts: withPart(was.parts, p) } : was,
+        was.job === job
+          ? {
+              job,
+              parts: withPart(was.parts, p),
+              fresh: new Set(was.fresh).add(partKey(p)),
+            }
+          : was,
       )
     })
   }, [job])
-  return state.job === job ? state.parts : NO_PARTS
+  const fresh = state.job === job ? state.fresh : NOTHING_FRESH
+  const busy: Busy = (key) => !fresh.has('done') && !fresh.has(key)
+  return { parts: state.parts, busy }
 }
 
-// Your cards, the best two, and the one flat-rate card, on one scale.
+// An amount keeps its sign on its own line: "−$1,716", never "−" then
+// "$1,716".
+const AMOUNT = /([−+-]?\$[\d,]+(?:\.\d+)?)/
+
+function Words({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(AMOUNT).map((t, i) =>
+        i % 2 === 1 ? (
+          <span class="nowrap" key={i}>
+            {t}
+          </span>
+        ) : (
+          t
+        ),
+      )}
+    </>
+  )
+}
+
+// Stand-ins for text still being worked out, a line each, so the answer
+// takes about the room they held.
+function Lines({ n }: { n: number }) {
+  return (
+    <p class="rate-skel" aria-hidden="true">
+      {Array.from({ length: n }, (_, i) => (
+        <span key={i}>{'\u00a0'}</span>
+      ))}
+    </p>
+  )
+}
+
+// Your cards, the best two, and the one flat-rate card, on one scale, each
+// with a line on what it is.
 function Comparison({
   start,
   best,
+  busy,
 }: {
   start: ReportStart
   best: BestCards | null
+  busy: boolean
 }) {
-  const rows = comparisonRows(start, best, shortName)
+  const [mine, , flat] = comparisonRows(start, best, shortName)
+  const top = best === null ? null : pairBeats(best) ? best.pair : best.single
+  const rows: (CompareRow & { key: string; note: string | null })[] = [
+    ...(mine ? [{ ...mine, key: 'mine', note: '' }] : []),
+    {
+      key: 'best',
+      label: top?.cards.length === 1 ? 'Best one card' : 'Best two cards',
+      value: top?.net ?? null,
+      mine: false,
+      note: best === null ? null : bestNote(catalog, start, best),
+    },
+    ...(flat ? [{ ...flat, key: 'flat', note: flatNote(start) }] : []),
+  ]
   const max = Math.max(0, ...rows.map((r) => r.value ?? 0))
   return (
-    <div class="rate-compare" role="list">
-      {rows.map((r) => (
-        <div class="rate-row" role="listitem" key={r.label}>
-          <span class="rate-label">{r.label}</span>
-          {r.value === null ? (
-            <span class="rate-wait muted">Working it out…</span>
-          ) : (
-            <>
-              <Bar value={r.value} max={max} quiet={!r.mine} />
-              <span class="rate-amount">{wholeDollars(r.value)}</span>
-            </>
-          )}
-        </div>
-      ))}
-    </div>
+    <section class="panel rate-part" aria-busy={busy}>
+      <h2>Next to other cards</h2>
+      <div class="rate-compare" role="list">
+        {rows.map((r) => (
+          <div class="rate-row" role="listitem" key={r.key}>
+            <span class="rate-label">{r.label}</span>
+            {r.value === null ? (
+              <>
+                <Bar value={0} max={0} />
+                <span class="rate-amount rate-skel-amount" aria-hidden="true">
+                  {'\u00a0'}
+                </span>
+              </>
+            ) : (
+              <>
+                <Bar value={r.value} max={max} quiet={!r.mine} />
+                <span class="rate-amount">
+                  <Words text={wholeDollars(r.value)} />
+                </span>
+              </>
+            )}
+            {r.note === null ? (
+              <div class="rate-note">
+                <Lines n={3} />
+              </div>
+            ) : r.note === '' ? null : (
+              <p class="rate-note muted small">{r.note}</p>
+            )}
+          </div>
+        ))}
+      </div>
+      {start.counted.length === 0 && start.creditChoices.length === 0 ? null : (
+        <p class="muted small">{countedNote()}</p>
+      )}
+    </section>
   )
 }
 
 function FeeCards({
   input,
   fees,
+  busy,
 }: {
   input: ReportInput
   fees: Map<string, FeeVerdict | null>
+  busy: Busy
 }) {
   const ids = input.cards
     .map((c) => c.id)
     .filter((id) => (cards.get(id)?.annual_fee ?? 0) > 0)
   if (ids.length === 0) return null
   return (
-    <section class="rate-part">
+    <section
+      class="panel rate-part"
+      aria-busy={ids.some((id) => busy(`fee:${id}`))}
+    >
       <h2>{ids.length === 1 ? 'Your fee card' : 'Your fee cards'}</h2>
       <ul class="rate-fees">
         {ids.map((id) => {
           const v = fees.get(id)
           return (
-            <li key={id}>
+            <li key={id} aria-busy={busy(`fee:${id}`)}>
               <div class="rate-fee-head">
                 <CardArt id={id} width={40} />
                 <span>
@@ -318,20 +418,36 @@ function FeeCards({
                           : "Rewards don't cover the fee"
                         : "Doesn't pay for itself"}
                   </span>
+                ) : v === undefined ? (
+                  <span class="tag rate-skel-tag" aria-hidden="true">
+                    Doesn't pay for itself
+                  </span>
                 ) : null}
               </div>
               {v === undefined ? (
-                <p class="muted">Working it out…</p>
+                <>
+                  <Lines n={4} />
+                  <Lines n={5} />
+                  <div class="small">
+                    <Lines n={3} />
+                  </div>
+                </>
               ) : v === null ? null : (
                 <>
                   {v.paysForItself ? null : (
                     <p>
-                      <strong>{feeCardLead(catalog, v)}</strong>
+                      <strong>
+                        <Words text={feeCardLead(catalog, v)} />
+                      </strong>
                     </p>
                   )}
-                  <p>{v.verdict}</p>
+                  <p>
+                    <Words text={v.verdict} />
+                  </p>
                   {v.credits === '' ? null : (
-                    <p class="muted small">{v.credits}</p>
+                    <p class="muted small">
+                      <Words text={v.credits} />
+                    </p>
                   )}
                 </>
               )}
@@ -343,13 +459,57 @@ function FeeCards({
   )
 }
 
-function Gaps({ gaps }: { gaps: Gap[] }) {
-  const [all, setAll] = useState(false)
-  const shown = all ? gaps : gaps.slice(0, GAPS_SHOWN)
+function Next({
+  next,
+  busy,
+}: {
+  next: Addition | null | undefined
+  busy: boolean
+}) {
   return (
-    <section class="rate-part">
+    <section class="panel rate-part" aria-busy={busy}>
+      <h2>A card to add</h2>
+      {next === undefined ? (
+        <>
+          <Lines n={3} />
+          <Lines n={1} />
+        </>
+      ) : (
+        <>
+          <p>
+            <Words text={nextText(catalog, next)} />
+          </p>
+          {next ? (
+            <p>
+              <a href={`/cards/${next.cardId}`}>
+                See the {shortName(next.cardId)}
+              </a>
+            </p>
+          ) : null}
+        </>
+      )}
+    </section>
+  )
+}
+
+function Gaps({ gaps, busy }: { gaps: Gap[] | null; busy: boolean }) {
+  const [all, setAll] = useState(false)
+  return (
+    <section class="panel rate-part" aria-busy={busy}>
       <h2>Where another card earns more</h2>
-      {gaps.length === 0 ? (
+      {gaps === null ? (
+        <>
+          <ul class="rate-gaps" aria-hidden="true">
+            {Array.from({ length: GAPS_SHOWN }, (_, i) => (
+              <li key={i}>
+                <span class="rate-skel-art" />
+                <Lines n={4} />
+              </li>
+            ))}
+          </ul>
+          <Lines n={1} />
+        </>
+      ) : gaps.length === 0 ? (
         <p>
           On every line of this spending, your cards earn close to the best card
           earnrate knows for it.
@@ -357,10 +517,12 @@ function Gaps({ gaps }: { gaps: Gap[] }) {
       ) : (
         <>
           <ul class="rate-gaps">
-            {shown.map((g) => (
+            {(all ? gaps : gaps.slice(0, GAPS_SHOWN)).map((g) => (
               <li key={g.label}>
                 <CardArt id={g.bestCardId} width={32} />
-                <span>{gapText(catalog, g)}</span>
+                <span>
+                  <Words text={gapText(catalog, g)} />
+                </span>
               </li>
             ))}
           </ul>
@@ -375,11 +537,20 @@ function Gaps({ gaps }: { gaps: Gap[] }) {
   )
 }
 
-// The report itself: the same for your own cards and a shared link.
+// "On typical U.S. spending, about $1,990 a month."
+const basisText = (start: ReportStart) =>
+  start.typical
+    ? `On typical U.S. spending, about ${wholeDollars(start.monthly)} a month.`
+    : `On your spending, ${wholeDollars(start.monthly)} a month.`
+
+// The report itself: the same for your own cards and a shared link. The
+// figure and what makes it up, then a panel each for the credits, the
+// comparison, sharing and the slower parts.
 function Report({
   start,
   input,
   parts,
+  busy,
   share,
   editors,
   answers,
@@ -387,86 +558,60 @@ function Report({
   start: ReportStart
   input: ReportInput
   parts: Parts
+  busy: Busy
   share: ComponentChildren
   editors: ComponentChildren
   answers: ComponentChildren
 }) {
   const { best, fees, next, gaps } = parts
-  const lead = [
-    flatText(catalog, start),
-    best ? bestText(catalog, start, best) : '',
-  ]
-    .filter((t) => t !== '')
-    .join(' ')
   return (
     <div class="rate-report" aria-live="polite">
       <ul class="rate-cards" aria-label="The cards rated">
         {start.cards.map((c) => (
           <li key={c.cardId}>
-            <CardArt id={c.cardId} width={44} />
-            <span class="rate-card-name">{shortName(c.cardId)}</span>
+            <CardArt id={c.cardId} width={28} />
+            <span>{shortestName(c.cardId)}</span>
           </li>
         ))}
       </ul>
       <p class="rate-figure" data-range={start.range === null ? undefined : ''}>
-        {netFigure(start)}
+        <Words text={netFigure(start)} />
         <span class="rate-per">{perYear(start)}</span>
       </p>
-      {answers}
-      <p class="rate-lead">{headlineText(catalog, start)}</p>
-      <Comparison start={start} best={best} />
-      <p class="muted small rate-like" hidden={start.counted.length === 0}>
-        {countedNote()}
+      <p class="rate-lead">
+        <Words text={breakdownText(catalog, start)} />
       </p>
-      <p>{lead}</p>
-      {editors}
-      {share}
-      <FeeCards input={input} fees={fees} />
-      <section class="rate-part">
-        <h2>A card to add</h2>
-        {next === undefined ? (
-          <p class="muted">Working it out…</p>
-        ) : (
-          <>
-            <p>{nextText(catalog, next)}</p>
-            {next ? (
-              <p>
-                <a href={`/cards/${next.cardId}`}>
-                  See the {shortName(next.cardId)}
-                </a>
-              </p>
+      {editors ?? <p class="muted rate-basis">{basisText(start)}</p>}
+      <div class="rate-blocks">
+        {answers}
+        <Comparison start={start} best={best} busy={busy('best')} />
+        {share}
+        <FeeCards input={input} fees={fees} busy={busy} />
+        <Next next={next} busy={busy('next')} />
+        <Gaps gaps={gaps} busy={busy('gaps')} />
+        <details class="filters rate-notes">
+          <summary>What this assumes</summary>
+          <ul class="assumptions">
+            {reportNotes(catalog, start, dataVersion).map((n) => (
+              <li key={n}>
+                <Words text={n} />
+              </li>
+            ))}
+            {start.lines.length > 0 ? (
+              <li>
+                Spending used, a month:{' '}
+                {start.lines
+                  .map(
+                    (l) =>
+                      `${lineName(catalog, l.label)} ${wholeDollars(l.monthly)}`,
+                  )
+                  .join(', ')}
+                .
+              </li>
             ) : null}
-          </>
-        )}
-      </section>
-      {gaps === null ? (
-        <section class="rate-part">
-          <h2>Where another card earns more</h2>
-          <p class="muted">Working it out…</p>
-        </section>
-      ) : (
-        <Gaps gaps={gaps} />
-      )}
-      <details class="filters rate-notes">
-        <summary>What this assumes</summary>
-        <ul class="assumptions">
-          {reportNotes(catalog, start, dataVersion).map((n) => (
-            <li key={n}>{n}</li>
-          ))}
-          {start.lines.length > 0 ? (
-            <li>
-              Spending used, a month:{' '}
-              {start.lines
-                .map(
-                  (l) =>
-                    `${lineName(catalog, l.label)} ${wholeDollars(l.monthly)}`,
-                )
-                .join(', ')}
-              .
-            </li>
-          ) : null}
-        </ul>
-      </details>
+          </ul>
+        </details>
+      </div>
     </div>
   )
 }
@@ -484,12 +629,7 @@ function SpendingEditor({
   return (
     <details class="filters spend-edit">
       <summary>
-        <span class="basis">
-          {start.typical
-            ? `On typical U.S. spending, about ${wholeDollars(start.monthly)} a month.`
-            : `On your spending, ${wholeDollars(start.monthly)} a month.`}
-        </span>{' '}
-        Change it
+        <span class="basis">{basisText(start)}</span> Change it
       </summary>
       <div class="panel">
         <p class="muted small">
@@ -878,7 +1018,7 @@ function ShareBox({
   )
 }
 
-// Right under the figure: each card's credits, to tap as used or not.
+// Each card's credits, to tap as used or not.
 function Answers({
   start,
   answers,
@@ -888,14 +1028,15 @@ function Answers({
 }) {
   if (start.creditChoices.length === 0) return null
   return (
-    <section class="rate-answers" aria-label="Credits you use">
+    <section class="panel rate-credits" aria-labelledby="rate-credits-title">
+      <h2 id="rate-credits-title">Credits</h2>
+      <p class="muted small rate-hint">
+        Count a credit as used only if you'd spend there anyway.
+      </p>
       <CreditPicks cards={start.creditChoices} onAnswer={answers.answer} />
       {answers.error === null ? null : (
         <p class="callout small">{answers.error}</p>
       )}
-      <p class="muted small">
-        Count a credit as used only if you'd spend there anyway.
-      </p>
     </section>
   )
 }
@@ -948,10 +1089,12 @@ function Rated({
     }),
     [input, start],
   )
-  const parts = useParts(linked, spending, today)
+  const { parts, busy } = useParts(linked, spending, today)
+  const bestBusy = busy('best')
   const picture = useMemo(
-    () => ratePictureText(start, parts.best, shortName, today),
-    [start, parts.best, today],
+    () =>
+      bestBusy ? null : ratePictureText(start, parts.best, shortestName, today),
+    [start, parts.best, today, bestBusy],
   )
   return (
     <>
@@ -959,6 +1102,7 @@ function Rated({
         start={start}
         input={linked}
         parts={parts}
+        busy={busy}
         answers={<Answers start={start} answers={answers} />}
         editors={
           <>
@@ -1017,16 +1161,21 @@ function Shared({
     () => reportStart(catalog, input, today, spending),
     [input, spending, today],
   )
-  const parts = useParts(input, spending, today)
+  const { parts, busy } = useParts(input, spending, today)
+  const bestBusy = busy('best')
   const picture = useMemo(
-    () => ratePictureText(start, parts.best, shortName, today),
-    [start, parts.best, today],
+    () =>
+      bestBusy
+        ? null
+        : ratePictureText(start, parts.best, shortestName, today, 'neutral'),
+    [start, parts.best, today, bestBusy],
   )
   return (
     <Report
       start={start}
       input={input}
       parts={parts}
+      busy={busy}
       share={
         <section class="panel rate-share" aria-labelledby="rate-share-title">
           <h2 id="rate-share-title">Share this report</h2>

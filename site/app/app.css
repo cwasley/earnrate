@@ -1073,22 +1073,72 @@ p[data-tone='warn']::before {
    its corner × "I don't". The answer is only in aria-pressed and
    data-answer. */
 .credit-picks-card + .credit-picks-card {
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .credit-picks-head {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
+  gap: 8px;
+  min-height: 32px;
   font-size: 15px;
 }
 
 .credit-picks-all {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
+  gap: 6px;
   margin-left: auto;
+}
+
+.app .credit-pill {
+  min-width: 52px;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+/* A card with every credit answered, as one line to open again. */
+.app .credit-picks-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.credit-picks-sum {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  min-width: 0;
+}
+
+.credit-picks-sum strong + span {
+  color: var(--muted);
+}
+
+.credit-picks-change {
+  margin-left: auto;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.credit-picks-card:has(.credit-picks-line) + .credit-picks-card {
+  margin-top: 0;
 }
 
 .credit-picks .link {
@@ -1164,11 +1214,15 @@ p[data-tone='warn']::before {
   cursor: pointer;
 }
 
+/* Two lines before an ellipsis: a row's tiles grow to the tallest. */
 .credit-name {
-  font-weight: 600;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .credit-meta {
@@ -1176,7 +1230,7 @@ p[data-tone='warn']::before {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0 6px;
-  padding-right: 12px;
+  padding-right: 4px;
   color: var(--muted);
   font-size: 13.5px;
   font-variant-numeric: tabular-nums;
@@ -1358,7 +1412,8 @@ a.button,
   transform: scale(var(--pressed));
 }
 
-:is(.result-toggle, .held-row):active {
+:is(.result-toggle, .held-row):active,
+.app .credit-picks-line:active {
   transform: scale(var(--pressed-wide));
 }
 
@@ -1377,7 +1432,9 @@ button:disabled:active {
     .message-line,
     .row-buttons,
     .quick-check,
-    .quick-done
+    .quick-done,
+    .credit-tiles,
+    .credit-picks-line
   ) {
   transition:
     opacity var(--arrive) var(--ease-out),
