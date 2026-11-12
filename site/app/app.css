@@ -504,6 +504,21 @@ input::-webkit-list-button {
   margin: 6px 0 0;
 }
 
+.reset-typical {
+  margin: 6px 0 0;
+}
+
+.reset-typical .link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .data-version {
   font-size: 13px;
   margin-top: 18px;

@@ -41,9 +41,14 @@ export const PAST_TYPICAL: Row[][] = [
   ],
 ]
 
-export const sameRows = (a: Row[], b: Row[]) =>
-  a.length === b.length &&
-  a.every((r, i) => r.what === b[i]?.what && r.monthly === b[i].monthly)
+// The same rows in any order: removing a row and adding it back puts it last.
+export function sameRows(a: Row[], b: Row[]): boolean {
+  if (a.length !== b.length) return false
+  const key = (r: Row) => `${r.what}\u0000${String(r.monthly)}`
+  const left = a.map(key).sort()
+  const right = b.map(key).sort()
+  return left.every((k, i) => k === right[i])
+}
 
 export const isTypicalRows = (rows: Row[]) =>
   sameRows(rows, TYPICAL_MONTHLY_SPEND)

@@ -25,6 +25,7 @@ import {
   resolveSpendLines,
   simulateCatalog,
   spendLineFor,
+  TYPICAL_MONTHLY_SPEND,
   type Simulation,
 } from '../../src/engine/simulate.ts'
 import {
@@ -409,6 +410,13 @@ export function Spending({
     )
   }
 
+  const add = (text: string) => {
+    const what = text.trim()
+    if (what === '' || rows.some((r) => r.what === what)) return
+    setRows([...rows, { what, monthly: 100 }])
+    setAdding('')
+  }
+
   const update = (i: number, monthly: number) =>
     setRows(
       rows.map((r, j) => (j === i ? { ...r, monthly } : r)),
@@ -501,10 +509,7 @@ export function Spending({
             class="ask small"
             onSubmit={(e) => {
               e.preventDefault()
-              const what = adding.trim()
-              if (what === '' || rows.some((r) => r.what === what)) return
-              setRows([...rows, { what, monthly: 100 }])
-              setAdding('')
+              add(adding)
             }}
           >
             <label class="visually-hidden" for="spend-add">
@@ -518,12 +523,31 @@ export function Spending({
               autocomplete="off"
               value={adding}
               onInput={(e) => setAdding(e.currentTarget.value)}
+              // WebKit keeps Enter for the suggestion list and doesn't submit.
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' || e.isComposing) return
+                e.preventDefault()
+                add(e.currentTarget.value)
+              }}
             />
             <button type="submit">Add</button>
           </form>
           <p class="total">
             {wholeDollars(total)} a month · {wholeDollars(total * 12)} a year
           </p>
+          {isTypicalRows(rows) ? null : (
+            <p class="reset-typical">
+              <button
+                type="button"
+                class="link"
+                onClick={() =>
+                  setRows(TYPICAL_MONTHLY_SPEND.map((t) => ({ ...t })))
+                }
+              >
+                Use typical amounts
+              </button>
+            </p>
+          )}
         </div>
       </details>
       {filters}

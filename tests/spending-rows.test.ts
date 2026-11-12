@@ -50,6 +50,20 @@ describe("Find a card's spending rows", () => {
     expect(isTypicalRows(loadSpendingRows())).toBe(false)
   })
 
+  test('the typical rows in another order are still typical, and are forgotten when saved', () => {
+    const moved = [...TYPICAL_MONTHLY_SPEND.slice(1), TYPICAL_MONTHLY_SPEND[0]]
+      .filter((r) => r !== undefined)
+      .map((r) => ({ ...r }))
+    expect(isTypicalRows(moved)).toBe(true)
+    store.set(KEY, JSON.stringify(moved))
+    expect(isTypicalRows(loadSpendingRows())).toBe(true)
+    saveSpendingRows(moved)
+    expect(store.has(KEY)).toBe(false)
+    expect(
+      sameRows(moved, [...moved.slice(1), { what: 'Gas', monthly: 151 }]),
+    ).toBe(false)
+  })
+
   test('saving keeps changed rows, and rows back at the typical amounts are forgotten', () => {
     const own = [{ what: 'Groceries', monthly: 700 }]
     saveSpendingRows(own)
