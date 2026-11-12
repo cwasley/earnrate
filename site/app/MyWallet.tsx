@@ -27,7 +27,6 @@ import {
   resolveSpendLines,
   typicalSpendLines,
   simulateAdditions,
-  TYPICAL_MONTHLY_SPEND,
   type Addition,
 } from '../../src/engine/simulate.ts'
 import { ifMemberLines, placedAmong } from '../../src/engine/memberships.ts'
@@ -69,7 +68,8 @@ import { QuickCards } from './QuickCards.tsx'
 import { Logo } from './Logo.tsx'
 import { track } from './track.ts'
 import { cheatSheetImage } from './sheet-image.ts'
-import { lineFor, type Row } from './Spending.tsx'
+import { lineFor } from './Spending.tsx'
+import { isTypicalRows, loadSpendingRows } from './spending-rows.ts'
 import {
   cardCount,
   cards,
@@ -88,7 +88,7 @@ import { PurchaseOptions, type Purchase } from './ThisPurchase.tsx'
 import type { Card, PaymentMethod } from '../../src/schema/card.ts'
 import { optionName, ruleWhat } from '../../src/engine/rule-text.ts'
 import { SearchInput } from './SearchInput.tsx'
-import { load, loadList, save } from './settings.ts'
+import { load, save } from './settings.ts'
 import {
   addOp,
   importOp,
@@ -924,12 +924,8 @@ function CardEditor({
 // The Find a card tab's spending rows, and whether they're still its typical
 // amounts.
 function spending(fallback = true): Spending {
-  const rows = loadList<Row>('spending', TYPICAL_MONTHLY_SPEND)
-  const typical =
-    rows.length === TYPICAL_MONTHLY_SPEND.length &&
-    TYPICAL_MONTHLY_SPEND.every(
-      (t, i) => rows[i]?.what === t.what && rows[i].monthly === t.monthly,
-    )
+  const rows = loadSpendingRows()
+  const typical = isTypicalRows(rows)
   const lines = resolveSpendLines(
     catalog,
     rows.map((r) => lineFor(r.what, r.monthly)),

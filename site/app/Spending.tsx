@@ -24,7 +24,6 @@ import {
   resolveSpendLines,
   simulateCatalog,
   spendLineFor,
-  TYPICAL_MONTHLY_SPEND,
   type Simulation,
 } from '../../src/engine/simulate.ts'
 import {
@@ -41,14 +40,14 @@ import {
 } from '../../src/engine/text.ts'
 import { cards, feeLabel, shortName, wholeDollars, words } from './format.ts'
 import {
-  engineOptions,
-  loadList,
-  save,
-  type Saved,
-  type Settings,
-} from './settings.ts'
+  isTypicalRows,
+  loadSpendingRows,
+  saveSpendingRows,
+  type Row as SpendingRow,
+} from './spending-rows.ts'
+import { engineOptions, type Saved, type Settings } from './settings.ts'
 
-export type Row = { what: string; monthly: number }
+export type Row = SpendingRow
 
 export const lineFor = (what: string, monthly: number) =>
   spendLineFor(catalog, what, monthly)
@@ -56,12 +55,6 @@ export const lineFor = (what: string, monthly: number) =>
 // Rows shown before "Show more", and how many it shows.
 const SHOWN = 3
 const MORE = 10
-
-const isTypical = (rows: Row[]) =>
-  rows.length === TYPICAL_MONTHLY_SPEND.length &&
-  TYPICAL_MONTHLY_SPEND.every(
-    (t, i) => rows[i]?.what === t.what && rows[i].monthly === t.monthly,
-  )
 
 function picksText(picks: Picks): string | null {
   const all = Object.values(picks).flat()
@@ -194,9 +187,11 @@ export function Spending({
   saved: Saved
   filters: ComponentChildren
 }) {
-  const [rows, setRows] = useState<Row[]>(() =>
-    loadList<Row>('spending', TYPICAL_MONTHLY_SPEND),
-  )
+  const [rows, setStateRows] = useState<Row[]>(loadSpendingRows)
+  const setRows = (next: Row[]) => {
+    setStateRows(next)
+    saveSpendingRows(next)
+  }
   const [adding, setAdding] = useState('')
   // Closed on every visit: the line above them says what they add up to.
   const [editing, setEditing] = useState(false)
@@ -221,9 +216,7 @@ export function Spending({
   // The open row: a card id, or a pair's ids joined with "+".
   const [open, setOpen] = useState<string | null>(focus[0] ?? null)
   const toggle = (key: string) => setOpen(open === key ? null : key)
-  useEffect(() => save('spending', rows), [rows])
-
-  const typical = isTypical(rows)
+  const typical = isTypicalRows(rows)
   const today = localToday()
   const lines = useMemo(
     () =>
