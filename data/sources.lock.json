@@ -103,7 +103,7 @@
       ]
     },
     "https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-11",
       "lines": [
         "0c6233fd6738c274",
         "2ed7d4bf99732756",
@@ -116,7 +116,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-11",
       "lines": [
         "00e15a095514ede5",
         "01c94a93deb9a84c",
@@ -126,13 +126,12 @@
         "18ea05840ea30e10",
         "2d20bc72efc9d0ef",
         "335cc59da7580d4d",
+        "39ca04851d77c412",
         "3e0d74aebc3b1eb1",
         "4536c56251f29b8a",
         "4667c5936ad52572",
-        "4c388e12791149ea",
         "4db3311144b50bb6",
         "56f120e8a90bf874",
-        "5daafbff644cc6c9",
         "60d9e3ffba1ddca5",
         "63bdd67a9f989d46",
         "7b3743e7eac97f26",
@@ -141,6 +140,7 @@
         "95df37d3591f2d44",
         "9bc9670e154faa1d",
         "c0687b431c3eb159",
+        "cc539854ba9d8024",
         "d8612d0a99af9ea2",
         "de61db6b77b1155c",
         "ed64edb053c61211"
@@ -1237,14 +1237,14 @@
       ]
     },
     "https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-11",
       "lines": [
         "2b2df50c7248b432",
         "faddb298329961b5"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64842.html": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-11",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1490,11 +1490,11 @@
       ]
     },
     "https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-11",
       "lines": []
     },
     "https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-11",
       "lines": []
     },
     "https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card": {
@@ -1561,7 +1561,7 @@
       ]
     },
     "https://www.citi.com/credit-cards/citi-strata-elite-credit-card": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-11",
       "lines": [
         "345e2953751d3064",
         "60d4f69954950949",
@@ -1569,7 +1569,7 @@
       ]
     },
     "https://www.thankyou.com/terms": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-11",
       "lines": []
     },
     "https://www.citi.com/credit-cards/citi-strata-premier-credit-card": {
