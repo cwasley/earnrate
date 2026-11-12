@@ -187,7 +187,8 @@ export function introWhat(
 // Bookings through a travel site the credit also names go without saying:
 // "Capital One Travel", not each kind of booking through it.
 export function creditName(catalog: Catalog, credit: Credit): string {
-  const ids = credit.match.merchants ?? []
+  if (credit.listed) return credit.listed.name
+  const ids = credit.match?.merchants ?? []
   const portals = ids
     .map((m) => findMerchant(catalog, m))
     .filter((m) => m?.kind === 'portal')
@@ -201,27 +202,31 @@ export function creditName(catalog: Catalog, credit: Credit): string {
   })
   return listed([
     ...merchants.map((m) => merchantName(catalog, m)),
-    ...(credit.match.categories ?? []).map((c) => categoryPhrase(catalog, c)),
+    ...(credit.match?.categories ?? []).map((c) => categoryPhrase(catalog, c)),
   ])
 }
 
 // A short name for a list of credits: the first store a credit names
 // ("Grubhub" for the dining credit at five chains); creditName has them all.
 export function creditLabel(catalog: Catalog, credit: Credit): string {
-  const [first, ...more] = credit.match.merchants ?? []
+  const [first, ...more] = credit.match?.merchants ?? []
   return first === undefined || more.length === 0
     ? creditName(catalog, credit)
     : merchantName(catalog, first)
 }
 
 // "at Lululemon", "at restaurants", "on travel", "on Walmart+ membership":
-// the category's or merchant's own preposition.
+// the category's or merchant's own preposition. A listed credit says its own.
 export const creditWhere = (catalog: Catalog, credit: Credit) =>
-  `${
-    (credit.match.categories ?? []).some((c) => categoryReadsOn(catalog, c)) ||
-    (credit.match.merchants ?? []).some(
-      (m) => findMerchant(catalog, m)?.preposition === 'on',
-    )
-      ? 'on'
-      : 'at'
-  } ${creditName(catalog, credit)}`
+  credit.listed
+    ? `on ${credit.listed.on}`
+    : `${
+        (credit.match?.categories ?? []).some((c) =>
+          categoryReadsOn(catalog, c),
+        ) ||
+        (credit.match?.merchants ?? []).some(
+          (m) => findMerchant(catalog, m)?.preposition === 'on',
+        )
+          ? 'on'
+          : 'at'
+      } ${creditName(catalog, credit)}`

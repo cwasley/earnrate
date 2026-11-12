@@ -122,6 +122,23 @@ credits:
     amount: 219
     period: calendar_year
     note: 'An annual CLEAR+ membership.'
+  # Listed, never applied to a purchase: earnrate can't tell which
+  # purchases they pay on.
+  - id: airline-fee
+    listed:
+      name: airline fee
+      on: incidental fees charged by the one airline you select
+    amount: 200
+    period: calendar_year
+    enroll: true
+    note: 'Enrolling is selecting one airline: Alaska, American, Delta, JetBlue, Southwest or United. You can change it once a year, in January. Incidental fees charged by that airline separately from the ticket. Not tickets, upgrades, miles, gift cards, duty free, award tickets or fees from partner airlines.'
+  - id: hotel
+    listed:
+      name: hotel
+      on: prepaid Fine Hotels + Resorts, The Hotel Collection and Airbnb Luxe bookings through Amex Travel
+    amount: 300
+    period: half_year
+    note: 'New prepaid ("Pay Now") bookings through AmexTravel.com, the Amex Travel app or by phone; Airbnb Luxe only online or in the app, with your Airbnb account linked to Amex. The Hotel Collection and Airbnb Luxe need a stay of two nights or more, and Fine Hotels + Resorts does too from January 1, 2027. Not property fees or charges by the property.'
 todo:
   - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
@@ -216,3 +233,27 @@ evidence:
   - rule: clear-plus
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
     quote: 'earn up to $219 in statement credits per calendar year when their Platinum Card®'
+  - rule: airline-fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'up to $200 in statement credits per calendar year for incidental airline fees'
+  - rule: airline-fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'can enroll in the benefit by making their airline selection'
+  - rule: airline-fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'Incidental airline fees must be separate charges from airline ticket charges.'
+  - rule: hotel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'Basic Card Members on a U.S. Consumer Platinum Card Account are eligible to receive up to $300'
+  - rule: hotel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'semi-annually (January to June, and July to December) for up to a total of $600 per calendar year'
+  - rule: hotel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'new prepaid Fine Hotels + Resorts® and The Hotel Collection bookings made through AmexTravel.com'
+  - rule: hotel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'new prepaid Airbnb Luxe bookings with Airbnb, made through AmexTravel.com or the Amex Travel App™'
+  - rule: hotel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'Effective January 1, 2027, Fine Hotels + Resorts® bookings will require a minimum two-night stay'

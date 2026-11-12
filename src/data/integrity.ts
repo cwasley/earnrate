@@ -221,9 +221,28 @@ function cardProblems(
       card.intro_rates.some((i) => i.id === credit.id)
     )
       problems.push(`${where}: credit '${credit.id}' has a rule's id`)
-    for (const c of credit.match.categories ?? [])
+    if ((credit.match === undefined) === (credit.listed === undefined))
+      problems.push(
+        `${where} ${credit.id}: a credit has match or listed, not both`,
+      )
+    // A listed credit is never applied to a purchase, so nothing checks its
+    // amount but the issuer's words: a quote states it.
+    if (credit.listed) {
+      const amount = new RegExp(`\\$${String(credit.amount)}(\\D|$)`)
+      if (
+        !card.evidence.some((e) => e.rule === credit.id && amount.test(e.quote))
+      )
+        problems.push(
+          `${where} ${credit.id}: no evidence quote states its amount`,
+        )
+      if (credit.min_amount !== undefined)
+        problems.push(
+          `${where} ${credit.id}: min_amount on a credit no purchase uses`,
+        )
+    }
+    for (const c of credit.match?.categories ?? [])
       checkCategory(c, `credit ${credit.id}`)
-    for (const m of credit.match.merchants ?? [])
+    for (const m of credit.match?.merchants ?? [])
       checkMerchant(m, `credit ${credit.id}`)
     // A month that pays differently is the issuer's word too: a quote names
     // the month and its amount, or the extra on top of the usual one.

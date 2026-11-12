@@ -3,6 +3,82 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.11.3'
+  date: 2026-11-11
+  changes:
+    - cause: addition
+      card: amex-platinum
+      field: credits.airline-fee
+      now: { amount: 200, period: calendar_year, enroll: true }
+      summary: The $200 Airline Fee Credit, on incidental fees charged by the one airline the cardholder selects, listed rather than matched to purchases.
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    - cause: addition
+      card: amex-platinum
+      field: credits.hotel
+      now: { amount: 300, period: half_year }
+      summary: The $600 Hotel Credit, $300 each half year on prepaid Fine Hotels + Resorts, The Hotel Collection and Airbnb Luxe bookings through Amex Travel, listed rather than matched to purchases.
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    - cause: addition
+      card: amex-business-platinum
+      field: credits.airline-fee
+      now: { amount: 200, period: calendar_year, enroll: true }
+      summary: The $200 Airline Fee Credit, on incidental fees charged by the one airline the cardholder selects, listed rather than matched to purchases.
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    - cause: addition
+      card: amex-business-platinum
+      field: credits.hotel
+      now: { amount: 300, period: half_year }
+      summary: The $600 Hotel Credit, $300 each half year on prepaid Fine Hotels + Resorts, The Hotel Collection and Airbnb Luxe bookings through Amex Travel, listed rather than matched to purchases.
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    - cause: addition
+      card: chase-sapphire-reserve
+      field: credits.exclusive-tables
+      now: { amount: 150, period: half_year }
+      summary: The $300 dining credit, $150 each half year at restaurants in the Sapphire Reserve Exclusive Tables program on OpenTable, listed rather than matched to purchases.
+      source: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    - cause: addition
+      card: chase-united-business
+      field: credits.farelock
+      now: { amount: 25, period: cardmember_year }
+      summary: The $25 credit on United FareLock purchases each cardmember year, listed rather than matched to purchases.
+      source: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    - cause: addition
+      card: chase-united-club-business
+      field: credits.farelock
+      now: { amount: 50, period: cardmember_year }
+      summary: The $50 credit on United FareLock purchases each cardmember year, listed rather than matched to purchases.
+      source: https://creditcards.chase.com/business-credit-cards/united/united-club-business
+    - cause: addition
+      card: citi-aadvantage-executive
+      field: credits.inkind
+      now: { amount: 100, period: half_year }
+      summary: The $200 inKind dining credit, $100 each half year at restaurants in the inKind network, listed rather than matched to purchases.
+      source: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    - cause: addition
+      card: citi-aadvantage-executive
+      field: credits.inflight-admirals-club
+      now: { amount: 100, period: calendar_year }
+      summary: Up to $100 a calendar year on inflight and eligible Admirals Club purchases, listed rather than matched to purchases.
+      source: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    - cause: addition
+      card: citi-aadvantage-globe
+      field: credits.inflight
+      now: { amount: 100, period: calendar_year }
+      summary: Up to $100 a calendar year on inflight purchases on American Airlines flights, listed rather than matched to purchases.
+      source: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    - cause: addition
+      card: citi-aadvantage-globe
+      field: credits.splurge
+      now: { amount: 100, period: calendar_year }
+      summary: "The $100 Splurge Credit, at up to 2 brands the cardholder chooses from Citi's list, listed rather than matched to purchases."
+      source: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    - cause: addition
+      card: citi-strata-elite
+      field: credits.splurge
+      now: { amount: 200, period: calendar_year }
+      summary: "The $200 Splurge Credit, at up to 2 brands the cardholder chooses from Citi's list, listed rather than matched to purchases."
+      source: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+
 - version: '2026.11.11.2'
   date: 2026-11-11
   changes:

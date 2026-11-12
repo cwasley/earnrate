@@ -77,6 +77,7 @@ import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
 import { milestoneStarts, milestoneWhat } from '../src/engine/milestones.ts'
 import {
+  creditName,
   creditWhere,
   introWhat,
   rulePreposition,
@@ -932,7 +933,17 @@ function creditsText(card: Card): string {
   const all = allCreditsYear(catalog, card, today, {})
   const year = all.yearly - all.nights
   const yearEndLine = yearEnd.get(card.id)
-  return `<h2>Statement credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns: ${esc(wholeDollars(year))} a year if you'd use them all. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that, and counts the ones you use against the annual fee. You can mark any you don't use.</p><ul>${items.join('')}</ul>${yearEndLine?.credits ? yearEndLine.html : ''}`
+  const unmatched = card.credits.filter((c) => c.listed)
+  const names = listed(unmatched.map((c) => creditName(catalog, c)))
+  const intro =
+    unmatched.length === card.credits.length
+      ? `Dollars back on these purchases: ${wholeDollars(year)} a year if you'd use them all. earnrate can't tell which purchases they pay on, so it never counts them toward one. With your cards saved, it counts the ones you use against the annual fee; mark what you've used, and any you don't use.`
+      : `Dollars back for spending at these stores or on these purchases, on top of what the purchase earns: ${wholeDollars(year)} a year if you'd use them all. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that, and counts the ones you use against the annual fee. You can mark any you don't use.${
+          unmatched.length === 0
+            ? ''
+            : ` earnrate can't tell which purchases the ${names} ${unmatched.length === 1 ? 'credit pays on, so it never counts it' : 'credits pay on, so it never counts them'} toward one; mark what you've used in your wallet.`
+        }`
+  return `<h2>Statement credits</h2><p>${esc(intro)}</p><ul>${items.join('')}</ul>${yearEndLine?.credits ? yearEndLine.html : ''}`
 }
 
 // Valued like points: the night's cap at earnrate's default point value.

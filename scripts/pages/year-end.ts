@@ -1087,7 +1087,7 @@ function cardPagesList(v: View): string {
 // aren't entered: said before the lists, so a count never reads as every
 // credit a card has.
 const SCOPE =
-  "This page lists statement credits at named stores and services. It leaves out a credit for a merchant you choose first, like an airline fee credit; a credit on only some of a merchant's sales, like hotel collection bookings; and a credit paid only after a spending total."
+  "This page lists statement credits paid each month, quarter, half year or year, including ones earnrate can't tie to a purchase, like an airline fee credit or a hotel collection credit. It leaves out a credit that pays only after other purchases, like a spending total; one limited per purchase, booking or stay; one at named stores and a whole category together; a percentage back; and Bank of America Premium Rewards' airline incidental credit, whose terms earnrate couldn't read."
 
 // The card's own page at its issuer: its first source that isn't a terms,
 // fees, FAQ or disclosure page.

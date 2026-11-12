@@ -33,6 +33,7 @@ import {
   choiceName,
   currencyLabel,
   CREDIT_SKIPPED,
+  LISTED_CREDIT_USED,
   earnText,
   freeNightText,
   NIGHT_NOT_VALUED,
@@ -75,6 +76,7 @@ export type CreditSummary = {
   used: number
   left: number | null
   tracked: boolean // the wallet has recorded use of it
+  listed: boolean // never counted toward a purchase: used only as marked
   text: string // "$75 back each quarter at Lululemon: $35 left this quarter."
 }
 
@@ -616,7 +618,7 @@ function creditSummaries(
         ? `${ENROLL_FIRST}, then mark it enrolled`
         : s.left === null
           ? "give the card's anniversary to track it"
-          : `${creditLeft(s.left, s.period)}${s.until === null ? '' : `, through ${shortDate(s.until)}`}`
+          : `${creditLeft(s.left, s.period)}${s.until === null ? '' : `, through ${shortDate(s.until)}`}${s.credit.listed ? `; ${LISTED_CREDIT_USED}` : ''}`
     return {
       id: s.credit.id,
       name: s.name,
@@ -632,6 +634,7 @@ function creditSummaries(
       used: s.used,
       left: s.left,
       tracked: held.credit_usage?.[s.credit.id] !== undefined,
+      listed: s.credit.listed !== undefined,
       text: `${creditBack(s)} ${creditWhere(catalog, s.credit)}${creditTerms(s.credit)}: ${status}.`,
     }
   })

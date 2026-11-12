@@ -1077,6 +1077,7 @@ describe('wallet setup', () => {
       ['search_cards', { query: 'amex gold' }],
       ['search_cards', { query: 'td-bank-nordstrom-visa' }],
       ['search_cards', { query: 'sapphire' }],
+      ['search_cards', { query: 'amex platinum' }],
       ['add_card', { cardId: 'chase-freedom-unlimited' }],
       [
         'update_card',
@@ -1472,6 +1473,52 @@ describe('wallet setup', () => {
       '    credit_usage:\n      lululemon: { period: 2026-Q4, used: 75 }\n',
     )
     expect(await readFile(file, 'utf8')).toContain('# mine')
+  })
+
+  test("a credit earnrate can't match to a purchase: marked used through update_card, never used by record_purchase", async () => {
+    const file = await walletCopy('cards:\n  - id: citi-double-cash # mine\n')
+    const client = await connect(file)
+    const added = await client.callTool({
+      name: 'add_card',
+      arguments: { cardId: 'amex-platinum', enrolled: ['airline-fee'] },
+    })
+    expect(added.isError).toBeFalsy()
+    const best = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Delta', amount: 60, channel: 'online' },
+    })
+    const rec = best.structuredContent as Recommendation
+    expect(
+      rec.ranked.find((r) => r.cardId === 'amex-platinum')?.credit ?? null,
+    ).toBeNull()
+    expect(text(best)).not.toMatch(/airline fee credit/)
+    const recorded = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'amex-platinum',
+        merchant: 'Delta',
+        amount: 60,
+        channel: 'online',
+      },
+    })
+    expect(text(recorded)).not.toMatch(/airline fee credit/)
+    expect(await readFile(file, 'utf8')).not.toContain('credit_usage')
+    const set = await client.callTool({
+      name: 'update_card',
+      arguments: { cardId: 'amex-platinum', creditUsed: { 'airline-fee': 60 } },
+    })
+    expect(set.isError).toBeFalsy()
+    const wallet = await client.callTool({ name: 'list_wallet', arguments: {} })
+    const platinum = (wallet.structuredContent as WalletSummary).cards.find(
+      (c) => c.cardId === 'amex-platinum',
+    )
+    expect(platinum?.credits).toContainEqual(
+      expect.objectContaining({ id: 'airline-fee', listed: true, left: 140 }),
+    )
+    expect(text(wallet)).toMatch(
+      /Credit \(airline-fee\): \$200 back each calendar year on incidental fees charged by the one airline you select: \$140 left this year, through Dec 31, \d{4}; earnrate can't tell which purchases it pays on, so mark what you've used\./,
+    )
+    expect(text(wallet)).toMatch(/Use your \$200 airline fee credit on/)
   })
 
   test("credits the user doesn't use: set through update_card, listed, and out of the fee math", async () => {

@@ -40,7 +40,7 @@ import {
 } from '../scripts/pages/year-end.ts'
 import { creditWhere } from '../src/engine/rule-text.ts'
 import { currentPeriodEnd, inEffect, periodKey } from '../src/engine/periods.ts'
-import { periodAmount } from '../src/engine/credits.ts'
+import { allCreditsYear, periodAmount } from '../src/engine/credits.ts'
 import { recentChangesSection } from '../scripts/pages/changes.ts'
 import { cardChangesUrl } from '../src/engine/changes.ts'
 import { ChangesFileSchema } from '../src/schema/changes.ts'
@@ -402,6 +402,34 @@ describe('the built static pages', () => {
       expect(facts).toContain(`<dt>${label}</dt>`)
   })
 
+  test("a card page lists the credits earnrate can't match to a purchase with the rest, says so, and counts them in the year's total", () => {
+    const section = (id: string) => {
+      const html = readFileSync(path.join(out, 'cards', `${id}.html`), 'utf8')
+      const start = html.indexOf('<h2>Statement credits</h2>')
+      return unescape(html.slice(start, html.indexOf('</ul>', start)))
+    }
+    const platinum = section('amex-platinum')
+    expect(platinum).toContain(
+      "earnrate can't tell which purchases the airline fee and hotel credits pay on, so it never counts them toward one; mark what you've used in your wallet.",
+    )
+    expect(platinum).toContain(
+      '$200 back each calendar year on incidental fees charged by the one airline you select',
+    )
+    expect(platinum).toContain(
+      '$300 back each half year on prepaid Fine Hotels + Resorts, The Hotel Collection and Airbnb Luxe bookings through Amex Travel',
+    )
+    const card = catalog.cards.find((c) => c.id === 'amex-platinum')
+    const year = card ? allCreditsYear(catalog, card, today, {}).yearly : 0
+    expect(platinum).toContain(
+      `${wholeDollars(year)} a year if you'd use them all`,
+    )
+    const globe = section('citi-aadvantage-globe')
+    expect(globe).toMatch(
+      /^<h2>Statement credits<\/h2><p>Dollars back on these purchases: \$200 a year if you'd use them all\. earnrate can't tell which purchases they pay on, so it never counts them toward one\./,
+    )
+    expect(globe).not.toContain('counts one toward a purchase')
+  })
+
   test("rent's page links the cards its note names", () => {
     const html = readFileSync(path.join(out, 'best', 'rent.html'), 'utf8')
     for (const id of ['bilt-blue', 'bilt-obsidian', 'bilt-palladium'])
@@ -685,9 +713,25 @@ describe('year-end pages', () => {
     test("says what kinds of credit the lists leave out before they start, and links each card's issuer page", () => {
       const scope = /<p class="ye-scope">([^<]*)/
       const sentence = scope.exec(hub)?.[1] ?? ''
-      expect(sentence).toMatch(/airline fee credit/)
-      expect(sentence).toMatch(/hotel collection/)
-      expect(sentence).toMatch(/spending total/)
+      const said = unescape(sentence)
+      expect(said).toMatch(
+        /^This page lists statement credits .*, including ones earnrate can't tie to a purchase, like an airline fee credit or a hotel collection credit\./,
+      )
+      expect(said).toMatch(/after other purchases, like a spending total/)
+      const bofa = catalog.cards.find(
+        (c) => c.id === 'bank-of-america-premium-rewards',
+      )
+      if (said.includes('Bank of America Premium Rewards'))
+        expect(bofa?.credits ?? []).toEqual([])
+      const platinum = unescape(pageOf('amex-platinum')?.html ?? '')
+      for (const id of ['airline-fee', 'hotel']) {
+        const credit = catalog.cards
+          .find((c) => c.id === 'amex-platinum')
+          ?.credits.find((c) => c.id === id)
+        expect(credit?.listed, id).toBeDefined()
+        if (credit)
+          expect(platinum, id).toContain(`back ${creditWhere(catalog, credit)}`)
+      }
       expect(hub.indexOf('class="ye-scope"')).toBeLessThan(
         hub.indexOf('<h2 id="credits">'),
       )

@@ -121,6 +121,7 @@ import {
   creditTerms,
   creditShort,
   CREDIT_THIS_PERIOD,
+  LISTED_CREDIT_USED,
   dollarsAndCents,
   FREE_NIGHT_NAME,
   freeNightText,
@@ -787,6 +788,9 @@ function CardEditor({
               : ` It ends after ${shortDate(c.credit.valid_to)}.`}
           </p>
           {c.credit.note ? <p class="muted small">{c.credit.note}</p> : null}
+          {c.credit.listed ? (
+            <p class="muted small">{LISTED_CREDIT_USED}.</p>
+          ) : null}
           <UseChoices
             name={`credit-${held.id}-${c.credit.id}`}
             label={`${c.name} credit`}

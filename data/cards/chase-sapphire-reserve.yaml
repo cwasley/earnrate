@@ -18,8 +18,7 @@ welcome_offer:
   spend: 6000
   months: 3
   note: 'Chase: "This credit card is unavailable to you if you currently have this card open. The new cardmember bonus may not be available to you if you previously held this card or received a new cardmember bonus for this card." Chase may also weigh how many cards you''ve opened and closed.'
-# Not modeled: The Edit credit (per booking), the Exclusive Tables dining
-# credit (restaurants in an OpenTable program), DoorDash promos and the
+# Not modeled: The Edit credit (per booking), DoorDash promos and the
 # $75,000-spend benefits. Purchases covered by the travel credit or The Edit
 # credit earn no points.
 rules:
@@ -85,6 +84,15 @@ credits:
     enroll: true
     valid_to: 2027-12-31
     note: 'Peloton memberships (All-Access, Rental, App+, Guide, App One, Strength+). Activate once on chase.com.'
+  # Listed, never applied to a purchase: earnrate can't tell which
+  # purchases they pay on.
+  - id: exclusive-tables
+    listed:
+      name: dining
+      on: dining at restaurants in the Sapphire Reserve Exclusive Tables program on OpenTable
+    amount: 150
+    period: half_year
+    note: 'Applied automatically to purchases made directly with the restaurant: up to $150 from January through June and $150 from July through December. Not merchandise, gift cards, or payments through a third-party service or delivery app. OpenTable lists the restaurants.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: stubhub
@@ -174,6 +182,15 @@ evidence:
   - rule: peloton-credit
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: 'qualifying Peloton Membership purchases up to a monthly maximum of $10'
+  - rule: exclusive-tables
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'Get up to $150 in statement credits from January through June and again from July through December'
+  - rule: exclusive-tables
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'when you dine at restaurants part of the Sapphire Reserve Exclusive Tables program on OpenTable'
+  - rule: exclusive-tables
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    quote: 'A statement credit will be automatically applied to your account for dining purchases at select restaurants'
 todo:
   - "peloton: the $5,000 limit runs across the whole offer (4/1/2025 to 12/31/2027), which no cap period can express, and the $150 minimum per purchase isn't modeled."
   - "Chase's terms say purchases the $300 travel credit covers earn no points, but earnrate counts the card's rate on the whole purchase with the credit on top (an engine gap). For its other credits the terms don't say, and they're modeled the same way."

@@ -259,6 +259,7 @@ export const CreditPeriod = z.enum([...CapPeriod.options, 'half_year'])
 
 export const CreditSchema = z.strictObject({
   id: KebabId,
+  // Every credit has `match` or `listed`, never both (checked in integrity).
   match: z
     .strictObject({
       merchants: z.array(KebabId).min(1).optional(),
@@ -267,7 +268,15 @@ export const CreditSchema = z.strictObject({
     .refine(
       (m) => (m.merchants === undefined) !== (m.categories === undefined),
       'a credit matches merchants or categories, not both',
-    ),
+    )
+    .optional(),
+  // A credit earnrate can't match to a purchase (an airline the cardholder
+  // picks first, only some of a merchant's bookings): shown and counted
+  // against the fee like any other, never applied to a purchase. `name`
+  // reads before "credit"; `on` says what it pays for.
+  listed: z
+    .strictObject({ name: z.string().min(1), on: z.string().min(1) })
+    .optional(),
   amount: z.number().positive(), // dollars of credit per period
   period: CreditPeriod,
   // A monthly credit's months that pay a different amount, by month number

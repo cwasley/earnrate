@@ -690,7 +690,17 @@ describe('merchant credits', () => {
       amount: 75,
       period: 'quarter',
       enroll: true,
+      listed: false,
       text: '$75 back each quarter at Lululemon, enroll first',
+    })
+    expect(card?.credits.find((c) => c.id === 'airline-fee')).toEqual({
+      id: 'airline-fee',
+      name: 'airline fee',
+      amount: 200,
+      period: 'calendar_year',
+      enroll: true,
+      listed: true,
+      text: "$200 back each calendar year on incidental fees charged by the one airline you select, enroll first; earnrate can't tell which purchases it pays on, so it never counts it toward one",
     })
   })
 })

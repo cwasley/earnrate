@@ -71,6 +71,15 @@ credits:
     amount: 100
     period: cardmember_year
     note: 'Flights booked directly with JSX.'
+  # Listed, never applied to a purchase: earnrate can't tell which
+  # purchases they pay on.
+  - id: farelock
+    listed:
+      name: FareLock
+      on: United FareLock purchases
+    amount: 25
+    period: cardmember_year
+    note: "FareLock bought with the card on a flight operated by United or United Express. FareLock holds a fare for a fee; the fee isn't refunded or taken off the ticket price."
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: instacart
@@ -143,3 +152,12 @@ evidence:
     url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
     quote: 'Get up to $100 back as a statement credit each anniversary year when you book flights directly with JSX'
     in_popup: true
+  - rule: farelock
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: 'Up to $25 in credits on FareLock purchases annually'
+  - rule: farelock
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: 'Earn up to a $25 statement credit when your card is used on FareLock purchases'
+  - rule: farelock
+    url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    quote: 'Annual means the year beginning with your account open date'

@@ -37,7 +37,7 @@ export function ownCards(
     const termsNameIt =
       c.only_at?.some((id) => ids.includes(id)) ||
       [...c.rules, ...c.credits].some((r) =>
-        r.match.merchants?.some((id) => ids.includes(id)),
+        r.match?.merchants?.some((id) => ids.includes(id)),
       )
     return (
       termsNameIt && names.some((n) => wordsOf(c.name).includes(wordsOf(n)))

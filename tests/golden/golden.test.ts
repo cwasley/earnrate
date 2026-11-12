@@ -1990,7 +1990,7 @@ describe('#32 merchant statement credits', () => {
       expect(enroll).toHaveLength(2)
       expect(enroll.every((i) => i.due === null)).toBe(true)
       expect(enroll[0]?.text).toMatch(
-        /^Do you use The Platinum Card from American Express' Uber, Uber One, Walmart\+ membership and CLEAR credits\? Say which you use and they count against the annual fee\.$/,
+        /^Do you use The Platinum Card from American Express' Uber, Uber One, Walmart\+ membership, CLEAR and hotel credits\? Say which you use and they count against the annual fee\.$/,
       )
       expect(enroll[1]?.text).toMatch(
         /^Enroll in The Platinum Card from American Express' Lululemon, Resy, .* and YouTube TV credits with the issuer, then mark them enrolled\.$/,
@@ -2956,7 +2956,13 @@ describe('#39 cards that need a membership, when every card is ranked', () => {
 describe('#40 keep or replace a fee card', () => {
   const wallet = (cards: object[], fields: object = {}) =>
     withProfile(WalletSchema.parse({ cards, ...fields }), 'flat')
-  const RESERVE_CREDITS = ['travel', 'stubhub', 'lyft-credit', 'peloton-credit']
+  const RESERVE_CREDITS = [
+    'travel',
+    'stubhub',
+    'lyft-credit',
+    'peloton-credit',
+    'exclusive-tables',
+  ]
   const PLATINUM_CREDITS = [
     'lululemon',
     'uber-cash',
@@ -3051,7 +3057,7 @@ describe('#40 keep or replace a fee card', () => {
       const marked = ask(reserve({ enrolled: RESERVE_CREDITS }))
       expect(k.unsaid.yearly).toBe(marked.renewal.credits)
       expect(keepOrReplaceUnsaid(k)).toBe(
-        `The Chase Sapphire Reserve's credits you haven't marked as used (${wholeDollars(k.unsaid.yearly)} a year: travel, StubHub, Lyft and Peloton membership) aren't counted; with them all, it would add about ${wholeDollars(marked.added)} a year.`,
+        `The Chase Sapphire Reserve's credits you haven't marked as used (${wholeDollars(k.unsaid.yearly)} a year: travel, StubHub, Lyft, Peloton membership and dining) aren't counted; with them all, it would add about ${wholeDollars(marked.added)} a year.`,
       )
     },
   )

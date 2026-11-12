@@ -39,7 +39,7 @@ rules:
     exclude: { merchants: [dodger-stadium, bellagio] }
     rate: 3
     note: 6x during Citi Nights (purchases authorized Friday 6 PM to Saturday 6 AM ET and Saturday 6 PM to Sunday 6 AM ET); earnrate can't see the time of a purchase, so this models the 3x rate. Includes cafes, bars, lounges, fast food, takeout and restaurant delivery services. Excludes bakeries, caterers and restaurants inside another business (hotels, stores, stadiums, grocery stores, warehouse clubs).
-# Not modeled: the Splurge Credit (brands you pick) and the Global Entry/TSA PreCheck credit.
+# Not modeled: the Global Entry/TSA PreCheck credit.
 todo:
   - Citi Nights 6x at restaurants depends on the authorization time, which the schema can't express. Modeled at 3x.
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
@@ -55,6 +55,15 @@ credits:
     amount: 300
     period: calendar_year
     note: 'Once a year, $300 off one hotel stay of 2 nights or more booked on cititravel.com, before taxes and fees. It applies to one stay, not split across several.'
+  # Listed, never applied to a purchase: earnrate can't tell which
+  # purchases they pay on.
+  - id: splurge
+    listed:
+      name: Splurge
+      on: up to 2 brands of your choice
+    amount: 200
+    period: calendar_year
+    note: 'Up to $200 a year in all, at up to 2 of: 1stDibs, American Airlines, Best Buy, Future Personal Training and Live Nation. Citi says exclusions apply at American Airlines and Live Nation.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -104,3 +113,9 @@ evidence:
   - rule: hotel
     url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
     quote: 'Once per calendar year, you can enjoy $300 off a single hotel stay of 2 nights or more'
+  - rule: splurge
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: 'Every calendar year, earn up to $200 in statement credits on your choice of up to 2'
+  - rule: splurge
+    url: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    quote: '1stDibs, American Airlines (exclusions apply), Best Buy®, Future Personal Training, and Live Nation (exclusions apply)'

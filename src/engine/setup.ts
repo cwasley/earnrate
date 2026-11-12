@@ -20,6 +20,7 @@ import {
   creditTerms,
   currencyLabel,
   ENROLL_FIRST,
+  LISTED_CREDIT,
   freeNightText,
   idList,
   NIGHT_NO_CAP,
@@ -69,13 +70,14 @@ export type CardInfo = {
   }[]
   // Rates for a stretch after opening, which need the opening date.
   introRates: { id: string; days: number; text: string }[]
-  // Merchant statement credits: "$75 back each quarter at Lululemon".
+  // Statement credits: "$75 back each quarter at Lululemon".
   credits: {
     id: string
     name: string
     amount: number
     period: Credit['period']
     enroll: boolean
+    listed: boolean // never counted toward a purchase
     text: string
   }[]
   // One a year each, after the account anniversary: "an anniversary free
@@ -268,7 +270,8 @@ export function cardInfo(
         amount: c.amount,
         period: c.period,
         enroll: c.enroll === true,
-        text: `${creditBack(c)} ${creditWhere(catalog, c)}${creditTerms(c)}${c.enroll ? `, ${ENROLL_FIRST}` : ''}`,
+        listed: c.listed !== undefined,
+        text: `${creditBack(c)} ${creditWhere(catalog, c)}${creditTerms(c)}${c.enroll ? `, ${ENROLL_FIRST}` : ''}${c.listed ? `; ${LISTED_CREDIT}` : ''}`,
       }
     }),
     freeNights: nightStates(

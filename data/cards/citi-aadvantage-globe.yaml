@@ -34,7 +34,25 @@ rules:
     match: { categories: [transit] }
     rate: 2
     note: Rides and Rails covers ferries, commuter and passenger rail, subways, taxis, limousines and car services, rideshare, tolls, parking and bus lines. Not charter or tour buses, car rentals, or motor home and RV rentals.
-# Not modeled: Turo, inflight and brand statement credits, Admirals Club Globe Passes, companion certificate, Loyalty Point bonuses.
+# Not modeled: the Turo credit (per trip), Admirals Club Globe Passes, companion certificate, Loyalty Point bonuses.
+# Statement credits.
+credits:
+  # Listed, never applied to a purchase: earnrate can't tell which
+  # purchases they pay on.
+  - id: inflight
+    listed:
+      name: inflight
+      on: inflight purchases on American Airlines flights
+    amount: 100
+    period: calendar_year
+    note: 'Inflight purchases paid with the card on American Airlines flights.'
+  - id: splurge
+    listed:
+      name: Splurge
+      on: up to 2 brands of your choice
+    amount: 100
+    period: calendar_year
+    note: 'Up to $100 a year in all, at up to 2 of: 1stDibs, eligible AAdvantage Hotels bookings, Future Personal Training and Live Nation. Citi says exclusions apply.'
 evidence:
   - rule: base_rate
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
@@ -71,3 +89,15 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
     quote: 'Fee for Foreign Purchases - None'
+  - rule: inflight
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'Every calendar year, earn up to $100 in statement credits on inflight purchases'
+  - rule: inflight
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'when you use your card on American Airlines flights'
+  - rule: splurge
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: 'Every calendar year, earn up to $100 in statement credits on your choice of up to 2'
+  - rule: splurge
+    url: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    quote: '1stDibs, eligible AAdvantage Hotels™ bookings, Future Personal Training and Live Nation® (exclusions apply)'

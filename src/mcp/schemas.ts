@@ -223,6 +223,9 @@ export const WalletSummarySchema = z.object({
           used: z.number(),
           left: z.number().nullable(),
           tracked: z.boolean(),
+          // earnrate can't tell which purchases it pays on: never counted
+          // toward one, used only as the user marks it (creditUsed).
+          listed: z.boolean(),
           text: z.string(),
         }),
       ),
@@ -443,6 +446,7 @@ export const CardSearchSchema = z.object({
           amount: z.number(),
           period: CreditPeriod,
           enroll: z.boolean(),
+          listed: z.boolean(), // never counted toward a purchase
           text: z.string(),
         }),
       ),

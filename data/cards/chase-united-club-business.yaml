@@ -69,6 +69,15 @@ credits:
     amount: 200
     period: cardmember_year
     note: 'Hotel stays prepaid through Renowned Hotels and Resorts for United cardmembers.'
+  # Listed, never applied to a purchase: earnrate can't tell which
+  # purchases they pay on.
+  - id: farelock
+    listed:
+      name: FareLock
+      on: United FareLock purchases
+    amount: 50
+    period: cardmember_year
+    note: "FareLock bought with the card on a flight operated by United or United Express. FareLock holds a fare for a fee; the fee isn't refunded or taken off the ticket price."
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: instacart
@@ -130,3 +139,9 @@ evidence:
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'Receive up to $200 back in statement credits each anniversary year on hotel accommodations'
     in_popup: true
+  - rule: farelock
+    url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
+    quote: 'Up to $50 in credits on FareLock purchases annually'
+  - rule: farelock
+    url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
+    quote: 'Earn up to $50 back as a statement credit each anniversary year after you buy FareLock'

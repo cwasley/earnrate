@@ -25,7 +25,7 @@ export type CreditState = CreditWords & {
 }
 
 // Only a store itself has a credit: a search for a kind of purchase
-// ("clothing") never does.
+// ("clothing") never does, and a listed credit covers no purchase at all.
 // A credit naming a merchant also covers its brands (Hilton's covers Hampton).
 export function creditCovers(
   catalog: Catalog,
@@ -33,12 +33,14 @@ export function creditCovers(
   merchant: Pick<MerchantResolution, 'merchantId' | 'category' | 'source'>,
 ): boolean {
   if (merchant.source === 'category' || merchant.source === 'none') return false
-  const named = credit.match.merchants
+  const { match } = credit
+  if (match === undefined) return false
+  const named = match.merchants
   if (named)
     return merchantFamily(catalog, merchant.merchantId).some((id) =>
       named.includes(id),
     )
-  return (credit.match.categories ?? []).some((c) =>
+  return (match.categories ?? []).some((c) =>
     categoryMatches(c, merchant.category),
   )
 }

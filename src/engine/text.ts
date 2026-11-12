@@ -558,6 +558,13 @@ export const CREDIT_GROUP = 'With a statement credit'
 // A credit the cardholder said they don't use, in list_wallet.
 export const CREDIT_SKIPPED = "marked as one you don't use, so it isn't counted"
 
+// A listed credit (`listed` on a card's credit): shown and counted against
+// the fee like any other, never toward a purchase.
+export const LISTED_CREDIT =
+  "earnrate can't tell which purchases it pays on, so it never counts it toward one"
+export const LISTED_CREDIT_USED =
+  "earnrate can't tell which purchases it pays on, so mark what you've used"
+
 // "$75 back each quarter", "$15 back each month ($35 in December)"
 export const creditBack = (
   c: Pick<Credit, 'amount' | 'period'> & {

@@ -62,10 +62,9 @@ rules:
     min_amount: 5000
     cap: key-business-categories
     note: A single eligible purchase of $5,000 or more, anywhere. It doesn't count if the merchant splits a purchase into charges under $5,000. A large purchase in a 2X category earns 2X once, and 5X travel wins over it. Shares the $2 million yearly cap.
-# Not modeled: the hotel and Airbnb credits (only some Amex Travel bookings),
-# the airline fee credit (an airline you pick), Adobe and the extra Dell
-# credit (after a spending total), the 35% Pay with Points airline bonus and
-# lounge access.
+# Not modeled: the Airbnb Experiences credit (after an Airbnb Luxe booking),
+# Adobe and the extra Dell credit (after a spending total), the 35% Pay with
+# Points airline bonus and lounge access.
 # Merchant statement credits, on top of what the purchase earns.
 credits:
   - id: hilton
@@ -103,6 +102,23 @@ credits:
     period: calendar_year
     enroll: true
     note: "Bought directly from Dell Technologies in the U.S. The extra $1,000 after $5,000 of Dell purchases in a year isn't modeled."
+  # Listed, never applied to a purchase: earnrate can't tell which
+  # purchases they pay on.
+  - id: airline-fee
+    listed:
+      name: airline fee
+      on: incidental fees charged by the one airline you select
+    amount: 200
+    period: calendar_year
+    enroll: true
+    note: 'Enrolling is selecting one airline: Alaska, American, Delta, JetBlue, Southwest or United, the same one as for the 35% Airline Bonus. You can change it once a year, in January. Incidental fees charged by that airline separately from the ticket. Not tickets, upgrades, miles, gift cards, duty free, award tickets or fees from partner airlines.'
+  - id: hotel
+    listed:
+      name: hotel
+      on: prepaid Fine Hotels + Resorts, The Hotel Collection and Airbnb Luxe bookings through Amex Travel
+    amount: 300
+    period: half_year
+    note: 'New prepaid ("Pay Now") bookings through AmexTravel.com, the Amex Travel app or by phone; Airbnb Luxe only online or in the app, with your Airbnb account linked to Amex. The Hotel Collection and Airbnb Luxe need a stay of two nights or more, and Fine Hotels + Resorts does too from January 1, 2027. Not property fees or charges by the property.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: large-purchases
@@ -192,6 +208,30 @@ evidence:
   - rule: dell
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
     quote: 'Each Card Account can receive up to $150 in statement credits for eligible purchases with Dell Technologies'
+  - rule: airline-fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'To receive statement credits of up to $200 per calendar year toward incidental air travel fees'
+  - rule: airline-fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Card Member must select one qualifying airline'
+  - rule: airline-fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Incidental air travel fees must be separate charges from airline ticket charges.'
+  - rule: airline-fee
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/
+    quote: 'Statement credits up to $200 per calendar year for incidental fees charged by your one selected qualifying airline.'
+  - rule: hotel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'eligible to receive up to $300 in statement credits semi-annually (January to June, and July to December)'
+  - rule: hotel
+    url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/
+    quote: 'Get up to $300 in statement credits semi-annually on prepaid Fine Hotels + Resorts® or The Hotel Collection bookings'
+  - rule: hotel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'new prepaid Airbnb Luxe bookings with Airbnb made through AmexTravel.com or the Amex Travel App™'
+  - rule: hotel
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'Effective January 1, 2027, Fine Hotels + Resorts® bookings will require a minimum two-night stay'
 todo:
   - "Software and cloud system providers count toward the electronics category, but earnrate has no software or cloud category, so only electronics stores are modeled. Construction material and hardware suppliers are modeled as earnrate's home improvement category."
   - 'From February 17, 2027, U.S. shipping providers count only when bought directly from UPS, FedEx, USPS, Auctane, DHL, Worldwide Express and Old Dominion Freight Line. Not modeled yet.'

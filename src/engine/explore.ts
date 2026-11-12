@@ -591,7 +591,7 @@ function creditPicks(
         // A credit for a whole category (every restaurant) isn't a store's.
         .filter(
           (c) =>
-            c.match.merchants !== undefined &&
+            c.match?.merchants !== undefined &&
             creditCovers(catalog, c, merchant),
         )
         .map((credit): CreditPick => {
