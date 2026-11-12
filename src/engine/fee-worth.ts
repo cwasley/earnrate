@@ -22,7 +22,7 @@ import {
   creditsYearText,
   currencyName,
   FREE_NIGHT_NAME,
-  listed,
+  inOrder,
   num,
   perksNoun,
   pct,
@@ -146,7 +146,12 @@ export function feeWorthKit(
     if (noFee(card).length === 0) return null
     const bonus = bonusLines(card)
     const everywhere = bonus.length === 0
-    const chosen = everywhere ? typical : bonus
+    // Read out in this order, so everything else comes last.
+    const chosen = [...(everywhere ? typical : bonus)].sort(
+      (a, b) =>
+        Number(a.merchant.category === 'other') -
+        Number(b.merchant.category === 'other'),
+    )
     const total = chosen.reduce((s, l) => s + l.monthly, 0)
     const lines = chosen.map((l) => ({ ...l, monthly: l.monthly / total }))
     const runs = new Map<number, { card: Simulation; best: Simulation }>()
@@ -240,11 +245,32 @@ const PLAIN: Markup = { esc: (s) => s, strong: (s) => s }
 export const lineWords = (l: ResolvedLine) =>
   l.merchant.source === 'category' ? l.label.toLowerCase() : l.label
 
-const share = (l: ResolvedLine) => pct(Math.round(l.monthly * 100))
+// Whole percents of `lines` that add up to 100: each share rounded down,
+// then the points left over to the largest remainders.
+export function wholeShares(lines: ResolvedLine[]): number[] {
+  const total = lines.reduce((s, l) => s + l.monthly, 0)
+  if (total <= 0) return lines.map(() => 0)
+  const exact = lines.map((l) => (l.monthly / total) * 100)
+  const shares = exact.map(Math.floor)
+  let left = 100 - shares.reduce((s, n) => s + n, 0)
+  const byRemainder = exact
+    .map((x, i) => ({ i, rest: x - Math.floor(x) }))
+    .sort((a, b) => b.rest - a.rest || a.i - b.i)
+  for (const { i } of byRemainder) {
+    if (left <= 0) break
+    shares[i] = (shares[i] ?? 0) + 1
+    left -= 1
+  }
+  return shares
+}
 
 // "67% supermarkets and 33% restaurants"
-export const feeWorthMix = (w: FeeWorth) =>
-  listed(w.lines.map((l) => `${share(l)} ${lineWords(l)}`))
+export function feeWorthMix(w: FeeWorth): string {
+  const shares = wholeShares(w.lines)
+  return inOrder(
+    w.lines.map((l, i) => `${pct(shares[i] ?? 0)} ${lineWords(l)}`),
+  )
+}
 
 export const EARNING_ONLY =
   'This counts only what the card earns, not lounge access or other benefits.'
@@ -257,7 +283,7 @@ export function feeWorthVerdict(
   const fee = wholeDollars(w.card.annual_fee ?? 0)
   const where = w.everywhere
     ? 'spending'
-    : `spending on ${listed(w.lines.map(lineWords))}`
+    : `spending on ${inOrder(w.lines.map(lineWords))}`
   return w.breakEven === null
     ? `On earning alone, the ${esc(name)} doesn't earn more than the best no-fee card after its ${esc(fee)} fee, at any amount up to ${esc(wholeDollars(MAX_MONTHLY))} a month of ${esc(where)}.`
     : `On earning alone, the ${esc(name)} earns more than the best no-fee card, after its ${esc(fee)} fee, from about ${strong(`${esc(wholeDollars(w.breakEven))} a month`)} of ${esc(where)}${w.stopsAt === null ? '' : `, up to about ${esc(wholeDollars(w.stopsAt))} a month (past that, a spending cap ends its lead)`}.`
@@ -390,9 +416,9 @@ export function feeWorthAnswer(
   const assumes = `Assumes typical U.S. spending (${w.everywhere ? `no typical category earns it a bonus, so earnrate's whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`}), the same every month for a year; ${value}; the regular annual fee${membership}; no welcome bonus or first-year rates. Compared with the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards that need no membership.`
   return {
     annualFee: card.annual_fee ?? 0,
-    mix: w.lines.map((l) => ({
+    mix: w.lines.map((l, i) => ({
       label: l.label,
-      share: Math.round(l.monthly * 100),
+      share: wholeShares(w.lines)[i] ?? 0,
     })),
     everywhere: w.everywhere,
     breakEven: w.breakEven,

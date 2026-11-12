@@ -315,8 +315,10 @@ export function simulateWallet(
       )
     }
   }
+  // From the unrounded lines: adding lines rounded to the cent drifts a
+  // flat 2% on $1,000 a month to $240.01.
   const rewards = roundCents(
-    lineResults.reduce((sum, l) => sum + l.earned, 0) +
+    results.reduce((sum, r) => sum + r.earned, 0) +
       milestones.reduce((sum, m) => sum + m.value, 0),
   )
   const annualFees = cards.reduce((sum, c) => sum + (c.card.annual_fee ?? 0), 0)
@@ -400,7 +402,7 @@ export function simulateWallet(
       cardId: h.id,
       picks: h.chosen?.picks ?? {},
     })),
-    spend: roundCents(lineResults.reduce((sum, l) => sum + l.spend, 0)),
+    spend: roundCents(results.reduce((sum, r) => sum + r.spend, 0)),
     rewards,
     annualFees,
     memberships,
