@@ -1083,11 +1083,18 @@ function cardPagesList(v: View): string {
         .join('')}</ul>`
 }
 
-// What the lists leave out, the kinds of credit docs/feature-gaps.md says
+// What the lists leave out, among the kinds docs/feature-gaps.md says
 // aren't entered: said before the lists, so a count never reads as every
-// credit a card has.
+// credit a card has. Not exhaustive, so it never claims to be.
 const SCOPE =
-  "This page lists statement credits paid each month, quarter, half year or year, including ones earnrate can't tie to a purchase, like an airline fee credit or a hotel collection credit. It leaves out a credit that pays only after other purchases, like a spending total; one limited per purchase, booking or stay; one at named stores and a whole category together; a percentage back; and Bank of America Premium Rewards' airline incidental credit, whose terms earnrate couldn't read."
+  "This page lists credits paid each month, quarter, half year or year, including ones earnrate can't tie to a purchase. It leaves out a few others, among them credits that pay only after other purchases and ones limited per booking or stay"
+
+// A card whose credit earnrate couldn't read on the issuer's pages: named on
+// the year's page and its own, and only while the card has no credit.
+const UNREAD = {
+  cardId: 'bank-of-america-premium-rewards',
+  what: "Bank of America Premium Rewards' airline incidental credit, whose terms earnrate couldn't read",
+}
 
 // The card's own page at its issuer: its first source that isn't a terms,
 // fees, FAQ or disclosure page.
@@ -1121,8 +1128,13 @@ function scopeHtml(ctx: PageContext, card: Card | null): string {
   const check =
     card === null
       ? ''
-      : ` For anything else, check <a class="ye-issuer" href="${esc(url)}" rel="nofollow noopener">${esc(pageName(ctx, card, url))}</a>.`
-  return `<p class="ye-scope">${esc(SCOPE)}${check}</p>`
+      : ` For those, check <a class="ye-issuer" href="${esc(url)}" rel="nofollow noopener">${esc(pageName(ctx, card, url))}</a>.`
+  const unread =
+    (card === null || card.id === UNREAD.cardId) &&
+    ctx.catalog.cards.some(
+      (c) => c.id === UNREAD.cardId && c.credits.length === 0,
+    )
+  return `<p class="ye-scope">${esc(`${SCOPE}${unread ? `; for now, also ${UNREAD.what}` : ''}.`)}${check}</p>`
 }
 
 const SOURCE_LINE = `<p class="muted">Every amount, date, cap and quote here is from the card's file in earnrate, checked against the issuer's pages on the date each card page shows. Check the issuer's terms before you rely on them.</p>`

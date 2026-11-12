@@ -714,15 +714,23 @@ describe('year-end pages', () => {
       const scope = /<p class="ye-scope">([^<]*)/
       const sentence = scope.exec(hub)?.[1] ?? ''
       const said = unescape(sentence)
-      expect(said).toMatch(
-        /^This page lists statement credits .*, including ones earnrate can't tie to a purchase, like an airline fee credit or a hotel collection credit\./,
-      )
-      expect(said).toMatch(/after other purchases, like a spending total/)
+      const lead =
+        "This page lists credits paid each month, quarter, half year or year, including ones earnrate can't tie to a purchase. It leaves out a few others, among them credits that pay only after other purchases and ones limited per booking or stay"
+      expect(said.startsWith(lead)).toBe(true)
       const bofa = catalog.cards.find(
         (c) => c.id === 'bank-of-america-premium-rewards',
       )
-      if (said.includes('Bank of America Premium Rewards'))
-        expect(bofa?.credits ?? []).toEqual([])
+      const unread = /Bank of America Premium Rewards/
+      expect(unread.test(said)).toBe(bofa?.credits.length === 0)
+      for (const page of cardPages) {
+        const own = unescape(scope.exec(page.html)?.[1] ?? '')
+        const id = page.path.split('/').at(-1) ?? ''
+        expect(own.startsWith(lead), id).toBe(true)
+        expect(unread.test(own), id).toBe(
+          id === bofa?.id && bofa.credits.length === 0,
+        )
+        expect(own.split('. ').length, id).toBeLessThanOrEqual(3)
+      }
       const platinum = unescape(pageOf('amex-platinum')?.html ?? '')
       for (const id of ['airline-fee', 'hotel']) {
         const credit = catalog.cards
@@ -738,7 +746,6 @@ describe('year-end pages', () => {
       for (const page of cardPages) {
         const id = page.path.split('/').at(-1) ?? ''
         const card = catalog.cards.find((c) => c.id === id)
-        expect(scope.exec(page.html)?.[1], id).toContain(sentence)
         expect(page.html.indexOf('class="ye-scope"'), id).toBeLessThan(
           page.html.indexOf('<h2 id='),
         )
