@@ -1,9 +1,10 @@
 import { Fragment, type ComponentChildren } from 'preact'
-import { useEffect, useMemo, useState } from 'preact/hooks'
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { HALF_CENT } from '../../src/engine/compare.ts'
 import type { Picks } from '../../src/engine/explore.ts'
 import { CardArt } from './CardArt.tsx'
+import { debouncer } from './debounce.ts'
 import { track } from './track.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import {
@@ -51,6 +52,9 @@ export type Row = SpendingRow
 
 export const lineFor = (what: string, monthly: number) =>
   spendLineFor(catalog, what, monthly)
+
+// How long typing pauses before the answer is worked out again.
+const SETTLE_MS = 250
 
 // Rows shown before "Show more", and how many it shows.
 const SHOWN = 3
@@ -188,10 +192,26 @@ export function Spending({
   filters: ComponentChildren
 }) {
   const [rows, setStateRows] = useState<Row[]>(loadSpendingRows)
-  const setRows = (next: Row[]) => {
+  // The rows the answer is for. Null until the tab has painted, so it shows
+  // before the first answer is worked out.
+  const [settled, setSettled] = useState<Row[] | null>(null)
+  const settle = useMemo(() => debouncer(SETTLE_MS), [])
+  useEffect(() => {
+    setSettled(rows)
+    return () => settle.cancel()
+  }, [])
+  // Typing waits for a pause before the answer is worked out again; other
+  // changes don't.
+  const setRows = (next: Row[], typing = false) => {
     setStateRows(next)
     saveSpendingRows(next)
+    if (typing) settle.run(() => setSettled(next))
+    else {
+      settle.cancel()
+      setSettled(next)
+    }
   }
+  const working = settled !== rows
   const [adding, setAdding] = useState('')
   // Closed on every visit: the line above them says what they add up to.
   const [editing, setEditing] = useState(false)
@@ -205,26 +225,20 @@ export function Spending({
       .filter((id) => catalog.cards.some((c) => c.id === id)),
   )
   useEffect(() => {
-    if (focus.length === 0) return
-    track('page-spending')
-    requestAnimationFrame(() => {
-      document
-        .querySelector(`[data-single="${CSS.escape(focus[0] ?? '')}"]`)
-        ?.scrollIntoView({ block: 'center' })
-    })
+    if (focus.length > 0) track('page-spending')
   }, [focus])
   // The open row: a card id, or a pair's ids joined with "+".
   const [open, setOpen] = useState<string | null>(focus[0] ?? null)
   const toggle = (key: string) => setOpen(open === key ? null : key)
-  const typical = isTypicalRows(rows)
+  const typical = isTypicalRows(settled ?? rows)
   const today = localToday()
   const lines = useMemo(
     () =>
       resolveSpendLines(
         catalog,
-        rows.map((r) => lineFor(r.what, r.monthly)),
+        (settled ?? rows).map((r) => lineFor(r.what, r.monthly)),
       ),
-    [rows],
+    [settled ?? rows],
   )
   const unknown = lines.filter((l) => l.merchant.source === 'none')
   const known = useMemo(
@@ -238,10 +252,10 @@ export function Spending({
   )
   const result = useMemo(
     () =>
-      known.length === 0 || leftOut !== null
+      settled === null || known.length === 0 || leftOut !== null
         ? null
         : simulateCatalog(catalog, known, { ...options, start: today }),
-    [known, leftOut, options, today],
+    [settled, known, leftOut, options, today],
   )
   // Each card alone, as the next-card planner values it: the same spending
   // all on it, with its welcome offer in the first year.
@@ -293,6 +307,17 @@ export function Spending({
   )
   const single = result?.singles[0]
   const pair = result?.pairs[0]
+  // The first answer scrolls to a card a page asked about.
+  const scrolled = useRef(false)
+  useEffect(() => {
+    if (scrolled.current || focus.length === 0 || !result) return
+    scrolled.current = true
+    requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-single="${CSS.escape(focus[0] ?? '')}"]`)
+        ?.scrollIntoView({ block: 'center' })
+    })
+  }, [focus, result])
   const notes = result
     ? [
         ...new Set([
@@ -385,14 +410,17 @@ export function Spending({
   }
 
   const update = (i: number, monthly: number) =>
-    setRows(rows.map((r, j) => (j === i ? { ...r, monthly } : r)))
+    setRows(
+      rows.map((r, j) => (j === i ? { ...r, monthly } : r)),
+      true,
+    )
 
   const singlesLeft = result ? Math.min(MORE, result.singles.length) - SHOWN : 0
   const pairsLeft = result ? Math.min(MORE, result.pairs.length) - SHOWN : 0
 
   return (
     <div>
-      <div aria-live="polite">
+      <div aria-live="polite" aria-busy={working}>
         {result && single ? (
           <Answer
             single={single}
@@ -418,11 +446,12 @@ export function Spending({
 
       <details
         class="filters spend-edit"
-        open={editing || !result}
+        open={editing || (!result && settled !== null)}
         onToggle={(e) => setEditing(e.currentTarget.open)}
       >
         <summary>
           <span class="basis">
+            {working ? <span class="sync-dot busy" aria-hidden="true" /> : null}
             {typical
               ? `On typical U.S. spending, about ${wholeDollars(monthly)} a month.`
               : `On your spending, ${wholeDollars(monthly)} a month.`}
@@ -450,6 +479,10 @@ export function Spending({
                     onInput={(e) => {
                       track('spending-edit')
                       update(i, Math.max(0, Number(e.currentTarget.value) || 0))
+                    }}
+                    onBlur={() => settle.flush()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') settle.flush()
                     }}
                   />
                 </span>

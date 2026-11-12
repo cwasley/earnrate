@@ -1726,6 +1726,12 @@ p.callout .link {
   font-weight: 400;
 }
 
+.spend-edit summary .basis .sync-dot {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 .how {
   margin-top: 14px;
 }
