@@ -34,6 +34,7 @@ import {
 import { quarterlyPages, quarters } from '../scripts/pages/quarterly.ts'
 import {
   yearEnd,
+  yearEndLinks,
   yearEndPages,
   yearEndRedirects,
 } from '../scripts/pages/year-end.ts'
@@ -457,7 +458,7 @@ describe('year-end pages', () => {
   const pages = yearEndPages(ctx, () => today)
   const hub = pages.find((p) => p.path === '/year-end/')?.html ?? ''
   const block = (section: string, cardId: string) => {
-    const start = hub.indexOf(`id="${section}-${cardId}"`)
+    const start = hub.indexOf(`data-anchor="${section}-${cardId}"`)
     return start === -1
       ? ''
       : hub.slice(start, hub.indexOf('</section>', start))
@@ -506,7 +507,7 @@ describe('year-end pages', () => {
     ).toEqual([])
     const details = hub.indexOf('<details class="ye-monthly">')
     expect(details).toBeGreaterThan(hub.indexOf('id="spend"'))
-    expect(hub.indexOf('id="monthly-')).toBeGreaterThan(details)
+    expect(hub.indexOf('data-anchor="monthly-')).toBeGreaterThan(details)
     expect(
       hub.slice(details + 1, hub.indexOf('</details>', details)),
     ).not.toMatch(/<details/)
@@ -589,7 +590,7 @@ describe('year-end pages', () => {
       }
       const platinum = pageOf('amex-platinum')?.html ?? ''
       expect(platinum).not.toContain('data-card="amex-gold"')
-      expect(platinum).not.toMatch(/id="[a-z]+-amex-gold"/)
+      expect(platinum).not.toMatch(/data-anchor="[a-z]+-amex-gold"/)
       expect(platinum).toContain('href="/cards/amex-platinum"')
       expect(platinum).toContain(`href="/year-end/${String(year)}#`)
       expect(platinum).toContain('href="/#wallet&amp;add=amex-platinum"')
@@ -612,7 +613,7 @@ describe('year-end pages', () => {
         month_amounts: { '12': 35 },
       })
       if (year === 2026) expect(platinum).toContain('$35 back at Uber')
-      expect(platinum).toContain(`worth up to ${money(total)} in all`)
+      expect(platinum).toContain(`worth up to ${money(total)} together`)
       const flex = pageOf('chase-freedom-flex')?.html ?? ''
       const opens = catalog.cards
         .find((c) => c.id === 'chase-freedom-flex')
@@ -621,6 +622,73 @@ describe('year-end pages', () => {
         expect(flex).toContain(
           `Activate with Chase starting ${shortDate(opens)}`,
         )
+    })
+
+    test("says what kinds of credit the lists leave out before they start, and links each card's issuer page", () => {
+      const scope = /<p class="ye-scope">([^<]*)/
+      const sentence = scope.exec(hub)?.[1] ?? ''
+      expect(sentence).toMatch(/airline fee credit/)
+      expect(sentence).toMatch(/hotel collection/)
+      expect(sentence).toMatch(/spending total/)
+      expect(hub.indexOf('class="ye-scope"')).toBeLessThan(
+        hub.indexOf('<h2 id="credits">'),
+      )
+      for (const page of cardPages) {
+        const id = page.path.split('/').at(-1) ?? ''
+        const card = catalog.cards.find((c) => c.id === id)
+        expect(scope.exec(page.html)?.[1], id).toContain(sentence)
+        expect(page.html.indexOf('class="ye-scope"'), id).toBeLessThan(
+          page.html.indexOf('<h2 id='),
+        )
+        const href = unescape(
+          /class="ye-issuer" href="([^"]*)"/.exec(page.html)?.[1] ?? '',
+        )
+        expect(card?.source_urls, id).toContain(href)
+        expect(href, id).not.toMatch(/terms|pricing|disclosure|faq/i)
+      }
+    })
+
+    test('no id or class carries a card id, and every link into a year-end page lands on an id or a data-anchor', () => {
+      const ids = new Set(catalog.cards.map((c) => c.id))
+      const named = (html: string) =>
+        [...html.matchAll(/\s(?:id|class)="([^"]*)"/g)].flatMap((m) =>
+          (m[1] ?? '').split(/\s+/),
+        )
+      for (const page of pages) {
+        const leaks = named(page.html).filter((n) =>
+          [...ids].some((id) => n === id || n.includes(id)),
+        )
+        expect(leaks, page.path).toEqual([])
+      }
+      const yearPage = pages.find((p) => p.path === `/year-end/${String(year)}`)
+      const targets = (html: string) =>
+        new Set(
+          [...html.matchAll(/\s(?:id|data-anchor)="([^"]*)"/g)].map(
+            (m) => m[1] ?? '',
+          ),
+        )
+      const onPage = new Map([
+        ['/year-end/', targets(hub)],
+        [`/year-end/${String(year)}`, targets(yearPage?.html ?? '')],
+      ])
+      const sources = [
+        ...pages.map((p) => ({ path: p.path, html: p.html })),
+        ...[...yearEndLinks(ctx).values()].map((l) => ({
+          path: 'card page',
+          html: l.html,
+        })),
+      ]
+      for (const { path: from, html } of sources)
+        for (const m of html.matchAll(
+          /href="(\/year-end\/[^"#]*)?#([^"]+)"/g,
+        )) {
+          const page = m[1] ?? from
+          const found = onPage.get(page)
+          if (!found) continue
+          expect(found.has(m[2] ?? ''), `${from} → ${page}#${m[2] ?? ''}`).toBe(
+            true,
+          )
+        }
     })
 
     test('is indexed only when something on it ends with the year', () => {

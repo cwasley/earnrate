@@ -27,6 +27,7 @@ import {
   money,
   MONTH_NAMES,
   periodPhrase,
+  possessive,
   shortDate,
   wholeDollars,
 } from '../../src/engine/text.ts'
@@ -482,7 +483,7 @@ function cardSummary(ctx: PageContext, one: YearEnd, card: Card): string[][] {
             `One credit on ${theCard} ends ${end}, worth up to ${money(atYearEnd(one, single))}.`,
           ]
         : [
-            `${String(n)} credits on ${theCard} end ${end}, worth up to ${creditTotal(one, credits)} in all.`,
+            `${String(n)} credits on ${theCard} end ${end}, worth up to ${creditTotal(one, credits)} together.`,
             `${String(n)} credits on ${theCard} end ${by}${dayOf(one.end)}, worth up to ${creditTotal(one, credits)}.`,
           ],
     ]
@@ -652,8 +653,8 @@ function cardBlock(
   inner: string,
 ): string {
   if (v.one)
-    return `<section class="ye-card ye-one" id="${section}-${esc(card.id)}">${inner}</section>`
-  return `<section class="ye-card" data-card="${esc(card.id)}" id="${section}-${esc(card.id)}"><div class="card-head small">${v.ctx.art(card.id, 64)}<h3><a href="/cards/${card.id}">${esc(card.name)}</a></h3><span class="ye-mark">Your card</span></div>${inner}${sendRow(v.y, card, v.titles.get(card.id) ?? '')}</section>`
+    return `<section class="ye-card ye-one" data-anchor="${section}-${esc(card.id)}">${inner}</section>`
+  return `<section class="ye-card" data-card="${esc(card.id)}" data-anchor="${section}-${esc(card.id)}"><div class="card-head small">${v.ctx.art(card.id, 64)}<h3><a href="/cards/${card.id}">${esc(card.name)}</a></h3><span class="ye-mark">Your card</span></div>${inner}${sendRow(v.y, card, v.titles.get(card.id) ?? '')}</section>`
 }
 
 // `prefer`: words the quote should name when one does (a month with its own
@@ -895,21 +896,35 @@ const allSections = (v: View) =>
     capsSection(v),
   ].join('\n      ')
 
-// Runs where it sits, after the lists: a link into the collapsed monthly
-// list opens it, and cards saved in this browser move to the top of each
+// Runs where it sits, after the lists: a link to a card's block (#credits-
+// <card>, its data-anchor) scrolls there, opening the collapsed monthly list
+// if it's in it, and cards saved in this browser move to the top of each
 // list. It only reads the wallet earnrate.dev saved; nothing is sent.
 const WALLET_SCRIPT = `(() => {
   const reveal = () => {
-    const id = decodeURIComponent(location.hash.slice(1))
-    const target = id && document.getElementById(id)
-    const box = target && target.closest('details')
+    const name = decodeURIComponent(location.hash.slice(1))
+    if (!name || document.getElementById(name)) return
+    const target = [...document.querySelectorAll('[data-anchor]')].find(
+      (el) => el.dataset.anchor === name,
+    )
+    if (!target) return
+    const box = target.closest('details')
     if (box && !box.open) {
+      // Opened at once, not animated, so the page is its full height to
+      // scroll in; its content is shown the frame after the toggle.
+      box.dataset.jump = ''
+      box.addEventListener(
+        'toggle',
+        () => requestAnimationFrame(() => target.scrollIntoView()),
+        { once: true },
+      )
       box.open = true
-      target.scrollIntoView()
+      return
     }
+    target.scrollIntoView()
   }
   addEventListener('hashchange', reveal)
-  reveal()
+  queueMicrotask(reveal)
   let held = []
   try {
     const w = JSON.parse(localStorage.getItem('earnrate:wallet'))
@@ -1056,6 +1071,32 @@ function cardPagesList(v: View): string {
         .join('')}</ul>`
 }
 
+// What the lists leave out, the kinds of credit docs/feature-gaps.md says
+// aren't entered: said before the lists, so a count never reads as every
+// credit a card has.
+const SCOPE =
+  "This page lists statement credits at named stores and services. It leaves out a credit for a merchant you choose first, like an airline fee credit; a credit on only some of a merchant's sales, like hotel collection bookings; and a credit paid only after a spending total."
+
+// The card's own page at its issuer: its first source that isn't a terms,
+// fees, FAQ or disclosure page.
+export function issuerPage(card: Card): string {
+  const main = card.source_urls.find(
+    (u) =>
+      !/terms|pricing|disclosure|faq|rewards-info|learnmore|education|benefit|calendar|\.pdf/i.test(
+        u,
+      ),
+  )
+  return main ?? card.source_urls[0] ?? ''
+}
+
+function scopeHtml(ctx: PageContext, card: Card | null): string {
+  const check =
+    card === null
+      ? ''
+      : ` For anything else, check <a class="ye-issuer" href="${esc(issuerPage(card))}" rel="nofollow noopener">${esc(`${possessive(ctx.issuerName(card.issuer))} page for the ${cardName(ctx, card)}`)}</a>.`
+  return `<p class="ye-scope">${esc(SCOPE)}${check}</p>`
+}
+
 const SOURCE_LINE = `<p class="muted">Every amount, date, cap and quote here is from the card's file in earnrate, checked against the issuer's pages on the date each card page shows. Check the issuer's terms before you rely on them.</p>`
 
 function renderYear(
@@ -1089,6 +1130,7 @@ function renderYear(
       <h1>${esc(h1)}</h1>
       <p class="updated">${esc(`Through ${shortDate(y.end)} · Updated ${ctx.dayWords(updated)}`)}</p>
       <p class="answer">${esc(summary(y))}</p>
+      ${scopeHtml(ctx, null)}
       ${hub ? `<p>This page always shows the current year. For a link that stays on ${esc(year)}, use <a href="/year-end/${year}">/year-end/${year}</a>.</p>` : ''}
       <div class="ye-yours" data-ye-yours hidden><p data-some hidden>Cards saved on earnrate.dev in this browser come first in each list, marked “Your card”. Each also has a page of its own:</p><p data-none hidden>None of the cards saved on earnrate.dev in this browser have anything on this page.</p><ul class="chip-links"></ul></div>
       ${jumpList(y, ctx)}
@@ -1127,6 +1169,7 @@ function cardPage(
       <p class="updated">${esc(`${card.name} · Through ${shortDate(y.end)} · Updated ${ctx.dayWords(lastmod)}`)}</p>
       <p class="answer">${esc(answer)}</p>
       ${sendRow(y, card, title)}
+      ${scopeHtml(ctx, card)}
       ${allSections(v)}
       <h2>${esc(`More on the ${name}`)}</h2>
       <p><a href="/cards/${card.id}">${esc(`Everything on the ${name}`)}</a>${esc(card.credits.length > 0 ? ': its rates, fees and all of its credits, not only the ones that end with the year.' : ': its rates, fees and the rest of its terms.')}</p>

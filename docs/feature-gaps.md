@@ -120,7 +120,6 @@ Merchant credits (`credits:`) and yearly free nights (`free_nights:`, one after 
 
 A credit (`credits:`) is a fixed dollar amount each period at named merchants or a category, counted on top of the card's rate. These credits don't fit:
 
-- A different amount in one month. Modeled at the usual amount: `amex-platinum` Uber Cash ($20 more in December); the rideshare credits on `chase-united-quest`, `chase-united-club`, `chase-united-business` and `chase-united-club-business` (more in December).
 - Starting a while after the account opens. `amex-delta-skymiles-gold`'s rideshare credit opens 12 months after the account does; the note says so.
 - Purchases the credit pays for earning nothing. earnrate counts the card's rate on the whole purchase: `chase-sapphire-reserve` ($300 travel credit, and The Edit, not entered), `capital-one-venture-x` and `capital-one-venture-x-business` (travel credits), `citi-strata-premier` (the $100 Annual Hotel Benefit).
 - Excluding part of a category. `chase-sapphire-reserve`'s travel credit covers Chase's travel category, which includes trains, buses, taxis, tolls and parking but not rideshare; earnrate's `transit` includes rideshare, so the credit matches `travel` only.

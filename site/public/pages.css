@@ -880,6 +880,9 @@ ul.ye-items p,
 .ye-quarter {
   margin-top: 8px;
 }
+.ye-monthly[data-jump]::details-content {
+  transition: none;
+}
 .ye-monthly > summary {
   margin: 0 0 12px;
   cursor: pointer;
