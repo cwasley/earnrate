@@ -33,7 +33,7 @@ import {
 import { optionName } from '../../src/engine/rule-text.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { CardArt } from '../app/CardArt.tsx'
-import { CreditPicks, type CreditAnswer } from '../app/CreditPicks.tsx'
+import { CreditPicks } from '../app/CreditPicks.tsx'
 import {
   cards,
   feeLabel,
@@ -49,9 +49,10 @@ import type { LinkState, LinkUpdater } from '../app/report-link.ts'
 import { sameRows } from '../app/spending-rows.ts'
 import { track } from '../app/track.ts'
 import {
+  answeredMarks,
   answerSaver,
   heldMarks,
-  withAnswer,
+  sameMarks,
   type Marks,
   type Saver,
 } from './answers.ts'
@@ -132,9 +133,10 @@ const withMarks = (c: ReportCard, m: Marks | undefined): ReportCard => ({
   ...(m && m.skipped.length > 0 ? { skipped: m.skipped } : {}),
 })
 
-// Credit answers change the report at once. With a saver (the visitor's own
-// wallet) each is saved too, and then shows what was saved: a refusal puts
-// the card's answers back as they are in My wallet.
+// Credit answers change the report at once. Each tap or All / None is one
+// change: the card's whole used and not-used lists. With a saver (the
+// visitor's own wallet) it's saved too, and then shows what was saved: a
+// refusal puts the card's answers back as they are in My wallet.
 function useAnswers(initial: ReportInput, save: Saver | null) {
   const [marks, setMarks] = useState<Record<string, Marks>>(() =>
     Object.fromEntries(
@@ -151,10 +153,12 @@ function useAnswers(initial: ReportInput, save: Saver | null) {
     latest.current = { ...latest.current, [cardId]: m }
     setMarks(latest.current)
   }
-  const answer = (cardId: string, ids: string[], a: CreditAnswer) => {
-    const next = withAnswer(latest.current[cardId] ?? NO_MARKS, ids, a)
-    put(cardId, next)
+  const set = (cardId: string, ids: string[], used: string[]) => {
+    const was = latest.current[cardId] ?? NO_MARKS
+    const next = answeredMarks(was, ids, used)
     setError(null)
+    if (sameMarks(was, next)) return
+    put(cardId, next)
     if (!save) return
     const turn = (turns.current.get(cardId) ?? 0) + 1
     turns.current.set(cardId, turn)
@@ -163,10 +167,13 @@ function useAnswers(initial: ReportInput, save: Saver | null) {
       if (!result.ok) setError(result.error)
       const held = result.wallet?.cards.find((c) => c.id === cardId)
       const card = cards.get(cardId)
-      if (held && card) put(cardId, heldMarks(card, held))
+      if (!held || !card) return
+      const saved = heldMarks(card, held)
+      const now = latest.current[cardId] ?? NO_MARKS
+      if (!sameMarks(saved, now)) put(cardId, saved)
     })
   }
-  return { marks, answer, error }
+  return { marks, set, error }
 }
 
 const applyMarks = (
@@ -179,6 +186,9 @@ const applyMarks = (
 
 type Parts = {
   best: BestCards | null
+  // The report start the best cards were worked out with, so the comparison
+  // shows one result at a time.
+  bestStart: ReportStart | null
   fees: Map<string, FeeVerdict | null>
   next: Addition | null | undefined
   gaps: Gap[] | null
@@ -186,15 +196,16 @@ type Parts = {
 
 const NO_PARTS: Parts = {
   best: null,
+  bestStart: null,
   fees: new Map(),
   next: undefined,
   gaps: null,
 }
 
-function withPart(was: Parts, p: Part): Parts {
+function withPart(was: Parts, p: Part, start: ReportStart): Parts {
   switch (p.part) {
     case 'best':
-      return { ...was, best: p.value }
+      return { ...was, best: p.value, bestStart: start }
     case 'fee':
       return { ...was, fees: new Map(was.fees).set(p.cardId, p.value) }
     case 'next':
@@ -215,21 +226,30 @@ const NOTHING_FRESH: Fresh = new Set()
 
 type Busy = (key: string) => boolean
 
-// Each part stays as the last job left it until the new job sends its own,
-// so a change dims what's being worked out instead of clearing it, and
-// nothing moves. A part no job has sent yet is undefined or null, and its
+// Each part stays exactly as the last job left it until the new job sends
+// its own, which then swaps in: nothing dims, clears or moves meanwhile, and
+// a job a newer change overtook is stopped and its parts dropped. Busy only
+// sets aria-busy. A part no job has sent yet is undefined or null, and its
 // section holds a placeholder the size of the answer.
-function useParts(input: ReportInput, spending: Spending, today: string) {
+function useParts(
+  input: ReportInput,
+  spending: Spending,
+  today: string,
+  start: ReportStart,
+) {
   const job = useMemo(
     () => ({ input, spending, today }),
     [input, spending, today],
   )
+  const startNow = useRef(start)
+  startNow.current = start
   const [state, setState] = useState<{
     job: Job | null
     parts: Parts
     fresh: Fresh
   }>({ job: null, parts: NO_PARTS, fresh: NOTHING_FRESH })
   useEffect(() => {
+    const jobStart = startNow.current
     setState((was) => ({ job, parts: was.parts, fresh: NOTHING_FRESH }))
     if (job.input.cards.length === 0) return
     return runReport(catalog, job, (p) => {
@@ -237,7 +257,7 @@ function useParts(input: ReportInput, spending: Spending, today: string) {
         was.job === job
           ? {
               job,
-              parts: withPart(was.parts, p),
+              parts: withPart(was.parts, p, jobStart),
               fresh: new Set(was.fresh).add(partKey(p)),
             }
           : was,
@@ -513,6 +533,10 @@ const basisText = (start: ReportStart) =>
     ? `On typical U.S. spending, about ${wholeDollars(start.monthly)} a month.`
     : `On your spending, ${wholeDollars(start.monthly)} a month.`
 
+// The longer lines under the figure keep their room whichever one
+// shows, so answering a credit never moves the page under the tap.
+const ROOM = { low: 0, high: 0 }
+
 // The report itself: the same for your own cards and a shared link. The
 // figure and what makes it up, then a panel each for the credits, the
 // comparison, sharing and the slower parts.
@@ -533,7 +557,7 @@ function Report({
   editors: ComponentChildren
   answers: ComponentChildren
 }) {
-  const { best, fees, next, gaps } = parts
+  const { best, bestStart, fees, next, gaps } = parts
   return (
     <div class="rate-report" aria-live="polite">
       <ul class="rate-cards" aria-label="The cards rated">
@@ -546,7 +570,19 @@ function Report({
       </ul>
       <p class="rate-figure" data-range={start.range === null ? undefined : ''}>
         <Words text={netFigure(start)} />
-        <span class="rate-per">{perYear(start)}</span>
+        <span class="rate-per">
+          <span>{perYear(start)}</span>
+          {start.creditChoices.length > 0 ? (
+            <>
+              <span class="rate-per-room" aria-hidden="true">
+                {perYear({ range: ROOM, counted: [] })}
+              </span>
+              <span class="rate-per-room" aria-hidden="true">
+                {perYear({ range: null, counted: [ROOM] })}
+              </span>
+            </>
+          ) : null}
+        </span>
       </p>
       <p class="rate-lead">
         <Words text={breakdownText(catalog, start)} />
@@ -554,7 +590,11 @@ function Report({
       {editors ?? <p class="muted rate-basis">{basisText(start)}</p>}
       <div class="rate-blocks">
         {answers}
-        <Comparison start={start} best={best} busy={busy('best')} />
+        <Comparison
+          start={bestStart ?? start}
+          best={best}
+          busy={busy('best')}
+        />
         {share}
         <FeeCards input={input} fees={fees} busy={busy} />
         <Next next={next} busy={busy('next')} />
@@ -762,9 +802,12 @@ function holds(input: ReportInput, lines: ResolvedLine[] | null): string[] {
     ...(Object.keys(input.valuations).length > 0
       ? ['The point values you set']
       : []),
-    ...(input.cards.some(
-      (c) => (c.used ?? []).length > 0 || (c.skipped ?? []).length > 0,
-    )
+    // Listed for any card with credits, answered or not, so the list stays
+    // put while they're tapped.
+    ...(input.cards.some((c) => {
+      const card = cards.get(c.id)
+      return (card?.credits.length ?? 0) + (card?.free_nights.length ?? 0) > 0
+    })
       ? ['Which statement credits you use']
       : []),
     ...(lines === null ? [] : ['Your monthly spending, rounded to $5']),
@@ -1024,9 +1067,9 @@ function Answers({
     <section class="panel rate-credits" aria-labelledby="rate-credits-title">
       <h2 id="rate-credits-title">Credits</h2>
       <p class="muted small rate-hint">
-        Count a credit as used only if you'd spend there anyway.
+        Tap the ones you use. Count a credit only if you'd spend there anyway.
       </p>
-      <CreditPicks cards={start.creditChoices} onAnswer={answers.answer} />
+      <CreditPicks cards={start.creditChoices} onSet={answers.set} />
       {answers.error === null ? null : (
         <p class="callout small">{answers.error}</p>
       )}
@@ -1091,12 +1134,13 @@ function Rated({
     }),
     [input, start],
   )
-  const { parts, busy } = useParts(linked, spending, today)
-  const bestBusy = busy('best')
+  const { parts, busy } = useParts(linked, spending, today, start)
   const picture = useMemo(
     () =>
-      bestBusy ? null : ratePictureText(start, parts.best, shortestName, today),
-    [start, parts.best, today, bestBusy],
+      parts.bestStart === null
+        ? null
+        : ratePictureText(parts.bestStart, parts.best, shortestName, today),
+    [parts.bestStart, parts.best, today],
   )
   return (
     <>
@@ -1168,14 +1212,19 @@ function Shared({
     () => reportStart(catalog, input, today, spending),
     [input, spending, today],
   )
-  const { parts, busy } = useParts(input, spending, today)
-  const bestBusy = busy('best')
+  const { parts, busy } = useParts(input, spending, today, start)
   const picture = useMemo(
     () =>
-      bestBusy
+      parts.bestStart === null
         ? null
-        : ratePictureText(start, parts.best, shortestName, today, 'neutral'),
-    [start, parts.best, today, bestBusy],
+        : ratePictureText(
+            parts.bestStart,
+            parts.best,
+            shortestName,
+            today,
+            'neutral',
+          ),
+    [parts.bestStart, parts.best, today],
   )
   return (
     <Report

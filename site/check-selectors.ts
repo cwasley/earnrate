@@ -146,21 +146,30 @@ const STEPS: Step[] = [
     },
   },
   {
-    name: 'Rate my wallet after marking credits used and not used',
+    name: 'Rate my wallet after tapping credits, All and None',
     url: '/rate',
     ready: '.credit-tile',
     act: async (page) => {
       const settle = () =>
         page.waitForFunction(
-          () => !document.body.innerText.includes('Working it out'),
+          () => document.querySelector('[aria-busy="true"]') === null,
         )
       const classes = async () =>
         (await marks(page)).map((m) => /class="([^"]*)"/.exec(m)?.[1] ?? '')
       await settle()
       const before = new Set(await classes())
       await page.locator('.credit-use').first().click()
-      await page.locator('.credit-skip').nth(1).click()
-      await page.waitForSelector('[data-answer="skipped"]')
+      await page.locator('.credit-use').nth(1).click()
+      await page.waitForSelector('.credit-use[aria-pressed="true"]')
+      await page
+        .getByRole('button', { name: /^I use all of/ })
+        .first()
+        .click()
+      await page
+        .getByRole('button', { name: /^I use none of/ })
+        .first()
+        .click()
+      await page.waitForSelector('.credit-use:not([aria-pressed="true"])')
       await settle()
       const added = (await classes()).filter((c) => !before.has(c))
       check(

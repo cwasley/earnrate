@@ -22,8 +22,6 @@ import {
 } from '../app/sync.ts'
 import type { Source } from './source.ts'
 
-export type Answer = 'used' | 'skipped' | null
-
 export type Marks = { used: string[]; skipped: string[] }
 
 // What the holder has said, by the rules the fee math uses.
@@ -40,13 +38,26 @@ export function heldMarks(card: Card, held: WalletCard): Marks {
   }
 }
 
-export function withAnswer(marks: Marks, ids: string[], answer: Answer) {
+// A card's marks once it's answered on /rate: of its credits `ids`, those in
+// `used` are used and every other one is not. Marks for credits it no longer
+// lists stay as they were.
+export function answeredMarks(
+  was: Marks,
+  ids: string[],
+  used: string[],
+): Marks {
   const out = (list: string[]) => list.filter((id) => !ids.includes(id))
   return {
-    used: [...out(marks.used), ...(answer === 'used' ? ids : [])],
-    skipped: [...out(marks.skipped), ...(answer === 'skipped' ? ids : [])],
+    used: [...out(was.used), ...ids.filter((id) => used.includes(id))],
+    skipped: [...out(was.skipped), ...ids.filter((id) => !used.includes(id))],
   }
 }
+
+const sameSet = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((id) => b.includes(id))
+
+export const sameMarks = (a: Marks, b: Marks) =>
+  sameSet(a.used, b.used) && sameSet(a.skipped, b.skipped)
 
 // The change that saves a card's marks: its whole used and not-used lists,
 // as My wallet's Settings sends them.

@@ -14,7 +14,7 @@ export type Voice = 'you' | 'I' | 'neutral'
 // What follows the headline figure: "a year after fees, depending on which
 // credits you use".
 export function perYear(
-  start: Pick<ReportStart, 'range' | 'counted'>,
+  start: Pick<ReportStart, 'range'> & { counted: readonly unknown[] },
   voice: Voice = 'you',
 ): string {
   if (start.range !== null)

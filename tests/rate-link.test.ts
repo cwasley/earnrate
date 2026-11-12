@@ -19,6 +19,7 @@ import {
   savedRows,
   storedSource,
 } from '../site/rate/source.ts'
+import { answeredMarks } from '../site/rate/answers.ts'
 import { ownLink } from '../site/rate/share.ts'
 import { storedId } from '../site/rate/store.ts'
 import type { LinkUpdater } from '../site/app/report-link.ts'
@@ -120,6 +121,31 @@ describe('report links', () => {
     expect(theirs.net).toBe(own.net)
     expect(theirs.counted).toEqual(own.counted)
     expect(theirs.credits).toEqual(own.credits)
+  })
+
+  test("a card answered with one tap carries its other credits as not used, so the link's headline is no range", () => {
+    const ids = ['dunkin', 'uber-cash', 'dining', 'resy']
+    const marks = answeredMarks({ used: [], skipped: [] }, ids, ['resy'])
+    const link: ReportLink = {
+      input: {
+        cards: [{ id: 'amex-gold', picks: {}, ...marks }],
+        memberships: [],
+        valuations: {},
+      },
+      lines: null,
+    }
+    const decoded = decodeReport(catalog, encodeReport(catalog, link))
+    if (!decoded.ok) throw new Error(decoded.message)
+    const gold = decoded.link.input.cards[0]
+    expect(gold?.used).toEqual(['resy'])
+    expect([...(gold?.skipped ?? [])].sort()).toEqual(
+      ['dining', 'dunkin', 'uber-cash'].sort(),
+    )
+    const start = reportStart(catalog, decoded.link.input, '2026-11-11', {
+      lines: lines(TYPICAL_MONTHLY_SPEND),
+      typical: true,
+    })
+    expect(start.range).toBeNull()
   })
 
   test('typical-style amounts go in a link as they are', () => {

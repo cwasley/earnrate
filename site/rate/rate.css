@@ -83,7 +83,7 @@
 
 /* What the figure means, on the line below it. */
 .rate-per {
-  display: block;
+  display: grid;
   margin-top: 4px;
   line-height: 1.3;
   font-size: 17px;
@@ -96,6 +96,15 @@
    one line on a phone, with what it means on the line below. */
 .rate-figure[data-range] {
   font-size: clamp(30px, 8.6vw, 48px);
+  line-height: calc(1.1 * clamp(38px, 10vw, 52px));
+}
+
+.rate-per > * {
+  grid-area: 1 / 1;
+}
+
+.rate-per-room {
+  visibility: hidden;
 }
 
 .rate-lead {
@@ -127,19 +136,6 @@
 
 .rate-hint {
   margin: -4px 0 14px;
-}
-
-/* While a part is worked out again, the last answer stays where it is,
-   dimmed after a moment so a quick one doesn't flicker. */
-.rate-part > :not(h2, .rate-fees),
-.rate-fees > li {
-  transition: opacity var(--fade) ease;
-}
-
-.rate-part[aria-busy='true'] > :not(h2, .rate-fees),
-.rate-fees > li[aria-busy='true'] {
-  opacity: 0.5;
-  transition-delay: 120ms;
 }
 
 /* Stand-ins for what isn't worked out yet: a bar a line of text. */
