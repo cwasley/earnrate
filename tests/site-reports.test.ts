@@ -565,7 +565,7 @@ describe('short report links', () => {
     const months = `${String(REPORT_RETENTION_MONTHS)} months after it was last opened or updated`
     expect(section.slice(0, 2600)).toContain(months)
     expect(section.slice(0, 2600)).toContain(
-      "Delete my link, under How it's worked out on Rate my wallet",
+      'Delete my link, under How this is worked out on Rate my wallet',
     )
     expect(privacy).not.toMatch(/choose the link that isn't saved/)
     expect(privacy).not.toMatch(/offers the link that isn't saved/)

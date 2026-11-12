@@ -27,6 +27,7 @@ import {
 import {
   creditChoices,
   unsaidCreditsYear,
+  usedCreditsYear,
   type CreditChoice,
   type CreditsYear,
 } from './credits.ts'
@@ -53,6 +54,7 @@ import {
   capitalize,
   creditsOnlyIf,
   feeCardExtrasText,
+  FREE_NIGHT_NAME,
   inOrder,
   listed,
   midSentence,
@@ -103,6 +105,13 @@ export type FeeVerdict = {
   counted: number // its credits marked as used, a year: in `net`
   verdict: string // keep-or-replace's answer
   credits: string // what its statement credits would add, or empty
+  // The same answer as figures, for the short sentences on /rate.
+  alone: boolean
+  against: string | null // held alone: the no-fee card `net` is against
+  used: string[] // the names of its credits counted in `net`
+  unsaid: CreditsYear // its credits not marked either way
+  unvaluedNight: boolean // a free night with no value to count it at
+  instead: { cardId: string; net: number; annualFee: number } | null
 }
 
 export type Gap = {
@@ -307,6 +316,7 @@ export function reportStart(
   input: ReportInput,
   today: string,
   spending: Spending,
+  voice: Voice = 'you',
 ): ReportStart {
   const { wallet, cards } = reportWallet(catalog, input, today, spending)
   const ids = wallet.cards.map((c) => c.id)
@@ -316,6 +326,7 @@ export function reportStart(
     spending.lines,
     today,
     ids,
+    voice,
   )
   const lines = countedLines(catalog, spending.lines)
   const credits = wallet.cards.flatMap((held) => {
@@ -421,6 +432,8 @@ export function reportFeeCards(
     const unsaid = k.unsaid
     const credits = keepOrReplaceUnsaid(k, voice)
     const paysForItself = whole(k.renewal.net) > 0
+    const card = catalog.cards.find((c) => c.id === held.id)
+    const [best] = k.replacements
     return [
       {
         cardId: held.id,
@@ -434,6 +447,19 @@ export function reportFeeCards(
         outcome: k.outcome,
         verdict: keepOrReplaceVerdict(catalog, k, paysForItself, voice),
         credits,
+        alone: k.alone,
+        against: k.renewal.against,
+        used: card
+          ? usedCreditsYear(catalog, card, held, k.start, wallet.valuations)
+              .names
+          : [],
+        unsaid,
+        unvaluedNight:
+          k.renewal.nightsUnvalued > 0 && unsaid.unvaluedNightIds.length > 0,
+        instead:
+          best === undefined || k.outcome === 'not-needed'
+            ? null
+            : { cardId: best.cardId, net: best.net, annualFee: best.annualFee },
       },
     ]
   })
@@ -767,6 +793,112 @@ export function feeCardText(catalog: Catalog, v: FeeVerdict): string {
   return [feeCardLead(catalog, v), v.verdict, v.credits]
     .filter((t) => t !== '')
     .join(' ')
+}
+
+// The one label beside each fee card on /rate.
+export const FEE_BADGES = {
+  pays: 'Pays for itself',
+  credits: 'Only with credits',
+  not: "Doesn't pay for itself",
+} as const
+
+export const feeCardBadge = (v: FeeVerdict): string =>
+  v.paysForItself
+    ? FEE_BADGES.pays
+    : v.creditsCover
+      ? FEE_BADGES.credits
+      : FEE_BADGES.not
+
+// "Dunkin'", "Uber, Grubhub and Resy", or past three a count: "all 11
+// credits".
+function fewCredits(c: CreditsYear, all: boolean): string {
+  if (c.names.length <= 3) return listed(c.names)
+  const nights = c.nightIds.length
+  const noun =
+    nights === 0
+      ? 'credits'
+      : nights === c.names.length
+        ? 'free nights'
+        : 'credits and free nights'
+  return `${all ? 'all ' : ''}${String(c.names.length)} ${noun}`
+}
+
+// A fee card's answer on /rate in a sentence or two, from the same figures
+// as `feeCardText`: "Adds about $114 a year beyond your other cards,
+// counting Dunkin', less than its $325 fee."
+export function feeCardShort(
+  catalog: Catalog,
+  v: FeeVerdict,
+  voice: Voice = 'you',
+): string {
+  const fee = `its ${money(v.fee)} fee`
+  const verb = v.alone ? 'Earns' : 'Adds'
+  const beyond = v.alone
+    ? v.against === null
+      ? ''
+      : ` more than the ${v.against}`
+    : voice === 'you'
+      ? ' beyond your other cards'
+      : ' beyond the other cards'
+  const counting =
+    v.used.length === 0
+      ? ''
+      : `, counting ${v.used.length <= 3 ? listed(v.used) : `${String(v.used.length)} credits`}`
+  const gross = v.net + v.fee
+  const lead =
+    whole(v.net) > 0
+      ? `${verb} about ${wholeDollars(v.net)} a year${beyond} after ${fee}${counting}.`
+      : whole(gross) <= 0
+        ? v.alone
+          ? `${verb} no more${v.against === null ? '' : ` than the ${v.against}`}, and has ${v.fee > 0 ? `a ${money(v.fee)} fee` : 'no fee'}.`
+          : `${verb} nothing${beyond}, against ${fee}.`
+        : `${verb} about ${wholeDollars(gross)} a year${beyond}${counting}, ${whole(v.net) === 0 ? `about what ${fee} costs` : `less than ${fee}`}.`
+  return [lead, insteadShort(catalog, v)].filter((s) => s !== '').join(' ')
+}
+
+// The cheaper card that would keep the most of it, or that none comes close.
+function insteadShort(catalog: Catalog, v: FeeVerdict): string {
+  if (v.outcome === 'not-needed') return ''
+  const i = v.instead
+  if (i === null) return 'No card with a lower fee comes close.'
+  const name = nameOf(catalog, i.cardId)
+  const net = wholeDollars(i.net)
+  const withFee =
+    i.annualFee === 0 ? 'with no fee' : `with a ${money(i.annualFee)} fee`
+  if (v.alone)
+    return `In its place, the ${name} would net about ${net} a year, ${withFee}.`
+  if (v.outcome === 'keeps')
+    return `The ${name} would keep about ${net} of that, ${withFee}.`
+  return whole(i.net) === whole(v.net)
+    ? `The ${name} would add about as much in its place, ${withFee}.`
+    : `The ${name} would add more in its place: about ${net} a year, ${withFee}.`
+}
+
+// Its credits not marked either way, as one short line: what the card
+// would add with them all used. Empty when there are none.
+export function feeCardCreditsShort(
+  v: FeeVerdict,
+  voice: Voice = 'you',
+): string {
+  const u = v.unsaid
+  if (u.yearly > 0) {
+    const what = fewCredits(u, true)
+    const withAll = roundCents(v.net + u.yearly)
+    const upTo = u.nights > 0 ? 'up to ' : ''
+    const than = v.against === null ? '' : ` than the ${v.against}`
+    if (whole(withAll) <= 0)
+      return v.alone
+        ? `Even with ${what} used, it wouldn't earn more${than} after its fee.`
+        : `Even with ${what} used, it wouldn't cover its fee.`
+    return v.alone
+      ? `With ${what} used, it would earn ${upTo}about ${wholeDollars(withAll)} a year more${than} after its fee.`
+      : `With ${what} used, it would add ${upTo}about ${wholeDollars(withAll)} a year after its fee.`
+  }
+  if (v.unvaluedNight)
+    return voice === 'you'
+      ? `Its ${FREE_NIGHT_NAME} counts once you say what it's worth to you.`
+      : `Its ${FREE_NIGHT_NAME} isn't counted: no value was set for it.`
+  return ''
 }
 
 // Right under the headline: the credits the figure leaves out, and what the

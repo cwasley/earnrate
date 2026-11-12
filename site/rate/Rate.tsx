@@ -15,7 +15,9 @@ import {
   assumedPicksText,
   bestNote,
   breakdownText,
-  feeCardLead,
+  feeCardBadge,
+  feeCardCreditsShort,
+  feeCardShort,
   flatNote,
   gapText,
   lineName,
@@ -407,13 +409,7 @@ function FeeCards({
                     class="tag"
                     data-tone={v.paysForItself ? undefined : 'warn'}
                   >
-                    {v.paysForItself
-                      ? 'Pays for itself'
-                      : v.creditsCover
-                        ? v.counted > 0
-                          ? 'Needs its other credits'
-                          : "Rewards don't cover the fee"
-                        : "Doesn't pay for itself"}
+                    {feeCardBadge(v)}
                   </span>
                 ) : v === undefined ? (
                   <span class="tag rate-skel-tag" aria-hidden="true">
@@ -423,36 +419,35 @@ function FeeCards({
               </div>
               {v === undefined ? (
                 <>
-                  <Lines n={4} />
-                  <Lines n={5} />
+                  <Lines n={2} />
                   <div class="small">
-                    <Lines n={3} />
+                    <Lines n={1} />
                   </div>
                 </>
               ) : v === null ? null : (
-                <>
-                  {v.paysForItself ? null : (
-                    <p>
-                      <strong>
-                        <Words text={feeCardLead(catalog, v, voice)} />
-                      </strong>
-                    </p>
-                  )}
-                  <p>
-                    <Words text={v.verdict} />
-                  </p>
-                  {v.credits === '' ? null : (
-                    <p class="muted small">
-                      <Words text={v.credits} />
-                    </p>
-                  )}
-                </>
+                <FeeLines v={v} voice={voice} />
               )}
             </li>
           )
         })}
       </ul>
     </section>
+  )
+}
+
+function FeeLines({ v, voice }: { v: FeeVerdict; voice: Voice }) {
+  const credits = feeCardCreditsShort(v, voice)
+  return (
+    <>
+      <p>
+        <Words text={feeCardShort(catalog, v, voice)} />
+      </p>
+      {credits === '' ? null : (
+        <p class="muted small">
+          <Words text={credits} />
+        </p>
+      )}
+    </>
   )
 }
 
@@ -556,13 +551,15 @@ const ROOM = { low: 0, high: 0 }
 
 // The report itself: the same for your own cards and a shared link. The
 // figure, the cards it's for and what makes it up, then a panel each for the
-// credits, the comparison, sharing and the slower parts.
+// credits, the comparison, sharing and the slower parts. What it assumes
+// goes in the page's own "How this is worked out" section.
 function Report({
   start,
   input,
   parts,
   busy,
   share,
+  closing,
   editors,
   answers,
   voice,
@@ -572,11 +569,16 @@ function Report({
   parts: Parts
   busy: Busy
   share: ComponentChildren
+  closing?: ComponentChildren
   editors: ComponentChildren
   answers: ComponentChildren
   voice: Voice
 }) {
   const { best, bestStart, fees, next, gaps } = parts
+  const assumes = useMemo(
+    () => document.querySelector('[data-rate-assumes]'),
+    [],
+  )
   return (
     <div class="rate-report" aria-live="polite">
       <p class="rate-figure" data-range={start.range === null ? undefined : ''}>
@@ -619,29 +621,30 @@ function Report({
         <FeeCards input={input} fees={fees} busy={busy} voice={voice} />
         <Next next={next} busy={busy('next')} />
         <Gaps gaps={gaps} busy={busy('gaps')} voice={voice} />
-        <details class="filters rate-notes">
-          <summary>What this assumes</summary>
-          <ul class="assumptions">
-            {reportNotes(catalog, start, dataVersion, voice).map((n) => (
-              <li key={n}>
-                <Words text={n} />
-              </li>
-            ))}
-            {start.lines.length > 0 ? (
-              <li>
-                Spending used, a month:{' '}
-                {start.lines
-                  .map(
-                    (l) =>
-                      `${lineName(catalog, l.label)} ${wholeDollars(l.monthly)}`,
-                  )
-                  .join(', ')}
-                .
-              </li>
-            ) : null}
-          </ul>
-        </details>
+        {closing}
       </div>
+      <Into el={assumes}>
+        <ul class="assumptions">
+          {reportNotes(catalog, start, dataVersion, voice).map((n) => (
+            <li key={n}>
+              <Words text={n} />
+            </li>
+          ))}
+          {/* The holder's typical-spending note already lists them. */}
+          {start.lines.length > 0 && !(start.typical && voice === 'you') ? (
+            <li>
+              Spending used, a month:{' '}
+              {start.lines
+                .map(
+                  (l) =>
+                    `${lineName(catalog, l.label)} ${wholeDollars(l.monthly)}`,
+                )
+                .join(', ')}
+              .
+            </li>
+          ) : null}
+        </ul>
+      </Into>
     </div>
   )
 }
@@ -811,27 +814,27 @@ function PicksEditor({
   )
 }
 
-// What a link holds, as a list for the box.
-function holds(input: ReportInput, lines: ResolvedLine[] | null): string[] {
-  return [
-    input.cards.length === 1 ? 'Your card' : 'Your cards',
+// What a link holds, in a line: "Holds your cards, picks, credits used and
+// spending (rounded to $5)."
+function holds(input: ReportInput, lines: ResolvedLine[] | null): string {
+  const parts = [
+    input.cards.length === 1 ? 'your card' : 'your cards',
     ...(input.cards.some((c) => Object.keys(c.picks).length > 0)
-      ? ['Your category picks']
+      ? ['picks']
       : []),
-    ...(input.memberships.length > 0 ? ['Your memberships'] : []),
-    ...(Object.keys(input.valuations).length > 0
-      ? ['The point values you set']
-      : []),
-    // Listed for any card with credits, answered or not, so the list stays
+    ...(input.memberships.length > 0 ? ['memberships'] : []),
+    ...(Object.keys(input.valuations).length > 0 ? ['point values'] : []),
+    // Named for any card with credits, answered or not, so the line stays
     // put while they're tapped.
     ...(input.cards.some((c) => {
       const card = cards.get(c.id)
       return (card?.credits.length ?? 0) + (card?.free_nights.length ?? 0) > 0
     })
-      ? ['Which statement credits you use']
+      ? ['credits used']
       : []),
-    ...(lines === null ? [] : ['Your monthly spending, rounded to $5']),
+    ...(lines === null ? [] : ['spending (rounded to $5)']),
   ]
+  return `Holds ${listed(parts)}.`
 }
 
 function useLinkState(mine: LinkUpdater | null): LinkState | null {
@@ -844,8 +847,9 @@ function useLinkState(mine: LinkUpdater | null): LinkState | null {
   return state
 }
 
-// Renders into an element outside the app, as a portal would: the delete
-// control sits in the page's own "How it's worked out" section.
+// Renders into an element outside the app, as a portal would: the
+// assumptions and the delete control sit in the page's own "How this is
+// worked out" section.
 function Into({
   el,
   children,
@@ -905,7 +909,7 @@ function ShareBox({
   }).slice(2)
   const report = (mine ? mine.report(include) : null) ?? pageReport
   const linked = mine ? decodeReport(catalog, `w=${report}`) : null
-  const items =
+  const held =
     linked?.ok === true
       ? holds(linked.link.input, linked.link.lines)
       : holds(input, spending.typical ? null : spending.lines)
@@ -1026,12 +1030,7 @@ function ShareBox({
         />
       )}
       {note === null ? null : <p class="small">{note}</p>}
-      <p class="small">The link holds:</p>
-      <ul class="small rate-holds">
-        {items.map((i) => (
-          <li key={i}>{i}</li>
-        ))}
-      </ul>
+      <p class="muted small rate-holds">{held}</p>
       {ownSpending ? (
         <label class="check small">
           <input
@@ -1203,8 +1202,13 @@ function CreditLines({ start }: { start: ReportStart }) {
       <h2 id="rate-credits-title">Credits</h2>
       <ul class="rate-credit-lines">
         {start.creditChoices.map((c) => {
-          const names = (answer: 'used' | 'skipped' | null) =>
-            c.choices.filter((x) => x.answer === answer).map((x) => x.name)
+          // Past three names, a count: "11 credits not counted".
+          const names = (answer: 'used' | 'skipped' | null) => {
+            const n = c.choices
+              .filter((x) => x.answer === answer)
+              .map((x) => x.name)
+            return n.length > 3 ? [`${String(n.length)} credits`] : n
+          }
           const parts = [
             [names('used'), 'used'],
             [names('skipped'), 'not used'],
@@ -1240,7 +1244,7 @@ function Shared({
     [lines],
   )
   const start = useMemo(
-    () => reportStart(catalog, input, today, spending),
+    () => reportStart(catalog, input, today, spending, 'neutral'),
     [input, spending, today],
   )
   const { parts, busy } = useParts(input, spending, today, start, 'neutral')
@@ -1264,10 +1268,14 @@ function Shared({
       parts={parts}
       busy={busy}
       voice="neutral"
-      share={
-        <section class="panel rate-share" aria-labelledby="rate-share-title">
-          <h2 id="rate-share-title">Share this report</h2>
+      share={null}
+      closing={
+        <section class="panel rate-end">
+          <p>earnrate rates any set of cards this way, with no sign-up.</p>
           <div class="row-buttons">
+            <a class="row-link primary" href="/rate">
+              Rate my cards
+            </a>
             <SaveImage picture={picture} />
           </div>
         </section>
@@ -1489,9 +1497,6 @@ export function Rate() {
           input={source.link.input}
           lines={source.link.lines}
         />
-        <p class="rate-yours">
-          <a href="/rate">Rate your own cards</a>
-        </p>
       </>
     )
   return (

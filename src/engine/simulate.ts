@@ -36,6 +36,7 @@ import {
   shortCardName,
   wholeDollars,
   possessive,
+  type Voice,
 } from './text.ts'
 import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
@@ -193,6 +194,7 @@ export function simulateWallet(
   // Cards the person already has: their first year is behind them and any
   // membership they need is paid for.
   held: string[] = [],
+  voice: Voice = 'you',
 ): Simulation {
   const lines = countedLines(catalog, given)
   const cards = wallet.cards.map((held) => {
@@ -364,7 +366,12 @@ export function simulateWallet(
     const card = cards.find((x) => x.card.id === c.cardId)?.card
     if (card)
       notes.push(
-        creditsCountedText(shortCardName(card.name), card.annual_fee ?? 0, c),
+        creditsCountedText(
+          shortCardName(card.name),
+          card.annual_fee ?? 0,
+          c,
+          voice,
+        ),
       )
   }
   const paying = paymentNote(

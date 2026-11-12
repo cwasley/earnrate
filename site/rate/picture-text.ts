@@ -76,10 +76,10 @@ export function comparisonRows(
 
 export const countedNote = (voice: Voice = 'you') =>
   voice === 'you'
-    ? 'Your figure counts the credits you use; the other two count none.'
+    ? 'Credits count only in your figure.'
     : voice === 'I'
-      ? 'My figure counts the credits I use; the other two count none.'
-      : 'The first figure counts the credits used; the other two count none.'
+      ? 'Credits count only in my figure.'
+      : 'Credits count only in the first figure.'
 
 export type RatePicture = {
   title: string

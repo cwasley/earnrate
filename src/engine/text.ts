@@ -797,18 +797,25 @@ export function creditsCountedText(
   card: string,
   fee: number,
   c: CreditsTotal,
+  voice: Voice = 'you',
 ): string {
   const amount = `${upTo(c)}${wholeDollars(c.yearly)} a year`
   if (nightCount(c) > 0 && c.names.length === 1) {
-    const used = (c.ownNightIds?.length ?? 0) > 0 ? '' : ', which you use,'
+    const used =
+      (c.ownNightIds?.length ?? 0) > 0
+        ? ''
+        : voice === 'you'
+          ? ', which you use,'
+          : ', marked as used,'
     return fee > 0
       ? `${possessive(card)} ${c.names[0] ?? ''}${used} counts against its fee: ${amount}.`
       : `${possessive(card)} ${c.names[0] ?? ''}${used} adds ${amount}.`
   }
   const noun = nightCount(c) > 0 ? perksNoun(c, false) : 'credits'
+  const use = voice === 'you' ? 'you use' : 'marked as used'
   return fee > 0
-    ? `${possessive(card)} ${noun} you use (${listed(c.names)}) count against its fee: ${amount}.`
-    : `${possessive(card)} ${noun} you use (${listed(c.names)}) add ${amount}.`
+    ? `${possessive(card)} ${noun} ${use} (${listed(c.names)}) count against its fee: ${amount}.`
+    : `${possessive(card)} ${noun} ${use} (${listed(c.names)}) add ${amount}.`
 }
 
 // Rankings of cards the person doesn't hold: the honest figure leaves

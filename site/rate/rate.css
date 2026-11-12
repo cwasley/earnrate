@@ -257,8 +257,7 @@ svg.rate-bar {
 }
 
 .rate-holds {
-  margin: 4px 0 10px;
-  padding-left: 1.2em;
+  margin: 10px 0 6px;
 }
 
 .rate-url {
@@ -335,10 +334,6 @@ svg.rate-bar {
   margin-top: 3px;
 }
 
-.rate-notes {
-  margin-top: 4px;
-}
-
 .rate-picks .field {
   display: grid;
   gap: 4px;
@@ -367,9 +362,23 @@ svg.rate-bar {
   margin-top: 0;
 }
 
+/* Close under the last panel: it's the report's fine print. */
 .rate-how {
-  margin: 40px 0 0;
+  margin: 12px 0 0;
   color: var(--muted);
+}
+
+.rate-how .assumptions {
+  margin: 6px 0 12px;
+}
+
+/* A shared report's last panel: a line, and a button each way out. */
+.rate-end p {
+  margin: 0;
+}
+
+.rate-end .row-buttons {
+  margin: 12px 0 0;
 }
 
 .rate-how .link {
@@ -381,15 +390,6 @@ svg.rate-bar {
   font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
-}
-
-.rate-yours {
-  margin: 32px 0 0;
-}
-
-/* On a shared report, "Rate your own cards" sits just above the section. */
-#rate:has(> .rate-yours:last-child) + .rate-how {
-  margin-top: 8px;
 }
 
 .rate-credits .callout {

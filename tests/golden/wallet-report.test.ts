@@ -21,7 +21,12 @@ import { roundCents, wholeDollars } from '../../src/engine/text.ts'
 import {
   bestNote,
   breakdownText,
+  FEE_BADGES,
+  feeCardBadge,
+  feeCardCreditsShort,
   feeCardLead,
+  feeCardShort,
+  feeCardText,
   flatNote,
   flatRateCard,
   gapText,
@@ -623,6 +628,81 @@ describe("rate my wallet: the page's shorter lines", () => {
     expect(breakdownText(catalog, used)).toMatch(
       /^\$[\d,]+ in rewards, plus \$[\d,]+ in credits you use, less its \$325 annual fee\.$/,
     )
+  })
+
+  test("each fee card's short answer gives the long answer's figures, with one of three tags", () => {
+    const r = report(
+      input(
+        [
+          'chase-sapphire-preferred',
+          { id: 'amex-gold', picks: {}, used: ['dunkin'] },
+          'usbank-cash-plus',
+          'chase-freedom-unlimited',
+          'chase-prime-visa',
+          'amex-platinum',
+          'amex-blue-cash-preferred',
+          'sofi-unlimited-2',
+        ],
+        { memberships: ['amazon-prime'] },
+      ),
+      typical(),
+    )
+    const byId = new Map(r.feeCards.map((v) => [v.cardId, v]))
+    expect([...byId.keys()]).toEqual([
+      'chase-sapphire-preferred',
+      'amex-gold',
+      'amex-platinum',
+      'amex-blue-cash-preferred',
+    ])
+    const amounts = (t: string) => t.match(/\$[\d,]+/g) ?? []
+    for (const v of r.feeCards) {
+      expect(Object.values(FEE_BADGES)).toContain(feeCardBadge(v))
+      const short = feeCardShort(catalog, v)
+      expect(short.length).toBeLessThan(feeCardText(catalog, v).length / 2)
+      for (const a of amounts(short))
+        expect(feeCardText(catalog, v)).toContain(a)
+      const credits = feeCardCreditsShort(v)
+      expect(credits).not.toBe('')
+      for (const a of amounts(credits)) expect(v.credits).toContain(a)
+    }
+    const gold = byId.get('amex-gold') as FeeVerdict
+    expect(feeCardBadge(gold)).toBe('Only with credits')
+    expect(feeCardShort(catalog, gold)).toMatch(
+      /^Adds about \$[\d,]+ a year beyond your other cards, counting Dunkin', less than its \$325 fee\.$/,
+    )
+    expect(feeCardCreditsShort(gold)).toMatch(
+      /^With Uber, Grubhub and Resy used, it would add about \$[\d,]+ a year after its fee\.$/,
+    )
+    const platinum = byId.get('amex-platinum') as FeeVerdict
+    expect(feeCardCreditsShort(platinum)).toMatch(
+      /^With all \d+ credits used, it would add about \$[\d,]+ a year after its fee\.$/,
+    )
+    const preferred = byId.get('amex-blue-cash-preferred') as FeeVerdict
+    expect(feeCardBadge(preferred)).toBe('Pays for itself')
+    expect(feeCardShort(catalog, preferred)).toMatch(
+      /^Adds about \$[\d,]+ a year beyond your other cards after its \$95 fee\. The .+ would (add more in its place: about \$[\d,]+ a year|keep about \$[\d,]+ of that|add about as much in its place), with (no fee|a \$\d+ fee)\.$/,
+    )
+    for (const v of r.feeCards) {
+      const neutral = { ...v, credits: '' }
+      expect(feeCardShort(catalog, neutral, 'neutral')).toBe(
+        feeCardShort(catalog, v).replace('your other', 'the other'),
+      )
+    }
+  })
+
+  test("a fee card with no credits that the others cover doesn't pay for itself, and says nothing about credits", () => {
+    const r = report(
+      input(['capital-one-venture', 'citi-double-cash']),
+      spending(['everything else', 1000]),
+    )
+    const [venture] = r.feeCards
+    expect(venture).toBeDefined()
+    if (!venture) return
+    expect(feeCardBadge(venture)).toBe("Doesn't pay for itself")
+    expect(feeCardShort(catalog, venture)).toMatch(
+      /^Adds (nothing beyond your other cards, against|about \$[\d,]+ a year beyond your other cards, less than) its \$95 fee\.$/,
+    )
+    expect(feeCardCreditsShort(venture)).toBe('')
   })
 
   test('the notes under the bars say what each card is, not its amount again', () => {

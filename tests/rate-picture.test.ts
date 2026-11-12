@@ -8,13 +8,19 @@ import {
 } from '../src/engine/simulate.ts'
 import { wholeDollars } from '../src/engine/text.ts'
 import {
+  bestNote,
   breakdownText,
+  feeCardCreditsShort,
   feeCardLead,
+  feeCardShort,
+  flatNote,
   gapText,
   netFigure,
+  nextText,
   reportBest,
   reportFeeCards,
   reportGaps,
+  reportNext,
   reportNotes,
   reportStart,
   type ReportInput,
@@ -116,9 +122,7 @@ describe("the report's picture", () => {
     expect(text.per).toBe(
       'a\u00a0year in rewards and credits I use, after\u00a0fees',
     )
-    expect(text.notes).toContain(
-      'My figure counts the credits I use; the other two count none.',
-    )
+    expect(text.notes).toContain('Credits count only in my figure.')
     expect(text.notes.at(-1)).toMatch(/^On my own spending\./)
   })
 
@@ -182,7 +186,7 @@ describe("the report's picture", () => {
       [input(), typical],
       [answered(own), own],
     ] as const) {
-      const start = reportStart(catalog, given, TODAY, spending)
+      const start = reportStart(catalog, given, TODAY, spending, 'neutral')
       const best = reportBest(catalog, given, TODAY, spending)
       const fees = reportFeeCards(
         catalog,
@@ -207,15 +211,35 @@ describe("the report's picture", () => {
         countedNote('neutral'),
         ...comparisonRows(start, best, name, 'neutral').map((r) => r.label),
         breakdownText(catalog, start, 'neutral'),
+        bestNote(catalog, start, best),
+        flatNote(start),
+        nextText(catalog, reportNext(catalog, given, TODAY, spending)),
         ...fees.flatMap((v) => [
           feeCardLead(catalog, { ...v, paysForItself: false }, 'neutral'),
           v.verdict,
           v.credits,
+          feeCardShort(catalog, v, 'neutral'),
+          feeCardCreditsShort(v, 'neutral'),
+          feeCardCreditsShort(
+            { ...v, unsaid: { ...v.unsaid, yearly: 0 }, unvaluedNight: true },
+            'neutral',
+          ),
         ]),
         ...gaps.map((g) => gapText(catalog, g, 'neutral')),
-        reportNotes(catalog, start, 'test', 'neutral')[0] ?? '',
+        ...reportNotes(catalog, start, 'test', 'neutral'),
       ]
       for (const w of words) expect(w).not.toMatch(you)
+      if (given.cards.some((c) => (c.used ?? []).length > 0)) {
+        const counted = reportNotes(
+          catalog,
+          reportStart(catalog, given, TODAY, spending),
+          'test',
+        )
+        expect(counted.join(' ')).toMatch(/credits you use \(/)
+        expect(
+          reportNotes(catalog, start, 'test', 'neutral').join(' '),
+        ).toMatch(/credits marked as used \(/)
+      }
       const own_ = reportFeeCards(catalog, given, TODAY, spending)
       expect(own_.map((v) => v.verdict).join(' ')).toMatch(you)
     }
