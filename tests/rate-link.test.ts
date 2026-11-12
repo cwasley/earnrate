@@ -254,7 +254,7 @@ describe('report links', () => {
     expect(reads).toBe(0)
   })
 
-  test("the page's code never writes the browser's storage, and its only requests are the short links' own, beyond the event counter", () => {
+  test("the page writes storage only through the saved wallet's credit answers, and its only requests are those and the short links' own, beyond the event counter", () => {
     const dir = path.join(ROOT, 'site/rate')
     const files = readdirSync(dir).filter((f) => /\.tsx?$/.test(f))
     expect(files).toContain('Rate.tsx')
@@ -264,9 +264,19 @@ describe('report links', () => {
         /\.(setItem|removeItem)\s*\(|localStorage\.clear|sessionStorage|indexedDB|document\.cookie|XMLHttpRequest|sendBeacon|WebSocket/,
       )
       if (f !== 'store.ts') expect(source, f).not.toMatch(/\bfetch\s*\(/)
-      expect(source, f).not.toMatch(/app\/(settings|sync)\.ts/)
+      if (f !== 'own-wallet.ts')
+        expect(source, f).not.toMatch(/app\/settings\.ts/)
+      if (f !== 'own-wallet.ts' && f !== 'answers.ts')
+        expect(source, f).not.toMatch(/app\/sync\.ts/)
+      if (f !== 'Rate.tsx') expect(source, f).not.toMatch(/own-wallet\.ts/)
       expect(source, f).not.toMatch(/from '\.\.\/statement/)
     }
+    const rate = readFileSync(path.join(dir, 'Rate.tsx'), 'utf8')
+    expect(rate.match(/\bOWN_WALLET\b/g)?.length).toBe(2)
+    expect(rate).toContain('answerSaver(source, OWN_WALLET)')
+    expect(readFileSync(path.join(dir, 'answers.ts'), 'utf8')).not.toMatch(
+      /\bsyncRequest\b/,
+    )
     const store = readFileSync(path.join(dir, 'store.ts'), 'utf8')
     const targets = [...store.matchAll(/\bfetch\(\s*([^,]+),/g)].map(
       (m) => m[1],

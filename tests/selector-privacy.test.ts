@@ -52,6 +52,26 @@ describe('ids and classes say nothing about the visitor', () => {
     expect(bad).toEqual([])
   })
 
+  test('in Rate my wallet and My wallet, no class switches on what the visitor holds or answered', () => {
+    // Each switches on the page's own state, never on the wallet.
+    const allowed = new Set([
+      "quiet ? 'rate-bar quiet' : 'rate-bar'", // the first row is always yours
+      "`${shown.error ? 'callout' : 'muted'} message-line`", // a refused change
+      "settled ? 'credit-picks settled' : 'credit-picks'", // after first paint
+    ])
+    const bad: string[] = []
+    for (const { file, text } of [
+      ...sources('site/rate', /\.tsx$/),
+      ...sources('site/app', /^(MyWallet|CreditPicks)\.tsx$/),
+    ])
+      for (const m of text.matchAll(/\sclass(?:Name)?=\{(`[^`]*`|[^}]*)\}/g)) {
+        const value = (m[1] ?? '').replace(/\s+/g, ' ').trim()
+        if (/\?|&&|\|\|/.test(value) && !allowed.has(value))
+          bad.push(`${file}: class={${value}}`)
+      }
+    expect(bad).toEqual([])
+  })
+
   test("the static pages' browser scripts mark a held card with data-*, not an id or class", () => {
     const bad: string[] = []
     for (const { file, text } of sources('scripts/pages', /\.ts$/))

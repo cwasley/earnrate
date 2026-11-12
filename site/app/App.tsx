@@ -28,7 +28,9 @@ import {
   firstConnection,
   importOp,
   keepClaudeSettings,
+  ENDED,
   LIMITED,
+  NEEDS_CONNECTION,
   membershipsOp,
   type Outcome,
   syncRequest,
@@ -317,8 +319,6 @@ const CANCELED = 'Sign-in was canceled. Nothing changed.'
 const FAILED = "Couldn't connect to your Claude wallet. Try again."
 const UNREACHABLE =
   "Couldn't reach earnrate's server to finish connecting. Try again when you're online."
-const NEEDS_CONNECTION = 'Changes need a connection.'
-const ENDED = 'This browser was signed out of your Claude wallet.'
 
 // Sign-in coming back (#wallet&sync=on) is read once and dropped from the
 // address, before anything else reads the hash.

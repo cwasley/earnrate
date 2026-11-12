@@ -16,12 +16,14 @@ import {
   typicalSpendLines,
 } from '../../src/engine/simulate.ts'
 import { usedCreditsYear } from '../../src/engine/credits.ts'
+import { inEffect } from '../../src/engine/periods.ts'
 import { roundCents, wholeDollars } from '../../src/engine/text.ts'
 import {
   feeCardLead,
   flatRateCard,
   gapText,
   lineName,
+  netFigure,
   type FeeVerdict,
   reportWallet,
   walletReport,
@@ -95,7 +97,7 @@ describe('#41 rate my wallet', () => {
       )
       const text = walletReportText(catalog, r)
       expect(text).toMatch(
-        /^Your 4 cards net about \$[\d,]+ a year: \$[\d,]+ in rewards, less \$95 in annual fees, on your spending of \$1,750 a month\./,
+        /^Without credits, your 4 cards net about \$[\d,]+ a year: \$[\d,]+ in rewards, less \$95 in annual fees, on your spending of \$1,750 a month\./,
       )
       expect(text).toMatch(
         /The best two cards for this spending, the .+, would net about \$[\d,]+ a year; your cards earn about \$[\d,]+ more\./,
@@ -425,6 +427,157 @@ describe('#41 rate my wallet', () => {
       expect(premier?.paysForItself).toBe(true)
       expect(premier?.verdict).toMatch(
         /^It pays for itself, and in its place the [^:]+ would add more to your wallet than the Citi Strata Premier: /,
+      )
+    },
+  )
+})
+
+describe('#42 rate my wallet: credits not answered yet', () => {
+  const every = (id: string) => {
+    const card = catalog.cards.find((c) => c.id === id)
+    if (!card) throw new Error(id)
+    return [
+      ...card.credits.filter((c) => inEffect(c, TODAY)).map((c) => c.id),
+      ...card.free_nights.map((n) => n.id),
+    ]
+  }
+
+  goldenTest(
+    '#42a with credits not answered, the figure is a range from none of them used to all of them used',
+    () => {
+      const s = typical()
+      const r = report(input(['amex-gold', 'amex-platinum']), s)
+      expect(r.range).not.toBeNull()
+      expect(r.range?.low).toBe(r.net)
+      const all = report(
+        input(
+          ['amex-gold', 'amex-platinum'].map((id) => ({
+            id,
+            picks: {},
+            used: every(id),
+          })),
+        ),
+        s,
+      )
+      expect(all.range).toBeNull()
+      expect(r.range?.high).toBe(all.net)
+      const unanswered = r.creditChoices
+        .flatMap((c) => c.choices)
+        .filter((c) => c.answer === null)
+        .reduce((sum, c) => sum + (c.yearly ?? 0), 0)
+      expect(r.range?.high).toBe(roundCents(r.net + unanswered))
+      const low = r.range?.low ?? 0
+      expect(low).toBeLessThan(0)
+      expect(netFigure(r)).toBe(
+        `${wholeDollars(low)} to +${wholeDollars(r.range?.high ?? 0)}`,
+      )
+      expect(netFigure(all)).toBe(wholeDollars(all.net))
+    },
+  )
+
+  goldenTest(
+    "#42b each rated card's live credits and free nights are listed once, with a short name, a year's dollars and whether the issuer needs enrolling",
+    () => {
+      const r = report(
+        input([
+          {
+            id: 'amex-platinum',
+            picks: {},
+            used: ['uber-cash'],
+            skipped: ['equinox'],
+          },
+          'amex-marriott-bonvoy-brilliant',
+          'amex-hilton-honors-aspire',
+          'citi-double-cash',
+        ]),
+        typical(),
+      )
+      expect(r.creditChoices.map((c) => c.cardId)).toEqual([
+        'amex-platinum',
+        'amex-marriott-bonvoy-brilliant',
+        'amex-hilton-honors-aspire',
+      ])
+      const platinum = r.creditChoices[0]?.choices ?? []
+      expect(platinum.map((c) => c.id).sort()).toEqual(
+        every('amex-platinum').sort(),
+      )
+      const byId = (id: string) => platinum.find((c) => c.id === id)
+      expect(byId('uber-cash')).toMatchObject({
+        name: 'Uber',
+        yearly: 200,
+        enroll: false,
+        night: false,
+        answer: 'used',
+      })
+      expect(byId('equinox')?.answer).toBe('skipped')
+      expect(byId('resy')).toMatchObject({ enroll: true, answer: null })
+      expect(byId('airline-fee')).toMatchObject({
+        name: 'Airline fee',
+        yearly: 200,
+        enroll: true,
+      })
+      expect(byId('walmart-plus')?.yearly).toBe(155.4)
+      const yearly = platinum.map((c) => c.yearly ?? 0)
+      expect(yearly).toEqual([...yearly].sort((a, b) => b - a))
+      const [night] = r.creditChoices[1]?.choices.filter((c) => c.night) ?? []
+      expect(night).toMatchObject({
+        id: 'anniversary-night',
+        name: 'Anniversary free night',
+        answer: null,
+      })
+      expect(night?.yearly).toBeGreaterThan(0)
+      const aspire = r.creditChoices[2]?.choices.find((c) => c.night)
+      expect(aspire?.yearly).toBeNull()
+    },
+  )
+
+  goldenTest(
+    '#42c once every credit is answered the figure is one number; a night with no point cap changes nothing either way',
+    () => {
+      const s = typical()
+      const r = report(
+        input([
+          {
+            id: 'amex-hilton-honors-aspire',
+            picks: {},
+            used: ['resort-credit'],
+            skipped: ['flight-credit', 'clear-plus'],
+          },
+        ]),
+        s,
+      )
+      expect(r.creditChoices[0]?.choices.find((c) => c.night)?.answer).toBe(
+        null,
+      )
+      expect(r.range).toBeNull()
+      const partly = report(
+        input([
+          { id: 'amex-platinum', picks: {}, used: ['uber-cash', 'resy'] },
+        ]),
+        s,
+      )
+      expect(partly.range?.low).toBe(partly.net)
+      expect(partly.range?.high).toBe(
+        roundCents(
+          partly.net + partly.credits.reduce((sum, c) => sum + c.yearly, 0),
+        ),
+      )
+    },
+  )
+
+  goldenTest(
+    '#42d with a range and no credit used, the sentence under the figure says its low end is without credits',
+    () => {
+      const r = report(input(['amex-gold', 'amex-platinum']), typical())
+      expect(walletReportText(catalog, r)).toMatch(
+        /^Without credits, your 2 cards net about −\$[\d,]+ a year: \$[\d,]+ in rewards, less \$1,220 in annual fees, on typical U\.S\. spending/,
+      )
+      const one = report(
+        input(['amex-gold', 'citi-double-cash']),
+        spending(['everything else', 1000]),
+      )
+      expect(netFigure({ ...one, range: { low: 120, high: 544 } })).toBe(
+        '$120 to $544',
       )
     },
   )

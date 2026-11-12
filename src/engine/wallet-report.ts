@@ -24,7 +24,12 @@ import {
   OTHER_PERKS,
   type KeepOrReplaceOutcome,
 } from './keep-or-replace.ts'
-import { unsaidCreditsYear, type CreditsYear } from './credits.ts'
+import {
+  creditChoices,
+  unsaidCreditsYear,
+  type CreditChoice,
+  type CreditsYear,
+} from './credits.ts'
 import { missingMembership, paidMemberships } from './memberships.ts'
 import { inEffect } from './periods.ts'
 import type { Spending } from './renewal.ts'
@@ -126,7 +131,16 @@ export type ReportStart = {
   // Each card's credits and free nights not marked either way, as if all
   // were used: left out of `net`.
   credits: CreditsYear[]
+  // While any of those is worth something: `net`, to what the cards would
+  // net with every one used. Null once each is answered.
+  range: NetRange | null
+  // Each card with credits or free nights, to mark as used or not.
+  creditChoices: CardCredits[]
 }
+
+export type NetRange = { low: number; high: number }
+
+export type CardCredits = { cardId: string; choices: CreditChoice[] }
 
 // The best two cards for the spending, and the best one, which is the
 // answer when no pair beats it.
@@ -303,6 +317,13 @@ export function reportStart(
     ids,
   )
   const lines = countedLines(catalog, spending.lines)
+  const credits = wallet.cards.flatMap((held) => {
+    const card = catalog.cards.find((c) => c.id === held.id)
+    if (!card) return []
+    const year = unsaidCreditsYear(catalog, card, held, today, input.valuations)
+    return year.yearly > 0 ? [year] : []
+  })
+  const unanswered = perksTotal(credits).yearly
   return {
     cards,
     empty: ids.length === 0,
@@ -314,17 +335,20 @@ export function reportStart(
     net: simulation.net,
     flat: flatComparison(catalog, input, today, spending),
     counted: simulation.credits.filter((c) => c.held && c.yearly > 0),
-    credits: wallet.cards.flatMap((held) => {
+    credits,
+    range:
+      unanswered > 0
+        ? {
+            low: simulation.net,
+            high: roundCents(simulation.net + unanswered),
+          }
+        : null,
+    creditChoices: wallet.cards.flatMap((held) => {
       const card = catalog.cards.find((c) => c.id === held.id)
-      if (!card) return []
-      const year = unsaidCreditsYear(
-        catalog,
-        card,
-        held,
-        today,
-        input.valuations,
-      )
-      return year.yearly > 0 ? [year] : []
+      const choices = card
+        ? creditChoices(catalog, card, held, today, input.valuations)
+        : []
+      return choices.length > 0 ? [{ cardId: held.id, choices }] : []
     }),
   }
 }
@@ -524,7 +548,16 @@ export const spendingBasis = (r: Pick<ReportStart, 'typical' | 'monthly'>) =>
     ? `on typical U.S. spending of about ${wholeDollars(r.monthly)} a month`
     : `on your spending of ${wholeDollars(r.monthly)} a month`
 
-// The headline figure in a sentence, with what makes it up.
+// The headline figure: "$1,240", or while credits are unanswered,
+// "−$591 to +$2,827" (a plus only beside a minus).
+export function netFigure(r: Pick<ReportStart, 'net' | 'range'>): string {
+  if (r.range === null) return wholeDollars(r.net)
+  const { low, high } = r.range
+  return `${wholeDollars(low)} to ${low < 0 && high > 0 ? '+' : ''}${wholeDollars(high)}`
+}
+
+// The headline figure in a sentence, with what makes it up. With a range
+// and no credit used, that's its low end, without credits.
 export function headlineText(catalog: Catalog, r: ReportStart): string {
   if (r.empty)
     return r.flat === null
@@ -550,7 +583,10 @@ export function headlineText(catalog: Catalog, r: ReportStart): string {
       : extras === ''
         ? ` in rewards, with no annual fee${one ? '' : 's'}`
         : `: ${wholeDollars(r.simulation.rewards)} in rewards${extras}, with no annual fee${one ? '' : 's'}`
-  return `${subject} about ${wholeDollars(r.net)} a year${made}, ${spendingBasis(r)}.`
+  const sentence = `${subject} about ${wholeDollars(r.net)} a year${made}, ${spendingBasis(r)}.`
+  return r.range !== null && r.counted.length === 0
+    ? `Without credits, ${sentence.charAt(0).toLowerCase()}${sentence.slice(1)}`
+    : sentence
 }
 
 // Against the best no-fee card with one rate for everything, held alone.

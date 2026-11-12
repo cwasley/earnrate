@@ -1,7 +1,6 @@
 import type { ComponentChildren } from 'preact'
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { catalog, dataVersion } from 'virtual:catalog'
-import { creditInUse, nightInUse } from '../../src/engine/credits.ts'
 import type { Picks } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import type { Spending } from '../../src/engine/renewal.ts'
@@ -18,12 +17,12 @@ import { currencyValuation } from '../../src/engine/valuation.ts'
 import {
   assumedPicksText,
   bestText,
-  creditsText,
   feeCardLead,
   flatText,
   gapText,
   headlineText,
   lineName,
+  netFigure,
   nextText,
   pairBeats,
   reportNotes,
@@ -37,14 +36,23 @@ import {
 import { optionName } from '../../src/engine/rule-text.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { CardArt } from '../app/CardArt.tsx'
+import { CreditPicks, type CreditAnswer } from '../app/CreditPicks.tsx'
 import { cards, feeLabel, shortName, wholeDollars } from '../app/format.ts'
 import { QuickCards } from '../app/QuickCards.tsx'
 import { loadWallet } from '../app/saved-wallet.ts'
 import { SearchInput } from '../app/SearchInput.tsx'
 import { isTypicalRows } from '../app/spending-rows.ts'
 import { track } from '../app/track.ts'
+import {
+  answerSaver,
+  heldMarks,
+  withAnswer,
+  type Marks,
+  type Saver,
+} from './answers.ts'
 import { Bar } from './Bar.tsx'
-import { creditIds, encodeReport, reportPart, roundedLines } from './link.ts'
+import { encodeReport, reportPart, roundedLines } from './link.ts'
+import { OWN_WALLET } from './own-wallet.ts'
 import { REPORT_RETENTION_MONTHS } from '../report-policy.ts'
 import { runReport } from './run.ts'
 import { linkFor, longUrl, NO_SHORT_LINK, type Attempt } from './share.ts'
@@ -112,22 +120,10 @@ function walletInput(
   return {
     cards: wallet.cards.map((h) => {
       const card = cards.get(h.id)
-      const used = card
-        ? [
-            ...card.credits.filter((c) => creditInUse(c, h)).map((c) => c.id),
-            ...card.free_nights
-              .filter((n) => nightInUse(n, h))
-              .map((n) => n.id),
-          ]
-        : []
-      const ids = card ? creditIds(card) : []
-      const skipped = (h.skipped_credits ?? []).filter((id) => ids.includes(id))
-      return {
-        id: h.id,
-        picks: picks[h.id] ?? validPicks(h.id, h.chosen?.picks),
-        ...(used.length > 0 ? { used } : {}),
-        ...(skipped.length > 0 ? { skipped } : {}),
-      }
+      return withMarks(
+        { id: h.id, picks: picks[h.id] ?? validPicks(h.id, h.chosen?.picks) },
+        card ? heldMarks(card, h) : undefined,
+      )
     }),
     memberships: wallet.memberships.filter((m) =>
       catalog.memberships.some((x) => x.id === m),
@@ -139,6 +135,62 @@ function walletInput(
     ),
   }
 }
+
+type ReportCard = ReportInput['cards'][number]
+
+const NO_MARKS: Marks = { used: [], skipped: [] }
+
+const withMarks = (c: ReportCard, m: Marks | undefined): ReportCard => ({
+  id: c.id,
+  picks: c.picks,
+  ...(m && m.used.length > 0 ? { used: m.used } : {}),
+  ...(m && m.skipped.length > 0 ? { skipped: m.skipped } : {}),
+})
+
+// Credit answers change the report at once. With a saver (the visitor's own
+// wallet) each is saved too, and then shows what was saved: a refusal puts
+// the card's answers back as they are in My wallet.
+function useAnswers(initial: ReportInput, save: Saver | null) {
+  const [marks, setMarks] = useState<Record<string, Marks>>(() =>
+    Object.fromEntries(
+      initial.cards.map((c) => [
+        c.id,
+        { used: c.used ?? [], skipped: c.skipped ?? [] },
+      ]),
+    ),
+  )
+  const [error, setError] = useState<string | null>(null)
+  const latest = useRef(marks)
+  const turns = useRef(new Map<string, number>())
+  const put = (cardId: string, m: Marks) => {
+    latest.current = { ...latest.current, [cardId]: m }
+    setMarks(latest.current)
+  }
+  const answer = (cardId: string, ids: string[], a: CreditAnswer) => {
+    const next = withAnswer(latest.current[cardId] ?? NO_MARKS, ids, a)
+    put(cardId, next)
+    setError(null)
+    if (!save) return
+    const turn = (turns.current.get(cardId) ?? 0) + 1
+    turns.current.set(cardId, turn)
+    void save(cardId, next).then((result) => {
+      if (turns.current.get(cardId) !== turn) return
+      if (!result.ok) setError(result.error)
+      const held = result.wallet?.cards.find((c) => c.id === cardId)
+      const card = cards.get(cardId)
+      if (held && card) put(cardId, heldMarks(card, held))
+    })
+  }
+  return { marks, answer, error }
+}
+
+const applyMarks = (
+  input: ReportInput,
+  marks: Record<string, Marks>,
+): ReportInput => ({
+  ...input,
+  cards: input.cards.map((c) => withMarks(c, marks[c.id])),
+})
 
 type Parts = {
   best: BestCards | null
@@ -274,7 +326,10 @@ function FeeCards({
                   <span class="muted small"> · {feeLabel(id)}</span>
                 </span>
                 {v ? (
-                  <span class={v.paysForItself ? 'tag' : 'tag warn'}>
+                  <span
+                    class="tag"
+                    data-tone={v.paysForItself ? undefined : 'warn'}
+                  >
                     {v.paysForItself
                       ? 'Pays for itself'
                       : v.creditsCover
@@ -347,17 +402,16 @@ function Report({
   parts,
   share,
   editors,
-  ask = null,
+  answers,
 }: {
   start: ReportStart
   input: ReportInput
   parts: Parts
   share: ComponentChildren
   editors: ComponentChildren
-  ask?: ComponentChildren
+  answers: ComponentChildren
 }) {
   const { best, fees, next, gaps } = parts
-  const credits = creditsText(catalog, start)
   const lead = [
     flatText(catalog, start),
     best ? bestText(catalog, start, best) : '',
@@ -374,23 +428,22 @@ function Report({
           </li>
         ))}
       </ul>
-      <p class="rate-figure">
-        {wholeDollars(start.net)}
+      <p class="rate-figure" data-range={start.range === null ? undefined : ''}>
+        {netFigure(start)}
         <span class="rate-per">
-          {start.counted.length > 0
-            ? ' a year in rewards and credits you use, after\u00a0fees'
-            : ' a year in rewards, after\u00a0fees'}
+          {start.range !== null
+            ? ' a\u00a0year after fees, depending on which credits you\u00a0use'
+            : start.counted.length > 0
+              ? ' a\u00a0year in rewards and credits you use, after\u00a0fees'
+              : ' a\u00a0year in rewards, after\u00a0fees'}
         </span>
       </p>
-      {credits === '' ? null : <p class="rate-credits">{credits}</p>}
+      {answers}
       <p class="rate-lead">{headlineText(catalog, start)}</p>
-      {ask}
       <Comparison start={start} best={best} />
-      {start.counted.length > 0 ? (
-        <p class="muted small rate-like">
-          Your figure counts the credits you use; the other two count none.
-        </p>
-      ) : null}
+      <p class="muted small rate-like" hidden={start.counted.length === 0}>
+        Your figure counts the credits you use; the other two count none.
+      </p>
       <p>{lead}</p>
       {editors}
       {share}
@@ -848,21 +901,25 @@ function ShareBox({
   )
 }
 
-// A saved card with credits not marked either way: where to mark them, in
-// its Settings in My wallet. Nothing is asked here.
-function AskCredits({ start }: { start: ReportStart }) {
-  if (start.credits.length === 0) return null
+// Right under the figure: each card's credits, to tap as used or not.
+function Answers({
+  start,
+  answers,
+}: {
+  start: ReportStart
+  answers: ReturnType<typeof useAnswers>
+}) {
+  if (start.creditChoices.length === 0) return null
   return (
-    <p class="small rate-ask">
-      Mark the credits you use in each card's Settings in My wallet:{' '}
-      {start.credits.map((c, i) => (
-        <span key={c.cardId}>
-          {i > 0 ? ', ' : ''}
-          <a href={`/#wallet&card=${c.cardId}`}>{shortName(c.cardId)}</a>
-        </span>
-      ))}
-      .
-    </p>
+    <section class="rate-answers" aria-label="Credits you use">
+      <CreditPicks cards={start.creditChoices} onAnswer={answers.answer} />
+      {answers.error === null ? null : (
+        <p class="callout small">{answers.error}</p>
+      )}
+      <p class="muted small">
+        Count a credit as used only if you'd spend there anyway.
+      </p>
+    </section>
   )
 }
 
@@ -871,10 +928,12 @@ function Rated({
   initial,
   rows: savedRows,
   saveCards,
+  save,
 }: {
   initial: ReportInput
   rows: Row[] | null
   saveCards: boolean
+  save: Saver | null
 }) {
   const today = useMemo(() => localToday(), [])
   const [rows, setRows] = useState<Row[]>(
@@ -882,18 +941,19 @@ function Rated({
   )
   const [picks, setPicks] = useState<Record<string, Picks>>({})
   const [include, setInclude] = useState(SHARE_SPENDING)
+  const answers = useAnswers(initial, save)
   const own = useMemo(() => spendingOf(rows), [rows])
   const spending = include ? own : TYPICAL
-  const input = useMemo(
-    () => ({
-      ...initial,
-      cards: initial.cards.map((c) => ({
+  const input = useMemo(() => {
+    const marked = applyMarks(initial, answers.marks)
+    return {
+      ...marked,
+      cards: marked.cards.map((c) => ({
         ...c,
         picks: picks[c.id] ?? c.picks,
       })),
-    }),
-    [initial, picks],
-  )
+    }
+  }, [initial, picks, answers.marks])
   const start = useMemo(
     () => reportStart(catalog, input, today, spending),
     [input, spending, today],
@@ -918,7 +978,7 @@ function Rated({
         start={start}
         input={linked}
         parts={parts}
-        ask={saveCards ? null : <AskCredits start={start} />}
+        answers={<Answers start={start} answers={answers} />}
         editors={
           <>
             <SpendingEditor rows={rows} setRows={setRows} start={start} />
@@ -953,14 +1013,20 @@ function Rated({
   )
 }
 
+// Answers here change only this report: nothing is saved.
 function Shared({
-  input,
+  input: given,
   lines,
 }: {
   input: ReportInput
   lines: ResolvedLine[] | null
 }) {
   const today = useMemo(() => localToday(), [])
+  const answers = useAnswers(given, null)
+  const input = useMemo(
+    () => applyMarks(given, answers.marks),
+    [given, answers.marks],
+  )
   const spending = useMemo(
     (): Spending => (lines === null ? TYPICAL : { lines, typical: false }),
     [lines],
@@ -977,6 +1043,7 @@ function Shared({
       parts={parts}
       share={null}
       editors={null}
+      answers={<Answers start={start} answers={answers} />}
     />
   )
 }
@@ -1076,7 +1143,7 @@ function Pick({ rows }: { rows: Row[] | null }) {
             Change cards
           </button>
         </p>
-        <Rated initial={input} rows={rows} saveCards />
+        <Rated initial={input} rows={rows} saveCards save={null} />
       </>
     )
   const wallet: Wallet = {
@@ -1205,12 +1272,13 @@ export function Rate() {
       {ownInput ? (
         <>
           <p class="lede">
-            The cards saved in My wallet. Nothing on this page changes them.
+            Your saved cards. Credits you mark here save to My wallet.
           </p>
           <Rated
             initial={ownInput}
             rows={source.kind === 'own' ? source.rows : null}
             saveCards={false}
+            save={answerSaver(source, OWN_WALLET)}
           />
         </>
       ) : (

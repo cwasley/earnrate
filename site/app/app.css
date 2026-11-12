@@ -244,7 +244,8 @@ input::-webkit-list-button {
   cursor: pointer;
 }
 
-.chip.on {
+.chip.on,
+.chip[aria-pressed='true'] {
   border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent);
@@ -408,6 +409,17 @@ input::-webkit-list-button {
 }
 
 .warn::before {
+  content: '! ';
+  font-weight: 700;
+}
+
+/* A warning that depends on the visitor's cards or spending: data-tone, not
+   a class, so the element path Cloudflare's analytics reports can't tell. */
+p[data-tone='warn'] {
+  color: var(--muted);
+}
+
+p[data-tone='warn']::before {
   content: '! ';
   font-weight: 700;
 }
@@ -1057,6 +1069,178 @@ input::-webkit-list-button {
   height: 12px;
 }
 
+/* A card's credits as tiles (CreditPicks.tsx): the tile says "I use it",
+   its corner × "I don't". The answer is only in aria-pressed and
+   data-answer. */
+.credit-picks-card + .credit-picks-card {
+  margin-top: 16px;
+}
+
+.credit-picks-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 15px;
+}
+
+.credit-picks-all {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-left: auto;
+}
+
+.credit-picks .link {
+  border: 0;
+  background: none;
+  padding: 4px 0;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.credit-picks .credit-more {
+  margin-top: 6px;
+}
+
+.credit-tiles {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .credit-tiles {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+}
+
+.credit-tile {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  transition:
+    transform var(--press) var(--ease-out),
+    background-color var(--fade) ease,
+    border-color var(--fade) ease;
+}
+
+/* The tile presses as one, whichever part is tapped. */
+.credit-tile:has(button:active) {
+  transform: scale(var(--pressed));
+}
+
+.app .credit-tile button:active {
+  transform: none;
+}
+
+/* The check at the top right, the × below it: room for both. */
+.app .credit-use {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 8px 30px 8px 12px;
+  border: 0;
+  border-radius: 11px;
+  background: none;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.credit-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.credit-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+  padding-right: 12px;
+  color: var(--muted);
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.credit-enroll {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.credit-value + .credit-enroll::before {
+  content: '· ';
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.credit-use:not([aria-pressed='true']) .quick-check {
+  display: none;
+}
+
+.app .credit-skip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.credit-skip svg {
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  border-radius: 50%;
+  transition:
+    background-color var(--fade) ease,
+    color var(--fade) ease;
+}
+
+.credit-skip[aria-pressed='true'] svg {
+  background: var(--muted);
+  color: var(--surface);
+}
+
+.credit-tile[data-answer='used'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.credit-tile[data-answer='skipped'] {
+  border-style: dashed;
+}
+
+.credit-tile[data-answer='skipped'] :is(.credit-name, .credit-meta) {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
 .quick-search-lead {
   margin: 18px 0 8px;
   font-size: 15px;
@@ -1558,7 +1742,9 @@ p.callout .link,
   cursor: pointer;
 }
 
-.app .segments label.on {
+/* The checked choice, by its input: a class would name the visitor's answer
+   in the element path Cloudflare's analytics reports. */
+.app .segments label:is(.on, :has(input:checked)) {
   background: var(--surface);
   color: var(--accent);
   font-weight: 600;

@@ -424,7 +424,7 @@ function UseChoices({
       {choices.map((choice) => {
         const on = value === choice.use
         return (
-          <label key={choice.use} class={on ? 'on' : undefined}>
+          <label key={choice.use}>
             <input
               type="radio"
               name={name}
@@ -1316,7 +1316,7 @@ function OfferRow({
         </span>
       </button>
       {plan.minimumSpend ? (
-        <p class={plan.minimumSpend.reachable ? undefined : 'warn'}>
+        <p data-tone={plan.minimumSpend.reachable ? undefined : 'warn'}>
           {minimumSpendText(o.spend, o.months, plan.minimumSpend, typical)}
         </p>
       ) : null}
@@ -1557,7 +1557,7 @@ function WhatIf({
         aria-label="What to count"
       >
         {VIEWS.map((v) => (
-          <label key={v.view} class={view === v.view ? 'on' : undefined}>
+          <label key={v.view}>
             <input
               type="radio"
               name="whatif-view"
@@ -2444,7 +2444,8 @@ export function MyWallet({
           {QUICK.map((q) => (
             <button
               type="button"
-              class={asked?.text === q ? 'chip on' : 'chip'}
+              class="chip"
+              aria-pressed={asked?.text === q}
               key={q}
               onClick={() => {
                 track('wallet-which-card')

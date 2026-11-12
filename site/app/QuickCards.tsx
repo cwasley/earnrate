@@ -3,7 +3,7 @@ import { CardArt } from './CardArt.tsx'
 import { cards, shortName } from './format.ts'
 import { QUICK_CARDS } from './quick-cards.ts'
 
-const Check = () => (
+export const Check = () => (
   <span class="quick-check" aria-hidden="true">
     <svg
       viewBox="0 0 16 16"

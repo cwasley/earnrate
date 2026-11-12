@@ -146,6 +146,31 @@ const STEPS: Step[] = [
     },
   },
   {
+    name: 'Rate my wallet after marking credits used and not used',
+    url: '/rate',
+    ready: '.credit-tile',
+    act: async (page) => {
+      const settle = () =>
+        page.waitForFunction(
+          () => !document.body.innerText.includes('Working it out'),
+        )
+      const classes = async () =>
+        (await marks(page)).map((m) => /class="([^"]*)"/.exec(m)?.[1] ?? '')
+      await settle()
+      const before = new Set(await classes())
+      await page.locator('.credit-use').first().click()
+      await page.locator('.credit-skip').nth(1).click()
+      await page.waitForSelector('[data-answer="skipped"]')
+      await settle()
+      const added = (await classes()).filter((c) => !before.has(c))
+      check(
+        'marking credits on Rate my wallet adds no class',
+        added.length === 0,
+        added.join(' '),
+      )
+    },
+  },
+  {
     name: 'the year-end page',
     url: '/year-end/',
     ready: 'main',

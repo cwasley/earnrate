@@ -318,8 +318,7 @@ export function editState({
   online: boolean
   busy: boolean
 }): { locked: boolean; note: string | null } {
-  if (synced && !online)
-    return { locked: true, note: 'Changes need a connection.' }
+  if (synced && !online) return { locked: true, note: NEEDS_CONNECTION }
   return { locked: busy, note: null }
 }
 
@@ -331,6 +330,8 @@ export type SyncResult =
   | { kind: 'limited' }
 
 export const LIMITED = 'Too many changes at once. Try again in a minute.'
+export const NEEDS_CONNECTION = 'Changes need a connection.'
+export const ENDED = 'This browser was signed out of your Claude wallet.'
 
 function walletOf(raw: unknown): Wallet | null {
   const w = raw as Partial<Wallet> | null

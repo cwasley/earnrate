@@ -75,6 +75,18 @@
   color: var(--muted);
 }
 
+/* "−$591 to +$2,827" is longer than one figure: a size that keeps it on
+   one line on a phone, with what it means on the line below. */
+.rate-figure[data-range] {
+  font-size: clamp(30px, 8.6vw, 48px);
+}
+
+.rate-figure[data-range] .rate-per {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
 .rate-lead {
   margin: 4px 0 16px;
 }
@@ -190,7 +202,7 @@ svg.rate-bar {
   color: var(--accent-strong);
 }
 
-.tag.warn {
+.tag[data-tone='warn'] {
   background: var(--warn-bg);
   color: var(--warn-text);
 }
@@ -250,17 +262,16 @@ svg.rate-bar {
   color: var(--text);
 }
 
-.rate-credits {
-  margin: 2px 0 8px;
-  font-weight: 600;
-}
-
 #rate .lede + .rate-yours {
   margin: -8px 0 18px;
 }
 
-.rate-ask {
-  margin: 0 0 12px;
+.rate-answers {
+  margin: 12px 0 18px;
+}
+
+.rate-answers p {
+  margin: 10px 0 0;
 }
 
 .rate-like {

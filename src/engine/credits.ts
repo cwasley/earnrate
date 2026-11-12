@@ -6,6 +6,7 @@ import { categoryMatches } from './evaluate.ts'
 import { inEffect, periodEnd, periodKey } from './periods.ts'
 import { creditLabel, creditName } from './rule-text.ts'
 import {
+  capitalize,
   FREE_NIGHT_NAME,
   ownNightName,
   roundCents,
@@ -374,6 +375,57 @@ export const usedCreditsYear = (
     date,
     held,
   )
+
+// One statement credit or free night on a held card, as a list of what to
+// mark as used or not: its short name, its dollars over the 12 months from
+// the date (a night at the cardholder's value, else its point cap; null
+// with neither), and what the cardholder has said, by the same rules the fee
+// math uses.
+export type CreditChoice = {
+  id: string
+  name: string // "Uber", "Airline fee", "Anniversary free night"
+  yearly: number | null
+  night: boolean
+  enroll: boolean // the issuer needs enrolling before it pays
+  answer: 'used' | 'skipped' | null
+}
+
+// The card's live credits, then its free nights, the most dollars first.
+export function creditChoices(
+  catalog: Catalog,
+  card: Card,
+  held: WalletCard,
+  date: string,
+  valuations: Wallet['valuations'],
+): CreditChoice[] {
+  const credits = liveCredits(card, date).map((c): CreditChoice => ({
+    id: c.id,
+    name: capitalize(creditLabel(catalog, c)),
+    yearly: roundCents(yearDollars(c, date)),
+    night: false,
+    enroll: c.enroll === true,
+    answer: isSkipped(c, held)
+      ? 'skipped'
+      : creditConfirmed(c, held)
+        ? 'used'
+        : null,
+  }))
+  const nights = card.free_nights.map((n): CreditChoice => ({
+    id: n.id,
+    name: capitalize(FREE_NIGHT_NAME),
+    yearly: ownNightValue(n, held) ?? nightValue(catalog, valuations, card, n),
+    night: true,
+    enroll: false,
+    answer: nightSkipped(n, held)
+      ? 'skipped'
+      : nightConfirmed(n, held)
+        ? 'used'
+        : null,
+  }))
+  const most = (a: CreditChoice, b: CreditChoice) =>
+    (b.yearly ?? 0) - (a.yearly ?? 0)
+  return [...credits.sort(most), ...nights.sort(most)]
+}
 
 // The credits and free nights a cardholder hasn't said they use or don't:
 // left out of the fee math until they do.
