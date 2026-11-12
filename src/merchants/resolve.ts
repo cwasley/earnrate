@@ -58,6 +58,24 @@ const STORE_GAS_CATEGORY: Record<string, string> = {
   warehouse_club: 'gas.superstore',
 }
 
+// Whether a purchase in this category is online by definition (its own or a
+// parent's `channel: online`).
+export function onlineCategory(catalog: Catalog, id: string): boolean {
+  if (catalog.categories.find((c) => c.id === id)?.channel === 'online')
+    return true
+  const dot = id.lastIndexOf('.')
+  return dot !== -1 && onlineCategory(catalog, id.slice(0, dot))
+}
+
+// The channel a purchase is taken to be: the one given, else online for a
+// category bought only online.
+export const settledChannel = (
+  catalog: Catalog,
+  category: string,
+  channel: Channel | null,
+): Channel | null =>
+  channel ?? (onlineCategory(catalog, category) ? 'online' : null)
+
 export function resolveMerchant(
   catalog: Catalog,
   input: string,
@@ -114,10 +132,11 @@ export function resolveMerchant(
   const typedDomain = found.domains.some(
     (d) => normalizeMerchantName(d) === query,
   )
-  return fromMerchant(found, source, input, channel, typedDomain)
+  return fromMerchant(catalog, found, source, input, channel, typedDomain)
 }
 
 function fromMerchant(
+  catalog: Catalog,
   found: Merchant,
   source: 'override' | 'seed',
   input: string,
@@ -127,7 +146,12 @@ function fromMerchant(
   const hasChannelRules =
     found.in_store !== undefined || found.online !== undefined
   const effectiveChannel =
-    channel ?? (typedDomain ? 'online' : hasChannelRules ? 'in_store' : null)
+    channel ??
+    (typedDomain
+      ? 'online'
+      : hasChannelRules
+        ? 'in_store'
+        : settledChannel(catalog, found.category, null))
   const view =
     effectiveChannel === 'in_store'
       ? found.in_store
@@ -181,6 +205,7 @@ export function resolveMerchantById(
   const found = findMerchant(catalog, id)
   if (!found) return null
   return fromMerchant(
+    catalog,
     found,
     override ? 'override' : 'seed',
     found.name,
@@ -244,7 +269,7 @@ export function categoryResolution(
     likelyMcc: null,
     accepts: null,
     ambiguity: null,
-    channel,
+    channel: settledChannel(catalog, category, channel),
     confidence: 'high',
     source: 'category',
     bookedVia: [],

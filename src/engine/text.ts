@@ -8,9 +8,9 @@ import type {
 } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { WalletCard } from '../schema/wallet.ts'
-import { findCategory } from '../merchants/resolve.ts'
+import { findCategory, onlineCategory } from '../merchants/resolve.ts'
 import { singleMcc } from './evaluate.ts'
-import type { MerchantResolution } from './types.ts'
+import type { Channel, MerchantResolution } from './types.ts'
 
 export const num = (n: number) => String(Number(n.toFixed(2)))
 export const pct = (n: number) => `${num(n)}%`
@@ -202,6 +202,21 @@ export function earnText(
 // The rate alone, once earnText has named the currency: "2%", "3x".
 export const bareRate = (rate: number, currency: string) =>
   currency === 'cash' ? pct(rate) : `${num(rate)}x`
+
+// For a purchase in a category bought only online, when the person didn't
+// say how they're paying: "Assumes an online purchase, since Amazon sells
+// online." Null otherwise.
+export function onlineAssumption(
+  catalog: Catalog,
+  merchant: MerchantResolution,
+  given: Channel | null,
+): string | null {
+  if (given !== null || merchant.channel === 'in_store') return null
+  if (!onlineCategory(catalog, merchant.category)) return null
+  return merchant.source === 'category'
+    ? 'Assumes an online purchase.'
+    : `Assumes an online purchase, since ${merchant.resolvedName} sells online.`
+}
 
 // "Assumes Vons counts as a supermarket; for Amex Gold, American Express
 // names it as one." `namedBy` is the issuers whose own lists name the store

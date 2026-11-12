@@ -4,7 +4,7 @@ import { walletProblems } from '../../src/data/integrity.ts'
 import { recommend } from '../../src/engine/recommend.ts'
 import { cardInfo } from '../../src/engine/setup.ts'
 import type { Spending } from '../../src/engine/renewal.ts'
-import { resolveMerchant } from '../../src/merchants/resolve.ts'
+import { resolveMerchant, resolvePlace } from '../../src/merchants/resolve.ts'
 import { catalogCheatSheet, cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
 import { checklist, checklistCalendar } from '../../src/engine/checklist.ts'
@@ -3461,6 +3461,83 @@ describe('#40 keep or replace a fee card', () => {
       expect(hiddenRatesText(platinum)).toBe(
         'Bookings through Amex Travel earn more on the Amex Platinum than the Other travel line counts; add them as their own lines for a closer answer.',
       )
+    },
+  )
+})
+
+describe('#41 online stores', () => {
+  const two = WalletSchema.parse({
+    cards: [{ id: 'amex-blue-cash-everyday' }, { id: 'citi-double-cash' }],
+  })
+
+  goldenTest(
+    '#41a Amazon with no channel is an online purchase: Blue Cash Everyday 3%, capped',
+    () => {
+      const rec = recommend(catalog, two, purchase('Amazon', { amount: 100 }))
+      expect(rec.merchant.channel).toBe('online')
+      const top = rec.ranked[0]
+      expect(top?.cardId).toBe('amex-blue-cash-everyday')
+      expect(top?.matchedRule).toBe('us-online-retail')
+      expect(top?.effectiveReturnPct).toBeCloseTo(3)
+      expect(top?.capped).toBe(true)
+      expectSome(
+        rec.assumptions,
+        /^Assumes an online purchase, since Amazon sells online\.$/,
+      )
+      const every = exploreCards(
+        catalog,
+        {
+          merchant: 'Amazon',
+          category: null,
+          amount: null,
+          channel: null,
+          date: TODAY,
+        },
+        { filters: ALL_PERSONAL_CARDS, memberships: [], valuations: {} },
+      )
+      const everyday = every.ranked.find(
+        (e) => e.cardId === 'amex-blue-cash-everyday',
+      )
+      expect(everyday?.effectiveReturnPct).toBeCloseTo(3)
+      expect(everyday?.requirements.cap).toMatchObject({
+        amount: 6000,
+        period: 'calendar_year',
+        thenRate: 1,
+      })
+      expectSome(
+        every.assumptions,
+        /^Assumes an online purchase, since Amazon sells online\.$/,
+      )
+    },
+  )
+
+  goldenTest('#41b an in-store channel the caller gives is kept', () => {
+    const rec = recommend(
+      catalog,
+      two,
+      purchase('Amazon', { amount: 100, channel: 'in_store' }),
+    )
+    expect(rec.merchant.channel).toBe('in_store')
+    expect(rec.ranked[0]?.cardId).toBe('citi-double-cash')
+    expect(entry(rec, 'amex-blue-cash-everyday').matchedRule).toBeNull()
+    expect(rec.assumptions.join(' ')).not.toMatch(/online purchase/)
+  })
+
+  goldenTest(
+    '#41c online retail as a kind of purchase is online; a store whose website alone is online retail is not',
+    () => {
+      const kind = recommend(
+        catalog,
+        two,
+        purchase('online shopping'),
+        resolvePlace(catalog, 'online shopping', null),
+      )
+      expectSome(kind.assumptions, /^Assumes an online purchase\.$/)
+      expect(kind.merchant.channel).toBe('online')
+      expect(kind.ranked[0]?.cardId).toBe('amex-blue-cash-everyday')
+      const petco = recommend(catalog, two, purchase('Petco'))
+      expect(petco.merchant.channel).not.toBe('online')
+      expect(entry(petco, 'amex-blue-cash-everyday').matchedRule).toBeNull()
     },
   )
 })

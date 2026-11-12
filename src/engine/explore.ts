@@ -43,6 +43,7 @@ import {
   creditTerms,
   earnText,
   listed,
+  onlineAssumption,
   paidText,
   PAYMENT_PHRASES,
   paymentUnknownText,
@@ -671,6 +672,8 @@ function exploreAssumptions(
       ),
     )
   }
+  const online = onlineAssumption(catalog, merchant, purchase.channel)
+  if (online !== null) assumptions.push(online)
   assumptions.push(
     'Assumes each card is set up for this purchase: the right category pick, any activation done, and none of its cap used yet. A card you hold may differ.',
   )

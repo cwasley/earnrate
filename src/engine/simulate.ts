@@ -7,12 +7,7 @@ import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
 import { allCreditsYear, usedCreditsYear, type CreditsYear } from './credits.ts'
-import {
-  categoryMatches,
-  evaluateCard,
-  purchaseContext,
-  usableAt,
-} from './evaluate.ts'
+import { evaluateCard, purchaseContext, usableAt } from './evaluate.ts'
 import {
   idealHolding,
   matchesFilters,
@@ -42,7 +37,7 @@ import {
   wholeDollars,
   possessive,
 } from './text.ts'
-import type { Channel, MerchantResolution } from './types.ts'
+import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
 import { EPSILON, HALF_CENT } from './compare.ts'
 
@@ -117,11 +112,6 @@ export type SimulateOptions = {
   held?: string[] // cards the person already has
 }
 
-// Online retail is paid on a website or app by definition, so spending there
-// is online and reaches the rates that pay only online (Blue Cash Everyday's
-// 3% at Amazon).
-const ONLINE_CATEGORY = 'online_retail'
-
 export function resolveSpendLines(
   catalog: Catalog,
   lines: SpendLine[],
@@ -129,16 +119,10 @@ export function resolveSpendLines(
   return lines
     .filter((l) => l.monthly > 0)
     .map((l) => {
-      const at = (channel: Channel | null) =>
-        l.merchant !== null
-          ? resolvePlace(catalog, l.merchant, channel)
-          : categoryResolution(catalog, l.category ?? 'other', channel)
-      const plain = at(null)
       const merchant =
-        plain.channel === null &&
-        categoryMatches(ONLINE_CATEGORY, plain.category)
-          ? at('online')
-          : plain
+        l.merchant !== null
+          ? resolvePlace(catalog, l.merchant, null)
+          : categoryResolution(catalog, l.category ?? 'other', null)
       return {
         label: l.label ?? merchant.resolvedName,
         monthly: l.monthly,

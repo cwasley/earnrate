@@ -26,6 +26,9 @@ export const CategorySchema = z
     // Bought as a service, a category reads "on" (3x on flights); places read
     // "at". Subcategories inherit it.
     preposition: z.literal('on').optional(),
+    // Bought only on a website or app (online retail): a purchase here is an
+    // online one unless the person says otherwise. Subcategories inherit it.
+    channel: z.literal('online').optional(),
     slug: z.string().optional(), // its search page, when not from its name
     // Answered by that category's search page instead of one of its own; its
     // own address redirects there.

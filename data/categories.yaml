@@ -182,6 +182,7 @@
 - id: online_retail
   preposition: on
   name: Online retail
+  channel: online
   aliases: [online shopping, shopping online, online]
 - id: office_supply
   name: Office supply stores

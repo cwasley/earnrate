@@ -48,6 +48,7 @@ import {
   introUnknownText,
   listed,
   money,
+  onlineAssumption,
   NETWORK_NAMES,
   num,
   paidText,
@@ -690,12 +691,19 @@ function assumptionsFor(
       `Assumes an in-store purchase. ${merchant.resolvedName} takes cards differently online.`,
     )
   }
-  if (merchant.channel === null && purchase.payment === 'paypal') {
+  const online = onlineAssumption(catalog, merchant, purchase.channel)
+  if (online !== null) {
+    assumptions.push(online)
+  } else if (merchant.channel === null && purchase.payment === 'paypal') {
     assumptions.push(
       'Assumes an online purchase, since PayPal checkout is online.',
     )
   }
-  if (purchase.channel === null && merchant.channel === 'online') {
+  if (
+    online === null &&
+    purchase.channel === null &&
+    merchant.channel === 'online'
+  ) {
     assumptions.push(
       'Assumes an online purchase, since you gave a web address.',
     )

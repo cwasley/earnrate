@@ -1,7 +1,7 @@
 import type { Cap, Card, PaymentMethod, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
-import { merchantFamily } from '../merchants/resolve.ts'
+import { merchantFamily, settledChannel } from '../merchants/resolve.ts'
 import { EPSILON } from './compare.ts'
 import {
   introCovers,
@@ -46,7 +46,12 @@ export function purchaseContext(
       category === merchant.category && merchant.likelyMcc !== null
         ? merchant.likelyMcc
         : singleMcc(catalog, category),
-    channel: paymentChannel(merchant.channel, payment),
+    // A category from the caller or Claude can be one bought only online.
+    channel: settledChannel(
+      catalog,
+      category,
+      paymentChannel(merchant.channel, payment),
+    ),
     country: purchase.country,
     date: purchase.date,
     amount: purchase.amount,
