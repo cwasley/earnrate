@@ -55,6 +55,22 @@ describe('merchant credit wording', () => {
       /rates that need a membership: PenFed Honors Advantage \(membership id penfed-honors-advantage\)/,
     )
   })
+
+  test("card search says when next quarter's activation opens", () => {
+    const flex = card('chase-freedom-flex')
+    const opens = flex.rules.find((r) => r.activate_from !== undefined)
+    if (!opens?.activate_from) return
+    const before = formatCardInfo(
+      catalog,
+      cardInfo(catalog, flex, null, '2026-12-01'),
+    )
+    expect(before).toContain(`${opens.id} (opens Dec 15, 2026)`)
+    const after = formatCardInfo(
+      catalog,
+      cardInfo(catalog, flex, null, '2026-12-20'),
+    )
+    expect(after).not.toContain('(opens ')
+  })
 })
 
 describe('possessive', () => {

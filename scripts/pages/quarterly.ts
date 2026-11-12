@@ -10,6 +10,7 @@ import {
 import { periodEnd, periodKey } from '../../src/engine/periods.ts'
 import { rotationGap, rotationGapText } from '../../src/engine/rotation.ts'
 import {
+  activationText,
   categoryPhrase,
   earnText,
   listed,
@@ -220,25 +221,6 @@ function topFor(ctx: PageContext, t: Target, date: string): ExploreEntry[] {
   return [...least.values()]
     .sort((a, b) => b.effectiveReturnPct - a.effectiveReturnPct)
     .slice(0, TOP)
-}
-
-// When to activate a quarter's bonus with the issuer, from its rules' dates.
-export function activationText(
-  issuer: string,
-  rules: Rule[],
-  today: string,
-): string {
-  const dates = (of: (r: Rule) => string | undefined) =>
-    [...new Set(rules.map(of).filter((d) => d !== undefined))].sort()
-  const deadlines = dates((r) => r.activate_by)
-  const opens = dates((r) => r.activate_from).filter((d) => d > today)
-  const from =
-    opens.length === 0 ? '' : ` starting ${listed(opens.map(shortDate), 'or')}`
-  if (deadlines.length === 0)
-    return `Activate with ${issuer}${from === '' ? ' first' : from}; it's free. ${issuer} hasn't given a deadline in the pages earnrate reads.`
-  if (deadlines.every((d) => d < today))
-    return `${issuer}'s deadline to activate was ${listed(deadlines.map(shortDate), 'or')}.`
-  return `Activate with ${issuer}${from === '' ? '' : `${from} and`} by ${listed(deadlines.map(shortDate), 'or')}; it's free.`
 }
 
 export function activationQuotes(card: Card, rules: Rule[]) {

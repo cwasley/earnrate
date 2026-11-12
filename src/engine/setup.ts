@@ -56,6 +56,7 @@ export type CardInfo = {
   // A paid membership the card itself needs (Costco Anywhere).
   requiresMembership: { id: string; name: string; annualFee: number } | null
   activation: string[] // rules that need activating, current or starting soon
+  activationOpens: Record<string, string> // of those, ones the issuer opens later
   needsAnniversary: boolean
   // Spend milestones: "$15,000 calendar-year spend for 10,000 bonus points".
   milestones: {
@@ -236,6 +237,15 @@ export function cardInfo(
               membership(catalog, card.requires_membership)?.annual_fee ?? 0,
           },
     activation: activationRules(card, today),
+    activationOpens: Object.fromEntries(
+      card.rules.flatMap((r) =>
+        r.activate_from !== undefined &&
+        r.activate_from > today &&
+        activationRules(card, today).includes(r.id)
+          ? [[r.id, r.activate_from]]
+          : [],
+      ),
+    ),
     needsAnniversary: needsAnniversary(card),
     milestones: card.milestones.map((m) => ({
       id: m.id,

@@ -341,6 +341,23 @@ describe('the built static pages', () => {
     expect(missing).toEqual([])
   })
 
+  test("a card page's rate rows say when activation opens and closes", () => {
+    const flex = catalog.cards.find((c) => c.id === 'chase-freedom-flex')
+    const html = readFileSync(
+      path.join(out, 'cards', 'chase-freedom-flex.html'),
+      'utf8',
+    )
+    for (const rule of flex?.rules ?? []) {
+      if (rule.requires?.activation !== true) continue
+      if (rule.activate_from !== undefined && rule.activate_from > today)
+        expect(html, rule.id).toContain(
+          `Activate it with Chase starting ${shortDate(rule.activate_from)}`,
+        )
+      if (rule.activate_by !== undefined && rule.activate_by >= today)
+        expect(html, rule.id).toContain(`by ${shortDate(rule.activate_by)}`)
+    }
+  })
+
   test('a card page lists its fees and rewards near the top', () => {
     const html = readFileSync(
       path.join(out, 'cards', 'paypal-cashback-mastercard.html'),
@@ -541,9 +558,19 @@ describe('year-end pages', () => {
   })
 
   test('saved cards come first in the browser, and nothing is sent', () => {
-    const script = /<script>\(\(\) => \{[\s\S]*?<\/script>/.exec(hub)?.[0]
-    expect(script).toContain("localStorage.getItem('earnrate:wallet')")
-    expect(script).not.toMatch(/fetch|sendBeacon|XMLHttpRequest/)
+    const scripts = [...hub.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
+      (m) => m[1] ?? '',
+    )
+    const wallet = scripts.findIndex((t) =>
+      t.includes("localStorage.getItem('earnrate:wallet')"),
+    )
+    expect(wallet).toBeGreaterThan(-1)
+    expect(scripts[wallet]).not.toMatch(/fetch|sendBeacon|XMLHttpRequest/)
+    // It goes to a linked block once the page is laid out: after the send
+    // script has shown its rows.
+    const send = scripts.findIndex((t) => t.includes('[data-send]'))
+    expect(send).toBeGreaterThan(-1)
+    expect(send).toBeLessThan(wallet)
     expect(hub).toContain('data-ye-list')
   })
 
@@ -644,6 +671,13 @@ describe('year-end pages', () => {
           /class="ye-issuer" href="([^"]*)"/.exec(page.html)?.[1] ?? '',
         )
         expect(card?.source_urls, id).toContain(href)
+        const label = unescape(
+          /class="ye-issuer"[^>]*>([^<]*)</.exec(page.html)?.[1] ?? '',
+        )
+        const host = new URL(href).hostname.replace(/^www\./, '')
+        expect(label, id).toMatch(/ page (for the .+|on [a-z0-9.-]+)$/)
+        if (label.includes(' page on ')) expect(label, id).toContain(host)
+        if (card?.only_at) expect(label, id).toContain(card.name)
         expect(href, id).not.toMatch(/terms|pricing|disclosure|faq/i)
       }
     })

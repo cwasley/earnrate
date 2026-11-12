@@ -298,6 +298,7 @@ test("search_cards' description names what it returns", async () => {
     memberships: 'memberships',
     requiresMembership: 'memberships',
     activation: 'activations',
+    activationOpens: 'when they open',
     needsAnniversary: null,
     milestones: 'spend bonuses',
     introRates: 'first-year rates',

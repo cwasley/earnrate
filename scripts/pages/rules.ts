@@ -1,6 +1,7 @@
 // A card rule in words, as the card pages and the pages built on them show
 // it: what it covers, its conditions, and the issuer's quote.
 import {
+  activationLine,
   capitalize,
   categoryPhrase,
   categoryReadsOn,
@@ -20,7 +21,7 @@ import { esc } from './site.ts'
 
 export type Quote = Card['evidence'][number]
 
-export function ruleKit(catalog: Catalog) {
+export function ruleKit(catalog: Catalog, today: string) {
   const { membershipName, issuerName } = cardText(catalog)
   const merchantName = (id: string) => findMerchant(catalog, id)?.name
   const readsOn = (id: string) => categoryReadsOn(catalog, id)
@@ -78,7 +79,7 @@ export function ruleKit(catalog: Catalog) {
     if (rule.requires?.membership !== undefined)
       lines.push(`With ${membershipName(rule.requires.membership)}`)
     if (rule.requires?.activation === true && omit.activation !== true)
-      lines.push(`Activate it with ${issuerName(card.issuer)} first`)
+      lines.push(activationLine(issuerName(card.issuer), rule, today))
     if (rule.valid_from !== undefined || rule.valid_to !== undefined)
       lines.push(
         rule.valid_from !== undefined && rule.valid_to !== undefined

@@ -30,7 +30,7 @@ export function pageContext(
     thisQuarter: quarterYear(options.today),
     ...cardText(catalog),
     ...pageKit(catalog, { dataVersion: options.dataVersion, todayWords }),
-    ...ruleKit(catalog),
+    ...ruleKit(catalog, options.today),
   }
 }
 

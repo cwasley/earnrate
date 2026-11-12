@@ -1,6 +1,11 @@
 import type { CardDetails } from '../engine/card-details.ts'
 import { membershipName } from '../engine/memberships.ts'
-import { foreignFeeText, money, NETWORK_NAMES } from '../engine/text.ts'
+import {
+  foreignFeeText,
+  money,
+  NETWORK_NAMES,
+  shortDate,
+} from '../engine/text.ts'
 import type { CardInfo, SetupNote } from '../engine/setup.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
@@ -38,7 +43,9 @@ export function formatCardInfo(
         ]
       : []),
     ...(card.activation.length > 0
-      ? [`activate with the issuer: ${card.activation.join(', ')}`]
+      ? [
+          `activate with the issuer: ${card.activation.map((id) => (card.activationOpens[id] === undefined ? id : `${id} (opens ${shortDate(card.activationOpens[id])})`)).join(', ')}`,
+        ]
       : []),
     ...(card.needsAnniversary ? ['cap resets on the card anniversary'] : []),
     ...card.milestones.map((m) => `spend bonus: ${m.text} (${m.id})`),

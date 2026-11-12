@@ -6,6 +6,7 @@
 // come first, chosen in the visitor's browser.
 import { periodAmount } from '../../src/engine/credits.ts'
 import { creditWhere } from '../../src/engine/rule-text.ts'
+import { activationText } from '../../src/engine/text.ts'
 import { milestonePays, milestoneWhat } from '../../src/engine/milestones.ts'
 import { offerTerms, OFFERS_MAY_DIFFER } from '../../src/engine/offers.ts'
 import {
@@ -24,6 +25,7 @@ import {
   inOrder,
   listed,
   longDate,
+  hostname,
   money,
   MONTH_NAMES,
   periodPhrase,
@@ -41,7 +43,6 @@ import type {
 import type { GeneratedPage, PageContext } from './context.ts'
 import {
   activationQuotes,
-  activationText,
   quarters,
   type Quarter,
   type QuarterCard,
@@ -272,6 +273,11 @@ const cardPath = (y: YearEnd, id: string) => `/year-end/${String(y.year)}/${id}`
 const cardName = (ctx: PageContext, card: Card) =>
   card.short_name ?? ctx.shortName(card.id)
 
+// The card in "the …", read as a card: a store card's short name is the
+// store's, so it goes by its full name ("the Nordstrom Credit Card").
+const theCard = (ctx: PageContext, card: Card) =>
+  `the ${card.only_at ? card.name : cardName(ctx, card)}`
+
 const sections = (y: YearEnd): [string, { card: Card }[]][] => [
   ['credits', y.credits],
   ['ending', y.ending],
@@ -474,17 +480,17 @@ function cardSummary(ctx: PageContext, one: YearEnd, card: Card): string[][] {
       credits.map((c) => c.valid_to),
     )
     const end = `${by}${date(one.end, first)}`
-    const theCard = `the ${cardName(ctx, card)}`
+    const named = theCard(ctx, card)
     const [single] = credits
     const lines: string[][] = [
       n === 1 && single
         ? [
-            `One credit on ${theCard} ends ${end}: ${money(atYearEnd(one, single))} back ${creditWhere(ctx.catalog, single)}.`,
-            `One credit on ${theCard} ends ${end}, worth up to ${money(atYearEnd(one, single))}.`,
+            `One credit on ${named} ends ${end}: ${money(atYearEnd(one, single))} back ${creditWhere(ctx.catalog, single)}.`,
+            `One credit on ${named} ends ${end}, worth up to ${money(atYearEnd(one, single))}.`,
           ]
         : [
-            `${String(n)} credits on ${theCard} end ${end}, worth up to ${creditTotal(one, credits)} together.`,
-            `${String(n)} credits on ${theCard} end ${by}${dayOf(one.end)}, worth up to ${creditTotal(one, credits)}.`,
+            `${String(n)} credits on ${named} end ${end}, worth up to ${creditTotal(one, credits)} together.`,
+            `${String(n)} credits on ${named} end ${by}${dayOf(one.end)}, worth up to ${creditTotal(one, credits)}.`,
           ],
     ]
     const periodic = count(one.credits)
@@ -896,10 +902,11 @@ const allSections = (v: View) =>
     capsSection(v),
   ].join('\n      ')
 
-// Runs where it sits, after the lists: a link to a card's block (#credits-
+// Runs where it sits, after the lists and after the send script has shown
+// its rows: cards saved in this browser move to the top of each list, and
+// only then, with the page laid out, a link to a card's block (#credits-
 // <card>, its data-anchor) scrolls there, opening the collapsed monthly list
-// if it's in it, and cards saved in this browser move to the top of each
-// list. It only reads the wallet earnrate.dev saved; nothing is sent.
+// if it's in it. It only reads the wallet earnrate.dev saved; nothing is sent.
 const WALLET_SCRIPT = `(() => {
   const reveal = () => {
     const name = decodeURIComponent(location.hash.slice(1))
@@ -923,8 +930,7 @@ const WALLET_SCRIPT = `(() => {
     }
     target.scrollIntoView()
   }
-  addEventListener('hashchange', reveal)
-  queueMicrotask(reveal)
+  const arrange = () => {
   let held = []
   try {
     const w = JSON.parse(localStorage.getItem('earnrate:wallet'))
@@ -945,6 +951,10 @@ const WALLET_SCRIPT = `(() => {
   box.querySelector(chips.length > 0 ? '[data-some]' : '[data-none]').hidden = false
   if (chips.length === 0) list.hidden = true
   box.hidden = false
+  }
+  arrange()
+  reveal()
+  addEventListener('hashchange', reveal)
 })()`
 
 // The send buttons: the system share sheet with the page's address and
@@ -987,9 +997,7 @@ const SEND_SCRIPT = `(() => {
     if (!button) return
     const { url, title } = button.dataset
     if (!navigator.share) return copy(button)
-    const shared = navigator.share({ url, title })
-    count()
-    shared.catch((err) => {
+    navigator.share({ url, title }).then(count, (err) => {
       if (err && err.name !== 'AbortError') copy(button)
     })
   })
@@ -1051,10 +1059,14 @@ function descriptionFor(y: YearEnd): string {
 }
 
 function jumpList(y: YearEnd, ctx: PageContext): string {
-  const items = [...anchors(y)].map(
-    ([id, anchor]) =>
-      `<li data-card="${esc(id)}"><a href="#${esc(anchor)}">${esc(ctx.shortName(id))}</a></li>`,
-  )
+  const items = [...anchors(y)].flatMap(([id, anchor]) => {
+    const card = ctx.catalog.cards.find((c) => c.id === id)
+    return card
+      ? [
+          `<li data-card="${esc(id)}"><a href="#${esc(anchor)}">${esc(cardName(ctx, card))}</a></li>`,
+        ]
+      : []
+  })
   return `<details class="ye-jump"><summary>${esc(`Jump to a card (${String(items.length)})`)}</summary><ul class="chip-links" data-ye-jump>${items.join('')}</ul></details>`
 }
 
@@ -1089,11 +1101,27 @@ export function issuerPage(card: Card): string {
   return main ?? card.source_urls[0] ?? ''
 }
 
+// The issuer's page when the address carries the issuer's name or a word
+// people search it by; otherwise the site it's on (a store's or a partner's).
+function pageName(ctx: PageContext, card: Card, url: string): string {
+  const issuer = ctx.catalog.issuers.find((i) => i.id === card.issuer)
+  const flat = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const host = hostname(url)
+  const words = issuer ? [issuer.id, issuer.name, ...issuer.search] : []
+  const theirs = words
+    .map(flat)
+    .some((w) => w.length >= 3 && flat(host).includes(w))
+  return theirs
+    ? `${possessive(ctx.issuerName(card.issuer))} page for ${theCard(ctx, card)}`
+    : `${possessive(theCard(ctx, card))} page on ${host}`
+}
+
 function scopeHtml(ctx: PageContext, card: Card | null): string {
+  const url = card === null ? '' : issuerPage(card)
   const check =
     card === null
       ? ''
-      : ` For anything else, check <a class="ye-issuer" href="${esc(issuerPage(card))}" rel="nofollow noopener">${esc(`${possessive(ctx.issuerName(card.issuer))} page for the ${cardName(ctx, card)}`)}</a>.`
+      : ` For anything else, check <a class="ye-issuer" href="${esc(url)}" rel="nofollow noopener">${esc(pageName(ctx, card, url))}</a>.`
   return `<p class="ye-scope">${esc(SCOPE)}${check}</p>`
 }
 
@@ -1139,8 +1167,8 @@ function renderYear(
       ${quarterly}
       ${nav}
       ${SOURCE_LINE}
-      <script>${WALLET_SCRIPT}</script>
-      <script>${SEND_SCRIPT}</script>`
+      <script>${SEND_SCRIPT}</script>
+      <script>${WALLET_SCRIPT}</script>`
   return { title, description, body }
 }
 
@@ -1171,8 +1199,8 @@ function cardPage(
       ${sendRow(y, card, title)}
       ${scopeHtml(ctx, card)}
       ${allSections(v)}
-      <h2>${esc(`More on the ${name}`)}</h2>
-      <p><a href="/cards/${card.id}">${esc(`Everything on the ${name}`)}</a>${esc(card.credits.length > 0 ? ': its rates, fees and all of its credits, not only the ones that end with the year.' : ': its rates, fees and the rest of its terms.')}</p>
+      <h2>${esc(`More on ${theCard(ctx, card)}`)}</h2>
+      <p><a href="/cards/${card.id}">${esc(`Everything on ${theCard(ctx, card)}`)}</a>${esc(card.credits.length > 0 ? ': its rates, fees and all of its credits, not only the ones that end with the year.' : ': its rates, fees and the rest of its terms.')}</p>
       <p><a href="/year-end/${year}#${esc(anchor)}">${esc(`Every card's credits and deadlines for ${shortDate(y.end)}`)}</a>, with this one among them.</p>
       ${pageActions(
         [

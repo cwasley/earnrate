@@ -5,6 +5,7 @@ import type {
   Credit,
   Milestone,
   PaymentMethod,
+  Rule,
 } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { WalletCard } from '../schema/wallet.ts'
@@ -988,4 +989,48 @@ export function minimumSpendText(
   return m.reachable
     ? `The ${money(spend)} minimum takes about ${String(m.weeks)} weeks of all ${whose}.`
     : `The ${money(spend)} minimum in ${String(months)} months is more than ${whose}, so the bonus isn't counted.`
+}
+
+type Activation = Pick<Rule, 'activate_from' | 'activate_by'>
+
+// The issuer's dates for activating a bonus: the first day, while it's still
+// ahead, and the deadlines.
+function activationDates(rules: Activation[], today: string) {
+  const dates = (of: (r: Activation) => string | undefined) =>
+    [...new Set(rules.map(of).filter((d) => d !== undefined))].sort()
+  return {
+    opens: dates((r) => r.activate_from).filter((d) => d > today),
+    deadlines: dates((r) => r.activate_by),
+  }
+}
+
+// When to activate a bonus, from its rules' dates: "Activate with Chase
+// starting Dec 15, 2026; it's free. …"
+export function activationText(
+  issuer: string,
+  rules: Activation[],
+  today: string,
+): string {
+  const { opens, deadlines } = activationDates(rules, today)
+  const from =
+    opens.length === 0 ? '' : ` starting ${listed(opens.map(shortDate), 'or')}`
+  if (deadlines.length === 0)
+    return `Activate with ${issuer}${from === '' ? ' first' : from}; it's free. ${issuer} hasn't given a deadline in the pages earnrate reads.`
+  if (deadlines.every((d) => d < today))
+    return `${issuer}'s deadline to activate was ${listed(deadlines.map(shortDate), 'or')}.`
+  return `Activate with ${issuer}${from === '' ? '' : `${from} and`} by ${listed(deadlines.map(shortDate), 'or')}; it's free.`
+}
+
+// The same for one rate's line: "Activate it with Chase starting Dec 15, 2026".
+export function activationLine(
+  issuer: string,
+  rule: Activation,
+  today: string,
+): string {
+  const { opens, deadlines } = activationDates([rule], today)
+  const [open] = opens
+  const [by] = deadlines.filter((d) => d >= today)
+  const from = open === undefined ? '' : ` starting ${shortDate(open)}`
+  const until = by === undefined ? '' : ` by ${shortDate(by)}`
+  return `Activate it with ${issuer}${from === '' && until === '' ? ' first' : `${from}${from !== '' && until !== '' ? ' and' : ''}${until}`}`
 }

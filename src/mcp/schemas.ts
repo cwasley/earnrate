@@ -421,6 +421,7 @@ export const CardSearchSchema = z.object({
         .object({ id: z.string(), name: z.string(), annualFee: z.number() })
         .nullable(),
       activation: z.array(z.string()),
+      activationOpens: z.record(z.string(), z.string()), // rule id: the day activation opens
       needsAnniversary: z.boolean(),
       milestones: z.array(
         z.object({
