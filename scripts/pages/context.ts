@@ -3,6 +3,7 @@
 import { longDate, quarterYear } from '../../src/engine/text.ts'
 import { cardText } from '../../src/format/card-text.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
+import type { OgImage } from './og.ts'
 import { ruleKit } from './rules.ts'
 import { pageKit } from './site.ts'
 
@@ -11,6 +12,8 @@ export type GeneratedPage = {
   path: string // its address: "/quarterly/2026-q4"
   html: string
   lastmod: string
+  noindex?: boolean // left out of the sitemap
+  image?: OgImage // its preview image, drawn with the card and store pages'
 }
 
 export function pageContext(

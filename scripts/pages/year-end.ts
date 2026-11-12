@@ -42,7 +42,16 @@ import {
   type Quarter,
   type QuarterCard,
 } from './quarterly.ts'
-import { chipLinks, esc, fitDescription, fitTitle, SITE } from './site.ts'
+import { cardColor } from '../../src/format/card-art.ts'
+import { button, pageActions } from './actions.ts'
+import {
+  chipLinks,
+  esc,
+  fitDescription,
+  fitSentences,
+  fitTitle,
+  SITE,
+} from './site.ts'
 
 // The first year earnrate published this page. Each later year keeps its own
 // address, saying where the current one is.
@@ -233,16 +242,31 @@ function anchors(y: YearEnd): Map<string, string> {
   return found
 }
 
-// The card pages' line linking to this year's page, for each card it lists.
-export function yearEndLinks(ctx: PageContext): Map<string, string> {
-  const y = yearEnd(ctx, Number(ctx.today.slice(0, 4)))
-  return new Map(
-    [...anchors(y)].map(([id, anchor]) => [
-      id,
-      `<p>${esc(`What on this card ends or starts over when ${String(y.year)} does:`)} <a href="/year-end/#${esc(anchor)}">${esc(`credits and deadlines for ${shortDate(y.end)}`)}</a>.</p>`,
-    ]),
-  )
+// The cards with anything on the year's page; each gets a page of its own.
+function listedCards(ctx: PageContext, y: YearEnd): Card[] {
+  const ids = anchors(y)
+  return ctx.catalog.cards.filter((c) => ids.has(c.id)).sort(byIssuer(ctx))
 }
+
+// One card's part of the year's page.
+function only(y: YearEnd, id: string): YearEnd {
+  const mine = <T extends { card: Card }>(list: T[]) =>
+    list.filter((c) => c.card.id === id)
+  return {
+    ...y,
+    credits: mine(y.credits),
+    monthly: mine(y.monthly),
+    ending: mine(y.ending),
+    milestones: mine(y.milestones),
+    caps: mine(y.caps),
+    rotation: mine(y.rotation),
+  }
+}
+
+const cardPath = (y: YearEnd, id: string) => `/year-end/${String(y.year)}/${id}`
+
+const cardName = (ctx: PageContext, card: Card) =>
+  card.short_name ?? ctx.shortName(card.id)
 
 const sections = (y: YearEnd): [string, { card: Card }[]][] => [
   ['credits', y.credits],
@@ -253,13 +277,376 @@ const sections = (y: YearEnd): [string, { card: Card }[]][] => [
   ['caps', y.caps],
 ]
 
-function cardBlock(
+const plural = (n: number, one: string, many = `${one}s`) =>
+  `${String(n)} ${n === 1 ? one : many}`
+
+// Every credit of one card's that ends with the year, December's monthly
+// ones included, each once: the count its page leads with.
+function creditList(one: YearEnd): Credit[] {
+  const all = [
+    ...[...one.credits, ...one.monthly].flatMap((c) =>
+      c.items.map((i) => i.credit),
+    ),
+    ...one.ending.flatMap((e) => e.items.credits),
+  ]
+  return [...new Map(all.map((c) => [c.id, c])).values()]
+}
+
+// What a card's page leads with, in this order: credits when one is for
+// the year, half-year or quarter (December's monthly ones then count too),
+// dated rates and offers, spend bonuses, December's monthly credits on
+// their own, rotating categories, caps.
+type Lead = 'credits' | 'ending' | 'spend' | 'monthly' | 'rotation' | 'caps'
+
+function leadOf(one: YearEnd): Lead {
+  const credits = creditList(one)
+  if (credits.some((c) => c.period !== 'month')) return 'credits'
+  if (one.ending.some((e) => e.items.offer || e.items.rules.length > 0))
+    return 'ending'
+  if (one.milestones.length > 0) return 'spend'
+  if (credits.length > 0) return 'monthly'
+  return one.rotation.length > 0 ? 'rotation' : 'caps'
+}
+
+const dayOf = (date: string) => shortDate(date).replace(/, \d{4}$/, '')
+
+// "by " when something on the list ends before December 31.
+const byWord = (one: YearEnd, dates: (string | undefined)[]) =>
+  dates.some((d) => d !== undefined && d < one.end) ? 'by ' : ''
+
+// What a spend bonus pays, when that's short enough to say in a sentence;
+// a long list of rewards stays in the page's own list.
+function shortPays(m: Milestone): string | null {
+  const pays = milestonePays(m)
+  return pays.length <= 60 && !pays.includes(':') ? pays : null
+}
+
+const creditTotal = (credits: Credit[]) =>
+  money(credits.reduce((sum, c) => sum + c.amount, 0))
+
+// What one card's page leads with, without the card's name: wordings for
+// the title, longest first, and the line on its preview image.
+function headline(one: YearEnd): { lead: string[]; line: string } {
+  const end = shortDate(one.end)
+  const day = dayOf(one.end)
+  const lead = leadOf(one)
+  const ending = one.ending[0]?.items
+  const spends = one.milestones.flatMap((c) => c.items)
+  if (lead === 'credits' || lead === 'monthly') {
+    const credits = creditList(one)
+    const n = credits.length
+    const by = byWord(
+      one,
+      credits.map((c) => c.valid_to),
+    )
+    const verb = n === 1 ? 'ends' : 'end'
+    const what =
+      lead === 'credits'
+        ? [plural(n, 'credit')]
+        : n === 1
+          ? ["December's monthly credit", plural(n, 'monthly credit')]
+          : [
+              `December's ${String(n)} monthly credits`,
+              plural(n, 'monthly credit'),
+            ]
+    return {
+      lead: what.flatMap((w) => [
+        `${w} that ${verb} ${by}${end}`,
+        `${w} ${verb} ${by}${end}`,
+        `${w} ${verb} ${by}${day}`,
+      ]),
+      line: `${capitalize(what[0] ?? '')} ${verb} ${by}${day}, worth up to ${creditTotal(credits)}`,
+    }
+  }
+  if (lead === 'ending' && ending) {
+    const { offer, rules } = ending
+    const to = one.ending[0]?.card.welcome_offer?.valid_to ?? one.end
+    if (rules.length === 0) {
+      const what = `public welcome offer ends ${shortDate(to)}`
+      return {
+        lead: [what, `welcome offer ends ${shortDate(to)}`],
+        line: capitalize(what),
+      }
+    }
+    const by = byWord(
+      one,
+      rules.map((r) => r.valid_to),
+    )
+    const what = `${plural(rules.length, 'rate')}${offer ? ' and its welcome offer' : ''}`
+    const verb = rules.length === 1 && !offer ? 'ends' : 'end'
+    return {
+      lead: [
+        `${what} that ${verb} ${by}${end}`,
+        `${what} ${verb} ${by}${end}`,
+        `${what} ${verb} ${by}${day}`,
+      ],
+      line: `${capitalize(what)} ${verb} ${by}${day}`,
+    }
+  }
+  const [spend] = spends
+  if (lead === 'spend' && spend) {
+    if (spends.length === 1) {
+      const amount = wholeDollars(spend.spend)
+      return {
+        lead: [
+          `spend ${amount} by ${end} for its bonus`,
+          `spend ${amount} by ${day} for its bonus`,
+          `${amount} spend bonus closes ${day}`,
+        ],
+        line: `Spend ${amount} on it by ${day} for ${shortPays(spend) ?? 'its bonus'}`,
+      }
+    }
+    const what = `${String(spends.length)} spend bonuses`
+    return {
+      lead: [
+        `${what} that close ${end}`,
+        `${what} close ${end}`,
+        `${what} close ${day}`,
+      ],
+      line: `${capitalize(what)} close ${day}`,
+    }
+  }
+  const rotation = one.rotation[0]
+  if (lead === 'rotation' && rotation) {
+    const pick =
+      rotation.last?.kind === 'pick' || rotation.next?.kind === 'pick'
+    const last = rotation.last ? one.lastQuarter : null
+    const next = rotation.next ? one.nextQuarter : null
+    if (last) {
+      const what = pick
+        ? `${last.label} category picks`
+        : `${last.label} bonus categories`
+      return {
+        lead: [`${what} end ${day}`],
+        line: `${what} end ${day}${next && !pick ? `; ${next.label}'s are posted` : ''}`,
+      }
+    }
+    if (next) {
+      const what = `${next.label} bonus categories`
+      return {
+        lead: [`${what} start ${dayOf(next.start)}`, what],
+        line: `${what} start ${dayOf(next.start)}`,
+      }
+    }
+  }
+  const caps = count(one.caps)
+  const what =
+    caps === 1
+      ? `bonus cap starts over ${shortDate(one.next)}`
+      : `${String(caps)} bonus caps start over ${shortDate(one.next)}`
+  return { lead: [what], line: capitalize(what) }
+}
+
+function cardTitle(ctx: PageContext, one: YearEnd, card: Card): string {
+  const name = cardName(ctx, card)
+  return fitTitle(headline(one).lead.map((l) => `${name}: ${l}`))
+}
+
+const PERIOD_WORDS: Partial<Record<Credit['period'], string>> = {
+  calendar_year: 'yearly',
+  half_year: 'half-year',
+  quarter: 'quarterly',
+}
+
+// One card's page in a few sentences, led by what its title says; each is
+// a list of wordings, longest first, for the description to fit.
+function cardSummary(ctx: PageContext, one: YearEnd, card: Card): string[][] {
+  const lead = leadOf(one)
+  const said: Partial<Record<Lead, string[][]>> = {}
+  // The first sentence gives the year; the rest say only the day.
+  const date = (iso: string, first: boolean) =>
+    first ? shortDate(iso) : dayOf(iso)
+
+  const credits = creditList(one)
+  const n = credits.length
+  if (n > 0) {
+    const first = lead === 'credits' || lead === 'monthly'
+    const by = byWord(
+      one,
+      credits.map((c) => c.valid_to),
+    )
+    const end = `${by}${date(one.end, first)}`
+    const theCard = `the ${cardName(ctx, card)}`
+    const [single] = credits
+    const lines: string[][] = [
+      n === 1 && single
+        ? [
+            `One credit on ${theCard} ends ${end}: ${money(single.amount)} back ${creditWhere(ctx.catalog, single)}.`,
+            `One credit on ${theCard} ends ${end}, worth up to ${money(single.amount)}.`,
+          ]
+        : [
+            `${String(n)} credits on ${theCard} end ${end}, worth up to ${creditTotal(credits)} in all.`,
+            `${String(n)} credits on ${theCard} end ${by}${dayOf(one.end)}, worth up to ${creditTotal(credits)}.`,
+          ],
+    ]
+    const periodic = count(one.credits)
+    const monthly = count(one.monthly)
+    const months =
+      monthly === 1
+        ? "December's monthly credit, which ends"
+        : "December's monthly credits, which end"
+    if (periodic > 0 && monthly > 0) {
+      const kinds = listed(
+        [
+          ...new Set(
+            one.credits.flatMap((c) =>
+              c.items.map((i) => PERIOD_WORDS[i.credit.period] ?? ''),
+            ),
+          ),
+        ],
+        'or',
+      )
+      lines.push([
+        `${periodic === 1 ? `One is a ${kinds} credit` : `${String(periodic)} are ${kinds} credits`}, and ${monthly === 1 ? 'one is' : `${String(monthly)} are`} ${months} like every month's.`,
+      ])
+    } else if (monthly > 0)
+      lines.push([
+        `${monthly === 1 ? "It's" : "They're"} ${months} like every month's.`,
+      ])
+    said[first ? lead : 'credits'] = lines
+  }
+
+  const ending = one.ending[0]?.items
+  if (ending) {
+    const first = lead === 'ending'
+    const offer = one.ending[0]?.card.welcome_offer?.valid_to
+    const lines: string[][] = []
+    if (ending.rules.length > 0) {
+      const r = ending.rules.length
+      const by = byWord(
+        one,
+        ending.rules.map((x) => x.valid_to),
+      )
+      lines.push([
+        `${r === 1 ? 'One of its rates ends' : `${String(r)} of its rates end`} ${by}${date(one.end, first)}.`,
+      ])
+    }
+    if (ending.offer && offer)
+      lines.push([
+        `Its public welcome offer ends ${date(offer, first && lines.length === 0)}.`,
+      ])
+    if (lines.length > 0) said.ending = lines
+  }
+
+  const spends = one.milestones.flatMap((c) => c.items)
+  const [spend] = spends
+  if (spend) {
+    const through = `through ${date(one.end, lead === 'spend')}`
+    const amount = wholeDollars(spend.spend)
+    const pays = shortPays(spend)
+    said.spend = [
+      spends.length === 1
+        ? [
+            ...(pays
+              ? [
+                  `Its ${amount} spend bonus, for ${pays}, counts purchases on the card ${through}.`,
+                ]
+              : []),
+            `Its ${amount} spend bonus counts purchases on the card ${through}.`,
+          ]
+        : [
+            `Its ${String(spends.length)} spend bonuses count purchases on the card ${through}.`,
+          ],
+    ]
+  }
+
+  const rotation = one.rotation[0]
+  if (rotation) {
+    const first = lead === 'rotation'
+    const pick =
+      rotation.last?.kind === 'pick' || rotation.next?.kind === 'pick'
+    const last = rotation.last ? one.lastQuarter : null
+    const next = rotation.next ? one.nextQuarter : null
+    const parts = pick
+      ? [
+          last
+            ? `its category picks for ${last.label} apply through ${date(one.end, false)}`
+            : '',
+        ]
+      : [
+          last
+            ? `its ${last.label} bonus categories end ${date(one.end, false)}`
+            : '',
+          next
+            ? `${last ? `${next.label}'s` : `its ${next.label} bonus categories`} start ${date(next.start, first)}`
+            : '',
+        ]
+    const kept = parts.filter((p) => p !== '')
+    if (kept.length > 0)
+      said.rotation = [[`${capitalize(kept.join(', and '))}.`]]
+  }
+
+  const caps = one.caps.flatMap((c) => c.items)
+  const [cap] = caps
+  const capCard = one.caps[0]?.card
+  if (cap && capCard) {
+    const lines = [
+      [
+        `On ${date(one.next, lead === 'caps')}, its calendar-year ${caps.length === 1 ? 'cap starts' : 'caps start'} over.`,
+      ],
+    ]
+    // On a page with nothing else, the cap itself.
+    const [rule] = cap.rules
+    if (lead === 'caps' && caps.length === 1 && cap.rules.length === 1 && rule)
+      lines.push([
+        `${capitalize(ctx.ruleWhat(capCard, rule))}: ${earnText(ctx.catalog, rule.rate, capCard.currency)}. ${capSentence(cap.cap, earnText(ctx.catalog, cap.cap.then_rate, capCard.currency))}.`,
+      ])
+    said.caps = lines
+  }
+
+  const order: Lead[] = [
+    lead,
+    ...(['credits', 'monthly', 'ending', 'spend', 'rotation', 'caps'] as const),
+  ]
+  return [...new Set(order)].flatMap((k) => said[k] ?? [])
+}
+
+// The card pages' line linking to the card's own year-end page. `credits`
+// says it lists the card's credits, so the line can go with them.
+export function yearEndLinks(
   ctx: PageContext,
+): Map<string, { html: string; credits: boolean }> {
+  const y = yearEnd(ctx, Number(ctx.today.slice(0, 4)))
+  return new Map(
+    listedCards(ctx, y).map((card) => {
+      const one = only(y, card.id)
+      const [lead = ''] = headline(one).lead
+      return [
+        card.id,
+        {
+          html: `<p>${esc(`What on this card ends or starts over when ${String(y.year)} does:`)} <a href="${cardPath(y, card.id)}">${esc(lead)}</a>.</p>`,
+          credits: creditList(one).length > 0,
+        },
+      ]
+    }),
+  )
+}
+
+// How the page is drawn: the year's page, or one card's (whose blocks skip
+// the card's name and art, already at the top).
+type View = {
+  ctx: PageContext
+  y: YearEnd
+  one: Card | null
+  titles: Map<string, string> // each card's own page title, for sending
+}
+
+// Shown only once the page's script runs: it shares the card's page with the
+// system share sheet where there is one, and otherwise copies its address.
+function sendRow(y: YearEnd, card: Card, title: string): string {
+  const url = `${SITE}${cardPath(y, card.id)}`
+  return `<p class="ye-send-row" data-send hidden><button type="button" class="ye-send" data-url="${esc(url)}" data-title="${esc(title.replace(/ \| earnrate$/, ''))}">Send this card's list</button><input class="ye-address" readonly hidden aria-label="${esc(`Address of the ${title.replace(/:.*/, '')} list`)}" value="${esc(url)}" /></p>`
+}
+
+function cardBlock(
+  v: View,
   section: string,
   card: Card,
   inner: string,
 ): string {
-  return `<section class="ye-card" data-card="${esc(card.id)}" id="${section}-${esc(card.id)}"><div class="card-head small">${ctx.art(card.id, 64)}<h3><a href="/cards/${card.id}">${esc(card.name)}</a></h3><span class="ye-mark">Your card</span></div>${inner}</section>`
+  if (v.one)
+    return `<section class="ye-card ye-one" id="${section}-${esc(card.id)}">${inner}</section>`
+  return `<section class="ye-card" data-card="${esc(card.id)}" id="${section}-${esc(card.id)}"><div class="card-head small">${v.ctx.art(card.id, 64)}<h3><a href="/cards/${card.id}">${esc(card.name)}</a></h3><span class="ye-mark">Your card</span></div>${inner}${sendRow(v.y, card, v.titles.get(card.id) ?? '')}</section>`
 }
 
 const firstQuote = (ctx: PageContext, card: Card, id: string) => {
@@ -280,18 +667,14 @@ function creditItem(ctx: PageContext, card: Card, item: CreditItem): string {
   return `<li><p><strong>${esc(what)}</strong> ${esc(periodPhrase(credit.period, item.key))}${esc(min)}.${esc(enroll)}</p>${noteHtml(credit.note)}${firstQuote(ctx, card, credit.id)}</li>`
 }
 
-const creditBlocks = (
-  ctx: PageContext,
-  section: string,
-  list: YearEnd['credits'],
-) =>
+const creditBlocks = (v: View, section: string, list: YearEnd['credits']) =>
   `<div class="ye-cards" data-ye-list>${list
     .map(({ card, items }) =>
       cardBlock(
-        ctx,
+        v,
         section,
         card,
-        `<ul class="ye-items">${items.map((i) => creditItem(ctx, card, i)).join('')}</ul>`,
+        `<ul class="ye-items">${items.map((i) => creditItem(v.ctx, card, i)).join('')}</ul>`,
       ),
     )
     .join('')}</div>`
@@ -299,28 +682,37 @@ const creditBlocks = (
 const count = (list: { items: unknown[] }[]) =>
   list.reduce((n, c) => n + c.items.length, 0)
 
-function creditsSection(ctx: PageContext, y: YearEnd): string {
+function creditsSection(v: View): string {
+  const { y } = v
   if (y.credits.length === 0) return ''
+  const monthly =
+    y.monthly.length > 0
+      ? "; December's monthly credits are further down."
+      : '.'
   return `<h2 id="credits">Yearly, half-year and quarterly credits that end ${esc(shortDate(y.end))}</h2>
-      <p>${esc(`Each of these is for the calendar year, July through December or the fourth quarter, all ending ${longDate(y.end)}. What's left of each then ends, and the next period's starts ${shortDate(y.next)}. Credits that run by cardmember year, from the account anniversary, aren't listed; December's monthly credits are further down.`)}</p>
-      ${creditBlocks(ctx, 'credits', y.credits)}`
+      <p>${esc(`Each of these is for the calendar year, July through December or the fourth quarter, all ending ${longDate(y.end)}. What's left of each then ends, and the next period's starts ${shortDate(y.next)}. Credits that run by cardmember year, from the account anniversary, aren't listed${monthly}`)}</p>
+      ${creditBlocks(v, 'credits', y.credits)}`
 }
 
-// Collapsed: December's credit ends like any month's, and the list would
-// bury the deadlines above it.
-function monthlySection(ctx: PageContext, y: YearEnd): string {
+// Collapsed on the year's page: December's credit ends like any month's,
+// and the list would bury the deadlines above it.
+function monthlySection(v: View): string {
+  const { y } = v
   if (y.monthly.length === 0) return ''
   const n = count(y.monthly)
-  return `<h2 id="monthly">Monthly credits</h2>
-      <p>${esc(`These reset every month. December's ends on ${shortDate(y.end)} like any other month's, and January's starts ${shortDate(y.next)}.`)}</p>
-      <details class="ye-monthly"><summary>${esc(`December's ${String(n)} monthly credits on ${String(y.monthly.length)} cards`)}</summary>
-      ${creditBlocks(ctx, 'monthly', y.monthly)}</details>`
+  const intro = `<h2 id="monthly">Monthly credits</h2>
+      <p>${esc(`These reset every month. December's ends on ${shortDate(y.end)} like any other month's, and January's starts ${shortDate(y.next)}.`)}</p>`
+  if (v.one) return `${intro}${creditBlocks(v, 'monthly', y.monthly)}`
+  return `${intro}
+      <details class="ye-monthly"><summary>${esc(`December's ${plural(n, 'monthly credit')} on ${plural(y.monthly.length, 'card')}`)}</summary>
+      ${creditBlocks(v, 'monthly', y.monthly)}</details>`
 }
 
 const ruleLine = (ctx: PageContext, card: Card, rule: Rule) =>
   `<strong>${esc(ctx.ruleWhat(card, rule))}</strong>: ${esc(earnText(ctx.catalog, rule.rate, card.currency))}`
 
-function endingSection(ctx: PageContext, y: YearEnd): string {
+function endingSection(v: View): string {
+  const { ctx, y } = v
   if (y.ending.length === 0) return ''
   const blocks = y.ending.map(({ card, items }) => {
     const lines: string[] = []
@@ -346,7 +738,7 @@ function endingSection(ctx: PageContext, y: YearEnd): string {
         `<li><p>From ${esc(shortDate(m.valid_from ?? ''))}: ${esc(milestoneWhat(m))}.</p>${noteHtml(m.note)}${firstQuote(ctx, card, m.id)}</li>`,
       )
     return cardBlock(
-      ctx,
+      v,
       'ending',
       card,
       `<ul class="ye-items">${lines.join('')}</ul>`,
@@ -357,12 +749,13 @@ function endingSection(ctx: PageContext, y: YearEnd): string {
       <div class="ye-cards" data-ye-list>${blocks.join('')}</div>`
 }
 
-function milestonesSection(ctx: PageContext, y: YearEnd): string {
+function milestonesSection(v: View): string {
+  const { y } = v
   if (y.milestones.length === 0) return ''
   const yearText = String(y.year)
   const blocks = y.milestones.map(({ card, items }) =>
     cardBlock(
-      ctx,
+      v,
       'spend',
       card,
       `<ul class="ye-items">${items
@@ -371,7 +764,7 @@ function milestonesSection(ctx: PageContext, y: YearEnd): string {
             m.valid_from !== undefined && m.valid_from > `${yearText}-01-01`
               ? ` Spending from ${shortDate(m.valid_from)} counts.`
               : ''
-          return `<li><p><strong>${esc(`${wholeDollars(m.spend)} on the card in ${yearText}`)}</strong> ${esc(`for ${milestonePays(m)}.${from}`)}</p>${noteHtml(m.note)}${firstQuote(ctx, card, m.id)}</li>`
+          return `<li><p><strong>${esc(`${wholeDollars(m.spend)} on the card in ${yearText}`)}</strong> ${esc(`for ${milestonePays(m)}.${from}`)}</p>${noteHtml(m.note)}${firstQuote(v.ctx, card, m.id)}</li>`
         })
         .join('')}</ul>`,
     ),
@@ -425,11 +818,12 @@ function picksPart(ctx: PageContext, card: Card, y: YearEnd): string {
   return `<p>${esc(`${last ? `Its picks for ${last.label} apply through ${shortDate(last.end)}, and you` : 'You'} choose again${again}.${unpicked}`)}</p>${next ? `<p><a href="/quarterly/${next.slug}">${esc(next.label)} in full</a></p>` : ''}`
 }
 
-function rotationSection(ctx: PageContext, y: YearEnd): string {
+function rotationSection(v: View): string {
+  const { ctx, y } = v
   if (y.rotation.length === 0) return ''
   const blocks = y.rotation.map(({ card, last, next }) =>
     cardBlock(
-      ctx,
+      v,
       'rotating',
       card,
       last?.kind === 'pick' || next?.kind === 'pick'
@@ -448,16 +842,20 @@ function rotationSection(ctx: PageContext, y: YearEnd): string {
       ? [y.nextQuarter.label]
       : []),
   ])
+  const intro = v.one
+    ? `Its bonus categories change each quarter; these are the ones for ${quartersNamed}, as ${ctx.issuerName(v.one.issuer)} has posted them.`
+    : `The cards whose bonus categories change each quarter, for ${quartersNamed} as each issuer has posted them. A quarter an issuer hasn't posted yet isn't listed.`
   return `<h2 id="rotating">Rotating categories</h2>
-      <p>${esc(`The cards whose bonus categories change each quarter, for ${quartersNamed} as each issuer has posted them. A quarter an issuer hasn't posted yet isn't listed.`)}</p>
+      <p>${esc(intro)}</p>
       <div class="ye-cards" data-ye-list>${blocks.join('')}</div>`
 }
 
-function capsSection(ctx: PageContext, y: YearEnd): string {
+function capsSection(v: View): string {
+  const { ctx, y } = v
   if (y.caps.length === 0) return ''
   const blocks = y.caps.map(({ card, items }) =>
     cardBlock(
-      ctx,
+      v,
       'caps',
       card,
       `<ul class="ye-items">${items
@@ -477,6 +875,16 @@ function capsSection(ctx: PageContext, y: YearEnd): string {
       <p>${esc(`These bonus rates have a calendar-year spending cap. Spending toward each starts again from zero on ${shortDate(y.next)}, so a cap you've used up this year earns the bonus rate again from then.`)}</p>
       <div class="ye-cards" data-ye-list>${blocks.join('')}</div>`
 }
+
+const allSections = (v: View) =>
+  [
+    creditsSection(v),
+    endingSection(v),
+    milestonesSection(v),
+    monthlySection(v),
+    rotationSection(v),
+    capsSection(v),
+  ].join('\n      ')
 
 // Runs where it sits, after the lists: a link into the collapsed monthly
 // list opens it, and cards saved in this browser move to the top of each
@@ -507,12 +915,46 @@ const WALLET_SCRIPT = `(() => {
   }
   const box = document.querySelector('[data-ye-yours]')
   if (!box) return
-  const chips = [...document.querySelectorAll('[data-ye-jump] > li')].filter(mine)
+  const chips = [...document.querySelectorAll('[data-ye-pages] > li')].filter(mine)
   const list = box.querySelector('ul')
   for (const c of chips) list.append(c.cloneNode(true))
   box.querySelector(chips.length > 0 ? '[data-some]' : '[data-none]').hidden = false
   if (chips.length === 0) list.hidden = true
   box.hidden = false
+})()`
+
+// The send buttons: the system share sheet with the page's address and
+// title where the browser has one, otherwise the address copied, or shown
+// to copy by hand. Nothing about the visitor goes with it.
+const SEND_SCRIPT = `(() => {
+  for (const row of document.querySelectorAll('[data-send]')) row.hidden = false
+  const flash = (button, text) => {
+    button.dataset.label ??= button.textContent
+    button.textContent = text
+    clearTimeout(button.timer)
+    button.timer = setTimeout(() => {
+      button.textContent = button.dataset.label
+    }, 1500)
+  }
+  const show = (button) => {
+    const field = button.parentElement.querySelector('.ye-address')
+    field.hidden = false
+    field.select()
+  }
+  const copy = (button) => {
+    const url = button.dataset.url
+    if (!navigator.clipboard) return show(button)
+    navigator.clipboard.writeText(url).then(() => flash(button, 'Link copied'), () => show(button))
+  }
+  document.addEventListener('click', (e) => {
+    const button = e.target instanceof Element && e.target.closest('.ye-send')
+    if (!button) return
+    const { url, title } = button.dataset
+    if (!navigator.share) return copy(button)
+    navigator.share({ url, title }).catch((err) => {
+      if (err && err.name !== 'AbortError') copy(button)
+    })
+  })
 })()`
 
 function summary(y: YearEnd): string {
@@ -578,6 +1020,21 @@ function jumpList(y: YearEnd, ctx: PageContext): string {
   return `<details class="ye-jump"><summary>${esc(`Jump to a card (${String(items.length)})`)}</summary><ul class="chip-links" data-ye-jump>${items.join('')}</ul></details>`
 }
 
+// Every card's own page, to send to someone who has that card.
+function cardPagesList(v: View): string {
+  const cards = listedCards(v.ctx, v.y)
+  return `<h2 id="by-card">A page for each card</h2>
+      <p>${esc(`Each of these ${String(cards.length)} cards has its own page with only its part of this list, to send to someone who has the card.`)}</p>
+      <ul class="chip-links" data-ye-pages>${cards
+        .map(
+          (c) =>
+            `<li data-card="${esc(c.id)}"><a href="${cardPath(v.y, c.id)}">${esc(cardName(v.ctx, c))}</a></li>`,
+        )
+        .join('')}</ul>`
+}
+
+const SOURCE_LINE = `<p class="muted">Every amount, date, cap and quote here is from the card's file in earnrate, checked against the issuer's pages on the date each card page shows. Check the issuer's terms before you rely on them.</p>`
+
 function renderYear(
   ctx: PageContext,
   y: YearEnd,
@@ -589,6 +1046,14 @@ function renderYear(
   const description = descriptionFor(y)
   const h1 = title.replace(/ \| earnrate$/, '')
   const year = String(y.year)
+  const v: View = {
+    ctx,
+    y,
+    one: null,
+    titles: new Map(
+      listedCards(ctx, y).map((c) => [c.id, cardTitle(ctx, only(y, c.id), c)]),
+    ),
+  }
   const nav =
     earlier.length === 0
       ? ''
@@ -602,20 +1067,115 @@ function renderYear(
       <p class="updated">${esc(`Through ${shortDate(y.end)} · Updated ${ctx.dayWords(updated)}`)}</p>
       <p class="answer">${esc(summary(y))}</p>
       ${hub ? `<p>This page always shows the current year. For a link that stays on ${esc(year)}, use <a href="/year-end/${year}">/year-end/${year}</a>.</p>` : ''}
-      <div class="ye-yours" data-ye-yours hidden><p data-some hidden>Cards saved on earnrate.dev in this browser come first in each list, marked “Your card”:</p><p data-none hidden>None of the cards saved on earnrate.dev in this browser have anything on this page.</p><ul class="chip-links"></ul></div>
+      <div class="ye-yours" data-ye-yours hidden><p data-some hidden>Cards saved on earnrate.dev in this browser come first in each list, marked “Your card”. Each also has a page of its own:</p><p data-none hidden>None of the cards saved on earnrate.dev in this browser have anything on this page.</p><ul class="chip-links"></ul></div>
       ${jumpList(y, ctx)}
-      ${creditsSection(ctx, y)}
-      ${endingSection(ctx, y)}
-      ${milestonesSection(ctx, y)}
-      ${monthlySection(ctx, y)}
-      ${rotationSection(ctx, y)}
-      ${capsSection(ctx, y)}
+      ${allSections(v)}
+      ${cardPagesList(v)}
       ${quarterly}
       ${nav}
-      <p class="muted">Every amount, date, cap and quote here is from the card's file in earnrate, checked against the issuer's pages on the date each card page shows. Check the issuer's terms before you rely on them.</p>
-      <script>${WALLET_SCRIPT}</script>`
+      ${SOURCE_LINE}
+      <script>${WALLET_SCRIPT}</script>
+      <script>${SEND_SCRIPT}</script>`
   return { title, description, body }
 }
+
+// A card's own part of the year's page, at an address of its own so a link
+// to it can say in its preview what's ending on that card.
+function cardPage(
+  ctx: PageContext,
+  y: YearEnd,
+  card: Card,
+  lastmod: string,
+): GeneratedPage {
+  const one = only(y, card.id)
+  const year = String(y.year)
+  const path = cardPath(y, card.id)
+  const name = cardName(ctx, card)
+  const title = cardTitle(ctx, one, card)
+  const sentences = cardSummary(ctx, one, card)
+  const [lead = [''], ...more] = sentences
+  const description = fitSentences([lead], more)
+  const answer = sentences.map((s) => s[0] ?? '').join(' ')
+  const anchor = anchors(y).get(card.id) ?? ''
+  const v: View = { ctx, y: one, one: card, titles: new Map() }
+  const image = `og/year-end/${year}/${card.id}.jpg`
+  const body = `
+      <div class="card-head">${ctx.art(card.id, 112)}<h1>${esc(title.replace(/ \| earnrate$/, ''))}</h1></div>
+      <p class="updated">${esc(`${card.name} · Through ${shortDate(y.end)} · Updated ${ctx.dayWords(lastmod)}`)}</p>
+      <p class="answer">${esc(answer)}</p>
+      ${sendRow(y, card, title)}
+      ${allSections(v)}
+      <h2>${esc(`More on the ${name}`)}</h2>
+      <p><a href="/cards/${card.id}">${esc(`Everything on the ${name}`)}</a>${esc(card.credits.length > 0 ? ': its rates, fees and all of its credits, not only the ones that end with the year.' : ': its rates, fees and the rest of its terms.')}</p>
+      <p><a href="/year-end/${year}#${esc(anchor)}">${esc(`Every card's credits and deadlines for ${shortDate(y.end)}`)}</a>, with this one among them.</p>
+      ${pageActions(
+        [
+          {
+            when: ['none', 'other'],
+            html: button(
+              `/#wallet&add=${card.id}`,
+              'Have it? Add it to your wallet',
+            ),
+          },
+          {
+            when: ['holds'],
+            html: button(`/#wallet&card=${card.id}`, 'Open it in your wallet'),
+          },
+        ],
+        card.id,
+      )}
+      ${SOURCE_LINE}
+      <script>${SEND_SCRIPT}</script>`
+  const { line } = headline(one)
+  return {
+    file: `year-end/${year}/${card.id}.html`,
+    path,
+    lastmod,
+    noindex: !cardPageIndexed(one),
+    image: {
+      file: image,
+      color: cardColor(ctx.catalog, card.id),
+      kicker: `${ctx.issuerName(card.issuer)} · year-end ${year}`,
+      name,
+      line,
+    },
+    html: ctx.layout({
+      title,
+      description,
+      path,
+      body,
+      image: `/${image}`,
+      noindex: !cardPageIndexed(one),
+      crumbs: [
+        { name: 'Year-end deadlines', path: '/year-end/' },
+        { name: year, path: `/year-end/${year}` },
+        { name, path },
+      ],
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: title,
+        description,
+        url: `${SITE}${path}`,
+        dateModified: lastmod,
+        temporalCoverage: `${year}-01-01/${y.end}`,
+        about: {
+          '@type': 'CreditCard',
+          name: card.name,
+          url: `${SITE}/cards/${card.id}`,
+        },
+      },
+    }),
+  }
+}
+
+// Search engines get a card's page when something on it ends with the year:
+// a yearly, half-year or quarterly credit, a dated rate or offer, a
+// calendar-year spend bonus. December's monthly credits, caps that start
+// over and rotating categories come back every period, and the card's page
+// and the quarterly pages already say them.
+export const cardPageIndexed = (one: YearEnd) =>
+  one.credits.length > 0 || one.ending.length > 0 || one.milestones.length > 0
 
 // A past year's address, kept so links to it still lead somewhere.
 function pastYear(ctx: PageContext, year: number): GeneratedPage {
@@ -654,16 +1214,27 @@ function pastYear(ctx: PageContext, year: number): GeneratedPage {
   }
 }
 
+// A past year's card pages lead to that year's page, which says they've
+// passed and links this year's.
+export function yearEndRedirects(ctx: PageContext): string[] {
+  const year = Number(ctx.today.slice(0, 4))
+  const lines: string[] = []
+  for (let e = FIRST_YEAR; e < year; e++)
+    lines.push(`/year-end/${String(e)}/* /year-end/${String(e)}`)
+  return lines
+}
+
 export function yearEndPages(
   ctx: PageContext,
   lastmod: (files: string[]) => string,
 ): GeneratedPage[] {
   const year = Number(ctx.today.slice(0, 4))
   const y = yearEnd(ctx, year)
-  const date = [
+  const start = `${String(year)}-01-01`
+  const later = (date: string) => (date > start ? date : start)
+  const date = later(
     lastmod([...anchors(y).keys()].map((id) => `data/cards/${id}.yaml`)),
-    `${String(year)}-01-01`,
-  ].reduce((a, b) => (b > a ? b : a))
+  )
   const earlier: number[] = []
   for (let e = FIRST_YEAR; e < year; e++) earlier.push(e)
   const page = (hub: boolean): GeneratedPage => {
@@ -696,5 +1267,12 @@ export function yearEndPages(
       }),
     }
   }
-  return [page(true), page(false), ...earlier.map((e) => pastYear(ctx, e))]
+  return [
+    page(true),
+    page(false),
+    ...listedCards(ctx, y).map((card) =>
+      cardPage(ctx, y, card, later(lastmod([`data/cards/${card.id}.yaml`]))),
+    ),
+    ...earlier.map((e) => pastYear(ctx, e)),
+  ]
 }

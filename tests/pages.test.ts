@@ -31,7 +31,11 @@ import {
   STEP,
 } from '../src/engine/fee-worth.ts'
 import { quarterlyPages, quarters } from '../scripts/pages/quarterly.ts'
-import { yearEnd, yearEndPages } from '../scripts/pages/year-end.ts'
+import {
+  yearEnd,
+  yearEndPages,
+  yearEndRedirects,
+} from '../scripts/pages/year-end.ts'
 import { creditWhere } from '../src/engine/rule-text.ts'
 import { currentPeriodEnd, inEffect } from '../src/engine/periods.ts'
 import { recentChangesSection } from '../scripts/pages/changes.ts'
@@ -185,13 +189,50 @@ describe('the built static pages', () => {
     expect(actions).not.toMatch(/fetch|sendBeacon|XMLHttpRequest/)
   })
 
-  test('the year-end page is linked from the cards it lists and from the footer', () => {
-    const year = yearEnd(ctx, Number(today.slice(0, 4)))
-    for (const { card } of year.credits)
+  test('the year-end page is linked from the footer, and each card it lists has a page of its own, linked from the card', () => {
+    const year = Number(today.slice(0, 4))
+    const y = yearEnd(ctx, year)
+    const listed = new Set(
+      [
+        ...y.credits,
+        ...y.monthly,
+        ...y.ending,
+        ...y.milestones,
+        ...y.caps,
+        ...y.rotation,
+      ].map((c) => c.card.id),
+    )
+    const built = readdirSync(path.join(out, 'year-end', String(year)))
+      .map((f) => f.replace(/\.html$/, ''))
+      .sort()
+    expect(built).toEqual([...listed].sort())
+    const hub = readFileSync(path.join(out, 'year-end', 'index.html'), 'utf8')
+    const sitemap = readFileSync(path.join(out, 'sitemap.xml'), 'utf8')
+    for (const id of listed) {
+      const address = `/year-end/${String(year)}/${id}`
+      expect(hub, id).toContain(`href="${address}"`)
+      const card = readFileSync(path.join(out, 'cards', `${id}.html`), 'utf8')
+      expect(card, id).toContain(`href="${address}"`)
+      const page = readFileSync(path.join(out, `${address}.html`), 'utf8')
+      expect(page, id).toContain(
+        `<link rel="canonical" href="https://earnrate.dev${address}" />`,
+      )
+      expect(page, id).toContain(
+        `<meta property="og:image" content="https://earnrate.dev/og${address}.jpg" />`,
+      )
       expect(
-        readFileSync(path.join(out, 'cards', `${card.id}.html`), 'utf8'),
-        card.id,
-      ).toContain(`href="/year-end/#credits-${card.id}"`)
+        sitemap.includes(`<loc>https://earnrate.dev${address}</loc>`),
+        id,
+      ).toBe(!page.includes('noindex'))
+    }
+    const credits = readFileSync(
+      path.join(out, 'cards', 'amex-platinum.html'),
+      'utf8',
+    )
+    const section = credits.slice(credits.indexOf('<h2>Statement credits</h2>'))
+    expect(section.slice(0, section.indexOf('<h2>', 4))).toContain(
+      `href="/year-end/${String(year)}/amex-platinum"`,
+    )
     expect(
       readFileSync(path.join(out, 'cards', 'citi-double-cash.html'), 'utf8'),
     ).toContain('<li><a href="/year-end/">')
@@ -496,6 +537,86 @@ describe('year-end pages', () => {
     expect(hub).toContain('data-ye-list')
   })
 
+  describe("each card's own page", () => {
+    const cardPages = pages.filter((p) =>
+      p.path.startsWith(`/year-end/${String(year)}/`),
+    )
+    const pageOf = (id: string) =>
+      cardPages.find((p) => p.path === `/year-end/${String(year)}/${id}`)
+    const title = (html: string) =>
+      unescape(/<title>([^<]*)<\/title>/.exec(html)?.[1] ?? '')
+    const description = (html: string) =>
+      unescape(
+        /<meta name="description" content="([^"]*)"/.exec(html)?.[1] ?? '',
+      )
+
+    test('leads its title with the card and the count of credits it lists, and fits', () => {
+      expect(cardPages.length).toBeGreaterThan(0)
+      for (const page of cardPages) {
+        const t = title(page.html)
+        const d = description(page.html)
+        expect(t.length, t).toBeLessThanOrEqual(TITLE_MAX)
+        expect(d.length, d).toBeLessThanOrEqual(DESCRIPTION_MAX)
+        const n = /: (\d+) (?:monthly )?credits? (?:that )?ends? /.exec(t)?.[1]
+        if (n === undefined) continue
+        const listed = page.html.match(/<strong>\$[\d,.]+ back /g) ?? []
+        expect(listed.length, t).toBe(Number(n))
+        expect(d, t).toMatch(new RegExp(`^(${n}|One) credits? on the `))
+      }
+      expect(title(pageOf('amex-platinum')?.html ?? '')).toMatch(
+        /^Amex Platinum: \d+ credits that end Dec 31, \d{4}/,
+      )
+    })
+
+    test("shows only that card's items, as the year's page words them", () => {
+      for (const { card, items } of [...y.credits, ...y.monthly]) {
+        const html = pageOf(card.id)?.html ?? ''
+        for (const { credit } of items)
+          expect(html, credit.id).toContain(
+            esc(`${money(credit.amount)} back ${creditWhere(catalog, credit)}`),
+          )
+      }
+      const platinum = pageOf('amex-platinum')?.html ?? ''
+      expect(platinum).not.toContain('data-card="amex-gold"')
+      expect(platinum).not.toMatch(/id="[a-z]+-amex-gold"/)
+      expect(platinum).toContain('href="/cards/amex-platinum"')
+      expect(platinum).toContain(`href="/year-end/${String(year)}#`)
+      expect(platinum).toContain('href="/#wallet&amp;add=amex-platinum"')
+      expect(platinum).toContain(
+        `"item":"https://earnrate.dev/year-end/${String(year)}"`,
+      )
+    })
+
+    test('is indexed only when something on it ends with the year', () => {
+      for (const page of cardPages) {
+        const id = page.path.split('/').at(-1) ?? ''
+        const ends = [...y.credits, ...y.ending, ...y.milestones].some(
+          (c) => c.card.id === id,
+        )
+        expect(page.noindex ?? false, id).toBe(!ends)
+        expect(page.html.includes('noindex'), id).toBe(!ends)
+      }
+    })
+
+    test("sends the card's own address and title, and nothing about the visitor", () => {
+      for (const page of cardPages) {
+        const url = `https://earnrate.dev${page.path}`
+        expect(page.html).toContain(`class="ye-send" data-url="${url}"`)
+        expect(page.html).toContain(
+          `data-title="${esc(title(page.html).replace(/ \| earnrate$/, ''))}"`,
+        )
+        expect(hub).toContain(`class="ye-send" data-url="${url}"`)
+      }
+      for (const html of [hub, pageOf('amex-platinum')?.html ?? '']) {
+        const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]
+          .map((m) => m[1] ?? '')
+          .join('\n')
+        expect(scripts).toContain('navigator.share({ url, title })')
+        expect(scripts).not.toMatch(/fetch|sendBeacon|XMLHttpRequest/)
+      }
+    })
+  })
+
   test('in January the hub is the new year, and last year keeps an address', () => {
     const january = pageContext(catalog, {
       today: `${String(year + 1)}-01-05`,
@@ -507,6 +628,12 @@ describe('year-end pages', () => {
     const past = later.find((p) => p.path === `/year-end/${String(year)}`)
     expect(past?.html).toContain('href="/year-end/"')
     expect(hubLater).toContain(`href="/year-end/${String(year)}"`)
+    expect(
+      later.filter((p) => p.path.startsWith(`/year-end/${String(year)}/`)),
+    ).toEqual([])
+    expect(yearEndRedirects(january)).toContain(
+      `/year-end/${String(year)}/* /year-end/${String(year)}`,
+    )
   })
 })
 

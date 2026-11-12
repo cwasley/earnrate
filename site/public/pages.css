@@ -886,6 +886,45 @@ ul.ye-items p,
   color: var(--accent);
   font-weight: 600;
 }
+.ye-one {
+  border-top: 0;
+  padding-top: 0;
+}
+.ye-send-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+.ye-send-row[hidden],
+.ye-address[hidden] {
+  display: none;
+}
+.ye-send {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.ye-send:hover {
+  border-color: var(--accent);
+}
+.ye-address {
+  flex: 1 1 16em;
+  min-width: 0;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
 
 /* The app's tabs in the header, beside the wordmark. On a phone too narrow
    for both, they move under it as one row. */

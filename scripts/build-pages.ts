@@ -97,7 +97,11 @@ import { button, pageActions, textLink, type Visitor } from './pages/actions.ts'
 import { storeIndexReasons } from './pages/indexing.ts'
 import { drawImages, type OgImage } from './pages/og.ts'
 import { quarterlyCardIds, quarterlyPages } from './pages/quarterly.ts'
-import { yearEndLinks, yearEndPages } from './pages/year-end.ts'
+import {
+  yearEndLinks,
+  yearEndPages,
+  yearEndRedirects,
+} from './pages/year-end.ts'
 import {
   chipLinks,
   esc,
@@ -924,7 +928,8 @@ function creditsText(card: Card): string {
   })
   const all = allCreditsYear(catalog, card, today, {})
   const year = all.yearly - all.nights
-  return `<h2>Statement credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns: ${esc(wholeDollars(year))} a year if you'd use them all. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that, and counts the ones you use against the annual fee. You can mark any you don't use.</p><ul>${items.join('')}</ul>`
+  const yearEndLine = yearEnd.get(card.id)
+  return `<h2>Statement credits</h2><p>Dollars back for spending at these stores or on these purchases, on top of what the purchase earns: ${esc(wholeDollars(year))} a year if you'd use them all. With your cards saved, earnrate counts one toward a purchase until it's used up for the period, once you mark it enrolled where the issuer asks for that, and counts the ones you use against the annual fee. You can mark any you don't use.</p><ul>${items.join('')}</ul>${yearEndLine?.credits ? yearEndLine.html : ''}`
 }
 
 // Valued like points: the night's cap at earnrate's default point value.
@@ -1460,7 +1465,7 @@ function renderCard(
       ${choicesText(card)}
       ${milestonesText(card)}
       ${rotates ? `<p>Its categories quarter by quarter, with deadlines: <a href="/quarterly/">this quarter's bonus categories</a>.</p>` : ''}
-      ${yearEnd.get(card.id) ?? ''}
+      ${yearEnd.get(card.id)?.credits === false ? (yearEnd.get(card.id)?.html ?? '') : ''}
       ${
         worth
           ? feeWorthSection(
@@ -2145,6 +2150,7 @@ await writeFile(
       return to === null ? [] : [`/best/${categoryAddress(cat)} /best/${to}`]
     }),
     ...comparisons.map((p) => `/compare/${p.b}-vs-${p.a} /compare/${p.slug}`),
+    ...yearEndRedirects(ctx),
   ]
     .map((line) => `${line} 301\n`)
     .join(''),
@@ -2183,6 +2189,7 @@ const generated: GeneratedPage[] = [
   ...yearEndPages(ctx, filesDate),
 ]
 for (const page of generated) {
+  if (page.image) images.push(page.image)
   await mkdir(path.dirname(path.join(OUT, page.file)), { recursive: true })
   await writeFile(path.join(OUT, page.file), page.html)
 }
@@ -2203,7 +2210,9 @@ const urls: [string, string][] = [
     `${SITE}/cards/${c.id}`,
     cardDate(c),
   ]),
-  ...generated.map((g): [string, string] => [`${SITE}${g.path}`, g.lastmod]),
+  ...generated
+    .filter((g) => !g.noindex)
+    .map((g): [string, string] => [`${SITE}${g.path}`, g.lastmod]),
   [`${SITE}/compare/`, dataDate],
   ...comparisons.map((p): [string, string] => [
     `${SITE}/compare/${p.slug}`,
