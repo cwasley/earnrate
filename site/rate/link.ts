@@ -15,7 +15,7 @@ import { num } from '../../src/engine/text.ts'
 import type { ReportInput } from '../../src/engine/wallet-report.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { ReportCodes } from '../report-check.ts'
-import { MAX_CARDS, MAX_LINES, MAX_TENS } from '../report-policy.ts'
+import { MAX_CARDS, MAX_LINES, SPEND_STEP, spendOk } from '../report-policy.ts'
 
 export const LINK_VERSION = '1'
 
@@ -134,29 +134,32 @@ export function reportCodes(catalog: Catalog): ReportCodes {
 const otherLabel = (name: string) =>
   `Other ${name.charAt(0).toLowerCase()}${name.slice(1)}`
 
-// Spending rounded to the nearest $10 a month, as a link carries it; lines
+// Spending rounded to the nearest $5 a month, as a link carries it; lines
 // that round to nothing, or that earnrate doesn't know, are dropped.
+const rounded = (monthly: number) =>
+  Math.round(monthly / SPEND_STEP) * SPEND_STEP
+
 export function roundedLines(lines: ResolvedLine[]): ResolvedLine[] {
   return lines
     .filter((l) => l.merchant.source !== 'none')
-    .map((l) => ({ ...l, monthly: Math.round(l.monthly / 10) * 10 }))
+    .map((l) => ({ ...l, monthly: rounded(l.monthly) }))
     .filter((l) => l.monthly > 0)
 }
 
 function lineToken(catalog: Catalog, l: ResolvedLine): string | null {
-  const tens = String(Math.round(l.monthly / 10))
+  const dollars = String(rounded(l.monthly))
   const category = catalog.categories.find((c) => c.id === l.merchant.category)
   if (l.merchant.source === 'category') {
     if (!category) return null
     const kind = l.label === otherLabel(category.name) ? 'o' : 'c'
-    return `${tens}${kind}${shortCode('category', category.id)}`
+    return `${dollars}${kind}${shortCode('category', category.id)}`
   }
   const id = l.merchant.merchantId
   if (id === null) return null
   const as = catalog.categories.find(
     (c) => c.name === l.label && l.label !== l.merchant.resolvedName,
   )
-  return `${tens}m${id}${as ? `.${shortCode('category', as.id)}` : ''}`
+  return `${dollars}m${id}${as ? `.${shortCode('category', as.id)}` : ''}`
 }
 
 export function encodeReport(catalog: Catalog, link: ReportLink): string {
@@ -324,11 +327,10 @@ function readLine(
   tables: ReturnType<typeof codeTables>,
   token: string,
 ): ResolvedLine {
-  const m = /^(\d{1,6})([com])([a-z0-9-]+)(?:\.([0-9a-z]{4}))?$/.exec(token)
+  const m = /^(\d{1,7})([com])([a-z0-9-]+)(?:\.([0-9a-z]{4}))?$/.exec(token)
   if (!m) throw new Refused(DAMAGED)
-  const tens = Number(m[1])
-  if (tens <= 0 || tens > MAX_TENS) throw new Refused(DAMAGED)
-  const monthly = tens * 10
+  const monthly = Number(m[1])
+  if (!spendOk(monthly)) throw new Refused(DAMAGED)
   const kind = m[2]
   const ref = m[3] ?? ''
   const categoryOf = (c: string) => {

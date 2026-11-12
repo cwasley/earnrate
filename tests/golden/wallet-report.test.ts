@@ -20,6 +20,8 @@ import { roundCents, wholeDollars } from '../../src/engine/text.ts'
 import {
   feeCardLead,
   flatRateCard,
+  gapText,
+  lineName,
   type FeeVerdict,
   reportWallet,
   walletReport,
@@ -388,4 +390,42 @@ describe('#41 rate my wallet', () => {
       0,
     )
   })
+
+  goldenTest(
+    '#41i a category named with capitals keeps them mid-sentence',
+    () => {
+      expect(lineName(catalog, 'TV and internet service')).toBe(
+        'TV and internet service',
+      )
+      expect(lineName(catalog, 'Other travel')).toBe('other travel')
+      expect(lineName(catalog, 'Gas stations')).toBe('gas stations')
+      expect(
+        gapText(catalog, {
+          label: 'TV and internet service',
+          spend: 1140,
+          heldPct: 1,
+          heldCardId: 'citi-double-cash',
+          bestCardId: 'usbank-cash-plus',
+          bestPct: 5,
+          fee: 0,
+          dollars: 45.6,
+        }),
+      ).toMatch(/^On TV and internet service, your cards earn 1%/)
+    },
+  )
+
+  goldenTest(
+    '#41j a fee card that pays for itself says so before what would add more in its place',
+    () => {
+      const r = report(
+        input(['citi-strata-premier', 'citi-double-cash']),
+        typical(),
+      )
+      const [premier] = r.feeCards
+      expect(premier?.paysForItself).toBe(true)
+      expect(premier?.verdict).toMatch(
+        /^It pays for itself, and in its place the [^:]+ would add more to your wallet than the Citi Strata Premier: /,
+      )
+    },
+  )
 })

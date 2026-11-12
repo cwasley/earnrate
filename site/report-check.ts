@@ -6,8 +6,8 @@
 import {
   MAX_CARDS,
   MAX_LINES,
-  MAX_TENS,
   REPORT_MAX_LENGTH,
+  spendOk,
 } from './report-policy.ts'
 
 // Built from the card data by scripts/build-report-codes.ts. A card's `p`
@@ -25,7 +25,7 @@ export type ReportCodes = {
 const CODE = /^[0-9a-z]{4}$/
 const MARK = /^([pux])([0-9a-z]{4})$/
 const VALUE = /^([0-9a-z]{4}):(\d{1,3}(?:\.\d{1,4})?)$/
-const LINE = /^(\d{1,6})([com])([a-z0-9-]+)(?:\.([0-9a-z]{4}))?$/
+const LINE = /^(\d{1,7})([com])([a-z0-9-]+)(?:\.([0-9a-z]{4}))?$/
 
 const list = (s: string) => (s === '' ? [] : s.split(','))
 
@@ -94,8 +94,7 @@ export function checkReport(text: string, codes: ReportCodes): boolean {
     const m = LINE.exec(token)
     if (!m) return false
     const [, amount = '', kind, ref = '', as] = m
-    const tens = Number(amount)
-    if (tens <= 0 || tens > MAX_TENS) return false
+    if (!spendOk(Number(amount))) return false
     if (kind !== 'm') return as === undefined && categories.has(ref)
     return merchants.has(ref) && (as === undefined || categories.has(as))
   })

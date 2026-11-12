@@ -60,6 +60,7 @@ import {
 } from '../../src/merchants/resolve.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { anniversaryOf, type Spending } from '../../src/engine/renewal.ts'
+import { addsAtOnce, askAddText } from './add-from-link.ts'
 import { CardArt } from './CardArt.tsx'
 import { KeepOrReplace } from './KeepOrReplace.tsx'
 import { PlaceKinds } from './PlaceKinds.tsx'
@@ -2242,15 +2243,28 @@ export function MyWallet({
 
   // A card page's "Add it to your wallet" arrives as #wallet&add=<card id>,
   // on load or as a change to the address. The id is read once and cleared.
+  // From anywhere but an earnrate.dev page, the cards are asked about first.
   // `whatif=<card>` opens "Would another card help?" at that card, and
   // `card=<card>` opens a held card's Settings, both from a card page.
   const [whatIf, setWhatIf] = useState<string[]>([])
+  const [asking, setAsking] = useState<string[] | null>(null)
+  const addNamed = (ids: string[]) => {
+    track('page-add')
+    const [only] = ids
+    if (ids.length === 1 && only !== undefined) void addAndOpen(only)
+    else void addSeveral(ids)
+  }
   const addFromAddress = () => {
     const params = new URLSearchParams(location.hash.slice(1))
     const param = (['add', 'whatif', 'card'] as const).find((k) =>
       params.has(k),
     )
     if (param === undefined) return
+    const atOnce = addsAtOnce({
+      hash: location.hash,
+      referrer: document.referrer,
+      origin: location.origin,
+    })
     const ids = params
       .getAll(param)
       .filter((id) => catalog.cards.some((c) => c.id === id))
@@ -2259,12 +2273,15 @@ export function MyWallet({
     history.replaceState(null, '', `#${rest || 'wallet'}`)
     const [cardId] = ids
     if (cardId === undefined) return
-    if (param === 'add' && ids.length > 1) {
-      track('page-add')
-      void addSeveral(ids)
-    } else if (param === 'add') {
-      track('page-add')
-      void addAndOpen(cardId)
+    if (param === 'add') {
+      const unheld = [...new Set(ids)].filter(
+        (id) => !wallet?.cards.some((c) => c.id === id),
+      )
+      if (atOnce || unheld.length === 0) addNamed(ids)
+      else {
+        setAsking(unheld)
+        requestAnimationFrame(() => scrollTo({ top: 0 }))
+      }
     } else if (param === 'whatif') {
       track('page-whatif')
       setWhatIf(ids)
@@ -2290,6 +2307,40 @@ export function MyWallet({
       removeEventListener('hashchange', onChange)
     }
   }, [])
+
+  const askAdd =
+    asking === null ? null : (
+      <section class="panel add-ask" aria-labelledby="add-ask-title">
+        <h3 id="add-ask-title">{askAddText(asking.length)}</h3>
+        <p>
+          A link named {asking.length === 1 ? 'it' : 'them'}. Nothing is added
+          unless you say so.
+        </p>
+        <ul class="add-ask-cards">
+          {asking.map((id) => (
+            <li key={id}>
+              <CardArt id={id} width={32} />
+              <span>{shortName(id)}</span>
+            </li>
+          ))}
+        </ul>
+        <div class="row-buttons">
+          <button
+            type="button"
+            class="primary"
+            onClick={() => {
+              setAsking(null)
+              addNamed(asking)
+            }}
+          >
+            Add
+          </button>
+          <button type="button" onClick={() => setAsking(null)}>
+            Not now
+          </button>
+        </div>
+      </section>
+    )
 
   const problems = wallet ? walletProblems(wallet, catalog) : []
   const rec = useMemo(
@@ -2350,6 +2401,7 @@ export function MyWallet({
     return (
       <div class="panels">
         {syncTop}
+        {askAdd}
         <section class="panel first" aria-labelledby="quick-title">
           <h3 id="quick-title">Which cards do you have?</h3>
           <p>
@@ -2414,6 +2466,7 @@ export function MyWallet({
   return (
     <div class="panels">
       {syncTop}
+      {askAdd}
       <section
         class="panel first"
         aria-labelledby="wallet-ask-title"

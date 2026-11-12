@@ -410,7 +410,7 @@ describe('the built static pages', () => {
     }
     const platinum = section('amex-platinum')
     expect(platinum).toContain(
-      "earnrate can't tell which purchases the airline fee and hotel credits pay on, so it never counts them toward one; mark what you've used in your wallet.",
+      "earnrate can't tell which purchases the airline fee and hotel credits pay on, so it never counts them toward one; say in your wallet which you use.",
     )
     expect(platinum).toContain(
       '$200 back each calendar year on incidental fees charged by the one airline you select',

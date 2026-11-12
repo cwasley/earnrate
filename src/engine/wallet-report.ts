@@ -50,6 +50,7 @@ import {
   feeCardExtrasText,
   inOrder,
   listed,
+  midSentence,
   money,
   pct,
   perksNoun,
@@ -393,18 +394,19 @@ export function reportFeeCards(
     if (!k) return []
     const unsaid = k.unsaid
     const credits = keepOrReplaceUnsaid(k)
+    const paysForItself = whole(k.renewal.net) > 0
     return [
       {
         cardId: held.id,
         fee: k.fee,
         net: k.renewal.net,
         counted: k.renewal.credits,
-        paysForItself: whole(k.renewal.net) > 0,
+        paysForItself,
         creditsCover:
           whole(k.renewal.net) <= 0 && whole(k.renewal.net + unsaid.yearly) > 0,
         perks: unsaid.yearly > 0 ? perksNoun(unsaid, true, true) : '',
         outcome: k.outcome,
-        verdict: keepOrReplaceVerdict(catalog, k),
+        verdict: keepOrReplaceVerdict(catalog, k, paysForItself),
         credits,
       },
     ]
@@ -572,11 +574,11 @@ export function flatText(catalog: Catalog, r: ReportStart): string {
   return `${than}, the best no-fee card with one rate for everything (${rate}${others}).`
 }
 
-// A spending line mid-sentence: "supermarkets", "other travel", "streaming
-// services", but "Amazon" as it is.
+// A spending line mid-sentence: "supermarkets", "other travel", "TV and
+// internet service", but "Amazon" as it is.
 export const lineName = (catalog: Catalog, label: string) =>
   catalog.categories.some((c) => c.name === label) || /^Other /.test(label)
-    ? label.toLowerCase()
+    ? midSentence(label)
     : label
 
 // Which card of a pair takes which lines: "the Amex Blue Cash Preferred for

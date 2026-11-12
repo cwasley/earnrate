@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { HALF_CENT } from '../../src/engine/compare.ts'
 import type { Picks } from '../../src/engine/explore.ts'
+import { followingOwnLink } from './add-from-link.ts'
 import { CardArt } from './CardArt.tsx'
 import { debouncer } from './debounce.ts'
 import { runAnswer } from './find/run.ts'
@@ -406,7 +407,11 @@ export function Spending({
             <a class="row-link" href={`/cards/${card.cardId}`}>
               See card details
             </a>
-            <a class="row-link primary" href={`#wallet&add=${card.cardId}`}>
+            <a
+              class="row-link primary"
+              href={`#wallet&add=${card.cardId}`}
+              onClick={() => followingOwnLink(`#wallet&add=${card.cardId}`)}
+            >
               Add to my wallet
             </a>
           </div>

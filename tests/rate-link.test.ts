@@ -85,7 +85,7 @@ const essentials = (link: ReportLink) => ({
 })
 
 describe('report links', () => {
-  test('cards, picks, memberships, point values and spending come back as they went in, rounded to $10', () => {
+  test('cards, picks, memberships, point values and spending come back as they went in, rounded to $5', () => {
     const fragment = encodeReport(catalog, EIGHT)
     const decoded = decodeReport(catalog, `#${fragment}`)
     expect(decoded.ok).toBe(true)
@@ -94,7 +94,7 @@ describe('report links', () => {
       essentials({ ...EIGHT, lines: roundedLines(EIGHT.lines ?? []) }),
     )
     expect(decoded.link.lines?.map((l) => l.monthly)).toEqual([
-      500, 250, 150, 100, 40, 60, 60, 30, 800, 210,
+      505, 255, 155, 105, 45, 65, 65, 35, 805, 215,
     ])
     expect(encodeReport(catalog, decoded.link)).toBe(fragment)
   })
@@ -118,6 +118,18 @@ describe('report links', () => {
     expect(theirs.net).toBe(own.net)
     expect(theirs.counted).toEqual(own.counted)
     expect(theirs.credits).toEqual(own.credits)
+  })
+
+  test('typical-style amounts go in a link as they are', () => {
+    const typicalLines = lines(TYPICAL_MONTHLY_SPEND)
+    expect(roundedLines(typicalLines).map((l) => l.monthly)).toEqual(
+      TYPICAL_MONTHLY_SPEND.map((t) => t.monthly),
+    )
+    const link = { ...EIGHT, lines: typicalLines }
+    const decoded = decodeReport(catalog, encodeReport(catalog, link))
+    expect(decoded.ok && decoded.link.lines?.map((l) => l.monthly)).toEqual(
+      TYPICAL_MONTHLY_SPEND.map((t) => t.monthly),
+    )
   })
 
   test('typical spending stays out of the link', () => {

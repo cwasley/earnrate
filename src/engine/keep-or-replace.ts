@@ -468,17 +468,24 @@ export function feeSavedText(k: KeepOrReplace, r: Replacement): string {
 }
 
 // The answer first: what a card in its place would do, or why none needs to.
+// `paysForItself`: said beside a tag that says so, so a card that would add
+// more in its place doesn't read as a contradiction.
 export function keepOrReplaceVerdict(
   catalog: Catalog,
   k: KeepOrReplace,
+  paysForItself = false,
 ): string {
   const [best] = k.replacements
-  const lead = keepOrReplaceLead(catalog, k)
+  const lead = keepOrReplaceLead(catalog, k, paysForItself)
   return best === undefined ? lead : `${lead} ${feeSavedText(k, best)}`
 }
 
 // The verdict's first sentence; the fee saved by the best card follows it.
-export function keepOrReplaceLead(catalog: Catalog, k: KeepOrReplace): string {
+export function keepOrReplaceLead(
+  catalog: Catalog,
+  k: KeepOrReplace,
+  paysForItself = false,
+): string {
   const [best] = k.replacements
   if (k.outcome === 'not-needed') {
     const adds = belowFee(
@@ -494,13 +501,16 @@ export function keepOrReplaceLead(catalog: Catalog, k: KeepOrReplace): string {
     return `Nothing with a lower fee comes close: in its place, no such card would add anything to your wallet after its fee, while ${heldAdds(k)}.`
   const name = nameOf(catalog, best.cardId)
   const net = wholeDollars(best.net)
-  return k.outcome === 'keeps'
-    ? `In its place, the ${name} would keep the most of what the ${k.name} adds to your wallet: about ${net} of ${wholeDollars(k.added)} a year after fees (${String(best.share)}%).`
-    : whole(k.added) <= 0
-      ? `In its place, the ${name} would add about ${net} a year to your wallet after its fee, while ${heldAdds(k)}.`
-      : whole(best.net) === whole(k.added)
-        ? `In its place, the ${name} would add about as much to your wallet as the ${k.name}: about ${net} a year after its fee.`
-        : `In its place, the ${name} would add more to your wallet than the ${k.name}: about ${net} a year after its fee, against ${wholeDollars(k.added)}.`
+  if (k.outcome === 'keeps')
+    return `In its place, the ${name} would keep the most of what the ${k.name} adds to your wallet: about ${net} of ${wholeDollars(k.added)} a year after fees (${String(best.share)}%).`
+  const inPlace = paysForItself
+    ? `It pays for itself, and in its place the ${name}`
+    : `In its place, the ${name}`
+  return whole(k.added) <= 0
+    ? `${inPlace} would add about ${net} a year to your wallet after its fee, while ${heldAdds(k)}.`
+    : whole(best.net) === whole(k.added)
+      ? `${inPlace} would add about as much to your wallet as the ${k.name}: about ${net} a year after its fee.`
+      : `${inPlace} would add more to your wallet than the ${k.name}: about ${net} a year after its fee, against ${wholeDollars(k.added)}.`
 }
 
 // How the held card's figure is made up.

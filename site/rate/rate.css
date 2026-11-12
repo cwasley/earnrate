@@ -60,6 +60,7 @@
 
 .rate-figure {
   margin: 4px 0 2px;
+  text-wrap: balance;
   font-size: clamp(38px, 10vw, 52px);
   font-weight: 700;
   letter-spacing: -0.03em;

@@ -76,7 +76,7 @@ function readSaved() {
 
 const TYPICAL: Spending = { lines: typicalSpendLines(catalog), typical: true }
 
-// The person's rows as the report counts them: known lines, rounded to $10
+// The person's rows as the report counts them: known lines, rounded to $5
 // as a link carries them; typical amounts when there are none of their own.
 function spendingOf(rows: Row[] | null): Spending {
   if (rows === null || isTypicalRows(rows)) return TYPICAL
@@ -378,8 +378,8 @@ function Report({
         {wholeDollars(start.net)}
         <span class="rate-per">
           {start.counted.length > 0
-            ? ' a year in rewards and credits you use, after fees'
-            : ' a year in rewards, after fees'}
+            ? ' a year in rewards and credits you use, after\u00a0fees'
+            : ' a year in rewards, after\u00a0fees'}
         </span>
       </p>
       {credits === '' ? null : <p class="rate-credits">{credits}</p>}
@@ -479,7 +479,7 @@ function SpendingEditor({
                   type="number"
                   inputMode="numeric"
                   min="0"
-                  step="10"
+                  step="5"
                   aria-label={`${r.what}, dollars a month`}
                   value={r.monthly}
                   onInput={(e) =>
@@ -661,7 +661,7 @@ function ShareBox({
     )
       ? ['Which statement credits you use']
       : []),
-    ...(spending.typical ? [] : ['Your monthly spending, rounded to $10']),
+    ...(spending.typical ? [] : ['Your monthly spending, rounded to $5']),
   ]
   const canShare = typeof navigator.share === 'function'
 
@@ -1185,8 +1185,8 @@ export function Rate() {
         <h1>A shared wallet</h1>
         <p class="lede">
           {source.stored
-            ? "Someone shared this report on their cards, so it's written to them. Your browser worked it out from what the link saved, which says nothing about who they are; nothing saved in this browser was read or changed."
-            : "Someone shared this report on their cards, so it's written to them. Your browser worked it out from the link alone: earnrate's server never saw it, and nothing saved in this browser was read or changed."}
+            ? 'This is a report on someone else’s cards, so where it says “your”, it means theirs. This browser worked it out from what the link saved, which says nothing about who they are, and nothing saved here was read or changed.'
+            : 'This is a report on someone else’s cards, so where it says “your”, it means theirs. This browser worked it out from the link alone: earnrate’s server never saw it, and nothing saved here was read or changed.'}
         </p>
         <p class="rate-yours">
           <a href="/rate">Rate your own cards</a>

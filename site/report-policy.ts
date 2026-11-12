@@ -16,7 +16,14 @@ export const REPORT_LINKS_PER_DAY = 300
 // Worker both refuse longer ones.
 export const MAX_CARDS = 30
 export const MAX_LINES = 40
-export const MAX_TENS = 100_000 // $1,000,000 a month on one line
+// A spending line's monthly dollars, a whole multiple of SPEND_STEP.
+export const SPEND_STEP = 5
+export const MAX_MONTHLY = 1_000_000
+export const spendOk = (dollars: number) =>
+  Number.isInteger(dollars) &&
+  dollars > 0 &&
+  dollars <= MAX_MONTHLY &&
+  dollars % SPEND_STEP === 0
 
 export const REPORT_RETENTION_SECONDS = Math.round(
   ((REPORT_RETENTION_MONTHS * 365.25) / 12) * 24 * 60 * 60,
