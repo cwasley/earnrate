@@ -1,4 +1,4 @@
-import type { ComponentChildren } from 'preact'
+import { render, type ComponentChildren } from 'preact'
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { catalog, dataVersion } from 'virtual:catalog'
 import type { Picks } from '../../src/engine/explore.ts'
@@ -31,6 +31,7 @@ import {
   type ReportStart,
 } from '../../src/engine/wallet-report.ts'
 import { optionName } from '../../src/engine/rule-text.ts'
+import { listed, type Voice } from '../../src/engine/text.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { CardArt } from '../app/CardArt.tsx'
 import { CreditPicks } from '../app/CreditPicks.tsx'
@@ -69,20 +70,13 @@ import {
   type RatePicture,
 } from './picture-text.ts'
 import { SaveImage } from './SaveImage.tsx'
-import { REPORT_RETENTION_MONTHS } from '../report-policy.ts'
 import { runReport } from './run.ts'
-import {
-  DEAD_LINK,
-  longUrl,
-  NO_SHORT_LINK,
-  ownLink,
-  pickLink,
-  type Have,
-} from './share.ts'
+import { DELETED, notMade, ownLink, pickLink, UNDELETED } from './share.ts'
 import {
   deleteReport,
   loadReport,
   newLink,
+  shortUrl,
   storedId,
   writeReport,
   type Saved,
@@ -236,10 +230,11 @@ function useParts(
   spending: Spending,
   today: string,
   start: ReportStart,
+  voice: Voice,
 ) {
   const job = useMemo(
-    () => ({ input, spending, today }),
-    [input, spending, today],
+    () => ({ input, spending, today, voice }),
+    [input, spending, today, voice],
   )
   const startNow = useRef(start)
   startNow.current = start
@@ -307,12 +302,14 @@ function Comparison({
   start,
   best,
   busy,
+  voice,
 }: {
   start: ReportStart
   best: BestCards | null
   busy: boolean
+  voice: Voice
 }) {
-  const [mine, , flat] = comparisonRows(start, best, shortName)
+  const [mine, , flat] = comparisonRows(start, best, shortName, voice)
   const top = best === null ? null : pairBeats(best) ? best.pair : best.single
   const rows: (CompareRow & { key: string; note: string | null })[] = [
     ...(mine ? [{ ...mine, key: 'mine', note: '' }] : []),
@@ -359,7 +356,7 @@ function Comparison({
         ))}
       </div>
       {start.counted.length === 0 && start.creditChoices.length === 0 ? null : (
-        <p class="muted small">{countedNote()}</p>
+        <p class="muted small">{countedNote(voice)}</p>
       )}
     </section>
   )
@@ -369,10 +366,12 @@ function FeeCards({
   input,
   fees,
   busy,
+  voice,
 }: {
   input: ReportInput
   fees: Map<string, FeeVerdict | null>
   busy: Busy
+  voice: Voice
 }) {
   const ids = input.cards
     .map((c) => c.id)
@@ -383,7 +382,15 @@ function FeeCards({
       class="panel rate-part"
       aria-busy={ids.some((id) => busy(`fee:${id}`))}
     >
-      <h2>{ids.length === 1 ? 'Your fee card' : 'Your fee cards'}</h2>
+      <h2>
+        {voice === 'you'
+          ? ids.length === 1
+            ? 'Your fee card'
+            : 'Your fee cards'
+          : ids.length === 1
+            ? 'The fee card'
+            : 'The fee cards'}
+      </h2>
       <ul class="rate-fees">
         {ids.map((id) => {
           const v = fees.get(id)
@@ -427,7 +434,7 @@ function FeeCards({
                   {v.paysForItself ? null : (
                     <p>
                       <strong>
-                        <Words text={feeCardLead(catalog, v)} />
+                        <Words text={feeCardLead(catalog, v, voice)} />
                       </strong>
                     </p>
                   )}
@@ -482,7 +489,15 @@ function Next({
   )
 }
 
-function Gaps({ gaps, busy }: { gaps: Gap[] | null; busy: boolean }) {
+function Gaps({
+  gaps,
+  busy,
+  voice,
+}: {
+  gaps: Gap[] | null
+  busy: boolean
+  voice: Voice
+}) {
   const [all, setAll] = useState(false)
   return (
     <section class="panel rate-part" aria-busy={busy}>
@@ -501,8 +516,8 @@ function Gaps({ gaps, busy }: { gaps: Gap[] | null; busy: boolean }) {
         </>
       ) : gaps.length === 0 ? (
         <p>
-          On every line of this spending, your cards earn close to the best card
-          earnrate knows for it.
+          On every line of this spending, {voice === 'you' ? 'your' : 'these'}{' '}
+          cards earn close to the best card earnrate knows for it.
         </p>
       ) : (
         <>
@@ -511,7 +526,7 @@ function Gaps({ gaps, busy }: { gaps: Gap[] | null; busy: boolean }) {
               <li key={g.label}>
                 <CardArt id={g.bestCardId} width={32} />
                 <span>
-                  <Words text={gapText(catalog, g)} />
+                  <Words text={gapText(catalog, g, voice)} />
                 </span>
               </li>
             ))}
@@ -528,18 +543,20 @@ function Gaps({ gaps, busy }: { gaps: Gap[] | null; busy: boolean }) {
 }
 
 // "On typical U.S. spending, about $1,990 a month."
-const basisText = (start: ReportStart) =>
+const basisText = (start: ReportStart, voice: Voice = 'you') =>
   start.typical
     ? `On typical U.S. spending, about ${wholeDollars(start.monthly)} a month.`
-    : `On your spending, ${wholeDollars(start.monthly)} a month.`
+    : voice === 'you'
+      ? `On your spending, ${wholeDollars(start.monthly)} a month.`
+      : `On spending of ${wholeDollars(start.monthly)} a month.`
 
 // The longer lines under the figure keep their room whichever one
 // shows, so answering a credit never moves the page under the tap.
 const ROOM = { low: 0, high: 0 }
 
 // The report itself: the same for your own cards and a shared link. The
-// figure and what makes it up, then a panel each for the credits, the
-// comparison, sharing and the slower parts.
+// figure, the cards it's for and what makes it up, then a panel each for the
+// credits, the comparison, sharing and the slower parts.
 function Report({
   start,
   input,
@@ -548,6 +565,7 @@ function Report({
   share,
   editors,
   answers,
+  voice,
 }: {
   start: ReportStart
   input: ReportInput
@@ -556,10 +574,27 @@ function Report({
   share: ComponentChildren
   editors: ComponentChildren
   answers: ComponentChildren
+  voice: Voice
 }) {
   const { best, bestStart, fees, next, gaps } = parts
   return (
     <div class="rate-report" aria-live="polite">
+      <p class="rate-figure" data-range={start.range === null ? undefined : ''}>
+        <Words text={netFigure(start)} />
+        <span class="rate-per">
+          <span>{perYear(start, voice)}</span>
+          {start.creditChoices.length > 0 ? (
+            <>
+              <span class="rate-per-room" aria-hidden="true">
+                {perYear({ range: ROOM, counted: [] }, voice)}
+              </span>
+              <span class="rate-per-room" aria-hidden="true">
+                {perYear({ range: null, counted: [ROOM] }, voice)}
+              </span>
+            </>
+          ) : null}
+        </span>
+      </p>
       <ul class="rate-cards" aria-label="The cards rated">
         {start.cards.map((c) => (
           <li key={c.cardId}>
@@ -568,41 +603,26 @@ function Report({
           </li>
         ))}
       </ul>
-      <p class="rate-figure" data-range={start.range === null ? undefined : ''}>
-        <Words text={netFigure(start)} />
-        <span class="rate-per">
-          <span>{perYear(start)}</span>
-          {start.creditChoices.length > 0 ? (
-            <>
-              <span class="rate-per-room" aria-hidden="true">
-                {perYear({ range: ROOM, counted: [] })}
-              </span>
-              <span class="rate-per-room" aria-hidden="true">
-                {perYear({ range: null, counted: [ROOM] })}
-              </span>
-            </>
-          ) : null}
-        </span>
-      </p>
       <p class="rate-lead">
-        <Words text={breakdownText(catalog, start)} />
+        <Words text={breakdownText(catalog, start, voice)} />
       </p>
-      {editors ?? <p class="muted rate-basis">{basisText(start)}</p>}
+      {editors ?? <p class="muted rate-basis">{basisText(start, voice)}</p>}
       <div class="rate-blocks">
         {answers}
         <Comparison
           start={bestStart ?? start}
           best={best}
           busy={busy('best')}
+          voice={voice}
         />
         {share}
-        <FeeCards input={input} fees={fees} busy={busy} />
+        <FeeCards input={input} fees={fees} busy={busy} voice={voice} />
         <Next next={next} busy={busy('next')} />
-        <Gaps gaps={gaps} busy={busy('gaps')} />
+        <Gaps gaps={gaps} busy={busy('gaps')} voice={voice} />
         <details class="filters rate-notes">
           <summary>What this assumes</summary>
           <ul class="assumptions">
-            {reportNotes(catalog, start, dataVersion).map((n) => (
+            {reportNotes(catalog, start, dataVersion, voice).map((n) => (
               <li key={n}>
                 <Words text={n} />
               </li>
@@ -824,12 +844,33 @@ function useLinkState(mine: LinkUpdater | null): LinkState | null {
   return state
 }
 
+// Renders into an element outside the app, as a portal would: the delete
+// control sits in the page's own "How it's worked out" section.
+function Into({
+  el,
+  children,
+}: {
+  el: Element | null
+  children: ComponentChildren
+}) {
+  useEffect(() => {
+    if (el) render(<>{children}</>, el)
+  })
+  useEffect(
+    () => () => {
+      if (el) render(null, el)
+    },
+    [el],
+  )
+  return null
+}
+
 // Copy link and Share name a short link on the page, so its address is
 // ready inside the tap; the report is saved just after. Your own wallet has
 // one link, which this browser keeps and updates when the wallet changes
 // (app/my-link.ts). Cards tapped in get a link per report, kept only in this
-// page's memory with its delete key. When no short link can be made, the
-// box hands out the longer link instead.
+// page's memory with its delete key. A link that couldn't be saved is
+// forgotten, so the next tap names a new one.
 function ShareBox({
   input,
   spending,
@@ -849,11 +890,13 @@ function ShareBox({
   mine: LinkUpdater | null
   edited: boolean
 }) {
-  const made = useRef(new Map<string, Saved | 'unavailable'>())
+  const made = useRef(new Map<string, Saved>())
   const [, redraw] = useState(0)
   const [note, setNote] = useState<string | null>(null)
-  const [copied, setCopied] = useState<'short' | 'long' | null>(null)
+  const [deleted, setDeleted] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
   const [shown, setShown] = useState<string | null>(null)
+  const slot = useMemo(() => document.querySelector('[data-rate-delete]'), [])
   const linkState = useLinkState(mine)
   const own = linkState?.link ?? null
   const pageReport = encodeReport(catalog, {
@@ -866,25 +909,18 @@ function ShareBox({
     linked?.ok === true
       ? holds(linked.link.input, linked.link.lines)
       : holds(input, spending.typical ? null : spending.lines)
-  const long = longUrl(location.origin, report)
-  const failed = made.current.get(report) === 'unavailable'
-  const have: Have = mine
-    ? (own ?? (failed ? 'unavailable' : null))
-    : (made.current.get(report) ?? null)
-  const saved = have === null || have === 'unavailable' ? null : have
-  const unavailable = have === 'unavailable'
-  const boxed =
-    have === null ? null : pickLink(location.origin, report, have, newLink).url
+  const have: Saved | null = mine ? own : (made.current.get(report) ?? null)
+  const boxed = have === null ? null : shortUrl(location.origin, have.id)
   const canShare = typeof navigator.share === 'function'
 
-  const flash = (which: 'short' | 'long') => {
+  const flash = () => {
     track('report-made')
-    setCopied(which)
-    setTimeout(() => setCopied(null), 1500)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
 
-  // Saves a link named in this tap; if it can't be, says so and offers the
-  // long link, which never stops working.
+  // Saves a link named in this tap; if it can't be, says so, and the next
+  // tap tries again under a new name.
   const save = (fresh: Saved) => {
     if (!mine) made.current.set(report, fresh)
     const done: Promise<Written> = mine
@@ -893,9 +929,10 @@ function ShareBox({
     redraw((n) => n + 1)
     void done.then((result) => {
       if (result === 'ok') return
-      made.current.set(report, 'unavailable')
-      setShown(long)
-      setNote(DEAD_LINK)
+      if (made.current.get(report) === fresh) made.current.delete(report)
+      setCopied(false)
+      setShown(null)
+      setNote(notMade(result))
       redraw((n) => n + 1)
     })
   }
@@ -903,8 +940,9 @@ function ShareBox({
   const target = () => {
     setNote(null)
     setShown(null)
+    setDeleted(null)
     mine?.flush()
-    return pickLink(location.origin, report, have, newLink)
+    return pickLink(location.origin, have, newLink)
   }
 
   // Both run inside the tap: Safari allows the clipboard and the share
@@ -916,10 +954,7 @@ function ShareBox({
       ? clipboard.writeText(t.url)
       : Promise.reject(new Error())
     if (t.fresh) save(t.fresh)
-    write.then(
-      () => flash(t.short ? 'short' : 'long'),
-      () => setShown(t.url),
-    )
+    write.then(flash, () => setShown(t.url))
   }
 
   const share = () => {
@@ -932,29 +967,16 @@ function ShareBox({
     )
   }
 
-  const copyLong = () => {
-    const clipboard = navigator.clipboard as Clipboard | undefined
-    if (!clipboard) {
-      setShown(long)
-      return
-    }
-    clipboard.writeText(long).then(
-      () => flash('long'),
-      () => setShown(long),
-    )
-  }
-
   const remove = () => {
-    if (!saved) return
-    const done = mine ? mine.remove() : deleteReport(saved)
+    if (!have) return
+    const done = mine ? mine.remove() : deleteReport(have)
     void done.then((ok) => {
       if (ok) {
-        if (!mine) made.current.delete(report)
+        if (made.current.get(report) === have) made.current.delete(report)
         setShown(null)
-        setNote(
-          'Deleted. That link now says the report is gone, and nothing of it is kept.',
-        )
-      } else setNote("Couldn't delete the link: earnrate.dev didn't answer.")
+        setNote(null)
+      }
+      setDeleted(ok ? DELETED : UNDELETED)
       redraw((n) => n + 1)
     })
   }
@@ -965,27 +987,22 @@ function ShareBox({
       {boxed === null ? (
         <p class="small">
           {mine
-            ? 'Copy link makes your own short link. It stays the same, and updates when you change your wallet.'
-            : 'Copy link saves this report on earnrate.dev under a short random name. Nothing in it says who you are.'}
+            ? 'Your link stays the same, and updates when your wallet changes.'
+            : 'Copy link saves this report on earnrate.dev under a short random name.'}
         </p>
       ) : (
-        <>
-          {unavailable ? <p class="small">{NO_SHORT_LINK}</p> : null}
-          <input
-            class="rate-url"
-            type="text"
-            readOnly
-            aria-label={
-              unavailable ? 'The link' : mine ? 'Your link' : 'The short link'
-            }
-            value={boxed}
-            onFocus={(e) => e.currentTarget.select()}
-          />
-        </>
+        <input
+          class="rate-url"
+          type="text"
+          readOnly
+          aria-label={mine ? 'Your link' : 'The link'}
+          value={boxed}
+          onFocus={(e) => e.currentTarget.select()}
+        />
       )}
       <div class="row-buttons">
         <button type="button" class="primary" onClick={copy}>
-          {copied === null ? 'Copy link' : 'Copied'}
+          {copied ? 'Copied' : 'Copy link'}
         </button>
         {canShare ? (
           <button type="button" onClick={share}>
@@ -994,18 +1011,7 @@ function ShareBox({
         ) : null}
         <SaveImage picture={picture} />
       </div>
-      {saved === null ? null : (
-        <p class="small muted">
-          {mine
-            ? 'Your link stays the same, and updates when you change your wallet. '
-            : `Saved on earnrate.dev with nothing about who made it, until ${String(REPORT_RETENTION_MONTHS)} months after it was last opened. `}
-          <button type="button" class="link" onClick={remove}>
-            Delete this link
-          </button>
-          {mine ? ' removes it from earnrate.dev.' : null}
-        </p>
-      )}
-      {mine && saved !== null && edited ? (
+      {mine && have !== null && edited ? (
         <p class="small">Changes made only on this page aren’t in your link.</p>
       ) : null}
       {linkState?.trouble ? <p class="small">{linkState.trouble}</p> : null}
@@ -1033,23 +1039,20 @@ function ShareBox({
             checked={include}
             onChange={(e) => setInclude(e.currentTarget.checked)}
           />
-          Put my monthly spending in the link. Without it, the report above uses
-          typical spending, as the link would.
+          Put my monthly spending in the link. Without it, this report uses
+          typical spending.
         </label>
       ) : null}
-      {unavailable ? null : (
-        <p class="small muted">
-          Or{' '}
-          <button type="button" class="link" onClick={copyLong}>
-            {copied === 'long'
-              ? 'copied'
-              : 'copy a link that isn’t saved anywhere'}
-          </button>
-          {mine
-            ? '. It’s longer, and doesn’t change with your wallet.'
-            : '. It’s longer, because it holds the report itself.'}
-        </p>
-      )}
+      <Into el={slot}>
+        {have === null ? null : (
+          <p class="small">
+            <button type="button" class="link" onClick={remove}>
+              Delete my link
+            </button>
+          </p>
+        )}
+        {deleted === null ? null : <p class="small">{deleted}</p>}
+      </Into>
     </section>
   )
 }
@@ -1134,7 +1137,7 @@ function Rated({
     }),
     [input, start],
   )
-  const { parts, busy } = useParts(linked, spending, today, start)
+  const { parts, busy } = useParts(linked, spending, today, start, 'you')
   const picture = useMemo(
     () =>
       parts.bestStart === null
@@ -1149,6 +1152,7 @@ function Rated({
         input={linked}
         parts={parts}
         busy={busy}
+        voice="you"
         answers={<Answers start={start} answers={answers} />}
         editors={
           <>
@@ -1190,20 +1194,47 @@ function Rated({
   )
 }
 
-// Answers here change only this report: nothing is saved.
+// On a shared report the credits are only shown, a line per card: which
+// count as used and which don't.
+function CreditLines({ start }: { start: ReportStart }) {
+  if (start.creditChoices.length === 0) return null
+  return (
+    <section class="panel" aria-labelledby="rate-credits-title">
+      <h2 id="rate-credits-title">Credits</h2>
+      <ul class="rate-credit-lines">
+        {start.creditChoices.map((c) => {
+          const names = (answer: 'used' | 'skipped' | null) =>
+            c.choices.filter((x) => x.answer === answer).map((x) => x.name)
+          const parts = [
+            [names('used'), 'used'],
+            [names('skipped'), 'not used'],
+            [names(null), 'not counted'],
+          ] as const
+          return (
+            <li key={c.cardId}>
+              <strong>{shortestName(c.cardId)}</strong>:{' '}
+              {parts
+                .filter(([n]) => n.length > 0)
+                .map(([n, said]) => `${listed(n)} ${said}`)
+                .join(' · ')}
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
+}
+
+// A report someone shared, as its link has it: nothing on it changes, and
+// nothing is saved.
 function Shared({
-  input: given,
+  input,
   lines,
 }: {
   input: ReportInput
   lines: ResolvedLine[] | null
 }) {
   const today = useMemo(() => localToday(), [])
-  const answers = useAnswers(given, null)
-  const input = useMemo(
-    () => applyMarks(given, answers.marks),
-    [given, answers.marks],
-  )
   const spending = useMemo(
     (): Spending => (lines === null ? TYPICAL : { lines, typical: false }),
     [lines],
@@ -1212,7 +1243,7 @@ function Shared({
     () => reportStart(catalog, input, today, spending),
     [input, spending, today],
   )
-  const { parts, busy } = useParts(input, spending, today, start)
+  const { parts, busy } = useParts(input, spending, today, start, 'neutral')
   const picture = useMemo(
     () =>
       parts.bestStart === null
@@ -1232,6 +1263,7 @@ function Shared({
       input={input}
       parts={parts}
       busy={busy}
+      voice="neutral"
       share={
         <section class="panel rate-share" aria-labelledby="rate-share-title">
           <h2 id="rate-share-title">Share this report</h2>
@@ -1241,7 +1273,7 @@ function Shared({
         </section>
       }
       editors={null}
-      answers={<Answers start={start} answers={answers} />}
+      answers={<CreditLines start={start} />}
     />
   )
 }
@@ -1452,20 +1484,14 @@ export function Rate() {
     return (
       <>
         <h1>A shared wallet</h1>
-        <p class="lede">
-          {source.stored
-            ? 'This is a report on someone else’s cards, so where it says “your”, it means theirs. This browser worked it out from what the link saved, which says nothing about who they are, and nothing saved here was read or changed.'
-            : 'This is a report on someone else’s cards, so where it says “your”, it means theirs. This browser worked it out from the link alone: earnrate’s server never saw it, and nothing saved here was read or changed.'}
-        </p>
-        <p class="rate-yours">
-          <a href="/rate">Rate your own cards</a>
-        </p>
         <Shared
           key={stored ?? location.hash}
           input={source.link.input}
           lines={source.link.lines}
         />
-        <RateYourOwn />
+        <p class="rate-yours">
+          <a href="/rate">Rate your own cards</a>
+        </p>
       </>
     )
   return (

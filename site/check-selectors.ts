@@ -13,6 +13,7 @@ import path from 'node:path'
 import type { Browser, Page } from 'playwright'
 import { loadCatalog } from '../src/data/load.ts'
 import { localToday } from '../src/engine/periods.ts'
+import { encodeReport } from './rate/link.ts'
 import { encodeSheet } from './sheet/link.ts'
 
 const DIST = path.join(import.meta.dirname, '..', 'site-dist')
@@ -31,11 +32,27 @@ const SAVED = {
   ]),
 }
 
+const catalog = await loadCatalog()
 const SENT = encodeSheet(
-  await loadCatalog(),
+  catalog,
   JSON.parse(SAVED['earnrate:wallet']) as Parameters<typeof encodeSheet>[1],
   localToday(),
 )
+// A report someone shared on the same cards, with credits answered both ways.
+const REPORT = encodeReport(catalog, {
+  input: {
+    cards: [
+      { id: 'amex-platinum', picks: {}, used: ['uber-cash'] },
+      ...HELD.filter((id) => id !== 'amex-platinum').map((id) => ({
+        id,
+        picks: {},
+      })),
+    ],
+    memberships: [],
+    valuations: {},
+  },
+  lines: null,
+})
 
 let failed = 0
 function check(name: string, ok: boolean, detail = '') {
@@ -308,6 +325,31 @@ for (const [name, type] of [
   }
   check(
     `${name}: opening a sent cheat sheet stores nothing`,
+    (await storage(fresh)) === '[[],[]]' && (await storage(saved)) === before,
+  )
+
+  // A shared report, read only: its credits are lines, not tiles, and
+  // nothing names a card in an id or class or touches storage.
+  for (const [who, page] of [
+    ['an empty profile', fresh],
+    ['a saved wallet', saved],
+  ] as const) {
+    await page.goto(`${BASE}/rate#${REPORT}`)
+    await page.waitForSelector('.rate-credit-lines li')
+    await page.waitForFunction(
+      () => document.querySelector('[aria-busy="true"]') === null,
+    )
+    const found = (await marks(page)).filter((m) =>
+      HELD.some((id) => m.includes(id)),
+    )
+    check(
+      `${name}: a shared report, with ${who}`,
+      found.length === 0 && (await page.locator('.credit-use').count()) === 0,
+      found.join(' '),
+    )
+  }
+  check(
+    `${name}: opening a shared report stores nothing`,
     (await storage(fresh)) === '[[],[]]' && (await storage(saved)) === before,
   )
   await browser.close()

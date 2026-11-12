@@ -14,9 +14,15 @@ import {
   type Gap,
   type ReportInput,
 } from '../../src/engine/wallet-report.ts'
+import type { Voice } from '../../src/engine/text.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 
-export type Job = { input: ReportInput; today: string; spending: Spending }
+export type Job = {
+  input: ReportInput
+  today: string
+  spending: Spending
+  voice: Voice
+}
 
 export type Part =
   | { part: 'best'; value: BestCards }
@@ -28,7 +34,7 @@ export type Part =
 export type WorkerRequest = { catalog: Catalog; job: Job }
 
 export function steps(catalog: Catalog, job: Job): (() => Part)[] {
-  const { input, today, spending } = job
+  const { input, today, spending, voice } = job
   const fees = input.cards
     .map((c) => c.id)
     .filter(
@@ -47,7 +53,9 @@ export function steps(catalog: Catalog, job: Job): (() => Part)[] {
     ...fees.map((cardId) => (): Part => ({
       part: 'fee',
       cardId,
-      value: reportFeeCards(catalog, input, today, spending, cardId)[0] ?? null,
+      value:
+        reportFeeCards(catalog, input, today, spending, cardId, voice)[0] ??
+        null,
     })),
     () => ({
       part: 'gaps',

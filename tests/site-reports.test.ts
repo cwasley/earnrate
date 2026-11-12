@@ -8,13 +8,8 @@ import {
   reportCodes,
   shortCode,
 } from '../site/rate/link.ts'
-import {
-  DEAD_LINK,
-  longUrl,
-  NO_SHORT_LINK,
-  pickLink,
-} from '../site/rate/share.ts'
-import { newLink, writeReport, type Written } from '../site/rate/store.ts'
+import { notMade, pickLink } from '../site/rate/share.ts'
+import { writeReport, type Written } from '../site/rate/store.ts'
 import { checkReport } from '../site/report-check.ts'
 import preview from '../site/preview-worker.ts'
 import {
@@ -31,6 +26,8 @@ import {
   BUSY,
   FULL,
   reports,
+  SHARED_LINK_TITLE,
+  sharedPage,
   type ReportMeta,
   type ReportStore,
 } from '../site/reports.ts'
@@ -459,6 +456,71 @@ describe('short report links', () => {
     expect(s.pages.slice(1)).toEqual(['/404', '/404', '/404', '/404'])
   })
 
+  test('a short link previews as "What my cards make in a year", and /rate keeps its own title', async () => {
+    const rate = await readFile(path.join(ROOT, 'site/rate.html'), 'utf8')
+    const titles = (html: string) => ({
+      title: /<title>([^<]*)<\/title>/.exec(html)?.[1],
+      og: /property="og:title"\s+content="([^"]*)"/.exec(html)?.[1],
+      twitter: /name="twitter:title"\s+content="([^"]*)"/.exec(html)?.[1],
+    })
+    expect(titles(rate)).toEqual({
+      title: 'Rate my wallet: what your cards earn in a year · earnrate',
+      og: 'Rate my wallet · earnrate',
+      twitter: undefined,
+    })
+    expect(SHARED_LINK_TITLE).toBe('What my cards make in a year')
+    const shared = {
+      title: SHARED_LINK_TITLE,
+      og: SHARED_LINK_TITLE,
+      twitter: undefined,
+    }
+    expect(titles(sharedPage(rate))).toEqual(shared)
+    expect(
+      titles(
+        sharedPage(
+          '<title>x</title><meta name="twitter:title" content="Rate my wallet">',
+        ),
+      ).twitter,
+    ).toBe(SHARED_LINK_TITLE)
+    expect(sharedPage(rate).replace(/<title>[^<]*<\/title>/, '')).toContain(
+      'name="description"',
+    )
+
+    const assets = {
+      fetch: (r: Request) =>
+        Promise.resolve(
+          new Response(r.method === 'HEAD' ? null : rate, {
+            headers: {
+              'content-type': 'text/html; charset=utf-8',
+              'content-length': String(rate.length),
+            },
+          }),
+        ),
+    }
+    const s = site()
+    const { made } = await s.make()
+    const id = made?.id ?? ''
+    s.env.ASSETS = assets
+    const live = await s.call(`/r/${id}`)
+    expect(live.status).toBe(200)
+    expect(live.headers.get('x-robots-tag')).toBe('noindex')
+    expect(live.headers.get('content-length')).toBeNull()
+    const page = await live.text()
+    expect(titles(page)).toEqual(shared)
+    expect(page).toContain('<div id="rate" class="app">')
+    const head = await s.call(`/r/${id}`, { method: 'HEAD' })
+    expect(head.status).toBe(200)
+    expect(await head.text()).toBe('')
+
+    const viewed = await preview.fetch(
+      new Request(`https://preview.earnrate.dev/r/${id}`),
+      { ASSETS: assets, REPORTS: memoryStore().store },
+    )
+    expect(viewed.status).toBe(200)
+    expect(viewed.headers.get('x-robots-tag')).toBe('noindex, nofollow')
+    expect(titles(await viewed.text())).toEqual(shared)
+  })
+
   test('the preview has the same links in its own store', async () => {
     const { store, entries } = memoryStore()
     const res = await preview.fetch(
@@ -502,7 +564,11 @@ describe('short report links', () => {
     const section = privacy.slice(privacy.indexOf('id="report-links"'))
     const months = `${String(REPORT_RETENTION_MONTHS)} months after it was last opened or updated`
     expect(section.slice(0, 2600)).toContain(months)
-    expect(section.slice(0, 2600)).toContain('Delete this link')
+    expect(section.slice(0, 2600)).toContain(
+      "Delete my link, under How it's worked out on Rate my wallet",
+    )
+    expect(privacy).not.toMatch(/choose the link that isn't saved/)
+    expect(privacy).not.toMatch(/offers the link that isn't saved/)
     expect(section.slice(0, 2600)).toContain(
       'each change to your wallet, or to your amounts if you put spending in the link, sends the new contents to the same name',
     )
@@ -711,25 +777,15 @@ describe('short report links', () => {
     expect(await read.text()).toBe(REPORT)
   })
 
-  test("the page names the link before anything is sent, and offers the link that isn't saved anywhere when it can't be made", async () => {
+  test("the page names the link before anything is sent, and says so when it can't be made", async () => {
     const named = { id: '7kq3mdx9', key: newKey() }
-    const fresh = pickLink(SITE, REPORT, null, () => named)
-    expect(fresh).toEqual({
-      url: `${SITE}/r/7kq3mdx9`,
-      short: true,
-      fresh: named,
-    })
+    const fresh = pickLink(SITE, null, () => named)
+    expect(fresh).toEqual({ url: `${SITE}/r/7kq3mdx9`, fresh: named })
     expect(
-      pickLink(SITE, REPORT, named, () => {
+      pickLink(SITE, named, () => {
         throw new Error('named another')
       }),
-    ).toEqual({ url: `${SITE}/r/7kq3mdx9`, short: true, fresh: null })
-    expect(pickLink(SITE, REPORT, 'unavailable', newLink)).toEqual({
-      url: `${SITE}/rate#w=${REPORT}`,
-      short: false,
-      fresh: null,
-    })
-    expect(longUrl(SITE, REPORT)).toBe(`${SITE}/rate#w=${REPORT}`)
+    ).toEqual({ url: `${SITE}/r/7kq3mdx9`, fresh: null })
 
     const answers: [() => Promise<Response>, Written][] = [
       [() => Promise.resolve(new Response(null, { status: 201 })), 'ok'],
@@ -758,7 +814,10 @@ describe('short report links', () => {
       })
       spy.mockRestore()
     }
-    expect(NO_SHORT_LINK).toMatch(/^A short link can't be made right now\./)
-    expect(DEAD_LINK).toMatch(/won't open/)
+    for (const result of ['busy', 'offline', 'refused'] as const)
+      expect(notMade(result)).toMatch(/won't open\. Try again in a minute\.$/)
+    expect(notMade('full')).toMatch(/won't open\. Try again tomorrow\.$/)
+    for (const result of ['busy', 'offline', 'refused', 'full'] as const)
+      expect(notMade(result)).not.toMatch(/#|saved anywhere|longer/)
   })
 })

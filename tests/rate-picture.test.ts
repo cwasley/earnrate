@@ -8,13 +8,20 @@ import {
 } from '../src/engine/simulate.ts'
 import { wholeDollars } from '../src/engine/text.ts'
 import {
+  breakdownText,
+  feeCardLead,
+  gapText,
   netFigure,
   reportBest,
+  reportFeeCards,
+  reportGaps,
+  reportNotes,
   reportStart,
   type ReportInput,
 } from '../src/engine/wallet-report.ts'
 import {
   comparisonRows,
+  countedNote,
   perYear,
   ratePictureText,
   type RatePicture,
@@ -167,5 +174,53 @@ describe("the report's picture", () => {
         TODAY,
       ),
     ).toBeNull()
+  })
+
+  test("a shared report's own sentences say these cards, never you or your", () => {
+    const you = /\b(you|your|yours|you'd)\b/i
+    for (const [given, spending] of [
+      [input(), typical],
+      [answered(own), own],
+    ] as const) {
+      const start = reportStart(catalog, given, TODAY, spending)
+      const best = reportBest(catalog, given, TODAY, spending)
+      const fees = reportFeeCards(
+        catalog,
+        given,
+        TODAY,
+        spending,
+        undefined,
+        'neutral',
+      )
+      const gaps = reportGaps(
+        catalog,
+        given,
+        TODAY,
+        spending,
+        start.simulation,
+        null,
+      )
+      expect(fees.length).toBeGreaterThan(0)
+      expect(gaps.length).toBeGreaterThan(0)
+      const words = [
+        perYear(start, 'neutral'),
+        countedNote('neutral'),
+        ...comparisonRows(start, best, name, 'neutral').map((r) => r.label),
+        breakdownText(catalog, start, 'neutral'),
+        ...fees.flatMap((v) => [
+          feeCardLead(catalog, { ...v, paysForItself: false }, 'neutral'),
+          v.verdict,
+          v.credits,
+        ]),
+        ...gaps.map((g) => gapText(catalog, g, 'neutral')),
+        reportNotes(catalog, start, 'test', 'neutral')[0] ?? '',
+      ]
+      for (const w of words) expect(w).not.toMatch(you)
+      const own_ = reportFeeCards(catalog, given, TODAY, spending)
+      expect(own_.map((v) => v.verdict).join(' ')).toMatch(you)
+    }
+    const start = reportStart(catalog, answered(own), TODAY, own)
+    expect(breakdownText(catalog, start, 'neutral')).toMatch(/in credits used/)
+    expect(breakdownText(catalog, start)).toMatch(/in credits you use/)
   })
 })

@@ -223,21 +223,22 @@
           name. Cloudflare's visit counts, described below, record the address
           of each page opened, which for a short link includes its name. A short
           link is deleted 13 months after it was last opened or updated. Delete
-          this link removes it sooner (copies Cloudflare holds elsewhere can
-          still open it for about a minute): your link from this browser at any
-          time, a one-off link only while the page that made it is open. Without
-          the key, earnrate has no way to tell which link was yours, so it stays
-          until it expires. Emptying your wallet deletes your link. One IP
-          address can make or update 10 links a minute, and the whole site makes
-          at most 300 new links a day, counted as one number; past either limit,
-          the page offers the link that isn't saved anywhere instead.
+          my link, under How it's worked out on Rate my wallet, removes it
+          sooner (copies Cloudflare holds elsewhere can still open it for about
+          a minute): your link from this browser at any time, a one-off link
+          only while the page that made it is open. Without the key, earnrate
+          has no way to tell which link was yours, so it stays until it expires.
+          Emptying your wallet deletes your link. One IP address can make or
+          update 10 links a minute, and the whole site makes at most 300 new
+          links a day, counted as one number; past either limit, the page says
+          the link couldn't be made and to try again.
         </p>
         <p>
-          If you'd rather nothing be stored, choose the link that isn't saved
-          anywhere. It's longer, because the report is written into the address
-          itself, after the #, which browsers don't send to a server:
-          earnrate.dev never receives it, and Cloudflare's analytics doesn't
-          record it.
+          The page used to offer a longer link too (earnrate.dev/rate#w=…),
+          which holds the report in the address itself, after the #, the part
+          browsers don't send to a server. Those still open, and are stored
+          nowhere: earnrate.dev never receives them, and Cloudflare's analytics
+          doesn't record them.
         </p>
         <h3 id="sheet-links">Sending your cheat sheet</h3>
         <p>
@@ -555,7 +556,8 @@
           the address and is stored nowhere. November 12, 2026: the short link
           for the wallet saved in your browser stays the same, and your browser
           updates it when your wallet changes; an update also pushes back its
-          deletion.
+          deletion. Rate my wallet no longer makes the longer link, though those
+          already made still open.
         </p>
       </section>
 

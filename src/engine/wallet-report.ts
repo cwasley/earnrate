@@ -63,6 +63,7 @@ import {
   roundCents,
   shortCardName,
   wholeDollars,
+  type Voice,
 } from './text.ts'
 
 export type ReportInput = {
@@ -410,6 +411,7 @@ export function reportFeeCards(
   today: string,
   spending: Spending,
   only?: string,
+  voice: Voice = 'you',
 ): FeeVerdict[] {
   const { wallet } = reportWallet(catalog, input, today, spending)
   return wallet.cards.flatMap((held) => {
@@ -417,7 +419,7 @@ export function reportFeeCards(
     const k = keepOrReplace(catalog, wallet, held.id, today, spending)
     if (!k) return []
     const unsaid = k.unsaid
-    const credits = keepOrReplaceUnsaid(k)
+    const credits = keepOrReplaceUnsaid(k, voice)
     const paysForItself = whole(k.renewal.net) > 0
     return [
       {
@@ -430,7 +432,7 @@ export function reportFeeCards(
           whole(k.renewal.net) <= 0 && whole(k.renewal.net + unsaid.yearly) > 0,
         perks: unsaid.yearly > 0 ? perksNoun(unsaid, true, true) : '',
         outcome: k.outcome,
-        verdict: keepOrReplaceVerdict(catalog, k, paysForItself),
+        verdict: keepOrReplaceVerdict(catalog, k, paysForItself, voice),
         credits,
       },
     ]
@@ -592,7 +594,11 @@ export function headlineText(catalog: Catalog, r: ReportStart): string {
 // What makes up the headline figure, for a page that shows the figure and
 // the spending beside it: "$688 in rewards, plus $304 in credits you use,
 // less $420 in annual fees."
-export function breakdownText(catalog: Catalog, r: ReportStart): string {
+export function breakdownText(
+  catalog: Catalog,
+  r: ReportStart,
+  voice: Voice = 'you',
+): string {
   if (r.empty) return headlineText(catalog, r)
   const one = r.cards.length === 1
   const fees = r.simulation.annualFees + r.simulation.membershipFees
@@ -600,11 +606,14 @@ export function breakdownText(catalog: Catalog, r: ReportStart): string {
   const extras =
     r.counted.length === 0
       ? ''
-      : feeCardExtrasText({
-          credits: counted.yearly,
-          freeNights: counted.nights ?? 0,
-          ownNights: 0,
-        })
+      : feeCardExtrasText(
+          {
+            credits: counted.yearly,
+            freeNights: counted.nights ?? 0,
+            ownNights: 0,
+          },
+          voice,
+        )
   const less =
     fees > 0
       ? `, less ${one ? `its ${money(fees)} annual fee` : `${money(fees)} in annual fees`}`
@@ -733,12 +742,16 @@ export function bestNote(
 // "Doesn't pay for itself" is about rewards and the credits marked as used,
 // on this spending, so a card whose other credits would cover the rest
 // says so first.
-export function feeCardLead(catalog: Catalog, v: FeeVerdict): string {
+export function feeCardLead(
+  catalog: Catalog,
+  v: FeeVerdict,
+  voice: Voice = 'you',
+): string {
   const name = nameOf(catalog, v.cardId)
   if (v.paysForItself) return ''
   const on =
     v.counted > 0
-      ? `On rewards and the credits you use (${wholeDollars(v.counted)} a year)`
+      ? `On rewards and the credits ${voice === 'you' ? 'you use' : 'used'} (${wholeDollars(v.counted)} a year)`
       : 'On rewards alone'
   const other = v.counted > 0 ? 'other ' : ''
   if (v.perks === '')
@@ -746,7 +759,7 @@ export function feeCardLead(catalog: Catalog, v: FeeVerdict): string {
       ? `${on}, the ${name} doesn't pay for itself on this spending.`
       : `The ${name} doesn't pay for itself on this spending.`
   return v.creditsCover
-    ? `${on}, the ${name} doesn't pay for itself on this spending; its ${other}${v.perks} would cover the rest if you'd use ${/s$/.test(v.perks) ? 'them' : 'it'}.`
+    ? `${on}, the ${name} doesn't pay for itself on this spending; its ${other}${v.perks} would cover the rest ${voice === 'you' ? `if you'd use ${/s$/.test(v.perks) ? 'them' : 'it'}` : 'if used'}.`
     : `${on}, the ${name} doesn't pay for itself on this spending, and its ${other}${v.perks} wouldn't cover the rest.`
 }
 
@@ -786,9 +799,13 @@ export function nextText(catalog: Catalog, next: Addition | null): string {
 
 const pctText = (n: number) => pct(Math.round(n * 10) / 10)
 
-export function gapText(catalog: Catalog, g: Gap): string {
+export function gapText(
+  catalog: Catalog,
+  g: Gap,
+  voice: Voice = 'you',
+): string {
   const fee = g.fee > 0 ? ` (its annual fee is ${money(g.fee)})` : ''
-  return `On ${lineName(catalog, g.label)}, your cards earn ${pctText(g.heldPct)}; the ${nameOf(catalog, g.bestCardId)} earns ${pctText(g.bestPct)}${fee}, about ${wholeDollars(g.dollars)} a year more on ${wholeDollars(g.spend)}.`
+  return `On ${lineName(catalog, g.label)}, ${voice === 'you' ? 'your' : 'these'} cards earn ${pctText(g.heldPct)}; the ${nameOf(catalog, g.bestCardId)} earns ${pctText(g.bestPct)}${fee}, about ${wholeDollars(g.dollars)} a year more on ${wholeDollars(g.spend)}.`
 }
 
 // "Assumes the best picks for this spending: Citi Custom Cash, restaurants."
@@ -818,9 +835,16 @@ export function reportNotes(
   catalog: Catalog,
   r: ReportStart,
   dataVersion: string,
+  voice: Voice = 'you',
 ): string[] {
   return [
-    r.typical ? TYPICAL_SPEND_NOTE : 'Uses the monthly amounts you entered.',
+    voice === 'you'
+      ? r.typical
+        ? TYPICAL_SPEND_NOTE
+        : 'Uses the monthly amounts you entered.'
+      : r.typical
+        ? 'The report has no spending of its own, so this uses rough typical monthly amounts for a U.S. household.'
+        : "Uses the report's own monthly amounts.",
     assumedPicksText(catalog, r),
     ...r.simulation.notes,
     CREDITS_NOT_COUNTED,

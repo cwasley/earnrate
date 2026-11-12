@@ -48,6 +48,7 @@ import {
   shortCardName,
   shortDate,
   wholeDollars,
+  type Voice,
 } from './text.ts'
 import { cardValuation } from './valuation.ts'
 
@@ -453,10 +454,15 @@ function belowFee(
 
 // "the Chase Sapphire Reserve adds about $35 a year", or what it adds
 // against its fee when that's no more.
-function heldAdds(k: KeepOrReplace): string {
+function heldAdds(k: KeepOrReplace, voice: Voice = 'you'): string {
+  const beyond = k.alone
+    ? ''
+    : voice === 'you'
+      ? undefined
+      : ' beyond the other cards'
   return whole(k.added) > 0
     ? `the ${k.name} adds about ${wholeDollars(k.added)} a year`
-    : `the ${k.name} ${belowFee('adds', k.added, k.fee, k.alone ? '' : undefined)}`
+    : `the ${k.name} ${belowFee('adds', k.added, k.fee, beyond)}`
 }
 
 export function feeSavedText(k: KeepOrReplace, r: Replacement): string {
@@ -474,9 +480,10 @@ export function keepOrReplaceVerdict(
   catalog: Catalog,
   k: KeepOrReplace,
   paysForItself = false,
+  voice: Voice = 'you',
 ): string {
   const [best] = k.replacements
-  const lead = keepOrReplaceLead(catalog, k, paysForItself)
+  const lead = keepOrReplaceLead(catalog, k, paysForItself, voice)
   return best === undefined ? lead : `${lead} ${feeSavedText(k, best)}`
 }
 
@@ -485,8 +492,12 @@ export function keepOrReplaceLead(
   catalog: Catalog,
   k: KeepOrReplace,
   paysForItself = false,
+  voice: Voice = 'you',
 ): string {
   const [best] = k.replacements
+  const wallet = voice === 'you' ? 'your wallet' : 'these cards'
+  const others = voice === 'you' ? 'Your other cards' : 'The other cards'
+  const held = heldAdds(k, voice)
   if (k.outcome === 'not-needed') {
     const adds = belowFee(
       'it adds',
@@ -495,22 +506,22 @@ export function keepOrReplaceLead(
       ' beyond them',
       ' beyond them',
     )
-    return `Your other cards already cover what the ${k.name} earns: ${adds}, so no card needs to take its place.`
+    return `${others} already cover what the ${k.name} earns: ${adds}, so no card needs to take its place.`
   }
   if (best === undefined)
-    return `Nothing with a lower fee comes close: in its place, no such card would add anything to your wallet after its fee, while ${heldAdds(k)}.`
+    return `Nothing with a lower fee comes close: in its place, no such card would add anything to ${wallet} after its fee, while ${held}.`
   const name = nameOf(catalog, best.cardId)
   const net = wholeDollars(best.net)
   if (k.outcome === 'keeps')
-    return `In its place, the ${name} would keep the most of what the ${k.name} adds to your wallet: about ${net} of ${wholeDollars(k.added)} a year after fees (${String(best.share)}%).`
+    return `In its place, the ${name} would keep the most of what the ${k.name} adds to ${wallet}: about ${net} of ${wholeDollars(k.added)} a year after fees (${String(best.share)}%).`
   const inPlace = paysForItself
     ? `It pays for itself, and in its place the ${name}`
     : `In its place, the ${name}`
   return whole(k.added) <= 0
-    ? `${inPlace} would add about ${net} a year to your wallet after its fee, while ${heldAdds(k)}.`
+    ? `${inPlace} would add about ${net} a year to ${wallet} after its fee, while ${held}.`
     : whole(best.net) === whole(k.added)
-      ? `${inPlace} would add about as much to your wallet as the ${k.name}: about ${net} a year after its fee.`
-      : `${inPlace} would add more to your wallet than the ${k.name}: about ${net} a year after its fee, against ${wholeDollars(k.added)}.`
+      ? `${inPlace} would add about as much to ${wallet} as the ${k.name}: about ${net} a year after its fee.`
+      : `${inPlace} would add more to ${wallet} than the ${k.name}: about ${net} a year after its fee, against ${wholeDollars(k.added)}.`
 }
 
 // How the held card's figure is made up.
@@ -532,7 +543,10 @@ export function keepOrReplaceMath(k: KeepOrReplace): string {
 
 // Its credits and free nights the person hasn't said they use, with what
 // the card would add if they used them all; empty when there are none.
-export function keepOrReplaceUnsaid(k: KeepOrReplace): string {
+export function keepOrReplaceUnsaid(
+  k: KeepOrReplace,
+  voice: Voice = 'you',
+): string {
   const parts: string[] = []
   const u = k.unsaid
   if (u.yearly > 0) {
@@ -540,12 +554,14 @@ export function keepOrReplaceUnsaid(k: KeepOrReplace): string {
     const withAll = roundCents(k.added + u.yearly)
     const upTo = u.nights > 0 ? 'up to ' : ''
     parts.push(
-      `${capitalize(possessive(`the ${k.name}`))} ${perksNoun(u, false, true)} you haven't marked as used (${creditsYearText(u)}) ${one ? "isn't" : "aren't"} counted; with ${one ? 'it' : 'them all'}, it would ${whole(withAll) > 0 ? `add ${upTo}about ${wholeDollars(withAll)} a year` : belowFee('add', withAll, k.fee).replace(/^add about/, `add ${upTo}about`)}.`,
+      `${capitalize(possessive(`the ${k.name}`))} ${perksNoun(u, false, true)} ${voice === 'you' ? "you haven't marked" : 'not marked'} as used (${creditsYearText(u)}) ${one ? "isn't" : "aren't"} counted; with ${one ? 'it' : 'them all'}, it would ${whole(withAll) > 0 ? `add ${upTo}about ${wholeDollars(withAll)} a year` : belowFee('add', withAll, k.fee).replace(/^add about/, `add ${upTo}about`)}.`,
     )
   }
   if (k.renewal.nightsUnvalued > 0 && u.unvaluedNightIds.length > 0)
     parts.push(
-      `Its ${FREE_NIGHT_NAME} isn't counted until you say what it's worth to you.`,
+      voice === 'you'
+        ? `Its ${FREE_NIGHT_NAME} isn't counted until you say what it's worth to you.`
+        : `Its ${FREE_NIGHT_NAME} isn't counted, since no value was set for it.`,
     )
   return parts.join(' ')
 }

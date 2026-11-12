@@ -923,24 +923,36 @@ export function feeCardEarnsText(
       : `${subject} earns about the same as ${over}`
 }
 
+// Who a sentence about a set of cards speaks to: their holder ("your
+// cards", "credits you use"), or anyone, as on a report someone shared
+// ("these cards", "credits used").
+export type Voice = 'you' | 'neutral'
+
 // ", plus $300 in credits you use and up to $150 for its anniversary free
 // night", or empty.
-export function feeCardExtrasText(r: {
-  credits: number
-  freeNights: number
-  ownNights: number
-}): string {
+export function feeCardExtrasText(
+  r: {
+    credits: number
+    freeNights: number
+    ownNights: number
+  },
+  voice: Voice = 'you',
+): string {
   const creditDollars = roundCents(r.credits - r.freeNights - r.ownNights)
   const extras = [
     ...(creditDollars > 0
-      ? [`${wholeDollars(creditDollars)} in credits you use`]
+      ? [
+          `${wholeDollars(creditDollars)} in credits ${voice === 'you' ? 'you use' : 'used'}`,
+        ]
       : []),
     ...(r.freeNights > 0
       ? [`up to ${wholeDollars(r.freeNights)} for its ${FREE_NIGHT_NAME}`]
       : []),
     ...(r.ownNights > 0
       ? [
-          `the ${wholeDollars(r.ownNights)} its ${FREE_NIGHT_NAME} is worth to you`,
+          voice === 'you'
+            ? `the ${wholeDollars(r.ownNights)} its ${FREE_NIGHT_NAME} is worth to you`
+            : `the ${wholeDollars(r.ownNights)} its ${FREE_NIGHT_NAME} is valued at`,
         ]
       : []),
   ]
