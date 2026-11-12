@@ -3,6 +3,7 @@
 import { categoryMatches } from '../../src/engine/evaluate.ts'
 import { optionName } from '../../src/engine/rule-text.ts'
 import {
+  activationLine,
   capitalize,
   choicePhrase,
   earnText,
@@ -182,9 +183,13 @@ function definitionBlock(ctx: PageContext, defs: Definition[]): string {
       ? `${optionName(ctx.catalog, card, choice.id, option)} (${choicePhrase(choice, true)})`
       : ctx.ruleWhatRaw(card, rule)
   const about = aboutOption(ctx, card, rule, option)
+  const activation =
+    rule.requires?.activation === true
+      ? activationLine(ctx.issuerName(card.issuer), rule, ctx.today)
+      : null
   const lines = ctx
     .ruleConditions(card, rule)
-    .filter((l) => !/^Up to \$/.test(l) && about(l))
+    .filter((l) => !/^Up to \$/.test(l) && (about(l) || l === activation))
   // A quote stays when it names this option or how the categories work.
   const quotes = definingQuotes(ctx, card, rule).filter((q) =>
     about(q.quote, true),
