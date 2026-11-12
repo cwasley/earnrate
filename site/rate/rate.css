@@ -257,3 +257,11 @@ svg.rate-bar {
 #rate .lede + .rate-yours {
   margin: -8px 0 18px;
 }
+
+.rate-ask {
+  margin: 0 0 12px;
+}
+
+.rate-like {
+  margin: -6px 0 14px;
+}

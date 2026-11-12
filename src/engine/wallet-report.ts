@@ -19,6 +19,7 @@ import {
 } from './explore.ts'
 import {
   keepOrReplace,
+  keepOrReplaceUnsaid,
   keepOrReplaceVerdict,
   OTHER_PERKS,
   type KeepOrReplaceOutcome,
@@ -46,21 +47,22 @@ import {
 import {
   capitalize,
   creditsOnlyIf,
-  ifCreditsUsedText,
+  feeCardExtrasText,
   inOrder,
   listed,
   money,
   pct,
   perksNoun,
   perksTotal,
-  possessive,
   roundCents,
   shortCardName,
   wholeDollars,
 } from './text.ts'
 
 export type ReportInput = {
-  cards: { id: string; picks: Picks }[]
+  // `used` and `skipped`: the card's credit and free night ids the wallet
+  // marks as used, or as not used.
+  cards: { id: string; picks: Picks; used?: string[]; skipped?: string[] }[]
   memberships: string[]
   valuations: Record<string, number> // cents a point, by currency
 }
@@ -91,6 +93,7 @@ export type FeeVerdict = {
   creditsCover: boolean
   perks: string // "statement credits", "free night"; empty for none
   outcome: KeepOrReplaceOutcome
+  counted: number // its credits marked as used, a year: in `net`
   verdict: string // keep-or-replace's answer
   credits: string // what its statement credits would add, or empty
 }
@@ -117,8 +120,10 @@ export type ReportStart = {
   simulation: Simulation
   net: number
   flat: FlatComparison | null
-  // Each held card's statement credits and free nights, as if all were
-  // used: left out of `net`, since a report doesn't know which are.
+  // Each card's credits and free nights marked as used: in `net`.
+  counted: CreditsYear[]
+  // Each card's credits and free nights not marked either way, as if all
+  // were used: left out of `net`.
   credits: CreditsYear[]
 }
 
@@ -172,6 +177,7 @@ export function reportWallet(
 ): { wallet: Wallet; cards: ReportCard[] } {
   const ids = known(catalog, input).map((c) => c.id)
   const picks = new Map(input.cards.map((c) => [c.id, c.picks]))
+  const marks = new Map(input.cards.map((c) => [c.id, c]))
   const assumed = new Set<string>()
   const holding = (id: string) => {
     const card = catalog.cards.find((c) => c.id === id)
@@ -201,6 +207,12 @@ export function reportWallet(
         id,
         cap_usage: {},
         activated: [],
+        ...((marks.get(id)?.used ?? []).length > 0
+          ? { enrolled: marks.get(id)?.used ?? [] }
+          : {}),
+        ...((marks.get(id)?.skipped ?? []).length > 0
+          ? { skipped_credits: marks.get(id)?.skipped ?? [] }
+          : {}),
         ...(Object.keys(picked(id)).length > 0
           ? { chosen: { period: '', picks: picked(id) } }
           : {}),
@@ -298,10 +310,9 @@ export function reportStart(
     monthly: lines.reduce((sum, l) => sum + l.monthly, 0),
     lines,
     simulation,
-    net: roundCents(
-      simulation.rewards - simulation.annualFees - simulation.membershipFees,
-    ),
+    net: simulation.net,
     flat: flatComparison(catalog, input, today, spending),
+    counted: simulation.credits.filter((c) => c.held && c.yearly > 0),
     credits: wallet.cards.flatMap((held) => {
       const card = catalog.cards.find((c) => c.id === held.id)
       if (!card) return []
@@ -336,7 +347,13 @@ export function reportBest(
   const held = known(catalog, input)
   const withNext =
     next !== null && held.length === 1
-      ? { ...next.simulation, alternatives: [] }
+      ? {
+          ...next.simulation,
+          alternatives: [],
+          // Like with like: no pair counts any credits.
+          heldCredits: 0,
+          net: roundCents(next.simulation.net - next.simulation.heldCredits),
+        }
       : null
   const bestPair =
     withNext !== null && (pair === null || withNext.net > pair.net + EPSILON)
@@ -375,19 +392,17 @@ export function reportFeeCards(
     const k = keepOrReplace(catalog, wallet, held.id, today, spending)
     if (!k) return []
     const unsaid = k.unsaid
-    const credits =
-      unsaid.yearly > 0
-        ? `${ifCreditsUsedText(unsaid, roundCents(k.added + unsaid.yearly), 'adds', possessive(`the ${k.name}`))} ${creditsOnlyIf(unsaid)}`.trim()
-        : ''
+    const credits = keepOrReplaceUnsaid(k)
     return [
       {
         cardId: held.id,
         fee: k.fee,
         net: k.renewal.net,
+        counted: k.renewal.credits,
         paysForItself: whole(k.renewal.net) > 0,
         creditsCover:
           whole(k.renewal.net) <= 0 && whole(k.renewal.net + unsaid.yearly) > 0,
-        perks: unsaid.yearly > 0 ? perksNoun(unsaid) : '',
+        perks: unsaid.yearly > 0 ? perksNoun(unsaid, true, true) : '',
         outcome: k.outcome,
         verdict: keepOrReplaceVerdict(catalog, k),
         credits,
@@ -518,10 +533,21 @@ export function headlineText(catalog: Catalog, r: ReportStart): string {
     ? `Your ${nameOf(catalog, r.cards[0]?.cardId ?? '')} nets`
     : `Your ${String(r.cards.length)} cards net`
   const fees = r.simulation.annualFees + r.simulation.membershipFees
+  const counted = perksTotal(r.counted)
+  const extras =
+    r.counted.length === 0
+      ? ''
+      : `${feeCardExtrasText({
+          credits: counted.yearly,
+          freeNights: counted.nights ?? 0,
+          ownNights: 0,
+        })} on ${listed(r.counted.map((c) => `the ${nameOf(catalog, c.cardId)}`))}`
   const made =
     fees > 0
-      ? `: ${wholeDollars(r.simulation.rewards)} in rewards, less ${one ? `its ${money(fees)} annual fee` : `${money(fees)} in annual fees`}`
-      : ` in rewards, with no annual fee${one ? '' : 's'}`
+      ? `: ${wholeDollars(r.simulation.rewards)} in rewards${extras}, less ${one ? `its ${money(fees)} annual fee` : `${money(fees)} in annual fees`}`
+      : extras === ''
+        ? ` in rewards, with no annual fee${one ? '' : 's'}`
+        : `: ${wholeDollars(r.simulation.rewards)} in rewards${extras}, with no annual fee${one ? '' : 's'}`
   return `${subject} about ${wholeDollars(r.net)} a year${made}, ${spendingBasis(r)}.`
 }
 
@@ -608,16 +634,24 @@ export function bestText(
       : `${lead}, about ${wholeDollars(-diff)} more than yours.`
 }
 
-// "Doesn't pay for itself" is about rewards on this spending, so a card
-// whose credits would cover the rest says so first.
+// "Doesn't pay for itself" is about rewards and the credits marked as used,
+// on this spending, so a card whose other credits would cover the rest
+// says so first.
 export function feeCardLead(catalog: Catalog, v: FeeVerdict): string {
   const name = nameOf(catalog, v.cardId)
   if (v.paysForItself) return ''
+  const on =
+    v.counted > 0
+      ? `On rewards and the credits you use (${wholeDollars(v.counted)} a year)`
+      : 'On rewards alone'
+  const other = v.counted > 0 ? 'other ' : ''
   if (v.perks === '')
-    return `The ${name} doesn't pay for itself on this spending.`
+    return v.counted > 0
+      ? `${on}, the ${name} doesn't pay for itself on this spending.`
+      : `The ${name} doesn't pay for itself on this spending.`
   return v.creditsCover
-    ? `On rewards alone, the ${name} doesn't pay for itself on this spending; its ${v.perks} would cover the rest if you'd use them.`
-    : `On rewards alone, the ${name} doesn't pay for itself on this spending, and its ${v.perks} wouldn't cover the rest.`
+    ? `${on}, the ${name} doesn't pay for itself on this spending; its ${other}${v.perks} would cover the rest if you'd use ${/s$/.test(v.perks) ? 'them' : 'it'}.`
+    : `${on}, the ${name} doesn't pay for itself on this spending, and its ${other}${v.perks} wouldn't cover the rest.`
 }
 
 export function feeCardText(catalog: Catalog, v: FeeVerdict): string {
@@ -635,7 +669,13 @@ export function creditsText(catalog: Catalog, r: ReportStart): string {
   const one = total.names.length === 1
   const on = listed(r.credits.map((c) => `the ${nameOf(catalog, c.cardId)}`))
   const subject = r.cards.length === 1 ? 'it' : 'these cards'
-  return `This figure leaves out the ${perksNoun(total, true, true)} on ${on}. If you'd use ${one ? 'it' : 'every one'} (${upTo}${wholeDollars(total.yearly)} a year), ${subject} would net ${upTo}about ${wholeDollars(r.net + total.yearly)} a year. ${creditsOnlyIf(total)}`.trim()
+  const yearly = `${upTo}${wholeDollars(total.yearly)} a year`
+  const withAll = `${upTo}about ${wholeDollars(r.net + total.yearly)} a year`
+  const sentence =
+    r.counted.length === 0
+      ? `This figure leaves out the ${perksNoun(total, true, true)} on ${on}. If you'd use ${one ? 'it' : 'every one'} (${yearly}), ${subject} would net ${withAll}.`
+      : `This figure counts the credits marked as used. The other ${perksNoun(total, true, true)} on ${on} (${yearly}) would make it ${withAll} if you'd use ${one ? 'it' : 'every one'}.`
+  return `${sentence} ${creditsOnlyIf(total)}`.trim()
 }
 
 export function nextText(catalog: Catalog, next: Addition | null): string {
@@ -673,7 +713,7 @@ export function assumedPicksText(catalog: Catalog, r: ReportStart): string {
 }
 
 export const CREDITS_NOT_COUNTED =
-  "Statement credits and free nights aren't counted, since the report doesn't know which ones you use; each fee card says what its credits would add."
+  "Statement credits and free nights count only where they're marked as used, at face value and a free night at its point cap; the best two cards and the flat-rate card count none. Each fee card says what its other credits would add."
 
 export const REPORT_PERKS = `Annual fees are counted; ${OTHER_PERKS}.`
 

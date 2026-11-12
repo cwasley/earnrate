@@ -1,7 +1,9 @@
 // A shared report's inputs, written into the address after the #, which
 // browsers never send to a server: `w=1/<cards>/<memberships>/<point
-// values>/<spending>`. Cards, categories, memberships, currencies and pick
-// options go by a short code made from their id; stores by their id.
+// values>/<spending>`. Cards, categories, memberships, currencies, pick
+// options and statement credits go by a short code made from their id;
+// stores by their id. After a card's code, `.p` is a pick, `.u` a credit
+// marked as used and `.x` one marked as not used.
 // Whoever opens the link rebuilds the report from it in their own browser.
 import {
   categoryResolution,
@@ -32,7 +34,8 @@ const MAX_TENS = 100_000 // $1,000,000 a month on one line
 // code here, as "kind:id": "code"; never re-pin an id that's been shipped.
 const PINNED: Record<string, string> = {}
 
-type Kind = 'card' | 'category' | 'membership' | 'currency' | 'option'
+type Kind =
+  'card' | 'category' | 'membership' | 'currency' | 'option' | 'credit'
 
 // FNV-1a, 32 bits, to four base-36 characters.
 export function shortCode(kind: Kind, id: string): string {
@@ -47,6 +50,12 @@ export function shortCode(kind: Kind, id: string): string {
 }
 
 const optionKey = (choice: string, option: string) => `${choice}/${option}`
+
+// A card's statement credits and free nights share one id space.
+export const creditIds = (card: Catalog['cards'][number]) => [
+  ...card.credits.map((c) => c.id),
+  ...card.free_nights.map((n) => n.id),
+]
 
 // Every code in use, by kind, to read a link back; a code two ids share in
 // one kind reads as neither.
@@ -115,7 +124,17 @@ export function encodeReport(catalog: Catalog, link: ReportLink): string {
         shortCode('option', optionKey(choice.id, o)),
       ),
     )
-    return [shortCode('card', c.id), ...options].join('.')
+    const known = card ? creditIds(card) : []
+    const marked = (prefix: string, ids: string[] | undefined) =>
+      (ids ?? [])
+        .filter((id) => known.includes(id))
+        .map((id) => `${prefix}${shortCode('credit', id)}`)
+    return [
+      shortCode('card', c.id),
+      ...options.map((o) => `p${o}`),
+      ...marked('u', c.used),
+      ...marked('x', c.skipped),
+    ].join('.')
   })
   const sections = [
     cards.join(','),
@@ -185,13 +204,29 @@ function readLink(catalog: Catalog, text: string): ReportLink {
   if (cardTokens.length === 0 || cardTokens.length > MAX_CARDS)
     throw new Refused(DAMAGED)
   const cards = cardTokens.map((token) => {
-    const [cardCode = '', ...optionCodes] = token.split('.')
+    const [cardCode = '', ...segments] = token.split('.')
     const id = lookup(tables.card, cardCode, 'a card')
     const card = catalog.cards.find((c) => c.id === id)
     if (!card) throw new Refused(UNKNOWN('a card'))
     const picks: Picks = {}
-    for (const oc of optionCodes) {
-      if (!/^[0-9a-z]{4}$/.test(oc)) throw new Refused(DAMAGED)
+    const used: string[] = []
+    const skipped: string[] = []
+    for (const segment of segments) {
+      const m = /^([pux])([0-9a-z]{4})$/.exec(segment)
+      if (!m) throw new Refused(DAMAGED)
+      const [, kind = '', oc = ''] = m
+      if (kind !== 'p') {
+        const found = creditIds(card).filter(
+          (c) => shortCode('credit', c) === oc,
+        )
+        const [only] = found
+        if (!only || found.length > 1)
+          throw new Refused(UNKNOWN('a statement credit'))
+        if (used.includes(only) || skipped.includes(only))
+          throw new Refused(DAMAGED)
+        ;(kind === 'u' ? used : skipped).push(only)
+        continue
+      }
       const found = card.choices.flatMap((choice) =>
         Object.keys(choice.options)
           .filter((o) => shortCode('option', optionKey(choice.id, o)) === oc)
@@ -205,7 +240,12 @@ function readLink(catalog: Catalog, text: string): ReportLink {
         throw new Refused(DAMAGED)
       picks[only.choice.id] = [...chosen, only.o]
     }
-    return { id, picks }
+    return {
+      id,
+      picks,
+      ...(used.length > 0 ? { used } : {}),
+      ...(skipped.length > 0 ? { skipped } : {}),
+    }
   })
   const ids = cards.map((c) => c.id)
   if (new Set(ids).size !== ids.length) throw new Refused(DAMAGED)

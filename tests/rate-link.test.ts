@@ -2,11 +2,8 @@ import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
-import {
-  resolveSpendLines,
-  spendLineFor,
-  TYPICAL_MONTHLY_SPEND,
-} from '../src/engine/simulate.ts'
+import { resolveSpendLines, spendLineFor } from '../src/engine/simulate.ts'
+import { reportStart } from '../src/engine/wallet-report.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import {
   codeTables,
@@ -30,7 +27,12 @@ const lines = (rows: { what: string; monthly: number }[]) =>
 const EIGHT: ReportLink = {
   input: {
     cards: [
-      { id: 'amex-gold', picks: {} },
+      {
+        id: 'amex-gold',
+        picks: {},
+        used: ['uber-cash', 'dining'],
+        skipped: ['dunkin'],
+      },
       { id: 'chase-sapphire-preferred', picks: {} },
       { id: 'chase-freedom-unlimited', picks: {} },
       {
@@ -49,7 +51,15 @@ const EIGHT: ReportLink = {
     valuations: { UR: 1.7, MR: 1.6 },
   },
   lines: lines([
-    ...TYPICAL_MONTHLY_SPEND.map((t) => ({ ...t, monthly: t.monthly + 3 })),
+    { what: 'Groceries', monthly: 503 },
+    { what: 'Dining', monthly: 253 },
+    { what: 'Gas', monthly: 153 },
+    { what: 'Amazon', monthly: 103 },
+    { what: 'Streaming (Netflix)', monthly: 43 },
+    { what: 'Flights', monthly: 63 },
+    { what: 'Hotels', monthly: 63 },
+    { what: 'Other travel', monthly: 33 },
+    { what: 'Everything else', monthly: 803 },
     { what: 'Costco', monthly: 214 },
   ]),
 }
@@ -81,6 +91,27 @@ describe('report links', () => {
     expect(encodeReport(catalog, decoded.link)).toBe(fragment)
   })
 
+  test('which credits are marked used or not used come back, and whoever opens the link sees the same headline', () => {
+    const decoded = decodeReport(catalog, encodeReport(catalog, EIGHT))
+    if (!decoded.ok) throw new Error(decoded.message)
+    const gold = decoded.link.input.cards.find((c) => c.id === 'amex-gold')
+    expect(gold?.used).toEqual(['uber-cash', 'dining'])
+    expect(gold?.skipped).toEqual(['dunkin'])
+    const spending = {
+      lines: roundedLines(EIGHT.lines ?? []),
+      typical: false,
+    }
+    const own = reportStart(catalog, EIGHT.input, '2026-11-11', spending)
+    const theirs = reportStart(catalog, decoded.link.input, '2026-11-11', {
+      lines: decoded.link.lines ?? [],
+      typical: false,
+    })
+    expect(own.counted.length).toBe(1)
+    expect(theirs.net).toBe(own.net)
+    expect(theirs.counted).toEqual(own.counted)
+    expect(theirs.credits).toEqual(own.credits)
+  })
+
   test('typical spending stays out of the link', () => {
     const fragment = encodeReport(catalog, {
       input: {
@@ -95,9 +126,9 @@ describe('report links', () => {
     expect(decoded.ok && decoded.link.lines).toBeNull()
   })
 
-  test('eight cards with picks, memberships, point values and ten spending lines fit in a short link', () => {
+  test('eight cards with picks, credit marks, memberships, point values and ten spending lines fit in a short link', () => {
     const fragment = encodeReport(catalog, EIGHT)
-    expect(fragment.length).toBeLessThanOrEqual(200)
+    expect(fragment.length).toBeLessThanOrEqual(240)
     expect(fragment).toMatch(/^w=1\/[0-9a-z.,/:-]+$/)
   })
 
@@ -117,6 +148,11 @@ describe('report links', () => {
         Object.keys(c.options).map((o) => shortCode('option', `${c.id}/${o}`)),
       )
       expect(new Set(codes).size, card.id).toBe(codes.length)
+      const credits = [
+        ...card.credits.map((c) => c.id),
+        ...card.free_nights.map((n) => n.id),
+      ].map((id) => shortCode('credit', id))
+      expect(new Set(credits).size, card.id).toBe(credits.length)
     }
   })
 

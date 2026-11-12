@@ -4,6 +4,7 @@ import { isClose } from '../../src/engine/compare.ts'
 import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
 import {
   keepOrReplace,
+  keepOrReplaceUnsaid,
   keepOrReplaceVerdict,
   OTHER_PERKS,
 } from '../../src/engine/keep-or-replace.ts'
@@ -14,9 +15,12 @@ import {
   spendLineFor,
   typicalSpendLines,
 } from '../../src/engine/simulate.ts'
+import { usedCreditsYear } from '../../src/engine/credits.ts'
 import { roundCents, wholeDollars } from '../../src/engine/text.ts'
 import {
+  feeCardLead,
   flatRateCard,
+  type FeeVerdict,
   reportWallet,
   walletReport,
   walletReportText,
@@ -42,7 +46,7 @@ const typical = (): Spending => ({
 })
 
 const input = (
-  cards: (string | { id: string; picks: Record<string, string[]> })[],
+  cards: (string | ReportInput['cards'][number])[],
   more: Partial<ReportInput> = {},
 ): ReportInput => ({
   cards: cards.map((c) => (typeof c === 'string' ? { id: c, picks: {} } : c)),
@@ -121,8 +125,9 @@ describe('#41 rate my wallet', () => {
       expect(platinum?.verdict).toMatch(
         /^Your other cards already cover what the Amex Platinum earns/,
       )
+      expect(platinum?.credits).toBe(keepOrReplaceUnsaid(k))
       expect(platinum?.credits).toMatch(
-        /^If you'd use all the Amex Platinum's statement credits \(.+\), it adds/,
+        /^The Amex Platinum's credits you haven't marked as used \(.+\) aren't counted; with them all, it would add about/,
       )
       const text = walletReportText(catalog, r)
       expect(platinum?.creditsCover).toBe(true)
@@ -291,6 +296,86 @@ describe('#41 rate my wallet', () => {
       for (const g of r.gaps.filter((x) => x.fee > 0))
         expect(text).toContain(`(its annual fee is $${String(g.fee)})`)
       expect(r.gaps.find((g) => g.label === 'Supermarkets')?.fee ?? 0).toBe(0)
+    },
+  )
+
+  goldenTest(
+    '#41j credits marked as used count against the fees, credits marked as not used count nowhere, and the rest are said apart',
+    () => {
+      const s = spending(['everything else', 1000])
+      const i = input([
+        {
+          id: 'amex-platinum',
+          picks: {},
+          used: ['uber-cash', 'resy', 'digital-entertainment'],
+          skipped: ['equinox'],
+        },
+        'citi-double-cash',
+      ])
+      const r = report(i, s)
+      const { wallet } = reportWallet(catalog, i, TODAY, s)
+      const platinum = catalog.cards.find((c) => c.id === 'amex-platinum')
+      const held = wallet.cards.find((c) => c.id === 'amex-platinum')
+      if (!platinum || !held) throw new Error('no Platinum')
+      const used = usedCreditsYear(catalog, platinum, held, TODAY, {})
+      expect(used.creditIds.sort()).toEqual(
+        ['digital-entertainment', 'resy', 'uber-cash'].sort(),
+      )
+      expect(r.counted.map((c) => c.yearly)).toEqual([used.yearly])
+      expect(r.net).toBe(
+        roundCents(
+          r.simulation.rewards + used.yearly - r.simulation.annualFees,
+        ),
+      )
+      const [unsaid] = r.credits
+      expect(unsaid?.creditIds).not.toContain('uber-cash')
+      expect(unsaid?.creditIds).not.toContain('equinox')
+      expect(unsaid?.creditIds).toContain('clear-plus')
+      const text = walletReportText(catalog, r)
+      expect(text).toContain(
+        `: ${wholeDollars(r.simulation.rewards)} in rewards, plus ${wholeDollars(used.yearly)} in credits you use on the Amex Platinum, less $895 in annual fees`,
+      )
+      expect(text).toContain(
+        `This figure counts the credits marked as used. The other statement credits on the Amex Platinum (${wholeDollars(unsaid?.yearly ?? 0)} a year) would make it about ${wholeDollars(r.net + (unsaid?.yearly ?? 0))} a year if you'd use every one.`,
+      )
+      const [verdict] = r.feeCards
+      expect(verdict?.counted).toBe(used.yearly)
+    },
+  )
+
+  goldenTest(
+    "#41k marking a fee card's credits as used flips it from not covering its fee to covering it, and its tag and the headline agree",
+    () => {
+      const s = spending(
+        ['dining', 300],
+        ['groceries', 400],
+        ['everything else', 500],
+      )
+      const plain = report(input(['amex-gold', 'citi-double-cash']), s)
+      const marked = report(
+        input([
+          {
+            id: 'amex-gold',
+            picks: {},
+            used: ['dunkin', 'uber-cash', 'dining', 'resy'],
+            skipped: [],
+          },
+          'citi-double-cash',
+        ]),
+        s,
+      )
+      const [before] = plain.feeCards
+      const [after] = marked.feeCards
+      expect(before?.paysForItself).toBe(false)
+      expect(before?.creditsCover).toBe(true)
+      expect(after?.paysForItself).toBe(true)
+      expect(after?.creditsCover).toBe(false)
+      expect(marked.net - plain.net).toBeCloseTo(after?.counted ?? 0, 2)
+      expect(feeCardLead(catalog, after as FeeVerdict)).toBe('')
+      expect(feeCardLead(catalog, before as FeeVerdict)).toBe(
+        "On rewards alone, the Amex Gold doesn't pay for itself on this spending; its statement credits would cover the rest if you'd use them.",
+      )
+      expect(walletReportText(catalog, marked)).not.toContain('leaves out')
     },
   )
 

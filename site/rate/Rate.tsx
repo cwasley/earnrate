@@ -1,6 +1,7 @@
 import type { ComponentChildren } from 'preact'
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog, dataVersion } from 'virtual:catalog'
+import { creditInUse, nightInUse } from '../../src/engine/credits.ts'
 import type { Picks } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import type { Spending } from '../../src/engine/renewal.ts'
@@ -42,7 +43,7 @@ import { loadWallet } from '../app/saved-wallet.ts'
 import { SearchInput } from '../app/SearchInput.tsx'
 import { track } from '../app/track.ts'
 import { Bar } from './Bar.tsx'
-import { encodeReport, reportPart, roundedLines } from './link.ts'
+import { creditIds, encodeReport, reportPart, roundedLines } from './link.ts'
 import { runReport } from './run.ts'
 import type { Job, Part } from './steps.ts'
 import { reportSource, savedRows, type Row, type Source } from './source.ts'
@@ -105,10 +106,25 @@ function walletInput(
   picks: Record<string, Picks>,
 ): ReportInput {
   return {
-    cards: wallet.cards.map((h) => ({
-      id: h.id,
-      picks: picks[h.id] ?? validPicks(h.id, h.chosen?.picks),
-    })),
+    cards: wallet.cards.map((h) => {
+      const card = cards.get(h.id)
+      const used = card
+        ? [
+            ...card.credits.filter((c) => creditInUse(c, h)).map((c) => c.id),
+            ...card.free_nights
+              .filter((n) => nightInUse(n, h))
+              .map((n) => n.id),
+          ]
+        : []
+      const ids = card ? creditIds(card) : []
+      const skipped = (h.skipped_credits ?? []).filter((id) => ids.includes(id))
+      return {
+        id: h.id,
+        picks: picks[h.id] ?? validPicks(h.id, h.chosen?.picks),
+        ...(used.length > 0 ? { used } : {}),
+        ...(skipped.length > 0 ? { skipped } : {}),
+      }
+    }),
     memberships: wallet.memberships.filter((m) =>
       catalog.memberships.some((x) => x.id === m),
     ),
@@ -258,7 +274,9 @@ function FeeCards({
                     {v.paysForItself
                       ? 'Pays for itself'
                       : v.creditsCover
-                        ? "Rewards don't cover the fee"
+                        ? v.counted > 0
+                          ? 'Needs its other credits'
+                          : "Rewards don't cover the fee"
                         : "Doesn't pay for itself"}
                   </span>
                 ) : null}
@@ -325,12 +343,14 @@ function Report({
   parts,
   share,
   editors,
+  ask = null,
 }: {
   start: ReportStart
   input: ReportInput
   parts: Parts
   share: ComponentChildren
   editors: ComponentChildren
+  ask?: ComponentChildren
 }) {
   const { best, fees, next, gaps } = parts
   const credits = creditsText(catalog, start)
@@ -352,11 +372,21 @@ function Report({
       </ul>
       <p class="rate-figure">
         {wholeDollars(start.net)}
-        <span class="rate-per"> a year in rewards, after fees</span>
+        <span class="rate-per">
+          {start.counted.length > 0
+            ? ' a year in rewards and credits you use, after fees'
+            : ' a year in rewards, after fees'}
+        </span>
       </p>
       {credits === '' ? null : <p class="rate-credits">{credits}</p>}
       <p class="rate-lead">{headlineText(catalog, start)}</p>
+      {ask}
       <Comparison start={start} best={best} />
+      {start.counted.length > 0 ? (
+        <p class="muted small rate-like">
+          Your figure counts the credits you use; the other two count none.
+        </p>
+      ) : null}
       <p>{lead}</p>
       {editors}
       {share}
@@ -608,6 +638,11 @@ function ShareBox({
     ...(Object.keys(input.valuations).length > 0
       ? ['The point values you set']
       : []),
+    ...(input.cards.some(
+      (c) => (c.used ?? []).length > 0 || (c.skipped ?? []).length > 0,
+    )
+      ? ['Which statement credits you use']
+      : []),
     ...(spending.typical ? [] : ['Your monthly spending, rounded to $10']),
   ]
   const canShare = typeof navigator.share === 'function'
@@ -688,6 +723,24 @@ function ShareBox({
   )
 }
 
+// A saved card with credits not marked either way: where to mark them, in
+// its Settings in My wallet. Nothing is asked here.
+function AskCredits({ start }: { start: ReportStart }) {
+  if (start.credits.length === 0) return null
+  return (
+    <p class="small rate-ask">
+      Mark the credits you use in each card's Settings in My wallet:{' '}
+      {start.credits.map((c, i) => (
+        <span key={c.cardId}>
+          {i > 0 ? ', ' : ''}
+          <a href={`/#wallet&card=${c.cardId}`}>{shortName(c.cardId)}</a>
+        </span>
+      ))}
+      .
+    </p>
+  )
+}
+
 // Your own cards, or ones tapped in: editable on the page, never saved.
 function Rated({
   initial,
@@ -710,7 +763,7 @@ function Rated({
     () => ({
       ...initial,
       cards: initial.cards.map((c) => ({
-        id: c.id,
+        ...c,
         picks: picks[c.id] ?? c.picks,
       })),
     }),
@@ -725,7 +778,11 @@ function Rated({
   const linked = useMemo(
     () => ({
       ...input,
-      cards: start.cards.map((c) => ({ id: c.cardId, picks: c.picks })),
+      cards: start.cards.map((c) => ({
+        ...input.cards.find((x) => x.id === c.cardId),
+        id: c.cardId,
+        picks: c.picks,
+      })),
     }),
     [input, start],
   )
@@ -736,6 +793,7 @@ function Rated({
         start={start}
         input={linked}
         parts={parts}
+        ask={saveCards ? null : <AskCredits start={start} />}
         editors={
           <>
             <SpendingEditor rows={rows} setRows={setRows} start={start} />
