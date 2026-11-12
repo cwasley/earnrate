@@ -222,6 +222,17 @@ describe('short report links', () => {
     expect(s.entries.size).toBe(0)
   })
 
+  test('a link is made only at exactly /r, the path the rate limiting rule watches', async () => {
+    const s = site()
+    for (const path of ['/r/', '/r//', '//r']) {
+      const res = await s.call(path, { method: 'POST', body: REPORT })
+      expect(res.status).not.toBe(201)
+      expect(res.headers.get('content-type') ?? '').not.toContain('json')
+    }
+    expect(s.entries.size).toBe(0)
+    expect((await s.make()).res.ok).toBe(true)
+  })
+
   test('ids are random, never repeat, and a taken one is skipped', async () => {
     const s = site()
     const ids = new Set<string>()

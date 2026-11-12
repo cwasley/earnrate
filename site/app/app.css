@@ -1433,7 +1433,9 @@ button:disabled:active {
 .todo .link,
 .skip-saved .link,
 p.muted .link,
-p.callout .link {
+p.callout .link,
+.rate-part > .link,
+.rate-change .link {
   border: 0;
   background: none;
   padding: 0;

@@ -199,8 +199,14 @@ export async function reports(
   const parts = url.pathname.split('/').filter((p) => p !== '')
   const [root, id, data] = parts
   if (root !== 'r') return notFound(request, env)
+  // Cloudflare's rate limiting rule matches the path "/r" exactly, so a link
+  // is made only there; "/r/" or "//r" would get past it.
   if (parts.length === 1 && request.method === 'POST')
-    return fromThePage(request) ? create(request, env, codes) : plain(403)
+    return url.pathname !== '/r'
+      ? plain(404)
+      : fromThePage(request)
+        ? create(request, env, codes)
+        : plain(403)
   if (id === undefined || !ID.test(id) || parts.length > 3)
     return notFound(request, env)
   if (data === 'data' && request.method === 'GET')
