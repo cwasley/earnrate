@@ -240,9 +240,13 @@ export type Markup = {
 
 const PLAIN: Markup = { esc: (s) => s, strong: (s) => s }
 
-// "supermarkets" mid-sentence, but "Amazon" keeps its capital.
+// "supermarkets" mid-sentence, but "Amazon" keeps its capital. A line spent
+// at a store and named for its kind ("Streaming services" at Netflix) reads
+// as the kind.
 export const lineWords = (l: ResolvedLine) =>
-  l.merchant.source === 'category' ? l.label.toLowerCase() : l.label
+  l.merchant.source === 'category' || l.label !== l.merchant.resolvedName
+    ? l.label.toLowerCase()
+    : l.label
 
 // Whole percents of `lines` that add up to 100: each share rounded down,
 // then the points left over to the largest remainders.

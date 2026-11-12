@@ -141,6 +141,9 @@ describe("the annual-fee section's numbers", () => {
       const other = w.lines.findIndex((l) => l.merchant.category === 'other')
       if (other !== -1) expect(other).toBe(w.lines.length - 1)
     }
+    const preferred = feeWorth(cardOf('amex-blue-cash-preferred'))
+    if (!preferred) throw new Error('amex-blue-cash-preferred')
+    expect(feeWorthMix(preferred)).toMatch(/\d+% streaming services/)
     const thirds = resolveSpendLines(catalog, [
       spendLineFor(catalog, 'Transit', 100),
       spendLineFor(catalog, 'Drugstores', 100),
