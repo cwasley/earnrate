@@ -207,12 +207,23 @@ export function simulateWallet(
     byCard: new Map<string, number>(),
   }))
 
+  // Each line's purchase, apart from its date. Bookings change only cap
+  // usage, which the context doesn't read.
+  const contexts = lines.map((line) =>
+    purchaseContext(catalog, wallet, line.merchant, line.merchant.category, {
+      amount: null,
+      date: start,
+      country: 'US',
+    }),
+  )
   for (const date of monthDates(start)) {
     lines.forEach((line, i) => {
       const result = results[i]
-      if (!result) return
+      const base = contexts[i]
+      if (!result || !base) return
       let left = line.monthly
       result.spend += left
+      const ctx = { ...base, date }
       for (let guard = 0; left > EPSILON && guard < 20; guard++) {
         let pick: {
           card: Card
@@ -224,13 +235,6 @@ export function simulateWallet(
           const raw = state.cards.find((h) => h.id === card.id)
           if (!raw) continue
           const held = withCurrentPicks(card, raw, date)
-          const ctx = purchaseContext(
-            catalog,
-            state,
-            line.merchant,
-            line.merchant.category,
-            { amount: null, date, country: 'US' },
-          )
           const { best } = evaluateCard(card, held, ctx)
           const perDollar = (best.rate * cents) / 100
           const room =
@@ -264,6 +268,7 @@ export function simulateWallet(
             channel: line.merchant.channel,
           },
           line.merchant,
+          { ...ctx, amount },
         )
         if (booking) state = applyBooking(state, booking)
         left -= amount

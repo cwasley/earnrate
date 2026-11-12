@@ -3,7 +3,11 @@ import type { Cap, Credit, Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { bonusStatus, countsTowardBonus } from './bonus.ts'
-import { evaluateCard, purchaseContext } from './evaluate.ts'
+import {
+  evaluateCard,
+  purchaseContext,
+  type PurchaseContext,
+} from './evaluate.ts'
 import { creditAt, creditDollars } from './credits.ts'
 import { milestoneProgress } from './milestones.ts'
 import { roundCents } from './text.ts'
@@ -33,17 +37,22 @@ export function capBooking(
     purchase.merchant,
     purchase.channel,
   ),
+  // The purchase's context, when the caller already has it (a simulated year
+  // books thousands of these).
+  context?: PurchaseContext,
 ): CapBooking | null {
   const held = wallet.cards.find((c) => c.id === purchase.cardId)
   if (!held) throw new Error(`${purchase.cardId} isn't in the wallet`)
   const card = catalog.cards.find((c) => c.id === purchase.cardId)
   if (!card) throw new Error(`${purchase.cardId} isn't in the card catalog`)
 
-  const ctx = purchaseContext(catalog, wallet, merchant, merchant.category, {
-    amount: purchase.amount,
-    date: purchase.date,
-    country: 'US',
-  })
+  const ctx =
+    context ??
+    purchaseContext(catalog, wallet, merchant, merchant.category, {
+      amount: purchase.amount,
+      date: purchase.date,
+      country: 'US',
+    })
   const { cap, rule } = evaluateCard(card, held, ctx).nominal
   if (!cap || !rule || cap.period === null) return null
 
