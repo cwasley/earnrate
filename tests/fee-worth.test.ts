@@ -99,6 +99,18 @@ describe('is the annual fee worth it', () => {
 })
 
 describe("the annual-fee section's numbers", () => {
+  test('the table shows whole dollars, rounded from the math', () => {
+    const ctx = pageContext(catalog, { today: TODAY, dataVersion: 'test' })
+    const { feeWorth } = feeWorthKit(catalog, TODAY)
+    const worth = feeWorth(cardOf('chase-ink-business-preferred'))
+    if (!worth) throw new Error('no fee math')
+    const table = /<table[\s\S]*<\/table>/.exec(feeWorthSection(ctx, worth))
+    const cells = plain(table?.[0] ?? '').match(/\$[\d,.]+/g) ?? []
+    expect(cells.length).toBeGreaterThan(0)
+    for (const cell of cells) expect(cell).toMatch(/^\$[\d,]+$/)
+    expect(worth.at(500).best.net % 1).not.toBe(0)
+  }, 30_000)
+
   test('a card that picks its bonus category counts only the category it picks', () => {
     const { feeWorth } = feeWorthKit(catalog, TODAY)
     const obsidian = feeWorth(cardOf('bilt-obsidian'))

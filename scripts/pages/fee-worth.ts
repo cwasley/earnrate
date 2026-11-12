@@ -38,7 +38,7 @@ export function feeWorthSection(
   const rows = SHOWN_AMOUNTS.map((m) => {
     const r = w.at(m)
     const best = r.best.cards[0]?.cardId ?? ''
-    return `<tr><td>${esc(wholeDollars(m))}</td><td>${esc(money(r.card.net))}</td><td>${esc(money(r.best.net))} <span class="muted">(<a href="/cards/${best}">${esc(ctx.shortName(best))}</a>)</span></td></tr>`
+    return `<tr><td>${esc(wholeDollars(m))}</td><td>${esc(wholeDollars(r.card.net))}</td><td>${esc(wholeDollars(r.best.net))} <span class="muted">(<a href="/cards/${best}">${esc(ctx.shortName(best))}</a>)</span></td></tr>`
   }).join('')
   const credits = feeWorthCredits(ctx.catalog, w, HTML)
   const creditsLine = credits === '' ? '' : ` ${credits}`
