@@ -925,9 +925,18 @@ const WALLET_SCRIPT = `(() => {
 
 // The send buttons: the system share sheet with the page's address and
 // title where the browser has one, otherwise the address copied, or shown
-// to copy by hand. Nothing about the visitor goes with it.
+// to copy by hand. Using it is counted once per page load like the app's
+// events (site/app/track.ts): the event's name only, never the card.
 const SEND_SCRIPT = `(() => {
   for (const row of document.querySelectorAll('[data-send]')) row.hidden = false
+  let counted = false
+  const count = () => {
+    if (counted) return
+    counted = true
+    try {
+      navigator.sendBeacon('/count', 'year-end-share')
+    } catch {}
+  }
   const flash = (button, text) => {
     button.dataset.label ??= button.textContent
     button.textContent = text
@@ -944,14 +953,19 @@ const SEND_SCRIPT = `(() => {
   const copy = (button) => {
     const url = button.dataset.url
     if (!navigator.clipboard) return show(button)
-    navigator.clipboard.writeText(url).then(() => flash(button, 'Link copied'), () => show(button))
+    navigator.clipboard.writeText(url).then(() => {
+      count()
+      flash(button, 'Link copied')
+    }, () => show(button))
   }
   document.addEventListener('click', (e) => {
     const button = e.target instanceof Element && e.target.closest('.ye-send')
     if (!button) return
     const { url, title } = button.dataset
     if (!navigator.share) return copy(button)
-    navigator.share({ url, title }).catch((err) => {
+    const shared = navigator.share({ url, title })
+    count()
+    shared.catch((err) => {
       if (err && err.name !== 'AbortError') copy(button)
     })
   })

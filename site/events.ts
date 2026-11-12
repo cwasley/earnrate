@@ -52,6 +52,7 @@ export const EVENTS = [
   'copy-cli',
   'copy-cli-mcp',
   'desktop-download',
+  'year-end-share', // the year-end pages' send button, beaconed by their own script
 ] as const
 
 export type SiteEvent = (typeof EVENTS)[number]

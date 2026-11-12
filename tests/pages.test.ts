@@ -24,6 +24,7 @@ import {
 import { ALL_PERSONAL_CARDS, exploreCards } from '../src/engine/explore.ts'
 import { pageContext } from '../scripts/pages/context.ts'
 import { TABS } from '../site/tabs.ts'
+import { EVENTS } from '../site/events.ts'
 import {
   feeWorthKit,
   type FeeWorth,
@@ -598,7 +599,7 @@ describe('year-end pages', () => {
       }
     })
 
-    test("sends the card's own address and title, and nothing about the visitor", () => {
+    test("sends the card's own address and title, counts only that it was used, and nothing about the visitor", () => {
       for (const page of cardPages) {
         const url = `https://earnrate.dev${page.path}`
         expect(page.html).toContain(`class="ye-send" data-url="${url}"`)
@@ -612,7 +613,10 @@ describe('year-end pages', () => {
           .map((m) => m[1] ?? '')
           .join('\n')
         expect(scripts).toContain('navigator.share({ url, title })')
-        expect(scripts).not.toMatch(/fetch|sendBeacon|XMLHttpRequest/)
+        const beacons = scripts.match(/sendBeacon\([^)]*\)/g) ?? []
+        expect(beacons).toEqual(["sendBeacon('/count', 'year-end-share')"])
+        expect(EVENTS).toContain('year-end-share')
+        expect(scripts).not.toMatch(/fetch|XMLHttpRequest/)
       }
     })
   })
