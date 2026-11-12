@@ -482,6 +482,9 @@ describe('short report links', () => {
         ),
       ).twitter,
     ).toBe(SHARED_LINK_TITLE)
+    expect(sharedPage(rate, 'https://earnrate.dev/r/abcdefgh')).toContain(
+      '<meta property="og:url" content="https://earnrate.dev/r/abcdefgh"',
+    )
     expect(sharedPage(rate).replace(/<title>[^<]*<\/title>/, '')).toContain(
       'name="description"',
     )

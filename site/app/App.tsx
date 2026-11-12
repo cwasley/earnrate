@@ -663,7 +663,8 @@ export function App() {
       const id = requestIdleCallback(later, { timeout: 4000 })
       return () => cancelIdleCallback(id)
     }
-    const timer = setTimeout(later, 2000)
+    // Safari has no idle callback; the work runs in a worker, so soon is fine.
+    const timer = setTimeout(later, 300)
     return () => clearTimeout(timer)
   }, [])
   useEffect(() => {

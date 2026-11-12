@@ -149,11 +149,31 @@ function pairParts(sim: Simulation): { id: string; covers: string }[] {
 
 // Stand-ins for text still being worked out, a line each, so the answer
 // takes about the room they held.
-function Lines({ n }: { n: number }) {
+// `mid` and `wide` are how many lines the text takes on wider screens.
+function Lines({
+  n,
+  mid = n,
+  wide = mid,
+}: {
+  n: number
+  mid?: number
+  wide?: number
+}) {
   return (
     <span class="skel" aria-hidden="true">
       {Array.from({ length: n }, (_, i) => (
-        <span key={i}>{'\u00a0'}</span>
+        <span
+          key={i}
+          class={
+            i >= mid
+              ? 'skel-past-mid'
+              : i >= wide
+                ? 'skel-past-wide'
+                : undefined
+          }
+        >
+          {'\u00a0'}
+        </span>
       ))}
     </span>
   )
@@ -230,11 +250,11 @@ function Answer({
       <dl class="panel find-answer">
         <dt>One card</dt>
         <dd>
-          <Lines n={2} />
+          <Lines n={2} mid={2} wide={1} />
         </dd>
         <dt>Two cards</dt>
         <dd>
-          <Lines n={4} />
+          <Lines n={4} mid={3} wide={2} />
         </dd>
       </dl>
     )

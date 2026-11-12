@@ -78,11 +78,11 @@ function CardCredits({
           <span class="credit-picks-sum">
             {named ? (
               <>
-                <strong>{name}</strong>
-                {'\u00a0· '}
+                <strong>{name}</strong>{' '}
               </>
             ) : null}
-            <span>
+            <span class="nowrap">
+              {named ? '· ' : null}
               {used.length === 0
                 ? 'None used'
                 : `${String(used.length)} of ${String(choices.length)} used`}

@@ -402,7 +402,10 @@ function FeeCards({
                 <CardArt id={id} width={40} />
                 <span>
                   <strong>{shortName(id)}</strong>
-                  <span class="muted small"> · {feeLabel(id)}</span>
+                  <span class="muted small">
+                    {' · '}
+                    {feeLabel(id).replace(/ a year/g, '\u00a0a\u00a0year')}
+                  </span>
                 </span>
                 {v ? (
                   <span

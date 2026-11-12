@@ -272,7 +272,10 @@ export async function reports(
     return new Response(page.body, { status: page.status, headers })
   headers.delete('content-length')
   headers.delete('etag')
-  const body = request.method === 'HEAD' ? null : sharedPage(await page.text())
+  const body =
+    request.method === 'HEAD'
+      ? null
+      : sharedPage(await page.text(), `${url.origin}/r/${id}`)
   return new Response(body, { status: page.status, headers })
 }
 
@@ -283,10 +286,23 @@ export const SHARED_LINK_TITLE = 'What my cards make in a year'
 const TITLE_META =
   /<meta\b[^>]*\b(?:property|name)\s*=\s*["'](?:og|twitter):title["'][^>]*>/gi
 
+const URL_META = /<meta\b[^>]*\bproperty\s*=\s*["']og:url["'][^>]*>/gi
+
 // /rate's file with the short link's title in its <title>, og:title and
-// twitter:title. The file is earnrate's own, so its tags are known.
-export function sharedPage(html: string): string {
-  return html
+// twitter:title, and the link itself as og:url (apps that follow og:url
+// would otherwise show /rate's title). The file is earnrate's own, so its
+// tags are known; `link` is built from an id that passed the ID pattern.
+export function sharedPage(html: string, link?: string): string {
+  const withUrl =
+    link === undefined
+      ? html
+      : html.replace(URL_META, (tag) =>
+          tag.replace(
+            /\bcontent\s*=\s*("[^"]*"|'[^']*')/i,
+            `content="${link}"`,
+          ),
+        )
+  return withUrl
     .replace(/<title>[^<]*<\/title>/i, `<title>${SHARED_LINK_TITLE}</title>`)
     .replace(TITLE_META, (tag) =>
       tag.replace(

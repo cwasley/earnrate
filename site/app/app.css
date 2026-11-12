@@ -2244,3 +2244,16 @@ p.callout .link,
 .results > h3 {
   scroll-margin-top: 12px;
 }
+
+/* Find a card's answer wraps to fewer lines on wider screens. */
+@media (min-width: 420px) {
+  .skel > .skel-past-mid {
+    display: none;
+  }
+}
+
+@media (min-width: 640px) {
+  .skel > .skel-past-wide {
+    display: none;
+  }
+}
