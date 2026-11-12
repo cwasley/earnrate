@@ -4,6 +4,7 @@
 // changed.
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
+import { PAST_TYPICAL, sameRows } from '../app/spending-rows.ts'
 import { REPORT_RETENTION_MONTHS } from '../report-policy.ts'
 import { decodeReport, reportPart, type ReportLink } from './link.ts'
 
@@ -57,12 +58,14 @@ export function storedSource(
     : { kind: 'bad', message: decoded.message }
 }
 
-// The spending rows Find a card saved, read only.
+// The spending rows Find a card saved, read only. Rows equal to a set Find a
+// card started with, in any order, were never the person's own: null, as
+// Find a card loads them as the typical amounts.
 export function savedRows(raw: string | null): Row[] | null {
   try {
     const parsed: unknown = raw === null ? null : JSON.parse(raw)
     if (!Array.isArray(parsed)) return null
-    return parsed.filter(
+    const rows = parsed.filter(
       (r): r is Row =>
         typeof r === 'object' &&
         r !== null &&
@@ -70,6 +73,7 @@ export function savedRows(raw: string | null): Row[] | null {
         typeof (r as Row).monthly === 'number' &&
         Number.isFinite((r as Row).monthly),
     )
+    return PAST_TYPICAL.some((p) => sameRows(rows, p)) ? null : rows
   } catch {
     return null
   }

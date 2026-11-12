@@ -41,6 +41,7 @@ import { cards, feeLabel, shortName, wholeDollars } from '../app/format.ts'
 import { QuickCards } from '../app/QuickCards.tsx'
 import { loadWallet } from '../app/saved-wallet.ts'
 import { SearchInput } from '../app/SearchInput.tsx'
+import { isTypicalRows } from '../app/spending-rows.ts'
 import { track } from '../app/track.ts'
 import { Bar } from './Bar.tsx'
 import { creditIds, encodeReport, reportPart, roundedLines } from './link.ts'
@@ -73,18 +74,12 @@ function readSaved() {
   return { wallet: loadWallet(), rows: savedRows(raw) }
 }
 
-const isTypical = (rows: Row[]) =>
-  rows.length === TYPICAL_MONTHLY_SPEND.length &&
-  TYPICAL_MONTHLY_SPEND.every(
-    (t, i) => rows[i]?.what === t.what && rows[i].monthly === t.monthly,
-  )
-
 const TYPICAL: Spending = { lines: typicalSpendLines(catalog), typical: true }
 
 // The person's rows as the report counts them: known lines, rounded to $10
 // as a link carries them; typical amounts when there are none of their own.
 function spendingOf(rows: Row[] | null): Spending {
-  if (rows === null || isTypical(rows)) return TYPICAL
+  if (rows === null || isTypicalRows(rows)) return TYPICAL
   const lines = roundedLines(
     resolveSpendLines(
       catalog,

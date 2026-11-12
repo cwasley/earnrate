@@ -20,6 +20,8 @@ import {
   storedSource,
 } from '../site/rate/source.ts'
 import { storedId } from '../site/rate/store.ts'
+import { isTypicalRows, PAST_TYPICAL } from '../site/app/spending-rows.ts'
+import { TYPICAL_MONTHLY_SPEND } from '../src/engine/simulate.ts'
 import { ROOT } from './helpers.ts'
 
 const catalog = await loadCatalog()
@@ -299,5 +301,29 @@ describe('report links', () => {
       { what: 'Dining', monthly: 200 },
     ])
     expect(savedRows('not json')).toBeNull()
+  })
+
+  test('spending Find a card started with, in any order, reads as typical, as it does there', () => {
+    const wallet = {
+      valuations: {},
+      memberships: [],
+      cards: [{ id: 'amex-gold', cap_usage: {}, activated: [] }],
+    }
+    const reordered = [...TYPICAL_MONTHLY_SPEND].reverse()
+    for (const rows of [...PAST_TYPICAL, reordered]) {
+      const raw = JSON.stringify(rows)
+      expect(savedRows(raw), raw).toBeNull()
+      const source = reportSource(catalog, '', () => ({
+        wallet,
+        rows: savedRows(raw),
+      }))
+      expect(source.kind === 'own' && source.rows, raw).toBeNull()
+    }
+    expect(isTypicalRows(reordered)).toBe(true)
+    const own = reordered.map((r) =>
+      r.what === 'Groceries' ? { ...r, monthly: 600 } : r,
+    )
+    expect(savedRows(JSON.stringify(own))).toEqual(own)
+    expect(isTypicalRows(own)).toBe(false)
   })
 })
