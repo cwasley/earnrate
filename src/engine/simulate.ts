@@ -480,7 +480,7 @@ function walletWith(
 }
 
 // The best picks for `card` alongside the cards already in `base`.
-function bestSimulation(
+export function bestSimulation(
   catalog: Catalog,
   base: WalletCard[],
   card: Card,

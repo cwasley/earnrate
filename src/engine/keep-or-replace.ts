@@ -59,8 +59,10 @@ export const REPLACEMENTS = 3
 export const HIDDEN_NAMED = 3
 export const HIDDEN_LINES = 2
 
-export const PERKS_NOT_COUNTED =
-  'This counts only earning, statement credits, free nights and fees: earnrate has nothing on lounge access, travel insurance, elite status or other perks, so weigh those yourself.'
+export const OTHER_PERKS =
+  'earnrate has nothing on lounge access, travel insurance, elite status or other perks, so weigh those yourself'
+
+export const PERKS_NOT_COUNTED = `This counts only earning, statement credits, free nights and fees: ${OTHER_PERKS}.`
 
 export type ReplacementOffer = {
   terms: string // "60,000 Chase Ultimate Rewards after $4,000 in purchases within 3 months"
