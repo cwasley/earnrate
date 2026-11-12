@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rate my wallet: what your cards earn in a year · earnrate</title>
+    <meta
+      name="description"
+      content="What your credit cards earn in a year after fees, next to one flat-rate card and the best two cards for your spending. Worked out in your browser."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://earnrate.dev/rate" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="earnrate" />
+    <meta property="og:url" content="https://earnrate.dev/rate" />
+    <meta property="og:title" content="Rate my wallet · earnrate" />
+    <meta
+      property="og:description"
+      content="What a set of credit cards earns in a year after fees, next to one flat-rate card and the best two cards for the same spending."
+    />
+    <meta property="og:image" content="https://earnrate.dev/og/rate.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://earnrate.dev/og/rate.jpg" />
+    <meta name="theme-color" content="#9a5020" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+    <link rel="icon" href="/favicon.svg?v=2" />
+    <link rel="stylesheet" href="/pages.css" />
+    <script type="module" src="./rate/main.tsx"></script>
+  </head>
+  <body>
+    <main>
+      <!--earnrate:header-->
+      <div id="rate" class="app">
+        <h1>Rate my wallet</h1>
+        <p class="lede">
+          What your cards earn in a year after their fees, next to one flat-rate
+          card and the best two cards for the same spending.
+        </p>
+        <noscript>
+          <p class="callout">
+            The report is worked out by a script in this page, so it needs
+            JavaScript turned on.
+          </p>
+        </noscript>
+      </div>
+
+      <section class="rate-how">
+        <h2>How it's worked out</h2>
+        <p>
+          earnrate spends a year of your monthly amounts on your cards, each
+          purchase going to whichever card earns the most on it, with spending
+          caps filling and resetting as the issuer's terms say. Points count at
+          earnrate's value for each program, or at the values you set in My
+          wallet. Annual fees come off the total. Statement credits, lounge
+          access and other perks don't count toward it.
+        </p>
+        <p>
+          The flat-rate card is the best one with no annual fee that pays the
+          same rate on every purchase. The best two cards are the pair, out of
+          every card earnrate knows, that nets the most on the same spending.
+        </p>
+        <p>
+          A link to a report carries your cards, picks, memberships and any
+          point values you set, and your spending if you choose. It's all after
+          the # in the address, the part browsers don't send to a server.
+          <a href="/privacy#rate">What the link holds</a>.
+        </p>
+      </section>
+      <!--earnrate:footer-->
+    </main>
+  </body>
+</html>

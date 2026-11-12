@@ -63,8 +63,9 @@ export function landingPage(): Plugin {
   }
 }
 
-// Find a card works out its answer in a worker, which gets the card data
-// from the page rather than a second copy of it.
+// /rate shares the home page's chunks (the card data, the engine, Preact).
+// Find a card and /rate's report work out their answers in workers, which
+// get the card data from the page rather than a second copy of it.
 export default defineConfig({
   root: import.meta.dirname,
   plugins: [catalogModule(), landingPage()],
@@ -76,6 +77,7 @@ export default defineConfig({
     rolldownOptions: {
       input: {
         index: `${import.meta.dirname}/index.html`,
+        rate: `${import.meta.dirname}/rate.html`,
         privacy: `${import.meta.dirname}/privacy.html`,
         terms: `${import.meta.dirname}/terms.html`,
         companies: `${import.meta.dirname}/companies.html`,

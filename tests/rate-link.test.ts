@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from 'node:fs'
+import path from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
 import {
@@ -15,6 +17,7 @@ import {
   type ReportLink,
 } from '../site/rate/link.ts'
 import { reportSource, savedRows } from '../site/rate/source.ts'
+import { ROOT } from './helpers.ts'
 
 const catalog = await loadCatalog()
 
@@ -193,6 +196,20 @@ describe('report links', () => {
     })
     expect(bad.kind).toBe('bad')
     expect(reads).toBe(0)
+  })
+
+  test("the page's code never writes the browser's storage or makes a request, beyond the event counter", () => {
+    const dir = path.join(ROOT, 'site/rate')
+    const files = readdirSync(dir).filter((f) => /\.tsx?$/.test(f))
+    expect(files).toContain('Rate.tsx')
+    for (const f of files) {
+      const source = readFileSync(path.join(dir, f), 'utf8')
+      expect(source, f).not.toMatch(
+        /\.(setItem|removeItem)\s*\(|localStorage\.clear|sessionStorage|indexedDB|document\.cookie|\bfetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket/,
+      )
+      expect(source, f).not.toMatch(/app\/(settings|sync)\.ts/)
+      expect(source, f).not.toMatch(/from '\.\.\/statement/)
+    }
   })
 
   test('without a link, the saved wallet is rated, or cards are picked when there is none', () => {

@@ -38,6 +38,12 @@ export const EVENTS = [
   'page-check',
   // Links to the statement check, which itself counts nothing
   'statement-check',
+  // Rate my wallet: following a link to it, sharing or copying a report's
+  // link, and opening a page with a report link (never what it holds)
+  'wallet-rate',
+  'decide-rate',
+  'report-made',
+  'report-opened',
   // Links for choosing a card
   'decide-fee',
   'decide-compare',

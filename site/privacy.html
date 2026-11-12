@@ -177,6 +177,26 @@
           purchases or the result. It doesn't open PDFs, since a PDF statement
           can carry the full card number.
         </p>
+        <h3 id="rate">Rating your wallet</h3>
+        <p>
+          <a href="/rate">Rate my wallet</a> works out in your browser what a
+          set of cards earns in a year. If a wallet is saved in this browser, it
+          reads that wallet and your amounts from Find a card, and doesn't
+          change them. Nothing is sent unless you share the report. A report
+          link holds your cards by product, like amex-gold, their category
+          picks, your memberships, any point values you set, and, if you leave
+          that box ticked, your monthly spending by category or store, rounded
+          to the nearest $10. It never holds card numbers, cap or spending
+          totals, purchases, the credits you use, opening dates or searches. All
+          of it is in the part of the address after the #, which browsers don't
+          send to a server, so earnrate.dev never receives it and Cloudflare's
+          analytics doesn't record it. Whoever opens the link sees the same
+          report, worked out in their own browser, and opening it doesn't read
+          or change anything saved in theirs. Anyone you send it to can pass it
+          on. The page counts <code>report-made</code> when you copy or share a
+          link and <code>report-opened</code> when a page opens with one, by
+          name only.
+        </p>
         <h3>What the site counts</h3>
         <p>
           So I can tell which parts of earnrate.dev people use, the page counts
@@ -244,6 +264,13 @@
           <li>
             Sending a card's list from the year-end pages, by sharing or copying
             its link (not which card): <code>year-end-share</code>
+          </li>
+          <li>
+            Rate my wallet: following a link to it from My wallet
+            (<code>wallet-rate</code>) or the home page
+            (<code>decide-rate</code>), copying or sharing a report's link
+            (<code>report-made</code>), and opening a page with one
+            (<code>report-opened</code>), never what the link holds
           </li>
           <li>
             Following a home-page link for choosing a card:
@@ -459,7 +486,9 @@
           earnrate's server. November 11, 2026: when signing in fails, the
           server's count notes which step failed and the kind of error. Also
           November 11: earnrate.dev can check an activity file against your
-          cards, reading it only on your device.
+          cards, reading it only on your device, and can rate a set of cards,
+          with a link to the report that keeps what it holds after the # in the
+          address.
         </p>
       </section>
 

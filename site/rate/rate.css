@@ -1,0 +1,250 @@
+/* The tokens app.css uses beyond pages.css's, as the home page sets them. */
+:root {
+  --accent-strong: #7f4119;
+  --accent-faint: #fbf3ed;
+  --tab-track: #efe3d8;
+  --placeholder: #9c958f;
+  --bar-quiet: #a1978e;
+  --warn-bg: #fbe9e5;
+  --warn-text: #8c2a17;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent-strong: #f1bd94;
+    --accent-faint: #201a16;
+    --tab-track: #31251c;
+    --placeholder: #77716b;
+    --bar-quiet: #6d655e;
+    --warn-bg: #3a1f19;
+    --warn-text: #f3b4a6;
+  }
+}
+
+#rate h1 {
+  margin-bottom: 10px;
+}
+
+#rate .lede {
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+
+#rate h2 {
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  margin: 28px 0 8px;
+}
+
+.rate-cards {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.rate-cards li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.rate-card-name {
+  overflow-wrap: anywhere;
+}
+
+.rate-figure {
+  margin: 4px 0 2px;
+  font-size: clamp(38px, 10vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.rate-per {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+
+.rate-lead {
+  margin: 4px 0 16px;
+}
+
+/* A label, a bar and its amount per row, all on one scale from zero. On a
+   phone the label takes its own line. */
+.rate-compare {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+.rate-row {
+  display: grid;
+  grid-template-columns: minmax(10em, 18em) minmax(0, 1fr) 5.5em;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.rate-label {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.rate-amount {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rate-wait {
+  grid-column: 2 / -1;
+  font-size: 14px;
+}
+
+@media (max-width: 559px) {
+  .rate-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .rate-label {
+    grid-column: 1 / -1;
+  }
+  .rate-wait {
+    grid-column: 1 / -1;
+  }
+}
+
+svg.rate-bar {
+  display: block;
+  height: 12px;
+}
+
+.rate-bar rect {
+  fill: var(--accent);
+}
+
+.rate-bar.quiet rect {
+  fill: var(--bar-quiet);
+}
+
+.rate-share {
+  margin: 20px 0 8px;
+}
+
+#rate .rate-share h2 {
+  margin-top: 0;
+}
+
+.rate-holds {
+  margin: 4px 0 10px;
+  padding-left: 1.2em;
+}
+
+.rate-url {
+  width: 100%;
+  margin: 4px 0 8px;
+  font-size: 14px;
+}
+
+.rate-fees,
+.rate-gaps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.rate-fees > li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.rate-fees > li:first-child {
+  padding-top: 0;
+}
+
+.rate-fees p {
+  margin: 6px 0 0;
+}
+
+.rate-fee-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.tag {
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 10px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.tag.warn {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.rate-gaps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 8px 0;
+}
+
+.rate-gaps .card-art {
+  margin-top: 3px;
+}
+
+.rate-notes {
+  margin-top: 24px;
+}
+
+.rate-picks .field {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 12px;
+  border: 0;
+  padding: 0;
+}
+
+.rate-picks select {
+  max-width: 100%;
+}
+
+.rate-save {
+  margin: 24px 0 0;
+}
+
+.rate-change {
+  margin: 0 0 8px;
+}
+
+.rate-own {
+  margin: 36px 0 0;
+}
+
+#rate .rate-own h2 {
+  margin-top: 0;
+}
+
+.rate-how {
+  margin-top: 48px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.rate-how h2 {
+  font-size: 17px;
+  color: var(--text);
+}

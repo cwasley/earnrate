@@ -12,6 +12,7 @@
     "app",
     "check-selectors.ts",
     "check-statement.ts",
+    "rate",
     "statement",
     "statement-policy.ts",
     "statement.config.ts",

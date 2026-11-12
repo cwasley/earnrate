@@ -1559,7 +1559,17 @@ function renderCardIndex(): string {
   })
 }
 
-const images: OgImage[] = []
+// /rate's report lives in the link's fragment, which previews never see, so
+// it has one image for every link.
+const images: OgImage[] = [
+  {
+    file: 'og/rate.jpg',
+    color: '#9a5020',
+    kicker: 'Rate my wallet',
+    name: 'What your cards earn in a year',
+    line: 'Next to one flat-rate card and the best two cards for the same spending',
+  },
+]
 const { feeWorth } = feeWorthKit(catalog, today)
 // The fee math again with points valued as transfers ("I transfer points").
 const { feeWorth: feeWorthTransferred } = feeWorthKit(
@@ -2221,7 +2231,7 @@ const urls: [string, string][] = [
     `${SITE}/compare/${p.slug}`,
     compareDate(p),
   ]),
-  ...['privacy', 'terms', 'support', 'statement'].map(
+  ...['privacy', 'terms', 'support', 'statement', 'rate'].map(
     (page): [string, string] => [
       `${SITE}/${page}`,
       changed(`site/${page}.html`),
