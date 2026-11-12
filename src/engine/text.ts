@@ -216,8 +216,12 @@ export function onlineAssumption(
   if (!onlineCategory(catalog, merchant.category)) return null
   return merchant.source === 'category'
     ? 'Assumes an online purchase.'
-    : `Assumes an online purchase, since ${merchant.resolvedName} sells online.`
+    : `Assumes an online purchase, ${sellsOnline(merchant.resolvedName)}.`
 }
+
+// The reason an online store's purchases count as online ones, for answers
+// and the store's page: "since Chewy sells online".
+export const sellsOnline = (name: string) => `since ${name} sells online`
 
 // "Assumes Vons counts as a supermarket; for Amex Gold, American Express
 // names it as one." `namedBy` is the issuers whose own lists name the store

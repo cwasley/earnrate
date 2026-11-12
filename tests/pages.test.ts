@@ -281,6 +281,22 @@ describe('the built static pages', () => {
     expect(meijer).not.toMatch(/amex-gold">[^<]+<\/a>: its [^<]* leaves it out/)
   })
 
+  test('an online store page says its rates are for buying online; a store with shops of its own says nothing of it', () => {
+    const answer = (slug: string) =>
+      /<p class="answer">[\s\S]*?<\/p>/.exec(
+        readFileSync(path.join(out, 'best', `${slug}.html`), 'utf8'),
+      )?.[0] ?? ''
+    expect(answer('amazon')).toContain(
+      'These rates are for buying online, since Amazon sells online.',
+    )
+    expect(answer('chewy')).toContain(
+      'These rates are for buying online, since Chewy sells online.',
+    )
+    expect(answer('chewy')).toContain('amex-blue-cash-everyday')
+    expect(answer('petco')).not.toBe('')
+    expect(answer('petco')).not.toContain('buying online')
+  })
+
   test("a store page names the store's own cards earnrate holds, and claims nothing where it holds none", () => {
     const page = (slug: string) =>
       readFileSync(path.join(out, 'best', `${slug}.html`), 'utf8')

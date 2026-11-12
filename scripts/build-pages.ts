@@ -62,7 +62,9 @@ import {
   freeNightText,
   freeNightValueText,
   NIGHT_NO_CAP,
+  onlineAssumption,
   possessive,
+  sellsOnline,
   withArticle,
 } from '../src/engine/text.ts'
 import { allCreditsYear, nightValue } from '../src/engine/credits.ts'
@@ -410,7 +412,7 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   const codes =
     page.merchant === null || r.merchant.source === 'none'
       ? ''
-      : ` ${esc(page.label)} usually counts ${esc(categoryAs(catalog, r.merchant.category))}${r.merchant.likelyMcc === null ? '' : ` (MCC ${String(r.merchant.likelyMcc)})`}.`
+      : ` ${esc(page.label)} usually counts ${esc(categoryAs(catalog, r.merchant.category))}${r.merchant.likelyMcc === null ? '' : ` (MCC ${String(r.merchant.likelyMcc)})`}.${onlineAssumption(catalog, r.merchant, null) === null ? '' : ` These rates are for buying online, ${esc(sellsOnline(page.label))}.`}`
   const credit = r.credits[0]
   const own = ownCardLine(page, r, shown)
   const parts = [
