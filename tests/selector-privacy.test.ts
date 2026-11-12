@@ -27,6 +27,7 @@ describe('ids and classes say nothing about the visitor', () => {
     for (const { file, text } of [
       ...sources('site/app', /\.tsx$/),
       ...sources('site/rate', /\.tsx$/),
+      ...sources('site/sheet', /\.tsx$/),
     ])
       for (const m of text.matchAll(
         /<([a-z][a-z0-9]*)\b[^<]*?\sid=\{(`[^`]*`|[^}]*)\}/g,
@@ -43,6 +44,7 @@ describe('ids and classes say nothing about the visitor', () => {
     for (const { file, text } of [
       ...sources('site/app', /\.tsx$/),
       ...sources('site/rate', /\.tsx$/),
+      ...sources('site/sheet', /\.tsx$/),
     ])
       for (const m of text.matchAll(/\sclass(?:Name)?=\{(`[^`]*`|[^}]*)\}/g))
         if (/\.id\b|cardId|held|\$\{(?![a-z.]*\s*\?)/i.test(m[1] ?? ''))

@@ -78,6 +78,7 @@ export default defineConfig({
       input: {
         index: `${import.meta.dirname}/index.html`,
         rate: `${import.meta.dirname}/rate.html`,
+        sheet: `${import.meta.dirname}/sheet.html`,
         privacy: `${import.meta.dirname}/privacy.html`,
         terms: `${import.meta.dirname}/terms.html`,
         companies: `${import.meta.dirname}/companies.html`,

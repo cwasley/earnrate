@@ -679,9 +679,22 @@ input::-webkit-list-button {
   .sheet-logo {
     display: none;
   }
+
+  .sheet-tools {
+    gap: 8px;
+  }
+
+  .sheet-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .app .sheet-head h3 {
+    font-size: 24px;
+  }
 }
 
-.sheet-download {
+.sheet-icon {
   display: grid;
   place-items: center;
   width: 38px;
@@ -693,16 +706,16 @@ input::-webkit-list-button {
   cursor: pointer;
 }
 
-.app .sheet-download {
+.app .sheet-icon {
   color: var(--surface);
 }
 
-.sheet-download svg {
+.sheet-icon svg {
   width: 20px;
   height: 20px;
 }
 
-.sheet-download:focus-visible {
+.sheet-icon:focus-visible {
   outline: 2px solid var(--surface);
   outline-offset: 2px;
 }
@@ -724,6 +737,21 @@ input::-webkit-list-button {
 
 .sheet-rows li:last-child {
   border-bottom: 0;
+}
+
+.sheet-sent {
+  padding: 12px 20px 0;
+  font-size: 14px;
+}
+
+.sheet-sent p {
+  margin: 0;
+}
+
+.sheet-sent input {
+  width: 100%;
+  margin-top: 8px;
+  font-size: 14px;
 }
 
 .wallet-pass {

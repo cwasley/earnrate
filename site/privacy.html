@@ -225,6 +225,20 @@
           earnrate.dev never receives it, and Cloudflare's analytics doesn't
           record it.
         </p>
+        <h3 id="sheet-links">Sending your cheat sheet</h3>
+        <p>
+          The send button on the cheat sheet in My wallet makes a link that
+          opens the same sheet on someone else's phone. It holds your cards by
+          product, their current category picks and activations, the day you
+          made it, and only the memberships and point values that change which
+          card the sheet picks or what it pays. It never holds card numbers,
+          checkout names, cap or spending totals, welcome bonus progress or
+          searches. Everything is in the address after the #, which browsers
+          don't send to a server, so earnrate never receives it and nothing is
+          stored. Whoever opens it sees the sheet worked out in their own
+          browser, and opening it doesn't read or change anything saved in
+          theirs. Anyone you send it to can pass it on.
+        </p>
         <h3>What the site counts</h3>
         <p>
           So I can tell which parts of earnrate.dev people use, the page counts
@@ -260,8 +274,10 @@
             <code>wallet-which-card</code> (asking which card to use),
             <code>wallet-export</code>, <code>wallet-import</code>,
             <code>cheat-sheet</code> (the cheat sheet was shown),
-            <code>cheat-sheet-image</code> (downloaded as an image),
-            <code>apple-wallet</code> (pressed Add to Apple Wallet),
+            <code>cheat-sheet-image</code> (downloaded as an image, here or on a
+            cheat sheet someone sent), <code>cheat-sheet-link</code> (sent or
+            copied its link), <code>apple-wallet</code> (pressed Add to Apple
+            Wallet, here or on a cheat sheet someone sent),
             <code>wallet-two-years</code> (opened the first-two-years view of
             Would another card help?), <code>wallet-skip-issuers</code> (changed
             which issuers to leave out, not which ones),
@@ -299,6 +315,10 @@
             (<code>decide-rate</code>), copying or sharing a report's link
             (<code>report-made</code>), and opening a page with one
             (<code>report-opened</code>), never what the link holds
+          </li>
+          <li>
+            Opening a page with a cheat sheet someone sent:
+            <code>cheat-sheet-opened</code>, never what the link holds
           </li>
           <li>
             Following a home-page link for choosing a card:

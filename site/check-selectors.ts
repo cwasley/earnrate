@@ -11,6 +11,9 @@ import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 import type { Browser, Page } from 'playwright'
+import { loadCatalog } from '../src/data/load.ts'
+import { localToday } from '../src/engine/periods.ts'
+import { encodeSheet } from './sheet/link.ts'
 
 const DIST = path.join(import.meta.dirname, '..', 'site-dist')
 const HELD = ['chase-freedom-flex', 'amex-platinum', 'citi-custom-cash']
@@ -27,6 +30,12 @@ const SAVED = {
     { what: 'Everything else', monthly: 900 },
   ]),
 }
+
+const SENT = encodeSheet(
+  await loadCatalog(),
+  JSON.parse(SAVED['earnrate:wallet']) as Parameters<typeof encodeSheet>[1],
+  localToday(),
+)
 
 let failed = 0
 function check(name: string, ok: boolean, detail = '') {
@@ -210,6 +219,46 @@ for (const [name, type] of [
     `${name}: the rated cards and the share box`,
     (await named()).length === 0,
     (await named()).join(' '),
+  )
+
+  // A cheat sheet someone sent, in an empty profile and beside a saved
+  // wallet: its cards come from the link, so no page without one shows
+  // them; none may be in an id or class, and storage stays as it was.
+  const fresh = await (
+    await browser.newContext({ viewport: { width: 390, height: 844 } })
+  ).newPage()
+  const storage = (page: Page) =>
+    page.evaluate(() =>
+      JSON.stringify(
+        [localStorage, sessionStorage].map((s) =>
+          Array.from({ length: s.length }, (_, i) => {
+            const key = s.key(i) ?? ''
+            return [key, s.getItem(key)]
+          }),
+        ),
+      ),
+    )
+  await saved.goto(`${BASE}/#wallet`)
+  await saved.waitForSelector('.held-row')
+  const before = await storage(saved)
+  for (const [who, page] of [
+    ['an empty profile', fresh],
+    ['a saved wallet', saved],
+  ] as const) {
+    await page.goto(`${BASE}/sheet#${SENT}`)
+    await page.waitForSelector('.sent-sheet .sheet-rows li')
+    const found = (await marks(page)).filter((m) =>
+      HELD.some((id) => m.includes(id)),
+    )
+    check(
+      `${name}: a sent cheat sheet, with ${who}`,
+      found.length === 0,
+      found.join(' '),
+    )
+  }
+  check(
+    `${name}: opening a sent cheat sheet stores nothing`,
+    (await storage(fresh)) === '[[],[]]' && (await storage(saved)) === before,
   )
   await browser.close()
 }

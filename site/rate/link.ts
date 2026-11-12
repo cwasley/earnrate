@@ -33,7 +33,13 @@ export type Decoded =
 const PINNED: Record<string, string> = {}
 
 type Kind =
-  'card' | 'category' | 'membership' | 'currency' | 'option' | 'credit'
+  | 'card'
+  | 'category'
+  | 'membership'
+  | 'currency'
+  | 'option'
+  | 'credit'
+  | 'activation'
 
 // FNV-1a, 32 bits, to four base-36 characters.
 export function shortCode(kind: Kind, id: string): string {
@@ -47,7 +53,8 @@ export function shortCode(kind: Kind, id: string): string {
   return (h % 36 ** 4).toString(36).padStart(4, '0')
 }
 
-const optionKey = (choice: string, option: string) => `${choice}/${option}`
+export const optionKey = (choice: string, option: string) =>
+  `${choice}/${option}`
 
 // A card's statement credits and free nights share one id space.
 export const creditIds = (card: Catalog['cards'][number]) => [

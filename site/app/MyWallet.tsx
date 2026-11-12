@@ -7,7 +7,6 @@ import {
   cheatSheet,
   EVERYDAY_PURCHASES,
   quickPickText,
-  type CheatSheet,
 } from '../../src/engine/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
 import { activationGroup } from '../../src/engine/evaluate.ts'
@@ -68,7 +67,7 @@ import { kindCategory } from './place-kinds.ts'
 import { QuickCards } from './QuickCards.tsx'
 import { Logo } from './Logo.tsx'
 import { track } from './track.ts'
-import { cheatSheetImage } from './sheet-image.ts'
+import { SheetDownload, useSheetSend, WalletPass } from './CheatSheetParts.tsx'
 import { lineFor } from './Spending.tsx'
 import { isTypicalRows, loadSpendingRows } from './spending-rows.ts'
 import {
@@ -317,6 +316,7 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
     () => cheatSheet(catalog, wallet, localToday()),
     [wallet],
   )
+  const send = useSheetSend(wallet)
   useEffect(() => {
     track('cheat-sheet')
   }, [])
@@ -329,31 +329,12 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
           <p>{sheet.quarter} · the card to use for each purchase</p>
         </div>
         <div class="sheet-tools">
-          <button
-            type="button"
-            class="sheet-download"
-            aria-label="Download as an image"
-            title="Download as an image"
-            onClick={() => {
-              track('cheat-sheet-image')
-              void saveSheet(sheet)
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />
-            </svg>
-          </button>
+          {send.button}
+          <SheetDownload sheet={sheet} />
           <Logo class="sheet-logo" chip="var(--accent)" />
         </div>
       </div>
+      {send.status}
       <ol class="sheet-rows">
         {sheet.rows.map((row) => {
           const held = wallet.cards.find((c) => c.id === row.cardId)
@@ -379,57 +360,6 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
       <WalletPass wallet={wallet} />
     </section>
   )
-}
-
-const PASS_URL = 'https://pass.earnrate.dev/'
-
-// The one thing earnrate.dev sends anywhere: what the pass needs (card ids,
-// picks, activations, checkout labels, memberships), never amounts or
-// searches. The signer keeps nothing.
-function WalletPass({ wallet }: { wallet: Wallet }) {
-  const sent = JSON.stringify({
-    memberships: wallet.memberships,
-    cards: wallet.cards.map((c) => ({
-      id: c.id,
-      checkout_label: c.checkout_label,
-      chosen: c.chosen,
-      activated: c.activated,
-    })),
-  })
-  return (
-    <form
-      class="wallet-pass"
-      method="post"
-      action={PASS_URL}
-      onSubmit={() => {
-        track('apple-wallet')
-      }}
-    >
-      <input type="hidden" name="wallet" value={sent} />
-      <input type="hidden" name="date" value={localToday()} />
-      <button type="submit" aria-label="Add to Apple Wallet">
-        <img src="/add-to-apple-wallet.svg" alt="" width="126" height="40" />
-      </button>
-      <p class="muted">
-        For iPhone: this cheat sheet in Apple Wallet, good until the quarter
-        ends. This sends your card names and picks (no amounts) to earnrate's
-        server, which makes the pass and keeps nothing.
-      </p>
-    </form>
-  )
-}
-
-async function saveSheet(sheet: CheatSheet) {
-  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const blob = await cheatSheetImage(sheet, shortName, pct, dark)
-  if (!blob) return
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `earnrate-cheat-sheet-${sheet.quarter.toLowerCase().replace(/\s+/g, '-')}.png`
-  a.click()
-  // Some browsers start the download after click() returns.
-  setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }
 
 function offerText(card: NonNullable<ReturnType<typeof cards.get>>): string {

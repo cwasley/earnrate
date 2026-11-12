@@ -18,6 +18,7 @@ export const EVENTS = [
   'wallet-import',
   'cheat-sheet',
   'cheat-sheet-image',
+  'cheat-sheet-link',
   'apple-wallet',
   'wallet-two-years',
   'wallet-skip-issuers',
@@ -44,6 +45,9 @@ export const EVENTS = [
   'decide-rate',
   'report-made',
   'report-opened',
+  // A cheat sheet sent to someone: opening a page with its link (never what
+  // the link holds)
+  'cheat-sheet-opened',
   // Links for choosing a card
   'decide-fee',
   'decide-compare',

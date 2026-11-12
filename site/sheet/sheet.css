@@ -1,0 +1,129 @@
+/* The tokens app.css uses beyond pages.css's, as the home page sets them. */
+:root {
+  --accent-strong: #7f4119;
+  --accent-faint: #fbf3ed;
+  --tab-track: #efe3d8;
+  --placeholder: #9c958f;
+  --bar-quiet: #a1978e;
+  --warn-bg: #fbe9e5;
+  --warn-text: #8c2a17;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent-strong: #f1bd94;
+    --accent-faint: #201a16;
+    --tab-track: #31251c;
+    --placeholder: #77716b;
+    --bar-quiet: #6d655e;
+    --warn-bg: #3a1f19;
+    --warn-text: #f3b4a6;
+  }
+}
+
+/* Read at a register: big names, one glance per row. */
+.sent-sheet .sheet-head {
+  padding: 18px 16px 16px;
+}
+
+.sent-sheet .sheet-head h1 {
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 4px 0 4px;
+}
+
+.sent-sheet .sheet-old {
+  margin: 14px 16px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: 15px;
+}
+
+.sent-sheet .sheet-rows {
+  padding: 2px 16px;
+}
+
+.sent-sheet .sheet-rows li {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label label'
+    'card rate';
+  gap: 4px 12px;
+  padding: 12px 0 14px;
+}
+
+.sent-sheet .sheet-label {
+  grid-area: label;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sent-sheet .sheet-card {
+  grid-area: card;
+}
+
+.sent-sheet .sheet-card .card-art {
+  display: inline-flex;
+  flex: none;
+}
+
+.sent-sheet .sheet-card-name {
+  font-size: 21px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.sent-sheet .sheet-card-name .row-note {
+  margin-top: 4px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.sent-sheet .sheet-rate {
+  grid-area: rate;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sent-sheet .wallet-pass {
+  padding: 4px 16px 18px;
+}
+
+@media (min-width: 640px) {
+  .sent-sheet .sheet-head {
+    padding: 22px 22px 18px;
+  }
+
+  .sent-sheet .sheet-rows {
+    padding: 4px 22px;
+  }
+
+  .sent-sheet .sheet-rows li {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.5fr) 4.6em;
+    grid-template-areas: 'label card rate';
+    align-items: center;
+  }
+
+  .sent-sheet .sheet-label {
+    font-size: 17px;
+  }
+
+  .sent-sheet .wallet-pass {
+    padding: 4px 22px 20px;
+  }
+}
+
+.sent-after {
+  margin: 18px 0 0;
+}
+
+.sent-after p {
+  margin: 10px 0 0;
+}
+
+.sheet-how {
+  margin-top: 36px;
+}
