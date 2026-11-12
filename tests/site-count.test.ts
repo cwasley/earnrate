@@ -76,13 +76,20 @@ describe('earnrate.dev counts', () => {
     for (const event of EVENTS) expect(privacy, event).toContain(event)
   })
 
-  test('the site Worker keeps no logs, stores nothing, and runs only for /count and /api/*', async () => {
+  test('the site Worker keeps no logs, stores only short report links, and runs only for /count, /api/* and /r', async () => {
     for (const file of ['../wrangler.jsonc', '../wrangler.preview.jsonc']) {
       const config = await readFile(new URL(file, import.meta.url), 'utf8')
       expect(config, file).toContain('"observability": { "enabled": false }')
       expect(config, file).not.toMatch(
-        /kv_namespaces|durable_objects|d1_databases|r2_buckets|queues|vectorize|hyperdrive|secrets_store/,
+        /durable_objects|d1_databases|r2_buckets|queues|vectorize|hyperdrive|secrets_store/,
       )
+      // Its one store: a KV namespace for short report links.
+      const kv = /"kv_namespaces": \[([^\]]*)\]/.exec(config)?.[1] ?? ''
+      expect(
+        [...kv.matchAll(/"binding": "([A-Z_]+)"/g)].map((m) => m[1]),
+        file,
+      ).toEqual(['REPORTS'])
+      expect(config.match(/kv_namespaces/g)?.length, file).toBe(1)
       // Its one binding beyond the files and counts: the hosted server.
       expect(config, file).toContain(
         '"services": [{ "binding": "MCP", "service": "earnrate-mcp" }]',
@@ -92,7 +99,9 @@ describe('earnrate.dev counts', () => {
       new URL('../wrangler.jsonc', import.meta.url),
       'utf8',
     )
-    expect(config).toContain('"run_worker_first": ["/count", "/api/*"]')
+    expect(config).toContain(
+      '"run_worker_first": ["/count", "/api/*", "/r", "/r/*"]',
+    )
   })
 })
 
@@ -127,7 +136,7 @@ describe('preview.earnrate.dev', () => {
       new URL('../wrangler.preview.jsonc', import.meta.url),
       'utf8',
     )
-    expect(config).not.toMatch(/analytics_engine|kv_namespaces|durable_objects/)
+    expect(config).not.toMatch(/analytics_engine|durable_objects/)
     const count = await preview.fetch(
       new Request('https://preview.earnrate.dev/count', {
         method: 'POST',

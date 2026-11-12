@@ -11,7 +11,7 @@
     "directory": "./site-dist",
     "not_found_handling": "404-page",
     "binding": "ASSETS",
-    "run_worker_first": ["/count", "/api/*"],
+    "run_worker_first": ["/count", "/api/*", "/r", "/r/*"],
   },
   // Opt-in wallet sync: /api/* reaches the hosted server (remote/) directly.
   // No storage of its own; the tokens stay in the visitor's cookie.
@@ -26,6 +26,17 @@
       "namespace_id": "1104",
       "simple": { "limit": 60, "period": 60 },
     },
+    // Short report links one IP address can make (site/report-policy.ts).
+    {
+      "name": "REPORT_LIMITER",
+      "namespace_id": "1105",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
+  // Short report links (/r, site/reports.ts): each report's string and its
+  // delete key's hash, nothing else. The site's only stored data.
+  "kv_namespaces": [
+    { "binding": "REPORTS", "id": "ef21ca669ebb4a5587e380784959fbbe" },
   ],
   "routes": [
     { "pattern": "earnrate.dev", "custom_domain": true },

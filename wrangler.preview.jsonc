@@ -16,5 +16,17 @@
   // The same wallet sync as earnrate.dev, against the live hosted server:
   // try it with a test wallet.
   "services": [{ "binding": "MCP", "service": "earnrate-mcp" }],
+  // Short report links in a store of their own, so preview links never land
+  // in earnrate.dev's.
+  "kv_namespaces": [
+    { "binding": "REPORTS", "id": "26c8d91d9dc243bcb582e6058803bf3d" },
+  ],
+  "ratelimits": [
+    {
+      "name": "REPORT_LIMITER",
+      "namespace_id": "1106",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
   "routes": [{ "pattern": "preview.earnrate.dev", "custom_domain": true }],
 }

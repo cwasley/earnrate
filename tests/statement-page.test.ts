@@ -204,7 +204,7 @@ describe('the built statement check', () => {
     expect(text.match(/statement-check: end/g)).toHaveLength(1)
     // Served from the static files, where _headers applies, not the Worker.
     expect(read('wrangler.jsonc')).toContain(
-      '"run_worker_first": ["/count", "/api/*"]',
+      '"run_worker_first": ["/count", "/api/*", "/r", "/r/*"]',
     )
   })
 

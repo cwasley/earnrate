@@ -1,10 +1,12 @@
-// earnrate.dev is static files; this Worker runs only for /count and
-// /api/*. At /count the page's beacon tallies an event name from EVENTS: it
+// earnrate.dev is static files; this Worker runs only for /count, /api/*
+// and /r. At /count the page's beacon tallies an event name from EVENTS: it
 // keeps no logs and writes only the event and the kind of device to
 // Analytics Engine, no IP address, user agent, cookie or id. /api/* is
-// opt-in wallet sync with Claude (api.ts), and stores nothing here.
+// opt-in wallet sync with Claude (api.ts), and stores nothing here. /r is
+// short report links (reports.ts), the one thing this Worker stores.
 import { api, type ApiEnv } from './api.ts'
 import { deviceOf, isEvent } from './events.ts'
+import { reports, type ReportsEnv } from './reports.ts'
 
 type Dataset = {
   writeDataPoint(point: { blobs?: string[]; indexes?: string[] }): void
@@ -14,11 +16,12 @@ type RateLimit = {
 }
 type Assets = { fetch(request: Request): Promise<Response> }
 
-export type SiteEnv = ApiEnv & {
-  ASSETS: Assets
-  USAGE?: Dataset
-  LIMITER?: RateLimit // per IP, so one script can't skew the counts
-}
+export type SiteEnv = ApiEnv &
+  ReportsEnv & {
+    ASSETS: Assets
+    USAGE?: Dataset
+    LIMITER?: RateLimit // per IP, so one script can't skew the counts
+  }
 
 const done = () =>
   new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } })
@@ -40,6 +43,8 @@ export default {
     const { pathname } = new URL(request.url)
     if (pathname === '/count') return count(request, env)
     if (pathname.startsWith('/api/')) return api(request, env)
+    if (pathname === '/r' || pathname.startsWith('/r/'))
+      return reports(request, env)
     return env.ASSETS.fetch(request)
   },
 }
