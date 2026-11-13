@@ -341,6 +341,17 @@ describe('the built static pages', () => {
     expect(answer('petco')).not.toContain('buying online')
   })
 
+  test("a card page gives the rotating categories' own rate, not one that stacks on an everyday rate", () => {
+    const flex = readFileSync(
+      path.join(out, 'cards', 'chase-freedom-flex.html'),
+      'utf8',
+    )
+    expect(flex).toContain(
+      '5% cash back on categories that rotate each quarter',
+    )
+    expect(flex).not.toMatch(/7% cash back on categories that rotate/)
+  })
+
   test("a store page names the store's own cards earnrate holds, and claims nothing where it holds none", () => {
     const page = (slug: string) =>
       readFileSync(path.join(out, 'best', `${slug}.html`), 'utf8')

@@ -1199,9 +1199,16 @@ function headlineFor(card: Card): { rate: number; text: string }[] {
   const rotatingRates = rotating
     ? card.rules.filter((r) => r.cap === rotating.id).map((r) => r.rate)
     : []
-  if (rotatingRates.length > 0)
+  // The rate most of the quarters' rules pay: one that stacks on an everyday
+  // rate (Freedom Flex's Q4 2026 dining, 3% + 4%) isn't the rotating rate.
+  const rotatingRate = [...new Set(rotatingRates)].sort(
+    (a, b) =>
+      rotatingRates.filter((r) => r === b).length -
+        rotatingRates.filter((r) => r === a).length || a - b,
+  )[0]
+  if (rotatingRate !== undefined)
     clauses.unshift({
-      rate: Math.max(...rotatingRates),
+      rate: rotatingRate,
       what: 'on categories that rotate each quarter',
     })
 
