@@ -761,7 +761,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       ${page.merchant ? howItCodes(ctx, page.merchant, categoryPageFor, r.categoryNote === null && r.merchant.source !== 'none' && shown.length > 0) : ''}
       ${sources(shown)}
       <details class="fine section-fine"><summary>How this is ranked</summary>
-      <p>Every personal card earnrate tracks that's open to new applicants, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, use <a href="/#spending">Get a card</a>.</p></details>
+      <p>Every personal card earnrate tracks that's open to new applicants, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, see <a href="/#spending">Best setups</a>.</p></details>
       ${related(page, all)}
       ${definitions ? `<p>What counts as ${esc(definitions)} for each issuer: <a href="/categories/${definitions}">their definitions, side by side</a>.</p>` : ''}`
   const jsonLd = {

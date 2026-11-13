@@ -5,7 +5,7 @@ export type Row = { what: string; monthly: number }
 
 const KEY = 'earnrate:spending'
 
-// Every set of rows Get a card has started with, the current one included.
+// Every set of rows Best setups has started with, the current one included.
 // The tab used to save them on every visit, so rows equal to one of these
 // were never the person's own: they load as the current typical amounts.
 export const PAST_TYPICAL: Row[][] = [

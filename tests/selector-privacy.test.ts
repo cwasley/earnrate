@@ -58,6 +58,7 @@ describe('ids and classes say nothing about the visitor', () => {
       "quiet ? 'rate-bar quiet' : 'rate-bar'", // the first row is always yours
       "`${shown.error ? 'callout' : 'muted'} message-line`", // a refused change
       "settled ? 'credit-picks settled' : 'credit-picks'", // after first paint
+      "rank === 1 ? 'result hero' : 'result'", // a ranking's first row
     ])
     const bad: string[] = []
     for (const { file, text } of [

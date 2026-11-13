@@ -278,8 +278,8 @@ function Example({
 export type Scope = 'yours' | 'every'
 
 const SCOPES: { scope: Scope; label: string }[] = [
-  { scope: 'yours', label: 'Your cards' },
   { scope: 'every', label: 'Every card' },
+  { scope: 'yours', label: 'Your cards' },
 ]
 
 // Which cards an answer ranks. The choice is the visitor's, so it lives in
@@ -510,7 +510,7 @@ export function BestFor({
   ) : null
   return (
     <div>
-      <div class="panel">
+      <div class="panel store-search">
         <ScopeSwitch scope={scope} onScope={onScope} />
         <form
           class="ask"
@@ -577,6 +577,7 @@ export function BestFor({
             Every store and category
           </a>
         </div>
+        {filters}
       </div>
       {example ? (
         <Example
@@ -594,7 +595,6 @@ export function BestFor({
           Open My wallet to fix it.
         </p>
       ) : null}
-      {filters}
 
       <div aria-live="polite">
         {answer ? (

@@ -67,9 +67,9 @@ export const lineFor = (what: string, monthly: number) =>
 // How long typing pauses before the answer is worked out again.
 const SETTLE_MS = 250
 
-// Rows shown before "Show more", and how many it shows: the best card and
-// the best pair, then the rest of each ranking.
-const SHOWN = 1
+// Rows shown before "Show more", and how many it shows: the top three of
+// each ranking, the first a size up, then the rest.
+const SHOWN = 3
 const MORE = 10
 
 function picksText(cardId: string, picks: Picks): string | null {
@@ -186,10 +186,16 @@ const SKEL_SINGLES = [
     fee: { n: 2, mid: 2, wide: 1 },
     first: true,
   },
+  { name: 1, fee: 1, first: true },
+  { name: 1, fee: 1 },
 ]
-const SKEL_PAIRS = [{ name: { n: 3, mid: 3, wide: 2 } }]
+const SKEL_PAIRS = [
+  { name: { n: 3, mid: 3, wide: 1 } },
+  { name: { n: 3, mid: 3, wide: 1 } },
+  { name: { n: 3, mid: 3, wide: 1 } },
+]
 // The best pair's split under it.
-const SKEL_SPLIT = { n: 4, mid: 3, wide: 1 }
+const SKEL_SPLIT = { n: 4, mid: 3, wide: 2 }
 // A new card for the wallet's top rows.
 const SKEL_ADDITIONS = [
   { name: { n: 2, mid: 2, wide: 1 }, fee: 1 },
@@ -675,7 +681,7 @@ export function Spending({
     (pairs ? SKEL_PAIRS : SKEL_SINGLES).map((shape, i) => (
       <li class={i === 0 ? 'result hero' : 'result'} key={i + 1}>
         <SkelRow rank={i + 1} pair={pairs} {...shape} />
-        {pairs ? (
+        {pairs && i === 0 ? (
           <p class="muted pair-split">
             <Lines {...SKEL_SPLIT} />
           </p>
@@ -822,7 +828,10 @@ export function Spending({
                 <>
                   <ol class="result-list">
                     {SKEL_ADDITIONS.map((shape, i) => (
-                      <li class="result" key={i + 1}>
+                      <li
+                        class={i === 0 ? 'result hero' : 'result'}
+                        key={i + 1}
+                      >
                         <SkelRow rank={i + 1} {...shape} />
                       </li>
                     ))}

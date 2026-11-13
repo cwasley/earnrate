@@ -7,7 +7,7 @@ import {
 } from '../../src/engine/simulate.ts'
 import { isTypicalRows, loadSpendingRows } from './spending-rows.ts'
 
-// Get a card's spending rows, and whether they're still its typical
+// Best setups' spending rows, and whether they're still its typical
 // amounts. An emptied tab says nothing about spending; typical amounts do
 // better.
 export function savedSpending(): Spending {

@@ -349,7 +349,7 @@ if (want('memberships')) {
   say('## Memberships')
   say()
   say(
-    'The typical month gives no memberships (Find a card, the home page, fee-worth, search_cards). Cards that need one are simulated for a member and listed apart. Spending at a store only members shop at implies that membership.',
+    'The typical month gives no memberships (Best setups, the home page, fee-worth, search_cards). Cards that need one are simulated for a member and listed apart. Spending at a store only members shop at implies that membership.',
   )
   const implied = catalog.memberships.filter((m) =>
     m.members_shop_at.some((id) =>
@@ -419,7 +419,7 @@ if (want('headline') || values.json || values.compare) {
   say('## Headline')
   say()
   say(
-    `Find a card (every personal card, no memberships) took ${String(Math.round(ms))} ms.`,
+    `Best setups (every personal card, no memberships) took ${String(Math.round(ms))} ms.`,
   )
   const fmt = (w: { cards: string[]; net: number }) =>
     `${w.cards.join(' + ')} ${money(w.net)}`

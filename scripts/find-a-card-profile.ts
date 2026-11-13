@@ -1,4 +1,4 @@
-// Times what Find a card works out for one answer, part by part, on the
+// Times what Best setups works out for one answer, part by part, on the
 // typical month or the rows given:
 // node scripts/find-a-card-profile.ts [YYYY-MM-DD] ["Cell phone=115" ...]
 import { loadCatalog } from '../src/data/load.ts'

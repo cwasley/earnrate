@@ -23,7 +23,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe("Find a card's spending rows", () => {
+describe("Best setups' spending rows", () => {
   test('the current typical amounts are on the list of past defaults, so changing them later still recognizes these', () => {
     expect(PAST_TYPICAL.some((p) => sameRows(p, TYPICAL_MONTHLY_SPEND))).toBe(
       true,

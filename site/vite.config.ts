@@ -65,7 +65,7 @@ export function landingPage(): Plugin {
 }
 
 // /rate shares the home page's chunks (the card data, the engine, Preact).
-// Get a card and /rate's report work out their answers in workers, which
+// Best setups and /rate's report work out their answers in workers, which
 // get the card data from the page rather than a second copy of it.
 export default defineConfig({
   root: import.meta.dirname,

@@ -169,7 +169,7 @@ function OfferRow({
   setOpen: (cardId: string | null) => void
 }) {
   return (
-    <li class="result" data-whatif={o.cardId}>
+    <li class={rank === 1 ? 'result hero' : 'result'} data-whatif={o.cardId}>
       <button
         type="button"
         class="result-top result-toggle"
@@ -330,7 +330,11 @@ export function NewCard({
       : ''
   }
   const row = (a: Addition, rank: number) => (
-    <li class="result" key={a.cardId} data-whatif={a.cardId}>
+    <li
+      class={rank === 1 ? 'result hero' : 'result'}
+      key={a.cardId}
+      data-whatif={a.cardId}
+    >
       <button
         type="button"
         class="result-top result-toggle"

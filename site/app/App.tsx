@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks'
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { BestFor, SUGGESTIONS, type Scope } from './BestFor.tsx'
 import { MyWallet } from './MyWallet.tsx'
@@ -375,7 +375,7 @@ export function App() {
     readHash(true),
   )
   // At a store ranks the visitor's own cards when they've saved some, and
-  // Get a card looks for one to add to them, until either is switched.
+  // Best setups looks for one to add to them, until either is switched.
   const [scopeSet, setScope] = useState<Scope | null>(asked.scope ?? null)
   const [findSet, setFind] = useState<FindMode | null>(asked.find ?? null)
   // A store waiting for the visitor's first cards, answered once they're in.
@@ -670,6 +670,24 @@ export function App() {
   useEffect(() => {
     track(`tab-${tab}`)
   }, [tab])
+  // The home page's story below the app shows with At a store only
+  // (app.css, by main's data-tab). Without the app it all shows.
+  const tabNow = useRef(tab)
+  const opened = useRef(false)
+  useLayoutEffect(() => {
+    tabNow.current = tab
+    const main = document.querySelector('main')
+    if (main) main.dataset.tab = tab
+    // A link that opens another tab from further down the page (My wallet's
+    // "Would another card help?", a to-do row) lands at the tabs, unless
+    // it's for a section below the app.
+    if (!opened.current) opened.current = true
+    else if (!section.current) {
+      const tabs = document.querySelector('.tabs')
+      if (tabs && tabs.getBoundingClientRect().top < 0)
+        tabs.scrollIntoView({ block: 'start' })
+    }
+  }, [tab])
   // A tab's panel animates only what arrives after it has rendered, so
   // opening a tab or loading the page shows it at rest.
   const [settled, setSettled] = useState<Tab | null>(null)
@@ -679,7 +697,7 @@ export function App() {
     })
     return () => cancelAnimationFrame(frame)
   }, [tab])
-  // Get a card's answer, started off the page's thread while the page is
+  // Best setups' answer, started off the page's thread while the page is
   // idle and again when its tab is pressed, so the tab opens with it.
   const prepareFind = () => {
     if (tab !== 'spending')
@@ -708,11 +726,16 @@ export function App() {
   }, [])
   useEffect(() => {
     // An address typed or followed on the page reads like a fresh load. A
-    // link to a section below (#claude) keeps the app as it is and scrolls
-    // there once the fold (fold.ts) has opened it.
+    // link to a section below (#claude) opens At a store, which shows those
+    // sections, and scrolls there.
     const onHash = () => {
       const below = linkedSection()
       if (below) {
+        if (tabNow.current !== 'best') {
+          // The address keeps the section's name.
+          section.current = below
+          setView({ tab: 'best', query: '' })
+        }
         requestAnimationFrame(() => below.scrollIntoView())
         return
       }
@@ -772,7 +795,6 @@ export function App() {
             onWallet={() => {
               setReturnTo(scope === 'yours' && query !== '' ? query : null)
               setView({ tab: 'wallet', query: '' })
-              document.querySelector('.tabs')?.scrollIntoView()
             }}
           />
         ) : tab === 'spending' ? (

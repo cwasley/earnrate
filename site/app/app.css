@@ -1791,13 +1791,21 @@ p.callout .link,
    ranking below them is on the first screen. */
 @media (max-width: 639px) {
   .panel > .chips {
+    --chip-fade: linear-gradient(
+      to right,
+      transparent,
+      #000 12px,
+      #000 calc(100% - 88px),
+      transparent calc(100% - 6px)
+    );
     flex-wrap: nowrap;
     overflow-x: auto;
     margin: 0 -18px;
     padding: 2px 18px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    mask-image: linear-gradient(to right, #000 85%, transparent);
+    -webkit-mask-image: var(--chip-fade);
+    mask-image: var(--chip-fade);
   }
 
   .panel > .chips::-webkit-scrollbar {
@@ -2073,7 +2081,7 @@ p.callout .link,
   margin-top: 0;
 }
 
-/* Get a card: the spending folded over the answer. */
+/* Best setups: the spending folded over the answer. */
 .find-answer {
   margin: 0;
   font-size: 16.5px;
@@ -2231,7 +2239,7 @@ p.callout .link,
   scroll-margin-top: 12px;
 }
 
-/* Get a card's answer wraps to fewer lines on wider screens. */
+/* Best setups' answer wraps to fewer lines on wider screens. */
 @media (min-width: 420px) {
   .skel > .skel-past-mid {
     display: none;
@@ -2244,10 +2252,34 @@ p.callout .link,
   }
 }
 
-/* At a store: Your cards or Every card. */
+/* At a store's panel: which cards, the search, the chips, then
+   memberships and how you're paying. */
 .app .scope {
-  max-width: 320px;
   margin: 0 0 4px;
+}
+
+.store-search .search-box:not(:has(.clear)) input {
+  padding-right: 14px;
+}
+
+.store-search .ask input.amount {
+  flex: 0 0 64px;
+  padding: 12px 6px;
+  text-align: center;
+}
+
+.store-search .ask > button {
+  flex: 0 0 56px;
+  padding: 0;
+}
+
+.store-search > .filters {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+.store-search > .filters > summary {
+  padding: 4px 0;
 }
 
 /* A card the visitor holds, marked by data-*: never a class. */
@@ -2273,7 +2305,7 @@ a.chip {
   margin-top: 12px;
 }
 
-/* Get a card: a new card for the wallet, or the best from scratch. Both
+/* Best setups: a new card for the wallet, or the best from scratch. Both
    labels wrap on a phone rather than squeeze. */
 .app .find-mode {
   margin: 0 0 12px;
@@ -2595,9 +2627,9 @@ a.chip {
   }
 }
 
-/* The home page for someone with saved cards (fold.ts): the header keeps
-   its top row, and the story below the app folds behind one button. */
-main[data-fold] header.hero > h1 {
+/* The home page for someone with saved cards (main.tsx) keeps its
+   header's top row. */
+main[data-returning] header.hero > h1 {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -2606,35 +2638,11 @@ main[data-fold] header.hero > h1 {
   white-space: nowrap;
 }
 
-main[data-fold] header.hero > :is(.lede, .stats, .popular-links) {
+main[data-returning] header.hero > .lede {
   display: none;
 }
 
-main[data-fold='closed'] > :not(header, footer, .about-fold) {
+/* The story below the app shows with At a store only (App.tsx). */
+main[data-tab]:not([data-tab='best']) > :not(header, footer) {
   display: none;
-}
-
-.about-fold {
-  margin: 28px 0 8px;
-  text-align: center;
-}
-
-.about-fold button {
-  padding: 10px 18px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--accent);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.about-fold button::after {
-  content: ' ▾';
-}
-
-main[data-fold='open'] .about-fold button::after {
-  content: ' ▴';
 }

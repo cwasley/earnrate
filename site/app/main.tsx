@@ -1,7 +1,7 @@
 import { render } from 'preact'
 import { App } from './App.tsx'
-import { foldStory } from './fold.ts'
 import { startMyLink } from './my-link.ts'
+import { loadWallet } from './saved-wallet.ts'
 import { copyButtons, trackClicks } from './track.ts'
 import './app.css'
 
@@ -11,7 +11,9 @@ startMyLink()
 
 const root = document.getElementById('app')
 if (root) {
-  foldStory()
+  // Someone with saved cards skips the headline (app.css).
+  if ((loadWallet()?.cards.length ?? 0) > 0)
+    root.closest('main')?.setAttribute('data-returning', '')
   root.textContent = ''
   render(<App />, root)
 }

@@ -1,4 +1,4 @@
-// Get a card's answer is worked out off the page's thread, so a phone
+// Best setups' answer is worked out off the page's thread, so a phone
 // stays responsive while it runs. Without workers it runs on the page, one
 // part per task.
 import type { Catalog } from '../../../src/schema/catalog.ts'

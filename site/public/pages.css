@@ -1397,26 +1397,19 @@ header {
 
 .app-nav {
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 10px;
-  background: var(--accent-soft);
-  font-size: 13px;
+  gap: 12px;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .app-nav a {
-  padding: 5px 8px;
-  border-radius: 7px;
-  color: var(--text);
+  padding: 8px 0;
+  color: var(--muted);
   text-decoration: none;
-  transition:
-    color var(--fade) ease,
-    background-color var(--fade) ease;
+  transition: color var(--fade) ease;
 }
 
 .app-nav a:hover {
-  background: var(--surface);
   color: var(--accent);
 }

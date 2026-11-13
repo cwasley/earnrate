@@ -161,7 +161,7 @@ const STEPS: Step[] = [
     },
   },
   {
-    name: 'Get a card at a card',
+    name: 'Best setups at a card',
     url: '/#spending&card=amex-platinum',
     ready: '.result-list',
   },
