@@ -58,9 +58,9 @@ export function storedSource(
     : { kind: 'bad', message: decoded.message }
 }
 
-// The spending rows Get a card saved, read only. Rows equal to a set Get a
-// card started with, in any order, were never the person's own: null, as
-// Get a card loads them as the typical amounts.
+// The spending rows Best setups saved, read only. Rows equal to a set Best
+// setups started with, in any order, were never the person's own: null, as
+// Best setups loads them as the typical amounts.
 export function savedRows(raw: string | null): Row[] | null {
   try {
     const parsed: unknown = raw === null ? null : JSON.parse(raw)

@@ -779,8 +779,8 @@ function SpendingEditor({
       </summary>
       <div class="panel">
         <p class="muted small">
-          Roughly what you spend each month. Changes here stay on this page; Get
-          a card keeps its own amounts.
+          Roughly what you spend each month. Changes here stay on this page;
+          Best setups keeps its own amounts.
         </p>
         <ul class="spend">
           {rows.map((r, i) => (
@@ -1182,7 +1182,7 @@ function Answers({
 }
 
 // The visitor's own wallet. Credit answers save to it; picks and amounts
-// changed here stay on the page. Amounts saved from Get a card in another
+// changed here stay on the page. Amounts saved from Best setups in another
 // tab replace the page's.
 function Rated({
   initial,

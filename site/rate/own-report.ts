@@ -1,6 +1,6 @@
 // The report a saved wallet makes, as /rate reads it and as its owner's
 // short link carries it: the wallet's cards with their saved picks and
-// credit answers, memberships and point values, and Get a card's amounts
+// credit answers, memberships and point values, and Best setups' amounts
 // when the owner puts spending in the link. Picks the wallet doesn't set are
 // left for whoever opens the link to assume, as /rate does.
 import type { Picks } from '../../src/engine/explore.ts'
@@ -64,7 +64,7 @@ export function walletReportInput(
 }
 
 // The person's rows as a report counts them: the lines earnrate knows, at
-// the amounts given, as Get a card counts them. A link rounds them to $5
+// the amounts given, as Best setups counts them. A link rounds them to $5
 // (`encodeReport`). Null for typical spending, or none of their own.
 export function spendingLines(
   catalog: Catalog,

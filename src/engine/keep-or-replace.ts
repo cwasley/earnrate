@@ -641,7 +641,7 @@ export function transferText(catalog: Catalog, k: KeepOrReplace): string {
 
 // "Chase Travel, flights and hotels earn more on the Chase Sapphire Reserve
 // than the Travel line counts; add them as their own lines for a closer
-// answer." `where` names the place to add them, like " in Get a card".
+// answer." `where` names the place to add them, like " in Best setups".
 export function hiddenRatesText(k: KeepOrReplace, where = ''): string {
   const sentences = k.hidden
     .slice(0, HIDDEN_LINES)
