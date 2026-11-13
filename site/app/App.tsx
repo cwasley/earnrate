@@ -875,10 +875,6 @@ export function App() {
             scope={scope}
             onScope={setScope}
             focus={focus === true}
-            perform={perform}
-            synced={synced}
-            locked={locked}
-            lockNote={edit.note}
           />
         ) : tab === 'spending' ? (
           <Spending

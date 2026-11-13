@@ -1902,7 +1902,7 @@ function compareBasis(c: Comparison): string {
       ? []
       : [` The ${possessive(shortName(s.card.id))} figure counts ${counted}.`]
   })
-  return `<details class="fine section-fine"><summary>How this is figured</summary><p>Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks.${esc(yearly.join(''))} ${esc(valueText(c))}${creditsText}</p></details>`
+  return `<details class="fine section-fine"><summary>How this is calculated</summary><p>Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks.${esc(yearly.join(''))} ${esc(valueText(c))}${creditsText}</p></details>`
 }
 
 const unverifiedEntry = (e: ExploreEntry | null) =>

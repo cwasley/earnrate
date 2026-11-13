@@ -52,6 +52,7 @@ import {
   isTypicalRows,
   loadSpendingRows,
   saveSpendingRows,
+  SPENDING_KEY,
   type Row as SpendingRow,
 } from './spending-rows.ts'
 import type { Saved, Settings } from './settings.ts'
@@ -327,6 +328,16 @@ export function Spending({
   locked: boolean
 }) {
   const [rows, setStateRows] = useState<Row[]>(loadSpendingRows)
+  // Rows saved in another tab show here too, so this tab's next change
+  // starts from them.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === SPENDING_KEY || e.key === null)
+        setStateRows(loadSpendingRows())
+    }
+    addEventListener('storage', onStorage)
+    return () => removeEventListener('storage', onStorage)
+  }, [])
   const today = localToday()
   const hasCards = (wallet?.cards.length ?? 0) > 0
   // A new card for the saved wallet, or the best cards from scratch.
@@ -962,7 +973,7 @@ export function Spending({
             </>
           ) : null}
           <details class="how">
-            <summary>How this is figured</summary>
+            <summary>How this is calculated</summary>
             <ul class="assumptions">
               <li>
                 Rewards minus annual fees over the next 12 months, with caps

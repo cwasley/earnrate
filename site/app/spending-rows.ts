@@ -3,7 +3,8 @@ import { walletSaved } from './wallet-events.ts'
 
 export type Row = { what: string; monthly: number }
 
-const KEY = 'earnrate:spending'
+export const SPENDING_KEY = 'earnrate:spending'
+const KEY = SPENDING_KEY
 
 // Every set of rows Best setups has started with, the current one included.
 // The tab used to save them on every visit, so rows equal to one of these

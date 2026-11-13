@@ -32,10 +32,7 @@ import {
   hostname,
   money,
 } from '../../src/engine/text.ts'
-import { CardPicker } from './AddCards.tsx'
-import { addOp, removeOp, type Outcome, type WalletOp } from './sync.ts'
 import {
-  cardCount,
   cards,
   feeLabel,
   issuerName,
@@ -347,75 +344,17 @@ function NextSteps({
   )
 }
 
-// Your cards before any are saved: they go in here, in place of the search,
-// which comes back at Done.
-function AddYours({
-  wallet,
-  waiting,
-  synced,
-  locked,
-  lockNote,
-  perform,
-  onAdded,
-  onDone,
-}: {
-  wallet: Wallet | null
-  // A store asked about before any cards were in.
-  waiting: string | null
-  synced: boolean
-  locked: boolean
-  lockNote: string | null
-  perform: (op: WalletOp) => Promise<Outcome>
-  onAdded: () => void
-  onDone: () => void
-}) {
-  // Only cards added here can be tapped back out here.
-  const [added, setAdded] = useState<string[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const count = wallet?.cards.length ?? 0
-  const add = async (cardId: string) => {
-    onAdded()
-    const result = await perform(addOp(cardId))
-    setError(result.ok ? null : result.error)
-    if (result.ok)
-      setAdded((ids) => (ids.includes(cardId) ? ids : [...ids, cardId]))
-    return result.ok
-  }
-  const remove = async (cardId: string) => {
-    if (!added.includes(cardId)) return
-    const result = await perform(removeOp(cardId))
-    setError(result.ok ? null : result.error)
-  }
+// Your cards before any are saved: a way to My wallet, in place of the search.
+function StartWallet() {
   return (
     <section class="add-yours" aria-labelledby="add-yours-title">
-      <h3 id="add-yours-title">Which cards do you have?</h3>
-      <p>
-        Tap the ones you have, and earnrate picks the one to use
-        {waiting === null ? ' at each store' : ` at ${waiting}`}.{' '}
-        {synced
-          ? "They're saved in your Claude wallet too: never a card number."
-          : 'They stay in this browser: no account, and never a card number.'}
-      </p>
-      <CardPicker
-        wallet={wallet}
-        added={added}
-        locked={locked}
-        onAdd={add}
-        onRemove={(cardId) => void remove(cardId)}
-      />
-      {error !== null ? (
-        <p class="callout">{error}</p>
-      ) : locked && lockNote !== null ? (
-        <p class="muted">{lockNote}</p>
-      ) : null}
-      {count === 0 ? null : (
-        <div class="quick-done">
-          <span>{cardCount(count)} in your wallet</span>
-          <button type="button" class="primary" onClick={onDone}>
-            Done
-          </button>
-        </div>
-      )}
+      <h3 id="add-yours-title">Want to check with your own cards?</h3>
+      <p>Save them in My wallet, and this answers from them.</p>
+      <div class="row-buttons">
+        <a class="row-link primary" href="#wallet">
+          Start a wallet
+        </a>
+      </div>
     </section>
   )
 }
@@ -432,10 +371,6 @@ export function BestFor({
   scope,
   onScope,
   focus,
-  perform,
-  synced,
-  locked,
-  lockNote,
 }: {
   settings: Settings
   saved: Saved
@@ -449,10 +384,6 @@ export function BestFor({
   onScope: (scope: Scope) => void
   // A store page's "Check with your own cards" opened this answer.
   focus: boolean
-  perform: (op: WalletOp) => Promise<Outcome>
-  synced: boolean
-  locked: boolean
-  lockNote: string | null
 }) {
   const [text, setText] = useState(query)
   const [all, setAll] = useState(false)
@@ -466,8 +397,7 @@ export function BestFor({
   const yours = scope === 'yours'
   const hasCards = (wallet?.cards.length ?? 0) > 0
   // From the first card added under Your cards until Done.
-  const [adding, setAdding] = useState(false)
-  const adder = yours && (!hasCards || adding)
+  const adder = yours && !hasCards
   const problems = useMemo(
     () => (wallet ? walletProblems(wallet, catalog) : []),
     [wallet],
@@ -475,14 +405,6 @@ export function BestFor({
   const asked = useMemo(() => splitPurchaseText(query), [query])
   const amount = asked.amount
   const empty = query.trim() === ''
-  // The store a link asked about before the visitor's cards were in.
-  const waiting = useMemo(() => {
-    if (empty) return null
-    const m = resolvePlace(catalog, asked.merchant, null)
-    return m.source === 'category' || m.source === 'none'
-      ? null
-      : m.resolvedName
-  }, [empty, asked])
   const result = useMemo(
     () =>
       yours || empty
@@ -583,19 +505,7 @@ export function BestFor({
       <div class="panel store-search" ref={panel}>
         <ScopeSwitch scope={scope} onScope={onScope} />
         {adder ? (
-          <AddYours
-            wallet={wallet}
-            waiting={waiting}
-            synced={synced}
-            locked={locked}
-            lockNote={lockNote}
-            perform={perform}
-            onAdded={() => setAdding(true)}
-            onDone={() => {
-              setAdding(false)
-              if (!empty) setShownCount((n) => n + 1)
-            }}
-          />
+          <StartWallet />
         ) : (
           <>
             <form
