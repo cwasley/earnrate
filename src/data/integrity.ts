@@ -8,7 +8,7 @@ import {
 import type { Merchant } from '../schema/merchant.ts'
 import { evaluateCard, purchaseContext } from '../engine/evaluate.ts'
 import { idealHolding } from '../engine/explore.ts'
-import { NAMED_LISTS, namedKey } from '../engine/named.ts'
+import { NAMED_LISTS, namedKey, quoteNames } from '../engine/named.ts'
 import { isAnniversary } from '../engine/periods.ts'
 import { MONTH_NAMES } from '../engine/text.ts'
 import { WALLET_VERSION, type Wallet } from '../schema/wallet.ts'
@@ -87,15 +87,6 @@ function lookupProblems(catalog: Catalog): string[] {
     }
   return problems
 }
-
-// Issuers spell names their own way ("BJ's Club", "7Eleven"), so a quote
-// names a store when any of its names appears, letters and digits only.
-const compact = (s: string) => s.toLowerCase().replace(/[^a-z0-9&]/g, '')
-
-const quoteNames = (quote: string, merchant: Merchant) =>
-  [merchant.name, ...merchant.aliases].some((n) =>
-    compact(quote).includes(compact(n)),
-  )
 
 // Whether the engine pays a rule at a store, with the card set up at its
 // best: every option picked, activated, any membership or payment it asks.

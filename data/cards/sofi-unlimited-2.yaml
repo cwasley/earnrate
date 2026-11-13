@@ -18,6 +18,8 @@ rules:
     match: { merchants: [sofi-travel] }
     rate: 3
     note: Trips booked through the SoFi Travel portal (run by Expedia), reached from SoFi's website or app. Booking on Expedia's own site or app doesn't count.
+    named:
+      not_earning: [expedia]
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: base_rate
@@ -33,6 +35,9 @@ evidence:
     url: https://www.sofi.com/card/rewards?cardType=c
     quote: 'You will earn 3% cash back Rewards Points for SoFi Travel purchases.'
   - rule: sofi-travel
+    url: https://www.sofi.com/credit-card/unlimited/
+    quote: 'Travel booked directly on Expedia’s website or app, or any other site operated or powered by Expedia is not eligible.'
+  - rule: sofi-travel.not_earning
     url: https://www.sofi.com/credit-card/unlimited/
     quote: 'Travel booked directly on Expedia’s website or app, or any other site operated or powered by Expedia is not eligible.'
   - rule: annual_fee

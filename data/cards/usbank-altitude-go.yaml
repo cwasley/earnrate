@@ -29,6 +29,8 @@ rules:
     exclude: { categories: [superstore, warehouse_club] }
     rate: 2
     note: Grocery stores and supermarkets. Discount stores and supercenters such as Target and Walmart, and wholesale clubs, earn 1X.
+    named:
+      not_earning: [target, walmart]
   - id: gas-ev-charging
     match: { categories: [gas, ev_charging] }
     exclude: { categories: [gas.grocery_store, gas.superstore] }
@@ -93,6 +95,9 @@ evidence:
   - rule: grocery
     url: https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
     quote: 'for every $1 in grocery store and supermarket purchases'
+  - rule: grocery.not_earning
+    url: https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
+    quote: 'grocery store and supermarket (wholesale clubs and discount stores/supercenters such as Target and Walmart will earn only 1 Point)'
   - rule: gas-ev-charging
     url: https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules
     quote: 'for every $1 on gas station and EV charging station purchases'

@@ -64,6 +64,8 @@ rules:
     valid_to: 2026-12-31
     activate_by: 2026-12-14
     note: Grocery stores excluding Walmart and Target. Chase's grocery category also excludes warehouse clubs, discount stores and gas at grocery stores; delivery services count only if they code as a grocery store.
+    named:
+      not_earning: [walmart, target]
   - id: q4-2026-dining
     match: { categories: [dining] }
     rate: 7
@@ -92,6 +94,8 @@ rules:
     valid_to: 2027-03-31
     activate_from: 2026-12-15
     note: Grocery stores excluding Walmart and Target.
+    named:
+      not_earning: [walmart, target]
   - id: q1-2027-streaming
     match:
       merchants:
@@ -151,6 +155,9 @@ evidence:
   - rule: q4-2026-grocery
     url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
     quote: 'This quarter, the deadline for activation is December 14, 2026'
+  - rule: q4-2026-grocery.not_earning
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'CURRENT QUARTER Grocery Stores (excluding Walmart® and Target®)'
   - rule: q4-2026-dining
     url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
     quote: 'For Dining purchases, you will earn 7% cash back (3% Dining cash back + 4% bonus category cash back)'
@@ -172,6 +179,9 @@ evidence:
   - rule: q1-2027-grocery
     url: https://www.chase.com/personal/credit-cards/freedom/flex-learnmore
     quote: "You can activate the next quarter's categories starting December 15, 2026"
+  - rule: q1-2027-grocery.not_earning
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    quote: 'NEXT QUARTER Grocery Stores (excluding Walmart® and Target®)'
   - rule: q1-2027-streaming
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
     quote: 'Top Streaming Services'

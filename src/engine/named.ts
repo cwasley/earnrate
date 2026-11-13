@@ -1,5 +1,6 @@
 import type { Card, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
+import type { Merchant } from '../schema/merchant.ts'
 import { inEffect } from './periods.ts'
 import type { MerchantResolution } from './types.ts'
 
@@ -10,6 +11,18 @@ export type NamedList = (typeof NAMED_LISTS)[number]
 
 // The evidence id a list's quotes go under: `us-supermarkets.earning`.
 export const namedKey = (ruleId: string, list: NamedList) => `${ruleId}.${list}`
+
+// Issuers spell names their own way ("BJ's Club", "7Eleven"), so a quote
+// names a store when any of its names appears, letters and digits only.
+const compact = (s: string) => s.toLowerCase().replace(/[^a-z0-9&]/g, '')
+
+export const quoteNames = (
+  quote: string,
+  merchant: Pick<Merchant, 'name' | 'aliases'>,
+) =>
+  [merchant.name, ...merchant.aliases].some((n) =>
+    compact(quote).includes(compact(n)),
+  )
 
 export type Naming = { card: Card; rule: Rule; list: NamedList }
 

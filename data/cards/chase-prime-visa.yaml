@@ -39,6 +39,8 @@ rules:
     geography: us_only
     requires: { membership: amazon-prime }
     note: Online or in-store in the U.S., but not through Instacart or other third-party sites.
+    named:
+      not_earning: [instacart]
   - id: amazon-without-prime
     match: { merchants: [amazon, amazon-fresh, audible] }
     rate: 3
@@ -88,6 +90,9 @@ evidence:
   - rule: whole-foods
     url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
     quote: 'purchases made at international Whole Foods Markets'
+  - rule: whole-foods.not_earning
+    url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    quote: 'Whole Foods Market products and services through third-party sites such as Eventbrite, Instacart, Google Express and Shipt'
   - rule: amazon-fresh
     url: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
     quote: 'Amazon.com Gift Cards, Amazon Fresh orders, Amazon Prime subscriptions'

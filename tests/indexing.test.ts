@@ -52,7 +52,7 @@ const withMerchant = (id: string, change: Partial<Merchant>): Catalog => ({
 
 describe('which store pages are indexed', () => {
   test('a store ranked like its category, with nothing of its own, is not', () => {
-    expect(reasons(catalog, 'ralphs')).toEqual([])
+    expect(reasons(catalog, 'stater-bros')).toEqual([])
   })
 
   test("a store an issuer's list of example stores names is", () => {
@@ -78,8 +78,10 @@ describe('which store pages are indexed', () => {
   test('a store page indexes itself once the data says something about it', () => {
     expect(
       reasons(
-        withMerchant('ralphs', { note: 'Some locations take only debit.' }),
-        'ralphs',
+        withMerchant('stater-bros', {
+          note: 'Some locations take only debit.',
+        }),
+        'stater-bros',
       ),
     ).toEqual(['notes on how it codes'])
   })

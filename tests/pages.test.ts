@@ -297,10 +297,10 @@ describe('the built static pages', () => {
     // Notes on how it codes, a credit there, a ranking of its own.
     for (const slug of ['costco', 'lululemon', 'amazon', 'groceries'])
       expect(noindex(slug), slug).toBe(false)
-    // Ranked exactly like supermarkets, with nothing about Ralphs itself.
-    expect(noindex('ralphs')).toBe(true)
-    expect(page('groceries')).toContain(
-      '<span class="store-row" id="ralphs">Ralphs</span>',
+    // Ranked exactly like supermarkets, with nothing about Stater Bros. itself.
+    expect(noindex('stater-bros')).toBe(true)
+    expect(page('groceries')).toMatch(
+      /<span class="store-row" id="stater-bros">Stater Bros\.[^<]*<\/span>/,
     )
     // American Express names Aldi among its example supermarkets.
     expect(noindex('aldi')).toBe(false)
@@ -380,6 +380,23 @@ describe('the built static pages', () => {
     const meijer = page('meijer')
     expect(meijer).toContain('American Express names Meijer among its examples')
     expect(meijer).not.toMatch(/amex-gold">[^<]+<\/a>: its [^<]* leaves it out/)
+  })
+
+  test('a store named in a long list quotes only its own piece, and a pick says which one covers it', () => {
+    const page = (slug: string) =>
+      readFileSync(path.join(out, 'best', `${slug}.html`), 'utf8')
+    const sprouts = page('sprouts')
+    expect(sprouts).toContain(
+      "pays its bonus on grocery stores, when that's your pick.",
+    )
+    expect(sprouts).toContain('Kroger Sprouts Farmers Market Fred Meyer')
+    expect(sprouts).not.toContain("Applebee's Grubhub Red Lobster")
+    const netflix = page('netflix')
+    expect(netflix).toContain("when that's one of your picks.")
+    expect(netflix).not.toContain('Sonic Chick-fil-A')
+    expect(page('target')).toContain(
+      'Examples of merchants where you will NOT earn additional rewards include:',
+    )
   })
 
   test('an online store page says its rates are for buying online; a store with shops of its own says nothing of it', () => {

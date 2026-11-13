@@ -48,6 +48,8 @@ rules:
       }
     rate: 3
     note: Supermarkets, meat lockers, freezers, dairy product stores and specialty markets. Groceries bought at gas stations, convenience stores, warehouse clubs, discount stores and superstores like Walmart and Target, or at grocery stores tied to them, earn 1%.
+    named:
+      not_earning: [walmart, target]
   - id: dining
     match: { categories: [dining] }
     rate: 3
@@ -85,6 +87,9 @@ evidence:
   - rule: grocery-stores
     url: https://disclosures.capitalone.com/disclosure.42167.en-US.html
     quote: 'Grocery purchases made at gas stations, convenience stores, warehouse clubs, discount stores, and super stores'
+  - rule: grocery-stores.not_earning
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'grocery stores, excluding superstores like Walmart® and Target®'
   - rule: dining
     url: https://www.capitalone.com/credit-cards/savor/
     quote: 'Purchases at restaurants, cafes, bars, lounges, fast-food chains and bakeries count as dining.'

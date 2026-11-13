@@ -72,12 +72,230 @@ rules:
     exclude: { mccs: [7523, 4784] }
     rate: 5
     cap: five-percent-combined
+    # Chipotle, on U.S. Bank's fast food list, is left out: earnrate counts
+    # it as a restaurant.
+    named:
+      earning:
+        [
+          comcast,
+          directv,
+          dish,
+          disney-plus,
+          netflix,
+          sling-tv,
+          hulu,
+          fandango-at-home,
+          amazon-music,
+          pandora,
+          spotify,
+          apple-music,
+          siriusxm,
+          liveone,
+          in-n-out,
+          mcdonalds,
+          taco-bell,
+          chick-fil-a,
+          wendys,
+          burger-king,
+          subway,
+          dominos,
+          sonic,
+          kfc,
+          dairy-queen,
+          arbys,
+          jack-in-the-box,
+          panda-express,
+          culvers,
+          jimmy-johns,
+          qdoba,
+          carls-jr,
+          papa-murphys,
+          xfinity-mobile,
+          att,
+          verizon,
+          t-mobile,
+          cricket-wireless,
+          metro-by-t-mobile,
+          boost-mobile,
+          consumer-cellular,
+          straight-talk,
+          tracfone,
+          macys,
+          nordstrom,
+          nordstrom-rack,
+          kohls,
+          jcpenney,
+          dillards,
+          bloomingdales,
+          saks-fifth-avenue,
+          saks-off-5th,
+          von-maur,
+          pge,
+          duke-energy,
+          ameren,
+          comed,
+          xcel-energy,
+          waste-management,
+          nicor-gas,
+          puget-sound-energy,
+          republic-services,
+          evergy,
+          portland-general-electric,
+          ikea,
+          ashley,
+          bobs-discount-furniture,
+          la-z-boy,
+          ethan-allen,
+          rh,
+          american-furniture-warehouse,
+          room-and-board,
+          rc-willey,
+          nebraska-furniture-mart,
+          value-city-furniture,
+          slumberland,
+          mattress-warehouse,
+          best-buy,
+          apple-store,
+          newegg,
+          monoprice,
+          bose,
+          amc,
+          regal,
+          cinemark,
+          harkins,
+          megaplex-theatres,
+          fandango,
+          atom-tickets,
+          camping-world,
+          rei,
+          dicks-sporting-goods,
+          academy-sports,
+          bass-pro-shops,
+          cabelas,
+          big-5,
+          hibbett,
+          scheels,
+          orvis,
+          golf-galaxy,
+          sportsmans-warehouse,
+          play-it-again-sports,
+          backcountry,
+          gap,
+          old-navy,
+          aeropostale,
+          american-eagle,
+          ann-taylor,
+          banana-republic,
+          eddie-bauer,
+          forever-21,
+          j-crew,
+          jos-a-bank,
+          talbots,
+          the-limited,
+          planet-fitness,
+          twenty-four-hour-fitness,
+          la-fitness,
+          anytime-fitness,
+          crunch-fitness,
+          orangetheory,
+          equinox,
+          life-time,
+          snap-fitness,
+          soulcycle,
+          pure-barre,
+          xsport-fitness,
+          genesis-health-clubs,
+          uber,
+          lyft,
+          amtrak,
+          greyhound,
+          metra,
+          cta,
+          trimet,
+          sound-transit,
+          washington-state-ferries,
+          clipper-card,
+          yellow-cab,
+        ]
+      not_earning: [walmart, target, costco, applebees, olive-garden]
   - id: two-percent
     match: { choice: two-percent }
     # Fast food is its own 5% option, not part of Restaurants. Gas at grocery
     # stores is left in until the todo below is settled.
     exclude: { categories: [gas.superstore, dining.fast_food] }
     rate: 2
+    # Left out: 7-Eleven (a gas station to U.S. Bank, a convenience store to
+    # earnrate), and Target and Walmart, which U.S. Bank's grocery list names
+    # though the same section excludes them.
+    named:
+      earning:
+        [
+          fred-meyer,
+          quiktrip,
+          speedway,
+          maverik,
+          holiday-stationstores,
+          kroger,
+          shell,
+          chevron,
+          exxon-mobil,
+          chargepoint,
+          marathon,
+          phillips-66,
+          evgo,
+          blink-charging,
+          cenex,
+          smashburger,
+          grubhub,
+          postmates,
+          delivery-com,
+          doordash,
+          uber-eats,
+          olive-garden,
+          applebees,
+          texas-roadhouse,
+          outback-steakhouse,
+          red-lobster,
+          buffalo-wild-wings,
+          cracker-barrel,
+          ihop,
+          longhorn-steakhouse,
+          red-robin,
+          pf-changs,
+          ruby-tuesday,
+          bob-evans,
+          pizza-hut,
+          perkins,
+          village-inn,
+          famous-daves,
+          old-chicago,
+          sizzler,
+          skyline-chili,
+          whole-foods,
+          trader-joes,
+          ralphs,
+          safeway,
+          albertsons,
+          sprouts,
+          instacart,
+          publix,
+          hy-vee,
+          giant-eagle,
+          king-soopers,
+          jewel-osco,
+          cub-foods,
+          schnucks,
+          dierbergs,
+          lunds-and-byerlys,
+          pick-n-save,
+          seventy-six,
+          bp,
+          kwik-shop,
+          bjs-restaurant,
+          cheddars,
+          tgi-fridays,
+        ]
+      not_earning: [target, walmart, mcdonalds, subway, dominos]
   - id: travel-center
     match: { merchants: [usbank-travel-center] }
     rate: 5
@@ -114,6 +332,123 @@ evidence:
   - rule: two-percent
     url: https://cashplus.usbank.com/cash-plus/samplemerchants
     quote: "Excludes most fast food restaurants like McDonald's"
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'TV Provider Charter DIRECTV Time Warner Cable Comcast DISH Network'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'TV or Movie Streaming Disney+ Netflix YouTube FandangoNOW Sling TV Hulu Vudu'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Music Streaming Amazon Music Pandora Spotify Apple Music SiriusXM Google Play Music Slacker Radio'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Arby's Domino's Papa Murphy's Burger King In-N-Out Burger Qdoba Mexican Grill Carl's Jr. Jack in the Box"
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Sonic Chick-fil-A Jimmy John's Subway Chipotle Mexican Grill KFC Taco Bell Culver's McDonald's Wendy's Dairy Queen Panda Express"
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'AT&T Wireless GreatCall TracFone Wireless Boost Mobile MetroPCS Wireless U.S. Cellular Wireless CenturyLink Sprint Wireless'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Verizon Wireless Consumer Cellular Straight Talk Wireless Virgin Mobile Cricket Wireless T-Mobile XFINITY MOBILE'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Bloomingdale's Kohl's Off 5th Bon-Ton Loehmann's Saks Fifth Avenue Boston Store Macy's Sears Dillard's Nordstrom"
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Soma Intimates JcPenney Nordstrom Rack Von Maur'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Ameren Corporation Nicor Gas Puget Sound Energy ComEd Payment NW Natural Republic Services Duke Energy'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Pacific Gas and Electric Company Seattle City Light Kansas City Power and Light Company'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Portland General Electric Waste Management Los Angeles Department of Water & Power Portland Water Bureau Xcel Energy'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'American Furniture Warehouse Homemakers Furniture RC Willey Art Van Furniture IKEA Restoration Hardware Ashley Furniture'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "La Z Boy Room & Board Bob's Discount Furniture Mattress Warehouse Slumberland Furniture Ethan Allen Mor"
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Steinhafels Furniture Row Nebraska Furniture Mart Value City Furniture Hom Furniture'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Apple Store firstSTREET Magnolia Best Buy Fry's Electronics Monoprice Bestbuy.com Frys.com Newegg.com Bose"
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'AMC Theatres Edwards Cinemas movietickets.com Atom Tickets Fandango.com Rave Cinema Century Theatres Harkins Theatres Regal Cinemas'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Cinemark Megaplex Theatres Showplace Icon Theatres'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Academy Sports + Outdoors Camping World Orvis Backcountry.com Dick's Sporting Goods Play It Again Sports"
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Bass Pro Shops Golf Galaxy REI Big 5 Sporting Goods Hibbett Sports Scheels Cabela's MLB.com Sportsman's Warehouse"
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Aeropostale Express Jos A Bank American Eagle Outfitters Forever 21 Old Navy Ann Taylor GAP Talbots'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Banana Republic J.Crew The Limited Eddie Bauer'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: '24 Hour Fitness LA Fitness Snap Fitness Anytime Fitness Life Time Fitness SoulCycle Crunch Fitness Orangetheory Fitness'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Weight Watchers Equinox Planet Fitness XSport Fitness Genesis Health Clubs Pure Barre ZUMBA Fitness'
+  - rule: five-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Amtrak Lyft Uber car2go Metra Ventra Catalina Express NYC Taxi Washington State Ferries Clipper Sound Transit Yellow Cab Greyhound TriMet'
+  - rule: five-percent.not_earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'purchases at discount stores like Wal-Mart, Target and Costco do not qualify'
+  - rule: five-percent.not_earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Full-service restaurants like Applebee's and Olive Garden are in the Restaurants category"
+  - rule: two-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: '7-Eleven EVgo Fast Charging Network Marathon Oil 76 Gas Stations ExxonMobil Maverick Country Store Blink Charging'
+  - rule: two-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Fred Meyer Fuel Center Phillips 66 BP Holiday Stationstores QuikTrip Cenex Kroger Fuel Center Shell'
+  - rule: two-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "ChargePoint Charging Station Kum & Go Speedway Chevron KwikShop SuperAmerica Love's Travel Stops Tesla Inc"
+  - rule: two-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Applebee's Grubhub Red Lobster BJ's Restaurant IHOP Red Robin Bite Squad Longhorn Steakhouse Ruby Tuesday"
+  - rule: two-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Bob Evans Old Chicago Sizzler Buffalo Wild Wings Olive Garden Skyline Chili Cheddar's Casual Café"
+  - rule: two-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Outback Steakhouse Smashburger Cracker Barrel P.F. Chang's T.G.I. Friday's delivery.com Perkins Texas Roadhouse DoorDash"
+  - rule: two-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Pizza Hut Uber Eats Famous Dave's BBQ Postmates Village Inn"
+  - rule: two-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Albertsons Jewel-Osco Safeway Cub Foods King Soopers Schnucks Dierbergs Kroger Sprouts Farmers Market Fred Meyer'
+  - rule: two-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Lunds & Byerlys Target Giant Eagle Pick'n Save Trader Joe's Hy-Vee Publix Wal-mart Instacart"
+  - rule: two-percent.earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: 'Instacart Ralphs Whole Foods Market Jet.com'
+  - rule: two-percent.not_earning
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: 'supermarket purchases at discount stores/supercenters such as Target and Walmart and wholesale clubs will only earn 1% cash back'
+  - rule: two-percent.not_earning
+    url: https://cashplus.usbank.com/cash-plus/samplemerchants
+    quote: "Excludes most fast food restaurants like McDonald's, Subway or Domino's"
   - rule: travel-center
     url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
     quote: 'additional 4% cash back for every $1 in eligible Net Purchases spent on prepaid air, car and hotel reservations'

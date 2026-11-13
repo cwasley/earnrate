@@ -76,6 +76,8 @@ rules:
     exclude: { categories: [warehouse_club], merchants: [walmart, target] }
     rate: 3
     note: Online pickup and delivery orders from grocery stores, specialty food stores and grocery delivery services, including meal kits. Not Target, Walmart, wholesale clubs, liquor stores, supermarket pharmacies, memberships or gift cards.
+    named:
+      not_earning: [walmart, target, costco, bjs-wholesale-club]
   - id: travel
     match: { categories: [travel] }
     rate: 2
@@ -119,6 +121,12 @@ evidence:
   - rule: online-grocery
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'wholesale clubs such as Costco and BJs, liquor stores and merchants that specialize in only a few grocery items'
+  - rule: online-grocery.not_earning
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Online grocery (excluding Target®, Walmart® and wholesale clubs)'
+  - rule: online-grocery.not_earning
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'wholesale clubs such as Costco and BJs, liquor stores'
   - rule: travel
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: 'spent on purchases made in the travel category'

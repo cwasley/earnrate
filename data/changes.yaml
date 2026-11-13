@@ -3,6 +3,312 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.13.2'
+  date: 2026-11-13
+  changes:
+    - cause: addition
+      card: chase-freedom-flex
+      field: rules.q4-2026-grocery.named
+      was: null
+      now: { not_earning: [walmart, target] }
+      summary: Chase names Walmart and Target as stores the fourth quarter's 5% grocery category leaves out. No rates changed.
+      source: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    - cause: addition
+      card: chase-freedom-flex
+      field: rules.q1-2027-grocery.named
+      was: null
+      now: { not_earning: [walmart, target] }
+      summary: Chase names Walmart and Target as stores the first quarter's 5% grocery category leaves out. No rates changed.
+      source: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    - cause: addition
+      card: chase-sapphire-preferred
+      field: rules.online-grocery.named
+      was: null
+      now: { not_earning: [walmart, target, costco, bjs-wholesale-club] }
+      summary: Chase names Walmart, Target, Costco and BJ's as stores its online grocery category leaves out. No rates changed.
+      source: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    - cause: addition
+      card: chase-sapphire-reserve
+      field: rules.flights-hotels-direct.named
+      was: null
+      now: { not_earning: [airbnb, vrbo, vacasa] }
+      summary: Chase names Airbnb, Vrbo and Vacasa as vacation rentals that don't count as hotels booked direct. No rates changed.
+      source: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    - cause: addition
+      card: chase-prime-visa
+      field: rules.whole-foods.named
+      was: null
+      now: { not_earning: [instacart] }
+      summary: Chase names Instacart among the third-party sites where Whole Foods Market purchases don't earn 5%. No rates changed.
+      source: https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
+    - cause: addition
+      card: capital-one-savor
+      field: rules.grocery-stores.named
+      was: null
+      now: { not_earning: [walmart, target] }
+      summary: Capital One names Walmart and Target as superstores its 3% grocery rate leaves out. No rates changed.
+      source: https://www.capitalone.com/credit-cards/savor/
+    - cause: addition
+      card: capital-one-kohls-rewards-visa
+      field: rules.grocery-stores.named
+      was: null
+      now: { not_earning: [costco, walmart] }
+      summary: Capital One names Costco and Walmart as stores where groceries earn 1%, not 2%. No rates changed.
+      source: https://www.capitalone.com/credit-cards/kohls/
+    - cause: addition
+      card: barclays-jetblue-plus
+      field: rules.grocery.named
+      was: null
+      now: { not_earning: [target, walmart] }
+      summary: Barclays names Target and Walmart as stores generally not classified as grocery stores. No rates changed.
+      source: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    - cause: addition
+      cards: [usbank-altitude-connect, usbank-altitude-go]
+      field: rules.grocery.named
+      was: null
+      now: { not_earning: [target, walmart] }
+      summary: U.S. Bank names Target and Walmart as supercenters where grocery purchases earn 1X. No rates changed.
+      source: https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
+    - cause: addition
+      card: usbank-cash-plus
+      field: rules.five-percent.named
+      was: null
+      now:
+        earning:
+          [
+            comcast,
+            directv,
+            dish,
+            disney-plus,
+            netflix,
+            sling-tv,
+            hulu,
+            fandango-at-home,
+            amazon-music,
+            pandora,
+            spotify,
+            apple-music,
+            siriusxm,
+            liveone,
+            in-n-out,
+            mcdonalds,
+            taco-bell,
+            chick-fil-a,
+            wendys,
+            burger-king,
+            subway,
+            dominos,
+            sonic,
+            kfc,
+            dairy-queen,
+            arbys,
+            jack-in-the-box,
+            panda-express,
+            culvers,
+            jimmy-johns,
+            qdoba,
+            carls-jr,
+            papa-murphys,
+            xfinity-mobile,
+            att,
+            verizon,
+            t-mobile,
+            cricket-wireless,
+            metro-by-t-mobile,
+            boost-mobile,
+            consumer-cellular,
+            straight-talk,
+            tracfone,
+            macys,
+            nordstrom,
+            nordstrom-rack,
+            kohls,
+            jcpenney,
+            dillards,
+            bloomingdales,
+            saks-fifth-avenue,
+            saks-off-5th,
+            von-maur,
+            pge,
+            duke-energy,
+            ameren,
+            comed,
+            xcel-energy,
+            waste-management,
+            nicor-gas,
+            puget-sound-energy,
+            republic-services,
+            evergy,
+            portland-general-electric,
+            ikea,
+            ashley,
+            bobs-discount-furniture,
+            la-z-boy,
+            ethan-allen,
+            rh,
+            american-furniture-warehouse,
+            room-and-board,
+            rc-willey,
+            nebraska-furniture-mart,
+            value-city-furniture,
+            slumberland,
+            mattress-warehouse,
+            best-buy,
+            apple-store,
+            newegg,
+            monoprice,
+            bose,
+            amc,
+            regal,
+            cinemark,
+            harkins,
+            megaplex-theatres,
+            fandango,
+            atom-tickets,
+            camping-world,
+            rei,
+            dicks-sporting-goods,
+            academy-sports,
+            bass-pro-shops,
+            cabelas,
+            big-5,
+            hibbett,
+            scheels,
+            orvis,
+            golf-galaxy,
+            sportsmans-warehouse,
+            play-it-again-sports,
+            backcountry,
+            gap,
+            old-navy,
+            aeropostale,
+            american-eagle,
+            ann-taylor,
+            banana-republic,
+            eddie-bauer,
+            forever-21,
+            j-crew,
+            jos-a-bank,
+            talbots,
+            the-limited,
+            planet-fitness,
+            twenty-four-hour-fitness,
+            la-fitness,
+            anytime-fitness,
+            crunch-fitness,
+            orangetheory,
+            equinox,
+            life-time,
+            snap-fitness,
+            soulcycle,
+            pure-barre,
+            xsport-fitness,
+            genesis-health-clubs,
+            uber,
+            lyft,
+            amtrak,
+            greyhound,
+            metra,
+            cta,
+            trimet,
+            sound-transit,
+            washington-state-ferries,
+            clipper-card,
+            yellow-cab,
+          ]
+        not_earning: [walmart, target, costco, applebees, olive-garden]
+      summary: The sample merchants U.S. Bank lists for each 5% category, and the stores it says those categories leave out. No rates changed.
+      source: https://cashplus.usbank.com/cash-plus/samplemerchants
+    - cause: addition
+      card: usbank-cash-plus
+      field: rules.two-percent.named
+      was: null
+      now:
+        earning:
+          [
+            fred-meyer,
+            quiktrip,
+            speedway,
+            maverik,
+            holiday-stationstores,
+            kroger,
+            shell,
+            chevron,
+            exxon-mobil,
+            chargepoint,
+            marathon,
+            phillips-66,
+            evgo,
+            blink-charging,
+            cenex,
+            smashburger,
+            grubhub,
+            postmates,
+            delivery-com,
+            doordash,
+            uber-eats,
+            olive-garden,
+            applebees,
+            texas-roadhouse,
+            outback-steakhouse,
+            red-lobster,
+            buffalo-wild-wings,
+            cracker-barrel,
+            ihop,
+            longhorn-steakhouse,
+            red-robin,
+            pf-changs,
+            ruby-tuesday,
+            bob-evans,
+            pizza-hut,
+            perkins,
+            village-inn,
+            famous-daves,
+            old-chicago,
+            sizzler,
+            skyline-chili,
+            whole-foods,
+            trader-joes,
+            ralphs,
+            safeway,
+            albertsons,
+            sprouts,
+            instacart,
+            publix,
+            hy-vee,
+            giant-eagle,
+            king-soopers,
+            jewel-osco,
+            cub-foods,
+            schnucks,
+            dierbergs,
+            lunds-and-byerlys,
+            pick-n-save,
+            seventy-six,
+            bp,
+            kwik-shop,
+            bjs-restaurant,
+            cheddars,
+            tgi-fridays,
+          ]
+        not_earning: [target, walmart, mcdonalds, subway, dominos]
+      summary: The sample merchants U.S. Bank lists for each 2% category, and the stores it says those categories leave out. No rates changed.
+      source: https://cashplus.usbank.com/cash-plus/samplemerchants
+    - cause: addition
+      card: verizon-visa-card
+      field: rules.verizon-purchases.named
+      was: null
+      now: { not_earning: [walmart, best-buy] }
+      summary: The rewards terms name Walmart and Best Buy as big-box stores where Verizon services earn 1%, not 4%. No rates changed.
+      source: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    - cause: addition
+      card: sofi-unlimited-2
+      field: rules.sofi-travel.named
+      was: null
+      now: { not_earning: [expedia] }
+      summary: SoFi names Expedia's own site and app as not earning the SoFi Travel rate. No rates changed.
+      source: https://www.sofi.com/credit-card/unlimited/
+
 - version: '2026.11.13.1'
   date: 2026-11-13
   changes:

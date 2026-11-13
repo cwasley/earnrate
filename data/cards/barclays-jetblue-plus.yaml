@@ -32,6 +32,8 @@ rules:
     exclude: { categories: [superstore, warehouse_club] }
     rate: 2
     note: Grocery stores and supermarkets, by merchant category code. Warehouse-type stores like Target and Walmart generally don't count.
+    named:
+      not_earning: [target, walmart]
 # Merchant statement credits, on top of what the purchase earns.
 credits:
   - id: jetblue-vacations
@@ -85,6 +87,9 @@ evidence:
     url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
     quote: 'Qualifying grocery store purchases are categorized as Grocery Stores and Supermarkets.'
   - rule: grocery
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'large warehouse-type stores, such as Target® and Walmart® are generally not classified as grocery stores'
+  - rule: grocery.not_earning
     url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
     quote: 'large warehouse-type stores, such as Target® and Walmart® are generally not classified as grocery stores'
   - rule: annual_fee

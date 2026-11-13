@@ -30,6 +30,8 @@ rules:
     match: { categories: [travel.flights, travel.hotels] }
     rate: 4
     note: Booked directly with the airline or hotel, including charter and private flights. Not travel agencies, discount travel sites or packages; vacation rentals (Airbnb, Vrbo, Vacasa) don't count as hotels.
+    named:
+      not_earning: [airbnb, vrbo, vacasa]
   - id: dining
     match: { categories: [dining] }
     rate: 3
@@ -117,6 +119,9 @@ evidence:
   - rule: flights-hotels-direct
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'This category includes only airline tickets purchased directly with airlines, including charter and private flights'
+  - rule: flights-hotels-direct.not_earning
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'homestays, such as those purchased through real estate agencies or merchants like Airbnb, Vrbo, and Vacasa, will not'
   - rule: dining
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: '3 points ("3X points") on dining at restaurants purchases'

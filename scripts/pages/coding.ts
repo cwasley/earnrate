@@ -7,7 +7,12 @@ import {
   purchaseContext,
 } from '../../src/engine/evaluate.ts'
 import { idealHolding, type Picks } from '../../src/engine/explore.ts'
-import { namedKey, namings, type Naming } from '../../src/engine/named.ts'
+import {
+  namedKey,
+  namings,
+  quoteNames,
+  type Naming,
+} from '../../src/engine/named.ts'
 import { inEffect } from '../../src/engine/periods.ts'
 import {
   categoryAs,
@@ -16,7 +21,10 @@ import {
   earnText,
   listed,
 } from '../../src/engine/text.ts'
-import { resolveMerchantById } from '../../src/merchants/resolve.ts'
+import {
+  findMerchant,
+  resolveMerchantById,
+} from '../../src/merchants/resolve.ts'
 import type { Card, Rule } from '../../src/schema/card.ts'
 import type { Merchant } from '../../src/schema/merchant.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
@@ -29,7 +37,7 @@ import {
   fitTitle,
   SITE,
 } from './site.ts'
-import { rulePreposition } from '../../src/engine/rule-text.ts'
+import { pickName, rulePreposition } from '../../src/engine/rule-text.ts'
 
 const EXCLUSION =
   /\bexclud|\bnot at\b|\bnot (be )?(included|eligible|count|qualify)|\bdo(es)? not\b|\bdon['’]t\b|\bisn['’]t\b|\baren['’]t\b|\bwon['’]t\b|\bexcept\b|\bmay not\b/i
@@ -280,14 +288,32 @@ function treatmentItems(
 // for each issuer, list and quote, naming every card that shares it, then
 // the quotes. A list of examples says nothing about the stores it leaves out.
 function issuerListsHtml(ctx: PageContext, merchant: Merchant): string {
-  const quotesOf = (n: Naming) =>
-    ctx.quotesFor(n.card, namedKey(n.rule.id, n.list))
+  // A long list is quoted in pieces: this page shows the pieces that name
+  // the store and any that name no store on the list (a lead-in).
+  const quotesOf = (n: Naming) => {
+    const others = (n.rule.named?.[n.list] ?? []).flatMap((id) => {
+      const m = findMerchant(ctx.catalog, id)
+      return m && m.id !== merchant.id ? [m] : []
+    })
+    return ctx
+      .quotesFor(n.card, namedKey(n.rule.id, n.list))
+      .filter(
+        (q) =>
+          quoteNames(q.quote, merchant) ||
+          !others.some((m) => quoteNames(q.quote, m)),
+      )
+  }
+  const bonusOf = (n: Naming) => {
+    const pick =
+      n.list === 'earning' ? pickFor(ctx, n.card, n.rule, merchant) : null
+    return pick ?? ctx.ruleWhatRaw(n.card, n.rule)
+  }
   const groups = new Map<string, Naming[]>()
   for (const n of namings(openCards(ctx), merchant.id, ctx.today)) {
     const key = JSON.stringify([
       n.card.issuer,
       n.list,
-      countsAs(ctx, n.rule) ?? ctx.ruleWhatRaw(n.card, n.rule),
+      countsAs(ctx, n.rule) ?? bonusOf(n),
       quotesOf(n).map((q) => [q.url, q.quote]),
     ])
     groups.set(key, [...(groups.get(key) ?? []), n])
@@ -312,7 +338,7 @@ function issuerListsHtml(ctx: PageContext, merchant: Merchant): string {
         )
       const one = cards.length === 1
       const named = one ? (cards[0] ?? '') : namedList(cards)
-      const bonus = esc(ctx.ruleWhatRaw(first.card, first.rule))
+      const bonus = esc(bonusOf(first))
       const which = as
         ? `stores that ${earning ? 'count' : "don't count"} ${esc(as)} for the bonus on ${one ? named : `these cards: ${named}`}`
         : `stores where ${one ? `${named} ${earning ? 'pays' : "doesn't pay"} its` : `these cards ${earning ? 'pay' : "don't pay"} their`} bonus on ${bonus}${one ? '' : `: ${named}`}`
@@ -327,6 +353,32 @@ function issuerListsHtml(ctx: PageContext, merchant: Merchant): string {
       return `<p>${sentence}</p><ul class="quotes">${quotes.join('')}</ul>`
     })
     .join('')
+}
+
+// "TV, internet and streaming, when that's one of your picks": the picks of
+// a rule paid on a pick that cover the store.
+function pickFor(
+  ctx: PageContext,
+  card: Card,
+  rule: Rule,
+  merchant: Merchant,
+): string | null {
+  const choice = card.choices.find((c) => c.id === rule.match.choice)
+  if (!choice) return null
+  const ways = [
+    merchant.category,
+    merchant.in_store?.category,
+    merchant.online?.category,
+  ].filter((w) => w !== undefined)
+  const picks = Object.entries(choice.options)
+    .filter(
+      ([, o]) =>
+        o.merchants.includes(merchant.id) ||
+        o.categories.some((c) => ways.some((w) => categoryMatches(c, w))),
+    )
+    .map(([id]) => pickName(ctx.catalog, card, choice.id, id))
+  if (picks.length === 0) return null
+  return `${listed(picks, 'or')}, when that's ${choice.pick > 1 ? 'one of your picks' : 'your pick'}`
 }
 
 // "as a supermarket", for a rule that covers one category and nothing else.

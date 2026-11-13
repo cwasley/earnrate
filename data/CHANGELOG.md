@@ -2,6 +2,24 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.13.2
+
+No rates changed. Stores issuers other than American Express name as earning a rule's rate or not earning it are now recorded on that rule (`named`, as in 2026.11.11), each list quoted from a page the card already cites, read 2026-11-13. `match` and `exclude` still decide every rate, and each named store passed the check that earnrate's data pays it, or doesn't, as the issuer says.
+
+- `chase-freedom-flex`: Walmart and Target, left out of the fourth quarter's and the first quarter's 5% grocery category ("CURRENT QUARTER Grocery Stores (excluding Walmart® and Target®)", https://creditcards.chase.com/cash-back-credit-cards/freedom/flex).
+- `chase-sapphire-preferred`: Walmart, Target, Costco and BJ's, left out of online grocery ("Online grocery (excluding Target®, Walmart® and wholesale clubs)", "wholesale clubs such as Costco and BJs, liquor stores", https://www.chase.com/personal/credit-cards/rewards-category-faq).
+- `chase-sapphire-reserve`: Airbnb, Vrbo and Vacasa, which don't count as hotels booked direct ("homestays, such as those purchased through real estate agencies or merchants like Airbnb, Vrbo, and Vacasa, will not", same page).
+- `chase-prime-visa`: Instacart, among the third-party sites where Whole Foods Market purchases don't earn 5% (https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards).
+- `capital-one-savor`: Walmart and Target, superstores left out of 3% at grocery stores ("grocery stores, excluding superstores like Walmart® and Target®", https://www.capitalone.com/credit-cards/savor/).
+- `capital-one-kohls-rewards-visa`: Costco and Walmart, where groceries earn 1% ("including warehouse clubs (e.g., Costco or Walmart®) and convenience stores will earn 1%", https://www.capitalone.com/credit-cards/kohls/).
+- `barclays-jetblue-plus`: Target and Walmart, "generally not classified as grocery stores" (https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255).
+- `usbank-altitude-connect` and `usbank-altitude-go`: Target and Walmart, where grocery purchases earn 1X (each card page).
+- `usbank-cash-plus`: the sample merchants U.S. Bank lists under each 5% and 2% category (https://cashplus.usbank.com/cash-plus/samplemerchants: 203 stores earnrate knows, from Netflix and McDonald's to IKEA, Planet Fitness, Sprouts and Trader Joe's), and the stores it says those categories leave out: Walmart, Target and Costco (department stores), Applebee's and Olive Garden (restaurants, not fast food), and McDonald's, Subway and Domino's (fast food, not restaurants). Some of its sample merchants are left out: Chipotle, listed as fast food, which earnrate counts as a restaurant that may code as fast food; 7-Eleven, listed as a gas station, which earnrate counts as a convenience store; and Target and Walmart, which the grocery list names though the same section and the card page say grocery purchases there earn 1%.
+- `verizon-visa-card`: Walmart and Best Buy, big-box stores where Verizon services earn 1% ("including any "big box" retailers such as Walmart or Best Buy", https://www.verizon.com/support/verizon-visa-card-rewards-legal/).
+- `sofi-unlimited-2`: Expedia, whose own site and app don't earn the SoFi Travel rate (https://www.sofi.com/credit-card/unlimited/).
+
+A store page now quotes only the pieces of a long list that name it, plus any lead-in, and a store an issuer names under a category you pick says which pick covers it.
+
 ## 2026.11.13.1
 
 No rates changed. A credit that pays a recurring subscription or membership fee billed to the card is now marked as one (`subscription: true`). Once the cardholder marks it used, earnrate counts it in full every period: it never asks what's been used of it, the to-do list has no reminder to use it, and a recorded purchase at its store doesn't draw it down. Purchase answers at its store are unchanged. Use saved for one of these credits before this release is ignored and left in the wallet file. Marked from each credit's note and quotes and what it pays for:

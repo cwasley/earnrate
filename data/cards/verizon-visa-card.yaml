@@ -46,6 +46,8 @@ rules:
     match: { merchants: [verizon-store] }
     rate: 4
     note: Devices and accessories bought at a Verizon store, Verizon online, by phone with Verizon or at an exclusive Verizon Authorized Retailer. Not Verizon wireless or Fios bill payments, or items charged to those bills, which earn 1%. Not Verizon services sold at big-box stores like Walmart or Best Buy.
+    named:
+      not_earning: [walmart, best-buy]
 todo:
   - "No readable Synchrony rates-and-fees table: the application's pricing terms are only inside the apply flow, and no synchronybankterms.com page for this card was found. The no-fee and no-foreign-fee quotes are from Verizon's own pages."
   - 'Verizon Dollars are forfeited if the Verizon wireless or Fios account closes, if the cardholder stops being its Account Owner or Manager, after 90 days if the card closes, or after 24 months with no card or rewards activity. Once Verizon service ends, the card earns nothing.'
@@ -100,6 +102,9 @@ evidence:
   - rule: verizon-purchases
     url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
     quote: 'including any "big box" retailers such as Walmart or Best Buy that offer Verizon services.'
+  - rule: verizon-purchases.not_earning
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'everywhere else Visa is accepted, including any "big box" retailers such as Walmart or Best Buy'
   - rule: annual_fee
     url: https://www.verizon.com/support/verizon-visa-card-faqs/
     quote: 'No annual fee and foreign transaction fees.'

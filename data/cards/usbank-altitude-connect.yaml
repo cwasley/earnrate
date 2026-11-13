@@ -56,6 +56,8 @@ rules:
     exclude: { categories: [superstore, warehouse_club] }
     rate: 2
     note: Grocery stores and supermarkets. Discount stores and supercenters such as Target and Walmart, and wholesale clubs, earn 1X.
+    named:
+      not_earning: [target, walmart]
   - id: streaming
     match:
       merchants:
@@ -133,6 +135,9 @@ evidence:
   - rule: grocery
     url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
     quote: 'wholesale clubs and discount stores/supercenters such as Target and Walmart will earn only 1 Point'
+  - rule: grocery.not_earning
+    url: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    quote: 'grocery store and supermarket (wholesale clubs and discount stores/supercenters such as Target and Walmart will earn only 1 Point)'
   - rule: streaming
     url: https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules
     quote: 'Qualifying streaming subscription services are: Amazon Music Unlimited, Amazon Prime Video, AMC+'
