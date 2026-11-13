@@ -705,7 +705,28 @@ function Report({
           {upTo === null ? (
             <span aria-hidden="true">{' '}</span>
           ) : (
-            <Words text={upTo} />
+            <>
+              <Words text={upTo} />
+              {voice === 'you' ? (
+                <>
+                  {' '}
+                  <button
+                    type="button"
+                    class="link"
+                    onClick={() => {
+                      const title =
+                        document.getElementById('rate-credits-title')
+                      if (!title) return
+                      title.tabIndex = -1
+                      title.scrollIntoView({ block: 'start' })
+                      title.focus({ preventScroll: true })
+                    }}
+                  >
+                    Tell us which you use ↓
+                  </button>
+                </>
+              ) : null}
+            </>
           )}
         </p>
       ) : null}
