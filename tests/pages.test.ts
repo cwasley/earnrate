@@ -627,9 +627,10 @@ describe('year-end pages', () => {
     const details = hub.indexOf('<details class="ye-monthly">')
     expect(details).toBeGreaterThan(hub.indexOf('id="spend"'))
     expect(hub.indexOf('data-anchor="monthly-')).toBeGreaterThan(details)
-    expect(
-      hub.slice(details + 1, hub.indexOf('</details>', details)),
-    ).not.toMatch(/<details/)
+    // Inside the monthly list, only each credit's own row opens.
+    expect(hub.slice(details + 1, hub.indexOf('<h2', details))).not.toMatch(
+      /<details(?! class="ye-row")/,
+    )
   })
 
   test('state each calendar-year spend bonus as what has to happen by December 31', () => {
@@ -674,6 +675,10 @@ describe('year-end pages', () => {
     expect(send).toBeGreaterThan(-1)
     expect(send).toBeLessThan(wallet)
     expect(hub).toContain('data-ye-list')
+    // With saved cards it shows only those until the visitor picks all.
+    expect(hub).toContain('data-ye-mode="yours"')
+    expect(hub).toContain('data-ye-mode="all"')
+    expect(scripts[wallet]).toContain('document.body.dataset.yeOnly')
   })
 
   describe("each card's own page", () => {

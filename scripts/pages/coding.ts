@@ -11,6 +11,7 @@ import { namedKey, namings, type Naming } from '../../src/engine/named.ts'
 import { inEffect } from '../../src/engine/periods.ts'
 import {
   categoryAs,
+  bareRate,
   categoryPhrase,
   earnText,
   listed,
@@ -20,13 +21,21 @@ import type { Card, Rule } from '../../src/schema/card.ts'
 import type { Merchant } from '../../src/schema/merchant.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
 import type { Quote } from './rules.ts'
-import { esc, fitDescription, fitTitle, SITE } from './site.ts'
+import {
+  chipLinks,
+  esc,
+  finePrint,
+  fitDescription,
+  fitTitle,
+  SITE,
+} from './site.ts'
 import { rulePreposition } from '../../src/engine/rule-text.ts'
 
 const EXCLUSION =
   /\bexclud|\bnot at\b|\bnot (be )?(included|eligible|count|qualify)|\bdo(es)? not\b|\bdon['’]t\b|\bisn['’]t\b|\baren['’]t\b|\bwon['’]t\b|\bexcept\b|\bmay not\b/i
 
 const SHOWN = 6 // cards named per line before "and N more"
+const SHOWN_LEFT_OUT = 4 // cards a store page names before the rest
 
 const openCards = (ctx: PageContext) =>
   ctx.catalog.cards.filter((c) => c.applications_closed === undefined)
@@ -207,7 +216,9 @@ function namedList(items: string[]): string {
   return `${items.slice(0, SHOWN).join(', ')} and ${String(items.length - SHOWN)} more`
 }
 
-// The cards that pay and the ones that don't, as list items.
+// The cards that pay and the ones that don't, as list items: the ones whose
+// terms leave the store out one line per issuer, and what those terms say,
+// each wording once with the cards that share it, as the fine print.
 function treatmentItems(
   ctx: PageContext,
   list: Treatment[],
@@ -216,7 +227,7 @@ function treatmentItems(
   // The store codes outside the category asked about: no card's reasons
   // apply, so they're one line.
   outside = false,
-): string[] {
+): { items: string[]; fine: string[] } {
   const paying = list.filter((t) => t.pays)
   const reason = (t: Treatment) => !t.pays && (t.quote || t.note || t.byName)
   const withReason = list.filter(reason)
@@ -231,10 +242,27 @@ function treatmentItems(
         ),
       )}.`,
     )
+  const byIssuer = new Map<string, Treatment[]>()
   for (const t of withReason)
+    byIssuer.set(t.card.issuer, [...(byIssuer.get(t.card.issuer) ?? []), t])
+  for (const [issuer, ts] of [...byIssuer].sort((a, b) =>
+    ctx.issuerName(a[0]).localeCompare(ctx.issuerName(b[0])),
+  ))
     items.push(
-      `<strong>Doesn't count</strong> for ${cardLink(ctx, t.card)}: ${t.quote ? ctx.quoteHtml(t.quote) : t.note ? esc(t.note) : 'its rule leaves this store out by name.'}`,
+      `<strong>Doesn't count</strong> for ${ts.length === 1 ? listed(ts.map((t) => cardLink(ctx, t.card))) : `${String(ts.length)} ${esc(ctx.issuerName(issuer))} cards: ${listed(ts.map((t) => cardLink(ctx, t.card)))}`}.`,
     )
+  const why = new Map<string, Treatment[]>()
+  for (const t of withReason) {
+    const text = t.quote
+      ? ctx.quoteHtml(t.quote)
+      : t.note
+        ? esc(t.note)
+        : 'Its rule leaves this store out by name.'
+    why.set(text, [...(why.get(text) ?? []), t])
+  }
+  const fine = [...why].map(
+    ([text, ts]) => `${listed(ts.map((t) => cardLink(ctx, t.card)))}: ${text}`,
+  )
   if (silent.length > 0 && outside)
     items.push(
       `<strong>Doesn't count</strong> for the other ${String(silent.length)} cards with a bonus on ${esc(familyWords)}: none of them pays when it counts ${esc(codesAs)}.`,
@@ -245,7 +273,7 @@ function treatmentItems(
         silent.map((t) => cardLink(ctx, t.card)),
       )}: ${silent.length === 1 ? 'its' : 'their'} bonus on ${esc(familyWords)} doesn't pay when it counts ${esc(codesAs)}.`,
     )
-  return items
+  return { items, fine }
 }
 
 // What issuers' own lists of example stores say about this one: a sentence
@@ -351,7 +379,7 @@ export function howItCodes(
   parts.push(lists)
 
   const named: string[] = []
-  const excluding: string[] = []
+  const excluding: { card: Card; rule: Rule; html: string }[] = []
   for (const card of openCards(ctx)) {
     for (const rule of card.rules.filter((r) => inEffect(r, ctx.today))) {
       const quote = ctx.quotesFor(card, rule.id)
@@ -375,9 +403,11 @@ export function howItCodes(
           [rule],
           ways.flatMap((w) => topicWords(ctx, merchant, w, '')),
         )
-        excluding.push(
-          `<li>${cardLink(ctx, card)}: its ${esc(earnText(ctx.catalog, rule.rate, card.currency))} on ${esc(ctx.ruleWhatRaw(card, rule))} leaves it out${why.quote ? `: ${ctx.quoteHtml(why.quote)}` : why.note ? `: ${esc(why.note)}` : '.'}</li>`,
-        )
+        excluding.push({
+          card,
+          rule,
+          html: `<li>${cardLink(ctx, card)}: its ${esc(earnText(ctx.catalog, rule.rate, card.currency))} on ${esc(ctx.ruleWhatRaw(card, rule))} leaves it out${why.quote ? `: ${ctx.quoteHtml(why.quote)}` : why.note ? `: ${esc(why.note)}` : '.'}</li>`,
+        })
       }
     }
   }
@@ -385,9 +415,20 @@ export function howItCodes(
     parts.push(
       `<h3>Cards whose terms name ${esc(merchant.name)}</h3><ul class="quotes">${named.join('')}</ul>`,
     )
-  if (excluding.length > 0)
+  if (excluding.length > SHOWN_LEFT_OUT) {
+    // The bonuses worth most as chips, every card with its terms behind a tap.
+    const top = [...excluding]
+      .sort(
+        (a, b) =>
+          valueOf(ctx, b.card, b.rule.rate) - valueOf(ctx, a.card, a.rule.rate),
+      )
+      .slice(0, SHOWN_LEFT_OUT)
     parts.push(
-      `<h3>Cards whose terms leave it out</h3><ul class="quotes">${excluding.join('')}</ul>`,
+      `<h3>Cards whose terms leave it out</h3><ul class="rate-chips">${top.map((e) => `<li>${cardLink(ctx, e.card)} <b>${esc(bareRate(e.rule.rate, e.card.currency))}</b></li>`).join('')}</ul>${finePrint(`<ul class="quotes">${excluding.map((e) => e.html).join('')}</ul>`, `All ${String(excluding.length)}, with their terms`)}`,
+    )
+  } else if (excluding.length > 0)
+    parts.push(
+      `<h3>Cards whose terms leave it out</h3><ul class="quotes">${excluding.map((e) => e.html).join('')}</ul>`,
     )
 
   for (const way of ways) {
@@ -492,6 +533,30 @@ const questionId = (heading: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
 
+// The answer word for one store: how many of the cards with a bonus in the
+// family pay where it usually codes, and whether another way it may code
+// turns that around.
+function verdict(
+  main: { inside: boolean; paying: number; total: number },
+  others: { inside: boolean; paying: number }[],
+): string {
+  const { inside, paying, total } = main
+  if (!inside && others.some((o) => o.inside && o.paying > 0))
+    return 'Sometimes'
+  if (inside && paying > 0 && others.some((o) => !o.inside)) return 'Usually'
+  if (!inside || paying === 0) return 'No'
+  if (paying === total) return 'Yes'
+  return paying * 2 >= total ? 'Mostly yes' : 'Mostly no'
+}
+
+type Answer = {
+  merchants: Merchant[]
+  word: string
+  codes: string
+  count: string
+  html: string
+}
+
 function answerQuestion(
   ctx: PageContext,
   q: Question,
@@ -501,36 +566,65 @@ function answerQuestion(
   if (merchants.length === 0) return null
   const familyWords = categoryPhrase(ctx.catalog, q.family)
   // Stores that code the same way and get the same answer share one.
-  const groups = new Map<string, { merchants: Merchant[]; html: string }>()
+  const groups = new Map<string, Answer>()
   for (const m of merchants) {
-    const ways = [m.category, ...(m.ambiguity?.may_code_as ?? [])]
-    const blocks = [...new Set(ways)].map((way) => {
+    const ways = [...new Set([m.category, ...(m.ambiguity?.may_code_as ?? [])])]
+    const tallies: { inside: boolean; paying: number; total: number }[] = []
+    const blocks = ways.map((way, i) => {
       const list = treatments(ctx, m, way, q.family)
-      const items = treatmentItems(
+      const inside = related(way, q.family)
+      tallies.push({
+        inside,
+        paying: list.filter((t) => t.pays).length,
+        total: list.length,
+      })
+      const { items, fine } = treatmentItems(
         ctx,
         list,
         familyWords,
         codesText(ctx, way),
-        !related(way, q.family),
+        !inside,
       )
       const lead =
-        way === m.category
-          ? `Counted ${esc(codesText(ctx, way, m.likely_mcc))}:`
-          : `If it counts ${esc(codesText(ctx, way))}:`
-      return `<p>${lead}</p><ul class="quotes">${items.map((i) => `<li>${i}</li>`).join('')}</ul>`
+        i === 0 ? '' : `<p>If it counts ${esc(codesText(ctx, way))}:</p>`
+      const quotes =
+        fine.length === 0
+          ? ''
+          : `<ul class="quotes">${fine.map((f) => `<li>${f}</li>`).join('')}</ul>`
+      return `${lead}<ul class="quotes">${items.map((t) => `<li>${t}</li>`).join('')}</ul>${finePrint(quotes)}`
     })
-    const key = blocks.join('')
+    const [main = { inside: false, paying: 0, total: 0 }, ...others] = tallies
+    const word = verdict(main, others)
+    const codes = codesText(ctx, m.category, m.likely_mcc)
+    const cards = `${String(main.total)} cards with a bonus on ${familyWords}`
+    const count =
+      main.paying === 0
+        ? `None of the ${cards} pays there.`
+        : main.paying === main.total
+          ? `All ${cards} pay there.`
+          : main.inside
+            ? `${String(main.paying)} of ${cards} pay there.`
+            : `${String(main.total - main.paying)} of ${cards} don't pay there.`
+    const key = JSON.stringify([word, codes, count, blocks])
     const g = groups.get(key)
     if (g) g.merchants.push(m)
-    else groups.set(key, { merchants: [m], html: key })
+    else
+      groups.set(key, {
+        merchants: [m],
+        word,
+        codes,
+        count,
+        html: blocks.join(''),
+      })
   }
   const notesOf = (ms: Merchant[]) => {
     const each = ms.map((m) =>
       [m.note, m.ambiguity?.note].filter((n) => n !== undefined).join(' '),
     )
     if (each.every((n) => n === '')) return ''
-    if (each.every((n) => n === each[0])) return `<p>${esc(each[0] ?? '')}</p>`
-    return `<ul>${ms.map((m, i) => (each[i] ? `<li>${esc(m.name)}: ${esc(each[i] ?? '')}</li>` : '')).join('')}</ul>`
+    if (each.every((n) => n === each[0]))
+      return `<p class="muted">${esc(each[0] ?? '')}</p>`
+    return `<ul class="muted">${ms.map((m, i) => (each[i] ? `<li>${esc(m.name)}: ${esc(each[i] ?? '')}</li>` : '')).join('')}</ul>`
   }
   const link = (m: Merchant) => {
     const slug = bestSlug(m.id)
@@ -538,7 +632,7 @@ function answerQuestion(
   }
   const sections = [...groups.values()].map(
     (g) =>
-      `<h3>${listed(g.merchants.map(link))}</h3>${notesOf(g.merchants)}${g.html}`,
+      `<div class="coding-answer"><p class="verdict"><strong>${esc(g.word)}.</strong> ${listed(g.merchants.map(link))} ${g.merchants.length === 1 ? 'codes' : 'code'} ${esc(g.codes)}. ${esc(g.count)}</p>${notesOf(g.merchants)}${g.html}</div>`,
   )
   return `<h2 id="${questionId(q.heading)}">${esc(q.heading)}</h2>${sections.join('')}`
 }
@@ -564,8 +658,8 @@ export function howStoresCodePage(
   const body = `
       <h1>How stores code</h1>
       <p class="updated">Updated ${esc(ctx.dayWords(lastmod))}</p>
-      <p>A card's bonus depends on how the store's charge is coded: the merchant category code on the charge decides what the purchase counts as, a supermarket or a restaurant or something else, whatever you bought. These answers come from earnrate's notes on each store and from each card's own rules, checked by earnrate's engine. A store's page shows every card's rate there.</p>
-      <ul>${answers.map((a) => `<li><a href="#${questionId(a.q.heading)}">${esc(a.q.heading)}</a></li>`).join('')}</ul>
+      <p>Your card's bonus depends on how the store's charge is coded, not on what you bought. A store's page shows every card's rate there.</p>
+      ${chipLinks(answers.map((a) => `<a href="#${questionId(a.q.heading)}">${esc(a.q.heading)}</a>`))}
       ${answers.map((a) => a.html).join('')}
       <p class="muted">Only cards open to new applicants are listed. A card "counts" a store when one of its rules in that category pays there, set up at its best: categories picked, bonuses activated, any membership it asks for.</p>`
   return {

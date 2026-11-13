@@ -12,6 +12,7 @@ import { rotationGap, rotationGapText } from '../../src/engine/rotation.ts'
 import {
   activationText,
   categoryPhrase,
+  bareRate,
   earnText,
   listed,
   pct,
@@ -24,7 +25,14 @@ import { optionName } from '../../src/engine/rule-text.ts'
 import type { Cap, Card, Choice, Rule } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
-import { chipLinks, esc, fitDescription, fitTitle, SITE } from './site.ts'
+import {
+  chipLinks,
+  esc,
+  finePrint,
+  fitDescription,
+  fitTitle,
+  SITE,
+} from './site.ts'
 
 const TOP = 3
 
@@ -252,9 +260,42 @@ function ruleItems(
       const quotes = ctx
         .quotesFor(card, rule.id)
         .filter((q) => !said.has(q.quote))
-      return `<li><span class="rank">${esc(String(rule.rate))}</span><div><span class="row-head"><strong>${esc(ctx.ruleWhat(card, rule))}</strong> <span class="rate">${esc(earnText(ctx.catalog, rule.rate, card.currency))}</span></span>${rule.note ? `<span class="muted row-note">${esc(rule.note)}</span>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${quotes.map((q) => `<p class="muted">${ctx.quoteHtml(q)}</p>`).join('')}</div></li>`
+      return `<li><p><strong>${esc(ctx.ruleWhat(card, rule))}</strong> <span class="rate">${esc(earnText(ctx.catalog, rule.rate, card.currency))}</span></p>${rule.note ? `<p>${esc(rule.note)}</p>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${quotes.map((q) => `<p class="muted">${ctx.quoteHtml(q)}</p>`).join('')}</li>`
     })
-  return `<ol class="cards rules">${items.join('')}</ol>`
+  return `<ul class="fine-rules">${items.join('')}</ul>`
+}
+
+// What a quarter's categories pay, as a row of chips: "7% Restaurants".
+function rateChips(ctx: PageContext, card: Card, rules: Rule[]): string {
+  return `<ul class="rate-chips">${[...rules]
+    .sort((a, b) => b.rate - a.rate)
+    .map(
+      (r) =>
+        `<li><b>${esc(bareRate(r.rate, card.currency))}</b> ${esc(ctx.ruleWhat(card, r))}</li>`,
+    )
+    .join('')}</ul>`
+}
+
+// The button to the issuer's activation page, with the deadline on it when
+// activation is open now and has one.
+function activateButton(
+  ctx: PageContext,
+  issuer: string,
+  rules: Rule[],
+  page: string,
+): string {
+  const opens = rules.some(
+    (r) => r.activate_from !== undefined && r.activate_from > ctx.today,
+  )
+  const by = rules
+    .map((r) => r.activate_by)
+    .filter((d) => d !== undefined && d >= ctx.today)
+    .sort()[0]
+  const label =
+    by !== undefined && !opens
+      ? `Activate by ${shortDate(by)}`
+      : `Activate with ${issuer}`
+  return `<a class="button" href="${esc(page)}" rel="nofollow noopener">${esc(label)}</a>`
 }
 
 function cardSection(ctx: PageContext, q: Quarter, qc: QuarterCard): string {
@@ -278,7 +319,7 @@ function cardSection(ctx: PageContext, q: Quarter, qc: QuarterCard): string {
     const unpicked = qc.choices.some((c) => !c.default)
       ? ` Until you pick, they earn its base rate of ${esc(earnText(ctx.catalog, card.base_rate, card.currency))}.`
       : ''
-    return `<section class="quarter-card">${head}<p>Its picks apply from ${esc(shortDate(q.start))} to ${esc(shortDate(q.end))}, and you choose again each quarter.${unpicked}</p><ul>${picks.join('')}</ul>${ruleItems(ctx, card, qc.rules)}</section>`
+    return `<section class="quarter-card">${head}<p>Its picks apply from ${esc(shortDate(q.start))} to ${esc(shortDate(q.end))}, and you choose again each quarter.${unpicked}</p><ul>${picks.join('')}</ul>${finePrint(ruleItems(ctx, card, qc.rules))}</section>`
   }
   if (qc.rules.length === 0)
     return `<section class="quarter-card">${head}<p class="answer">${esc(rotationGapText(ctx.shortName(card.id), qc.gap ?? q.key))}</p></section>`
@@ -296,15 +337,26 @@ function cardSection(ctx: PageContext, q: Quarter, qc: QuarterCard): string {
   const quotes = activationQuotes(card, qc.rules)
   // The issuer's page that says how to activate, for the next step.
   const page = (quotes.find((e) => /activat/i.test(e.quote)) ?? quotes[0])?.url
-  const go =
-    needsActivation && page
-      ? ` <a href="${esc(page)}" rel="nofollow noopener">${esc(issuer)}'s activation details</a>.`
-      : ''
   const said = new Set([
     `${shortDate(from)} to ${shortDate(to)}`,
     ...quotes.map((e) => e.quote),
   ])
-  return `<section class="quarter-card">${head}<p class="answer">${esc(shortDate(from))} to ${esc(shortDate(to))}. ${esc(capSentence(cap, earnText(ctx.catalog, cap.then_rate, card.currency), 'combined purchases in these categories'))}. ${esc(activation)}${go}</p>${quotes.length > 0 ? `<p><strong>From ${esc(issuer)}'s terms:</strong></p><ul class="quotes">${quotes.map((e) => `<li>${ctx.quoteHtml(e)}</li>`).join('')}</ul>` : ''}${ruleItems(ctx, card, qc.rules, said)}</section>`
+  // The page's dates are the quarter's; a card's own only when they differ.
+  const dates =
+    from === q.start && to === q.end
+      ? ''
+      : `${shortDate(from)} to ${shortDate(to)}. `
+  const button =
+    needsActivation && page ? activateButton(ctx, issuer, qc.rules, page) : ''
+  // A button that gives the deadline says it all; the sentence goes with
+  // the fine print.
+  const dated = button.includes('Activate by ')
+  const next =
+    button === ''
+      ? `<p class="muted">${esc(activation)}</p>`
+      : `<p class="actions">${button}${dated ? '' : `<span class="muted">${esc(activation)}</span>`}</p>`
+  const fine = `${dated ? `<p>${esc(activation)}</p>` : ''}${quotes.length > 0 ? `<p><strong>From ${esc(issuer)}'s terms:</strong></p><ul class="quotes">${quotes.map((e) => `<li>${ctx.quoteHtml(e)}</li>`).join('')}</ul>` : ''}${ruleItems(ctx, card, qc.rules, said)}`
+  return `<section class="quarter-card summary-card">${head}${rateChips(ctx, card, qc.rules)}<p>${esc(`${dates}${capSentence(cap, earnText(ctx.catalog, cap.then_rate, card.currency), 'combined purchases in these categories')}.`)}</p>${next}${finePrint(fine)}</section>`
 }
 
 function topSection(ctx: PageContext, q: Quarter, slugs: BestSlugs): string {
@@ -324,7 +376,7 @@ function topSection(ctx: PageContext, q: Quarter, slugs: BestSlugs): string {
     return `<h3>On ${heading}</h3><ol class="cards">${rows}</ol>`
   })
   if (blocks.every((b) => b === '')) return ''
-  return `<h2>Cards that earn the most on this quarter's categories</h2><p>Ranked by earnrate's engine for ${esc(shortDate(date))}, across every personal card it tracks, each set up at its best: categories activated or picked, and no cap used yet. Points count at earnrate's default value.</p>${blocks.join('')}`
+  return `<h2>Cards that earn the most on this quarter's categories</h2><p class="muted">Ranked on ${esc(shortDate(date))} across every personal card, each set up at its best: categories activated or picked, and no cap used yet. Points count at earnrate's default value.</p>${blocks.join('')}`
 }
 
 const namesFor = (ctx: PageContext, ids: string[], style: number) =>
@@ -403,14 +455,12 @@ function renderQuarter(
   const body = `
       <h1>${esc(h1)}</h1>
       <p class="updated">${esc(shortDate(q.start))} to ${esc(shortDate(q.end))} · Updated ${esc(ctx.dayWords(updated))}</p>
-      ${hub ? `<p>This page always shows the current quarter. For a link that stays on ${esc(q.label)}, use <a href="/quarterly/${q.slug}">/quarterly/${q.slug}</a>.</p>` : ''}
-      <h2>Rotating categories</h2>
       ${rotating.map((c) => cardSection(ctx, q, c)).join('')}
       ${picks.length > 0 ? `<h2>Categories you pick each quarter</h2>${picks.map((c) => cardSection(ctx, q, c)).join('')}` : ''}
       ${q.end === `${ctx.today.slice(0, 4)}-12-31` ? `<p>Statement credits, spend bonuses and caps that end or start over with the year, on every card: <a href="/year-end/">year-end deadlines</a>.</p>` : ''}
       ${topSection(ctx, q, slugs)}
       ${nav}
-      <p class="muted">Every rate, cap, date and quote here is from the card's file in earnrate, checked against the issuer's pages on the date each card page shows. Check the issuer's terms before you rely on them.</p>`
+      <p class="muted">Every rate, cap, date and quote here is from the card's file in earnrate, checked against the issuer's pages on the date each card page shows. Check the issuer's terms before you rely on them.${hub ? ` This page always shows the current quarter. For a link that stays on ${esc(q.label)}, use <a href="/quarterly/${q.slug}">/quarterly/${q.slug}</a>.` : ''}</p>`
   return { title, description, body }
 }
 

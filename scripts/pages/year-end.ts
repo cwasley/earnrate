@@ -22,7 +22,6 @@ import {
   currencyName,
   earnText,
   ENROLL_FIRST,
-  inOrder,
   listed,
   longDate,
   hostname,
@@ -52,6 +51,7 @@ import { button, pageActions } from './actions.ts'
 import {
   chipLinks,
   esc,
+  finePrint,
   fitDescription,
   fitSentences,
   fitTitle,
@@ -682,14 +682,21 @@ const firstQuote = (
 const noteHtml = (note: string | undefined) =>
   note ? `<span class="muted row-note">${esc(note)}</span>` : ''
 
+// One row per credit: its amount, period and whether to enroll; the note,
+// the enrollment sentence and the issuer's quote open from it.
 function creditItem(ctx: PageContext, card: Card, item: CreditItem): string {
   const { credit } = item
   const what = `${money(periodAmount(credit, item.key))} back ${creditWhere(ctx.catalog, credit)}`
   const min = creditTerms({ min_amount: credit.min_amount })
   const enroll = credit.enroll
-    ? ` ${capitalize(ENROLL_FIRST)} with ${ctx.issuerName(card.issuer)}.`
+    ? `<p>${esc(`${capitalize(ENROLL_FIRST)} with ${ctx.issuerName(card.issuer)}.`)}</p>`
     : ''
-  return `<li><p><strong>${esc(what)}</strong> ${esc(periodPhrase(credit.period, item.key))}${esc(min)}.${esc(enroll)}</p>${noteHtml(credit.note)}${firstQuote(ctx, card, credit.id, periodAmount(credit, item.key) === credit.amount ? undefined : MONTH_NAMES[Number(item.key.slice(5, 7)) - 1])}</li>`
+  const tag = credit.enroll ? ' <span class="ye-tag">Enroll</span>' : ''
+  const more = `${enroll}${noteHtml(credit.note)}${firstQuote(ctx, card, credit.id, periodAmount(credit, item.key) === credit.amount ? undefined : MONTH_NAMES[Number(item.key.slice(5, 7)) - 1])}`
+  const line = `<strong>${esc(what)}</strong> <span class="muted">${esc(`${periodPhrase(credit.period, item.key)}${min}`)}</span>${tag}`
+  return more === ''
+    ? `<li><p>${line}</p></li>`
+    : `<li><details class="ye-row"><summary>${line}</summary>${more}</details></li>`
 }
 
 const creditBlocks = (v: View, section: string, list: YearEnd['credits']) =>
@@ -715,7 +722,7 @@ function creditsSection(v: View): string {
       ? "; December's monthly credits are further down."
       : '.'
   return `<h2 id="credits">Yearly, half-year and quarterly credits that end ${esc(shortDate(y.end))}</h2>
-      <p>${esc(`Each of these is for the calendar year, July through December or the fourth quarter, all ending ${longDate(y.end)}. What's left of each then ends, and the next period's starts ${shortDate(y.next)}. Credits that run by cardmember year, from the account anniversary, aren't listed${monthly}`)}</p>
+      <p class="muted">${esc(`Each of these is for the calendar year, July through December or the fourth quarter, all ending ${longDate(y.end)}. What's left of each then ends, and the next period's starts ${shortDate(y.next)}. Credits that run by cardmember year, from the account anniversary, aren't listed${monthly}`)}</p>
       ${creditBlocks(v, 'credits', y.credits)}`
 }
 
@@ -726,7 +733,7 @@ function monthlySection(v: View): string {
   if (y.monthly.length === 0) return ''
   const n = count(y.monthly)
   const intro = `<h2 id="monthly">Monthly credits</h2>
-      <p>${esc(`These reset every month. December's ends on ${shortDate(y.end)} like any other month's, and January's starts ${shortDate(y.next)}.`)}</p>`
+      <p class="muted">${esc(`These reset every month. December's ends on ${shortDate(y.end)} like any other month's, and January's starts ${shortDate(y.next)}.`)}</p>`
   if (v.one) return `${intro}${creditBlocks(v, 'monthly', y.monthly)}`
   return `${intro}
       <details class="ye-monthly"><summary>${esc(`December's ${plural(n, 'monthly credit')} on ${plural(y.monthly.length, 'card')}`)}</summary>
@@ -770,7 +777,7 @@ function endingSection(v: View): string {
     )
   })
   return `<h2 id="ending">Rates and offers that end by ${esc(shortDate(y.end))}</h2>
-      <p>${esc(`Each has an end date of its own in the issuer's terms. Where a card's terms say what takes over on ${shortDate(y.next)}, that's listed with it.`)}</p>
+      <p class="muted">${esc(`Each has an end date of its own in the issuer's terms. Where a card's terms say what takes over on ${shortDate(y.next)}, that's listed with it.`)}</p>
       <div class="ye-cards" data-ye-list>${blocks.join('')}</div>`
 }
 
@@ -795,7 +802,7 @@ function milestonesSection(v: View): string {
     ),
   )
   return `<h2 id="spend">Spend bonuses counted by calendar year</h2>
-      <p>${esc(`Each counts purchases on the card from Jan 1 to ${shortDate(y.end)}, so the total has to be reached by then. Spending toward it starts again from zero on ${shortDate(y.next)}.`)}</p>
+      <p class="muted">${esc(`Each counts purchases on the card from Jan 1 to ${shortDate(y.end)}, so the total has to be reached by then. Spending toward it starts again from zero on ${shortDate(y.next)}.`)}</p>
       <div class="ye-cards" data-ye-list>${blocks.join('')}</div>`
 }
 
@@ -862,7 +869,7 @@ function rotationSection(v: View): string {
     ? `Its bonus categories change each quarter; these are the ones for ${quartersNamed}, as ${ctx.issuerName(v.one.issuer)} has posted them.`
     : `The cards whose bonus categories change each quarter, for ${quartersNamed} as each issuer has posted them. A quarter an issuer hasn't posted yet isn't listed.`
   return `<h2 id="rotating">Rotating categories</h2>
-      <p>${esc(intro)}</p>
+      <p class="muted">${esc(intro)}</p>
       <div class="ye-cards" data-ye-list>${blocks.join('')}</div>`
 }
 
@@ -888,10 +895,12 @@ function capsSection(v: View): string {
     ),
   )
   return `<h2 id="caps">Caps that start over on ${esc(shortDate(y.next))}</h2>
-      <p>${esc(`These bonus rates have a calendar-year spending cap. Spending toward each starts again from zero on ${shortDate(y.next)}, so a cap you've used up this year earns the bonus rate again from then.`)}</p>
+      <p class="muted">${esc(`These bonus rates have a calendar-year spending cap. Spending toward each starts again from zero on ${shortDate(y.next)}, so a cap you've used up this year earns the bonus rate again from then.`)}</p>
       <div class="ye-cards" data-ye-list>${blocks.join('')}</div>`
 }
 
+// Each list in a box of its own, which the page's script hides when the
+// visitor picks only their cards and none of theirs is in it.
 const allSections = (v: View) =>
   [
     creditsSection(v),
@@ -900,14 +909,26 @@ const allSections = (v: View) =>
     monthlySection(v),
     rotationSection(v),
     capsSection(v),
-  ].join('\n      ')
+  ]
+    .filter((s) => s !== '')
+    .map((s) => (v.one ? s : `<div data-ye-section>${s}</div>`))
+    .join('\n      ')
 
 // Runs where it sits, after the lists and after the send script has shown
 // its rows: cards saved in this browser move to the top of each list, and
-// only then, with the page laid out, a link to a card's block (#credits-
-// <card>, its data-anchor) scrolls there, opening the collapsed monthly list
-// if it's in it. It only reads the wallet earnrate.dev saved; nothing is sent.
+// the page shows only those until the visitor picks all cards. Only then,
+// with the page laid out, a link to a card's block (#credits-<card>, its
+// data-anchor) scrolls there, showing every card if it isn't one of theirs
+// and opening the collapsed monthly list if it's in it. It only reads the
+// wallet earnrate.dev saved; nothing is sent. What's held is marked in data-*
+// attributes only.
 const WALLET_SCRIPT = `(() => {
+  const show = (only) => {
+    if (only) document.body.dataset.yeOnly = ''
+    else delete document.body.dataset.yeOnly
+    for (const b of document.querySelectorAll('[data-ye-mode]'))
+      b.setAttribute('aria-pressed', String((b.dataset.yeMode === 'yours') === only))
+  }
   const reveal = () => {
     const name = decodeURIComponent(location.hash.slice(1))
     if (!name || document.getElementById(name)) return
@@ -915,6 +936,7 @@ const WALLET_SCRIPT = `(() => {
       (el) => el.dataset.anchor === name,
     )
     if (!target) return
+    if (!target.hasAttribute('data-held')) show(false)
     const box = target.closest('details')
     if (box && !box.open) {
       // Opened at once, not animated, so the page is its full height to
@@ -943,14 +965,24 @@ const WALLET_SCRIPT = `(() => {
     for (const b of blocks) b.dataset.held = ''
     for (const b of [...blocks].reverse()) list.prepend(b)
   }
+  for (const s of document.querySelectorAll('[data-ye-section]'))
+    if (s.querySelector('[data-held]')) s.dataset.hasHeld = ''
+  const chips = [
+    ...document.querySelectorAll('[data-ye-jump] > li, [data-ye-pages] > li'),
+  ].filter(mine)
+  for (const c of chips) c.dataset.held = ''
   const box = document.querySelector('[data-ye-yours]')
   if (!box) return
-  const chips = [...document.querySelectorAll('[data-ye-pages] > li')].filter(mine)
-  const list = box.querySelector('ul')
-  for (const c of chips) list.append(c.cloneNode(true))
-  box.querySelector(chips.length > 0 ? '[data-some]' : '[data-none]').hidden = false
-  if (chips.length === 0) list.hidden = true
+  const n = document.querySelectorAll('[data-ye-pages] > li[data-held]').length
+  box.querySelector(n > 0 ? '[data-some]' : '[data-none]').hidden = false
   box.hidden = false
+  if (n === 0) return
+  box.querySelector('[data-ye-n]').textContent = String(n)
+  box.addEventListener('click', (e) => {
+    const b = e.target instanceof Element && e.target.closest('[data-ye-mode]')
+    if (b) show(b.dataset.yeMode === 'yours')
+  })
+  show(true)
   }
   arrange()
   reveal()
@@ -1003,32 +1035,41 @@ const SEND_SCRIPT = `(() => {
   })
 })()`
 
-function summary(y: YearEnd): string {
+// What the page counts, each a link to its list.
+function countChips(y: YearEnd): string {
+  const chip = (n: number, what: string, anchor: string) =>
+    n > 0 ? [`<a href="#${anchor}">${esc(`${String(n)} ${what}`)}</a>`] : []
   const credits = count(y.credits)
   const milestones = count(y.milestones)
   const monthly = count(y.monthly)
-  const parts = [
-    credits > 0
-      ? `${String(credits)} yearly, half-year and quarterly statement credits on ${String(y.credits.length)} cards end`
-      : '',
-    milestones > 0
-      ? `${String(milestones)} spend bonuses on ${String(y.milestones.length)} cards close their year`
-      : '',
-    y.ending.length > 0
-      ? `rates or offers on ${String(y.ending.length)} cards reach their end date`
-      : '',
-  ].filter((p) => p !== '')
-  const months =
-    monthly > 0
-      ? ` December's ${String(monthly)} monthly credits on ${String(y.monthly.length)} cards end that day too, as every month's do.`
-      : ''
-  const caps =
-    y.caps.length > 0
-      ? ` On ${shortDate(y.next)}, the calendar-year caps on ${String(y.caps.length)} cards start over.`
-      : ''
-  return parts.length === 0
-    ? `${months}${caps}`.trim()
-    : `By ${shortDate(y.end)}, ${inOrder(parts)}.${months}${caps}`
+  const chips = [
+    ...chip(credits, credits === 1 ? 'credit ends' : 'credits end', 'credits'),
+    ...chip(
+      y.ending.length,
+      y.ending.length === 1
+        ? "card's rates or offer end"
+        : "cards' rates or offers end",
+      'ending',
+    ),
+    ...chip(
+      milestones,
+      milestones === 1 ? 'spend bonus closes' : 'spend bonuses close',
+      'spend',
+    ),
+    ...chip(
+      monthly,
+      monthly === 1 ? 'monthly credit ends' : 'monthly credits end',
+      'monthly',
+    ),
+    ...chip(
+      y.caps.length,
+      `${y.caps.length === 1 ? "card's caps start" : "cards' caps start"} over ${shortDate(y.next).replace(/, \d{4}$/, '')}`,
+      'caps',
+    ),
+  ]
+  return chips.length === 0
+    ? ''
+    : `<p>${esc(`By ${shortDate(y.end)}:`)}</p>${chipLinks(chips)}`
 }
 
 function titleFor(y: YearEnd, hub: boolean): string {
@@ -1074,7 +1115,7 @@ function jumpList(y: YearEnd, ctx: PageContext): string {
 function cardPagesList(v: View): string {
   const cards = listedCards(v.ctx, v.y)
   return `<h2 id="by-card">A page for each card</h2>
-      <p>${esc(`Each of these ${String(cards.length)} cards has its own page with only its part of this list, to send to someone who has the card.`)}</p>
+      <p class="muted">${esc(`Each of these ${String(cards.length)} cards has its own page with only its part of this list, to send to someone who has the card.`)}</p>
       <ul class="chip-links" data-ye-pages>${cards
         .map(
           (c) =>
@@ -1134,7 +1175,10 @@ function scopeHtml(ctx: PageContext, card: Card | null): string {
     ctx.catalog.cards.some(
       (c) => c.id === UNREAD.cardId && c.credits.length === 0,
     )
-  return `<p class="ye-scope">${esc(`${SCOPE}${unread ? `; for now, also ${UNREAD.what}` : ''}.`)}${check}</p>`
+  return finePrint(
+    `<p class="ye-scope">${esc(`${SCOPE}${unread ? `; for now, also ${UNREAD.what}` : ''}.`)}${check}</p>`,
+    'What this page leaves out',
+  )
 }
 
 const SOURCE_LINE = `<p class="muted">Every amount, date, cap and quote here is from the card's file in earnrate, checked against the issuer's pages on the date each card page shows. Check the issuer's terms before you rely on them.</p>`
@@ -1169,16 +1213,16 @@ function renderYear(
   const body = `
       <h1>${esc(h1)}</h1>
       <p class="updated">${esc(`Through ${shortDate(y.end)} · Updated ${ctx.dayWords(updated)}`)}</p>
-      <p class="answer">${esc(summary(y))}</p>
+      ${countChips(y)}
       ${scopeHtml(ctx, null)}
-      ${hub ? `<p>This page always shows the current year. For a link that stays on ${esc(year)}, use <a href="/year-end/${year}">/year-end/${year}</a>.</p>` : ''}
-      <div class="ye-yours" data-ye-yours hidden><p data-some hidden>Cards saved on earnrate.dev in this browser come first in each list, marked “Your card”. Each also has a page of its own:</p><p data-none hidden>None of the cards saved on earnrate.dev in this browser have anything on this page.</p><ul class="chip-links"></ul></div>
+      <div class="ye-yours" data-ye-yours hidden><div data-some hidden><div class="ye-view" role="group" aria-label="Cards shown"><button type="button" data-ye-mode="yours" aria-pressed="true">Your cards (<span data-ye-n></span>)</button><button type="button" data-ye-mode="all" aria-pressed="false">${esc(`All ${String(anchors(y).size)} cards`)}</button></div></div><p data-none hidden>None of the cards saved on earnrate.dev in this browser have anything on this page.</p></div>
       ${jumpList(y, ctx)}
       ${allSections(v)}
       ${cardPagesList(v)}
       ${quarterly}
       ${nav}
       ${SOURCE_LINE}
+      ${hub ? `<p class="muted">This page always shows the current year. For a link that stays on ${esc(year)}, use <a href="/year-end/${year}">/year-end/${year}</a>.</p>` : ''}
       <script>${SEND_SCRIPT}</script>
       <script>${WALLET_SCRIPT}</script>`
   return { title, description, body }
@@ -1200,14 +1244,13 @@ function cardPage(
   const sentences = cardSummary(ctx, one, card)
   const [lead = [''], ...more] = sentences
   const description = fitSentences([lead], more)
-  const answer = sentences.map((s) => s[0] ?? '').join(' ')
   const anchor = anchors(y).get(card.id) ?? ''
   const v: View = { ctx, y: one, one: card, titles: new Map() }
   const image = `og/year-end/${year}/${card.id}.jpg`
   const body = `
       <div class="card-head">${ctx.art(card.id, 112)}<h1>${esc(title.replace(/ \| earnrate$/, ''))}</h1></div>
       <p class="updated">${esc(`${card.name} · Through ${shortDate(y.end)} · Updated ${ctx.dayWords(lastmod)}`)}</p>
-      <p class="answer">${esc(answer)}</p>
+      <p class="answer ye-figure">${esc(`${headline(one).line}.`)}</p>
       ${sendRow(y, card, title)}
       ${scopeHtml(ctx, card)}
       ${allSections(v)}

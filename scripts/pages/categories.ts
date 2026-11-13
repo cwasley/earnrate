@@ -4,16 +4,24 @@ import { categoryMatches } from '../../src/engine/evaluate.ts'
 import { optionName } from '../../src/engine/rule-text.ts'
 import {
   activationLine,
+  bareRate,
+  possessive,
   capitalize,
   choicePhrase,
-  earnText,
   listed,
   words,
 } from '../../src/engine/text.ts'
 import { findMerchant } from '../../src/merchants/resolve.ts'
 import type { Card, Rule } from '../../src/schema/card.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
-import { chipLinks, esc, fitDescription, fitTitle, SITE } from './site.ts'
+import {
+  chipLinks,
+  esc,
+  finePrint,
+  fitDescription,
+  fitTitle,
+  SITE,
+} from './site.ts'
 
 // The categories people search definitions for, by the word they use.
 const CATEGORY_PAGES: { slug: string; category: string }[] = [
@@ -173,6 +181,8 @@ function definitions(ctx: PageContext, family: string): Definition[] {
   return foldTiers(found)
 }
 
+// One definition and the cards that share it: what it covers once, the
+// cards and their rates as chips, the issuer's words behind a tap.
 function definitionBlock(ctx: PageContext, defs: Definition[]): string {
   const [first] = defs
   if (!first) return ''
@@ -190,25 +200,35 @@ function definitionBlock(ctx: PageContext, defs: Definition[]): string {
   const lines = ctx
     .ruleConditions(card, rule)
     .filter((l) => !/^Up to \$/.test(l) && (about(l) || l === activation))
-  // A quote stays when it names this option or how the categories work.
-  const quotes = definingQuotes(ctx, card, rule).filter((q) =>
-    about(q.quote, true),
-  )
+  // A quote stays when it names this option or how the categories work,
+  // each wording once for the cards that share it.
+  const quotes = [
+    ...new Map(
+      defs.flatMap((d) =>
+        definingQuotes(ctx, d.card, d.rule)
+          .filter((q) =>
+            aboutOption(ctx, d.card, d.rule, d.option)(q.quote, true),
+          )
+          .map((q) => [q.quote, q] as const),
+      ),
+    ).values(),
+  ]
   const rateOf = (d: Definition) => {
     const top = [...d.tiers].sort((a, b) => b.rate - a.rate)[0]
-    const earn = earnText(ctx.catalog, d.rule.rate, d.card.currency)
+    const earn = bareRate(d.rule.rate, d.card.currency)
     const membership = top?.requires?.membership
     return top && membership
-      ? `${earn}, up to ${earnText(ctx.catalog, top.rate, d.card.currency)} with ${ctx.membershipName(membership)}`
+      ? `${earn}, up to ${bareRate(top.rate, d.card.currency)} with ${ctx.membershipName(membership)}`
       : earn
   }
-  const cardsLine = listed(
-    defs.map(
+  const chips = `<ul class="rate-chips">${defs
+    .map(
       (d) =>
-        `<a href="/cards/${d.card.id}">${esc(ctx.shortName(d.card.id))}</a> (${esc(rateOf(d))})`,
-    ),
-  )
-  return `<div class="definition"><p><strong>${esc(capitalize(what))}</strong>: ${cardsLine}</p>${rule.note ? `<p class="muted">${esc(rule.note)}</p>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${quotes.length > 0 ? `<ul class="quotes">${quotes.map((q) => `<li>${ctx.quoteHtml(q)}</li>`).join('')}</ul>` : ''}</div>`
+        `<li><a href="/cards/${d.card.id}">${esc(ctx.shortName(d.card.id))}</a> <b>${esc(rateOf(d))}</b></li>`,
+    )
+    .join('')}</ul>`
+  const words = `${possessive(ctx.issuerName(card.issuer))} words`
+  return `<div class="definition"><p><strong>${esc(capitalize(what))}</strong></p>${chips}${rule.note ? `<p class="muted">${esc(rule.note)}</p>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${finePrint(quotes.length > 0 ? `<ul class="quotes">${quotes.map((q) => `<li>${ctx.quoteHtml(q)}</li>`).join('')}</ul>` : '', words)}</div>`
 }
 
 export function categoryPages(
@@ -224,13 +244,13 @@ export function categoryPages(
     if (defs.length === 0) return []
     const byIssuer = new Map<string, Map<string, Definition[]>>()
     for (const d of defs) {
-      // Cards whose rule reads and is quoted the same share one block.
+      // Cards whose rule reads the same share one block; their quotes are
+      // pooled behind it.
       const key = JSON.stringify([
         d.option,
         ctx.ruleWhatRaw(d.card, d.rule),
         d.rule.note ?? '',
         ctx.ruleConditions(d.card, d.rule).filter((l) => !/^Up to \$/.test(l)),
-        definingQuotes(ctx, d.card, d.rule).map((q) => q.quote),
       ])
       const issuer =
         byIssuer.get(d.card.issuer) ?? new Map<string, Definition[]>()
@@ -259,7 +279,7 @@ export function categoryPages(
     const date = lastmod([...cardFiles, 'data/categories.yaml'])
     const body = `
       <h1>What counts as ${esc(label)}</h1>
-      <p class="updated">${String(defs.length)} bonus rules from ${String(issuers.length)} issuers · Updated ${esc(ctx.dayWords(date))}</p>
+      <p class="updated">${String(issuers.length)} issuers · Updated ${esc(ctx.dayWords(date))}</p>
       <p>Each issuer decides what its ${esc(label)} bonus covers, mostly by how the store's charge is coded. Here is every bonus on ${esc(label)} in earnrate's data, grouped by issuer, with the issuer's own words.${ranking ? ` For which card earns the most, see the <a href="/best/${ranking}">${esc(label)} ranking</a>.` : ''}</p>
       <div class="issuers">${issuers
         .map(
@@ -302,7 +322,6 @@ export function categoryPages(
         page,
         label,
         issuers: issuers.length,
-        rules: defs.length,
         files: cardFiles,
       },
     ]
@@ -331,7 +350,7 @@ export function categoryPages(
       <h1>What each category covers</h1>
       <p class="updated">Updated ${esc(ctx.dayWords(indexDate))}</p>
       <p>The same word means different things to different issuers. Each page puts their definitions and exclusions side by side, from the cards' terms.</p>
-      <ul>${built.map((b) => `<li><a href="/categories/${b.page.path.split('/').at(-1) ?? ''}">${esc(capitalize(b.label))}</a>: ${String(b.rules)} bonus rules from ${String(b.issuers)} issuers</li>`).join('')}</ul>`,
+      <ul>${built.map((b) => `<li><a href="/categories/${b.page.path.split('/').at(-1) ?? ''}">${esc(capitalize(b.label))}</a>: what ${String(b.issuers)} issuers count</li>`).join('')}</ul>`,
       jsonLd: {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',

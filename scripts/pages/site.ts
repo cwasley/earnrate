@@ -10,7 +10,6 @@ const ICON = '/favicon.svg?v=2'
 
 // The footer every page shares, the home page and the policy pages
 // included (site/vite.config.ts fills their <!--earnrate:footer-->).
-// `before` is a page's own line above it, like the data version.
 const FOOTER_GROUPS: [string, [string, string][]][] = [
   [
     'Find a card',
@@ -45,13 +44,13 @@ const FOOTER_GROUPS: [string, [string, string][]][] = [
   ],
 ]
 
-export const siteFooter = (before = '') =>
-  `<footer>${before}<nav class="footer-cols" aria-label="More from earnrate">${FOOTER_GROUPS.map(
+export const siteFooter = () =>
+  `<footer><nav class="footer-cols" aria-label="More from earnrate">${FOOTER_GROUPS.map(
     ([head, links]) =>
       `<div><p class="footer-head">${head}</p><ul>${links.map(([href, label]) => `<li><a href="${href}">${esc(label)}</a></li>`).join('')}</ul></div>`,
   ).join(
     '',
-  )}</nav><p>No affiliate links, ever. The code is MIT licensed; the card data is CC BY-NC 4.0, free for personal use, and <a href="mailto:licensing@earnrate.dev">licensed</a> for commercial use.</p></footer>`
+  )}</nav><p>No affiliate links. Code MIT; card data CC BY-NC 4.0, free for personal use and <a href="mailto:licensing@earnrate.dev">licensed</a> for commercial use.</p></footer>`
 
 // Search results cut titles and descriptions past about these lengths;
 // tests/pages.test.ts holds every page to them.
@@ -137,6 +136,12 @@ export function fitSentences(
 export const chipLinks = (links: string[]) =>
   `<ul class="chip-links">${links.map((l) => `<li>${l}</li>`).join('')}</ul>`
 
+// The issuers' quotes, notes and exclusions, one tap away.
+export const finePrint = (html: string, label = 'Fine print') =>
+  html === ''
+    ? ''
+    : `<details class="fine"><summary>${esc(label)}</summary>${html}</details>`
+
 export type Crumb = { name: string; path: string }
 
 export type PageSpec = {
@@ -217,12 +222,11 @@ ${page.noindex ? '    <meta name="robots" content="noindex, follow" />\n' : ''} 
       ${PAGE_HEADER}
       ${page.crumbs.length > 0 ? crumbsHtml(page.crumbs) : ''}
 ${page.body}
-      <aside class="next">
-        <h2>Use it with your own cards</h2>
-        <p><a href="/#wallet">Add your cards on earnrate.dev</a> and it picks the best one anywhere, tracking your spending caps and quarterly picks. It runs in your browser, with no sign-up.</p>
-        <p>Or <a href="/#claude">use it in Claude</a>: ask on claude.ai, in the desktop app, in Claude Code or in Cowork.</p>
+      <aside class="next" aria-label="Use it with your own cards">
+        <p class="actions"><a class="button" href="/#wallet">Add your cards</a><a class="button quiet" href="/#claude">Ask in Claude</a></p>
+        <p class="muted">Rates from each issuer's terms, card data ${esc(context.dataVersion)}. Rates change; check before you apply. <a href="/support">Wrong rate?</a></p>
       </aside>
-      ${siteFooter(`<p class="footer-intro">earnrate compares ${String(catalog.cards.length)} U.S. cards using each issuer's own terms; rankings depend only on those terms. Card data ${esc(context.dataVersion)}. Rates change, so check the issuer's terms before you apply. Wrong rate? <a href="/support">Tell us</a>.</p>`)}
+      ${siteFooter()}
     </main>
   </body>
 </html>

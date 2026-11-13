@@ -4,6 +4,7 @@
 // page's freshness facts.
 import {
   changeHeadline,
+  changeWhat,
   datedChanges,
   type DatedChange,
   freshness,
@@ -13,6 +14,7 @@ import {
 } from '../../src/engine/changes.ts'
 import { addDays } from '../../src/engine/periods.ts'
 import {
+  capitalize,
   currencyName,
   hostname,
   listed,
@@ -23,7 +25,7 @@ import { findMerchant } from '../../src/merchants/resolve.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Change, ChangeCause, Release } from '../../src/schema/changes.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
-import { esc, fitDescription, fitTitle, SITE } from './site.ts'
+import { esc, finePrint, fitDescription, fitTitle, SITE } from './site.ts'
 
 const RECENT_ON_CARD = 3
 const RECENT_ON_COMPANIES = 5
@@ -53,9 +55,18 @@ function whenText(change: Change): string {
   return parts.length === 0 ? '' : `; ${parts.join(', ')}`
 }
 
+// One date per change on the page: when it took effect if the issuer said,
+// otherwise the release that recorded it. The year only when it isn't this
+// one.
+function changeDay(ctx: PageContext, d: DatedChange): string {
+  const day = d.change.effective ?? d.date
+  const words = shortDate(day)
+  return `<time datetime="${day}">${esc(day.slice(0, 4) === ctx.today.slice(0, 4) ? words.replace(/, \d{4}$/, '') : words)}</time>`
+}
+
 function issuerItem(ctx: PageContext, d: DatedChange): string {
   const id = cardOf(d)
-  return `<li>${ctx.art(id)}<div><p class="muted"><time datetime="${d.date}">${esc(shortDate(d.date))}</time>${esc(whenText(d.change))}</p><p><strong>${esc(changeHeadline(ctx.catalog, d.change))}</strong></p><p class="muted"><a href="/cards/${id}">${esc(ctx.shortName(id))}</a> · Source: ${sourceLink(d.change.source ?? '')}</p></div></li>`
+  return `<li>${ctx.art(id)}<div><p class="muted">${changeDay(ctx, d)} · <a href="/cards/${id}">${esc(ctx.shortName(id))}</a> · ${sourceLink(d.change.source ?? '')}</p><p><strong>${esc(capitalize(changeWhat(ctx.catalog, d.change)))}</strong></p></div></li>`
 }
 
 function names(ctx: PageContext, change: Change): string {
@@ -168,7 +179,7 @@ export function changesFeed(catalog: Catalog, releases: Release[]): string {
       <link>${SITE}/cards/${id}</link>
       <guid isPermaLink="false">earnrate-${xml(`${d.version}-${id}-${d.change.field ?? ''}`)}</guid>
       <pubDate>${rfc822(d.date)}</pubDate>
-      <description>${xml(`${headline}. Source: ${d.change.source ?? ''}`)}</description>
+      <description>${xml(`${headline}${whenText(d.change)}. Source: ${d.change.source ?? ''}`)}</description>
     </item>`
   })
   const facts = freshness(catalog, releases)
@@ -215,13 +226,17 @@ export function recentChangesSection(
   const own =
     fixes.length === 0
       ? ''
-      : `<p>Corrections earnrate made to its own data about this card; ${esc(ctx.issuerName(ctx.catalog.cards.find((c) => c.id === cardId)?.issuer ?? ''))} didn't change anything:</p><ul class="change-notes">${fixes
-          .map(
-            (d) =>
-              `<li><time datetime="${d.date}">${esc(shortDate(d.date))}</time>: ${esc(d.change.summary ?? '')}</li>`,
-          )
-          .join('')}</ul>`
-  return `<h2 id="${RECENT_CHANGES_ID}">Recent changes</h2>${issuer}${own}<p><a href="/changes">Every change issuers made to card terms</a></p>`
+      : finePrint(
+          `<p>Corrections earnrate made to its own data about this card; ${esc(ctx.issuerName(ctx.catalog.cards.find((c) => c.id === cardId)?.issuer ?? ''))} didn't change anything:</p><ul class="change-notes">${fixes
+            .map(
+              (d) =>
+                `<li><time datetime="${d.date}">${esc(shortDate(d.date))}</time>: ${esc(d.change.summary ?? '')}</li>`,
+            )
+            .join('')}</ul>`,
+          `Data fixes (${String(fixes.length)})`,
+        )
+  // A card's own changes first; earnrate's fixes to its data last, closed.
+  return `<h2 id="${RECENT_CHANGES_ID}">Recent changes</h2>${issuer}<p><a href="/changes">Every change issuers made to card terms</a></p>${own}`
 }
 
 // The companies page's <!--earnrate:freshness--> and <!--earnrate:recent_changes-->.

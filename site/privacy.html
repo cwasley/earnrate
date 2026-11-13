@@ -35,6 +35,9 @@
         color: var(--muted);
         max-width: 36em;
       }
+      table.numbers th[scope='row'] {
+        width: 42%;
+      }
       code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         font-size: 0.9em;
@@ -89,8 +92,44 @@
         <p class="updated">Updated November 12, 2026.</p>
       </header>
 
+      <section aria-labelledby="leaves">
+        <h2 id="leaves">What leaves your browser on earnrate.dev</h2>
+        <table class="numbers">
+          <tbody>
+            <tr>
+              <th scope="row"><a href="#site">By default</a></th>
+              <td>
+                Nothing you enter: your wallet, amounts and searches stay on
+                your device.
+              </td>
+            </tr>
+            <tr>
+              <th scope="row"><a href="#pass">Add to Apple Wallet</a></th>
+              <td>
+                Your cards by product, their picks and activations, checkout
+                names, memberships and today's date
+              </td>
+            </tr>
+            <tr>
+              <th scope="row"><a href="#sync">Sync with Claude</a></th>
+              <td>Your wallet, stored encrypted. Off unless you turn it on.</td>
+            </tr>
+            <tr>
+              <th scope="row">
+                <a href="#report-links">Copy link on /rate</a>
+              </th>
+              <td>The report, under a random name</td>
+            </tr>
+            <tr>
+              <th scope="row"><a href="#counts">Usage counts</a></th>
+              <td>An action's name and the kind of device</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
       <section>
-        <h2>On earnrate.dev</h2>
+        <h2 id="site">On earnrate.dev</h2>
         <p>
           Everything on earnrate.dev runs in your browser: the card comparison,
           the spending simulator and your wallet. The card data loads with the
@@ -116,7 +155,7 @@
           checks for a newer one when you're online. It holds nothing you typed,
           and clearing the site's data removes it.
         </p>
-        <h3>The Apple Wallet pass</h3>
+        <h3 id="pass">The Apple Wallet pass</h3>
         <p>
           Only when you press <b>Add to Apple Wallet</b>, your browser sends
           earnrate's pass server (pass.earnrate.dev) what the cheat sheet needs:
@@ -254,7 +293,7 @@
           browser, and opening it doesn't read or change anything saved in
           theirs. Anyone you send it to can pass it on.
         </p>
-        <h3>What the site counts</h3>
+        <h3 id="counts">What the site counts</h3>
         <p>
           So I can tell which parts of earnrate.dev people use, the page counts
           the actions below. When you do one, your browser sends earnrate.dev
