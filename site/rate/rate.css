@@ -477,13 +477,13 @@ svg.rate-bar {
    below waits for the report, so nothing on the page moves when it
    arrives. */
 .rate-frame,
-.rate-frame > [data-rate-frame],
-main[data-rate='shared'] .rate-frame-lede {
+.rate-frame > [data-rate-frame] {
   display: none;
 }
 
 main[data-loading] .rate-frame,
-main:is([data-rate='own'], [data-rate='shared']) [data-rate-frame='report'],
+main[data-rate='own'] [data-rate-frame='own'],
+main[data-rate='shared'] [data-rate-frame='shared'],
 main[data-rate='pick'] [data-rate-frame='pick'] {
   display: block;
 }
@@ -501,26 +501,17 @@ main[data-loading] > :not(header, #rate) {
   margin-top: 16px;
 }
 
-main[data-rate='own'] .rate-frame-lede + .rate-report-frame {
+.rate-frame-lede + .rate-report-frame {
   margin-top: 0;
 }
 
-.rate-report-frame .rate-figure {
-  width: 3.4em;
-}
-
 .rate-frame-figure {
+  width: 3.4em;
   background-size: 100% 0.7em;
 }
 
-.rate-frame-per {
-  margin: 4px 0 0;
-  font-size: 17px;
-  line-height: 1.3;
-}
-
 .rate-report-frame .rate-cards li {
-  width: 8.5em;
+  width: 9em;
   min-height: 27px;
   background:
     linear-gradient(var(--line), var(--line)) center / calc(100% - 20px) 0.6em
@@ -529,7 +520,11 @@ main[data-rate='own'] .rate-frame-lede + .rate-report-frame {
 }
 
 .rate-report-frame .rate-cards li:nth-child(2) {
-  width: 11em;
+  width: 13em;
+}
+
+.rate-report-frame .rate-cards li:nth-child(3) {
+  width: 11.5em;
 }
 
 .rate-frame-panel {

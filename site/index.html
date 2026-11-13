@@ -764,9 +764,11 @@
                     ><span class="frame-line"></span
                   ></span>
                 </div>
-                <div class="filters">
-                  <span class="frame-line frame-summary"></span>
-                </div>
+                <details class="filters">
+                  <summary>
+                    <span class="frame-text">Filters and memberships</span>
+                  </summary>
+                </details>
               </div>
               <section class="example">
                 <h3><span class="frame-line frame-heading"></span></h3>
@@ -801,18 +803,23 @@
             </div>
             <div class="frame-body" data-frame="spending">
               <div class="segments find-mode frame-held">
-                <span class="frame-segment frame-on"
-                  ><span class="frame-line"></span
-                ></span>
-                <span class="frame-segment"
-                  ><span class="frame-line"></span
-                ></span>
+                <label class="on"
+                  ><span class="frame-text"
+                    >A new card for my wallet</span
+                  ></label
+                >
+                <label
+                  ><span class="frame-text"
+                    >Best cards from scratch</span
+                  ></label
+                >
               </div>
               <p class="muted frame-held-text">
-                <span class="frame-line"></span>
-                <span class="frame-line frame-short"></span>
+                <span class="frame-text"
+                  >Your cards earn about $670 a year on this spending.</span
+                >
               </p>
-              <div class="segments frame-held">
+              <div class="segments whatif-view frame-held">
                 <span class="frame-segment frame-on"
                   ><span class="frame-line"></span
                 ></span>
@@ -860,18 +867,50 @@
                   </li>
                 </ol>
                 <span class="more frame-more"></span>
+                <p class="muted frame-unheld">
+                  <span class="frame-text"
+                    >If you have a wireless or home internet account: its card,
+                    $563 a year.</span
+                  >
+                </p>
               </section>
-              <div class="filters">
-                <span class="frame-line frame-summary"></span>
-              </div>
+              <details class="filters spend-edit">
+                <summary>
+                  <span class="frame-text frame-basis"
+                    >On typical U.S. spending, about $1,990 a month.</span
+                  >
+                  <span class="frame-text">Change it</span>
+                </summary>
+              </details>
+              <details class="filters frame-unheld">
+                <summary>
+                  <span class="frame-text">Filters and memberships</span>
+                </summary>
+              </details>
+              <details class="filters whatif-more frame-held">
+                <summary>
+                  <span class="frame-text"
+                    >Can't get cards from some issuers? Leave them out</span
+                  >
+                </summary>
+              </details>
             </div>
             <div class="frame-body panels wallet-grid" data-frame="wallet">
               <section class="panel sheet">
                 <div class="sheet-head frame-sheet-head">
                   <div>
                     <span class="sheet-brand frame-line"></span>
-                    <h3 class="frame-line"></h3>
-                    <p class="frame-line frame-short"></p>
+                    <h3><span class="frame-text">My card cheat sheet</span></h3>
+                    <p>
+                      <span class="frame-text"
+                        >Q4 2026 · the card to use for each purchase</span
+                      >
+                    </p>
+                  </div>
+                  <div class="sheet-tools">
+                    <span class="sheet-icon"></span>
+                    <span class="sheet-icon"></span>
+                    <span class="sheet-logo"></span>
                   </div>
                 </div>
                 <ol class="sheet-rows">
@@ -926,8 +965,42 @@
                     ><span class="sheet-rate frame-line frame-rate"></span>
                   </li>
                 </ol>
+                <div class="wallet-pass">
+                  <span class="frame-pass"></span>
+                  <p>
+                    <span class="frame-text"
+                      >For iPhone: this cheat sheet in Apple Wallet, good until
+                      the quarter ends. This sends the card names and picks (no
+                      amounts) to earnrate's server, which makes the pass and
+                      keeps nothing.</span
+                    >
+                  </p>
+                </div>
               </section>
               <div class="wallet-main">
+                <section class="panel todo-panel">
+                  <h3 class="frame-todo-head">
+                    <span class="frame-line frame-heading"></span>
+                  </h3>
+                  <ul class="todo-list">
+                    <li class="todo-row">
+                      <span class="frame-art"></span>
+                      <span class="todo-text"
+                        ><strong class="frame-line"></strong
+                        ><span class="todo-meta frame-line frame-short"></span
+                      ></span>
+                      <span class="todo-go frame-go"></span>
+                    </li>
+                    <li class="todo-row">
+                      <span class="frame-art"></span>
+                      <span class="todo-text"
+                        ><strong class="frame-line"></strong
+                        ><span class="todo-meta frame-line frame-short"></span
+                      ></span>
+                      <span class="todo-go frame-go"></span>
+                    </li>
+                  </ul>
+                </section>
                 <section class="panel">
                   <h3><span class="frame-line frame-heading"></span></h3>
                   <ul class="held">
@@ -976,11 +1049,31 @@
               <section class="panel first">
                 <h3><span class="frame-line frame-heading"></span></h3>
                 <p>
-                  <span class="frame-line"></span>
-                  <span class="frame-line"></span>
-                  <span class="frame-line frame-short"></span>
+                  <span class="frame-text"
+                    >Tap the ones you have, and earnrate tells you which to use
+                    anywhere. Your wallet is saved only in this browser: no
+                    account, and never a card number.</span
+                  >
                 </p>
                 <ul class="quick-cards">
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
                   <li>
                     <span class="quick-card frame-tile"
                       ><span class="frame-art"></span

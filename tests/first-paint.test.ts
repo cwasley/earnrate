@@ -1,7 +1,9 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { runInNewContext } from 'node:vm'
 import { describe, expect, test } from 'vitest'
+import { RATE_FRAME } from '../site/rate/frame.ts'
+import { perYear } from '../site/rate/picture-text.ts'
 import { TABS, tabFor } from '../site/tabs.ts'
 import { ROOT } from './helpers.ts'
 
@@ -146,4 +148,29 @@ test("/statement's first panel matches the one its script draws", () => {
   expect(texts.length).toBeGreaterThan(4)
   for (const text of texts) expect(source).toContain(text)
   expect(inlineScripts(html)).toEqual([])
+})
+
+test("the outlines' words are the app's, or a typical figure's line", () => {
+  const plain = (text: string) => words(text.replaceAll('\u00a0', ' '))
+  const source = plain(
+    ['site/app', 'site/rate', 'site/sheet']
+      .flatMap((dir) =>
+        readdirSync(path.join(ROOT, dir))
+          .filter((f) => f.endsWith('.tsx'))
+          .map((f) => read(`${dir}/${f}`)),
+      )
+      .join(' '),
+  )
+  const worded = (['you', 'neutral'] as const).map((voice) =>
+    plain(perYear({ counted: [null] }, voice)),
+  )
+  const texts = [read('site/index.html'), read('site/sheet.html'), RATE_FRAME]
+    .flatMap((html) => [
+      ...html.matchAll(/<span\s+class="frame-text[^"]*"\s*>([^<]+)<\/span/g),
+    ])
+    .map((m) => plain(m[1] ?? ''))
+  expect(texts.length).toBeGreaterThan(10)
+  for (const text of texts)
+    if (!/\d/.test(text) && !worded.includes(text))
+      expect(source).toContain(text)
 })

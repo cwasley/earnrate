@@ -2717,6 +2717,27 @@ main[data-tab='wallet'] .app-frame [data-frame-tab='wallet'] {
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
 }
 
+/* The app's own words, unseen, with a still bar under each line: they wrap
+   where its text will on any font. */
+.frame-text {
+  color: transparent;
+  background: linear-gradient(var(--bar, var(--line)), var(--bar, var(--line)))
+    left center / 100% 0.6em no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  user-select: none;
+}
+
+/* The spending line's figure, unlike the Change it after it, isn't bold. */
+.frame-basis {
+  font-weight: 400;
+}
+
+:is(.app-frame, .rate-frame, .sheet-frame) summary {
+  color: var(--line);
+  cursor: default;
+}
+
 /* A still bar where a line of text will be. */
 .frame-line {
   display: block;
@@ -2777,10 +2798,6 @@ main[data-tab='wallet'] .app-frame [data-frame-tab='wallet'] {
   border-radius: 8px;
 }
 
-.app-frame .find-mode .frame-segment {
-  min-height: 48px;
-}
-
 .app-frame .frame-segment > .frame-line {
   width: 5em;
 }
@@ -2801,14 +2818,43 @@ main[data-saved] .app-frame .scope .frame-segment:last-child {
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
 }
 
-main[data-saved] .app-frame .frame-held {
+main[data-saved] .app-frame .segments.frame-held {
   display: flex;
-  margin-bottom: 14px;
+}
+
+main[data-saved] .app-frame details.frame-held {
+  display: block;
 }
 
 main[data-saved] .app-frame .frame-held-text {
   display: block;
   margin: 0 0 14px;
+}
+
+.app-frame .results > p.frame-unheld {
+  margin: 0 0 14px;
+}
+
+/* A new visitor's Best setups ranks the same cards every time: its first
+   rows' size, names wrapped on a phone and a first-year figure under the
+   rate. */
+main:not([data-saved]) .app-frame .result-list > li:nth-child(2) .result-top {
+  min-height: 54.8px;
+}
+
+main:not([data-saved]) .app-frame .result.hero .result-top {
+  min-height: 59.6px;
+}
+
+@media (max-width: 440px) {
+  main:not([data-saved]) .app-frame .result.hero .result-top {
+    min-height: 91.6px;
+  }
+
+  /* A phone wraps most card names in a wallet's ranking. */
+  main[data-saved] .app-frame .result-top {
+    min-height: 66.6px;
+  }
 }
 
 .frame-input {
@@ -2830,8 +2876,9 @@ main[data-saved] .app-frame .frame-held-text {
   background: var(--accent-soft);
 }
 
-.chip.frame-chip {
+.app .chip.frame-chip {
   width: 6em;
+  font: inherit;
   cursor: default;
 }
 
@@ -2841,6 +2888,11 @@ main[data-saved] .app-frame .frame-held-text {
 
 .chip.frame-chip:nth-child(3n) {
   width: 4em;
+}
+
+.app .chip.frame-chip:last-child {
+  width: 13em;
+  font-size: 14.5px;
 }
 
 .app-frame .more.frame-more {
@@ -2853,21 +2905,31 @@ main[data-saved] .app-frame .frame-held-text {
 }
 
 .sheet-head.frame-sheet-head {
-  display: block;
+  --bar: color-mix(in srgb, var(--accent) 18%, transparent);
   background: var(--accent-soft);
 }
 
 .frame-sheet-head .frame-line {
-  --bar: color-mix(in srgb, var(--accent) 18%, transparent);
   background-image: linear-gradient(var(--bar), var(--bar));
 }
 
 .frame-sheet-head .sheet-brand {
+  display: inline-block;
   width: 4em;
 }
 
-.frame-sheet-head h3.frame-line {
-  background-size: min(11em, 80%) 0.6em;
+.app .frame-sheet-head .sheet-icon {
+  color: var(--bar);
+  cursor: default;
+}
+
+.frame-pass {
+  display: block;
+  width: 127px;
+  height: 40px;
+  margin: 4px 0;
+  border-radius: 8px;
+  background: var(--line);
 }
 
 .sheet-rows .sheet-card.frame-line {
@@ -2884,14 +2946,26 @@ main[data-saved] .app-frame .frame-held-text {
   content: '\00a0';
 }
 
+.app-frame [data-frame='wallet-empty'] .quick-cards {
+  margin-top: 28px;
+}
+
+/* The common cards' tiles, each the height of a two-line name, the rows'
+   usual height (a wide grid's first row has one-line names). */
 .quick-card.frame-tile {
-  min-height: 117px;
+  min-height: 139.2px;
   cursor: default;
 }
 
+@media (min-width: 720px) {
+  .quick-cards > li:nth-child(-n + 5) > .frame-tile {
+    min-height: 116.8px;
+  }
+}
+
 .frame-tile > .frame-art {
-  width: 56px;
-  height: 35px;
+  width: 64px;
+  height: 40px;
 }
 
 .frame-tile > .frame-line {
@@ -2900,6 +2974,40 @@ main[data-saved] .app-frame .frame-held-text {
 
 .app-frame .held-row {
   cursor: default;
+}
+
+.app-frame .frame-todo-head {
+  margin: 0;
+  padding: 16px 0;
+  font-size: 18px;
+}
+
+.app-frame .todo-list {
+  padding-bottom: 14px;
+}
+
+.app-frame .todo-row .frame-art {
+  align-self: flex-start;
+  width: 32px;
+  height: 20px;
+  margin-top: 3px;
+}
+
+.app-frame .todo-go.frame-go {
+  width: auto;
+  min-width: 5.5em;
+  background: var(--surface);
+}
+
+.app-frame .todo-go.frame-go::before {
+  content: '\00a0';
+}
+
+/* On a phone a to-do's title takes two lines beside its button. */
+@media (max-width: 440px) {
+  .app-frame .todo-text > strong {
+    min-height: 2.6em;
+  }
 }
 
 .app-frame .held-name,

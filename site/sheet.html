@@ -39,12 +39,26 @@
         </noscript>
         <!-- The outline of a sent cheat sheet, until the page's script
              replaces it (sheet.css). -->
-        <section class="panel sheet sent-sheet sheet-frame" aria-hidden="true">
+        <section
+          class="panel sheet sent-sheet sheet-frame"
+          aria-hidden="true"
+          inert
+        >
           <div class="sheet-head frame-sheet-head">
             <div>
               <span class="sheet-brand frame-line"></span>
-              <span class="frame-line frame-title"></span>
-              <p class="frame-line frame-short"></p>
+              <span class="frame-title"
+                ><span class="frame-text">Card cheat sheet</span></span
+              >
+              <p>
+                <span class="frame-text"
+                  >Q4 2026 · the card to use for each purchase</span
+                >
+              </p>
+            </div>
+            <div class="sheet-tools">
+              <span class="sheet-icon"></span>
+              <span class="sheet-logo"></span>
             </div>
           </div>
           <ol class="sheet-rows">
@@ -93,7 +107,23 @@
               ><span class="sheet-card frame-line"></span
               ><span class="sheet-rate frame-line frame-rate"></span>
             </li>
+            <li>
+              <span class="sheet-label frame-line frame-short"></span
+              ><span class="sheet-card frame-line"></span
+              ><span class="sheet-rate frame-line frame-rate"></span>
+            </li>
           </ol>
+          <div class="wallet-pass">
+            <span class="frame-pass"></span>
+            <p>
+              <span class="frame-text"
+                >For iPhone: this cheat sheet in Apple Wallet, good until the
+                quarter ends. This sends the card names and picks (no amounts)
+                to earnrate's server, which makes the pass and keeps
+                nothing.</span
+              >
+            </p>
+          </div>
         </section>
         <script>
           // A sent cheat sheet is in the address: its outline shows while the
