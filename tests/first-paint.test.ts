@@ -45,7 +45,7 @@ function run(
     document: { currentScript: { parentElement: element } },
     location: { pathname: '/', ...place },
     localStorage: storage,
-    setTimeout: () => 0,
+    addEventListener: () => undefined,
     URLSearchParams,
   })
   return { dataset, read }

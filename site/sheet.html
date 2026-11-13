@@ -102,7 +102,7 @@
             const main = document.currentScript.parentElement.parentElement
             if (!/(^#|&)s=/.test(location.hash)) return
             main.dataset.loading = ''
-            setTimeout(() => delete main.dataset.loading, 12000)
+            addEventListener('load', () => delete main.dataset.loading)
           })()
         </script>
       </div>

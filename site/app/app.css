@@ -2790,6 +2790,17 @@ main[data-tab='wallet'] .app-frame [data-frame-tab='wallet'] {
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
 }
 
+/* With saved cards, At a store opens on Your cards, the second choice. */
+main[data-saved] .app-frame .scope .frame-segment.frame-on {
+  background: none;
+  box-shadow: none;
+}
+
+main[data-saved] .app-frame .scope .frame-segment:last-child {
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+
 main[data-saved] .app-frame .frame-held {
   display: flex;
   margin-bottom: 14px;

@@ -661,11 +661,11 @@
                   : 'best'
           if (saved) main.dataset.saved = ''
           main.dataset.loading = ''
-          setTimeout(() => {
+          addEventListener('load', () => {
             if (main.dataset.loading === undefined) return
             for (const key of ['tab', 'saved', 'loading'])
               delete main.dataset[key]
-          }, 12000)
+          })
         })()
       </script>
       <header class="hero">

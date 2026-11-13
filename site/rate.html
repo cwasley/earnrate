@@ -66,11 +66,11 @@
             if (shared) rate.querySelector('h1').textContent = 'A shared wallet'
             main.dataset.rate = kind
             main.dataset.loading = ''
-            setTimeout(() => {
+            addEventListener('load', () => {
               if (main.dataset.loading === undefined) return
               delete main.dataset.rate
               delete main.dataset.loading
-            }, 12000)
+            })
           })()
         </script>
       </div>
