@@ -35,7 +35,9 @@ test('every bonus rate is listed, and an activated quarter says so', () => {
     /3% cash back at restaurants, drugstores and pharmacies/,
   )
   expect(rates).not.toMatch(/once activated/)
-  expect(flex?.toActivate).toEqual([])
+  expect(flex?.toActivate).toEqual([
+    'grocery stores and select streaming services (Jan 1, 2027 to Mar 31, 2027, activate from Dec 15, 2026)',
+  ])
 })
 
 test('a capped rate says how much spending earns it', () => {

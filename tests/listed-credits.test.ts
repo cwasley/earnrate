@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { catalogProblems } from '../src/data/integrity.ts'
 import { loadCatalog } from '../src/data/load.ts'
-import { checklist } from '../src/engine/checklist.ts'
+import { checklist, checklistRows } from '../src/engine/checklist.ts'
 import {
   allCreditsYear,
   creditAt,
@@ -129,6 +129,39 @@ describe('a listed credit', () => {
       { filters: ALL_PERSONAL_CARDS, memberships: [], valuations: {} },
     )
     expect(every.credits.map((c) => c.creditId)).not.toContain('airline-fee')
+  })
+
+  test('that needs setting up says how in the to-do, apart from the credits to enroll in', () => {
+    const items = checklistRows(
+      catalog,
+      wallet(),
+      TODAY,
+      undefined,
+      () => 'Amex Platinum',
+    ).filter((i) => i.cardId === 'amex-platinum' && i.kind === 'enroll')
+    const setup = items.find((i) => i.ref === 'airline-fee')
+    expect(setup?.text).toBe(
+      "Set up Amex Platinum's $200 airline fee credit with American Express (it pays on incidental fees charged by the one airline you select), then say you use it and it counts against the annual fee.",
+    )
+    expect(setup?.row).toMatchObject({
+      title: 'Set up airline fee credit',
+      button: 'Set up',
+    })
+    const enroll = items.find((i) => i.text.startsWith('Enroll in'))
+    expect(enroll?.text).not.toMatch(/airline/)
+    expect(enroll?.ref?.split(',')).not.toContain('airline-fee')
+    const done = checklist(
+      catalog,
+      wallet({ enrolled: ['airline-fee'] }),
+      TODAY,
+    )
+    expect(done.find((i) => i.ref === 'airline-fee')?.kind).toBe('credit')
+    const skipped = checklist(
+      catalog,
+      wallet({ skipped_credits: ['airline-fee'] }),
+      TODAY,
+    )
+    expect(skipped.map((i) => i.ref ?? '').join(' ')).not.toMatch(/airline-fee/)
   })
 
   test('is used only as marked, and the to-do says what is left until it resets', () => {

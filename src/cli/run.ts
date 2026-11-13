@@ -377,7 +377,9 @@ export async function run(argv: string[], io: Io): Promise<number> {
   const wallet = options.valuation
     ? withValuationProfile(loaded, options.valuation)
     : loaded
-  const rec = recommend(catalog, wallet, purchase, merchant)
+  const rec = recommend(catalog, wallet, purchase, merchant, {
+    today: io.today,
+  })
 
   if (options.json) {
     io.stdout(`${JSON.stringify(rec, null, 2)}\n`)

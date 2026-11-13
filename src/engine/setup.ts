@@ -102,7 +102,8 @@ export type SetupNote = {
   text: string
 }
 
-// Rules that start within this many days are worth activating now.
+// Rules that start, or open for activation, within this many days are worth
+// a reminder now.
 const ACTIVATION_LOOKAHEAD_DAYS = 45
 
 const searchWords = (s: string) =>
@@ -168,7 +169,9 @@ export function activationRules(card: Card, today: string): string[] {
         (r.valid_to === undefined || r.valid_to >= today) &&
         (r.activate_by === undefined || r.activate_by >= today) &&
         (r.valid_from === undefined ||
-          daysBetween(today, r.valid_from) <= ACTIVATION_LOOKAHEAD_DAYS),
+          daysBetween(today, r.valid_from) <= ACTIVATION_LOOKAHEAD_DAYS ||
+          (r.activate_from !== undefined &&
+            daysBetween(today, r.activate_from) <= ACTIVATION_LOOKAHEAD_DAYS)),
     )
     .map((r) => r.id)
 }

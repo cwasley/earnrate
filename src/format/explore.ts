@@ -35,6 +35,7 @@ import {
   words,
   listed,
 } from '../engine/text.ts'
+import { pickName } from '../engine/rule-text.ts'
 import type { Catalog } from '../schema/catalog.ts'
 
 const TOP_BEST = 10
@@ -110,10 +111,11 @@ export function formatExploration(
   return `${lines.join('\n')}\n`
 }
 
-function picksText(picks: Picks): string {
+function picksText(catalog: Catalog, cardId: string, picks: Picks): string {
+  const card = catalog.cards.find((c) => c.id === cardId)
   const parts = Object.entries(picks).map(
     ([choice, options]) =>
-      `${listed(options.map(words))} as its ${choiceName(choice)} ${options.length === 1 ? 'pick' : 'picks'}`,
+      `${listed(options.map((o) => (card ? pickName(catalog, card, choice, o) : words(o))))} as its ${choiceName(choice)} ${options.length === 1 ? 'pick' : 'picks'}`,
   )
   return parts.length === 0 ? '' : ` (with ${parts.join('; ')})`
 }
@@ -159,7 +161,7 @@ export function formatCatalogSimulation(
     const card = s.cards[0]
     if (!card) return
     lines.push(
-      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeDollars(s.net)}  (${wholeDollars(s.rewards)} rewards, ${wholeDollars(s.annualFees)} fee)${ifCreditsShort(unheld(s), s.netIfCreditsUsed)}${picksText(card.picks)}`,
+      `${String(i + 1).padStart(2)}. ${name(card.cardId)}  ${wholeDollars(s.net)}  (${wholeDollars(s.rewards)} rewards, ${wholeDollars(s.annualFees)} fee)${ifCreditsShort(unheld(s), s.netIfCreditsUsed)}${picksText(catalog, card.cardId, card.picks)}`,
     )
   })
   const pairs = r.pairs.slice(0, top)
@@ -167,7 +169,7 @@ export function formatCatalogSimulation(
     lines.push('', 'Best two-card pairs:')
     pairs.forEach((s, i) => {
       lines.push(
-        `${String(i + 1).padStart(2)}. ${s.cards.map((c) => `${name(c.cardId)}${picksText(c.picks)}`).join(' + ')}  ${wholeDollars(s.net)}${ifCreditsShort(unheld(s), s.netIfCreditsUsed, '', 'their')}`,
+        `${String(i + 1).padStart(2)}. ${s.cards.map((c) => `${name(c.cardId)}${picksText(catalog, c.cardId, c.picks)}`).join(' + ')}  ${wholeDollars(s.net)}${ifCreditsShort(unheld(s), s.netIfCreditsUsed, '', 'their')}`,
       )
       if (s.alternatives.length > 0)
         lines.push(
@@ -212,7 +214,7 @@ export function formatAdditions(
     lines.push('', 'Cards that would add the most (after their annual fee):')
     gains.slice(0, all ? 20 : TOP_SIMULATED).forEach((a, i) => {
       lines.push(
-        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeDollars(a.gain)} a year  (+${wholeDollars(a.extraRewards)} rewards, ${wholeDollars(a.annualFee)} fee)${ifCreditsShort(unheld(a.simulation, a.cardId), a.gainIfCreditsUsed, '+')}${picksText(a.picks)}`,
+        `${String(i + 1).padStart(2)}. ${name(a.cardId)}  +${wholeDollars(a.gain)} a year  (+${wholeDollars(a.extraRewards)} rewards, ${wholeDollars(a.annualFee)} fee)${ifCreditsShort(unheld(a.simulation, a.cardId), a.gainIfCreditsUsed, '+')}${picksText(catalog, a.cardId, a.picks)}`,
       )
     })
   }

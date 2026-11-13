@@ -11,10 +11,15 @@ import type { Catalog } from '../schema/catalog.ts'
 import type { WalletCard } from '../schema/wallet.ts'
 import { findCategory, onlineCategory } from '../merchants/resolve.ts'
 import { singleMcc } from './evaluate.ts'
+import { currentPeriodEnd, periodKey } from './periods.ts'
 import type { Channel, MerchantResolution } from './types.ts'
 
 export const num = (n: number) => String(Number(n.toFixed(2)))
 export const pct = (n: number) => `${num(n)}%`
+// The gap between two percent rates. Never bare "points": earnrate's points
+// are rewards.
+export const percentagePoints = (n: number) =>
+  `${num(n)} percentage ${n === 1 ? 'point' : 'points'}`
 export const roundCents = (n: number) => Math.round(n * 100) / 100
 // Ids for a message: "amex-gold, citi-double-cash".
 export const idList = (ids: string[]) => ids.join(', ')
@@ -238,6 +243,11 @@ export function codesAs(
   merchant: MerchantResolution,
   namedBy: { issuer: string; cards: string[] }[] = [],
 ): string {
+  if (
+    merchant.channel === 'in_store' &&
+    onlineCategory(catalog, merchant.category)
+  )
+    return `${merchant.resolvedName} sells online, but you said you're buying in store, so rates for online shopping don't apply.`
   const mcc = merchant.likelyMcc ?? singleMcc(catalog, merchant.category)
   const code = mcc === null ? '' : ` (MCC ${String(mcc)})`
   const named = namedBy
@@ -691,6 +701,17 @@ export const enrollCreditText = (card: string, names: string[]) =>
     ? `Enroll in ${possessive(card)} ${names[0] ?? ''} credit with the issuer, then mark it enrolled.`
     : `Enroll in ${possessive(card)} ${listed(names)} credits with the issuer, then mark them enrolled.`
 
+// A listed credit that needs setting up with the issuer first (choosing the
+// airline an airline fee credit pays on): enrolling there is a choice, not a
+// button, so the to-do says what the credit pays on.
+export const setUpCreditText = (
+  card: string,
+  issuer: string,
+  c: { periodAmount: number; name: string },
+  on: string,
+) =>
+  `Set up ${possessive(card)} ${money(c.periodAmount)} ${c.name} credit with ${issuer} (it pays on ${on}), then say you use it and it counts against the annual fee.`
+
 // Credits that need no enrolling and free nights, before the cardholder
 // says whether they use them: they don't offset the annual fee until then.
 export function askCreditText(card: string, names: string[], nights = 0) {
@@ -1068,6 +1089,35 @@ export function activationText(
   if (deadlines.every((d) => d < today))
     return `${issuer}'s deadline to activate was ${listed(deadlines.map(shortDate), 'or')}.`
   return `Activate with ${issuer}${from === '' ? '' : `${from} and`} by ${listed(deadlines.map(shortDate), 'or')}; it's free.`
+}
+
+// A bonus's dates as a calendar quarter, "Q1 2027", when they're exactly one.
+export function quarterName(from: string, to: string): string | null {
+  const key = periodKey('quarter', from, null)
+  if (key === null || currentPeriodEnd('quarter', from, null) !== to)
+    return null
+  if (!['01-01', '04-01', '07-01', '10-01'].includes(from.slice(5))) return null
+  return periodPhrase('quarter', key).replace(/^for /, '')
+}
+
+// A bonus the issuer hasn't opened for activation yet, in the to-do:
+// "Freedom Flex's Q1 2027 bonus at grocery stores opens for activation Dec
+// 15, 2026."
+export function activationOpensText(
+  card: string,
+  where: string,
+  opens: string,
+  window: { from: string | null; to: string | null; by: string | null },
+): string {
+  const quarter =
+    window.from !== null && window.to !== null
+      ? quarterName(window.from, window.to)
+      : null
+  const starts =
+    quarter === null && window.from !== null
+      ? ` (it starts ${shortDate(window.from)})`
+      : ''
+  return `${possessive(card)}${quarter === null ? '' : ` ${quarter}`} bonus ${where} opens for activation ${shortDate(opens)}${window.by === null ? '' : `; activate it by ${shortDate(window.by)}`}${starts}.`
 }
 
 // The same for one rate's line: "Activate it with Chase starting Dec 15, 2026".

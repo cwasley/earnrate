@@ -54,6 +54,7 @@ import {
   paidText,
   paymentUnknownText,
   pct,
+  percentagePoints,
   pointValuesText,
   possessive,
   roundCents,
@@ -160,6 +161,9 @@ function compareEntries(a: Entry, b: Entry): number {
 export type RecommendOptions = {
   // Simulations and the cheat sheet rank by rates alone.
   credits?: boolean
+  // The day asked, for a purchase dated ahead: whether its bonus is open for
+  // activation yet. The purchase's date when not given.
+  today?: string
 }
 
 function rankEntries(
@@ -412,6 +416,7 @@ function warningsFor(
   catalog: Catalog,
   entry: Entry,
   purchase: Purchase,
+  today: string,
 ): string[] {
   const { card, valuation, evaluation } = entry
   const { best, nominal } = evaluation
@@ -484,8 +489,12 @@ function warningsFor(
       )
       continue
     }
+    const opens =
+      rule.activate_from !== undefined && rule.activate_from > today
+        ? `Activation opens ${shortDate(rule.activate_from)}: activate`
+        : 'Activate'
     warnings.push(
-      `Activate this bonus with the issuer (it's free)${rule.activate_by === undefined ? '' : ` by ${shortDate(rule.activate_by)}`} to earn ${rate} here${rule.valid_to === undefined ? '' : ` through ${shortDate(rule.valid_to)}`}.`,
+      `${opens} this bonus with the issuer (it's free)${rule.activate_by === undefined ? '' : ` by ${shortDate(rule.activate_by)}`} to earn ${rate} here${rule.valid_to === undefined ? '' : ` through ${shortDate(rule.valid_to)}`}.`,
     )
   }
   return warnings
@@ -496,6 +505,7 @@ function toRanked(
   wallet: Wallet,
   entry: Entry,
   purchase: Purchase,
+  today: string,
 ): RankedCard {
   const { card, held, valuation, evaluation } = entry
   return {
@@ -537,7 +547,7 @@ function toRanked(
     },
     capped: evaluation.best.cap !== null,
     reasoning: reasoningFor(catalog, wallet, entry, purchase.amount),
-    warnings: warningsFor(catalog, entry, purchase),
+    warnings: warningsFor(catalog, entry, purchase, today),
   }
 }
 
@@ -816,7 +826,9 @@ export function recommend(
     merchant.category,
     options,
   )
-  const ranked = entries.map((e) => toRanked(catalog, wallet, e, purchase))
+  const ranked = entries.map((e) =>
+    toRanked(catalog, wallet, e, purchase, options.today ?? purchase.date),
+  )
   const winner = entries[0]
   const warnings: string[] = []
   const notes: string[] = []
@@ -1018,7 +1030,7 @@ export function recommend(
     isClose(open.entry.effectiveReturnPct, best)
   )
     notes.push(
-      `${displayName(open.entry)} earns ${pct(open.entry.rateReturnPct)} here, ${num(gap)} ${gap === 1 ? 'point' : 'points'} less than ${pct(best)}, and would help its welcome bonus (${toGo}). You're on pace, so this uses the higher rate.`,
+      `${displayName(open.entry)} earns ${pct(open.entry.rateReturnPct)} here, ${percentagePoints(gap)} less than ${pct(best)}, and would help its welcome bonus (${toGo}). You're on pace, so this uses the higher rate.`,
     )
   const chosen = bonus?.entry ?? creditEntry ?? winner
   // A tie among the top cards doesn't matter when a welcome bonus decides.

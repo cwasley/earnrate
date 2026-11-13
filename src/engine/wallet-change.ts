@@ -93,7 +93,7 @@ export type WalletChange =
 
 const failed = (error: string) => ({ ok: false as const, error })
 
-function findCatalogCard(
+export function findCatalogCard(
   catalog: Catalog,
   id: string,
   today: string,

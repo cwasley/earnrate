@@ -3,6 +3,7 @@ import { CLI_NAME } from '../brand.ts'
 import { loadCatalog, walletPath } from '../data/load.ts'
 import { compareOffers } from '../engine/offers.ts'
 import { isValuationProfile, withValuationProfile } from '../engine/profiles.ts'
+import { findCatalogCard } from '../engine/wallet-change.ts'
 import { currencyName } from '../engine/text.ts'
 import { formatOffers } from '../format/offers.ts'
 import { cardList, valuationProblem } from './args.ts'
@@ -27,6 +28,8 @@ Options:
   --no-fee               Cards with no annual fee.
   --business             Business cards instead of personal ones.
   --held                 Include cards already in your wallet.
+  --compare <ids>        Compare just these cards, comma separated, held or
+                         not, in place of the filters above.
   --cards <ids>          Cards you have, instead of your wallet, comma separated.
   --member <name>        A membership you have, in place of the saved ones.
   --skip-issuer <id>     Leave out an issuer's cards (chase), in place of the
@@ -48,6 +51,7 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
         'no-fee': { type: 'boolean' },
         business: { type: 'boolean' },
         held: { type: 'boolean' },
+        compare: { type: 'string' },
         cards: { type: 'string' },
         member: { type: 'string', multiple: true },
         'skip-issuer': { type: 'string', multiple: true },
@@ -77,6 +81,14 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
   }
 
   const catalog = await loadCatalog()
+  const compare = cardList(values.compare)
+  for (const id of compare ?? []) {
+    const card = findCatalogCard(catalog, id, io.today)
+    if (typeof card === 'string') {
+      io.stderr(`${card}\n`)
+      return USAGE_ERROR
+    }
+  }
   const found = await cardsToUse(catalog, walletPath(io.env), io, {
     cards: cardList(values.cards),
     members: values.member ?? [],
@@ -116,6 +128,9 @@ export async function runOffers(argv: string[], io: Io): Promise<number> {
       business: values.business ?? false,
       noAnnualFee: values['no-fee'] ?? false,
       includeHeld: values.held ?? false,
+      ...(compare !== null && compare.length > 0
+        ? { only: [...new Set(compare)] }
+        : {}),
     },
     io.today,
   )

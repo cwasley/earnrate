@@ -20,6 +20,9 @@ export type OfferFilters = {
   business: boolean // business cards instead of personal ones
   noAnnualFee: boolean
   includeHeld: boolean
+  // Just these card ids, held or not, in place of the filters above and the
+  // issuers left out.
+  only?: string[]
 }
 
 export type OfferSummary = {
@@ -150,19 +153,36 @@ export function compareOffers(
     (sum, l) => sum + l.monthly,
     0,
   )
-  const { additions, membersOnly: memberAdditions } = simulateAdditions(
-    catalog,
-    wallet,
-    spending.lines,
-    {
-      filters: { ...filters, issuer: null, includeClosed: true },
-      memberships: wallet.memberships,
-      valuations: wallet.valuations,
-      start: today,
-    },
-  )
+  const only = filters.only ?? null
+  const tried = (business: boolean) => {
+    const { additions, membersOnly } = simulateAdditions(
+      catalog,
+      only === null ? wallet : { ...wallet, skipped_issuers: [] },
+      spending.lines,
+      {
+        filters:
+          only === null
+            ? { ...filters, issuer: null, includeClosed: true }
+            : {
+                kind: 'any',
+                noAnnualFee: false,
+                business,
+                issuer: null,
+                includeClosed: true,
+              },
+        memberships: wallet.memberships,
+        valuations: wallet.valuations,
+        start: today,
+      },
+      only === null ? undefined : (card) => only.includes(card.id),
+    )
+    return [...additions, ...membersOnly]
+  }
   const added = new Map(
-    [...additions, ...memberAdditions].map((a) => [a.cardId, a]),
+    [
+      ...tried(filters.business),
+      ...(only === null ? [] : tried(!filters.business)),
+    ].map((a) => [a.cardId, a]),
   )
   const paid = paidMemberships(catalog, {
     memberships: wallet.memberships,
@@ -173,13 +193,17 @@ export function compareOffers(
   const membersOnly: MembersOnly<OfferSummary>[] = []
   const withoutOffer: string[] = []
   for (const card of catalog.cards) {
-    if (card.network === 'store') continue
-    if (!filters.includeHeld && held.has(card.id)) continue
-    if (skipped.has(card.issuer)) continue
-    if (
-      !matchesFilters(card, { ...filters, issuer: null, includeClosed: true })
-    )
-      continue
+    if (only !== null) {
+      if (!only.includes(card.id)) continue
+    } else {
+      if (card.network === 'store') continue
+      if (!filters.includeHeld && held.has(card.id)) continue
+      if (skipped.has(card.issuer)) continue
+      if (
+        !matchesFilters(card, { ...filters, issuer: null, includeClosed: true })
+      )
+        continue
+    }
 
     const offer = card.welcome_offer
     if (!offer || !inEffect(offer, today)) {
@@ -247,13 +271,17 @@ export function compareOffers(
   offers.sort(offerOrder)
   membersOnly.sort(offerOrder)
 
+  const cardName = (id: string) =>
+    catalog.cards.find((c) => c.id === id)?.name ?? id
   const notes = [
-    `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`,
+    only === null
+      ? `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`
+      : `Compares only the cards you named: ${listed(only.map(cardName))}.`,
     `Each offer is the public one on the issuer's page on the date shown, checked weekly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how.`,
     `Ranked on the first two years together: what each card ${wallet.cards.length > 0 ? 'adds to your cards' : 'earns'} on ${spending.typical ? 'typical U.S. spending' : 'your spending'}${wallet.cards.length > 0 ? ' (it takes the purchases where it earns more)' : ''}, plus the welcome bonus in year one if the minimum spend fits in the window with all your spending on it, less each year's annual fee. Year one counts the card at its standard rates.`,
     "First-year value is the bonus alone at your point values, less the first year's fee.",
     CREDITS_APART,
-    ...(skipped.size > 0
+    ...(skipped.size > 0 && only === null
       ? [
           `Leaves out cards from ${listed([...skipped].map((i) => catalog.issuers.find((x) => x.id === i)?.name ?? i))}, as you asked.`,
         ]

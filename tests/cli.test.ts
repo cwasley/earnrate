@@ -591,6 +591,18 @@ describe('no wallet needed', () => {
     )
     expect(offers.stdout).not.toMatch(/^ ?\d+\. The Platinum Card/m)
     expect(offers.stdout).toMatch(/Likely not eligible: you hold The Platinum/)
+    const named = await cli(
+      ['offers', '--compare', 'chase-sapphire-preferred,capital-one-venture-x'],
+      noWallet,
+    )
+    expect(named.stdout.match(/^ ?\d+\. /gm)).toHaveLength(2)
+    expect(named.stdout).toMatch(/Compares only the cards you named/)
+    const unknown = await cli(
+      ['offers', '--compare', 'chase-sapphire'],
+      noWallet,
+    )
+    expect(unknown.code).toBe(2)
+    expect(unknown.stderr).toMatch(/Closest: chase-sapphire-preferred/)
     const sim = await cli(['simulate'], noWallet)
     expect(sim.code).toBe(0)
     expect(sim.stdout).toMatch(/^No spending was given/)

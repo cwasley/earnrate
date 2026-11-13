@@ -29,6 +29,7 @@ describe('checklist', () => {
   test('lists activations, picks, caps and welcome bonuses, soonest first', () => {
     expect(kinds).toEqual([
       'activate:chase-freedom-flex',
+      'activate:chase-freedom-flex',
       'cap:amex-blue-cash-preferred',
       'pick:usbank-cash-plus',
       'bonus:amex-blue-cash-preferred',
@@ -36,10 +37,11 @@ describe('checklist', () => {
     ])
     expect(items[0]).toMatchObject({ due: '2026-12-14' })
     expect(items[0]?.text).toMatch(/by Dec 14, 2026\.$/)
-    expect(items[1]).toMatchObject({ due: '2026-12-31' })
-    expect(items[1]?.text).toMatch(/\$800 left of \$6,000/)
-    expect(items[2]?.text).toMatch(/5% and 2% categories for this quarter/)
-    expect(items[3]?.text).toMatch(
+    expect(items[1]).toMatchObject({ due: '2026-12-15' })
+    expect(items[2]).toMatchObject({ due: '2026-12-31' })
+    expect(items[2]?.text).toMatch(/\$800 left of \$6,000/)
+    expect(items[3]?.text).toMatch(/5% and 2% categories for this quarter/)
+    expect(items[4]?.text).toMatch(
       /\$2,100 to go by Apr 1, 2027, about \$\d+ a week\.$/,
     )
   })
@@ -57,7 +59,10 @@ describe('checklist', () => {
   test('a done activation and current picks drop off', () => {
     const done = WalletSchema.parse({
       cards: [
-        { id: 'chase-freedom-flex', activated: ['q4-2026-grocery'] },
+        {
+          id: 'chase-freedom-flex',
+          activated: ['q4-2026-grocery', 'q1-2027-grocery'],
+        },
         {
           id: 'usbank-cash-plus',
           chosen: {
@@ -88,8 +93,8 @@ describe('checklist', () => {
     const next = checklist(catalog, flex, '2026-12-01').find(
       (i) => i.kind === 'activate',
     )
-    expect(next?.text).toMatch(
-      /starting Dec 15, 2026 \(it starts Jan 1, 2027\)\.$/,
+    expect(next?.text).toBe(
+      "Chase Freedom Flex's Q1 2027 bonus at grocery stores and on select streaming services opens for activation Dec 15, 2026.",
     )
     expect(next?.due).toBe('2026-12-15')
     const open = checklist(catalog, flex, '2026-12-16').find(
@@ -153,8 +158,9 @@ describe('checklist', () => {
   test('the calendar has an event for each dated action, not for caps', () => {
     const ics = checklistCalendar(items, '20261101T120000Z')
     expect(ics.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true)
-    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(3)
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(4)
     expect(ics).toContain('DTSTART;VALUE=DATE:20261214')
+    expect(ics).toContain('DTSTART;VALUE=DATE:20261215')
     expect(ics).toContain('TRIGGER:-P2D')
     expect(ics.split('\r\n').every((l) => l.length <= 75)).toBe(true)
   })
@@ -267,7 +273,8 @@ describe('rows for the site', () => {
         .map((i) => i.row.title),
     ).toEqual([
       'Do you use the Uber, Uber One and 3 more credits?',
-      'Enroll in Lululemon, Resy and 4 more credits',
+      'Enroll in Lululemon, Resy and 3 more credits',
+      'Set up airline fee credit',
     ])
     expect(row('enroll', 'amex-gold', 'uber-cash')?.button).toBe('Answer')
   })

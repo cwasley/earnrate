@@ -152,7 +152,9 @@ export function cheatSheet(
       ...(matches.length > 0
         ? [`matches the listed card on ${listed(matches)}`]
         : []),
-      ...(near.length > 0 ? [`comes within a point on ${listed(near)}`] : []),
+      ...(near.length > 0
+        ? [`comes within a percentage point on ${listed(near)}`]
+        : []),
     ]
     return [
       `Working on ${possessive(name)} welcome bonus: ${money(status.remaining ?? 0)} more by ${shortDate(status.deadline ?? date)}. ${

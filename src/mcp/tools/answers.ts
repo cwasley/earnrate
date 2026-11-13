@@ -29,6 +29,7 @@ import {
 } from '../../engine/text.ts'
 import type { Spending } from '../../engine/renewal.ts'
 import { EMPTY_WALLET } from '../../engine/transient.ts'
+import { findCatalogCard } from '../../engine/wallet-change.ts'
 import type { MerchantResolution } from '../../engine/types.ts'
 import { formatCardInfo } from '../../format/cards.ts'
 import { formatCheatSheet } from '../../format/cheat-sheet.ts'
@@ -42,6 +43,7 @@ import { formatRecommendation } from '../../format/recommendation.ts'
 import { resolvePlace, withCallerCategory } from '../../merchants/resolve.ts'
 import { ALL_CARDS_NOTE, fail, type Context } from '../context.ts'
 import {
+  CardId,
   ChannelInput,
   CountryInput,
   PaymentInput,
@@ -199,7 +201,9 @@ export function registerAnswerTools(
           },
         }
       }
-      const rec = recommend(catalog, wallet, purchase, resolved.merchant)
+      const rec = recommend(catalog, wallet, purchase, resolved.merchant, {
+        today: deps.today(),
+      })
       const output = {
         ...rec,
         warnings: [...rec.warnings, ...resolved.notices],
@@ -306,7 +310,7 @@ export function registerAnswerTools(
     {
       title: 'Compare welcome offers',
       description:
-        "Ranks cards the user doesn't have by what they'd be worth over the first two years: what each adds to the user's cards (or, with none, earns) on their spending, plus the public welcome (sign-up) bonus in year one if its minimum spend fits in the window, less each year's annual fee. A card that needs a membership the user hasn't given (Verizon Visa) is left out of the ranking and named after it, in `membersOnly`. Each offer also shows the bonus alone (first-year value), year one and year two, and how many weeks of spending the minimum takes. Offers the issuer rules out because of a card in the user's wallet are marked likely not eligible and listed last; issuers the user can't get cards from (skippedIssuers, or saved with set_memberships) are left out. Use it when the user asks which card to get next or which has the best sign-up bonus. Spending is optional (typical amounts otherwise). It covers only the cards earnrate knows, offers vary by person, and each offer's note gives the issuer's eligibility rules; pass those caveats on. Never suggest applying through a link.",
+        "Ranks cards the user doesn't have by what they'd be worth over the first two years: what each adds to the user's cards (or, with none, earns) on their spending, plus the public welcome (sign-up) bonus in year one if its minimum spend fits in the window, less each year's annual fee. A card that needs a membership the user hasn't given (Verizon Visa) is left out of the ranking and named after it, in `membersOnly`. Each offer also shows the bonus alone (first-year value), year one and year two, and how many weeks of spending the minimum takes. Offers the issuer rules out because of a card in the user's wallet are marked likely not eligible and listed last; issuers the user can't get cards from (skippedIssuers, or saved with set_memberships) are left out. Use it when the user asks which card to get next or which has the best sign-up bonus. With `compare`, it compares just the cards the user names (\"Sapphire Preferred or Venture X?\"), held or not, whatever the other filters. Spending is optional (typical amounts otherwise). It covers only the cards earnrate knows, offers vary by person, and each offer's note gives the issuer's eligibility rules; pass those caveats on. Never suggest applying through a link.",
       inputSchema: z.object({
         ...OfferFilters,
         valuation: CatalogFilters.valuation,
@@ -314,6 +318,13 @@ export function registerAnswerTools(
           .boolean()
           .optional()
           .describe('Include cards already in the wallet.'),
+        compare: z
+          .array(CardId)
+          .min(1)
+          .optional()
+          .describe(
+            "Card ids from search_cards to compare, when the user names the cards they're choosing between. Only these are ranked. Leave out to rank every card.",
+          ),
         cards: NamedCards,
         memberships: NamedMemberships,
         spending: SpendingLines,
@@ -335,6 +346,10 @@ export function registerAnswerTools(
       const found = wallet ?? { ...EMPTY_WALLET, ...(await ctx.saved()) }
       const spending = spendingFrom(args.spending ?? [])
       if (typeof spending === 'string') return fail(spending)
+      for (const id of args.compare ?? []) {
+        const card = findCatalogCard(catalog, id, deps.today())
+        if (typeof card === 'string') return fail(card)
+      }
       const withMembers = args.memberships
         ? { ...found, memberships: args.memberships }
         : found
@@ -349,6 +364,7 @@ export function registerAnswerTools(
           noAnnualFee: args.noAnnualFee ?? false,
           business: args.business ?? false,
           includeHeld: args.includeHeld ?? false,
+          ...(args.compare ? { only: [...new Set(args.compare)] } : {}),
         },
         deps.today(),
         spending,

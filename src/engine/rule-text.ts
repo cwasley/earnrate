@@ -48,6 +48,20 @@ export function optionName(
   return parts.length > 0 ? listed(parts) : words(option)
 }
 
+// A pick in a short line: a long list of stores reads as its option's name
+// ("select clothing stores").
+export function pickName(
+  catalog: Catalog,
+  card: Card,
+  choiceId: string,
+  option: string,
+): string {
+  const o = card.choices.find((c) => c.id === choiceId)?.options[option]
+  return (o?.merchants.length ?? 0) > 3
+    ? words(option)
+    : optionName(catalog, card, choiceId, option)
+}
+
 // What a rule covers, as a list of phrases. With the card, a pick reads
 // "the 2 categories you pick each quarter" and a rule for every purchase reads
 // "every purchase" when it's the card's only one.

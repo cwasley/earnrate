@@ -14,6 +14,7 @@ import {
 } from './changes.ts'
 import { addDays, currentPeriodEnd, daysBetween } from './periods.ts'
 import {
+  activationOpensText,
   CAP_PERIODS,
   capitalize,
   choiceName,
@@ -31,6 +32,8 @@ import {
   wholeDollars,
   possessive,
   capNamed,
+  quarterName,
+  setUpCreditText,
 } from './text.ts'
 import { milestonePays } from './milestones.ts'
 import { renewalCheck, renewalDue, type Spending } from './renewal.ts'
@@ -154,16 +157,25 @@ export function checklistRows(
         a.activateFrom !== null && a.activateFrom > today
           ? a.activateFrom
           : null
+      const quarter =
+        a.from !== null && a.to !== null ? quarterName(a.from, a.to) : null
       items.push({
         kind: 'activate',
         cardId: card.id,
-        text: `Activate ${possessive(name)} bonus ${a.where}${opens === null ? '' : ` starting ${shortDate(opens)}`}${a.activateBy === null ? '' : `${opens === null ? '' : ' and'} by ${shortDate(a.activateBy)}`}${starts}.`,
+        text:
+          opens === null
+            ? `Activate ${possessive(name)} bonus ${a.where}${a.activateBy === null ? '' : ` by ${shortDate(a.activateBy)}`}${starts}.`
+            : activationOpensText(name, a.where, opens, {
+                from: a.from,
+                to: a.to,
+                by: a.activateBy,
+              }),
         due:
           opens ??
           a.activateBy ??
           (a.from !== null && a.from > today ? a.from : a.to),
         row: row(
-          `Activate bonus: ${listedFew(a.parts)}`,
+          `Activate ${opens !== null && quarter !== null ? `${quarter} ` : ''}bonus: ${listedFew(a.parts)}`,
           'Activate',
           opens !== null
             ? `from ${near(opens)}`
@@ -304,7 +316,9 @@ export function checklistRows(
         ),
       })
     }
-    const toEnroll = s.credits.filter((c) => !c.enrolled && !c.skipped)
+    const toEnroll = s.credits.filter(
+      (c) => !c.enrolled && !c.skipped && !c.listed,
+    )
     if (toEnroll.length > 0)
       items.push({
         kind: 'enroll',
@@ -320,6 +334,18 @@ export function checklistRows(
           'Enroll',
         ),
       })
+    for (const c of s.credits) {
+      const on = card.credits.find((x) => x.id === c.id)?.listed?.on
+      if (c.enrolled || c.skipped || on === undefined) continue
+      items.push({
+        kind: 'enroll',
+        cardId: card.id,
+        ref: c.id,
+        text: setUpCreditText(name, issuerOf(catalog, card.issuer), c, on),
+        due: null,
+        row: row(`Set up ${creditsNamed([c.name])}`, 'Set up'),
+      })
+    }
     for (const c of s.credits) {
       if (!c.enrolled || c.skipped) continue
       // One that needs no enrolling shows once the cardholder says they use

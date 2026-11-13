@@ -647,6 +647,56 @@ describe('#21 Freedom Flex activation', () => {
       expectSome(flex.warnings, /needed activating by Dec 14, 2026/)
     },
   )
+
+  goldenTest(
+    "#21f next quarter's purchase, asked before activation opens: says when it opens",
+    () => {
+      const wallet = withFlex([])(baseWallet())
+      const rec = recommend(
+        catalog,
+        wallet,
+        krogerOn('2027-01-15'),
+        undefined,
+        {
+          today: '2026-11-12',
+        },
+      )
+      const flex = entry(rec, 'chase-freedom-flex')
+      expect(flex.matchedRule).toBeNull()
+      expectSome(
+        flex.warnings,
+        /^Activation opens Dec 15, 2026: activate this bonus with the issuer \(it's free\) to earn 5x Chase Ultimate Rewards here through Mar 31, 2027\.$/,
+      )
+      const open = recommend(
+        catalog,
+        wallet,
+        krogerOn('2027-01-15'),
+        undefined,
+        { today: '2026-12-16' },
+      )
+      expect(entry(open, 'chase-freedom-flex').warnings.join(' ')).not.toMatch(
+        /Activation opens/,
+      )
+    },
+  )
+})
+
+describe('#21g to-do: next quarter opens for activation', () => {
+  goldenTest(
+    "#21g once next quarter's rules exist, the to-do says when activation opens, beside this quarter's deadline",
+    () => {
+      const wallet = WalletSchema.parse({
+        cards: [{ id: 'chase-freedom-flex', checkout_label: 'Freedom Flex' }],
+      })
+      const texts = checklist(catalog, wallet, '2026-11-12')
+        .filter((i) => i.kind === 'activate')
+        .map((i) => i.text)
+      expect(texts).toEqual([
+        "Activate Freedom Flex's bonus at grocery stores, restaurants and American Red Cross by Dec 14, 2026.",
+        "Freedom Flex's Q1 2027 bonus at grocery stores and on select streaming services opens for activation Dec 15, 2026.",
+      ])
+    },
+  )
 })
 
 describe('#22 abroad', () => {
@@ -1987,13 +2037,17 @@ describe('#32 merchant statement credits', () => {
       expect(usedUp.some((i) => i.kind === 'credit')).toBe(false)
       const todo = checklist(catalog, wallet(), TODAY)
       const enroll = todo.filter((i) => i.kind === 'enroll')
-      expect(enroll).toHaveLength(2)
+      expect(enroll).toHaveLength(3)
       expect(enroll.every((i) => i.due === null)).toBe(true)
       expect(enroll[0]?.text).toMatch(
         /^Do you use The Platinum Card from American Express' Uber, Uber One, Walmart\+ membership, CLEAR and hotel credits\? Say which you use and they count against the annual fee\.$/,
       )
       expect(enroll[1]?.text).toMatch(
         /^Enroll in The Platinum Card from American Express' Lululemon, Resy, .* and YouTube TV credits with the issuer, then mark them enrolled\.$/,
+      )
+      expect(enroll[1]?.text).not.toMatch(/airline/)
+      expect(enroll[2]?.text).toBe(
+        "Set up The Platinum Card from American Express' $200 airline fee credit with American Express (it pays on incidental fees charged by the one airline you select), then say you use it and it counts against the annual fee.",
       )
     },
   )
@@ -2861,6 +2915,28 @@ describe('#39 cards that need a membership, when every card is ranked', () => {
   )
 
   goldenTest(
+    "#39d2 simulated picks read as categories, not ids: Cash+'s 5% picks",
+    () => {
+      const sim = simulateCatalog(catalog, typicalSpendLines(catalog), {
+        ...options(),
+        start: TODAY,
+      })
+      const text = formatCatalogSimulation(sim, catalog, true)
+      const picks = [...text.matchAll(/\(with (.*? as its .*?)\)/g)].map(
+        (m) => m[1] ?? '',
+      )
+      expect(picks.length).toBeGreaterThan(0)
+      expect(text).toMatch(
+        /cell phone service, streaming services, TV and internet service as its 5% picks/,
+      )
+      for (const p of picks)
+        expect(p).not.toMatch(
+          /tv internet streaming|gas ev charging|cell phone and/,
+        )
+    },
+  )
+
+  goldenTest(
     '#39e at Costco, buying there implies the membership: Costco Anywhere still ranks',
     () => {
       const r = exploreCards(
@@ -3528,6 +3604,36 @@ describe('#41 online stores', () => {
     expect(entry(rec, 'amex-blue-cash-everyday').matchedRule).toBeNull()
     expect(rec.assumptions.join(' ')).not.toMatch(/online purchase/)
   })
+
+  goldenTest(
+    '#41d an online store bought in store says so, not that it counts as online retail',
+    () => {
+      const rec = recommend(
+        catalog,
+        two,
+        purchase('Chewy', { amount: 50, channel: 'in_store' }),
+      )
+      expect(rec.assumptions.join(' ')).not.toMatch(/online retail/)
+      expectSome(
+        rec.assumptions,
+        /^Chewy sells online, but you said you're buying in store, so rates for online shopping don't apply\.$/,
+      )
+      const every = exploreCards(
+        catalog,
+        {
+          merchant: 'Chewy',
+          category: null,
+          amount: null,
+          channel: 'in_store',
+          date: TODAY,
+        },
+        { filters: ALL_PERSONAL_CARDS, memberships: [], valuations: {} },
+      )
+      expect(every.assumptions.join(' ')).not.toMatch(/online retail/)
+      const online = recommend(catalog, two, purchase('Chewy', { amount: 50 }))
+      expectSome(online.assumptions, /^Assumes Chewy counts as online retail/)
+    },
+  )
 
   goldenTest(
     '#41c online retail as a kind of purchase is online; a store whose website alone is online retail is not',

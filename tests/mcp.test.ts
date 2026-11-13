@@ -163,6 +163,17 @@ describe('tools', () => {
     expect(bad.isError).toBe(true)
   })
 
+  test("a purchase in a quarter that isn't open for activation yet says when it opens", async () => {
+    const client = await connect(await walletCopy())
+    const result = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'Safeway', amount: 100, date: '2027-01-15' },
+    })
+    expect(text(result)).toMatch(
+      /Activation opens Dec 15, 2026: activate this bonus with the issuer \(it's free\) to earn 5x Chase Ultimate Rewards here through Mar 31, 2027\./,
+    )
+  })
+
   test('compare_welcome_offers takes the memberships the user names', async () => {
     const client = await connect(await walletCopy())
     const known = await client.callTool({
@@ -175,6 +186,34 @@ describe('tools', () => {
       arguments: { memberships: ['not-a-membership'] },
     })
     expect(unknown.isError).toBe(true)
+  })
+
+  test('compare_welcome_offers compares just the cards the user names, held ones too', async () => {
+    const client = await connect(await walletCopy())
+    const named = await client.callTool({
+      name: 'compare_welcome_offers',
+      arguments: {
+        compare: ['chase-sapphire-preferred', 'capital-one-venture-x'],
+      },
+    })
+    expect(named.isError, text(named)).toBeFalsy()
+    const { offers } = named.structuredContent as {
+      offers: { cardId: string; held: boolean }[]
+    }
+    expect(offers.map((o) => o.cardId).sort()).toEqual([
+      'capital-one-venture-x',
+      'chase-sapphire-preferred',
+    ])
+    expect(offers.find((o) => o.held)?.cardId).toBe('chase-sapphire-preferred')
+    expect(text(named)).toMatch(
+      /Compares only the cards you named: .*Sapphire Preferred.* and .*Venture X/,
+    )
+    const unknown = await client.callTool({
+      name: 'compare_welcome_offers',
+      arguments: { compare: ['chase-sapphire'] },
+    })
+    expect(unknown.isError).toBe(true)
+    expect(text(unknown)).toMatch(/Closest: chase-sapphire-preferred/)
   })
 
   test('best_card_for_purchase returns the decision and readable text', async () => {

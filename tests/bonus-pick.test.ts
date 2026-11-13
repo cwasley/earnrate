@@ -88,7 +88,7 @@ test('on pace, a bonus card close to the best is mentioned, not picked', () => {
   )
   expect(rec.decision?.cardId).toBe('amex-gold')
   expect(rec.notes.join(' ')).toMatch(
-    /Savor.* earns 3% here, 1 point less than 4%.*You're on pace/,
+    /Savor.* earns 3% here, 1 percentage point less than 4%.*You're on pace/,
   )
 })
 
@@ -106,6 +106,7 @@ test("a cheat sheet keeps each row's best card and names where the bonus card fi
   expect(sheet.notes[0]).toMatch(
     /Savor.*welcome bonus: \$300 more by Jan 15, 2027\. It matches the listed card on .*dining/,
   )
+  expect(sheet.notes.join(' ')).not.toMatch(/within a point/)
   const one = cheatSheet(
     catalog,
     WalletSchema.parse({
