@@ -242,6 +242,7 @@ export function NewCard({
   onChange,
   focus,
   skeleton,
+  spending,
 }: {
   wallet: Wallet
   additions: Additions | null
@@ -253,6 +254,9 @@ export function NewCard({
   focus: string[]
   // Stand-ins for the answer while the first one is worked out.
   skeleton: { intro: ComponentChildren; rows: ComponentChildren }
+  // The spending it's figured on, after the ranking. Its place in the tree
+  // is the same before and after the answer, so it keeps its focus.
+  spending: ComponentChildren
 }) {
   const [open, setOpen] = useState<string | null>(focus[0] ?? null)
   const [view, setView] = useState<View>('yearly')
@@ -297,6 +301,8 @@ export function NewCard({
         {skeleton.intro}
         {viewSwitch}
         {skeleton.rows}
+        {spending}
+        <SkipIssuers wallet={wallet} locked={locked} onChange={onChange} />
       </section>
     )
 
@@ -472,6 +478,7 @@ export function NewCard({
           </details>
         </>
       )}
+      {spending}
       <SkipIssuers wallet={wallet} locked={locked} onChange={onChange} />
       {counted.length > 0 ? (
         <details class="how">

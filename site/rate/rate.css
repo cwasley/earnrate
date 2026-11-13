@@ -331,6 +331,10 @@ svg.rate-bar {
   justify-self: start;
 }
 
+.rate-fee-label {
+  display: block;
+}
+
 /* A card with no fee: one line, what it earns at the end. */
 .rate-fees > li.rate-fee-plain {
   display: grid;

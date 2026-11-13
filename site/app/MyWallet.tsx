@@ -11,7 +11,6 @@ import {
   cardInfo,
   knownMemberships,
   membershipsUsed,
-  searchCards,
   setupNotes,
   type SetupNote,
 } from '../../src/engine/setup.ts'
@@ -26,8 +25,8 @@ import {
 } from '../../src/engine/checklist.ts'
 import { addsAtOnce, askAddText } from './add-from-link.ts'
 import { CardArt } from './CardArt.tsx'
+import { CardPicker } from './AddCards.tsx'
 import { CardSettings, hasFee, type CreditFocus } from './CardSettings.tsx'
-import { QuickCards } from './QuickCards.tsx'
 import { Logo } from './Logo.tsx'
 import { track } from './track.ts'
 import { SheetDownload, useSheetSend, WalletPass } from './CheatSheetParts.tsx'
@@ -36,13 +35,11 @@ import {
   cardCount,
   cards,
   feeLabel,
-  issuerName,
   membershipName,
   pct,
   shortName,
   wholeDollars,
 } from './format.ts'
-import { SearchInput } from './SearchInput.tsx'
 import { load, save } from './settings.ts'
 import {
   addOp,
@@ -196,7 +193,7 @@ function CardList({
                 <CardArt id={held.id} width={40} />
                 <span>
                   <strong>{shortName(held.id)}</strong>
-                  <span class="muted"> · {feeLabel(held.id)}</span>
+                  <span class="muted held-fee">{feeLabel(held.id)}</span>
                   {note ? (
                     <span class="row-note">{note}</span>
                   ) : renewalAsks(held) ? (
@@ -235,77 +232,6 @@ function CardList({
         )
       })}
     </ul>
-  )
-}
-
-// Every card added from the grid or the search counts the same way.
-function countAdded() {
-  track('wallet-card-added')
-  if (!load<boolean>('counted-first-card', false)) {
-    track('wallet-first-card')
-    save('counted-first-card', true)
-  }
-}
-
-function AddCard({
-  wallet,
-  onAdd,
-}: {
-  wallet: Wallet | null
-  onAdd: (cardId: string) => Promise<boolean>
-}) {
-  const [query, setQuery] = useState('')
-  const found = useMemo(
-    () =>
-      query.trim().length < 2
-        ? []
-        : searchCards(catalog, query, wallet, localToday()).cards.slice(0, 6),
-    [query, wallet],
-  )
-  return (
-    <div>
-      <label class="visually-hidden" for="card-search">
-        Add a card
-      </label>
-      <SearchInput
-        id="card-search"
-        class="search"
-        type="search"
-        placeholder="Add a card, like Sapphire"
-        autocomplete="off"
-        value={query}
-        onInput={(e) => setQuery(e.currentTarget.value)}
-        onClear={() => setQuery('')}
-      />
-      <ul class="found">
-        {found.map((c) => (
-          <li key={c.id}>
-            <span class="found-name">
-              <CardArt id={c.id} width={32} />
-              <span>
-                {shortName(c.id)}
-                <span class="muted"> · {issuerName(c.issuer)}</span>
-              </span>
-            </span>
-            {c.held ? (
-              <span class="muted">Added</span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  void onAdd(c.id).then((ok) => {
-                    if (ok) countAdded()
-                  })
-                  setQuery('')
-                }}
-              >
-                Add
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
   )
 }
 
@@ -890,7 +816,6 @@ export function MyWallet({
   lockNote,
   syncTop,
   connect,
-  onDone,
 }: {
   wallet: Wallet | null
   perform: (op: WalletOp) => Promise<Outcome>
@@ -900,8 +825,6 @@ export function MyWallet({
   lockNote: string | null
   syncTop: ComponentChildren // sync status, the first-connection choice
   connect: ComponentChildren // "Use the same wallet as Claude"
-  // A store At a store is waiting to answer once the first cards are in.
-  onDone?: (() => void) | undefined
 }) {
   const [message, setMessage] = useState<{
     text: string
@@ -984,10 +907,6 @@ export function MyWallet({
         ? { text: [...new Set(needs)].join(' '), error: false }
         : null,
     )
-    if (onDone) {
-      onDone()
-      return
-    }
     requestAnimationFrame(() => {
       document.querySelector('.tabs')?.scrollIntoView({ block: 'start' })
     })
@@ -1246,25 +1165,13 @@ export function MyWallet({
               under Your cards.
             </p>
           ) : null}
-          <fieldset class="lock" disabled={locked}>
-            <QuickCards
-              wallet={wallet}
-              added={gridAdded}
-              onAdd={(cardId) => {
-                void addFromGrid(cardId).then((ok) => {
-                  if (!ok) return
-                  countAdded()
-                  track('wallet-quick-add')
-                })
-              }}
-              onRemove={(cardId) => void removeFromGrid(cardId)}
-            />
-            <p class="quick-search-lead">
-              Not here? Find any of the {catalog.cards.length} cards earnrate
-              knows.
-            </p>
-            <AddCard wallet={wallet} onAdd={addFromGrid} />
-          </fieldset>
+          <CardPicker
+            wallet={wallet}
+            added={gridAdded}
+            locked={locked}
+            onAdd={addFromGrid}
+            onRemove={(cardId) => void removeFromGrid(cardId)}
+          />
           {messageLine}
           {count === 0 ? null : (
             <div class="quick-done">

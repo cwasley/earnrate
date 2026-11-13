@@ -443,8 +443,7 @@ function FeeCards({
                 <CardArt id={id} width={40} />
                 <span>
                   <strong>{shortName(id)}</strong>
-                  <span class="muted small">
-                    {' · '}
+                  <span class="muted small rate-fee-label">
                     {feeLabel(id).replace(/ a year/g, ' a year')}
                   </span>
                 </span>
@@ -470,7 +469,7 @@ function FeeCards({
             <CardArt id={s.cardId} width={40} />
             <span>
               <strong>{shortName(s.cardId)}</strong>
-              <span class="muted small"> · No annual fee</span>
+              <span class="muted small rate-fee-label">No annual fee</span>
             </span>
             <span class="rate-fee-amount">
               <span class="muted small">Earns </span>

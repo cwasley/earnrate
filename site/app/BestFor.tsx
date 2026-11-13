@@ -32,7 +32,10 @@ import {
   hostname,
   money,
 } from '../../src/engine/text.ts'
+import { CardPicker } from './AddCards.tsx'
+import { addOp, removeOp, type Outcome, type WalletOp } from './sync.ts'
 import {
+  cardCount,
   cards,
   feeLabel,
   issuerName,
@@ -310,10 +313,10 @@ function ScopeSwitch({
 
 function NextSteps({
   addCards,
-  onWallet,
+  onAdd,
 }: {
   addCards: boolean
-  onWallet: () => void
+  onAdd: () => void
 }) {
   return (
     <div class="next-steps">
@@ -325,7 +328,7 @@ function NextSteps({
             class="link"
             onClick={() => {
               track('cta-save-cards')
-              onWallet()
+              onAdd()
             }}
           >
             Add your cards
@@ -344,24 +347,76 @@ function NextSteps({
   )
 }
 
-// Your cards, before any are saved.
-function AddYours({ onWallet }: { onWallet: () => void }) {
+// Your cards before any are saved: they go in here, in place of the search,
+// which comes back at Done.
+function AddYours({
+  wallet,
+  waiting,
+  synced,
+  locked,
+  lockNote,
+  perform,
+  onAdded,
+  onDone,
+}: {
+  wallet: Wallet | null
+  // A store asked about before any cards were in.
+  waiting: string | null
+  synced: boolean
+  locked: boolean
+  lockNote: string | null
+  perform: (op: WalletOp) => Promise<Outcome>
+  onAdded: () => void
+  onDone: () => void
+}) {
+  // Only cards added here can be tapped back out here.
+  const [added, setAdded] = useState<string[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const count = wallet?.cards.length ?? 0
+  const add = async (cardId: string) => {
+    onAdded()
+    const result = await perform(addOp(cardId))
+    setError(result.ok ? null : result.error)
+    if (result.ok)
+      setAdded((ids) => (ids.includes(cardId) ? ids : [...ids, cardId]))
+    return result.ok
+  }
+  const remove = async (cardId: string) => {
+    if (!added.includes(cardId)) return
+    const result = await perform(removeOp(cardId))
+    setError(result.ok ? null : result.error)
+  }
   return (
-    <div class="next-steps">
+    <section class="add-yours" aria-labelledby="add-yours-title">
+      <h3 id="add-yours-title">Which cards do you have?</h3>
       <p>
-        <button
-          type="button"
-          class="link"
-          onClick={() => {
-            track('cta-save-cards')
-            onWallet()
-          }}
-        >
-          Add your cards
-        </button>
-        , and earnrate says which one to use. They stay in this browser.
+        Tap the ones you have, and earnrate picks the one to use
+        {waiting === null ? ' at each store' : ` at ${waiting}`}.{' '}
+        {synced
+          ? "They're saved in your Claude wallet too: never a card number."
+          : 'They stay in this browser: no account, and never a card number.'}
       </p>
-    </div>
+      <CardPicker
+        wallet={wallet}
+        added={added}
+        locked={locked}
+        onAdd={add}
+        onRemove={(cardId) => void remove(cardId)}
+      />
+      {error !== null ? (
+        <p class="callout">{error}</p>
+      ) : locked && lockNote !== null ? (
+        <p class="muted">{lockNote}</p>
+      ) : null}
+      {count === 0 ? null : (
+        <div class="quick-done">
+          <span>{cardCount(count)} in your wallet</span>
+          <button type="button" class="primary" onClick={onDone}>
+            Done
+          </button>
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -376,8 +431,11 @@ export function BestFor({
   onQuery,
   scope,
   onScope,
-  onWallet,
   focus,
+  perform,
+  synced,
+  locked,
+  lockNote,
 }: {
   settings: Settings
   saved: Saved
@@ -389,14 +447,14 @@ export function BestFor({
   onQuery: (q: string) => void
   scope: Scope
   onScope: (scope: Scope) => void
-  onWallet: () => void
   // A store page's "Check with your own cards" opened this answer.
   focus: boolean
+  perform: (op: WalletOp) => Promise<Outcome>
+  synced: boolean
+  locked: boolean
+  lockNote: string | null
 }) {
   const [text, setText] = useState(query)
-  // The amount box, and the amount the answer on screen was asked with.
-  const [amountText, setAmountText] = useState('')
-  const [askedAmount, setAskedAmount] = useState<number | null>(null)
   const [all, setAll] = useState(false)
   // A kind of place picked for a store earnrate doesn't know, for this
   // search only.
@@ -407,13 +465,24 @@ export function BestFor({
   const { abroad, payment } = purchase
   const yours = scope === 'yours'
   const hasCards = (wallet?.cards.length ?? 0) > 0
+  // From the first card added under Your cards until Done.
+  const [adding, setAdding] = useState(false)
+  const adder = yours && (!hasCards || adding)
   const problems = useMemo(
     () => (wallet ? walletProblems(wallet, catalog) : []),
     [wallet],
   )
   const asked = useMemo(() => splitPurchaseText(query), [query])
-  const amount = askedAmount ?? asked.amount
+  const amount = asked.amount
   const empty = query.trim() === ''
+  // The store a link asked about before the visitor's cards were in.
+  const waiting = useMemo(() => {
+    if (empty) return null
+    const m = resolvePlace(catalog, asked.merchant, null)
+    return m.source === 'category' || m.source === 'none'
+      ? null
+      : m.resolvedName
+  }, [empty, asked])
   const result = useMemo(
     () =>
       yours || empty
@@ -431,11 +500,12 @@ export function BestFor({
   )
   const rec = useMemo(
     () =>
-      !yours || empty || !wallet || !hasCards || problems.length > 0
+      !yours || adder || empty || !wallet || !hasCards || problems.length > 0
         ? null
         : askWallet(wallet, asked.merchant, amount, abroad, payment, kind),
     [
       yours,
+      adder,
       empty,
       wallet,
       hasCards,
@@ -474,6 +544,7 @@ export function BestFor({
   // tab opening), so each one can bring its answer into view.
   const [shownCount, setShownCount] = useState(focus ? 1 : 0)
   const heading = useRef<HTMLHeadingElement>(null)
+  const panel = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (shownCount === 0 || !matchMedia(SMALL).matches) return
     // Closes the phone's keyboard, which would cover the answer.
@@ -485,7 +556,6 @@ export function BestFor({
   const ask = (q: string, show = true) => {
     setText(q)
     setAll(false)
-    setAskedAmount(Number(amountText) || null)
     onQuery(q)
     if (show) setShownCount((n) => n + 1)
   }
@@ -510,74 +580,85 @@ export function BestFor({
   ) : null
   return (
     <div>
-      <div class="panel store-search">
+      <div class="panel store-search" ref={panel}>
         <ScopeSwitch scope={scope} onScope={onScope} />
-        <form
-          class="ask"
-          role="search"
-          onSubmit={(e) => {
-            e.preventDefault()
-            ask(text)
-          }}
-        >
-          <label class="visually-hidden" for="best-for">
-            Store or category
-          </label>
-          <SearchInput
-            id="best-for"
-            type="search"
-            list="suggestions"
-            placeholder="Store or category"
-            autocomplete="off"
-            enterkeyhint="search"
-            value={text}
-            onInput={(e) => {
-              const value = e.currentTarget.value
-              setText(value)
-              if (
-                SUGGESTIONS.some((s) => s.toLowerCase() === value.toLowerCase())
-              )
-                // A suggestion picked from the list moves to the answer; one
-                // typed out in full doesn't, while the keyboard is in use.
-                ask(
-                  value,
-                  (e as unknown as InputEvent).inputType ===
-                    'insertReplacementText',
-                )
+        {adder ? (
+          <AddYours
+            wallet={wallet}
+            waiting={waiting}
+            synced={synced}
+            locked={locked}
+            lockNote={lockNote}
+            perform={perform}
+            onAdded={() => setAdding(true)}
+            onDone={() => {
+              setAdding(false)
+              if (!empty) setShownCount((n) => n + 1)
             }}
-            onClear={() => setText('')}
           />
-          <input
-            class="amount"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            placeholder="$"
-            aria-label="Amount (optional)"
-            value={amountText}
-            onInput={(e) => setAmountText(e.currentTarget.value)}
-          />
-          <button type="submit">Go</button>
-        </form>
-        <div class="chips" role="list">
-          {QUICK.map((q) => (
-            <button
-              type="button"
-              role="listitem"
-              class={
-                q.toLowerCase() === query.toLowerCase() ? 'chip on' : 'chip'
-              }
-              key={q}
-              onClick={() => ask(q)}
+        ) : (
+          <>
+            <form
+              class="ask"
+              role="search"
+              onSubmit={(e) => {
+                e.preventDefault()
+                ask(text)
+              }}
             >
-              {q}
-            </button>
-          ))}
-          <a class="chip" role="listitem" href="/best/">
-            Every store and category
-          </a>
-        </div>
-        {filters}
+              <label class="visually-hidden" for="best-for">
+                Store or category
+              </label>
+              <SearchInput
+                id="best-for"
+                type="search"
+                list="suggestions"
+                placeholder="Store or category"
+                autocomplete="off"
+                enterkeyhint="search"
+                value={text}
+                onInput={(e) => {
+                  const value = e.currentTarget.value
+                  setText(value)
+                  if (
+                    SUGGESTIONS.some(
+                      (s) => s.toLowerCase() === value.toLowerCase(),
+                    )
+                  )
+                    // A suggestion picked from the list moves to the
+                    // answer; one typed out in full doesn't, while the
+                    // keyboard is in use.
+                    ask(
+                      value,
+                      (e as unknown as InputEvent).inputType ===
+                        'insertReplacementText',
+                    )
+                }}
+                onClear={() => setText('')}
+              />
+              <button type="submit">Go</button>
+            </form>
+            <div class="chips" role="list">
+              {QUICK.map((q) => (
+                <button
+                  type="button"
+                  role="listitem"
+                  class={
+                    q.toLowerCase() === query.toLowerCase() ? 'chip on' : 'chip'
+                  }
+                  key={q}
+                  onClick={() => ask(q)}
+                >
+                  {q}
+                </button>
+              ))}
+              <a class="chip" role="listitem" href="/best/">
+                Every store and category
+              </a>
+            </div>
+            {filters}
+          </>
+        )}
       </div>
       {example ? (
         <Example
@@ -588,7 +669,6 @@ export function BestFor({
           }}
         />
       ) : null}
-      {yours && !hasCards ? <AddYours onWallet={onWallet} /> : null}
       {yours && hasCards && problems.length > 0 ? (
         <p class="callout">
           The wallet saved in this browser has problems: {problems.join(' ')}{' '}
@@ -697,7 +777,15 @@ export function BestFor({
               </>
             ) : null}
             {noteOnly(answer) ? null : (
-              <NextSteps addCards={!hasCards} onWallet={onWallet} />
+              <NextSteps
+                addCards={!hasCards}
+                onAdd={() => {
+                  onScope('yours')
+                  requestAnimationFrame(() => {
+                    panel.current?.scrollIntoView({ block: 'start' })
+                  })
+                }}
+              />
             )}
           </section>
         ) : null}

@@ -663,11 +663,6 @@ p[data-tone='warn']::before {
   cursor: pointer;
 }
 
-.data-version {
-  font-size: 13px;
-  margin-top: 18px;
-}
-
 .app section > h3 {
   font-size: 19px;
   letter-spacing: -0.01em;
@@ -702,11 +697,6 @@ p[data-tone='warn']::before {
   margin-top: 0;
   width: 20px;
   height: 20px;
-}
-
-.ask input.amount {
-  flex: 0 0 72px;
-  padding: 12px 8px;
 }
 
 .verdict {
@@ -976,6 +966,14 @@ p[data-tone='warn']::before {
 
 .held-row > span:first-child {
   min-width: 0;
+}
+
+.held-name > span:last-child {
+  line-height: 1.35;
+}
+
+.held-fee {
+  display: block;
 }
 
 .held-row > .muted {
@@ -1375,7 +1373,8 @@ p[data-tone='warn']::before {
 }
 
 /* Stays at the bottom of the screen while the grid scrolls by. */
-.panel > .quick-done {
+.panel > .quick-done,
+.store-search > .add-yours > .quick-done {
   position: sticky;
   bottom: 0;
   display: flex;
@@ -2262,12 +2261,6 @@ p.callout .link,
   padding-right: 14px;
 }
 
-.store-search .ask input.amount {
-  flex: 0 0 64px;
-  padding: 12px 6px;
-  text-align: center;
-}
-
 .store-search .ask > button {
   flex: 0 0 56px;
   padding: 0;
@@ -2280,6 +2273,15 @@ p.callout .link,
 
 .store-search > .filters > summary {
   padding: 4px 0;
+}
+
+/* Your cards with none saved: the cards go in where the search was. */
+.app .add-yours > h3 {
+  margin: 14px 0 4px;
+}
+
+.add-yours > p:first-of-type {
+  margin: 0 0 12px;
 }
 
 /* A card the visitor holds, marked by data-*: never a class. */

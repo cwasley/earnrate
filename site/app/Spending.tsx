@@ -446,6 +446,7 @@ export function Spending({
     0,
   )
   const single = result?.singles[0]
+  const ranked = pending || (result !== null && single !== undefined)
   const pair = result?.pairs[0]
   // A pair is worth showing first only when it beats the best card alone.
   const pairBetter =
@@ -806,12 +807,10 @@ export function Spending({
         </p>
       ) : null}
       {leftOut !== null ? <p class="callout">{leftOut}</p> : null}
-      {editor}
-      {forWallet ? null : filters}
-
       {forWallet ? (
         nothing ? null : (
           <NewCard
+            spending={editor}
             wallet={forWallet}
             additions={answer?.found.additions ?? null}
             typical={typical}
@@ -842,9 +841,9 @@ export function Spending({
             }}
           />
         )
-      ) : pending || (result && single) ? (
+      ) : ranked ? (
         <section class="results" aria-busy={working}>
-          <h3>Each card on its own</h3>
+          <h3>Single card</h3>
           <ol class="result-list">
             {result?.singles
               .slice(0, shownSingles)
@@ -924,10 +923,18 @@ export function Spending({
                     </p>
                   )
                 })}
-
+        </section>
+      ) : null}
+      {/* The same child of the page whatever the answer, so the editor
+          keeps its focus while the answer changes around it. With a new
+          card for the wallet, it goes inside that answer. */}
+      {forWallet ? (nothing ? editor : null) : editor}
+      {forWallet ? null : filters}
+      {!forWallet && ranked ? (
+        <section class="results" aria-busy={working}>
           {pending || pair ? (
             <>
-              <h3>Two cards together</h3>
+              <h3>Two cards</h3>
               {!pending && !pairBetter && single ? (
                 <p class="muted">
                   No pair beats the {shortName(single.cards[0]?.cardId ?? '')}{' '}

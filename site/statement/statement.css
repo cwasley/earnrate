@@ -479,24 +479,16 @@ table.promises th {
   white-space: nowrap;
 }
 
-table.promises td:first-of-type {
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-table.promises td:last-child {
+table.promises td {
   color: var(--muted);
 }
 
-/* On a phone each row is the question and its answer, the note below. */
+/* On a phone each row is the promise, its note below. */
 @media (max-width: 559px) {
   table.promises :is(tbody, tr, th, td) {
     display: block;
   }
   table.promises tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 2px 12px;
     padding: 10px 0;
     border-bottom: 1px solid var(--line);
   }
@@ -504,11 +496,11 @@ table.promises td:last-child {
     padding: 0;
     border: 0;
   }
-  table.promises td:first-of-type {
-    text-align: right;
+  table.promises th {
+    white-space: normal;
   }
-  table.promises td:last-child {
-    grid-column: 1 / -1;
+  table.promises td {
+    margin-top: 2px;
     font-size: 15px;
   }
 }

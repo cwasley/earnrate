@@ -87,8 +87,8 @@ function readHash(landing = false): View {
   if (hash.has('whatif')) return { tab: 'spending', query: '', find: 'add' }
   if (hash.has('wallet')) {
     // A store sent from a search page is asked of the visitor's own cards.
-    // With none saved yet, At a store offers to add them and answers once
-    // they're in: the page already gave the all-cards ranking.
+    // With none saved yet, At a store's Your cards takes them first and
+    // answers once they're in: the page already gave the all-cards ranking.
     const query = hash.get('wallet') ?? ''
     return query === ''
       ? { tab: 'wallet', query }
@@ -378,8 +378,6 @@ export function App() {
   // Best setups looks for one to add to them, until either is switched.
   const [scopeSet, setScope] = useState<Scope | null>(asked.scope ?? null)
   const [findSet, setFind] = useState<FindMode | null>(asked.find ?? null)
-  // A store waiting for the visitor's first cards, answered once they're in.
-  const [returnTo, setReturnTo] = useState<string | null>(null)
   const [initial] = useState(loadState)
   const [settings, setSettings] = useState<Settings>(initial.settings)
   const [wallet, setWallet] = useState<Wallet | null>(initial.wallet)
@@ -743,7 +741,6 @@ export function App() {
       setView(next)
       setScope(next.scope ?? null)
       setFind(next.find ?? null)
-      setReturnTo(null)
       // After a section below was in view, the answer is up in the app.
       requestAnimationFrame(() => {
         const app = document.getElementById('app')
@@ -792,10 +789,10 @@ export function App() {
             scope={scope}
             onScope={setScope}
             focus={focus === true}
-            onWallet={() => {
-              setReturnTo(scope === 'yours' && query !== '' ? query : null)
-              setView({ tab: 'wallet', query: '' })
-            }}
+            perform={perform}
+            synced={synced}
+            locked={locked}
+            lockNote={edit.note}
           />
         ) : tab === 'spending' ? (
           <Spending
@@ -820,14 +817,6 @@ export function App() {
             lockNote={edit.note}
             syncTop={syncTop}
             connect={connect}
-            onDone={
-              returnTo === null
-                ? undefined
-                : () => {
-                    setReturnTo(null)
-                    setView({ tab: 'best', query: returnTo })
-                  }
-            }
           />
         )}
       </div>
@@ -836,9 +825,6 @@ export function App() {
           <option key={s} value={s} />
         ))}
       </datalist>
-      <p class="data-version muted">
-        Free, no sign-up, and what you type stays on your device.
-      </p>
     </div>
   )
 }
