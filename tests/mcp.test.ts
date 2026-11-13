@@ -1066,6 +1066,23 @@ describe('wallet setup', () => {
         'best_card_for_purchase',
         { merchant: 'Costco', cards: [{ cardId: 'amex-gold' }] },
       ],
+      [
+        'best_card_for_purchase',
+        {
+          merchant: "Dunkin'",
+          amount: 10,
+          cards: [{ cardId: 'amex-gold', enrolled: ['dunkin'] }],
+        },
+      ],
+      [
+        'best_card_for_purchase',
+        {
+          merchant: 'Uber',
+          amount: 40,
+          date: '2026-12-10',
+          cards: [{ cardId: 'amex-platinum', enrolled: ['uber-cash'] }],
+        },
+      ],
       ['resolve_merchant', { merchant: 'Costco' }],
       ['cheat_sheet', {}],
       ['cheat_sheet', { everyCard: true, noAnnualFee: true }],

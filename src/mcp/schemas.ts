@@ -53,6 +53,8 @@ const RankedCardSchema = z.object({
       id: z.string(),
       name: z.string(),
       amount: z.number(),
+      month_amounts: z.record(z.string(), z.number()).optional(),
+      periodAmount: z.number(),
       period: CreditPeriod,
       enrolled: z.boolean(),
       left: z.number().nullable(),
