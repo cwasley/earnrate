@@ -81,6 +81,9 @@ export function splitPage(html: string): { text: string; data: string } {
   }
   const body = /<body[\s>]/i.exec(s)
   if (body) s = s.slice(body.index)
+  // Adjacent list items render on lines of their own, so a quote of a list
+  // reads them apart even when the markup has no space between them.
+  s = s.replace(/<\/li\s*>/gi, ' ')
   return { text: decode(s.replace(TAG, '')), data: data.join('\n') }
 }
 

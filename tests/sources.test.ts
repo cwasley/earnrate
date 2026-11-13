@@ -83,6 +83,13 @@ describe('text', () => {
     expect(data).not.toContain('styled')
   })
 
+  test('list items read apart even with no space between them in the markup', () => {
+    const { text } = splitPage(
+      '<body><ul><li>Amazon</li><li>Crate &amp; Barrel</li><li>Walmart</li></ul></body>',
+    )
+    expect(containsQuote([text], 'Amazon Crate & Barrel Walmart')).toBe(true)
+  })
+
   test('earning lines skip APRs and short fragments', () => {
     const lines = earningLines(PAGE)
     expect(lines).toContain(

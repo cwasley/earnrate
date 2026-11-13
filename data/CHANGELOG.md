@@ -2,6 +2,13 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.13.3
+
+No rates changed. Two more issuers' named stores (`named`, as in 2026.11.11):
+
+- `bank-of-america-customized-cash-rewards`: the "Merchant examples" Bank of America lists under each 3% choice category, which it calls "examples of the type of companies/merchants that frequently appear as transactions" and "not a comprehensive list" (https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/, read in a browser 2026-11-13). Recorded on the `three-percent` rule: ChargePoint, ExxonMobil, Electrify America, EVgo, QuikTrip, RaceTrac, Shell and Wawa (gas and EV charging); Amazon, Comcast, Etsy, Netflix, Nordstrom, Ticketmaster and Walmart (online shopping, which counts only purchases paid online); Chipotle, Domino's, Grubhub, Starbucks and Sweetgreen (dining); Airbnb, American Airlines, Amtrak, Delta, Enterprise, Expedia, E-ZPass, Marriott, ParkMobile, Royal Caribbean and Uber (travel); CVS and Walgreens (drug stores); Ace Hardware, IKEA and The Home Depot (home improvement and furnishings). Left out: 7-Eleven, listed under gas, which earnrate counts as a convenience store; Wayfair, listed under home furnishings, which earnrate counts as online retail; Tesla, which names no store earnrate knows; and Semaconnect, Hillstone, RiteAid, Crate & Barrel, Pottery Barn, Sherwin-Williams and Williams-Sonoma, which aren't in the merchant data.
+- `venmo-credit-card`: DoorDash and Taco Bell on the dining and nightlife rate ("delivery through places like DoorDash and Taco Bell"), and Ticketmaster on entertainment ("concerts through Ticketmaster"), from Venmo's card rewards page (https://venmo.com/about/creditcard/rewards), which the card already cites.
+
 ## 2026.11.13.2
 
 No rates changed. Stores issuers other than American Express name as earning a rule's rate or not earning it are now recorded on that rule (`named`, as in 2026.11.11), each list quoted from a page the card already cites, read 2026-11-13. `match` and `exclude` still decide every rate, and each named store passed the check that earnrate's data pays it, or doesn't, as the issuer says.

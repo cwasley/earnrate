@@ -51,6 +51,49 @@ rules:
     rate: 3
     cap: three-and-two-percent-combined
     note: Gas and EV charging, online shopping, dining, travel, drug stores, or home improvement and furnishings, whichever you picked. Gas excludes EV charging billed by parking lots. Travel includes parking, transit, rideshare and tolls. Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded. The first $2,500 a calendar quarter across the 3% and 2% categories, then 1%.
+    # 7-Eleven (gas to Bank of America) and Wayfair (home furnishings) are left
+    # out: earnrate codes them as a convenience store and online retail, so
+    # they'd pass the data check only through online shopping, the wrong pick.
+    named:
+      earning:
+        [
+          chargepoint,
+          exxon-mobil,
+          electrify-america,
+          evgo,
+          quiktrip,
+          racetrac,
+          shell,
+          wawa,
+          amazon,
+          comcast,
+          etsy,
+          netflix,
+          nordstrom,
+          ticketmaster,
+          walmart,
+          chipotle,
+          dominos,
+          grubhub,
+          starbucks,
+          sweetgreen,
+          airbnb,
+          american-airlines,
+          amtrak,
+          delta,
+          enterprise,
+          expedia,
+          e-zpass,
+          marriott,
+          parkmobile,
+          royal-caribbean,
+          uber,
+          cvs,
+          walgreens,
+          ace-hardware,
+          ikea,
+          home-depot,
+        ]
   - id: two-percent
     match: { categories: [grocery.supermarket, warehouse_club] }
     rate: 2
@@ -174,6 +217,30 @@ evidence:
   - rule: three-percent
     url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
     quote: 'Excludes EV charging purchases from parking lots billing for vehicle charging'
+  - rule: three-percent.earning
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'Entities listed here are examples of the type of companies/merchants that frequently appear as transactions'
+  - rule: three-percent.earning
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'this is not a comprehensive list'
+  - rule: three-percent.earning
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: '7-Eleven ChargePoint Exxon Mobile Electrify America EVGO QuikTrip/QT RaceTrac Semaconnect Shell Tesla Wawa'
+  - rule: three-percent.earning
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'Amazon Comcast Etsy Netflix Nordstrom Ticketmaster Walmart'
+  - rule: three-percent.earning
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: "Chipotle Domino's Pizza Grubhub Hillstone Starbucks Sweetgreen"
+  - rule: three-percent.earning
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'Airbnb American Airlines Amtrak Delta Airlines Enterprise Rent-A-Car Expedia E-Zpass Marriott ParkMobile Royal Caribbean Uber'
+  - rule: three-percent.earning
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'CVS RiteAid Walgreens'
+  - rule: three-percent.earning
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'Ace Hardware Crate & Barrel IKEA Pottery Barn Sherwin-Williams The Home Depot Wayfair Williams-Sonoma'
   - rule: two-percent
     url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/
     quote: 'Automatic 2% cash back at grocery stores and wholesale clubs'

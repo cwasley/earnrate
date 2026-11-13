@@ -356,7 +356,8 @@ function issuerListsHtml(ctx: PageContext, merchant: Merchant): string {
 }
 
 // "TV, internet and streaming, when that's one of your picks": the picks of
-// a rule paid on a pick that cover the store.
+// a rule paid on a pick that cover the store. An online shopping pick covers
+// nearly every store, so it's named only when no other pick does.
 function pickFor(
   ctx: PageContext,
   card: Card,
@@ -370,13 +371,22 @@ function pickFor(
     merchant.in_store?.category,
     merchant.online?.category,
   ].filter((w) => w !== undefined)
-  const picks = Object.entries(choice.options)
-    .filter(
-      ([, o]) =>
-        o.merchants.includes(merchant.id) ||
-        o.categories.some((c) => ways.some((w) => categoryMatches(c, w))),
+  const options = Object.entries(choice.options)
+  const covering = options.filter(
+    ([, o]) =>
+      o.merchants.includes(merchant.id) ||
+      o.categories.some((c) => ways.some((w) => categoryMatches(c, w))),
+  )
+  const online = options.filter(([, o]) => {
+    const exclude = o.online?.exclude
+    return (
+      exclude !== undefined &&
+      !ways.every((w) => exclude.some((c) => categoryMatches(c, w)))
     )
-    .map(([id]) => pickName(ctx.catalog, card, choice.id, id))
+  })
+  const picks = (covering.length > 0 ? covering : online).map(([id]) =>
+    pickName(ctx.catalog, card, choice.id, id),
+  )
   if (picks.length === 0) return null
   return `${listed(picks, 'or')}, when that's ${choice.pick > 1 ? 'one of your picks' : 'your pick'}`
 }

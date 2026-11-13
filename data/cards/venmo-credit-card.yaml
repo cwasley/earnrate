@@ -22,6 +22,8 @@ rules:
     match: { categories: [dining] }
     rate: 3
     note: Restaurants and quick-serve restaurants, for dining in, carryout, drive-through or delivery, plus bars. Set by merchant category code, so a cafe inside a gas station may not count. Venmo's pages also name bakeries and liquor stores, which the Synchrony terms don't.
+    named:
+      earning: [doordash, taco-bell]
   - id: entertainment
     match:
       {
@@ -30,6 +32,8 @@ rules:
       }
     rate: 3
     note: Movie theaters, concert and theatrical promoters, pro sports, streaming and other subscription TV, radio or streaming, sporting goods stores, and membership sports and recreation clubs (gyms, golf, tennis, swimming).
+    named:
+      earning: [ticketmaster]
   - id: entertainment-other
     what: bookstores and newsstands, digital goods sellers, music and video stores, amusement parks and attractions, camps, bowling alleys, golf courses and arcades
     # Visa's codes for the rest of Venmo's "Eligible entertainment
@@ -111,6 +115,12 @@ evidence:
   - rule: entertainment
     url: https://venmo.com/about/creditcard/rewards
     quote: 'Sporting Goods Stores Hobby, Toy & Game Stores'
+  - rule: entertainment.earning
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'This includes streaming, concerts through Ticketmaster, and more.'
+  - rule: dining-nightlife.earning
+    url: https://venmo.com/about/creditcard/rewards
+    quote: 'Bakeries, restaurants, takeout, and delivery through places like DoorDash and Taco Bell, plus bars and liquor stores.'
   - rule: entertainment-other
     url: https://www.synchronybankterms.com/syfterms/html/VCCRewardsTerms.htm
     quote: 'digital goods such as books, movies, music and games, books and newsstands, amusement parks'

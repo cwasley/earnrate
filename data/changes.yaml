@@ -3,6 +3,70 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.13.3'
+  date: 2026-11-13
+  changes:
+    - cause: addition
+      card: bank-of-america-customized-cash-rewards
+      field: rules.three-percent.named
+      was: null
+      now:
+        earning:
+          [
+            chargepoint,
+            exxon-mobil,
+            electrify-america,
+            evgo,
+            quiktrip,
+            racetrac,
+            shell,
+            wawa,
+            amazon,
+            comcast,
+            etsy,
+            netflix,
+            nordstrom,
+            ticketmaster,
+            walmart,
+            chipotle,
+            dominos,
+            grubhub,
+            starbucks,
+            sweetgreen,
+            airbnb,
+            american-airlines,
+            amtrak,
+            delta,
+            enterprise,
+            expedia,
+            e-zpass,
+            marriott,
+            parkmobile,
+            royal-caribbean,
+            uber,
+            cvs,
+            walgreens,
+            ace-hardware,
+            ikea,
+            home-depot,
+          ]
+      summary: The merchant examples Bank of America lists under each 3% choice category. No rates changed.
+      source: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    - cause: addition
+      card: venmo-credit-card
+      field: rules.dining-nightlife.named
+      was: null
+      now: { earning: [doordash, taco-bell] }
+      summary: Venmo names DoorDash and Taco Bell among the places its 3% dining and nightlife rate is earned. No rates changed.
+      source: https://venmo.com/about/creditcard/rewards
+    - cause: addition
+      card: venmo-credit-card
+      field: rules.entertainment.named
+      was: null
+      now: { earning: [ticketmaster] }
+      summary: Venmo names concerts through Ticketmaster as 3% entertainment. No rates changed.
+      source: https://venmo.com/about/creditcard/rewards
+
 - version: '2026.11.13.2'
   date: 2026-11-13
   changes:
