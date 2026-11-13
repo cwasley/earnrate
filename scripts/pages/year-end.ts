@@ -336,7 +336,7 @@ const atYearEnd = (one: YearEnd, c: Credit) =>
   periodAmount(c, periodKey(c.period, one.end, null))
 
 const creditTotal = (one: YearEnd, credits: Credit[]) =>
-  money(credits.reduce((sum, c) => sum + atYearEnd(one, c), 0))
+  wholeDollars(credits.reduce((sum, c) => sum + atYearEnd(one, c), 0))
 
 // What one card's page leads with, without the card's name: wordings for
 // the title, longest first, and the line on its preview image.
@@ -486,7 +486,7 @@ function cardSummary(ctx: PageContext, one: YearEnd, card: Card): string[][] {
       n === 1 && single
         ? [
             `One credit on ${named} ends ${end}: ${money(atYearEnd(one, single))} back ${creditWhere(ctx.catalog, single)}.`,
-            `One credit on ${named} ends ${end}, worth up to ${money(atYearEnd(one, single))}.`,
+            `One credit on ${named} ends ${end}, worth up to ${wholeDollars(atYearEnd(one, single))}.`,
           ]
         : [
             `${String(n)} credits on ${named} end ${end}, worth up to ${creditTotal(one, credits)} together.`,

@@ -1,6 +1,6 @@
 // The report a saved wallet makes, as /rate reads it and as its owner's
 // short link carries it: the wallet's cards with their saved picks and
-// credit answers, memberships and point values, and Find a card's amounts
+// credit answers, memberships and point values, and Get a card's amounts
 // when the owner puts spending in the link. Picks the wallet doesn't set are
 // left for whoever opens the link to assume, as /rate does.
 import type { Picks } from '../../src/engine/explore.ts'
@@ -15,7 +15,7 @@ import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { isTypicalRows, type Row } from '../app/spending-rows.ts'
 import { heldMarks } from './answers.ts'
-import { encodeReport, roundedLines } from './link.ts'
+import { encodeReport } from './link.ts'
 
 type Card = Catalog['cards'][number]
 
@@ -63,19 +63,18 @@ export function walletReportInput(
   }
 }
 
-// The person's rows as a report counts them: known lines, rounded to $5 as
-// a link carries them. Null for typical spending, or none of their own.
+// The person's rows as a report counts them: the lines earnrate knows, at
+// the amounts given, as Get a card counts them. A link rounds them to $5
+// (`encodeReport`). Null for typical spending, or none of their own.
 export function spendingLines(
   catalog: Catalog,
   rows: Row[] | null,
 ): ResolvedLine[] | null {
   if (rows === null || isTypicalRows(rows)) return null
-  const lines = roundedLines(
-    resolveSpendLines(
-      catalog,
-      rows.map((r) => spendLineFor(catalog, r.what, r.monthly)),
-    ),
-  )
+  const lines = resolveSpendLines(
+    catalog,
+    rows.map((r) => spendLineFor(catalog, r.what, r.monthly)),
+  ).filter((l) => l.merchant.source !== 'none' && l.monthly > 0)
   return lines.length === 0 ? null : lines
 }
 

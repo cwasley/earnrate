@@ -521,10 +521,10 @@ function changeItems(
         due: null,
         row: note(
           null,
-          `earnrate fixed some of its own mistakes about ${listedFew(
+          `Answers for ${listedFew(
             fixed.map(([id]) => names.get(id) ?? id),
             60,
-          )}. Answers already use the fixed terms.`,
+          )} now use corrected terms.`,
         ),
       },
     })
@@ -550,7 +550,7 @@ function changeItems(
           due: null,
           row: note(
             cardId,
-            `earnrate fixed ${list.length === 1 ? 'a mistake' : 'some of its own mistakes'} about ${names.get(cardId) ?? cardId}. Answers already use the fixed terms.`,
+            `Answers for ${names.get(cardId) ?? cardId} now use corrected terms.`,
           ),
         },
       })

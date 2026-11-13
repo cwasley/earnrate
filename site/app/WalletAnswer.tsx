@@ -6,6 +6,7 @@ import {
   creditShort,
   dollarsAndCents,
   listed,
+  MERCHANT_CODE_LEAD,
   money,
 } from '../../src/engine/text.ts'
 import type { Recommendation } from '../../src/engine/types.ts'
@@ -49,18 +50,17 @@ export function askWallet(
   )
 }
 
-// "(MCC 5300)" says nothing to a shopper; Claude and the command line keep it.
-const plain = (line: string) => line.replace(/ \(MCC \d{4}\)/g, '')
-
-// What an answer assumed, one tap away.
-export function Assumes({ lines }: { lines: string[] }) {
+// What an answer assumed, one tap away. The merchant code is for Claude
+// and the command line; it says nothing to a shopper.
+export function Assumes({ lines: all }: { lines: string[] }) {
+  const lines = all.filter((l) => !l.startsWith(MERCHANT_CODE_LEAD))
   if (lines.length === 0) return null
   return (
     <details class="how assumes">
       <summary>What this assumes</summary>
       <ul class="assumptions">
         {lines.map((a) => (
-          <li key={a}>{plain(a)}</li>
+          <li key={a}>{a}</li>
         ))}
       </ul>
     </details>

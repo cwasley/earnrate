@@ -6,6 +6,7 @@ import { localToday } from '../../src/engine/periods.ts'
 import type { Spending } from '../../src/engine/renewal.ts'
 import { searchCards } from '../../src/engine/setup.ts'
 import {
+  nothingCounted,
   TYPICAL_MONTHLY_SPEND,
   typicalSpendLines,
   type Addition,
@@ -17,11 +18,10 @@ import {
   breakdownText,
   feeCardBadge,
   feeCardCreditsShort,
-  feeCardShort,
+  insteadShort,
   flatNote,
   gapText,
   lineName,
-  netFigure,
   nextText,
   pairBeats,
   reportNotes,
@@ -68,9 +68,11 @@ import {
   countedNote,
   perYear,
   ratePictureText,
+  upToText,
   type CompareRow,
   type RatePicture,
 } from './picture-text.ts'
+import { feeFigures } from './fee-figures.ts'
 import { SaveImage } from './SaveImage.tsx'
 import { runReport } from './run.ts'
 import { DELETED, notMade, ownLink, pickLink, UNDELETED } from './share.ts'
@@ -111,8 +113,9 @@ function readSaved() {
 
 const TYPICAL: Spending = { lines: typicalSpendLines(catalog), typical: true }
 
-// The person's rows as the report counts them: known lines, rounded to $5
-// as a link carries them; typical amounts when there are none of their own.
+// The person's rows as the report counts them: known lines at the amounts
+// given (a link rounds them to $5); typical amounts when there are none of
+// their own.
 function spendingOf(rows: Row[] | null): Spending {
   const lines = spendingLines(catalog, rows)
   return lines === null ? TYPICAL : { lines, typical: false }
@@ -298,8 +301,8 @@ function Lines({ n }: { n: number }) {
   )
 }
 
-// Your cards, the best two, and the one flat-rate card, on one scale, each
-// with a line on what it is.
+// Your cards, the best two, and the best no-fee card with one rate, on one
+// scale, each with a line on what it is.
 function Comparison({
   start,
   best,
@@ -385,13 +388,9 @@ function FeeCards({
       aria-busy={ids.some((id) => busy(`fee:${id}`))}
     >
       <h2>
-        {voice === 'you'
-          ? ids.length === 1
-            ? 'Your fee card'
-            : 'Your fee cards'
-          : ids.length === 1
-            ? 'The fee card'
-            : 'The fee cards'}
+        {ids.length === 1
+          ? 'Card with an annual fee'
+          : 'Cards with an annual fee'}
       </h2>
       <ul class="rate-fees">
         {ids.map((id) => {
@@ -438,16 +437,26 @@ function FeeCards({
   )
 }
 
+// What it adds, after its fee and with every credit used, as figures; the
+// cheaper card that would do as well, and an unvalued free night, in words.
 function FeeLines({ v, voice }: { v: FeeVerdict; voice: Voice }) {
-  const credits = feeCardCreditsShort(v, voice)
+  const { figures, counting } = feeFigures(v)
+  const night = v.unsaid.yearly > 0 ? '' : feeCardCreditsShort(v, voice)
+  const instead = insteadShort(catalog, v)
+  const notes = [counting ?? '', instead, night].filter((t) => t !== '')
   return (
     <>
-      <p>
-        <Words text={feeCardShort(catalog, v, voice)} />
-      </p>
-      {credits === '' ? null : (
+      <dl class="rate-fee-figures">
+        {figures.map((f) => (
+          <div key={f.label}>
+            <dt>{f.label}</dt>
+            <dd>{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {notes.length === 0 ? null : (
         <p class="muted small">
-          <Words text={credits} />
+          <Words text={notes.join(' ')} />
         </p>
       )}
     </>
@@ -548,9 +557,11 @@ const basisText = (start: ReportStart, voice: Voice = 'you') =>
       ? `On your spending, ${wholeDollars(start.monthly)} a month.`
       : `On spending of ${wholeDollars(start.monthly)} a month.`
 
-// The longer lines under the figure keep their room whichever one
-// shows, so answering a credit never moves the page under the tap.
-const ROOM = { low: 0, high: 0 }
+// The longer line under the figure keeps its room whichever one shows,
+// and the line on unanswered credits keeps its room once they're all
+// answered, so answering a credit never moves the page under the tap.
+const NONE_COUNTED = { counted: [] }
+const ONE_COUNTED = { counted: [null] }
 
 // The report itself: the same for your own cards and a shared link. The
 // figure, the cards it's for and what makes it up, then a panel each for the
@@ -566,6 +577,7 @@ function Report({
   editors,
   answers,
   voice,
+  nothing = null,
 }: {
   start: ReportStart
   input: ReportInput
@@ -576,30 +588,51 @@ function Report({
   editors: ComponentChildren
   answers: ComponentChildren
   voice: Voice
+  // Why there's nothing to rate: the only spending is a kind no card is
+  // ranked on, like rent.
+  nothing?: string | null
 }) {
   const { best, bestStart, fees, next, gaps } = parts
   const assumes = useMemo(
     () => document.querySelector('[data-rate-assumes]'),
     [],
   )
+  const choices = start.creditChoices.length > 0
+  const upTo = upToText(start, voice)
+  if (nothing)
+    return (
+      <div class="rate-report">
+        <p class="callout">{nothing}</p>
+        {editors}
+      </div>
+    )
   return (
     <div class="rate-report" aria-live="polite">
-      <p class="rate-figure" data-range={start.range === null ? undefined : ''}>
-        <Words text={netFigure(start)} />
+      <p class="rate-figure">
+        <Words text={wholeDollars(start.net)} />
         <span class="rate-per">
           <span>{perYear(start, voice)}</span>
-          {start.creditChoices.length > 0 ? (
+          {choices ? (
             <>
               <span class="rate-per-room" aria-hidden="true">
-                {perYear({ range: ROOM, counted: [] }, voice)}
+                {perYear(NONE_COUNTED, voice)}
               </span>
               <span class="rate-per-room" aria-hidden="true">
-                {perYear({ range: null, counted: [ROOM] }, voice)}
+                {perYear(ONE_COUNTED, voice)}
               </span>
             </>
           ) : null}
         </span>
       </p>
+      {choices ? (
+        <p class="rate-up-to">
+          {upTo === null ? (
+            <span aria-hidden="true">{' '}</span>
+          ) : (
+            <Words text={upTo} />
+          )}
+        </p>
+      ) : null}
       <ul class="rate-cards" aria-label="The cards rated">
         {start.cards.map((c) => (
           <li key={c.cardId}>
@@ -669,8 +702,8 @@ function SpendingEditor({
       </summary>
       <div class="panel">
         <p class="muted small">
-          Roughly what you spend each month. Changes here stay on this page;
-          Find a card keeps its own amounts.
+          Roughly what you spend each month. Changes here stay on this page; Get
+          a card keeps its own amounts.
         </p>
         <ul class="spend">
           {rows.map((r, i) => (
@@ -1155,6 +1188,9 @@ function Rated({
         parts={parts}
         busy={busy}
         voice="you"
+        nothing={
+          spending.typical ? null : nothingCounted(catalog, spending.lines)
+        }
         answers={<Answers start={start} answers={answers} />}
         editors={
           <>
@@ -1264,6 +1300,17 @@ function Shared({
           ),
     [parts.bestStart, parts.best, today],
   )
+  if (lines !== null && nothingCounted(catalog, lines) !== null)
+    return (
+      <>
+        <p class="callout">
+          This report's only spending is{' '}
+          {listed(lines.map((l) => lineName(catalog, l.label)))}, which earnrate
+          doesn't count in a year of rewards, so there's nothing to rate.
+        </p>
+        <RateYourOwn />
+      </>
+    )
   return (
     <Report
       start={start}
@@ -1329,8 +1376,8 @@ function CardFinder({
       <SearchInput
         class="search"
         type="search"
-        aria-label="Find a card"
-        placeholder="Find a card, like Sapphire"
+        aria-label="Add a card"
+        placeholder="Add a card, like Sapphire"
         autocomplete="off"
         value={query}
         onInput={(e) => setQuery(e.currentTarget.value)}
@@ -1396,9 +1443,8 @@ function Pick({ rows }: { rows: Row[] | null }) {
     <section class="panel first rate-pick">
       <h2>Which cards do you have?</h2>
       <p>
-        Tap the ones you have. earnrate works out what they earn in a year after
-        their fees, and compares that with one flat-rate card and with the best
-        two cards for the same spending.
+        Tap the cards you have. See what they earn after fees, and how that
+        compares.
       </p>
       <QuickCards
         wallet={wallet}

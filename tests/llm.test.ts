@@ -104,7 +104,7 @@ describe('golden #10 with the classifier', () => {
       confidence: 'low',
     })
     expect(rec.assumptions.join(' ')).toMatch(
-      /counts as home improvement \(MCC 5251\).*Claude's reasoning: The name suggests/,
+      /counts as home improvement\..*Claude's reasoning: The name suggests.*Usual merchant code: MCC 5251\./,
     )
     expect(rec.warnings.join(' ')).toMatch(/Claude's guess \(fake-model\)/)
     expect(rec.warnings.join(' ')).not.toMatch(/Couldn't identify/)

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { localToday } from '../../src/engine/periods.ts'
-import { shortDate } from '../../src/engine/text.ts'
+import { nearDate } from '../../src/engine/text.ts'
 import { CardArt } from '../app/CardArt.tsx'
 import { SheetDownload, WalletPass } from '../app/CheatSheetParts.tsx'
 import { pct, shortName } from '../app/format.ts'
@@ -104,9 +104,19 @@ function Sent({ link }: { link: SheetLink }) {
           Add these cards to My wallet
         </a>
         <p class="small muted">
-          Sent {shortDate(link.made)}. Nothing on this page is saved in your
-          browser.
+          Sent {nearDate(link.made, today)}. Nothing here is saved.
         </p>
+        <details class="small sheet-holds">
+          <summary>What the link holds</summary>
+          <p class="muted">
+            Their cards by product, their category picks and activations, and
+            any memberships or point values that change the sheet: no card
+            numbers or spending. It's all in the address after the #, which
+            browsers don't send to a server, and the sheet is worked out in your
+            browser. Opening it doesn't read or change anything saved here.{' '}
+            <a href="/privacy#sheet-links">More on sheet links</a>.
+          </p>
+        </details>
       </div>
     </>
   )

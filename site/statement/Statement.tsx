@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from 'preact/hooks'
+import { useEffect, useId, useMemo, useRef, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { localToday } from '../../src/engine/periods.ts'
 import { searchCards } from '../../src/engine/setup.ts'
@@ -143,157 +143,182 @@ export function StatementCheck() {
   const setCard = (key: number, cardId: string) =>
     setFiles((now) => now.map((f) => (f.key === key ? { ...f, cardId } : f)))
 
-  return (
-    <div class={settled ? 'check settled' : 'check'}>
-      <section class="panel" aria-labelledby="choose-title">
-        <h2 id="choose-title">
-          {files.length === 0 ? 'Choose an activity file' : 'Add another file'}
-        </h2>
-        <p>
-          {files.length === 0
-            ? "A CSV file of one card's activity, downloaded from American Express or Chase."
-            : "Another card's activity, or more of the same card's, to see them together."}
-        </p>
-        <div class="row-buttons">
-          <label class="file-button primary">
-            Choose a CSV file
-            <input
-              type="file"
-              accept={ACCEPT}
-              multiple
-              onChange={(e) => {
-                const input = e.currentTarget
-                void choose(input.files).then(() => {
-                  input.value = ''
-                })
-              }}
-            />
-          </label>
-        </div>
-        {problems.map((p) => (
-          <p class="callout" role="alert" key={p}>
-            {p}
+  // A file still waiting for its card keeps the files on top; once each
+  // has one, the answer leads and the files fold to a line each, and the
+  // page goes to the answer rather than leave the visitor below it.
+  const waiting = files.some((f) => f.cardId === null && f.lines.length > 0)
+  const top = useRef<HTMLDivElement>(null)
+  const wasWaiting = useRef(false)
+  useEffect(() => {
+    if (wasWaiting.current && !waiting && files.length > 0)
+      top.current?.scrollIntoView({ block: 'start' })
+    wasWaiting.current = waiting
+  }, [waiting])
+
+  const fileInput = (primary: boolean, label: string) => (
+    <label class={primary ? 'file-button primary' : 'file-button'}>
+      {label}
+      <input
+        type="file"
+        accept={ACCEPT}
+        multiple
+        onChange={(e) => {
+          const input = e.currentTarget
+          void choose(input.files).then(() => {
+            input.value = ''
+          })
+        }}
+      />
+    </label>
+  )
+  const problemLines = problems.map((p) => (
+    <p class="callout" role="alert" key={p}>
+      {p}
+    </p>
+  ))
+
+  if (files.length === 0)
+    return (
+      <div class={settled ? 'check settled' : 'check'}>
+        <section class="panel" aria-labelledby="choose-title">
+          <h2 id="choose-title">Choose an activity file</h2>
+          <p>
+            A CSV file of one card's activity, downloaded from American Express
+            or Chase.
           </p>
-        ))}
-        <p class="muted small">
-          On your card's website, download your activity (sometimes called
-          transactions) and choose CSV. A PDF statement won't be read.
-        </p>
-        <details class="where">
-          <summary>Where to find the file</summary>
-          <ul class="muted small">
-            <li>
-              <strong>American Express.</strong> Sign in and open your
-              statements at{' '}
-              <a href="https://global.americanexpress.com/activity/statements">
-                global.americanexpress.com/activity/statements
-              </a>
-              . Choose Download on a monthly or yearly statement, pick CSV, and
-              tick “Include all additional transaction details”. That box adds
-              the category earnrate reads; the merchant addresses that come with
-              it are ignored.
-            </li>
-            <li>
-              <strong>Chase.</strong> Sign in on a computer and open the
-              download page at{' '}
-              <a href="https://secure.chase.com/web/auth/dashboard#/dashboard/accountDetails/downloadAccountTransactions/index">
-                secure.chase.com
-              </a>
-              . Set the file type to “Spreadsheet (Excel, CSV)”. Chase says the
-              CSV download is on its website from a computer, and that on a
-              phone it gives PDFs.
-            </li>
-          </ul>
+          <div class="row-buttons">{fileInput(true, 'Choose a CSV file')}</div>
+          {problemLines}
           <p class="muted small">
-            Checked in signed-in accounts on November 11, 2026. The issuers' own
-            notes:{' '}
-            <a href="https://www.americanexpress.com/us/customer-service/faq.download-export-transactions-software.html">
-              American Express
-            </a>
-            ,{' '}
-            <a href="https://www.chase.com/personal/banking/education/budgeting-saving/what-is-chase-spending-planner">
-              Chase
-            </a>
-            .
+            On your card's website, download your activity (sometimes called
+            transactions) and choose CSV. A PDF statement won't be read.
           </p>
-        </details>
-      </section>
+          <WhereToFind />
+        </section>
+      </div>
+    )
 
-      {files.map((f) => (
-        <FilePanel
-          key={f.key}
-          file={f}
-          options={issuerCards(
-            f.issuer,
-            saved
-              ? [...saved.cards.map((c) => c.id), ...fileCards]
-              : [...QUICK_CARDS, ...picked, ...fileCards],
-          )}
-          saved={saved}
-          nameOf={nameOf}
-          onCard={(id) => setCard(f.key, id)}
-          onForget={() => {
-            setFiles((now) => now.filter((x) => x.key !== f.key))
-            setProblems([])
-          }}
-        />
-      ))}
-
-      {files.length > 0 ? (
-        saved ? (
-          <section class="panel arrive" aria-labelledby="cards-title">
-            <h2 id="cards-title">Your cards</h2>
-            <p>
-              The check compares the {plural(saved.cards.length, 'card')} in My
-              wallet on this browser:{' '}
-              {listed(saved.cards.map((c) => nameOf(c.id)))}. It reads them and
-              changes nothing.
-            </p>
-          </section>
-        ) : (
-          <section class="panel arrive" aria-labelledby="cards-title">
-            <h2 id="cards-title">Your other cards</h2>
-            <p>
-              Tap the cards you have, and the check works out which of them
-              would have earned the most for each purchase. They're kept on this
-              page only: nothing is saved, and they're gone when you leave.
-            </p>
-            {unreadable ? (
-              <p class="muted small">
-                The wallet saved in this browser couldn't be read, so it isn't
-                used here.
-              </p>
-            ) : null}
-            <QuickCards
-              wallet={{ valuations: {}, memberships: [], cards: wallet.cards }}
-              added={picked}
-              keptLabel="From your file"
-              onAdd={(id) => setPicked((now) => [...now, id])}
-              onRemove={(id) => setPicked((now) => now.filter((x) => x !== id))}
-            />
-            <p class="quick-search-lead">
-              Not here? Find any of the {catalog.cards.length} cards earnrate
-              knows.
-            </p>
-            <CardFinder
-              taken={wallet.cards.map((c) => c.id)}
-              action="Add"
-              onPick={(id) => setPicked((now) => [...now, id])}
-            />
-          </section>
-        )
+  const filesPart = (
+    <section class="panel arrive" aria-labelledby="files-title">
+      <h2 id="files-title">
+        {files.length === 1 ? 'Your file' : 'Your files'}
+      </h2>
+      <ul class="file-list">
+        {files.map((f) => (
+          <FilePanel
+            key={f.key}
+            file={f}
+            options={issuerCards(
+              f.issuer,
+              saved
+                ? [...saved.cards.map((c) => c.id), ...fileCards]
+                : [...QUICK_CARDS, ...picked, ...fileCards],
+            )}
+            saved={saved}
+            nameOf={nameOf}
+            onCard={(id) => setCard(f.key, id)}
+            onForget={() => {
+              setFiles((now) => now.filter((x) => x.key !== f.key))
+              setProblems([])
+            }}
+          />
+        ))}
+      </ul>
+      {saved ? (
+        <p class="muted small">
+          Compared with the {plural(saved.cards.length, 'card')} in My wallet:{' '}
+          {listed(saved.cards.map((c) => nameOf(c.id)))}.
+        </p>
+      ) : unreadable ? (
+        <p class="muted small">
+          The wallet saved in this browser couldn't be read, so it isn't used
+          here.
+        </p>
       ) : null}
+      <div class="row-buttons">{fileInput(false, 'Add another file')}</div>
+      {problemLines}
+    </section>
+  )
+  const otherCards = saved ? null : (
+    <section class="panel arrive" aria-labelledby="cards-title">
+      <h2 id="cards-title">Your other cards</h2>
+      <p>Tap the cards you have.</p>
+      <QuickCards
+        wallet={{ valuations: {}, memberships: [], cards: wallet.cards }}
+        added={picked}
+        keptLabel="From your file"
+        onAdd={(id) => setPicked((now) => [...now, id])}
+        onRemove={(id) => setPicked((now) => now.filter((x) => x !== id))}
+      />
+      <p class="quick-search-lead">
+        Not here? Find any of the {catalog.cards.length} cards earnrate knows.
+      </p>
+      <CardFinder
+        taken={wallet.cards.map((c) => c.id)}
+        action="Add"
+        onPick={(id) => setPicked((now) => [...now, id])}
+      />
+    </section>
+  )
 
+  return (
+    <div class={settled ? 'check settled' : 'check'} ref={top}>
+      {waiting ? filesPart : null}
       {check ? (
         <Result check={check} wallet={wallet} saved={saved} nameOf={nameOf} />
       ) : null}
+      {otherCards}
       {check && best ? (
         <BestCards best={best} analysis={check.analysis} />
       ) : null}
+      {waiting ? null : filesPart}
     </div>
   )
 }
 
+function WhereToFind() {
+  return (
+    <details class="where">
+      <summary>Where to find the file</summary>
+      <ul class="muted small">
+        <li>
+          <strong>American Express.</strong> Sign in and open your statements at{' '}
+          <a href="https://global.americanexpress.com/activity/statements">
+            global.americanexpress.com/activity/statements
+          </a>
+          . Choose Download on a monthly or yearly statement, pick CSV, and tick
+          “Include all additional transaction details”. That box adds the
+          category earnrate reads; the merchant addresses that come with it are
+          ignored.
+        </li>
+        <li>
+          <strong>Chase.</strong> Sign in on a computer and open the download
+          page at{' '}
+          <a href="https://secure.chase.com/web/auth/dashboard#/dashboard/accountDetails/downloadAccountTransactions/index">
+            secure.chase.com
+          </a>
+          . Set the file type to “Spreadsheet (Excel, CSV)”. Chase says the CSV
+          download is on its website from a computer, and that on a phone it
+          gives PDFs.
+        </li>
+      </ul>
+      <p class="muted small">
+        Checked in signed-in accounts on November 11, 2026. The issuers' own
+        notes:{' '}
+        <a href="https://www.americanexpress.com/us/customer-service/faq.download-export-transactions-software.html">
+          American Express
+        </a>
+        ,{' '}
+        <a href="https://www.chase.com/personal/banking/education/budgeting-saving/what-is-chase-spending-planner">
+          Chase
+        </a>
+        .
+      </p>
+    </details>
+  )
+}
+
+// A file with its card is one line, its details a tap away; a file still
+// waiting for its card shows them, with the question.
 function FilePanel({
   file,
   options,
@@ -310,6 +335,7 @@ function FilePanel({
   onForget: () => void
 }) {
   const id = useId()
+  const [open, setOpen] = useState(false)
   const issuer = issuerName(file.issuer)
   const purchases = file.lines.filter((l) => l.amount > 0)
   const refunds = file.lines.length - purchases.length
@@ -319,141 +345,141 @@ function FilePanel({
     saved !== null &&
     file.cardId !== null &&
     !saved.cards.some((c) => c.id === file.cardId)
+  const waiting = file.cardId === null && file.lines.length > 0
+  const shown = waiting || open
   return (
-    <section class="panel arrive" aria-labelledby={`${id}-title`}>
-      <h2 id={`${id}-title`}>{issuer} activity</h2>
-      <p class="muted small file-name">{file.name}</p>
-      <dl class="figures">
-        <div>
-          <dt>Purchases</dt>
-          <dd>{purchases.length}</dd>
-        </div>
-        <div>
-          <dt>Refunds</dt>
-          <dd>{refunds}</dd>
-        </div>
-        <div class="wide">
-          <dt>Dates</dt>
-          <dd>
-            {dates.length > 0
-              ? dateRange(dates[0] ?? '', dates.at(-1) ?? '')
-              : 'None'}
-          </dd>
-        </div>
-        <div>
-          <dt>Columns read</dt>
-          <dd>{file.read.length}</dd>
-        </div>
-        <div>
-          <dt>Columns ignored</dt>
-          <dd>{file.ignored.length}</dd>
-        </div>
-      </dl>
-      {file.lines.length > 0 ? (
-        <details class="lines">
-          <summary>What it read, line by line</summary>
-          <p>
-            {`It read ${listed(file.read)}.`}
-            {file.read.includes('Type')
-              ? ' Type tells purchases from payments.'
-              : ''}
-            {file.ignored.length > 0
-              ? ` It ignored the file's other columns and kept nothing from them: ${listed(file.ignored)}.`
-              : ''}
-          </p>
-          {skipped > 0 ? (
-            <p>
-              It left out {plural(skipped, 'other row')}:{' '}
-              {LEFT_OUT[file.issuer]}.
-            </p>
-          ) : null}
-          {file.issuer === 'chase' ? (
-            <p class="muted small">
-              Chase lists purchases as negative amounts; here they're positive,
-              and refunds negative.
-            </p>
-          ) : null}
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Date</th>
-                  <th scope="col">Description</th>
-                  <th scope="col" class="num">
-                    Amount
-                  </th>
-                  <th scope="col">Category</th>
-                </tr>
-              </thead>
-              <tbody>
-                {file.lines.map((l, i) => (
-                  <tr key={i}>
-                    <td class="date">{shortDate(l.date)}</td>
-                    <td>{l.description}</td>
-                    <td class="num">{dollarsAndCents(l.amount)}</td>
-                    <td class="category">{l.issuerCategory ?? ''}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </details>
-      ) : (
-        <p class="callout">There are no purchases in this file to check.</p>
-      )}
-      {file.lines.length > 0 ? (
-        <fieldset class="which">
-          <legend>Which card is this file from?</legend>
-          {options.length > 0 ? (
-            <div class="chips">
-              {options.map((cardId) => (
-                <button
-                  type="button"
-                  key={cardId}
-                  class={file.cardId === cardId ? 'chip on' : 'chip'}
-                  aria-pressed={file.cardId === cardId}
-                  onClick={() => onCard(cardId)}
-                >
-                  {nameOf(cardId)}
-                </button>
-              ))}
-            </div>
-          ) : saved ? (
-            <p class="muted small">
-              None of the cards in My wallet are {issuer} cards.
-            </p>
-          ) : null}
-          {notHeld ? (
-            <p class="muted small">
-              It isn't in My wallet, so it's added for this check only. My
-              wallet stays as it is.
-            </p>
-          ) : null}
-          <CardFinder
-            issuer={file.issuer}
-            placeholder={`Another ${issuer} card`}
-            taken={options}
-            action="Choose"
-            onPick={onCard}
-          />
-        </fieldset>
-      ) : null}
-      <div class="row-buttons">
+    <li class="file arrive" aria-labelledby={`${id}-title`}>
+      <p class="file-line">
+        <strong id={`${id}-title`}>
+          {file.cardId === null ? `${issuer} activity` : nameOf(file.cardId)}
+        </strong>
+        <span class="muted small file-name">
+          {file.name} · {plural(purchases.length, 'purchase')}
+          {dates.length > 0
+            ? ` · ${dateRange(dates[0] ?? '', dates.at(-1) ?? '')}`
+            : ''}
+        </span>
+      </p>
+      <div class="row-buttons file-buttons">
+        {waiting ? null : (
+          <button
+            type="button"
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? 'Hide details' : 'Details'}
+          </button>
+        )}
         <button type="button" onClick={onForget}>
           Forget this file
         </button>
       </div>
-      <p class="muted small">
-        Forget this file drops it and everything read from it. Reloading or
-        closing the page does the same.
-      </p>
-    </section>
+      {file.lines.length === 0 ? (
+        <p class="callout">There are no purchases in this file to check.</p>
+      ) : shown ? (
+        <>
+          {file.cardId !== null && refunds > 0 ? (
+            <p class="muted small">
+              {plural(refunds, 'refund')} too, which aren't counted.
+            </p>
+          ) : null}
+          <details class="lines">
+            <summary>What it read, line by line</summary>
+            <p>
+              {`It read ${listed(file.read)}.`}
+              {file.read.includes('Type')
+                ? ' Type tells purchases from payments.'
+                : ''}
+              {file.ignored.length > 0
+                ? ` It ignored the file's other columns and kept nothing from them: ${listed(file.ignored)}.`
+                : ''}
+            </p>
+            {skipped > 0 ? (
+              <p>
+                It left out {plural(skipped, 'other row')}:{' '}
+                {LEFT_OUT[file.issuer]}.
+              </p>
+            ) : null}
+            {file.issuer === 'chase' ? (
+              <p class="muted small">
+                Chase lists purchases as negative amounts; here they're
+                positive, and refunds negative.
+              </p>
+            ) : null}
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Description</th>
+                    <th scope="col" class="num">
+                      Amount
+                    </th>
+                    <th scope="col">Category</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {file.lines.map((l, i) => (
+                    <tr key={i}>
+                      <td class="date">{shortDate(l.date)}</td>
+                      <td>{l.description}</td>
+                      <td class="num">{dollarsAndCents(l.amount)}</td>
+                      <td class="category">{l.issuerCategory ?? ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+          <fieldset class="which">
+            <legend>Which card is this file from?</legend>
+            {options.length > 0 ? (
+              <div class="chips">
+                {options.map((cardId) => (
+                  <button
+                    type="button"
+                    key={cardId}
+                    class={file.cardId === cardId ? 'chip on' : 'chip'}
+                    aria-pressed={file.cardId === cardId}
+                    onClick={() => {
+                      onCard(cardId)
+                      setOpen(false)
+                    }}
+                  >
+                    {nameOf(cardId)}
+                  </button>
+                ))}
+              </div>
+            ) : saved ? (
+              <p class="muted small">
+                None of the cards in My wallet are {issuer} cards.
+              </p>
+            ) : null}
+            <CardFinder
+              issuer={file.issuer}
+              placeholder={`Another ${issuer} card`}
+              taken={options}
+              action="Choose"
+              onPick={(cardId) => {
+                onCard(cardId)
+                setOpen(false)
+              }}
+            />
+          </fieldset>
+        </>
+      ) : null}
+      {notHeld ? (
+        <p class="muted small">
+          Not in My wallet, so counted for this check only.
+        </p>
+      ) : null}
+    </li>
   )
 }
 
 function CardFinder({
   issuer,
-  placeholder = 'Find a card, like Sapphire',
+  placeholder = 'Add a card, like Sapphire',
   taken,
   action,
   onPick,

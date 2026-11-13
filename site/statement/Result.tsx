@@ -151,15 +151,20 @@ export function Result({
       ) : null}
 
       <p class="muted small">
-        {values
-          ? `${values} ${saved ? 'These are the values My wallet uses.' : "These are earnrate's values."} `
-          : ''}
-        Each card is counted at its rewards rates. Statement credits, welcome
-        bonuses and yearly spend bonuses aren't included.{' '}
-        {saved
-          ? "Spending caps start empty at the file's first purchase: the totals and bonus progress saved in My wallet describe today and may already include these purchases."
-          : "Spending caps start empty at the file's first purchase."}
+        Credits, welcome bonuses and spend bonuses aren't counted.
       </p>
+      <details class="small">
+        <summary>How this is counted</summary>
+        <p class="muted">
+          {values
+            ? `${values} ${saved ? 'These are the values My wallet uses.' : "These are earnrate's values."} `
+            : ''}
+          Each card is counted at its rewards rates.{' '}
+          {saved
+            ? "Spending caps start empty at the file's first purchase: the totals and bonus progress saved in My wallet describe today and may already include these purchases."
+            : "Spending caps start empty at the file's first purchase."}
+        </p>
+      </details>
 
       {check.unknown.length > 0 ? (
         <>

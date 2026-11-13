@@ -77,6 +77,15 @@ export function drawRatePicture(
     y += 48
     ctx.fillText(line, PAD, y)
   }
+  if (text.upTo !== null) {
+    ctx.fillStyle = colors.ink
+    ctx.font = `600 34px ${FONT}`
+    y += 12
+    for (const line of wrap(ctx, text.upTo, inner)) {
+      y += 48
+      ctx.fillText(line, PAD, y)
+    }
+  }
 
   y += 96
   const max = Math.max(0, ...text.rows.map((r) => r.value))

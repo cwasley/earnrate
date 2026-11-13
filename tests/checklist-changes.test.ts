@@ -169,11 +169,11 @@ describe('changes on the to-do list', () => {
     ])
   })
 
-  test("a correction says the mistake was earnrate's, naming only the held card and its issuer", () => {
+  test("a correction leads with what's now right and says the mistake was earnrate's, naming only the held card and its issuer", () => {
     const [fix, ...rest] = todo([{ id: 'citi-custom-cash' }])
     expect(rest).toEqual([])
     expect(fix?.text).toBe(
-      "earnrate fixed its own mistake about Citi Custom Cash (Citi didn't change anything): The bonus categories are marked automatic. Answers before Nov 10, 2026 used the old value.",
+      "Corrected for Citi Custom Cash: The bonus categories are marked automatic. earnrate had this wrong before Nov 10, 2026; Citi didn't change anything.",
     )
     expect(fix?.url).toBeUndefined()
   })
@@ -185,7 +185,7 @@ describe('changes on the to-do list', () => {
         kind: 'change',
         cardId: 'chase-prime-visa',
         ref: 'corrections',
-        text: "earnrate fixed 2 of its own mistakes about Prime Visa (Chase didn't change anything); answers already use the fixed terms. See what changed: https://earnrate.dev/cards/chase-prime-visa#recent-changes",
+        text: "Answers for Prime Visa now use corrected terms (2 fixes); earnrate had them wrong, and Chase didn't change anything. See what changed: https://earnrate.dev/cards/chase-prime-visa#recent-changes",
         url: 'https://earnrate.dev/cards/chase-prime-visa#recent-changes',
         due: null,
       },
@@ -240,9 +240,9 @@ test('corrections to several held cards share one line', () => {
   })
   const fixes = checklist(real, wallet, real.changes?.[0]?.date ?? TODAY)
     .filter((i) => i.kind === 'change')
-    .filter((i) => i.text.startsWith('earnrate fixed '))
+    .filter((i) => i.ref === 'corrections')
   expect(fixes.map((i) => i.text)).toEqual([
-    "earnrate fixed some of its own mistakes about Prime Visa and American Express Gold Card (their issuers didn't change anything); answers already use the fixed terms. Asking about a card shows what changed, and so does its page on earnrate.dev, under Recent changes.",
+    "Answers for Prime Visa and American Express Gold Card now use corrected terms; earnrate had them wrong, and their issuers didn't change anything. Asking about a card shows what changed, and so does its page on earnrate.dev, under Recent changes.",
   ])
 })
 
@@ -259,9 +259,9 @@ test("today's real record shows only issuer changes and corrections, for held ca
     (i) => i.kind === 'change',
   )
   expect(items.length).toBeGreaterThan(0)
-  const fixed = items.filter((i) => i.text.startsWith('earnrate fixed '))
+  const fixed = items.filter((i) => i.ref === 'corrections')
   expect(fixed).toHaveLength(1)
-  expect(fixed[0]?.text).toMatch(/ more of your cards \(their issuers/)
+  expect(fixed[0]?.text).toMatch(/ more of your cards now use corrected terms/)
   for (const i of items) {
     expect(wallet.cards.some((c) => c.id === i.cardId)).toBe(true)
     expect(i.ref).not.toMatch(/:welcome_offer$/)
@@ -299,8 +299,7 @@ describe('rows for the site', () => {
   test("earnrate's corrections are a note linking to the card's recent changes", () => {
     expect(rows([{ id: 'chase-prime-visa' }])).toEqual([
       {
-        title:
-          'earnrate fixed some of its own mistakes about Prime Visa. Answers already use the fixed terms.',
+        title: 'Answers for Prime Visa now use corrected terms.',
         card: 'Prime Visa',
         when: null,
         amount: null,

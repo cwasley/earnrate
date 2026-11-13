@@ -1333,7 +1333,7 @@ describe('#28 first-year rates', () => {
       expect(entry(rec, 'discover-it-cash-back').rate).toBeCloseTo(5)
       expectSome(
         rec.assumptions,
-        /^A first-year rate may apply on Discover it Cash Back Credit Card: 10% cash back here in an account's first year, instead of the 5% cash back it's ranked at\. Give the card's opening date if it opened in the last year\.$/,
+        /^A first-year rate may apply on Discover it Cash Back: 10% cash back here in an account's first year, instead of the 5% cash back it's ranked at\. Give the card's opening date if it opened in the last year\.$/,
       )
     },
   )
@@ -1432,7 +1432,7 @@ describe('#28 first-year rates', () => {
       ).toBeCloseTo(3)
       expectSome(
         rec.assumptions,
-        /^A first-year rate may apply on Bank of America Customized Cash Rewards Credit Card: 6% cash back here/,
+        /^A first-year rate may apply on Bank of America Customized Cash Rewards: 6% cash back here/,
       )
     },
   )
@@ -2347,7 +2347,7 @@ describe('#35 terms with a size or a date', () => {
       expect(entry(unknown, 'amex-business-platinum').rate).toBe(1)
       expectSome(
         unknown.assumptions,
-        /^On a purchase of \$5,000 or more, The Business Platinum Card from American Express would earn 2x Amex Membership Rewards here, instead of the 1x Amex Membership Rewards it's ranked at\. Give the amount to count it\.$/,
+        /^On a purchase of \$5,000 or more, Amex Business Platinum would earn 2x Amex Membership Rewards here, instead of the 1x Amex Membership Rewards it's ranked at\. Give the amount to count it\.$/,
       )
     },
   )

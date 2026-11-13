@@ -747,7 +747,7 @@ describe('year-end pages', () => {
         month_amounts: { '12': 35 },
       })
       if (year === 2026) expect(platinum).toContain('$35 back at Uber')
-      expect(platinum).toContain(`worth up to ${money(total)} together`)
+      expect(platinum).toContain(`worth up to ${wholeDollars(total)} together`)
       const flex = pageOf('chase-freedom-flex')?.html ?? ''
       const opens = catalog.cards
         .find((c) => c.id === 'chase-freedom-flex')

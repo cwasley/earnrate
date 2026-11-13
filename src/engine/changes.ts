@@ -231,13 +231,13 @@ export function holderFixesText(
   if (fixes.length === 1 && only !== undefined) {
     const url = only.change.source
     return {
-      text: `earnrate fixed its own mistake about ${name} (${issuer} didn't change anything): ${sentence(only.change.summary ?? '')} Answers before ${shortDate(only.date)} used the old value.${sourceText(url)}`,
+      text: `Corrected for ${name}: ${sentence(only.change.summary ?? '')} earnrate had this wrong before ${shortDate(only.date)}; ${issuer} didn't change anything.${sourceText(url)}`,
       ...(url === undefined ? {} : { url }),
     }
   }
   const url = cardChangesUrl(cardId)
   return {
-    text: `earnrate fixed ${String(fixes.length)} of its own mistakes about ${name} (${issuer} didn't change anything); answers already use the fixed terms. See what changed: ${url}`,
+    text: `Answers for ${name} now use corrected terms (${String(fixes.length)} fixes); earnrate had them wrong, and ${issuer} didn't change anything. See what changed: ${url}`,
     url,
   }
 }
@@ -245,7 +245,7 @@ export function holderFixesText(
 // One to-do line for earnrate's recent corrections across several held
 // cards: none of them asks anything of the user, so they share a line.
 export const holderFixesAcrossText = (names: string[]) =>
-  `earnrate fixed some of its own mistakes about ${listed(names.length > 4 ? [...names.slice(0, 3), `${String(names.length - 3)} more of your cards`] : names)} (their issuers didn't change anything); answers already use the fixed terms. Asking about a card shows what changed, and so does its page on earnrate.dev, under Recent changes.`
+  `Answers for ${listed(names.length > 4 ? [...names.slice(0, 3), `${String(names.length - 3)} more of your cards`] : names)} now use corrected terms; earnrate had them wrong, and their issuers didn't change anything. Asking about a card shows what changed, and so does its page on earnrate.dev, under Recent changes.`
 
 export type Freshness = {
   issuerChanges: number

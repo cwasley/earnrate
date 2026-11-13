@@ -38,6 +38,7 @@ import {
   categoryUnranked,
   choiceName,
   codesAs,
+  merchantCodeText,
   creditBack,
   creditThen,
   creditTerms,
@@ -675,7 +676,7 @@ function exploreAssumptions(
   const online = onlineAssumption(catalog, merchant, purchase.channel)
   if (online !== null) assumptions.push(online)
   assumptions.push(
-    'Assumes each card is set up for this purchase: the right category pick, any activation done, and none of its cap used yet. A card you hold may differ.',
+    'Assumes each card is ready for this: its bonus category picked, any activation done and its spending cap not used up. A card you hold may differ.',
   )
   assumptions.push(
     options.memberships.length === 0
@@ -711,6 +712,8 @@ function exploreAssumptions(
       ),
     )
   }
+  const code = merchantCodeText(catalog, merchant)
+  if (code !== null) assumptions.push(code)
   return assumptions
 }
 

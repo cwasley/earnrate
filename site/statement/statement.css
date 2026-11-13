@@ -52,9 +52,43 @@
   color: var(--surface);
 }
 
+/* Each file as a line: its card, then its name, count and dates, with
+   Details and Forget beside it. */
+.file-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.file {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.file:first-child {
+  padding-top: 0;
+}
+
+.file-line {
+  display: grid;
+  gap: 2px;
+}
+
+.check .file-line {
+  margin: 0 0 6px;
+}
+
 .file-name {
-  margin-top: -6px;
   overflow-wrap: anywhere;
+}
+
+.file-buttons {
+  margin: 0 0 4px;
+}
+
+.file-buttons button {
+  padding: 4px 12px;
+  font-size: 14px;
 }
 
 .which {
@@ -298,36 +332,6 @@ button.link.more {
   color: var(--accent);
   font-weight: 600;
   cursor: pointer;
-}
-
-/* A file's counts, as a row of figures. */
-.figures {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(6.5em, 1fr));
-  gap: 8px;
-  margin: 8px 0 12px;
-}
-
-.figures > div {
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: var(--accent-faint);
-}
-
-.figures .wide {
-  grid-column: span 2;
-}
-
-.figures dt {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.figures dd {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
 /* The answer's tables. On a phone a row becomes a block: the store as its

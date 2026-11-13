@@ -1,6 +1,5 @@
 import { monthYear, wholeDollars } from '../../src/engine/text.ts'
 import {
-  netFigure,
   pairBeats,
   type BestCards,
   type ReportStart,
@@ -11,16 +10,12 @@ import {
 // else shared.
 export type Voice = 'you' | 'I' | 'neutral'
 
-// What follows the headline figure: "a year after fees, depending on which
-// credits you use".
+// What follows the headline figure, which counts only the credits marked
+// as used: "a year in rewards, after fees".
 export function perYear(
-  start: Pick<ReportStart, 'range'> & { counted: readonly unknown[] },
+  start: { counted: readonly unknown[] },
   voice: Voice = 'you',
 ): string {
-  if (start.range !== null)
-    return voice === 'neutral'
-      ? ' a\u00a0year after fees, depending on which credits are\u00a0used'
-      : ` a\u00a0year after fees, depending on which credits ${voice}\u00a0use`
   if (start.counted.length === 0)
     return ' a\u00a0year in rewards, after\u00a0fees'
   return voice === 'neutral'
@@ -28,9 +23,24 @@ export function perYear(
     : ` a\u00a0year in rewards and credits ${voice} use, after\u00a0fees`
 }
 
+// Under the figure while some credits aren't answered: what the cards
+// would net with every one used. "Up to +$3,150 if you use every credit"
+export function upToText(
+  start: Pick<ReportStart, 'range'>,
+  voice: Voice = 'you',
+): string | null {
+  if (start.range === null) return null
+  const { low, high } = start.range
+  const amount = `${low < 0 && high > 0 ? '+' : ''}${wholeDollars(high)}`
+  return voice === 'neutral'
+    ? `Up to ${amount} if every credit is\u00a0used`
+    : `Up to ${amount} if ${voice} use every\u00a0credit`
+}
+
 export type CompareRow = { label: string; value: number | null; mine: boolean }
 
-// The cards rated, the best two, and the one flat-rate card, on one scale.
+// The cards rated, the best two, and the best no-fee card with one rate, on
+// one scale.
 // A value is null while it's being worked out.
 export function comparisonRows(
   start: ReportStart,
@@ -87,6 +97,7 @@ export type RatePicture = {
   cards: { cardId: string; name: string }[]
   figure: string
   per: string
+  upTo: string | null
   rows: { label: string; amount: string; value: number; quiet: boolean }[]
   notes: string[]
   link: string
@@ -120,8 +131,9 @@ export function ratePictureText(
       cardId: c.cardId,
       name: cardName(c.cardId),
     })),
-    figure: netFigure(start),
+    figure: wholeDollars(start.net),
     per: perYear(start, voice).trim(),
+    upTo: upToText(start, voice),
     rows: rows.flatMap((r) =>
       r.value === null
         ? []

@@ -12,7 +12,7 @@ const ICON = '/favicon.svg?v=2'
 // included (site/vite.config.ts fills their <!--earnrate:footer-->).
 const FOOTER_GROUPS: [string, [string, string][]][] = [
   [
-    'Find a card',
+    'Cards and tools',
     [
       ['/best/', 'Best card for every store'],
       ['/cards/', 'All cards'],

@@ -248,8 +248,6 @@ export function codesAs(
     onlineCategory(catalog, merchant.category)
   )
     return `${merchant.resolvedName} sells online, but you said you're buying in store, so rates for online shopping don't apply.`
-  const mcc = merchant.likelyMcc ?? singleMcc(catalog, merchant.category)
-  const code = mcc === null ? '' : ` (MCC ${String(mcc)})`
   const named = namedBy
     .map((n) =>
       n.cards.length > 3
@@ -257,7 +255,28 @@ export function codesAs(
         : `; for ${listed(n.cards)}, ${n.issuer} names it as one`,
     )
     .join('')
-  return `Assumes ${merchant.resolvedName} counts ${categoryAs(catalog, merchant.category)}${code}${named}.`
+  return `Assumes ${merchant.resolvedName} counts ${categoryAs(catalog, merchant.category)}${named}.`
+}
+
+export const MERCHANT_CODE_LEAD = 'Usual merchant code:'
+
+// The code behind "counts as a supermarket", for whoever wants it: "Usual
+// merchant code: MCC 5411." Said after the plain-words assumptions, and
+// left off the site, where it says nothing to a shopper.
+export function merchantCodeText(
+  catalog: Catalog,
+  merchant: MerchantResolution,
+): string | null {
+  if (
+    merchant.source === 'category' ||
+    merchant.source === 'none' ||
+    merchant.category === 'other' ||
+    (merchant.channel === 'in_store' &&
+      onlineCategory(catalog, merchant.category))
+  )
+    return null
+  const mcc = merchant.likelyMcc ?? singleMcc(catalog, merchant.category)
+  return mcc === null ? null : `${MERCHANT_CODE_LEAD} MCC ${String(mcc)}.`
 }
 
 // "Point values: Membership Rewards (MR) at 1¢." for the currencies an

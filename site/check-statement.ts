@@ -197,10 +197,11 @@ async function open(
 
 const fileInput = (page: Page) => page.locator('input[type=file]')
 
-async function pickFileCard(page: Page, nth: number, name: string) {
+// The file waiting for its card: one with its card folds to a line.
+async function pickFileCard(page: Page, name: string) {
   await page
     .locator('fieldset.which')
-    .nth(nth)
+    .first()
     .getByRole('button', { name, exact: true })
     .click()
 }
@@ -354,10 +355,10 @@ async function privacyChecks(
   // Online: two files for two cards, an answer, then Forget.
   requests.length = 0
   await fileInput(page).setInputFiles([csv('activity.csv', AMEX_CSV)])
-  await pickFileCard(page, 0, 'Amex Gold')
+  await pickFileCard(page, 'Amex Gold')
   await page.locator('#result-title').waitFor({ timeout: 10_000 })
   await fileInput(page).setInputFiles([csv('Chase_Activity.CSV', CHASE_CSV)])
-  await pickFileCard(page, 1, 'Chase Sapphire Preferred')
+  await pickFileCard(page, 'Chase Sapphire Preferred')
   const byCard = await page
     .locator('table[aria-label="By card used"] tbody tr')
     .count()
@@ -444,7 +445,7 @@ async function privacyChecks(
   const empty = await storage(offline.page)
   await offline.context.setOffline(true)
   await fileInput(offline.page).setInputFiles([csv('activity.csv', AMEX_CSV)])
-  await pickFileCard(offline.page, 0, 'Amex Platinum')
+  await pickFileCard(offline.page, 'Amex Platinum')
   await tapCard(offline.page, 'Amex Blue Cash Preferred')
   const answer = offline.page.locator('#result-title')
   await answer.waitFor({ timeout: 10_000 })
@@ -487,7 +488,7 @@ async function privacyChecks(
   // which is the visitor leaving, not the page sending anything.
   const leaving = await open(browser, origin, { width: 390 })
   await fileInput(leaving.page).setInputFiles([csv('activity.csv', AMEX_CSV)])
-  await pickFileCard(leaving.page, 0, 'Amex Gold')
+  await pickFileCard(leaving.page, 'Amex Gold')
   const link = leaving.page.locator('.best-cards .best-name a').first()
   await link.waitFor({ timeout: 10_000 })
   const href = (await link.getAttribute('href')) ?? ''
@@ -520,10 +521,11 @@ const STATES: State[] = [
     wallet: false,
     run: async (page) => {
       await fileInput(page).setInputFiles([csv('activity.csv', AMEX_CSV)])
-      await pickFileCard(page, 0, 'Amex Platinum')
+      await pickFileCard(page, 'Amex Platinum')
       await tapCard(page, 'Amex Blue Cash Preferred')
       await tapCard(page, 'Chase Freedom Unlimited')
       await tapCard(page, 'Citi Double Cash')
+      await page.getByRole('button', { name: 'Details' }).first().click()
       await page.locator('details.lines summary').first().click()
       await page.locator('#best-title').waitFor()
     },
@@ -533,7 +535,7 @@ const STATES: State[] = [
     wallet: false,
     run: async (page) => {
       await fileInput(page).setInputFiles([csv('activity.csv', AMEX_CSV)])
-      await pickFileCard(page, 0, 'Amex Gold')
+      await pickFileCard(page, 'Amex Gold')
       await page.locator('#best-title').waitFor()
     },
   },
@@ -544,7 +546,7 @@ const STATES: State[] = [
       await fileInput(page).setInputFiles([
         csv('Chase_Activity.CSV', CHASE_CSV),
       ])
-      await pickFileCard(page, 0, 'Chase Sapphire Preferred')
+      await pickFileCard(page, 'Chase Sapphire Preferred')
       await page.locator('#best-title').waitFor()
     },
   },
@@ -556,8 +558,8 @@ const STATES: State[] = [
         csv('activity.csv', AMEX_CSV),
         csv('Chase_Activity.CSV', CHASE_CSV),
       ])
-      await pickFileCard(page, 0, 'Amex Gold')
-      await pickFileCard(page, 1, 'Chase Sapphire Preferred')
+      await pickFileCard(page, 'Amex Gold')
+      await pickFileCard(page, 'Chase Sapphire Preferred')
       await page.locator('#best-title').waitFor()
     },
   },
@@ -586,7 +588,7 @@ const STATES: State[] = [
     wallet: false,
     run: async (page) => {
       await fileInput(page).setInputFiles([csv('activity.csv', AMEX_CSV)])
-      await pickFileCard(page, 0, 'Amex Platinum')
+      await pickFileCard(page, 'Amex Platinum')
       await page.getByRole('button', { name: 'Forget this file' }).click()
     },
   },

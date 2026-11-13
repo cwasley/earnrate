@@ -15,7 +15,6 @@ import {
   feeCardShort,
   flatNote,
   gapText,
-  netFigure,
   nextText,
   reportBest,
   reportFeeCards,
@@ -30,8 +29,10 @@ import {
   countedNote,
   perYear,
   ratePictureText,
+  upToText,
   type RatePicture,
 } from '../site/rate/picture-text.ts'
+import { feeFigures } from '../site/rate/fee-figures.ts'
 import { TODAY } from './golden/fixtures.ts'
 
 const catalog = await loadCatalog()
@@ -88,21 +89,27 @@ const everyWord = (t: RatePicture) =>
     ...t.cards.map((c) => c.name),
     t.figure,
     t.per,
+    t.upTo ?? '',
     ...t.rows.flatMap((r) => [r.label, r.amount]),
     ...t.notes,
     t.link,
   ].join('\n')
 
 describe("the report's picture", () => {
-  test('with credits unanswered, shows the range the page shows', () => {
+  test('with credits unanswered, leads with the figure without them and says what every one would add', () => {
     const { start, best, text } = picture(input(), typical)
     expect(start.range).not.toBeNull()
-    expect(text.figure).toBe(netFigure(start))
-    expect(text.figure).toMatch(/ to /)
-    expect(text.per).toBe(
-      'a\u00a0year after fees, depending on which credits I\u00a0use',
+    expect(text.figure).toBe(wholeDollars(start.net))
+    expect(text.figure).not.toMatch(/ to /)
+    expect(text.per).toBe('a\u00a0year in rewards, after\u00a0fees')
+    const high = wholeDollars(start.range?.high ?? NaN)
+    expect(text.upTo).toBe(
+      `Up to ${start.net < 0 ? '+' : ''}${high} if I use every\u00a0credit`,
     )
-    expect(perYear(start)).toContain('which credits you\u00a0use')
+    expect(upToText(start)).toBe(
+      `Up to ${start.net < 0 ? '+' : ''}${high} if you use every\u00a0credit`,
+    )
+    expect(upToText(start, 'neutral')).toMatch(/if every credit is\u00a0used$/)
     const page = comparisonRows(start, best, name)
     expect(text.rows.map((r) => r.amount)).toEqual(
       page.map((r) => wholeDollars(r.value ?? NaN)),
@@ -117,8 +124,8 @@ describe("the report's picture", () => {
   test('with every credit answered, shows the one number the page shows', () => {
     const { start, text } = picture(answered(own), own)
     expect(start.range).toBeNull()
-    expect(text.figure).toBe(netFigure(start))
-    expect(text.figure).not.toMatch(/ to /)
+    expect(text.figure).toBe(wholeDollars(start.net))
+    expect(text.upTo).toBeNull()
     expect(text.per).toBe(
       'a\u00a0year in rewards and credits I use, after\u00a0fees',
     )
@@ -208,6 +215,7 @@ describe("the report's picture", () => {
       expect(gaps.length).toBeGreaterThan(0)
       const words = [
         perYear(start, 'neutral'),
+        upToText(start, 'neutral') ?? '',
         countedNote('neutral'),
         ...comparisonRows(start, best, name, 'neutral').map((r) => r.label),
         breakdownText(catalog, start, 'neutral'),
@@ -246,5 +254,28 @@ describe("the report's picture", () => {
     const start = reportStart(catalog, answered(own), TODAY, own)
     expect(breakdownText(catalog, start, 'neutral')).toMatch(/in credits used/)
     expect(breakdownText(catalog, start)).toMatch(/in credits you use/)
+  })
+
+  test('a card with a fee is three figures: what it adds, after its fee, and with every credit', () => {
+    const fees = reportFeeCards(catalog, input(), TODAY, typical)
+    const gold = fees.find((v) => v.cardId === 'amex-gold')
+    if (!gold) throw new Error('no Gold')
+    const { figures } = feeFigures(gold)
+    expect(figures.map((f) => f.label)).toEqual([
+      'Adds',
+      'After its fee',
+      'With every credit',
+    ])
+    expect(figures[0]?.value).toBe(wholeDollars(gold.net + gold.fee))
+    expect(figures[1]?.value.replace('+', '')).toBe(wholeDollars(gold.net))
+    expect(figures[2]?.value.replace('+', '')).toBe(
+      wholeDollars(gold.net + gold.unsaid.yearly),
+    )
+    const answered_ = reportFeeCards(catalog, answered(own), TODAY, own)
+    for (const v of answered_) {
+      const f = feeFigures(v)
+      expect(f.figures).toHaveLength(2)
+      if (v.used.length > 0) expect(f.counting).toMatch(/^Counts /)
+    }
   })
 })

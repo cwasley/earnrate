@@ -1,4 +1,4 @@
-// Find a card's answer, worked out off the page's thread: every card alone
+// Get a card's answer, worked out off the page's thread: every card alone
 // and in pairs, then the welcome-offer ranking, together so the two always
 // describe the same spending. With a saved wallet, "A new card for my
 // wallet" asks what each card would add to it instead.

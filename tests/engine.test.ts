@@ -626,7 +626,7 @@ describe('gas sold at stores', () => {
     expect(rate(rec, 'usbank-cash-plus')).toBe(2)
     expect(rec.decision?.cardId).toBe('chase-sapphire-preferred')
     expect(rec.warnings.join(' ')).toMatch(
-      /If it counts as a supermarket, American Express Blue Cash Preferred Card wins \(6%\)/,
+      /If it counts as a supermarket, Amex Blue Cash Preferred wins \(6%\)/,
     )
   })
 
@@ -778,16 +778,14 @@ describe('stores an issuer names', () => {
       purchase('vons'),
     )
     expect(rec.assumptions).toContain(
-      'Assumes Vons counts as a supermarket (MCC 5411); for American Express Gold Card, American Express names it as one.',
+      'Assumes Vons counts as a supermarket; for Amex Gold, American Express names it as one.',
     )
     const other = recommend(
       realCatalog,
       wallet('citi-double-cash'),
       purchase('vons'),
     )
-    expect(other.assumptions).toContain(
-      'Assumes Vons counts as a supermarket (MCC 5411).',
-    )
+    expect(other.assumptions).toContain('Assumes Vons counts as a supermarket.')
   })
 
   test('a store that may code another way is settled for a card whose issuer names it', () => {

@@ -405,7 +405,7 @@ export function reportBest(
   return { pair: bestPair, single: bestSingle }
 }
 
-// A pair beats one card when it nets at least half a dollar more, as Find a
+// A pair beats one card when it nets at least half a dollar more, as Get a
 // card says.
 export const pairBeats = (
   b: BestCards,
@@ -857,7 +857,7 @@ export function feeCardShort(
 }
 
 // The cheaper card that would keep the most of it, or that none comes close.
-function insteadShort(catalog: Catalog, v: FeeVerdict): string {
+export function insteadShort(catalog: Catalog, v: FeeVerdict): string {
   if (v.outcome === 'not-needed') return ''
   const i = v.instead
   if (i === null) return 'No card with a lower fee comes close.'

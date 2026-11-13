@@ -19,13 +19,24 @@ export function normalizeMerchantName(input: string): string {
     .trim()
 }
 
+// Built once per list of merchants, since a statement resolves hundreds of
+// lines against the same catalog. Keyed by the array, so another catalog
+// gets its own; a list that grew since (a test's edited copy) is rebuilt.
+const indexes = new WeakMap<
+  Merchant[],
+  { size: number; index: Map<string, Merchant> }
+>()
+
 function buildIndex(merchants: Merchant[]): Map<string, Merchant> {
+  const cached = indexes.get(merchants)
+  if (cached?.size === merchants.length) return cached.index
   const index = new Map<string, Merchant>()
   for (const m of merchants) {
     for (const key of [m.name, ...m.aliases, ...m.domains]) {
       index.set(normalizeMerchantName(key), m)
     }
   }
+  indexes.set(merchants, { size: merchants.length, index })
   return index
 }
 
@@ -36,16 +47,15 @@ type Found = { key: string; merchant: Merchant }
 function lookup(index: Map<string, Merchant>, query: string): Found | null {
   const exact = index.get(query)
   if (exact) return { key: query, merchant: exact }
-  let best: Found | null = null
-  for (const [key, merchant] of index) {
-    if (
-      query.startsWith(`${key} `) &&
-      (!best || key.length > best.key.length)
-    ) {
-      best = { key, merchant }
-    }
+  // Each word-boundary prefix of the query, longest first: a key never ends
+  // in a space, so these are the only keys it can start with.
+  for (let end = query.lastIndexOf(' '); end > 0;) {
+    const key = query.slice(0, end)
+    const merchant = index.get(key)
+    if (merchant) return { key, merchant }
+    end = query.lastIndexOf(' ', end - 1)
   }
-  return best
+  return null
 }
 
 // Gas stations run by stores code differently from regular gas stations, and

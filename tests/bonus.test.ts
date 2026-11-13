@@ -140,7 +140,7 @@ describe('recommendations', () => {
       costHere: 5,
     })
     expect(rec.notes[0]).toMatch(
-      /behind pace on .*\$3,500 more to spend by Jan 1, 2027 \(about \$355 a week\), worth about \$600\. Using it here earns \$5 less than American Express Blue Cash Preferred Card/,
+      /behind pace on .*\$3,500 more to spend by Jan 1, 2027 \(about \$355 a week\), worth about \$600\. Using it here earns \$5 less than Amex Blue Cash Preferred/,
     )
   })
 
@@ -200,7 +200,7 @@ describe('recommendations', () => {
     expect(rec.decision?.cardId).toBe('amex-platinum')
     expect(rec.bonus).toBeNull()
     expect(rec.notes).toContain(
-      "Use The Platinum Card from American Express' Lululemon credit here: what's left of it ends Dec 31, 2026. Test Offer Card's welcome bonus can catch up on other purchases ($3,500 more to spend by Jan 1, 2027).",
+      "Use Amex Platinum's Lululemon credit here: what's left of it ends Dec 31, 2026. Test Offer's welcome bonus can catch up on other purchases ($3,500 more to spend by Jan 1, 2027).",
     )
   })
 
@@ -220,7 +220,7 @@ describe('recommendations', () => {
     expect(rec.decision?.cardId).toBe('amex-platinum')
     expect(rec.bonus).toBeNull()
     expect(rec.notes).toContain(
-      "Use The Platinum Card from American Express' Lululemon credit here: what's left of it ends Dec 31, 2026. IHG One Rewards Premier Credit Card's spend bonus can come with a later purchase on it. Test Offer Card's welcome bonus can catch up on other purchases ($3,500 more to spend by Jan 1, 2027).",
+      "Use Amex Platinum's Lululemon credit here: what's left of it ends Dec 31, 2026. IHG One Rewards Premier's spend bonus can come with a later purchase on it. Test Offer's welcome bonus can catch up on other purchases ($3,500 more to spend by Jan 1, 2027).",
     )
   })
 
@@ -307,7 +307,7 @@ describe('credits and spend bonuses', () => {
     expect(rec.decision?.cardId).toBe('amex-platinum')
     expect(rec.ranked[1]?.milestoneBonus).not.toBeNull()
     expect(rec.notes).toContain(
-      "Use The Platinum Card from American Express' Lululemon credit here: what's left of it ends Dec 31, 2026. IHG One Rewards Premier Credit Card's spend bonus can come with a later purchase on it.",
+      "Use Amex Platinum's Lululemon credit here: what's left of it ends Dec 31, 2026. IHG One Rewards Premier's spend bonus can come with a later purchase on it.",
     )
   })
 

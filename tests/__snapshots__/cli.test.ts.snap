@@ -14,8 +14,9 @@ Use Cash+: 5% back. High confidence.
      Valued at 1¢ per point: 2% back.
   + 6 more cards (--all lists them)
 
-Assumes Comcast Xfinity counts as TV and internet service (MCC 4899).
+Assumes Comcast Xfinity counts as TV and internet service.
 Point values: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢ and Amex Membership Rewards (MR) at 1¢.
+Usual merchant code: MCC 4899.
 "
 `;
 
@@ -35,9 +36,10 @@ Use Sapphire Preferred: 1% back. High confidence.
 Prime Visa and Cash+ also earn 1% here. Sapphire Preferred wins the tie because its points can be worth more.
 Can't use here: Amex Gold, Blue Cash Preferred, Freedom Flex, Double Cash, Savor, SoFi. Costco takes only Visa in-store.
 
-Assumes Costco counts as a warehouse club (MCC 5300).
+Assumes Costco counts as a warehouse club.
 Assumes an in-store purchase. Costco takes cards differently online.
 Point values: Chase Ultimate Rewards (UR) at 1¢.
+Usual merchant code: MCC 5300.
 "
 `;
 
@@ -142,7 +144,8 @@ Use Amex Gold: 6.8% back, about $5.44. High confidence.
 
 Blue Cash Preferred beats Amex Gold here if Amex Membership Rewards (MR) points are worth less than 1.5¢ (valued here at 1.7¢).
 
-Assumes Whole Foods Market counts as a supermarket (MCC 5411); for Amex Gold and Blue Cash Preferred, American Express names it as one.
+Assumes Whole Foods Market counts as a supermarket; for Amex Gold and Blue Cash Preferred, American Express names it as one.
 Point values: Amex Membership Rewards (MR) at 1.7¢, SoFi Member Rewards at 1¢ and Chase Ultimate Rewards (UR) at 1.7¢.
+Usual merchant code: MCC 5411.
 "
 `;

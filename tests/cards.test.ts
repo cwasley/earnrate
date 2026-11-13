@@ -121,7 +121,7 @@ describe('the 16 popular cards', () => {
     )
     expect(inStore.decision).toBeNull()
     expect(inStore.warnings.join(' ')).toMatch(
-      /Ordering online instead\? Citi Double Cash Card works there/,
+      /Ordering online instead\? Citi Double Cash works there/,
     )
     const online = recommend(
       catalog,

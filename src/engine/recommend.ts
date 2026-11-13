@@ -43,10 +43,10 @@ import {
   currencyLabel,
   currencyName,
   earnText,
-  heldName,
   introRateText,
   introUnknownText,
   listed,
+  merchantCodeText,
   money,
   onlineAssumption,
   NETWORK_NAMES,
@@ -58,6 +58,7 @@ import {
   pointValuesText,
   possessive,
   roundCents,
+  shortCardName,
   shortDate,
   wholeDollars,
 } from './text.ts'
@@ -135,7 +136,10 @@ type Entry = {
   ifLarger: { amount: number; rate: number; returnPct: number } | null
 }
 
-const displayName = (e: Entry) => e.held.checkout_label ?? e.card.name
+// A card in a sentence: its checkout label, or its short name ("Amex
+// Gold"), as the rows above the sentence show it.
+const displayName = (e: Entry) =>
+  e.held.checkout_label ?? shortCardName(e.card.name)
 
 // "Worth X or more" must hold at X itself, so round up; "less than X" rounds down.
 const roundUp = (n: number) => String(Math.ceil(n * 100 - EPSILON) / 100)
@@ -398,7 +402,11 @@ function reasoningFor(
     const partners = card.pools_into?.when_wallet_has ?? []
     const heldPartners = wallet.cards
       .filter((h) => partners.includes(h.id))
-      .map((h) => heldName(catalog, h))
+      .map(
+        (h) =>
+          h.checkout_label ??
+          shortCardName(catalog.cards.find((c) => c.id === h.id)?.name ?? h.id),
+      )
     lines.push(
       `Pools into ${currencyName(catalog, currency)} because you hold ${listed(heldPartners)}.`,
     )
@@ -639,7 +647,7 @@ function ifPaying(
     return [
       {
         cardId: e.card.id,
-        cardName: displayName(e),
+        cardName: e.held.checkout_label ?? e.card.name,
         payment: e.ifPaid.payment,
         earn: earnText(catalog, e.ifPaid.rate, currency),
         standard: earnText(catalog, e.evaluation.best.nominalRate, currency),
@@ -771,6 +779,8 @@ function assumptionsFor(
       assumptions.push(
         `Counts the ${money(hit.before)} tracked on ${displayName(e)} in ${hit.period} toward its ${wholeDollars(hit.spend)} spend bonus; spending earnrate wasn't told about isn't counted.`,
       )
+  const code = merchantCodeText(catalog, merchant)
+  if (code !== null) assumptions.push(code)
   return assumptions
 }
 
@@ -788,9 +798,9 @@ export function noteOnlyAssumptions(
   catalog: Catalog,
   merchant: MerchantResolution,
 ): string[] {
-  return merchant.source === 'category' || merchant.source === 'none'
-    ? []
-    : [codesAs(catalog, merchant)]
+  if (merchant.source === 'category' || merchant.source === 'none') return []
+  const code = merchantCodeText(catalog, merchant)
+  return [codesAs(catalog, merchant), ...(code === null ? [] : [code])]
 }
 
 export function recommend(

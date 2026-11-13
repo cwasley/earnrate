@@ -124,6 +124,13 @@
   margin: 10px 0 0;
 }
 
-.sheet-how {
-  margin-top: 36px;
+.sheet-holds {
+  margin: 4px 0 0;
+}
+
+.sheet-holds summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 4px 0;
 }

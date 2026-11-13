@@ -462,7 +462,7 @@ describe('comparing every card', () => {
 
   test('best states the merchant code it assumes, like a recommendation', async () => {
     expect((await cli(['best', 'expedia'], noWallet)).stdout).toMatch(
-      /Assumes Expedia counts as travel \(MCC 4722\)/,
+      /Assumes Expedia counts as travel\.\n[^]*Usual merchant code: MCC 4722\./,
     )
   })
 
