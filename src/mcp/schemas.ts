@@ -461,6 +461,18 @@ export const CardSearchSchema = z.object({
           text: z.string(),
         }),
       ),
+      // Every cardmember year with nothing to enroll in: counted in yearly
+      // figures (simulate_spending, the fee math), never in one purchase's.
+      yearlyPoints: z.array(
+        z.object({
+          id: z.string(),
+          points: z.number().nullable(), // a fixed amount a year
+          percent: z.number().nullable(), // or a percent of the year's purchases or points
+          of: z.enum(['purchases', 'points']).nullable(),
+          value: z.number().nullable(), // the fixed amount in dollars
+          text: z.string(),
+        }),
+      ),
       // Null when the search found more cards than it details.
       earning: z.array(z.string()).nullable(),
       // Null without an annual fee. Dollars a month of the mix's spending.
@@ -644,7 +656,17 @@ const SimulationSchema = z.object({
       value: z.number(),
     }),
   ),
-  // What each card took and earned a year, its milestones included.
+  // Points each card gives every year with no enrolling: in rewards.
+  yearlyPoints: z.array(
+    z.object({
+      cardId: z.string(),
+      yearlyPointsId: z.string(),
+      points: z.number(),
+      value: z.number(),
+    }),
+  ),
+  // What each card took and earned a year, its milestones and yearly points
+  // included.
   byCard: z.array(
     z.object({ cardId: z.string(), spend: z.number(), rewards: z.number() }),
   ),

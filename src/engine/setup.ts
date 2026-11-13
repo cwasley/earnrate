@@ -19,6 +19,7 @@ import {
   creditBack,
   creditTerms,
   currencyLabel,
+  currencyName,
   ENROLL_FIRST,
   LISTED_CREDIT,
   freeNightText,
@@ -28,7 +29,9 @@ import {
   nightWorthText,
   listed,
   possessive,
+  roundCents,
 } from './text.ts'
+import { yearlyPointsLine } from './yearly-points.ts'
 
 export type CardChoiceInfo = {
   id: string
@@ -88,6 +91,17 @@ export type CardInfo = {
     points: number | null // in the card's currency; null without a cap
     value: number | null // dollars at the wallet's point value, "up to"
     ownValue: number | null // what the user says it's worth, on a card they hold
+    text: string
+  }[]
+  // Points it adds every cardmember year with nothing to enroll in: "10,000
+  // Capital One miles every year (about $100 at 1¢ a point)". Counted in
+  // yearly figures, never in a purchase's.
+  yearlyPoints: {
+    id: string
+    points: number | null // a fixed amount, in the card's currency
+    percent: number | null // or this percent of the year's purchases or points
+    of: 'purchases' | 'points' | null
+    value: number | null // the fixed amount in dollars, at the point value
     text: string
   }[]
 }
@@ -294,6 +308,28 @@ export function cardInfo(
         value: n.value,
         ownValue: n.own,
         text: `${freeNightText(n.points, currencyLabel(catalog, card.currency))} (${nightWorthText(n, centsPerUnit) ?? (heldCard ? NIGHT_UNVALUED_SHORT : NIGHT_NO_CAP)})`,
+      }
+    }),
+    yearlyPoints: card.yearly_points.map((y) => {
+      const { centsPerUnit } = currencyValuation(
+        catalog,
+        { valuations: wallet?.valuations ?? {} },
+        card.currency,
+      )
+      return {
+        id: y.id,
+        points: y.points ?? null,
+        percent: y.percent ?? null,
+        of: y.of ?? null,
+        value:
+          y.points === undefined
+            ? null
+            : roundCents((y.points * centsPerUnit) / 100),
+        text: yearlyPointsLine(
+          y,
+          currencyName(catalog, card.currency),
+          centsPerUnit,
+        ),
       }
     }),
   }

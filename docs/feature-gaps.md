@@ -112,9 +112,10 @@ A `cardmember_year` milestone runs from the account anniversary date. Citi count
 
 ### Perks that offset the annual fee
 
-Merchant credits (`credits:`) and yearly free nights (`free_nights:`, one after each account anniversary, valued at the night's point cap times the person's point value, or at what the cardholder says it's worth to them) count against a held card's fee once the cardholder says they use them, and are shown apart for cards not held. A night with no point cap (`amex-hilton-honors-aspire`'s Annual Free Night Reward) counts only at the cardholder's own value, and isn't counted for cards not held. Other perks that aren't dollars at a store don't count anywhere.
+Merchant credits (`credits:`) and yearly free nights (`free_nights:`, one after each account anniversary, valued at the night's point cap times the person's point value, or at what the cardholder says it's worth to them) count against a held card's fee once the cardholder says they use them, and are shown apart for cards not held. A night with no point cap (`amex-hilton-honors-aspire`'s Annual Free Night Reward) counts only at the cardholder's own value, and isn't counted for cards not held. Points every cardholder gets after each account anniversary with nothing to enroll in (`yearly_points:`, a fixed amount or a percent of the year's purchases or points) count in every yearly figure without being marked used, and from year two in a welcome-offer comparison. Other perks that aren't dollars at a store don't count anywhere.
 
 - Free nights earned by spending (milestone `rewards` on the Hilton, Marriott and IHG cards) are shown, not valued.
+- Yearly points that depend on holding another card: `chase-united-business` and `chase-united-club-business` give 5,000 miles a year only beside a personal Chase United card. `yearly_points` has no condition on the wallet's other cards, so they aren't entered.
 
 ### Merchant credits the schema can't express
 

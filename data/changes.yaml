@@ -3,6 +3,66 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.13'
+  date: 2026-11-13
+  changes:
+    - cause: addition
+      card: capital-one-venture-x
+      field: yearly_points.anniversary-miles
+      now: { points: 10000 }
+      summary: 10,000 Capital One miles after each account anniversary, starting with the first.
+      source: https://disclosures.capitalone.com/disclosure.42201.en-US.html
+    - cause: addition
+      card: capital-one-venture-x-business
+      field: yearly_points.anniversary-miles
+      now: { points: 10000 }
+      summary: 10,000 Capital One miles after each account anniversary, starting with the first.
+      source: https://disclosures.capitalone.com/disclosure.42243.en-US.html
+    - cause: addition
+      card: barclays-jetblue-plus
+      field: yearly_points.anniversary-points
+      now: { points: 5000 }
+      summary: 5,000 TrueBlue points 4-6 weeks after each account anniversary.
+      source: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    - cause: addition
+      card: chase-southwest-plus
+      field: yearly_points.anniversary-points
+      now: { points: 3000 }
+      summary: 3,000 Rapid Rewards points every year on the cardmember anniversary.
+      source: https://creditcards.chase.com/travel-credit-cards/southwest/plus
+    - cause: addition
+      card: chase-southwest-premier
+      field: yearly_points.anniversary-points
+      now: { points: 6000 }
+      summary: 6,000 Rapid Rewards points every year on the cardmember anniversary.
+      source: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+    - cause: addition
+      card: chase-southwest-priority
+      field: yearly_points.anniversary-points
+      now: { points: 7500 }
+      summary: 7,500 Rapid Rewards points every year on the cardmember anniversary.
+      source: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    - cause: addition
+      card: chase-southwest-premier-business
+      field: yearly_points.anniversary-points
+      now: { points: 6000 }
+      summary: 6,000 Rapid Rewards points every year after the cardmember anniversary.
+      source: https://creditcards.chase.com/business-credit-cards/southwest/premier-business
+    - cause: addition
+      card: chase-southwest-performance-business
+      field: yearly_points.anniversary-points
+      now: { points: 9000 }
+      summary: 9,000 Rapid Rewards points every year after the cardmember anniversary.
+      source: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
+    - cause: wording
+      card: chase-united-business
+      field: todo
+      summary: A todo says the 5,000-mile better-together bonus isn't counted, since it needs a personal Chase United card as well.
+    - cause: wording
+      card: chase-united-club-business
+      field: todo
+      summary: A todo says the 5,000-mile better-together bonus isn't counted, since it needs a personal Chase United card as well.
+
 - version: '2026.11.11.3'
   date: 2026-11-11
   changes:

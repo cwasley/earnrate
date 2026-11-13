@@ -225,8 +225,15 @@ export function compareOffers(
     const plan: OfferPlan | null = addition
       ? (() => {
           const reached = minimum === null || minimum.reachable
+          // Yearly points come after each anniversary, so not in year one.
+          const anniversary = addition.simulation.yearlyPoints
+            .filter((y) => y.cardId === card.id)
+            .reduce((sum, y) => sum + y.value, 0)
           const yearOne = roundCents(
-            addition.extraRewards + (reached ? value : 0) - (firstYearFee ?? 0),
+            addition.extraRewards -
+              anniversary +
+              (reached ? value : 0) -
+              (firstYearFee ?? 0),
           )
           const yearTwo = roundCents(addition.extraRewards - addition.annualFee)
           return {
@@ -278,7 +285,7 @@ export function compareOffers(
       ? `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`
       : `Compares only the cards you named: ${listed(only.map(cardName))}.`,
     `Each offer is the public one on the issuer's page on the date shown, checked weekly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how.`,
-    `Ranked on the first two years together: what each card ${wallet.cards.length > 0 ? 'adds to your cards' : 'earns'} on ${spending.typical ? 'typical U.S. spending' : 'your spending'}${wallet.cards.length > 0 ? ' (it takes the purchases where it earns more)' : ''}, plus the welcome bonus in year one if the minimum spend fits in the window with all your spending on it, less each year's annual fee. Year one counts the card at its standard rates.`,
+    `Ranked on the first two years together: what each card ${wallet.cards.length > 0 ? 'adds to your cards' : 'earns'} on ${spending.typical ? 'typical U.S. spending' : 'your spending'}${wallet.cards.length > 0 ? ' (it takes the purchases where it earns more)' : ''}, plus the welcome bonus in year one if the minimum spend fits in the window with all your spending on it, less each year's annual fee. Year one counts the card at its standard rates${offers.some((o) => (catalog.cards.find((c) => c.id === o.cardId)?.yearly_points.length ?? 0) > 0) ? ', and points a card gives every year from year two, after its first anniversary' : ''}.`,
     "First-year value is the bonus alone at your point values, less the first year's fee.",
     CREDITS_APART,
     ...(skipped.size > 0 && only === null

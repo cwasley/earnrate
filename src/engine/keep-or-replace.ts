@@ -51,6 +51,7 @@ import {
   type Voice,
 } from './text.ts'
 import { cardValuation } from './valuation.ts'
+import { yearlyPointsCounted } from './yearly-points.ts'
 
 // How many cheaper cards the answer names.
 export const REPLACEMENTS = 3
@@ -730,6 +731,20 @@ export function keepOrReplaceAssumes(
           `Each cheaper card is counted at its regular annual fee, beside your other cards, taking the purchases where it earns the most. ${CREDITS_APART}`,
         ]
       : []),
+    ...[k.cardId, ...k.replacements.map((r) => r.cardId)].flatMap((id) => {
+      const card = catalog.cards.find((c) => c.id === id)
+      const counted =
+        card === undefined
+          ? null
+          : yearlyPointsCounted(
+              catalog,
+              card,
+              possessive(
+                `the ${id === k.cardId ? k.name : nameOf(catalog, id)}`,
+              ),
+            )
+      return counted === null ? [] : [`Counts ${counted}.`]
+    }),
     ...(k.replacements.some((r) => r.offer !== null)
       ? [OFFERS_MAY_DIFFER]
       : []),

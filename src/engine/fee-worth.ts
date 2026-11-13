@@ -32,6 +32,7 @@ import {
   wholeDollars,
 } from './text.ts'
 import { currencyValuation } from './valuation.ts'
+import { yearlyPointsCounted } from './yearly-points.ts'
 
 export const STEP = 50 // dollars a month between the amounts tried
 export const MAX_MONTHLY = 5000
@@ -353,8 +354,14 @@ function creditsSentences(
   // free night"
   const credits = w.credits.names.length - w.credits.nightIds.length
   const perks = `${w.credits.names.length > 1 && credits !== 1 ? 'all ' : ''}its ${perksNoun(w.credits, true, true)}`
+  // The yearly points count too, so they're named beside the credits.
+  const yearly = yearlyPointsCounted(catalog, w.card)
   const worthMore =
-    w.credits.names.length === 1 ? "it's worth" : "they're worth"
+    yearly !== null
+      ? `${w.credits.names.length === 1 ? 'it' : 'they'} and ${yearly} are worth`
+      : w.credits.names.length === 1
+        ? "it's worth"
+        : "they're worth"
   // "$100 a year at Chase Travel" for one credit, else the list.
   const lone =
     w.credits.names.length === 1 && w.credits.nightIds.length === 0
@@ -417,7 +424,8 @@ export function feeWorthAnswer(
     w.at(STEP).card.membershipFees > 0
       ? ', the membership it needs counted like a fee'
       : ''
-  const assumes = `Assumes typical U.S. spending (${w.everywhere ? `no typical category earns it a bonus, so earnrate's whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`}), the same every month for a year; ${value}; the regular annual fee${membership}; no welcome bonus or first-year rates. Compared with the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards that need no membership.`
+  const yearly = yearlyPointsCounted(catalog, card)
+  const assumes = `Assumes typical U.S. spending (${w.everywhere ? `no typical category earns it a bonus, so earnrate's whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`}), the same every month for a year; ${value}; the regular annual fee${membership}${yearly === null ? '' : `; ${yearly}`}; no welcome bonus or first-year rates. Compared with the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards that need no membership.`
   return {
     annualFee: card.annual_fee ?? 0,
     mix: w.lines.map((l, i) => ({

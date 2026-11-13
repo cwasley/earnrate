@@ -54,6 +54,9 @@ export function formatCardInfo(
     ),
     ...card.credits.map((c) => `statement credit ${c.id}: ${c.text}`),
     ...card.freeNights.map((n) => `free night ${n.id}: ${n.text}`),
+    ...card.yearlyPoints.map(
+      (y) => `yearly points ${y.id}: ${y.text}, with nothing to enroll in`,
+    ),
     ...(card.onlyAt ? [`works only at ${card.onlyAt.join(', ')}`] : []),
     foreignFeeText(card.foreignTransactionFee).toLowerCase(),
     ...(details?.welcomeOffer

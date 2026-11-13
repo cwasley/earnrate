@@ -46,6 +46,10 @@ rules:
     rate: 3
     valid_to: 2027-12-31
     note: Limited-time offer on rides, bikes, scooters, Lyft memberships and Lyft Cash bought in the Lyft app. Gift cards, Lyft car rentals, vehicle service centers and miscellaneous fees are excluded.
+yearly_points:
+  - id: anniversary-points
+    points: 6000
+    note: Every year on the account anniversary.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
   - rule: annual_fee
@@ -93,3 +97,9 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://creditcards.chase.com/southwest/premier-business-credit-card
     quote: 'No Foreign Transaction Fees: See Cardmember Agreement for details'
+  - rule: anniversary-points
+    url: https://creditcards.chase.com/business-credit-cards/southwest/premier-business
+    quote: 'Receive 6,000 bonus points each year after your Cardmember anniversary.'
+  - rule: anniversary-points
+    url: https://creditcards.chase.com/southwest/premier-business-credit-card
+    quote: '6,000 anniversary points every year on your Cardmember Anniversary'

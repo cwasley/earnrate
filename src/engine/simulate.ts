@@ -28,10 +28,12 @@ import {
   categoryNote,
   categoryUnranked,
   creditsCountedText,
+  currencyName,
   leftOutText,
   money,
   namedStore,
   paymentNote,
+  pct,
   roundCents,
   shortCardName,
   wholeDollars,
@@ -40,6 +42,7 @@ import {
 } from './text.ts'
 import type { MerchantResolution } from './types.ts'
 import { cardValuation } from './valuation.ts'
+import { yearlyPointsAmount } from './yearly-points.ts'
 import { EPSILON, HALF_CENT } from './compare.ts'
 
 const MONTHS = 12
@@ -91,8 +94,10 @@ export type Simulation = {
   // Spend milestones the year's spending on a card reaches; their points
   // are in `rewards`.
   milestones: SimulatedMilestone[]
-  // What each card took and earned, its milestones included: the cards'
-  // `rewards` add up to the simulation's.
+  // Points each card gives every year with no enrolling: in `rewards`.
+  yearlyPoints: SimulatedYearlyPoints[]
+  // What each card took and earned, its milestones and yearly points
+  // included: the cards' `rewards` add up to the simulation's.
   byCard: CardResult[]
   notes: string[]
 }
@@ -111,6 +116,13 @@ export type SimulatedMilestone = {
   cardId: string
   milestoneId: string
   points: number | null
+  value: number // dollars, at the point values given
+}
+
+export type SimulatedYearlyPoints = {
+  cardId: string
+  yearlyPointsId: string
+  points: number // in the card's currency
   value: number // dollars, at the point values given
 }
 
@@ -213,6 +225,7 @@ export function simulateWallet(
   })
   let state = wallet
   const earnedBy = new Map<string, number>()
+  const pointsBy = new Map<string, number>() // in each card's own currency
   const results = lines.map(() => ({
     spend: 0,
     earned: 0,
@@ -239,6 +252,7 @@ export function simulateWallet(
       for (let guard = 0; left > EPSILON && guard < 20; guard++) {
         let pick: {
           card: Card
+          rate: number
           perDollar: number
           room: number
         } | null = null
@@ -252,7 +266,7 @@ export function simulateWallet(
           const room =
             best.cap && best.cap.remaining > 0 ? best.cap.remaining : Infinity
           if (!pick || perDollar > pick.perDollar + EPSILON)
-            pick = { card, perDollar, room }
+            pick = { card, rate: best.rate, perDollar, room }
         }
         if (!pick) break
         const chosen = pick
@@ -261,6 +275,10 @@ export function simulateWallet(
         earnedBy.set(
           chosen.card.id,
           (earnedBy.get(chosen.card.id) ?? 0) + amount * chosen.perDollar,
+        )
+        pointsBy.set(
+          chosen.card.id,
+          (pointsBy.get(chosen.card.id) ?? 0) + amount * chosen.rate,
         )
         result.byCard.set(
           chosen.card.id,
@@ -309,6 +327,7 @@ export function simulateWallet(
   // A year of these amounts is taken as every year's: a calendar-year or
   // cardmember-year total is the same twelve months' spending.
   const milestones: SimulatedMilestone[] = []
+  const yearlyPoints: SimulatedYearlyPoints[] = []
   const milestoneNotes: string[] = []
   const lastMonth = monthDates(start).at(-1) ?? start
   for (const { card, cents } of cards) {
@@ -330,12 +349,38 @@ export function simulateWallet(
         `${shortCardName(card.name)}: ${wholeDollars(spent)} a year on it reaches ${milestoneWhat(m)}${milestoneStarts(m, start)}${m.points === undefined ? '' : ` (about ${money(value)}, counted in its rewards)`}, assuming the same spending each year.`,
       )
     }
+    // Only what the card itself took and earned counts toward a percentage.
+    const earnedPoints = pointsBy.get(card.id) ?? 0
+    for (const y of card.yearly_points) {
+      const points = yearlyPointsAmount(y, {
+        spend: spent,
+        points: earnedPoints,
+      })
+      if (points <= 0) continue
+      const value = roundCents((points * cents) / 100)
+      yearlyPoints.push({
+        cardId: card.id,
+        yearlyPointsId: y.id,
+        points,
+        value,
+      })
+      const of =
+        y.points !== undefined
+          ? ''
+          : y.of === 'points'
+            ? `, ${pct(y.percent ?? 0)} of the ${Math.round(earnedPoints).toLocaleString('en-US')} its purchases earned`
+            : `, ${pct(y.percent ?? 0)} of its ${wholeDollars(spent)} of purchases`
+      milestoneNotes.push(
+        `${shortCardName(card.name)}: ${points.toLocaleString('en-US')} ${currencyName(catalog, card.currency)} every year${of} (about ${money(value)}, counted in its rewards).`,
+      )
+    }
   }
   // From the unrounded lines: adding lines rounded to the cent drifts a
   // flat 2% on $1,000 a month to $240.01.
   const rewards = roundCents(
     results.reduce((sum, r) => sum + r.earned, 0) +
-      milestones.reduce((sum, m) => sum + m.value, 0),
+      milestones.reduce((sum, m) => sum + m.value, 0) +
+      yearlyPoints.reduce((sum, y) => sum + y.value, 0),
   )
   const annualFees = cards.reduce((sum, c) => sum + (c.card.annual_fee ?? 0), 0)
   const credits: SimulatedCredits[] = cards.flatMap(({ card }) => {
@@ -437,6 +482,7 @@ export function simulateWallet(
     credits,
     lines: lineResults,
     milestones,
+    yearlyPoints,
     byCard: cards.map(({ card }) => ({
       cardId: card.id,
       spend: roundCents(
@@ -444,7 +490,7 @@ export function simulateWallet(
       ),
       rewards: roundCents(
         (earnedBy.get(card.id) ?? 0) +
-          milestones
+          [...milestones, ...yearlyPoints]
             .filter((m) => m.cardId === card.id)
             .reduce((sum, m) => sum + m.value, 0),
       ),

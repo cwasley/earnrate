@@ -75,6 +75,11 @@ import type { Merchant } from '../src/schema/merchant.ts'
 import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
 import { milestoneStarts, milestoneWhat } from '../src/engine/milestones.ts'
 import {
+  yearlyPointsCounted,
+  yearlyPointsText,
+  yearlyPointsWorth,
+} from '../src/engine/yearly-points.ts'
+import {
   creditName,
   creditWhere,
   introWhat,
@@ -1124,6 +1129,20 @@ function freeNightsText(card: Card): string {
   return `<h2>Free night</h2><p>A free night each year after the account anniversary, with no spending needed. ${capped ? "It's worth the most at a hotel that costs its full point cap, on a stay you'd make anyway. With your cards saved, earnrate counts it against the annual fee once you say you use it, and you can mark it as one you don't." : "With your cards saved, earnrate counts it against the annual fee once you say what it's worth to you, and you can mark it as one you don't."}</p><ul>${items.join('')}</ul>`
 }
 
+// Valued at earnrate's default point value, like the rest of the page.
+function yearlyPointsSection(card: Card): string {
+  if (card.yearly_points.length === 0) return ''
+  const currency = catalog.currencies.find((c) => c.id === card.currency)
+  const name = currency?.name ?? card.currency
+  const cents = currency?.value_cents ?? 1
+  const items = card.yearly_points.map((y) => {
+    const what = capitalize(yearlyPointsText(y, name))
+    return `<li><strong>${esc(what)}</strong> (${esc(yearlyPointsWorth(y, cents))} at ${esc(num(cents))}¢ a point, earnrate's default)${noteAndQuote(card, y.id, y.note)}</li>`
+  })
+  const it = card.yearly_points.length === 1 ? 'it' : 'them'
+  return `<h2>Points every year</h2><p>Every cardholder gets ${it}, with nothing to enroll in and no spending needed. earnrate counts ${it} in the card's yearly figures, including whether the annual fee is worth it, but never in what a single purchase earns.</p><ul>${items.join('')}</ul>`
+}
+
 function introRatesText(card: Card): string {
   if (card.intro_rates.length === 0) return ''
   const items = card.intro_rates.map(
@@ -1666,6 +1685,7 @@ function renderCard(
       ${introRatesText(card)}
       ${creditsText(card)}
       ${freeNightsText(card)}
+      ${yearlyPointsSection(card)}
       ${foreignFeeSection(card)}
       ${offerText(card)}
       ${recentChangesSection(ctx, releases, card.id)}
@@ -1876,7 +1896,13 @@ function compareBasis(c: Comparison): string {
   })
   const creditsText =
     credits.length === 0 ? '' : ` ${esc([...credits, onlyIf].join(' '))}`
-  return `<details class="fine section-fine"><summary>How this is figured</summary><p>Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks. ${esc(valueText(c))}${creditsText}</p></details>`
+  const yearly = [x, y].flatMap((s) => {
+    const counted = yearlyPointsCounted(catalog, s.card)
+    return counted === null
+      ? []
+      : [` The ${possessive(shortName(s.card.id))} figure counts ${counted}.`]
+  })
+  return `<details class="fine section-fine"><summary>How this is figured</summary><p>Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks.${esc(yearly.join(''))} ${esc(valueText(c))}${creditsText}</p></details>`
 }
 
 const unverifiedEntry = (e: ExploreEntry | null) =>

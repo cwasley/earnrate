@@ -196,9 +196,36 @@ function cardProblems(
     ['milestone', card.milestones.map((m) => m.id)],
     ['intro rate', card.intro_rates.map((i) => i.id)],
     ['credit', card.credits.map((c) => c.id)],
+    ['yearly points', card.yearly_points.map((y) => y.id)],
   ] as const) {
     for (const id of duplicates(ids))
       problems.push(`${where}: duplicate ${kind} id '${id}'`)
+  }
+  for (const y of card.yearly_points) {
+    if (
+      [
+        ...card.rules,
+        ...card.milestones,
+        ...card.intro_rates,
+        ...card.credits,
+        ...card.free_nights,
+      ].some((x) => x.id === y.id)
+    )
+      problems.push(`${where}: yearly points '${y.id}' has a rule's id`)
+    // Nothing else checks the amount, so a quote states it: "10,000 bonus
+    // miles", "10% of your total purchases".
+    const amounts =
+      y.points === undefined
+        ? [`${String(y.percent)}%`]
+        : [y.points.toLocaleString('en-US'), `${String(y.points / 1000)}k`]
+    if (
+      !card.evidence.some(
+        (e) =>
+          e.rule === y.id &&
+          amounts.some((a) => e.quote.toLowerCase().includes(a)),
+      )
+    )
+      problems.push(`${where} ${y.id}: no evidence quote states its amount`)
   }
   // Evidence names rules and milestones alike, so their ids can't overlap.
   for (const m of card.milestones)
@@ -293,6 +320,7 @@ function cardProblems(
     ...card.intro_rates.map((i) => i.id),
     ...card.credits.map((c) => c.id),
     ...card.free_nights.map((n) => n.id),
+    ...card.yearly_points.map((y) => y.id),
     ...card.rules.flatMap((r) =>
       NAMED_LISTS.filter((list) => r.named?.[list]).map((list) =>
         namedKey(r.id, list),

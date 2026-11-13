@@ -303,6 +303,7 @@ test("search_cards' description names what it returns", async () => {
     introRates: 'first-year rates',
     credits: 'statement credits',
     freeNights: 'yearly free nights',
+    yearlyPoints: 'points it gives every year',
   }
   for (const key of Object.keys(cardInfo(catalog, card, null, '2026-11-06'))) {
     expect(key in phrases, `no phrase decided for ${key}`).toBe(true)

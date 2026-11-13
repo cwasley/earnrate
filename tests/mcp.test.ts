@@ -1134,6 +1134,8 @@ describe('wallet setup', () => {
       ['search_cards', { query: 'td-bank-nordstrom-visa' }],
       ['search_cards', { query: 'sapphire' }],
       ['search_cards', { query: 'amex platinum' }],
+      ['search_cards', { query: 'venture x rewards' }],
+      ['simulate_spending', { cards: [{ cardId: 'capital-one-venture-x' }] }],
       ['add_card', { cardId: 'chase-freedom-unlimited' }],
       [
         'update_card',

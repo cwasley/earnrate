@@ -307,6 +307,29 @@ export const FreeNightSchema = z.strictObject({
   note: z.string().optional(),
 })
 
+// Points every cardholder gets after each account anniversary, with nothing
+// to enroll in and no spending total to reach: a fixed amount (the Venture
+// X's 10,000 anniversary miles), or `percent` of the year's purchases on the
+// card, in points per dollar (`of: purchases`), or of the points those
+// purchases earned (`of: points`). Counted in yearly figures from the first
+// anniversary on, never in a purchase's.
+export const YearlyPointsSchema = z
+  .strictObject({
+    id: KebabId,
+    points: z.number().int().positive().optional(), // in the card's currency
+    percent: z.number().positive().max(100).optional(),
+    of: z.enum(['purchases', 'points']).optional(),
+    note: z.string().optional(),
+  })
+  .refine(
+    (y) => (y.points === undefined) !== (y.percent === undefined),
+    'yearly points need points or percent, not both',
+  )
+  .refine(
+    (y) => (y.percent === undefined) === (y.of === undefined),
+    'percent needs of (purchases or points), and only percent takes it',
+  )
+
 const HexColor = z.string().regex(/^#[0-9a-f]{6}$/)
 
 export const CardSchema = z
@@ -358,6 +381,7 @@ export const CardSchema = z
     // Wallets mark these used or skipped by id beside credits, so the two
     // lists share one id space.
     free_nights: z.array(FreeNightSchema).default([]),
+    yearly_points: z.array(YearlyPointsSchema).default([]),
     // A short quote from an issuer page for each rule (or `base_rate`, or a
     // credit's id). The weekly source check fails a rule whose quote
     // disappears from its page.
@@ -408,3 +432,4 @@ export type Milestone = z.output<typeof MilestoneSchema>
 export type IntroRate = z.output<typeof IntroRateSchema>
 export type Credit = z.output<typeof CreditSchema>
 export type FreeNight = z.output<typeof FreeNightSchema>
+export type YearlyPoints = z.output<typeof YearlyPointsSchema>

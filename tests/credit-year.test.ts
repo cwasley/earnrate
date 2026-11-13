@@ -468,10 +468,20 @@ describe("the annual-fee page's second figure", { timeout: 30_000 }, () => {
     expect(gold?.breakEven).toBeGreaterThan(0)
   })
 
-  test('credits worth less than the fee leave a break-even, or none', () => {
+  test('points the card gives every year count with its credits', () => {
     const ventureX = feeWorth(cardOf(catalog, 'capital-one-venture-x'))
     expect(ventureX?.credits?.yearly).toBe(300)
-    expect(ventureX?.creditsBreakEven).toBeNull()
+    expect(ventureX?.breakEven).toBeNull()
+    expect(ventureX?.creditsBreakEven).toBe(0)
+  })
+
+  test('credits worth less than the fee leave a break-even, or none', () => {
+    const journey = feeWorth(cardOf(catalog, 'wells-fargo-autograph-journey'))
+    expect(journey?.credits?.yearly).toBe(50)
+    expect(journey?.creditsBreakEven).toBeGreaterThan(0)
+    const globe = feeWorth(cardOf(catalog, 'citi-aadvantage-globe'))
+    expect(globe?.credits?.yearly).toBe(200)
+    expect(globe?.creditsBreakEven).toBeNull()
     const noCredits = feeWorth(cardOf(catalog, 'capital-one-venture'))
     expect(noCredits?.credits).toBeNull()
     expect(noCredits?.creditsBreakEven).toBeNull()

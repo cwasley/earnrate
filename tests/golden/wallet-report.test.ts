@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../../src/data/load.ts'
 import { isClose } from '../../src/engine/compare.ts'
 import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
+import { feeWorthKit } from '../../src/engine/fee-worth.ts'
 import {
   keepOrReplace,
   keepOrReplaceUnsaid,
@@ -11,6 +12,7 @@ import {
 import type { Spending } from '../../src/engine/renewal.ts'
 import {
   resolveSpendLines,
+  simulateAdditions,
   simulateCatalog,
   spendLineFor,
   typicalSpendLines,
@@ -18,6 +20,7 @@ import {
 import { usedCreditsYear } from '../../src/engine/credits.ts'
 import { inEffect } from '../../src/engine/periods.ts'
 import {
+  money,
   roundCents,
   shortCardName,
   wholeDollars,
@@ -49,6 +52,8 @@ import {
   walletReportText,
   type ReportInput,
 } from '../../src/engine/wallet-report.ts'
+import { YearlyPointsSchema } from '../../src/schema/card.ts'
+import type { Catalog } from '../../src/schema/catalog.ts'
 import { TODAY } from './fixtures.ts'
 
 const goldenTest = test
@@ -636,6 +641,19 @@ describe("#43 rate my wallet: each card's part adds up to the figure", () => {
       input(['chase-sapphire-preferred', 'amex-blue-cash-preferred']),
     ],
     ['eight cards', EIGHT],
+    ['a card with yearly points', input(['capital-one-venture-x'])],
+    [
+      'three cards, one with yearly points and a credit used',
+      input([
+        'amex-gold',
+        'citi-double-cash',
+        {
+          id: 'capital-one-venture-x',
+          picks: {},
+          used: ['capital-one-travel'],
+        },
+      ]),
+    ],
   ]
   const sum = (ns: number[]) => ns.reduce((a, b) => a + b, 0)
 
@@ -798,6 +816,142 @@ describe("#43 rate my wallet: each card's part adds up to the figure", () => {
       ).toMatch(/^With all \d+ credits used, it would net \$[\d,]+\.$/)
       const sofi = shares.find((c) => c.cardId === 'sofi-unlimited-2')
       expect(sofi?.upTo).toBeNull()
+    },
+  )
+})
+
+describe('#44 points every cardholder gets each year count in yearly figures', () => {
+  const VX = 'capital-one-venture-x'
+  const CSP = 'chase-sapphire-preferred'
+  const withYearly = (id: string, yearly: unknown[]): Catalog => ({
+    ...catalog,
+    cards: catalog.cards.map((c) =>
+      c.id === id
+        ? { ...c, yearly_points: YearlyPointsSchema.array().parse(yearly) }
+        : c,
+    ),
+  })
+  const plain = withYearly(VX, [])
+
+  goldenTest(
+    '#44a the Venture X alone nets the value of its 10,000 anniversary miles more, in its own part of the figure too',
+    () => {
+      const i = input([VX])
+      const r = reportStart(catalog, i, TODAY, typical())
+      const before = reportStart(plain, i, TODAY, typical())
+      expect(r.simulation.yearlyPoints).toEqual([
+        {
+          cardId: VX,
+          yearlyPointsId: 'anniversary-miles',
+          points: 10000,
+          value: 100,
+        },
+      ])
+      expect(roundCents(r.net - before.net)).toBe(100)
+      expect(roundCents(r.simulation.rewards - before.simulation.rewards)).toBe(
+        100,
+      )
+      expect(cardShares(catalog, r)[0]?.net).toBe(
+        (cardShares(plain, before)[0]?.net ?? NaN) + 100,
+      )
+      expect(r.simulation.notes).toContain(
+        'Capital One Venture X Rewards: 10,000 Capital One miles every year (about $100, counted in its rewards).',
+      )
+    },
+  )
+
+  goldenTest('#44b the miles are worth what the saved point value says', () => {
+    const r = reportStart(
+      catalog,
+      input([VX], { valuations: { C1: 1.85 } }),
+      TODAY,
+      typical(),
+    )
+    expect(r.simulation.yearlyPoints[0]?.value).toBe(185)
+  })
+
+  goldenTest(
+    "#44c a percentage counts only the card's own points or purchases, not the wallet's",
+    () => {
+      const i = input([CSP, 'amex-gold'])
+      const base = reportStart(withYearly(CSP, []), i, TODAY, typical())
+      const own = base.simulation.byCard.find((c) => c.cardId === CSP)
+      const gold = base.simulation.byCard.find((c) => c.cardId === 'amex-gold')
+      if (!own || !gold) throw new Error('no cards')
+      // Chase Ultimate Rewards are 1¢ each by default, so dollars × 100.
+      const ofPoints = reportStart(
+        withYearly(CSP, [{ id: 'boost', percent: 10, of: 'points' }]),
+        i,
+        TODAY,
+        typical(),
+      )
+      expect(ofPoints.simulation.yearlyPoints).toEqual([
+        {
+          cardId: CSP,
+          yearlyPointsId: 'boost',
+          points: Math.round(own.rewards * 10),
+          value: Math.round(own.rewards * 10) / 100,
+        },
+      ])
+      expect(
+        ofPoints.simulation.byCard.find((c) => c.cardId === 'amex-gold')
+          ?.rewards,
+      ).toBe(gold.rewards)
+      const ofPurchases = reportStart(
+        withYearly(CSP, [{ id: 'boost', percent: 10, of: 'purchases' }]),
+        i,
+        TODAY,
+        typical(),
+      )
+      expect(ofPurchases.simulation.yearlyPoints[0]?.points).toBe(
+        Math.round(own.spend * 0.1),
+      )
+      expect(ofPurchases.simulation.notes).toContain(
+        `Chase Sapphire Preferred: ${Math.round(own.spend * 0.1).toLocaleString('en-US')} Chase Ultimate Rewards every year, 10% of its ${wholeDollars(own.spend)} of purchases (about ${money(Math.round(own.spend * 0.1) / 100)}, counted in its rewards).`,
+      )
+    },
+  )
+
+  goldenTest(
+    '#44d keep-or-replace, the next-card planner and the fee math count them',
+    () => {
+      const alone = input([VX])
+      const [verdict] = reportFeeCards(catalog, alone, TODAY, typical())
+      const [before] = reportFeeCards(plain, alone, TODAY, typical())
+      expect(roundCents((verdict?.net ?? NaN) - (before?.net ?? NaN))).toBe(100)
+
+      const dc = input(['citi-double-cash'])
+      const addition = (c: Catalog) =>
+        simulateAdditions(
+          c,
+          reportWallet(c, dc, TODAY, typical()).wallet,
+          typical().lines,
+          {
+            filters: ALL_PERSONAL_CARDS,
+            memberships: [],
+            valuations: {},
+            start: TODAY,
+          },
+        ).additions.find((a) => a.cardId === VX)
+      expect(
+        roundCents(
+          (addition(catalog)?.gain ?? NaN) - (addition(plain)?.gain ?? NaN),
+        ),
+      ).toBe(100)
+
+      const cardIn = (c: Catalog) => {
+        const card = c.cards.find((x) => x.id === VX)
+        if (!card) throw new Error(VX)
+        return card
+      }
+      const worth = feeWorthKit(catalog, TODAY).feeWorth(cardIn(catalog))
+      const worthBefore = feeWorthKit(plain, TODAY).feeWorth(cardIn(plain))
+      expect(
+        roundCents(
+          (worth?.at(1000).card.net ?? NaN) -
+            (worthBefore?.at(1000).card.net ?? NaN),
+        ),
+      ).toBe(100)
     },
   )
 })

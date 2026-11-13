@@ -620,16 +620,17 @@
       ]
     },
     "https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-13",
       "lines": [
         "34831fccb972883f",
         "749128751b4a132b"
       ]
     },
     "https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-13",
       "lines": [
         "178db1c2e1019edd",
+        "181cd25987d30b34",
         "28a882c7cc27a4b1",
         "34831fccb972883f",
         "6af89a86caeeda9a",
@@ -637,7 +638,6 @@
         "749128751b4a132b",
         "7fa83f3c2e326ea4",
         "c83be071e8db28c0",
-        "d15244438ae63783",
         "f073a5138a41db0d",
         "f47e93213f8b4360"
       ]
@@ -833,7 +833,7 @@
       ]
     },
     "https://www.capitalone.com/small-business/credit-cards/venture-x-business/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-13",
       "lines": [
         "20f095d5d7cbf2a0",
         "2b1a946f503b7064",
@@ -843,7 +843,7 @@
       ]
     },
     "https://disclosures.capitalone.com/disclosure.42243.en-US.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-13",
       "lines": [
         "480eb3fe2cafb4bf",
         "b0e93cb41f424ddc",
@@ -852,7 +852,7 @@
       ]
     },
     "https://www.capitalone.com/credit-cards/venture-x/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-13",
       "lines": [
         "219c07631a88a8fa",
         "80cbc7d5b721ec63",
@@ -860,7 +860,7 @@
       ]
     },
     "https://disclosures.capitalone.com/disclosure.42201.en-US.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-13",
       "lines": [
         "b4d5d7100d10cb8f",
         "c69e5c49f35e5fe6",
@@ -906,7 +906,7 @@
       ]
     },
     "https://www.chase.com/personal/credit-cards/rewards-category-faq": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-13",
       "lines": []
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65070.html": {
@@ -1254,11 +1254,11 @@
       ]
     },
     "https://creditcards.chase.com/southwest/performance-business-credit-card": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-13",
       "lines": []
     },
     "https://creditcards.chase.com/business-credit-cards/southwest/performance-business": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-13",
       "lines": [
         "127d5fcbb834e674",
         "327825ff4aff6921",
@@ -1268,7 +1268,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61809.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-13",
       "lines": [
         "1661d1dd310f3cb0",
         "29f2aac9a943305c",
@@ -1279,14 +1279,14 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/southwest/plus": {
-      "checked": "2026-11-09",
+      "checked": "2026-11-13",
       "lines": [
         "1df3212c22205922",
         "d335efa354650248"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64433.html": {
-      "checked": "2026-11-09",
+      "checked": "2026-11-13",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1296,14 +1296,14 @@
       ]
     },
     "https://creditcards.chase.com/southwest/premier-business-credit-card": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-13",
       "lines": [
         "0628c2f9c6f5dcc5",
         "e7686f35278d778a"
       ]
     },
     "https://creditcards.chase.com/business-credit-cards/southwest/premier-business": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-13",
       "lines": [
         "7f32b4b910a3890d",
         "89163eb2524063a4",
@@ -1312,7 +1312,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61808.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-13",
       "lines": [
         "1661d1dd310f3cb0",
         "29f2aac9a943305c",
@@ -1323,14 +1323,14 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/southwest/premier": {
-      "checked": "2026-11-09",
+      "checked": "2026-11-13",
       "lines": [
         "1e8f9a9dc6b709c5",
         "9502f678ac5d4486"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64337.html": {
-      "checked": "2026-11-09",
+      "checked": "2026-11-13",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1340,13 +1340,13 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/southwest/priority": {
-      "checked": "2026-11-09",
+      "checked": "2026-11-13",
       "lines": [
         "50db4f32171a404f"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64414.html": {
-      "checked": "2026-11-09",
+      "checked": "2026-11-13",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",

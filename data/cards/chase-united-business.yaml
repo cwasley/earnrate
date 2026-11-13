@@ -50,6 +50,7 @@ milestones:
 todo:
   - United Card Events from Chase also earn 2x; no merchant exists for them, so they aren't modeled.
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
+  - "The 5,000-mile better-together bonus each anniversary needs a personal Chase United card as well, and yearly points can't depend on the wallet's other cards, so it isn't counted."
 # Merchant statement credits, on top of what the purchase earns.
 credits:
   - id: instacart

@@ -40,6 +40,10 @@ credits:
     period: calendar_year
     min_amount: 100
     note: One $100 credit a calendar year on a JetBlue Vacations package of $100 or more (after returns and credits), booked at jetbluevacations.com or 844-JB-VACAY. It posts 6-8 weeks after the purchase.
+yearly_points:
+  - id: anniversary-points
+    points: 5000
+    note: Credited to the TrueBlue account 4-6 weeks after each account anniversary, while the account is open and in good standing.
 evidence:
   - rule: jetblue-vacations
     url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
@@ -98,7 +102,13 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
     quote: 'Foreign Transaction 0% of each transaction in U.S. dollars.'
+  - rule: anniversary-points
+    url: https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+    quote: 'Earn 5,000 bonus points each year after your JetBlue Plus Card account anniversary'
+  - rule: anniversary-points
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
+    quote: 'A 5,000 TrueBlue points bonus will be credited to your Membership Account'
 todo:
-  - Not modeled (perks, not points per dollar) the 5,000-point anniversary bonus, 10% of points back on JetBlue Award Flights, 50% off inflight food and drink and the free first checked bag.
+  - Not modeled (perks, not points per dollar) 10% of points back on JetBlue Award Flights, 50% off inflight food and drink and the free first checked bag.
   - Card spending earns Mosaic tiles toward JetBlue elite status, which isn't modeled.
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
