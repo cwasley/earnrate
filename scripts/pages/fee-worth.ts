@@ -7,6 +7,7 @@ import {
   feeWorthMix,
   feeWorthTransfer,
   feeWorthVerdict,
+  highText,
   lineWords,
   MAX_MONTHLY,
   STEP,
@@ -91,6 +92,7 @@ export function feeWorthSection(
         ]),
   ]
   const mix = feeWorthMix(w)
+  const why = highText(w)
   const rows = SHOWN_AMOUNTS.map((m) => {
     const r = w.at(m)
     const best = r.best.cards[0]?.cardId ?? ''
@@ -106,11 +108,16 @@ export function feeWorthSection(
   ].filter((x) => x !== null)
   return `<h2 id="annual-fee">Is the annual fee worth it?</h2>
       <p>It earns more than the best no-fee card, after its ${esc(fee)} fee, at this much a month of ${esc(where)}:</p>
-      <dl class="facts worth">${answers.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+      <dl class="facts worth">${answers.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>${
+        why === ''
+          ? ''
+          : `
+      <p>${esc(why)}</p>`
+      }
       <p class="muted">${esc(EARNING_ONLY)}</p>
       <table class="numbers"><thead><tr><th>A month</th><th>${esc(name)}, a year after fees</th><th>Best no-fee card</th></tr></thead><tbody>${rows}</tbody></table>
       <details class="fine"><summary>How this is calculated</summary>
-      <p>${feeWorthVerdict(w, name, HTML)}${transferLine}${creditsLine}</p>
+      <p>${feeWorthVerdict(w, name, HTML, false)}${transferLine}${creditsLine}</p>
       <p class="muted">Assumes ${esc(value)}; ${esc(w.everywhere ? `no typical category earns it a bonus, so the whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`)} (from earnrate's typical household: ${esc(TYPICAL_MONTHLY_SPEND.map((t) => `${t.what} ${money(t.monthly)}`).join(', '))}); the same spending every month for a year; the regular annual fee${extras.length > 0 ? `, ${esc(listed(extras))}` : ''}${yearly === null ? '' : `; ${esc(yearly)}`}; no welcome bonus, first-year rate or credits. The no-fee side is the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards that need no membership, on the same spending, each with its best picks. Other spending, earned at each card's other rates, isn't included.</p>
       </details>`
 }

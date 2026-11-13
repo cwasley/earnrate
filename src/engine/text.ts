@@ -717,6 +717,17 @@ export function creditAnswerText(c: CreditWords, dollars: number | null) {
     : `${money(dollars)} back from its ${credit}: all that's left ${CREDIT_THIS_PERIOD[c.period]}, on top of what it earns.`
 }
 
+// For an answer with no amount, which counts no credit: "Amex Platinum has
+// $15 of its Uber and Uber Eats credit left this month; give an amount to
+// count it."
+export function creditNoAmountText(
+  card: string,
+  c: Pick<CreditWords, 'name' | 'period' | 'minAmount'> & { left: number },
+): string {
+  const min = c.minAmount ?? null
+  return `${card} has ${money(c.left)} of its ${c.name} credit left ${CREDIT_THIS_PERIOD[c.period]}; give an amount to count it${min === null ? '' : ` (it needs ${minPurchase(min)})`}.`
+}
+
 // One short line beside a ranked card: "+ $35 back from its Lululemon
 // credit", "Lululemon credit: $35 left this quarter".
 export function creditShort(c: CreditWords, dollars: number | null): string {

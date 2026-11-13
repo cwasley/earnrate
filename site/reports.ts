@@ -82,7 +82,11 @@ export const FULL = 'daily-limit'
 const plain = (status: number, body: string | null = null) =>
   new Response(body, {
     status,
-    headers: { 'cache-control': 'no-store', 'content-type': 'text/plain' },
+    headers: {
+      'cache-control': 'no-store',
+      'content-type': 'text/plain',
+      'x-content-type-options': 'nosniff',
+    },
   })
 
 // Only the page itself, on this site: a request from another site's script

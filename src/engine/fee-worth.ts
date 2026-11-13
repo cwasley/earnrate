@@ -36,6 +36,9 @@ import { yearlyPointsCounted } from './yearly-points.ts'
 
 export const STEP = 50 // dollars a month between the amounts tried
 export const MAX_MONTHLY = 5000
+// A break-even past this many times typical spending in the card's lines
+// says why it's that high.
+export const HIGH_TIMES_TYPICAL = 2
 
 // Amex Membership Rewards and Chase Ultimate Rewards at what transferring
 // them can be worth: a card earning one gets the fee math again at it.
@@ -56,7 +59,19 @@ export type FeeWorth = {
   creditsBreakEven: number | null
   creditsStopAt: number | null
   rivals: number // no-fee cards it was compared with
+  // Why a break-even past typical spending in these lines is that high.
+  high: HighBreakEven | null
   at: (monthly: number) => { card: Simulation; best: Simulation }
+}
+
+export type HighBreakEven = {
+  typical: number // dollars a month typical spending puts in these lines
+  rival: string // the best no-fee card below the break-even, short name
+  // Lines the rival earns more on there, and whether a cap of its own ends
+  // that before the break-even.
+  rivalAhead: ResolvedLine[]
+  rivalCapped: boolean
+  edgeCents: number // cents a dollar more the card earns on the whole mix
 }
 
 // The best no-fee card for a mix and an amount doesn't depend on the fee
@@ -174,6 +189,10 @@ export function feeWorthKit(
       (m) => at(m).card.net > at(m).best.net,
       STEP,
     )
+    const high =
+      breakEven === null || breakEven <= HIGH_TIMES_TYPICAL * total
+        ? null
+        : highBreakEven(lines, breakEven, total, at)
     const own = held.find((h) => h.id === card.id) ?? null
     const year = allCreditsYear(catalog, card, today, valuations, own)
     // The simulation counts each night at its cap; the person's own value
@@ -201,7 +220,36 @@ export function feeWorthKit(
       creditsBreakEven: withCredits.breakEven,
       creditsStopAt: withCredits.stopsAt,
       rivals: noFee(card).length,
+      high,
       at,
+    }
+  }
+
+  // Read halfway to the break-even, where the no-fee card still leads.
+  function highBreakEven(
+    lines: ResolvedLine[],
+    breakEven: number,
+    typical: number,
+    at: FeeWorth['at'],
+  ): HighBreakEven | null {
+    const half = Math.max(STEP, Math.round(breakEven / 2 / STEP) * STEP)
+    const { card, best } = at(half)
+    const rival = catalog.cards.find((c) => c.id === best.cards[0]?.cardId)
+    if (!rival || card.spend <= 0) return null
+    const rate = (sim: Simulation, label: string) =>
+      sim.lines.find((l) => l.label === label)?.returnPct ?? 0
+    const rivalAhead = lines.filter(
+      (l) => rate(best, l.label) > rate(card, l.label) + EPSILON,
+    )
+    const later = at(breakEven).best
+    return {
+      typical,
+      rival: shortCardName(rival.name),
+      rivalAhead,
+      rivalCapped: rivalAhead.some(
+        (l) => rate(later, l.label) < rate(best, l.label) - EPSILON,
+      ),
+      edgeCents: ((card.rewards - best.rewards) / card.spend) * 100,
     }
   }
 
@@ -284,14 +332,38 @@ export function feeWorthVerdict(
   w: FeeWorth,
   name: string,
   { esc, strong }: Markup = PLAIN,
+  withWhy = true,
 ): string {
   const fee = wholeDollars(w.card.annual_fee ?? 0)
   const where = w.everywhere
     ? 'spending'
     : `spending on ${inOrder(w.lines.map(lineWords))}`
-  return w.breakEven === null
-    ? `On earning alone, the ${esc(name)} doesn't earn more than the best no-fee card after its ${esc(fee)} fee, at any amount up to ${esc(wholeDollars(MAX_MONTHLY))} a month of ${esc(where)}.`
-    : `On earning alone, the ${esc(name)} earns more than the best no-fee card, after its ${esc(fee)} fee, from about ${strong(`${esc(wholeDollars(w.breakEven))} a month`)} of ${esc(where)}${w.stopsAt === null ? '' : `, up to about ${esc(wholeDollars(w.stopsAt))} a month (past that, a spending cap ends its lead)`}.`
+  const verdict =
+    w.breakEven === null
+      ? `On earning alone, the ${esc(name)} doesn't earn more than the best no-fee card after its ${esc(fee)} fee, at any amount up to ${esc(wholeDollars(MAX_MONTHLY))} a month of ${esc(where)}.`
+      : `On earning alone, the ${esc(name)} earns more than the best no-fee card, after its ${esc(fee)} fee, from about ${strong(`${esc(wholeDollars(w.breakEven))} a month`)} of ${esc(where)}${w.stopsAt === null ? '' : `, up to about ${esc(wholeDollars(w.stopsAt))} a month (past that, a spending cap ends its lead)`}.`
+  const why = withWhy ? highText(w) : ''
+  return why === '' ? verdict : `${verdict} ${esc(why)}`
+}
+
+// "That's far more than typical spending on these (about $385 a month),
+// because the Ink Business Cash, a no-fee card, earns more on cell phone
+// service, and TV and internet service until its spending cap runs out."
+export function highText(w: FeeWorth): string {
+  const h = w.high
+  if (h === null) return ''
+  const these = w.everywhere ? 'this spending' : 'these'
+  const typical = `That's far more than typical spending on ${these} (about ${wholeDollars(h.typical)} a month)`
+  if (h.rivalAhead.length > 0) {
+    const ahead = `the ${h.rival}, a no-fee card, earns more on ${inOrder(h.rivalAhead.map(lineWords))}`
+    return h.rivalCapped
+      ? `${typical}, because ${ahead} until its spending cap runs out.`
+      : `${typical}, because ${ahead}, so this card's lead on the rest has to make up its fee.`
+  }
+  const edge = Math.round(h.edgeCents * 10) / 10
+  return edge <= 0
+    ? ''
+    : `${typical}, because it earns about ${num(edge)}¢ more per dollar than the ${h.rival}, a no-fee card, and that has to add up to its ${wholeDollars(w.card.annual_fee ?? 0)} fee.`
 }
 
 // "If you transfer Chase Ultimate Rewards to airlines and hotels and count

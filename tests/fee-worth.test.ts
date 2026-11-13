@@ -8,6 +8,7 @@ import {
   feeWorthMix,
   feeWorthTransfer,
   feeWorthVerdict,
+  highText,
   TRANSFER_VALUES,
   wholeShares,
   type FeeWorth,
@@ -45,8 +46,14 @@ describe('is the annual fee worth it', () => {
       }
       const page = plain(feeWorthSection(ctx, worth, transfer))
       expect(page).toContain(
-        feeWorthVerdict(worth, shortCardName(worth.card.name)),
+        feeWorthVerdict(
+          worth,
+          shortCardName(worth.card.name),
+          undefined,
+          false,
+        ),
       )
+      expect(page).toContain(highText(worth))
       expect(page).toContain(feeWorthTransfer(catalog, worth.card, transfer))
       expect(page).toContain(feeWorthCredits(catalog, worth))
     }
@@ -62,6 +69,25 @@ describe('is the annual fee worth it', () => {
     )
     expect(feeWorthCredits(catalog, several)).toMatch(
       /^If you'd use all its statement credits \(\$424 a year: .*\), they're worth more .* They're worth that only if/,
+    )
+  }, 30_000)
+
+  test('a break-even far past typical spending says why', () => {
+    const { feeWorth } = feeWorthKit(catalog, '2026-11-13')
+    const ink = feeWorth(cardOf('chase-ink-business-preferred'))
+    const gold = feeWorth(cardOf('amex-gold'))
+    const everyday = feeWorth(cardOf('amex-blue-cash-preferred'))
+    if (!ink || !gold || !everyday) throw new Error('no fee math')
+    expect(ink.high?.rivalCapped).toBe(true)
+    expect(feeWorthVerdict(ink, 'Ink Business Preferred')).toMatch(
+      /That's far more than typical spending on these \(about \$\d+ a month\), because the Ink Business Cash, a no-fee card, earns more on cell phone service, and TV and internet service until its spending cap runs out\.$/,
+    )
+    expect(feeWorthVerdict(gold, 'Amex Gold')).toMatch(
+      /, because it earns about [\d.]+¢ more per dollar than the .+, a no-fee card, and that has to add up to its \$\d+ fee\.$/,
+    )
+    expect(everyday.high).toBeNull()
+    expect(feeWorthVerdict(everyday, 'Blue Cash Preferred')).not.toContain(
+      'typical spending',
     )
   }, 30_000)
 

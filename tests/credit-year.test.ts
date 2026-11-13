@@ -368,6 +368,27 @@ describe("Aspire's Hilton Resort Credit", () => {
     )
   })
 
+  test('an answer with no amount names a credit left here, ranked as it was', () => {
+    const wallet = WalletSchema.parse({
+      cards: [{ id: 'amex-blue-cash-preferred' }, { id: 'amex-platinum' }],
+    })
+    const ask = (amount: number | null) =>
+      recommend(catalog, wallet, {
+        merchant: 'Uber',
+        amount,
+        channel: null,
+        date: TODAY,
+        country: 'US',
+        payment: null,
+      })
+    const none = ask(null)
+    expect(none.decision?.cardId).toBe('amex-blue-cash-preferred')
+    expect(none.notes).toContain(
+      'Amex Platinum has $15 of its Uber and Uber Eats credit left this month; give an amount to count it.',
+    )
+    expect(ask(30).notes.join(' ')).not.toContain('give an amount')
+  })
+
   test('not at a plain Hilton, which earns the same', () => {
     const r = at('Hilton')
     expect(r?.rate).toBe(14)

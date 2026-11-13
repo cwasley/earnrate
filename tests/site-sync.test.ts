@@ -31,6 +31,7 @@ import {
   signInStarted,
   takeSignInStarted,
   updateOp,
+  walletDifferences,
   type LocalOp,
 } from '../site/app/sync.ts'
 import { TODAY } from './golden/fixtures.ts'
@@ -252,6 +253,43 @@ describe('the first connection', () => {
     expect(firstConnection(walletWith('amex-gold'), settingsOnly)).toBe(
       'claude',
     )
+  })
+
+  test('the choice names what differs beyond the cards', () => {
+    const name = (id: string) =>
+      catalog.cards.find((c) => c.id === id)?.name ?? id
+    const claude = walletWith('amex-platinum', 'chase-freedom-flex')
+    const [platinum, flex] = claude.cards
+    if (!platinum || !flex) throw new Error('no cards')
+    const browser: Wallet = {
+      ...claude,
+      valuations: { MR: 1.5 },
+      cards: [
+        { ...platinum, enrolled: ['uber-cash'], skipped_credits: [] },
+        { ...flex, activated: ['flex-quarterly'], cap_usage: {} },
+      ],
+    }
+    expect(firstConnection(claude, browser)).toBe('ask')
+    expect(walletDifferences(claude, browser, name)).toEqual([
+      `activations on ${name('chase-freedom-flex')}`,
+      `credits on ${name('amex-platinum')}`,
+      'point values',
+    ])
+    expect(walletDifferences(claude, claude, name)).toEqual([])
+    expect(
+      walletDifferences(
+        claude,
+        { ...claude, cards: [...claude.cards].reverse() },
+        name,
+      ),
+    ).toEqual(['the order of the cards'])
+    expect(
+      walletDifferences(
+        claude,
+        { ...walletWith('citi-double-cash'), memberships: ['costco'] },
+        name,
+      ),
+    ).toEqual(['memberships'])
   })
 })
 

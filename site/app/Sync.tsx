@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { shortName } from './format.ts'
-import { signInStarted } from './sync.ts'
+import { signInStarted, walletDifferences } from './sync.ts'
 
 // Where sign-in starts. A navigation, never a fetch: the Worker sends the
 // browser on to earnrate's sign-in page.
@@ -131,10 +131,18 @@ export function FirstChoice({
   onChoose: (choice: Choice) => void
   onCancel: () => void
 }) {
+  const also = walletDifferences(claude, browser, shortName)
+  const sameCards =
+    claude.cards.length === browser.cards.length &&
+    cardList(claude) === cardList(browser)
   return (
     <section class="panel sync-panel sync-choice" aria-live="polite">
       <h3>Which wallet should earnrate keep?</h3>
-      <p>Your Claude wallet and this browser both have cards.</p>
+      <p>
+        {sameCards
+          ? 'Your Claude wallet and this browser have the same cards, set up differently.'
+          : 'Your Claude wallet and this browser both have cards.'}
+      </p>
       <dl class="sync-sides">
         <dt>In Claude</dt>
         <dd>
@@ -145,20 +153,29 @@ export function FirstChoice({
           {count(browser.cards.length)}: {cardList(browser)}
         </dd>
       </dl>
+      {also.length > 0 ? (
+        <p class="sync-also">
+          <strong>{sameCards ? 'They differ in' : 'Also differs'}:</strong>{' '}
+          {also.join('; ')}.
+        </p>
+      ) : null}
       <fieldset class="lock" disabled={busy}>
         <ul class="sync-options">
           <li>
             <button type="button" onClick={() => onChoose('claude')}>
               Use my Claude wallet
             </button>
-            <span class="muted small">This browser's cards are replaced.</span>
+            <span class="muted small">
+              This browser's {sameCards ? 'copy is' : 'cards are'} replaced.
+            </span>
           </li>
           <li>
             <button type="button" onClick={() => onChoose('browser')}>
               Replace it with this browser's
             </button>
             <span class="muted small">
-              The Claude wallet's cards are replaced.
+              The Claude wallet's {sameCards ? 'copy is' : 'cards are'}{' '}
+              replaced.
             </span>
           </li>
           <li>

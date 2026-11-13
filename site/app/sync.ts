@@ -7,6 +7,7 @@ import { tracksUse } from '../../src/engine/credits.ts'
 import { capByKey } from '../../src/engine/evaluate.ts'
 import { choicePeriod, periodKey } from '../../src/engine/periods.ts'
 import type { SetupNote } from '../../src/engine/setup.ts'
+import { listedFew } from '../../src/engine/text.ts'
 import { EMPTY_WALLET } from '../../src/engine/transient.ts'
 import {
   addToWallet,
@@ -261,6 +262,72 @@ const isEmpty = (w: Wallet | null) =>
 const sameWallet = (a: Wallet, b: Wallet) =>
   JSON.stringify([a.cards, a.memberships, a.valuations, a.skipped_issuers]) ===
   JSON.stringify([b.cards, b.memberships, b.valuations, b.skipped_issuers])
+
+// Order-free and blind to empty values, so a field one side leaves out and
+// the other holds empty doesn't count as a difference.
+function canonical(v: unknown): unknown {
+  if (v === undefined || v === null) return null
+  if (Array.isArray(v)) {
+    if (v.length === 0) return null
+    return v
+      .map(canonical)
+      .map((x) => JSON.stringify(x))
+      .sort()
+  }
+  if (typeof v === 'object') {
+    const entries = Object.entries(v)
+      .map(([k, x]) => [k, canonical(x)] as const)
+      .filter(([, x]) => x !== null)
+      .sort(([a], [b]) => a.localeCompare(b))
+    return entries.length === 0 ? null : entries
+  }
+  return v
+}
+
+const differs = (a: unknown, b: unknown) =>
+  JSON.stringify(canonical(a)) !== JSON.stringify(canonical(b))
+
+const CARD_PARTS: [string, (keyof WalletCard)[]][] = [
+  ['picks', ['chosen']],
+  ['activations', ['activated']],
+  ['credits', ['enrolled', 'credit_usage', 'skipped_credits', 'night_values']],
+  ['bonus progress', ['bonus', 'milestone_usage']],
+  ['spending totals', ['cap_usage']],
+  ['card dates', ['anniversary', 'opened']],
+  ['checkout labels', ['checkout_label']],
+]
+
+// What the two wallets hold differently beyond which cards they have, for
+// the first-connection choice: "credits on Amex Platinum", "point values".
+export function walletDifferences(
+  claude: Wallet,
+  browser: Wallet,
+  name: (id: string) => string,
+): string[] {
+  const theirs = new Map(claude.cards.map((c) => [c.id, c]))
+  const both = browser.cards.flatMap((mine) => {
+    const other = theirs.get(mine.id)
+    return other ? [[mine, other] as const] : []
+  })
+  const parts = CARD_PARTS.flatMap(([label, fields]) => {
+    const names = both
+      .filter(([a, b]) => fields.some((f) => differs(a[f], b[f])))
+      .map(([a]) => name(a.id))
+    return names.length > 0 ? [`${label} on ${listedFew(names)}`] : []
+  })
+  if (differs(claude.memberships, browser.memberships))
+    parts.push('memberships')
+  if (differs(claude.valuations, browser.valuations)) parts.push('point values')
+  if (differs(claude.skipped_issuers, browser.skipped_issuers))
+    parts.push('issuers left out of next-card answers')
+  const order = (w: Wallet) => w.cards.map((c) => c.id).join(' ')
+  const sameCards =
+    claude.cards.length === browser.cards.length &&
+    browser.cards.every((c) => theirs.has(c.id))
+  if (parts.length === 0 && sameCards && order(claude) !== order(browser))
+    parts.push('the order of the cards')
+  return parts
+}
 
 // The browser's wallet, keeping settings the Claude wallet has and the
 // browser doesn't: for a first connection where only the browser has cards.

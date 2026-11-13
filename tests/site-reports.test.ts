@@ -198,6 +198,8 @@ describe('short report links', () => {
     expect(res.headers.get('set-cookie')).toBeNull()
     const read = await s.call(`/r/${made.id}/data`)
     expect(read.status).toBe(200)
+    expect(read.headers.get('content-type')).toBe('text/plain')
+    expect(read.headers.get('x-content-type-options')).toBe('nosniff')
     expect(await read.text()).toBe(REPORT)
   })
 
