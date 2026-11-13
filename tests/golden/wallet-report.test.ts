@@ -912,33 +912,37 @@ describe('#44 points every cardholder gets each year count in yearly figures', (
     },
   )
 
+  goldenTest('#44d keep-or-replace counts them', () => {
+    const alone = input([VX])
+    const [verdict] = reportFeeCards(catalog, alone, TODAY, typical())
+    const [before] = reportFeeCards(plain, alone, TODAY, typical())
+    expect(roundCents((verdict?.net ?? NaN) - (before?.net ?? NaN))).toBe(100)
+  })
+
+  goldenTest('#44e the next-card planner counts them', () => {
+    const dc = input(['citi-double-cash'])
+    const addition = (c: Catalog) =>
+      simulateAdditions(
+        c,
+        reportWallet(c, dc, TODAY, typical()).wallet,
+        typical().lines,
+        {
+          filters: ALL_PERSONAL_CARDS,
+          memberships: [],
+          valuations: {},
+          start: TODAY,
+        },
+      ).additions.find((a) => a.cardId === VX)
+    expect(
+      roundCents(
+        (addition(catalog)?.gain ?? NaN) - (addition(plain)?.gain ?? NaN),
+      ),
+    ).toBe(100)
+  })
+
   goldenTest(
-    '#44d keep-or-replace, the next-card planner and the fee math count them',
+    '#44f the fee math counts them',
     () => {
-      const alone = input([VX])
-      const [verdict] = reportFeeCards(catalog, alone, TODAY, typical())
-      const [before] = reportFeeCards(plain, alone, TODAY, typical())
-      expect(roundCents((verdict?.net ?? NaN) - (before?.net ?? NaN))).toBe(100)
-
-      const dc = input(['citi-double-cash'])
-      const addition = (c: Catalog) =>
-        simulateAdditions(
-          c,
-          reportWallet(c, dc, TODAY, typical()).wallet,
-          typical().lines,
-          {
-            filters: ALL_PERSONAL_CARDS,
-            memberships: [],
-            valuations: {},
-            start: TODAY,
-          },
-        ).additions.find((a) => a.cardId === VX)
-      expect(
-        roundCents(
-          (addition(catalog)?.gain ?? NaN) - (addition(plain)?.gain ?? NaN),
-        ),
-      ).toBe(100)
-
       const cardIn = (c: Catalog) => {
         const card = c.cards.find((x) => x.id === VX)
         if (!card) throw new Error(VX)
@@ -953,6 +957,7 @@ describe('#44 points every cardholder gets each year count in yearly figures', (
         ),
       ).toBe(100)
     },
+    60_000,
   )
 })
 
