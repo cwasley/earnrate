@@ -35,6 +35,7 @@ import type { Card } from '../../src/schema/card.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { answeredMarks, heldMarks } from '../rate/answers.ts'
 import { CreditPicks } from './CreditPicks.tsx'
+import { usedSoFarShown } from './credit-enroll.ts'
 import { openedChange, spentChange, trackingChange } from './bonus-change.ts'
 import { draftShown, type Draft } from './draft.ts'
 import { cards, issuerName, words } from './format.ts'
@@ -433,7 +434,7 @@ export function CardSettings({
                   {c.credit.note ? ` ${c.credit.note}` : ''}
                   {c.credit.listed ? ` ${LISTED_CREDIT_USED}.` : ''}
                 </p>
-                {!c.skipped && (c.credit.enroll ? c.enrolled : c.confirmed) ? (
+                {usedSoFarShown(c) ? (
                   <SavedNumber
                     label={`Used so far ${CREDIT_THIS_PERIOD[c.period]}`}
                     value={c.used > 0 ? String(c.used) : ''}

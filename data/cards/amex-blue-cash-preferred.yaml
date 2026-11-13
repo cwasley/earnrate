@@ -104,6 +104,7 @@ credits:
     amount: 10
     period: month
     enroll: true
+    subscription: true
     note: Subscriptions bought at DisneyPlus.com, Hulu.com or Stream.ESPN.com, bundles included; an annual plan gets one $10 credit, in the month it's bought. Not through an app store or a device, or with cable.
 todo:
   - Amex's Select U.S. Streaming list also names AMC+, Britbox, iHeartRadio, Kindle Unlimited, Luminary and MGM+, which earnrate doesn't know as stores yet.

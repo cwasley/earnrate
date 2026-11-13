@@ -347,7 +347,7 @@ export function checklistRows(
       })
     }
     for (const c of s.credits) {
-      if (!c.enrolled || c.skipped) continue
+      if (!c.enrolled || c.skipped || c.subscription) continue
       // One that needs no enrolling shows once the cardholder says they use
       // it or uses it, so a card's every credit isn't a to-do for someone
       // who never shops there.

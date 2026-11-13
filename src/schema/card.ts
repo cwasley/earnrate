@@ -286,6 +286,10 @@ export const CreditSchema = z.strictObject({
     .optional(),
   // The cardholder must enroll with the issuer before it pays.
   enroll: z.literal(true).optional(),
+  // It pays a recurring subscription or membership fee billed to the card
+  // (Disney+, Walmart+): once marked used it pays in full every period, so
+  // what's used of it is never tracked or asked for.
+  subscription: z.literal(true).optional(),
   // It pays only on a purchase of at least this many dollars.
   min_amount: z.number().positive().optional(),
   // The issuer's last day for it. Past it the credit counts nowhere, and a

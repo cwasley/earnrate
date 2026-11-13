@@ -266,6 +266,10 @@ function cardProblems(
         problems.push(
           `${where} ${credit.id}: min_amount on a credit no purchase uses`,
         )
+      if (credit.subscription)
+        problems.push(
+          `${where} ${credit.id}: subscription on a credit no purchase uses`,
+        )
     }
     for (const c of credit.match?.categories ?? [])
       checkCategory(c, `credit ${credit.id}`)

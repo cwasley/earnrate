@@ -65,6 +65,11 @@ export const creditConfirmed = (credit: Credit, held: WalletCard) =>
 export const creditInUse = (credit: Credit, held: WalletCard) =>
   creditConfirmed(credit, held) && !isSkipped(credit, held)
 
+// What's used of it is kept: every credit but one that pays a subscription
+// billed to the card, which pays in full each period once marked used.
+export const tracksUse = (credit: Pick<Credit, 'subscription'>) =>
+  credit.subscription !== true
+
 // The credit's dollars for one period: a monthly credit can pay more in some
 // months (Uber Cash's December).
 export function periodAmount(
@@ -85,7 +90,8 @@ function creditState(
 ): CreditState {
   const anniversary = held.anniversary ?? null
   const period = periodKey(credit.period, date, anniversary)
-  const usage = held.credit_usage?.[credit.id]
+  // Use saved for a subscription credit (before it was one) is ignored.
+  const usage = tracksUse(credit) ? held.credit_usage?.[credit.id] : undefined
   const used =
     period !== null && usage !== undefined && usage.period === period
       ? usage.used

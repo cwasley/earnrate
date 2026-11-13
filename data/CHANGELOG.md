@@ -2,6 +2,23 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.13.1
+
+No rates changed. A credit that pays a recurring subscription or membership fee billed to the card is now marked as one (`subscription: true`). Once the cardholder marks it used, earnrate counts it in full every period: it never asks what's been used of it, the to-do list has no reminder to use it, and a recorded purchase at its store doesn't draw it down. Purchase answers at its store are unchanged. Use saved for one of these credits before this release is ignored and left in the wallet file. Marked from each credit's note and quotes and what it pays for:
+
+- `amex-blue-cash-preferred` and `amex-blue-cash-everyday`: the Disney+, Hulu and ESPN credit (subscriptions bought at DisneyPlus.com, Hulu.com or Stream.ESPN.com).
+- `amex-blue-cash-everyday`: the Home Chef credit (a Home Chef meal kit subscription).
+- `amex-platinum` and `amex-business-gold`: the Walmart+ credit ("one Walmart+ monthly membership fee").
+- `amex-platinum`: the Uber One credit ("Uber One membership fees"), the digital entertainment credit (Disney+, ESPN streaming, Hulu, The New York Times, Paramount+, Peacock, The Wall Street Journal, YouTube Premium and YouTube TV) and the Equinox credit (club memberships or an Equinox+ subscription).
+- `amex-platinum`, `amex-business-platinum` and `amex-hilton-honors-aspire`: the CLEAR+ credit (an annual CLEAR+ membership).
+- `amex-business-gold` and `amex-business-platinum`: the ChatGPT Business credit.
+- `chase-sapphire-reserve`: the Peloton credit ("eligible Peloton memberships").
+- `amex-business-platinum`: the wireless credit ("monthly wireless telephone service charges made directly from a wireless telephone service provider"), a monthly phone bill billed to the card.
+
+Not marked, since they pay on purchases rather than a fixed fee, or it isn't clear they do: the Instacart credits on Chase's United, IHG and Ink cards (they pay on orders; the Instacart+ membership itself is complimentary), `amex-business-gold`'s Squarespace credit and `chase-ihg-one-rewards-business`' Expensify credit (both pay on any purchase there).
+
+Also, a quote note: `chase-sapphire-reserve`'s $75,000 spend benefit quote ("Spend $75,000 each calendar year and unlock status and credits with leading travel and shopping brands.") is now in the "Unlock even more benefits" drawer Chase's page builds on click, so it's marked `in_popup: true`, seen there on 2026-11-13.
+
 ## 2026.11.13
 
 No rates changed. A card can now list points every cardholder gets after each account anniversary, with nothing to enroll in and no spending total to reach (`yearly_points`: a fixed amount, or a percent of the year's purchases or of the points they earned). earnrate counts them in every yearly figure: Rate my wallet, the spending simulation, the next-card planner, keep-or-replace and whether an annual fee is worth it. A welcome-offer comparison counts them from year two, and a single purchase's answer never does. Each needs a quote stating its amount. Entered, each read on the issuer's own pages 2026-11-13:

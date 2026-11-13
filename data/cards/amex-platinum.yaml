@@ -73,6 +73,7 @@ credits:
     match: { merchants: [uber-one] }
     amount: 120
     period: calendar_year
+    subscription: true
     note: 'Uber One membership fees, monthly or annual, charged to the card with Uber Cash turned off for them. Not free trials.'
   - id: resy
     match: { merchants: [resy] }
@@ -99,12 +100,14 @@ credits:
     amount: 25
     period: month
     enroll: true
+    subscription: true
     note: "Bought directly from Disney+, ESPN streaming, Hulu, The New York Times, Paramount+, Peacock, The Wall Street Journal, YouTube Premium or YouTube TV. Not through a cable bundle or another company's app store."
   - id: equinox
     match: { merchants: [equinox] }
     amount: 300
     period: calendar_year
     enroll: true
+    subscription: true
     note: 'U.S. Equinox club memberships or an Equinox+ subscription.'
   - id: oura
     match: { merchants: [oura] }
@@ -116,11 +119,13 @@ credits:
     match: { merchants: [walmart-plus] }
     amount: 12.95
     period: month
+    subscription: true
     note: 'One Walmart+ monthly membership fee a month, plus its tax. Not annual memberships or Plus Ups.'
   - id: clear-plus
     match: { merchants: [clear] }
     amount: 219
     period: calendar_year
+    subscription: true
     note: 'An annual CLEAR+ membership.'
   # Listed, never applied to a purchase: earnrate can't tell which
   # purchases they pay on.

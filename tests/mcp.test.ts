@@ -1145,6 +1145,15 @@ describe('wallet setup', () => {
         'record_purchase',
         { cardId: 'amex-gold', merchant: 'Whole Foods', amount: 20 },
       ],
+      [
+        'update_card',
+        { cardId: 'amex-blue-cash-preferred', enrolled: ['disney-streaming'] },
+      ],
+      [
+        'record_purchase',
+        { cardId: 'amex-blue-cash-preferred', merchant: 'Disney+', amount: 11 },
+      ],
+      ['list_wallet', {}],
       ['set_memberships', { memberships: ['amazon-prime', 'costco'] }],
       [
         'set_point_values',
@@ -1531,6 +1540,87 @@ describe('wallet setup', () => {
       '    credit_usage:\n      lululemon: { period: 2026-Q4, used: 75 }\n',
     )
     expect(await readFile(file, 'utf8')).toContain('# mine')
+  })
+
+  test('a subscription credit: counted in full once enrolled, with nothing for record_purchase to use up', async () => {
+    const before =
+      'cards:\n  - id: amex-blue-cash-preferred # mine\n    enrolled: [disney-streaming]\n    credit_usage:\n      disney-streaming: { period: 2026-10, used: 4 }\n'
+    const file = await walletCopy(before)
+    const client = await connect(file)
+    const wallet = await client.callTool({ name: 'list_wallet', arguments: {} })
+    expect(text(wallet)).toMatch(
+      /Credit \(disney-streaming\): \$10 back each month at Disney\+, Hulu and ESPN: counted in full each month while the subscription is billed to the card\./,
+    )
+    expect(text(wallet)).not.toMatch(/Use your \$10/)
+    const [bcp] = (wallet.structuredContent as WalletSummary).cards
+    expect(bcp?.credits).toContainEqual(
+      expect.objectContaining({
+        id: 'disney-streaming',
+        subscription: true,
+        used: 0,
+        left: 10,
+      }),
+    )
+    const recorded = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'amex-blue-cash-preferred',
+        merchant: 'Disney+',
+        amount: 10.99,
+        date: '2026-10-20',
+      },
+    })
+    expect(recorded.isError).toBeFalsy()
+    expect(text(recorded)).toMatch(
+      /Disney\+, Hulu and ESPN credit pays this subscription each month, so there's nothing to track for it\./,
+    )
+    expect(text(recorded)).not.toMatch(/Used \$/)
+    expect(await readFile(file, 'utf8')).toBe(before)
+    const set = await client.callTool({
+      name: 'update_card',
+      arguments: {
+        cardId: 'amex-blue-cash-preferred',
+        creditUsed: { 'disney-streaming': 6 },
+      },
+    })
+    expect(set.isError).toBeFalsy()
+    expect(text(set)).toMatch(/nothing kept for the disney-streaming credit/)
+    expect(await readFile(file, 'utf8')).toContain(
+      'disney-streaming: { period: 2026-10, used: 4 }',
+    )
+  })
+
+  test('recording a purchase at a subscription that needs no enrolling marks its credit used', async () => {
+    const file = await walletCopy('cards:\n  - id: amex-platinum # mine\n')
+    const client = await connect(file)
+    const recorded = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'amex-platinum',
+        merchant: 'Walmart+',
+        amount: 12.95,
+        date: '2026-10-20',
+      },
+    })
+    expect(recorded.isError).toBeFalsy()
+    expect(text(recorded)).toMatch(
+      /Marked Amex Platinum's Walmart\+ membership credit as one you use\./,
+    )
+    expect(await readFile(file, 'utf8')).toContain('walmart-plus')
+    const skipped = await walletCopy(
+      'cards:\n  - id: amex-platinum # mine\n    skipped_credits: [walmart-plus]\n',
+    )
+    const again = await connect(skipped)
+    const declined = await again.callTool({
+      name: 'record_purchase',
+      arguments: {
+        cardId: 'amex-platinum',
+        merchant: 'Walmart+',
+        amount: 12.95,
+        date: '2026-10-20',
+      },
+    })
+    expect(text(declined)).not.toMatch(/Marked/)
   })
 
   test("a credit earnrate can't match to a purchase: marked used through update_card, never used by record_purchase", async () => {

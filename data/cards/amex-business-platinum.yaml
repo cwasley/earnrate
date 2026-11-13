@@ -77,18 +77,21 @@ credits:
     match: { merchants: [clear] }
     amount: 219
     period: calendar_year
+    subscription: true
     note: 'An annual CLEAR+ membership.'
   - id: chatgpt-business
     match: { merchants: [chatgpt] }
     amount: 300
     period: calendar_year
     enroll: true
+    subscription: true
     note: 'ChatGPT Business bought directly from OpenAI in the U.S.'
   - id: wireless
     match: { categories: [phone] }
     amount: 10
     period: month
     enroll: true
+    subscription: true
     note: 'Monthly wireless phone service bought directly from a U.S. provider, not hardware. From February 17, 2027, only Verizon, AT&T, T-Mobile, Frontier, Comcast, Charter, Spectrum Mobile, UScellular, Optimum, Ultra Mobile and Mint Mobile.'
   - id: indeed
     match: { merchants: [indeed] }

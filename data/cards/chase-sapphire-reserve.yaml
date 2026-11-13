@@ -83,6 +83,7 @@ credits:
     period: month
     enroll: true
     valid_to: 2027-12-31
+    subscription: true
     note: 'Peloton memberships (All-Access, Rental, App+, Guide, App One, Strength+). Activate once on chase.com.'
   # Listed, never applied to a purchase: earnrate can't tell which
   # purchases they pay on.
@@ -152,6 +153,7 @@ evidence:
   - rule: spend-75k
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: 'Spend $75,000 each calendar year and unlock status and credits with leading travel and shopping brands.'
+    in_popup: true
   - rule: spend-75k
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: '$75,000 Spend Benefit – IHG One Rewards Diamond Elite Status'

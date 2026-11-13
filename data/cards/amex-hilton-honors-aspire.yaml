@@ -69,6 +69,7 @@ credits:
     match: { merchants: [clear] }
     amount: 219
     period: calendar_year
+    subscription: true
     note: 'An annual CLEAR+ membership.'
   - id: resort-credit
     match: { merchants: [hilton-resorts] }

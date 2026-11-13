@@ -228,6 +228,9 @@ export const WalletSummarySchema = z.object({
           // earnrate can't tell which purchases it pays on: never counted
           // toward one, used only as the user marks it (creditUsed).
           listed: z.boolean(),
+          // It pays a subscription billed to the card: counted in full each
+          // period once marked used; creditUsed is ignored for it.
+          subscription: z.boolean(),
           text: z.string(),
         }),
       ),

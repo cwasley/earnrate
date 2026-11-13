@@ -3,6 +3,7 @@
 // it's applied here with the shared wallet-change rules; synced, it's sent
 // to /api/wallet on this site's own origin, which holds the sign-in in a
 // cookie this script can't read. Nothing else is ever sent.
+import { tracksUse } from '../../src/engine/credits.ts'
 import { capByKey } from '../../src/engine/evaluate.ts'
 import { choicePeriod, periodKey } from '../../src/engine/periods.ts'
 import type { SetupNote } from '../../src/engine/setup.ts'
@@ -181,7 +182,7 @@ export function heldToInput(
     )
   const credits = Object.entries(held.credit_usage ?? {}).filter(([id, u]) => {
     const c = card.credits.find((x) => x.id === id)
-    return c !== undefined && u.period === now(c.period)
+    return c !== undefined && tracksUse(c) && u.period === now(c.period)
   })
   if (credits.length > 0)
     input.creditUsed = Object.fromEntries(credits.map(([k, u]) => [k, u.used]))

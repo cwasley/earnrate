@@ -9,7 +9,7 @@ import {
 import { addMonths } from './bonus.ts'
 import { capByKey } from './evaluate.ts'
 import { choicePeriod, isAnniversary, periodKey } from './periods.ts'
-import { periodAmount } from './credits.ts'
+import { periodAmount, tracksUse } from './credits.ts'
 import {
   knownMemberships,
   searchCards,
@@ -355,6 +355,8 @@ export function cardFields(
         )
         continue
       }
+      // Paid in full each period: what's used of it isn't kept.
+      if (!tracksUse(credit)) continue
       const period = periodKey(credit.period, today, anniversary)
       const most = periodAmount(credit, period)
       if (!(used >= 0 && used <= most))

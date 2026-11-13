@@ -612,6 +612,25 @@ export const LISTED_CREDIT =
 export const LISTED_CREDIT_USED =
   "earnrate can't tell which purchases it pays on, so mark what you've used"
 
+// A credit that pays a subscription billed to the card, in list_wallet:
+// nothing to track once it's marked used.
+export const subscriptionCreditStatus = (
+  period: Credit['period'],
+  confirmed: boolean,
+) =>
+  confirmed
+    ? `counted in full ${CREDIT_PERIODS[period]} while the subscription is billed to the card`
+    : `say you use it and it's counted in full ${CREDIT_PERIODS[period]}`
+
+// What record_purchase says at a subscription credit's store: "Amex Blue
+// Cash Preferred's Disney+, Hulu and ESPN credit pays this subscription each
+// month, so there's nothing to track for it."
+export const subscriptionPaidText = (
+  card: string,
+  c: Pick<CreditWords, 'name' | 'period'>,
+) =>
+  `${possessive(card)} ${c.name} credit pays this subscription ${CREDIT_PERIODS[c.period]}, so there's nothing to track for it.`
+
 // "$75 back each quarter", "$15 back each month ($35 in December)"
 export const creditBack = (
   c: Pick<Credit, 'amount' | 'period'> & {

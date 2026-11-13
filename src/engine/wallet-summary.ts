@@ -11,7 +11,12 @@ import {
 import { introUntil, introWindows, openedOn } from './intro.ts'
 import { effectiveMemberships, membershipName } from './memberships.ts'
 import { milestoneSummaries, type MilestoneSummary } from './milestones.ts'
-import { creditStates, nightStates, usedCreditsYear } from './credits.ts'
+import {
+  creditStates,
+  nightStates,
+  tracksUse,
+  usedCreditsYear,
+} from './credits.ts'
 import {
   creditWhere,
   optionName,
@@ -29,6 +34,7 @@ import {
   creditTerms,
   creditsCountedText,
   creditLeft,
+  subscriptionCreditStatus,
   ENROLL_FIRST,
   choiceName,
   currencyLabel,
@@ -77,6 +83,9 @@ export type CreditSummary = {
   left: number | null
   tracked: boolean // the wallet has recorded use of it
   listed: boolean // never counted toward a purchase: used only as marked
+  // It pays a subscription billed to the card: in full each period once
+  // marked used, so `used` stays 0 and nothing is tracked.
+  subscription: boolean
   text: string // "$75 back each quarter at Lululemon: $35 left this quarter."
 }
 
@@ -619,9 +628,11 @@ function creditSummaries(
       ? CREDIT_SKIPPED
       : !s.enrolled
         ? `${ENROLL_FIRST}, then mark it enrolled`
-        : s.left === null
-          ? "give the card's anniversary to track it"
-          : `${creditLeft(s.left, s.period)}${s.until === null ? '' : `, through ${shortDate(s.until)}`}${s.credit.listed ? `; ${LISTED_CREDIT_USED}` : ''}`
+        : !tracksUse(s.credit)
+          ? subscriptionCreditStatus(s.period, s.confirmed)
+          : s.left === null
+            ? "give the card's anniversary to track it"
+            : `${creditLeft(s.left, s.period)}${s.until === null ? '' : `, through ${shortDate(s.until)}`}${s.credit.listed ? `; ${LISTED_CREDIT_USED}` : ''}`
     return {
       id: s.credit.id,
       name: s.name,
@@ -636,8 +647,10 @@ function creditSummaries(
       until: s.until,
       used: s.used,
       left: s.left,
-      tracked: held.credit_usage?.[s.credit.id] !== undefined,
+      tracked:
+        tracksUse(s.credit) && held.credit_usage?.[s.credit.id] !== undefined,
       listed: s.credit.listed !== undefined,
+      subscription: !tracksUse(s.credit),
       text: `${creditBack(s)} ${creditWhere(catalog, s.credit)}${creditTerms(s.credit)}: ${status}.`,
     }
   })

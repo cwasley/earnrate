@@ -8,7 +8,7 @@ import {
   purchaseContext,
   type PurchaseContext,
 } from './evaluate.ts'
-import { creditAt, creditDollars } from './credits.ts'
+import { creditAt, creditDollars, tracksUse } from './credits.ts'
 import { milestoneProgress } from './milestones.ts'
 import { roundCents } from './text.ts'
 import type { MerchantResolution, RecordedPurchase } from './types.ts'
@@ -207,7 +207,8 @@ export type CreditBooking = {
 }
 
 // The part of an enrolled merchant credit this purchase uses. None when the
-// card has no credit here, it isn't enrolled, or it's used up.
+// card has no credit here, it isn't enrolled, it's used up, or it pays a
+// subscription (paid in full each period, so nothing is kept).
 export function creditBooking(
   catalog: Catalog,
   wallet: Wallet,
@@ -223,7 +224,14 @@ export function creditBooking(
   if (!held || !card) return null
   const state = creditAt(catalog, card, held, merchant, purchase.date)
   const back = state ? creditDollars(state, purchase.amount) : null
-  if (!state || state.key === null || back === null || back <= 0) return null
+  if (
+    !state ||
+    !tracksUse(state.credit) ||
+    state.key === null ||
+    back === null ||
+    back <= 0
+  )
+    return null
   return {
     cardId: card.id,
     creditId: state.credit.id,

@@ -3,6 +3,74 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.13.1'
+  date: 2026-11-13
+  changes:
+    - cause: addition
+      card: amex-business-platinum
+      field: credits.wireless.subscription
+      was: null
+      now: true
+      summary: The wireless credit pays a monthly phone bill billed to the card, so once marked it counts in full each month.
+    - cause: quote
+      card: chase-sapphire-reserve
+      field: evidence
+      summary: The $75,000 spend benefit's quote now sits in a drawer Chase's page builds on click, so it's marked as a popup quote.
+    - cause: addition
+      cards: [amex-blue-cash-preferred, amex-blue-cash-everyday]
+      field: credits.disney-streaming.subscription
+      was: null
+      now: true
+      summary: The Disney+, Hulu and ESPN credit pays a subscription billed to the card; once marked used it counts in full each month, with nothing to track or use up.
+    - cause: addition
+      card: amex-blue-cash-everyday
+      field: credits.home-chef.subscription
+      was: null
+      now: true
+      summary: The Home Chef credit pays a meal kit subscription billed to the card; once marked used it counts in full each month, with nothing to track or use up.
+    - cause: addition
+      cards: [amex-platinum, amex-business-gold]
+      field: credits.walmart-plus.subscription
+      was: null
+      now: true
+      summary: The Walmart+ credit pays the monthly membership fee billed to the card; once marked used it counts in full each month, with nothing to track or use up.
+    - cause: addition
+      card: amex-platinum
+      field: credits.uber-one.subscription
+      was: null
+      now: true
+      summary: The Uber One credit pays membership fees billed to the card; once marked used it counts in full each calendar year, with nothing to track or use up.
+    - cause: addition
+      card: amex-platinum
+      field: credits.digital-entertainment.subscription
+      was: null
+      now: true
+      summary: The digital entertainment credit pays subscriptions billed to the card; once marked used it counts in full each month, with nothing to track or use up.
+    - cause: addition
+      card: amex-platinum
+      field: credits.equinox.subscription
+      was: null
+      now: true
+      summary: The Equinox credit pays a membership or Equinox+ subscription billed to the card; once marked used it counts in full each calendar year, with nothing to track or use up.
+    - cause: addition
+      cards: [amex-platinum, amex-business-platinum, amex-hilton-honors-aspire]
+      field: credits.clear-plus.subscription
+      was: null
+      now: true
+      summary: The CLEAR+ credit pays the yearly membership billed to the card; once marked used it counts in full each calendar year, with nothing to track or use up.
+    - cause: addition
+      cards: [amex-business-gold, amex-business-platinum]
+      field: credits.chatgpt-business.subscription
+      was: null
+      now: true
+      summary: The ChatGPT Business credit pays a subscription billed to the card; once marked used it counts in full each calendar year, with nothing to track or use up.
+    - cause: addition
+      card: chase-sapphire-reserve
+      field: credits.peloton-credit.subscription
+      was: null
+      now: true
+      summary: The Peloton credit pays a membership billed to the card; once marked used it counts in full each month, with nothing to track or use up.
+
 - version: '2026.11.13'
   date: 2026-11-13
   changes:

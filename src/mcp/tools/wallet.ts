@@ -8,8 +8,10 @@ import {
   listed,
   money,
   shortDate,
+  subscriptionPaidText,
   words,
 } from '../../engine/text.ts'
+import { counts, creditAt, tracksUse } from '../../engine/credits.ts'
 import { membershipName } from '../../engine/memberships.ts'
 import { profileText, VALUATION_PROFILES } from '../../engine/profiles.ts'
 import { optionName } from '../../engine/rule-text.ts'
@@ -18,7 +20,7 @@ import { walletSummary } from '../../engine/wallet-summary.ts'
 import { checklist } from '../../engine/checklist.ts'
 import { pickedCategories } from '../../engine/evaluate.ts'
 import { choicePeriod, periodKey } from '../../engine/periods.ts'
-import { periodPhrase } from '../../engine/text.ts'
+import { periodPhrase, possessive } from '../../engine/text.ts'
 import { cardText, issuerName } from '../../format/card-text.ts'
 import {
   formatBooking,
@@ -93,8 +95,14 @@ function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
         ? 'no credits enrolled'
         : `enrolled in: ${args.enrolled.join(', ')}`,
     )
-  for (const [id, used] of Object.entries(args.creditUsed ?? {}))
-    out.push(`${money(used)} of the ${id} credit used this period`)
+  for (const [id, used] of Object.entries(args.creditUsed ?? {})) {
+    const credit = card?.credits.find((c) => c.id === id)
+    out.push(
+      credit && !tracksUse(credit)
+        ? `nothing kept for the ${id} credit: it pays a subscription, counted in full each period`
+        : `${money(used)} of the ${id} credit used this period`,
+    )
+  }
   if (args.skippedCredits !== undefined)
     out.push(
       args.skippedCredits.length === 0
@@ -243,6 +251,39 @@ export function walletHandlers(
             ?.caps.find((c) => c.key === booking.capKey)
         : undefined
       const capLabel = capSummary?.label ?? null
+      const shortName = cardText(catalog).shortName(cardId)
+      // A subscription credit here pays in full each period: nothing is
+      // booked against it, and the reply says so.
+      const held = w.cards.find((c) => c.id === cardId)
+      const heldCard = catalog.cards.find((c) => c.id === cardId)
+      const paying =
+        held && heldCard
+          ? creditAt(catalog, heldCard, held, resolved.merchant, purchase.date)
+          : null
+      // Paying a subscription that needs no enrolling on the card says the
+      // cardholder uses its credit, unless they said they don't.
+      let marked = false
+      if (
+        paying &&
+        held &&
+        !tracksUse(paying.credit) &&
+        paying.credit.enroll !== true &&
+        !paying.confirmed &&
+        !(held.skipped_credits ?? []).includes(paying.credit.id)
+      ) {
+        const done = await store.updateCard(
+          {
+            id: cardId,
+            enrolled: [...(held.enrolled ?? []), paying.credit.id],
+          },
+          purchase.date,
+        )
+        marked = done.ok
+      }
+      const subscription =
+        paying && !tracksUse(paying.credit) && (marked || counts(paying))
+          ? `${marked ? `Marked ${possessive(shortName)} ${paying.name} credit as one you use. ` : ''}${subscriptionPaidText(shortName, paying)}`
+          : null
       const output =
         booking || bonus || milestones.length > 0 || credit
           ? {
@@ -251,7 +292,7 @@ export function walletHandlers(
               bonus,
               milestones,
               credit,
-              message: `${formatBooking(amount, cardText(catalog).shortName(cardId), booking, bonus, milestones, credit, capLabel, capSummary?.afterCap ?? null)} Saved in ${ctx.walletName}.`,
+              message: `${formatBooking(amount, shortName, booking, bonus, milestones, credit, capLabel, capSummary?.afterCap ?? null)}${subscription === null ? '' : ` ${subscription}`} Saved in ${ctx.walletName}.`,
             }
           : {
               recorded: false,
@@ -261,7 +302,9 @@ export function walletHandlers(
               credit: null,
               message:
                 stalePicks(purchase.date) ??
-                `Nothing to track: ${cardText(catalog).shortName(cardId)} has no spending cap, open welcome bonus, spend bonus or enrolled statement credit for this purchase, so the wallet wasn't changed.`,
+                (subscription === null
+                  ? `Nothing to track: ${shortName} has no spending cap, open welcome bonus, spend bonus or enrolled statement credit for this purchase, so the wallet wasn't changed.`
+                  : `${subscription} The wallet wasn't changed.`),
             }
       return {
         content: [

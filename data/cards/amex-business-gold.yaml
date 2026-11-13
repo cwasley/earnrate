@@ -75,6 +75,7 @@ credits:
     amount: 300
     period: calendar_year
     enroll: true
+    subscription: true
     note: 'ChatGPT Business bought directly from OpenAI in the U.S.'
   - id: squarespace
     match: { merchants: [squarespace] }
@@ -86,6 +87,7 @@ credits:
     match: { merchants: [walmart-plus] }
     amount: 12.95
     period: month
+    subscription: true
     note: 'One Walmart+ monthly membership fee a month, plus its tax. Not annual memberships, Plus Ups or Walmart Business+.'
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:

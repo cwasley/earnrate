@@ -79,12 +79,14 @@ credits:
     amount: 15
     period: month
     enroll: true
+    subscription: true
     note: 'A Home Chef meal kit subscription bought at homechef.com/blue-cash-everyday. Not individual meal kits, kitchenware or gift cards.'
   - id: disney-streaming
     match: { merchants: [disney-plus, hulu, espn] }
     amount: 7
     period: month
     enroll: true
+    subscription: true
     note: "Subscriptions bought at DisneyPlus.com, Hulu.com or Stream.ESPN.com, bundles included; an annual plan gets one $7 credit, in the month it's bought. Not through an app store or a device, or with cable."
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
