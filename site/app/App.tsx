@@ -721,6 +721,11 @@ export function App() {
       setScope(next.scope ?? null)
       setFind(next.find ?? null)
       setReturnTo(null)
+      // After a section below was in view, the answer is up in the app.
+      requestAnimationFrame(() => {
+        const app = document.getElementById('app')
+        if (app && app.getBoundingClientRect().bottom < 0) app.scrollIntoView()
+      })
     }
     addEventListener('hashchange', onHash)
     return () => removeEventListener('hashchange', onHash)
