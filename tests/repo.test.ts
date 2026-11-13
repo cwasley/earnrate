@@ -136,8 +136,7 @@ test('counts in the docs match the catalog and the tool lists', async () => {
     await read('site/index.html'),
     landingFacts(catalog, sample, '2026-11-03'),
   )
-  expect(flat(home)).toContain(`<b>${String(catalog.cards.length)}</b>cards`)
-  expect(flat(home)).toContain(cards)
+  expect(flat(home)).toContain(`${cards} from`)
 
   const hosted = ANSWER_TOOLS.length + SAVED_WALLET_TOOLS.length
   const manifest = JSON.parse(await read('mcpb/manifest.json')) as {

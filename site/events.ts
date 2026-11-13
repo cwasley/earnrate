@@ -30,7 +30,6 @@ export const EVENTS = [
   'cta-after-answer',
   'cta-save-cards',
   'cta-pass-hint',
-  'cta-bottom',
   // Arrivals from the static pages' buttons
   'page-spending',
   'page-whatif',

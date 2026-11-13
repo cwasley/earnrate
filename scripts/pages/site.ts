@@ -44,8 +44,8 @@ const FOOTER_GROUPS: [string, [string, string][]][] = [
   ],
 ]
 
-export const siteFooter = () =>
-  `<footer><nav class="footer-cols" aria-label="More from earnrate">${FOOTER_GROUPS.map(
+export const siteFooter = (before = '') =>
+  `<footer>${before}<nav class="footer-cols" aria-label="More from earnrate">${FOOTER_GROUPS.map(
     ([head, links]) =>
       `<div><p class="footer-head">${head}</p><ul>${links.map(([href, label]) => `<li><a href="${href}">${esc(label)}</a></li>`).join('')}</ul></div>`,
   ).join(

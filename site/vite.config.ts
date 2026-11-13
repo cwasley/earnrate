@@ -47,17 +47,18 @@ export function landingPage(): Plugin {
         .replace('<!--earnrate:footer-->', siteFooter())
         .replace('<!--earnrate:header-->', PAGE_HEADER)
       if (!FILLED.some((f) => ctx.filename.endsWith(f))) return html
-      const [catalog, sample, releases] = await Promise.all([
+      const [catalog, sample, releases, version] = await Promise.all([
         loadCatalog(),
         loadWallet(`${import.meta.dirname}/../wallet.example.yaml`),
         loadChanges(),
+        readFile(`${DATA_DIR}VERSION`, 'utf8'),
       ])
       return renderLanding(
         html,
         landingFacts(catalog, sample, localToday()),
         ctx.filename.endsWith('/companies.html')
           ? companyParts(catalog, releases)
-          : {},
+          : { data_version: version.trim() },
       )
     },
   }
