@@ -35,6 +35,8 @@ import type { Card } from '../../src/schema/card.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { answeredMarks, heldMarks } from '../rate/answers.ts'
 import { CreditPicks } from './CreditPicks.tsx'
+import { openedChange, spentChange, trackingChange } from './bonus-change.ts'
+import { draftShown, type Draft } from './draft.ts'
 import { cards, issuerName, words } from './format.ts'
 import { KeepOrReplace } from './KeepOrReplace.tsx'
 import { offerTerms } from '../../src/engine/offers.ts'
@@ -62,6 +64,18 @@ function offerText(card: Card): string {
   const o = card.welcome_offer
   if (!o || !inEffect(o, localToday())) return ''
   return `Published offer: ${offerTerms(o, currencyName(catalog, card.currency))}.`
+}
+
+// A field's local value, which gives way to the saved one whenever that
+// changes. `key` stands for the saved value when it isn't a primitive.
+function useDraft<T>(saved: T, key: unknown = saved): [T, (next: T) => void] {
+  const [draft, setDraft] = useState<Draft<T>>(null)
+  return [
+    draftShown(draft, saved, key),
+    (next) => {
+      setDraft({ value: next, over: key })
+    },
+  ]
 }
 
 export const hasFee = (held: WalletCard) =>
@@ -96,12 +110,16 @@ function Anniversary({
   value: string | null // MM-DD
   onSave: (mmdd: string) => void
 }) {
-  const [month, setMonth] = useState(() => Number(value?.slice(0, 2) ?? 0))
-  const [day, setDay] = useState(() => Number(value?.slice(3, 5) ?? 0))
+  const [{ month, day }, setPicked] = useDraft(
+    {
+      month: Number(value?.slice(0, 2) ?? 0),
+      day: Number(value?.slice(3, 5) ?? 0),
+    },
+    value,
+  )
   const set = (m: number, d: number) => {
     const fits = m > 0 ? Math.min(d, DAYS[m - 1] ?? 31) : d
-    setMonth(m)
-    setDay(fits)
+    setPicked({ month: m, day: fits })
     if (m > 0 && fits > 0) onSave(`${two(m)}-${two(fits)}`)
   }
   return (
@@ -155,7 +173,7 @@ function SavedNumber({
   max?: string
   onSave: (text: string) => void
 }) {
-  const [text, setText] = useState(value)
+  const [text, setText] = useDraft(value)
   const commit = () => {
     if (text !== value) onSave(text)
   }
@@ -211,10 +229,11 @@ export function CardSettings({
   const today = localToday()
   const info = card ? cardInfo(catalog, card, wallet, today) : null
   const [error, setError] = useState<string | null>(null)
-  const [tracking, setTracking] = useState(held.bonus !== undefined)
+  const [tracking, setTracking] = useDraft(held.bonus !== undefined)
   // One opening date serves the welcome bonus and any first-year rate.
-  const [opened, setOpened] = useState(held.opened ?? held.bonus?.opened ?? '')
-  const [spent, setSpent] = useState(held.bonus ? String(held.bonus.spent) : '')
+  const [opened, setOpened] = useDraft(held.opened ?? held.bonus?.opened ?? '')
+  // Spending typed before there's a date to save the bonus with.
+  const [unsaved, setUnsaved] = useState('')
   if (!info || !card) return null
   const milestones = milestoneSummaries(card, held, today)
   const trackedSpend = milestones.find((m) => m.tracked)
@@ -226,12 +245,27 @@ export function CardSettings({
   const change = (input: Omit<CardInput, 'id'>) => {
     void save(input).then(setError)
   }
-  const saveBonus = (on: boolean, date: string, dollars: string) => {
-    if (on && date !== '')
-      change({
-        bonus: { opened: date, spent: Math.max(0, Number(dollars) || 0) },
-      })
-    else if (!on && held.bonus) change({ bonus: null })
+  const spent = held.bonus ? String(held.bonus.spent) : unsaved
+  const changeIf = (input: Omit<CardInput, 'id'> | null) => {
+    if (input) change(input)
+  }
+  const saveTracking = (on: boolean) => {
+    setTracking(on)
+    changeIf(trackingChange(held, on, opened, unsaved))
+  }
+  const saveOpened = (date: string) => {
+    setOpened(date)
+    changeIf(
+      openedChange(held, date, {
+        tracking,
+        introRates: info.introRates.length > 0,
+        unsaved,
+      }),
+    )
+  }
+  const saveSpent = (text: string) => {
+    setUnsaved(text)
+    changeIf(spentChange(held, opened, text))
   }
 
   const fee = hasFee(held)
@@ -485,18 +519,7 @@ export function CardSettings({
               type="date"
               value={opened}
               max={today}
-              onChange={(e) => {
-                const date = e.currentTarget.value
-                setOpened(date)
-                change(
-                  date === ''
-                    ? held.opened === undefined
-                      ? {}
-                      : { opened: null }
-                    : { opened: date },
-                )
-                if (tracking) saveBonus(true, date, spent)
-              }}
+              onChange={(e) => saveOpened(e.currentTarget.value)}
             />
           </label>
         </fieldset>
@@ -538,11 +561,7 @@ export function CardSettings({
                 <input
                   type="checkbox"
                   checked={tracking}
-                  onChange={(e) => {
-                    const on = e.currentTarget.checked
-                    setTracking(on)
-                    saveBonus(on, opened, spent)
-                  }}
+                  onChange={(e) => saveTracking(e.currentTarget.checked)}
                 />
                 I'm working on this card's welcome bonus
               </label>
@@ -555,11 +574,7 @@ export function CardSettings({
                         type="date"
                         value={opened}
                         max={today}
-                        onChange={(e) => {
-                          const date = e.currentTarget.value
-                          setOpened(date)
-                          saveBonus(true, date, spent)
-                        }}
+                        onChange={(e) => saveOpened(e.currentTarget.value)}
                       />
                     </label>
                   ) : null}
@@ -568,10 +583,7 @@ export function CardSettings({
                     value={spent}
                     placeholder="0"
                     min="0"
-                    onSave={(text) => {
-                      setSpent(text)
-                      saveBonus(true, opened, text)
-                    }}
+                    onSave={saveSpent}
                   />
                 </>
               ) : null}

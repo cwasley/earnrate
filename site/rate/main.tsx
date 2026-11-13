@@ -1,10 +1,23 @@
 import { render } from 'preact'
+import { WalletBoundary } from '../app/WalletBoundary.tsx'
+import { reportPart } from './link.ts'
 import { Rate } from './Rate.tsx'
+import { storedId } from './store.ts'
 import '../app/app.css'
 import './rate.css'
 
 const root = document.getElementById('rate')
 if (root) {
   root.textContent = ''
-  render(<Rate />, root)
+  render(
+    <WalletBoundary
+      ownWallet={() =>
+        storedId(location.pathname) === null &&
+        reportPart(location.hash) === null
+      }
+    >
+      <Rate />
+    </WalletBoundary>,
+    root,
+  )
 }

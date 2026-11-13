@@ -16,6 +16,8 @@ import {
   applyLocally,
   ENDED,
   LIMITED,
+  changeLanded,
+  NOT_SAVED,
   NEEDS_CONNECTION,
   removeOp,
   updateOp,
@@ -73,7 +75,7 @@ export type SaveDeps = {
   write: (wallet: Wallet) => void
   synced: () => boolean
   online: () => boolean
-  send: (op: LocalOp) => Promise<SyncResult>
+  send: (op: LocalOp | null) => Promise<SyncResult>
   signedOut: () => void
 }
 
@@ -100,6 +102,7 @@ export async function saveChange(
   })
   if (deps.synced()) {
     if (!deps.online()) return refused(NEEDS_CONNECTION)
+    const before = deps.read()
     const result = await deps.send(op)
     switch (result.kind) {
       case 'ok':
@@ -112,8 +115,21 @@ export async function saveChange(
         return refused(ENDED)
       case 'limited':
         return refused(LIMITED)
-      case 'offline':
-        return refused(NEEDS_CONNECTION)
+      case 'offline': {
+        // The change may have been made with only its answer lost.
+        const check = await deps.send(null)
+        if (check.kind !== 'ok') return refused(NEEDS_CONNECTION)
+        deps.write(check.wallet)
+        return changeLanded(
+          deps.catalog,
+          before,
+          check.wallet,
+          op,
+          deps.today(),
+        )
+          ? { ok: true, wallet: check.wallet }
+          : refused(NOT_SAVED)
+      }
     }
   }
   const change = applyLocally(deps.catalog, deps.read(), op, deps.today())

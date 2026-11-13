@@ -16,10 +16,9 @@ let memory: Wallet | null = null
 export const OWN_WALLET: SaveDeps = {
   catalog,
   today: localToday,
-  read: () => loadWallet() ?? memory,
+  read: () => memory ?? loadWallet(),
   write: (wallet) => {
-    memory = wallet
-    saveWallet(wallet)
+    memory = saveWallet(wallet) ? null : wallet
   },
   synced: () => load('sync', { on: false }).on,
   online: () => navigator.onLine,

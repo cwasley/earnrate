@@ -3,6 +3,7 @@ import { App } from './App.tsx'
 import { startMyLink } from './my-link.ts'
 import { loadWallet } from './saved-wallet.ts'
 import { copyButtons, trackClicks } from './track.ts'
+import { WalletBoundary } from './WalletBoundary.tsx'
 import './app.css'
 
 trackClicks()
@@ -15,7 +16,12 @@ if (root) {
   if ((loadWallet()?.cards.length ?? 0) > 0)
     root.closest('main')?.setAttribute('data-returning', '')
   root.textContent = ''
-  render(<App />, root)
+  render(
+    <WalletBoundary ownWallet={() => true}>
+      <App />
+    </WalletBoundary>,
+    root,
+  )
 }
 
 // Offline support for the installed app; only the built site has sw.js.

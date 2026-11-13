@@ -5,7 +5,12 @@ import { addToWallet } from '../src/engine/wallet-change.ts'
 import { reportStart, type ReportInput } from '../src/engine/wallet-report.ts'
 import type { Wallet } from '../src/schema/wallet.ts'
 import { enrollLine } from '../site/app/credit-enroll.ts'
-import { ENDED, NEEDS_CONNECTION, type LocalOp } from '../site/app/sync.ts'
+import {
+  ENDED,
+  NEEDS_CONNECTION,
+  NOT_SAVED,
+  type LocalOp,
+} from '../site/app/sync.ts'
 import {
   addCard,
   answeredMarks,
@@ -64,7 +69,7 @@ function harness(wallet: Wallet | null, synced = false) {
   const log = {
     reads: 0,
     writes: [] as Wallet[],
-    sent: [] as LocalOp[],
+    sent: [] as (LocalOp | null)[],
     signedOut: 0,
   }
   let server = wallet
@@ -80,6 +85,10 @@ function harness(wallet: Wallet | null, synced = false) {
     online: () => true,
     send: (op) => {
       log.sent.push(op)
+      if (op === null)
+        return Promise.resolve(
+          server ? { kind: 'ok', wallet: server } : { kind: 'offline' },
+        )
       if (!server || op.tool !== 'update_card')
         return Promise.resolve({ kind: 'offline' })
       const { cardId, enrolled = [], skippedCredits = [] } = op.input
@@ -252,6 +261,41 @@ describe("Rate my wallet's credit answers", () => {
     expect(later).toEqual({ ok: false, error: NEEDS_CONNECTION, wallet })
     expect(offline.log.sent).toEqual([])
     expect(offline.log.writes).toEqual([])
+  })
+
+  test('with sync on, a change whose answer was lost is checked against the synced wallet', async () => {
+    const wallet = saved()
+    const marks = { used: ['resy', 'clear-plus'], skipped: ['equinox'] }
+    const own = { kind: 'own', wallet, rows: null } as const
+
+    const made = harness(wallet, true)
+    const send = made.deps.send
+    made.deps.send = async (op) => {
+      const result = await send(op)
+      return op === null ? result : { kind: 'offline' }
+    }
+    const landed = await answerSaver(own, made.deps)?.('amex-platinum', marks)
+    expect(landed?.ok).toBe(true)
+    expect(made.log.sent).toEqual([marksOp('amex-platinum', marks), null])
+    const cached = made.log.writes.at(-1)?.cards[0]
+    if (!cached) throw new Error('not cached')
+    expect(heldMarks(platinum, cached)).toEqual(marks)
+
+    const lost = harness(wallet, true)
+    lost.deps.send = (op) =>
+      Promise.resolve(
+        op === null ? { kind: 'ok', wallet } : { kind: 'offline' },
+      )
+    expect(await answerSaver(own, lost.deps)?.('amex-platinum', marks)).toEqual(
+      { ok: false, error: NOT_SAVED, wallet },
+    )
+
+    const away = harness(wallet, true)
+    away.deps.send = () => Promise.resolve({ kind: 'offline' })
+    expect(await answerSaver(own, away.deps)?.('amex-platinum', marks)).toEqual(
+      { ok: false, error: NEEDS_CONNECTION, wallet },
+    )
+    expect(away.log.writes).toEqual([])
   })
 
   test('the first tap on a card answers all of it: that credit used, every other one not, saved as one change', async () => {

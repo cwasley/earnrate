@@ -30,13 +30,16 @@ import {
   firstConnection,
   importOp,
   keepClaudeSettings,
+  changeLanded,
   ENDED,
   LIMITED,
   NEEDS_CONNECTION,
+  NOT_SAVED,
   membershipsOp,
   type Outcome,
   syncRequest,
   syncReturn,
+  takeSignInStarted,
   type SyncReturn,
   type WalletOp,
 } from './sync.ts'
@@ -353,7 +356,7 @@ const UNREACHABLE =
 function takeSyncReturn(): SyncReturn | null {
   const { sync, hash } = syncReturn(location.hash)
   if (sync) history.replaceState(null, '', `${location.pathname}${hash}`)
-  return sync
+  return takeSignInStarted() ? sync : null
 }
 
 function initialSync(back: SyncReturn | null): SyncView {
@@ -362,6 +365,17 @@ function initialSync(back: SyncReturn | null): SyncView {
   return {
     state: 'off',
     note: back === 'canceled' ? CANCELED : back === 'failed' ? FAILED : null,
+  }
+}
+
+const WATCHED = ['earnrate:wallet', 'earnrate:sync']
+
+function storageWorks(): boolean {
+  try {
+    localStorage.getItem('earnrate:wallet')
+    return true
+  } catch {
+    return false
   }
 }
 
@@ -390,12 +404,23 @@ export function App() {
   // reads the wallet as it is now.
   const walletRef = useRef(wallet)
   walletRef.current = wallet
+  const syncRef = useRef(sync)
+  syncRef.current = sync
+  // Whether this browser's storage holds the wallet. Without it (blocked,
+  // or full) the wallet lives in this page only.
+  const stores = useRef(storageWorks())
 
-  const replaceWallet = (next: Wallet | null) => {
+  const showWallet = (next: Wallet | null) => {
     walletRef.current = next
     setWallet(next)
-    saveWallet(next)
   }
+  const replaceWallet = (next: Wallet | null) => {
+    showWallet(next)
+    stores.current = saveWallet(next)
+  }
+  // Other tabs save to the same storage, so a change starts from what's
+  // saved now, not from what this page loaded.
+  const savedNow = () => (stores.current ? loadWallet() : walletRef.current)
   const synced = sync.state === 'on'
   const edit = editState({ synced, online, busy })
   const locked =
@@ -522,15 +547,39 @@ export function App() {
     })
   }
 
+  // Another tab may have turned sync on or off since this one loaded; this
+  // tab follows it. Without storage there's no other tab to follow.
+  const followSync = (): SyncView['state'] => {
+    const current = syncRef.current
+    if (
+      !stores.current ||
+      current.state === 'connecting' ||
+      current.state === 'choose'
+    )
+      return current.state
+    const on = load('sync', { on: false }).on
+    const next: SyncView | null =
+      on && current.state !== 'on'
+        ? { state: 'on', note: null }
+        : !on && current.state === 'on'
+          ? { state: 'off', note: null }
+          : null
+    if (!next) return current.state
+    syncRef.current = next
+    setSync(next)
+    return next.state
+  }
+
   // Every change on the page goes through here: applied in this browser
   // with the shared rules, or, synced, made on the server and shown back.
   const perform = async (op: WalletOp): Promise<Outcome> => {
-    if (sync.state === 'connecting' || sync.state === 'choose')
+    const now = followSync()
+    if (now === 'connecting' || now === 'choose')
       return {
         ok: false,
         error: 'Finish connecting to your Claude wallet first.',
       }
-    if (sync.state === 'on') {
+    if (now === 'on') {
       if (!online) return { ok: false, error: NEEDS_CONNECTION }
       // Shown at once by the same rules; the server's answer then replaces
       // it, or the wallet goes back as it was.
@@ -539,10 +588,7 @@ export function App() {
         op.tool === 'import_wallet'
           ? null
           : applyLocally(catalog, walletRef.current, op, localToday())
-      if (local?.ok) {
-        walletRef.current = local.wallet
-        setWallet(local.wallet)
-      }
+      if (local?.ok) showWallet(local.wallet)
       setBusy(true)
       try {
         const result = await syncRequest(op)
@@ -550,8 +596,7 @@ export function App() {
           replaceWallet(result.wallet)
           return { ok: true, notes: local?.ok ? local.notes : [] }
         }
-        walletRef.current = before
-        setWallet(before)
+        showWallet(before)
         switch (result.kind) {
           case 'refused':
             return { ok: false, error: result.error }
@@ -560,9 +605,18 @@ export function App() {
             return { ok: false, error: ENDED }
           case 'limited':
             return { ok: false, error: LIMITED }
-          case 'offline':
-            setOnline(false)
-            return { ok: false, error: NEEDS_CONNECTION }
+          case 'offline': {
+            // The change may have been made with only its answer lost.
+            const check = await syncRequest(null)
+            if (check.kind !== 'ok') {
+              setOnline(false)
+              return { ok: false, error: NEEDS_CONNECTION }
+            }
+            replaceWallet(check.wallet)
+            return changeLanded(catalog, before, check.wallet, op, localToday())
+              ? { ok: true, notes: local?.ok ? local.notes : [] }
+              : { ok: false, error: NOT_SAVED }
+          }
         }
       } finally {
         setBusy(false)
@@ -576,7 +630,7 @@ export function App() {
       replaceWallet(parsed)
       return { ok: true, notes: [] }
     }
-    const change = applyLocally(catalog, walletRef.current, op, localToday())
+    const change = applyLocally(catalog, savedNow(), op, localToday())
     if (!change.ok) return { ok: false, error: change.error }
     replaceWallet(change.wallet)
     return { ok: true, notes: change.notes }
@@ -614,6 +668,38 @@ export function App() {
     const timer = setInterval(() => void refresh(), 30_000)
     return () => clearInterval(timer)
   }, [sync.state, online])
+
+  // Other tabs: a wallet one saves shows here at once, and sync turned on
+  // or off there is followed here (turned on, the effect above fetches).
+  // Unsynced, the page also reads storage again when it comes back into
+  // view; synced, the fetch above covers that.
+  useEffect(() => {
+    const reread = () => {
+      if (stores.current) showWallet(loadWallet())
+    }
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== null && !WATCHED.includes(e.key)) return
+      const state = followSync()
+      if (state === 'connecting' || state === 'choose') return
+      if (e.key !== 'earnrate:sync') reread()
+    }
+    const onSeen = () => {
+      if (document.visibilityState !== 'visible') return
+      const state = followSync()
+      if (state === 'off' || state === 'ended') reread()
+    }
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) onSeen()
+    }
+    addEventListener('storage', onStorage)
+    addEventListener('pageshow', onShow)
+    document.addEventListener('visibilitychange', onSeen)
+    return () => {
+      removeEventListener('storage', onStorage)
+      removeEventListener('pageshow', onShow)
+      document.removeEventListener('visibilitychange', onSeen)
+    }
+  }, [])
 
   const syncTop =
     sync.state === 'connecting' ? (

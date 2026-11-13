@@ -1,10 +1,12 @@
-import { describe, expect, test } from 'vitest'
+import { readFile } from 'node:fs/promises'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import {
   addToWallet,
   removeFromWallet,
   updateInWallet,
   withMemberships,
   withValuations,
+  type CardInput,
 } from '../src/engine/wallet-change.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import type { Wallet } from '../src/schema/wallet.ts'
@@ -12,6 +14,7 @@ import { SYNC_HEADER } from '../site/api.ts'
 import {
   addOp,
   applyLocally,
+  changeLanded,
   combineOps,
   editState,
   firstConnection,
@@ -25,6 +28,8 @@ import {
   syncRequest,
   disconnect,
   syncReturn,
+  signInStarted,
+  takeSignInStarted,
   updateOp,
   type LocalOp,
 } from '../site/app/sync.ts'
@@ -418,5 +423,102 @@ describe('issuers left out of next-card answers, across the sync', () => {
       tool: 'set_memberships',
       input: { skippedIssuers: ['chase', 'amex'] },
     })
+  })
+})
+
+test('the privacy page names everything a synced change can send', async () => {
+  const card: Record<keyof Omit<CardInput, 'id'>, string> = {
+    checkoutLabel: 'names you gave them for checkout',
+    picks: 'picks',
+    anniversary: 'anniversary',
+    opened: 'opening dates',
+    activated: 'activations',
+    capSpent: 'cap and spending totals',
+    milestoneSpent: 'cap and spending totals',
+    enrolled: 'the statement credits and free nights you use',
+    creditUsed: "how much of each credit you've used",
+    skippedCredits: "and the ones you don't",
+    nightValues: 'what a free night is worth to you',
+    bonus: 'welcome bonus progress and its terms',
+  }
+  const wallet = [
+    'memberships',
+    'point values',
+    'redemption notes',
+    "card issuers you've left out of next-card answers",
+  ]
+  const page = (
+    await readFile(new URL('../site/privacy.html', import.meta.url), 'utf8')
+  ).replace(/\s+/g, ' ')
+  const section = page.slice(page.indexOf('id="sync"'))
+  for (const phrase of [...Object.values(card), ...wallet])
+    expect(section).toContain(phrase)
+  expect(section).not.toContain('purchase you record')
+})
+
+describe("sign-in's return", () => {
+  const session = () => {
+    const items = new Map<string, string>()
+    vi.stubGlobal('sessionStorage', {
+      getItem: (k: string) => items.get(k) ?? null,
+      setItem: (k: string, v: string) => items.set(k, v),
+      removeItem: (k: string) => items.delete(k),
+    })
+  }
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  test('counts once, and only in the tab that pressed connect', () => {
+    session()
+    expect(takeSignInStarted()).toBe(false)
+    signInStarted()
+    expect(takeSignInStarted()).toBe(true)
+    expect(takeSignInStarted()).toBe(false)
+  })
+
+  test("doesn't count without session storage", () => {
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => {
+        throw new Error('blocked')
+      },
+      setItem: () => {
+        throw new Error('blocked')
+      },
+    })
+    signInStarted()
+    expect(takeSignInStarted()).toBe(false)
+  })
+})
+
+describe('a change whose answer was lost', () => {
+  const before = walletWith('amex-gold')
+  const landed = (after: Wallet, op: Parameters<typeof changeLanded>[3]) =>
+    changeLanded(catalog, before, after, op, TODAY)
+
+  test('an added card is there, or not', () => {
+    const both = walletWith('amex-gold', 'citi-double-cash')
+    expect(landed(both, addOp('citi-double-cash'))).toBe(true)
+    expect(landed(before, addOp('citi-double-cash'))).toBe(false)
+  })
+
+  test('a removed card is gone, or not', () => {
+    expect(landed(walletWith(), removeOp('amex-gold'))).toBe(true)
+    expect(landed(before, removeOp('amex-gold'))).toBe(false)
+  })
+
+  test('another change makes no difference when made again', () => {
+    const op = updateOp({ id: 'amex-gold', anniversary: '03-15' })
+    const change = applyLocally(catalog, before, op, TODAY)
+    if (!change.ok) throw new Error(change.error)
+    expect(landed(change.wallet, op)).toBe(true)
+    expect(landed(before, op)).toBe(false)
+    const costco = membershipsOp(['costco'])
+    expect(landed({ ...before, memberships: ['costco'] }, costco)).toBe(true)
+    expect(landed(before, costco)).toBe(false)
+  })
+
+  test('a whole-wallet import is never taken as made', () => {
+    expect(landed(before, importOp('cards: []'))).toBe(false)
   })
 })

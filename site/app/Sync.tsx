@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { shortName } from './format.ts'
+import { signInStarted } from './sync.ts'
 
 // Where sign-in starts. A navigation, never a fetch: the Worker sends the
 // browser on to earnrate's sign-in page.
@@ -31,6 +32,7 @@ function ConnectButton({
       disabled={going}
       onClick={() => {
         setGoing(true)
+        signInStarted()
         location.assign(CONNECT)
       }}
     >

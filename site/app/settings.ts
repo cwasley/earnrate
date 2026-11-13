@@ -86,14 +86,18 @@ export function save(key: string, value: unknown): void {
 
 export { loadWallet }
 
-export function saveWallet(wallet: Wallet | null): void {
+// False when the browser wouldn't store it.
+export function saveWallet(wallet: Wallet | null): boolean {
+  let stored = true
   try {
     if (wallet === null) localStorage.removeItem('earnrate:wallet')
     else localStorage.setItem('earnrate:wallet', JSON.stringify(wallet))
   } catch {
     // Without storage the wallet lasts until the page closes.
+    stored = false
   }
   walletSaved()
+  return stored
 }
 
 // Memberships used to be saved with the filters. They belong to the wallet

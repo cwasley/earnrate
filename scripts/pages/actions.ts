@@ -19,19 +19,31 @@ export function pageActions(sets: ActionSet[], cardId?: string): string {
 }
 
 // Runs where it sits, before the page paints, so the right buttons show
-// from the start. A synced wallet is cached in the same place.
+// from the start, and again when another tab changes the wallet or the page
+// comes back from the back-forward cache. A synced wallet is cached in the
+// same place. Each copy of the script handles only the box just before it.
 const ACTIONS_SCRIPT = `(() => {
-  let held = []
-  try {
-    const w = JSON.parse(localStorage.getItem('earnrate:wallet'))
-    if (w && Array.isArray(w.cards)) held = w.cards.map((c) => c.id)
-  } catch {}
-  for (const box of document.querySelectorAll('[data-actions]')) {
+  const box = document.currentScript?.previousElementSibling
+  if (!box || !box.hasAttribute('data-actions')) return
+  const pick = () => {
+    let held = []
+    try {
+      const w = JSON.parse(localStorage.getItem('earnrate:wallet'))
+      if (w && Array.isArray(w.cards))
+        held = w.cards.map((c) => c && c.id).filter((id) => typeof id === 'string')
+    } catch {}
     const card = box.dataset.card
     const who = held.length === 0 ? 'none' : card && held.includes(card) ? 'holds' : 'other'
     for (const p of box.querySelectorAll('[data-when]'))
       p.hidden = !p.dataset.when.split(' ').includes(who)
   }
+  pick()
+  addEventListener('storage', (e) => {
+    if (e.key === null || e.key === 'earnrate:wallet') pick()
+  })
+  addEventListener('pageshow', (e) => {
+    if (e.persisted) pick()
+  })
 })()`
 
 export const button = (href: string, label: string) =>

@@ -952,41 +952,71 @@ const WALLET_SCRIPT = `(() => {
     }
     target.scrollIntoView()
   }
-  const arrange = () => {
-  let held = []
-  try {
-    const w = JSON.parse(localStorage.getItem('earnrate:wallet'))
-    if (w && Array.isArray(w.cards)) held = w.cards.map((c) => c.id)
-  } catch {}
-  if (held.length === 0) return
-  const mine = (el) => held.includes(el.dataset.card)
-  for (const list of document.querySelectorAll('[data-ye-list]')) {
-    const blocks = [...list.children].filter(mine)
-    for (const b of blocks) b.dataset.held = ''
-    for (const b of [...blocks].reverse()) list.prepend(b)
-  }
-  for (const s of document.querySelectorAll('[data-ye-section]'))
-    if (s.querySelector('[data-held]')) s.dataset.hasHeld = ''
+  const lists = [...document.querySelectorAll('[data-ye-list]')].map(
+    (list) => [list, [...list.children]],
+  )
   const chips = [
     ...document.querySelectorAll('[data-ye-jump] > li, [data-ye-pages] > li'),
-  ].filter(mine)
-  for (const c of chips) c.dataset.held = ''
+  ]
   const box = document.querySelector('[data-ye-yours]')
-  if (!box) return
-  const n = document.querySelectorAll('[data-ye-pages] > li[data-held]').length
-  box.querySelector(n > 0 ? '[data-some]' : '[data-none]').hidden = false
-  box.hidden = false
-  if (n === 0) return
-  box.querySelector('[data-ye-n]').textContent = String(n)
-  box.addEventListener('click', (e) => {
+  let mode = null
+  box?.addEventListener('click', (e) => {
     const b = e.target instanceof Element && e.target.closest('[data-ye-mode]')
-    if (b) show(b.dataset.yeMode === 'yours')
+    if (!b) return
+    mode = b.dataset.yeMode === 'yours'
+    show(mode)
   })
-  show(true)
+  // Run again when another tab changes the wallet or the page comes back
+  // from the back-forward cache, starting from the lists' own order.
+  let arranged = null
+  const arrange = () => {
+    let held = []
+    try {
+      const w = JSON.parse(localStorage.getItem('earnrate:wallet'))
+      if (w && Array.isArray(w.cards))
+        held = w.cards.map((c) => c && c.id).filter((id) => typeof id === 'string')
+    } catch {}
+    const key = held.join(' ')
+    if (key === arranged || (arranged === null && held.length === 0)) {
+      arranged = key
+      return
+    }
+    arranged = key
+    const mine = (el) => held.includes(el.dataset.card)
+    for (const [list, children] of lists) {
+      for (const c of children) {
+        delete c.dataset.held
+        list.append(c)
+      }
+      const blocks = children.filter(mine)
+      for (const b of blocks) b.dataset.held = ''
+      for (const b of [...blocks].reverse()) list.prepend(b)
+    }
+    for (const s of document.querySelectorAll('[data-ye-section]')) {
+      if (s.querySelector('[data-held]')) s.dataset.hasHeld = ''
+      else delete s.dataset.hasHeld
+    }
+    for (const c of chips) {
+      if (mine(c)) c.dataset.held = ''
+      else delete c.dataset.held
+    }
+    if (!box) return
+    const n = held.length === 0 ? 0 : document.querySelectorAll('[data-ye-pages] > li[data-held]').length
+    box.querySelector('[data-some]').hidden = n === 0
+    box.querySelector('[data-none]').hidden = n > 0 || held.length === 0
+    box.hidden = held.length === 0
+    if (n > 0) box.querySelector('[data-ye-n]').textContent = String(n)
+    show(n > 0 && (mode ?? true))
   }
   arrange()
   reveal()
   addEventListener('hashchange', reveal)
+  addEventListener('storage', (e) => {
+    if (e.key === null || e.key === 'earnrate:wallet') arrange()
+  })
+  addEventListener('pageshow', (e) => {
+    if (e.persisted) arrange()
+  })
 })()`
 
 // The send buttons: the system share sheet with the page's address and

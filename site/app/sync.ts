@@ -20,6 +20,7 @@ import {
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { SYNC_HEADER } from '../api.ts'
+import { normalizeWallet } from './saved-wallet.ts'
 
 // add_card and update_card's input: CardInput with the card as `cardId`.
 export type CardChangeInput = Omit<CardInput, 'id'> & { cardId: string }
@@ -315,6 +316,29 @@ export function syncReturn(hash: string): {
   }
 }
 
+// Any page could link to #wallet&sync=on, so the return counts only in the
+// tab that pressed connect: it marks its own session storage just before
+// leaving for sign-in, and the mark is read and cleared on the next load.
+const STARTED = 'earnrate:sync-started'
+
+export function signInStarted(): void {
+  try {
+    sessionStorage.setItem(STARTED, '1')
+  } catch {
+    // Without storage the return can't be told from a link, so it's ignored.
+  }
+}
+
+export function takeSignInStarted(): boolean {
+  try {
+    const started = sessionStorage.getItem(STARTED) === '1'
+    sessionStorage.removeItem(STARTED)
+    return started
+  } catch {
+    return false
+  }
+}
+
 // Whether My wallet can be changed right now, and what to say if not.
 export function editState({
   synced,
@@ -339,15 +363,32 @@ export type SyncResult =
 export const LIMITED = 'Too many changes at once. Try again in a minute.'
 export const NEEDS_CONNECTION = 'Changes need a connection.'
 export const ENDED = 'This browser was signed out of your Claude wallet.'
+export const NOT_SAVED =
+  "That change didn't reach your Claude wallet. Try it again."
 
-function walletOf(raw: unknown): Wallet | null {
-  const w = raw as Partial<Wallet> | null
-  if (!w || !Array.isArray(w.cards)) return null
-  return {
-    valuations: w.valuations ?? {},
-    memberships: w.memberships ?? [],
-    ...(w.skipped_issuers ? { skipped_issuers: w.skipped_issuers } : {}),
-    cards: w.cards,
+// Whether the synced wallet, read after a change's answer was lost, already
+// has the change: the card added or gone, or the change making no
+// difference when made again. A whole-wallet import isn't checked.
+export function changeLanded(
+  catalog: Catalog,
+  before: Wallet | null,
+  after: Wallet,
+  op: WalletOp,
+  today: string,
+): boolean {
+  const holds = (w: Wallet | null, id: string) =>
+    w?.cards.some((c) => c.id === id) ?? false
+  switch (op.tool) {
+    case 'import_wallet':
+      return false
+    case 'add_card':
+      return holds(after, op.input.cardId) && !holds(before, op.input.cardId)
+    case 'remove_card':
+      return !holds(after, op.input.cardId) && holds(before, op.input.cardId)
+    default: {
+      const again = applyLocally(catalog, after, op, today)
+      return again.ok && sameWallet(again.wallet, after)
+    }
   }
 }
 
@@ -394,7 +435,7 @@ async function request(op: WalletOp | null, send: Fetch): Promise<SyncResult> {
     error?: unknown
   } | null
   if (response.status === 200) {
-    const wallet = walletOf(body?.wallet)
+    const wallet = normalizeWallet(body?.wallet)
     return wallet ? { kind: 'ok', wallet } : { kind: 'offline' }
   }
   if (
