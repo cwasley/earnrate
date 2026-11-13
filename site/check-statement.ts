@@ -4,10 +4,11 @@
 // tries, it reads a file and answers with the network off, and it leaves the
 // browser's storage as it found it. Synthetic files only.
 //
-//   yarn site:check-statement [--shots <dir>]
+//   yarn site:check-statement [--shots <dir>] [--shots-in webkit]
 //
-// --shots also saves screenshots at 390px and 1280px, light and dark, and
-// the page's text as page-text.md, for review.
+// --shots also saves screenshots at 390px and 1280px, light and dark (in
+// Chromium, or WebKit with --shots-in webkit), and the page's text as
+// page-text.md, for review.
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { createServer, type IncomingMessage } from 'node:http'
 import type { AddressInfo } from 'node:net'
@@ -19,10 +20,15 @@ import { headerPolicy } from './statement-policy.ts'
 
 const DIST = path.join(import.meta.dirname, '..', 'site-dist')
 const { values } = parseArgs({
-  options: { shots: { type: 'string' }, prefix: { type: 'string' } },
+  options: {
+    shots: { type: 'string' },
+    'shots-in': { type: 'string' },
+    prefix: { type: 'string' },
+  },
 })
 const shots = values.shots ? path.resolve(values.shots) : null
 const prefix = values.prefix ?? ''
+const shotsIn = (values['shots-in'] ?? 'chromium').toLowerCase()
 
 let failed = 0
 function check(name: string, ok: boolean, detail = '') {
@@ -356,6 +362,12 @@ async function privacyChecks(
     .locator('table[aria-label="By card used"] tbody tr')
     .count()
   check(`${label}: two files for two cards`, byCard === 2, String(byCard))
+  await page.locator('#best-title').waitFor({ timeout: 10_000 })
+  check(
+    `${label}: with a saved wallet, the best cards follow the best of yours`,
+    (await bestRows(page)) === 3 &&
+      (await page.locator('#result-title').count()) === 1,
+  )
   const canShare = await page.evaluate(
     () =>
       typeof navigator.canShare === 'function' &&
@@ -440,6 +452,16 @@ async function privacyChecks(
     `${label}: offline, with no saved wallet, an Amex file gets an answer`,
     (await offline.page.locator('table.missed tbody tr').count()) > 0,
   )
+  await offline.page.locator('#best-title').waitFor({ timeout: 10_000 })
+  check(
+    `${label}: offline, the best cards for the file's purchases show, each linked to its page`,
+    (await bestRows(offline.page)) === 3 &&
+      (
+        await offline.page
+          .locator('.best-cards .best-name a')
+          .evaluateAll((links) => links.map((a) => a.getAttribute('href')))
+      ).every((href) => href?.startsWith('/cards/')),
+  )
   check(
     `${label}: offline, no request was attempted`,
     offline.requests.length === 0,
@@ -460,7 +482,30 @@ async function privacyChecks(
     offline.errors.join(' | '),
   )
   await offline.context.close()
+
+  // A best card's name is a link: the policy lets the page navigate to it,
+  // which is the visitor leaving, not the page sending anything.
+  const leaving = await open(browser, origin, { width: 390 })
+  await fileInput(leaving.page).setInputFiles([csv('activity.csv', AMEX_CSV)])
+  await pickFileCard(leaving.page, 0, 'Amex Gold')
+  const link = leaving.page.locator('.best-cards .best-name a').first()
+  await link.waitFor({ timeout: 10_000 })
+  const href = (await link.getAttribute('href')) ?? ''
+  const violationsBeforeLeaving = (await leaving.violations()).length
+  await link.click()
+  await leaving.page.waitForURL(`${origin}${href}`, { timeout: 10_000 })
+  check(
+    `${label}: a best card's link opens its card page`,
+    href.startsWith('/cards/') &&
+      leaving.page.url() === `${origin}${href}` &&
+      violationsBeforeLeaving === 0,
+    leaving.page.url(),
+  )
+  await leaving.context.close()
 }
+
+const bestRows = (page: Page) =>
+  page.locator('.best-cards ol.best-list').first().locator('li').count()
 
 type State = {
   name: string
@@ -480,6 +525,16 @@ const STATES: State[] = [
       await tapCard(page, 'Chase Freedom Unlimited')
       await tapCard(page, 'Citi Double Cash')
       await page.locator('details.lines summary').first().click()
+      await page.locator('#best-title').waitFor()
+    },
+  },
+  {
+    name: '2a-amex-file-card-only',
+    wallet: false,
+    run: async (page) => {
+      await fileInput(page).setInputFiles([csv('activity.csv', AMEX_CSV)])
+      await pickFileCard(page, 0, 'Amex Gold')
+      await page.locator('#best-title').waitFor()
     },
   },
   {
@@ -490,6 +545,7 @@ const STATES: State[] = [
         csv('Chase_Activity.CSV', CHASE_CSV),
       ])
       await pickFileCard(page, 0, 'Chase Sapphire Preferred')
+      await page.locator('#best-title').waitFor()
     },
   },
   {
@@ -502,6 +558,7 @@ const STATES: State[] = [
       ])
       await pickFileCard(page, 0, 'Amex Gold')
       await pickFileCard(page, 1, 'Chase Sapphire Preferred')
+      await page.locator('#best-title').waitFor()
     },
   },
   {
@@ -552,6 +609,9 @@ async function screenshots(browser: Browser, origin: string, dir: string) {
         )
         await state.run(page)
         await page.waitForTimeout(400)
+        // Before the screenshot: Playwright's WebKit screenshot adds a style
+        // of its own, which the policy refuses.
+        const broken = await violations()
         await page.screenshot({
           path: path.join(
             dir,
@@ -578,8 +638,8 @@ async function screenshots(browser: Browser, origin: string, dir: string) {
         )
         check(
           `${state.name}: nothing on the page broke its policy`,
-          (await violations()).length === 0,
-          (await violations()).join(', '),
+          broken.length === 0,
+          broken.join(', '),
         )
         if (width === 390 && !dark) {
           await page.evaluate(() => {
@@ -626,7 +686,7 @@ try {
     const browser = await type.launch()
     try {
       await privacyChecks(browser, label, origin, log)
-      if (shots && label === 'Chromium')
+      if (shots && label.toLowerCase() === shotsIn)
         await screenshots(browser, origin, shots)
     } finally {
       await browser.close()

@@ -3,7 +3,12 @@ import { catalog } from 'virtual:catalog'
 import { localToday } from '../../src/engine/periods.ts'
 import { searchCards } from '../../src/engine/setup.ts'
 import { dollarsAndCents, listed, shortDate } from '../../src/engine/text.ts'
+import { effectiveMemberships } from '../../src/engine/memberships.ts'
 import type { CardLine } from '../../src/import/analyze.ts'
+import {
+  bestCardsWork,
+  type BestCards as BestCardsResult,
+} from '../../src/import/best-cards.ts'
 import type { Issuer } from '../../src/import/statement.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { CardArt } from '../app/CardArt.tsx'
@@ -22,6 +27,7 @@ import {
   savedCards,
   type ReadFile,
 } from './check.ts'
+import { BestCards } from './BestCards.tsx'
 import { Result } from './Result.tsx'
 
 type LoadedFile = ReadFile & {
@@ -40,6 +46,9 @@ const issuerCards = (issuer: Issuer, ids: string[]) =>
   [...new Set(ids)].filter((id) => cards.get(id)?.issuer === issuer)
 
 let nextKey = 1
+
+// Under a frame at a phone's speed.
+const SLICE_MS = 12
 
 export function StatementCheck() {
   // Read once; the page never writes to the browser's storage.
@@ -72,6 +81,35 @@ export function StatementCheck() {
       entries.length > 0 ? runCheck(catalog, wallet, entries, today) : null,
     [files, picked, saved, today],
   )
+  // Cards tapped in change the answer only through a membership they imply.
+  const implied = effectiveMemberships(
+    catalog,
+    wallet.memberships,
+    wallet.cards.map((c) => c.id),
+  ).join()
+  // Every card's replay runs a few milliseconds at a time after the answer
+  // shows, so a slow phone keeps responding. A worker would need the page's
+  // policy to allow one.
+  const [best, setBest] = useState<BestCardsResult | null>(null)
+  useEffect(() => {
+    setBest(null)
+    if (entries.length === 0) return
+    const work = bestCardsWork(catalog, wallet, entries)
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const run = () => {
+      const until = performance.now() + SLICE_MS
+      while (performance.now() < until) {
+        const step = work.next()
+        if (step.done) {
+          setBest(step.value)
+          return
+        }
+      }
+      timer = setTimeout(run, 0)
+    }
+    timer = setTimeout(run, 0)
+    return () => clearTimeout(timer)
+  }, [files, saved, implied])
 
   const choose = async (list: FileList | null) => {
     const found: string[] = []
@@ -248,6 +286,9 @@ export function StatementCheck() {
 
       {check ? (
         <Result check={check} wallet={wallet} saved={saved} nameOf={nameOf} />
+      ) : null}
+      {check && best ? (
+        <BestCards best={best} analysis={check.analysis} />
       ) : null}
     </div>
   )

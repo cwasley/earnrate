@@ -214,6 +214,55 @@
   }
 }
 
+/* Best cards for these purchases: the card, its fee, what it would have
+   earned and the difference from the cards used, a row each. */
+.best-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.best-list li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+}
+
+.best-art {
+  grid-row: 1 / span 3;
+  align-self: start;
+  padding-top: 3px;
+}
+
+.best-name {
+  font-weight: 600;
+}
+
+.best-amount {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.best-gap {
+  grid-column: 2 / -1;
+  color: var(--accent-strong);
+  font-weight: 600;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.best-fee {
+  grid-column: 2 / -1;
+}
+
+.best-cards h3 {
+  margin-top: 4px;
+}
+
 svg.bar {
   display: block;
   height: 10px;

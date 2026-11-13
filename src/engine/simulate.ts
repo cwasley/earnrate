@@ -167,7 +167,7 @@ function monthDates(start: string): string[] {
 }
 
 // Picks carry over from period to period, so a quarter's picks hold all year.
-function withCurrentPicks(
+export function withCurrentPicks(
   card: Card,
   held: WalletCard,
   date: string,
@@ -440,7 +440,7 @@ function combinations<T>(items: T[], size: number): T[][] {
 
 // Pick sets worth trying: only options that raise the card's rate on one of
 // the lines, combined up to the number of picks the card allows.
-function candidatePicks(
+export function candidatePicks(
   catalog: Catalog,
   card: Card,
   lines: ResolvedLine[],

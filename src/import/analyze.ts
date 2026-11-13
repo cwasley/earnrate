@@ -15,7 +15,7 @@ import {
 import { roundCents } from '../engine/text.ts'
 import type { MerchantResolution, Purchase } from '../engine/types.ts'
 import { resolveMerchant, withCallerCategory } from '../merchants/resolve.ts'
-import type { Milestone } from '../schema/card.ts'
+import type { Card, Milestone } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import {
@@ -133,6 +133,25 @@ export function resolveLine(
           .join(' ')
       : known.resolvedName
   return { name, merchant, known }
+}
+
+// A purchase on a card the store's data says it doesn't take: the statement
+// shows the store took the card's network there.
+export function takenWith(
+  card: Card | undefined,
+  merchant: MerchantResolution,
+): { took: MerchantResolution; refused: boolean } {
+  const network =
+    card && !card.only_at && card.network !== 'store' ? card.network : null
+  const refused =
+    card !== undefined && network !== null && !usableAt(card, merchant)
+  return {
+    took:
+      refused && merchant.accepts
+        ? { ...merchant, accepts: [...merchant.accepts, network] }
+        : merchant,
+    refused,
+  }
 }
 
 function capPeriodKey(
@@ -321,16 +340,10 @@ export function analyzeStatement(
       coding.set(name, mismatch)
     }
 
-    const card = catalog.cards.find((c) => c.id === cardId)
-    const network =
-      card && !card.only_at && card.network !== 'store' ? card.network : null
-    const refused =
-      card !== undefined && network !== null && !usableAt(card, merchant)
-    // The statement shows the store took the card's network here.
-    const took: MerchantResolution =
-      refused && merchant.accepts
-        ? { ...merchant, accepts: [...merchant.accepts, network] }
-        : merchant
+    const { took, refused } = takenWith(
+      catalog.cards.find((c) => c.id === cardId),
+      merchant,
+    )
     if (refused) {
       const key = `${name}|${cardId}`
       const entry = notTaken.get(key) ?? {
