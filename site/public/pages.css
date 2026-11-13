@@ -168,6 +168,43 @@ ol.cards > li {
   margin-bottom: 10px;
 }
 
+/* A ranked card's whole row opens its page; links and fine print inside
+   it sit above that. */
+ol.cards > li {
+  position: relative;
+}
+
+.row-link {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.row-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+}
+
+ol.cards > li:has(.row-link):hover {
+  border-color: var(--accent);
+}
+
+.row-link:focus-visible {
+  outline: none;
+}
+
+.row-link:focus-visible::after {
+  outline: 2px solid var(--accent);
+}
+
+ol.cards > li a:not(.row-link),
+ol.cards > li details {
+  position: relative;
+  z-index: 1;
+}
+
 ol.cards ul {
   margin: 6px 0 0;
   padding-left: 1.1em;
@@ -211,14 +248,70 @@ ol.cards ul {
   margin-top: 2px;
 }
 
-@media (max-width: 479px) {
-  .rules .row-head {
-    flex-direction: column;
-  }
+/* A card's rates: the rate in its own column on the right, at any width. */
+ol.rules > li {
+  grid-template-columns: 1fr;
+}
 
-  .rules .row-head .rate {
-    text-align: left;
-  }
+.rules .row-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.rate-group {
+  margin: 0 0 10px;
+}
+
+/* What a row leaves out and the issuer's words, one tap away. */
+details.fine {
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+details.fine > summary {
+  display: inline-block;
+  cursor: pointer;
+  list-style: none;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+details.fine > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.fine > summary::after {
+  content: ' +';
+}
+
+details.fine[open] > summary::after {
+  content: ' –';
+}
+
+details.fine > summary:hover {
+  color: var(--accent);
+}
+
+details.fine p {
+  margin: 4px 0 0;
+}
+
+/* A page's own fine print (how it's ranked, the issuers' words): a row
+   under the content, closed. */
+details.section-fine {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+}
+
+details.section-fine > summary {
+  color: var(--text);
+  font-size: 16px;
+}
+
+details.section-fine + details.section-fine {
+  margin-top: 10px;
 }
 
 .quotes li {
@@ -273,6 +366,41 @@ ol.cards ul {
 .filter input:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+/* The store index's everyday purchases, as big chips. */
+.everyday .chip-links {
+  gap: 10px;
+  margin: 16px 0 4px;
+}
+.everyday .chip-links a {
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.all-cats {
+  margin-top: 8px;
+}
+.all-cats > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 2px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.all-cats > summary::-webkit-details-marker {
+  display: none;
+}
+.all-cats > summary::after {
+  content: ' +';
+}
+.all-cats[open] > summary::after {
+  content: ' –';
+}
+.all-cats > .cats {
+  margin-top: 0;
 }
 
 /* The store index: a closed row per category, its stores inside. An open
@@ -572,6 +700,15 @@ table.compare td:not(.win) .rate {
   font-size: 13px;
 }
 
+.cell-fine {
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.more-rows > .table-box {
+  margin-top: 6px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -807,6 +944,87 @@ table.numbers tr:last-child td {
 }
 .more-groups > .groups {
   margin-top: 4px;
+}
+/* A placement row of one store: a link styled like the other rows. */
+a.group-link {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+a.group-link:hover {
+  border-color: var(--accent);
+}
+.group summary .pill,
+a.group-link .pill {
+  align-self: center;
+}
+.pill {
+  flex: none;
+  min-width: 46px;
+  text-align: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.pill-top {
+  background: var(--bg);
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* Where it ranks: points at the default value or at transfer value, two
+   radio buttons styled as one switch; the views follow with :has(). */
+.seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 2px 0 10px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.seg label {
+  position: relative;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--fade) ease,
+    color var(--fade) ease;
+}
+.seg input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.seg label:has(input:checked) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.seg label:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.rank-view[data-view='transfer'],
+.ranks:has(input[value='transfer']:checked) .rank-view[data-view='default'] {
+  display: none;
+}
+.ranks:has(input[value='transfer']:checked) .rank-view[data-view='transfer'] {
+  display: block;
 }
 
 /* Term changes: issuer changes as a card list, earnrate's own per release. */

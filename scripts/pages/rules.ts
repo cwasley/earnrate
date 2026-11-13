@@ -66,7 +66,7 @@ export function ruleKit(catalog: Catalog, today: string) {
   function ruleConditions(
     card: Card,
     rule: Rule,
-    omit: { cap?: boolean; activation?: boolean } = {},
+    omit: { cap?: boolean; activation?: boolean; dates?: boolean } = {},
   ): string[] {
     const lines: string[] = []
     const excluded = exclusionLine(rule)
@@ -80,7 +80,10 @@ export function ruleKit(catalog: Catalog, today: string) {
       lines.push(`With ${membershipName(rule.requires.membership)}`)
     if (rule.requires?.activation === true && omit.activation !== true)
       lines.push(activationLine(issuerName(card.issuer), rule, today))
-    if (rule.valid_from !== undefined || rule.valid_to !== undefined)
+    if (
+      omit.dates !== true &&
+      (rule.valid_from !== undefined || rule.valid_to !== undefined)
+    )
       lines.push(
         rule.valid_from !== undefined && rule.valid_to !== undefined
           ? `${shortDate(rule.valid_from)} to ${shortDate(rule.valid_to)}`

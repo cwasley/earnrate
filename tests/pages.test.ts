@@ -336,7 +336,10 @@ describe('the built static pages', () => {
     expect(answer('chewy')).toContain(
       'These rates are for buying online, since Chewy sells online.',
     )
-    expect(answer('chewy')).toContain('amex-blue-cash-everyday')
+    const chewyRanking = /<ol class="cards">[\s\S]*?<\/ol>/.exec(
+      readFileSync(path.join(out, 'best', 'chewy.html'), 'utf8'),
+    )?.[0]
+    expect(chewyRanking).toContain('amex-blue-cash-everyday')
     expect(answer('petco')).not.toBe('')
     expect(answer('petco')).not.toContain('buying online')
   })

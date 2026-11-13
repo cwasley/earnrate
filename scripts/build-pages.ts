@@ -16,11 +16,7 @@ import {
 } from '../src/engine/explore.ts'
 import { EPSILON } from '../src/engine/compare.ts'
 import { noteOnly } from '../src/engine/recommend.ts'
-import {
-  membershipNeeded,
-  membershipText,
-  paidMemberships,
-} from '../src/engine/memberships.ts'
+import { membershipText } from '../src/engine/memberships.ts'
 import { findMerchant } from '../src/merchants/resolve.ts'
 import {
   addDays,
@@ -29,6 +25,8 @@ import {
   localToday,
 } from '../src/engine/periods.ts'
 import {
+  activationLine,
+  capSentence,
   capitalize,
   CATEGORY_CARDS_LEAD,
   categoryCards,
@@ -116,6 +114,7 @@ import {
   slugify,
 } from './pages/site.ts'
 import { ownCards } from './pages/store-cards.ts'
+import { EVERYDAY_PURCHASES } from '../src/engine/cheat-sheet.ts'
 import {
   comparePairs,
   comparer,
@@ -143,6 +142,7 @@ const today = process.env.EARNRATE_PAGES_TODAY ?? localToday()
 const ctx = pageContext(catalog, { today, dataVersion })
 const { thisQuarter, dayWords, art, layout } = ctx
 const { ruleWhat, ruleWhatRaw, ruleConditions, evidenceFor } = ctx
+const { exclusionLine } = ctx
 const { merchantName, readsOn } = ctx
 const {
   cards,
@@ -167,6 +167,12 @@ function untilText(entry: ExploreEntry): string | null {
   return longDate(rule.valid_to)
 }
 
+// The same in a page's own short date format, for its lists and tables.
+function untilShort(entry: ExploreEntry): string | null {
+  const end = ruleEnd(entry)
+  return end === null ? null : shortDate(end)
+}
+
 // The last day of the rule that gives an entry its rate, if it has one.
 const ruleEnd = (entry: ExploreEntry) =>
   cards.get(entry.cardId)?.rules.find((r) => r.id === entry.matchedRule)
@@ -179,6 +185,7 @@ const isUnverified = (e: ExploreEntry) =>
 type Page = {
   slug: string
   label: string // "Whole Foods Market" or "groceries"
+  phrase: string // for sentences: "Whole Foods Market" or "supermarkets"
   query: ExploreQuery
   categoryId: string
   merchant: Merchant | null
@@ -187,6 +194,17 @@ type Page = {
 // Booking-portal variants ("Hotel through Amex Travel") answer the same
 // question as their portal page, so they don't get pages of their own.
 const skipMerchant = (m: Merchant) => m.kind === 'booking'
+
+// A kind of purchase by the name the app's chips give it ("groceries",
+// "dining"), so a page's heading matches what the visitor tapped; sentences
+// keep the category's own name ("at supermarkets").
+const EVERYDAY_LABELS = new Map(
+  EVERYDAY_PURCHASES.flatMap((i) =>
+    'category' in i ? [[i.category, i.label.toLowerCase()] as const] : [],
+  ),
+)
+const categoryLabel = (id: string) =>
+  EVERYDAY_LABELS.get(id) ?? categoryPhrase(catalog, id)
 
 const categoryAddress = (cat: Category) =>
   cat.slug ?? slugify(cat.aliases[0] ?? cat.name)
@@ -201,6 +219,7 @@ function pages(c: Catalog): Page[] {
     list.push({
       slug: m.id,
       label: m.name,
+      phrase: m.name,
       query: {
         merchant: m.name,
         category: null,
@@ -216,7 +235,8 @@ function pages(c: Catalog): Page[] {
     if (cat.page !== undefined) continue
     list.push({
       slug: categoryAddress(cat),
-      label: categoryPhrase(c, cat.id),
+      label: categoryLabel(cat.id),
+      phrase: categoryPhrase(c, cat.id),
       query: {
         merchant: null,
         category: cat.id,
@@ -264,8 +284,6 @@ const tiedIn = (list: ExploreEntry[]) => {
     : []
 }
 
-const TIED_NAMED = 3
-
 function tiedFees(tied: ExploreEntry[]): string {
   const free = tied.filter((e) => e.annualFee === 0).length
   return free === tied.length
@@ -275,19 +293,12 @@ function tiedFees(tied: ExploreEntry[]): string {
       : ''
 }
 
-// "6 cards tie for the most at Gap: 2% cash back. Citi Double Cash,
-// Fidelity Rewards, SoFi Unlimited 2% and 3 more, all with no annual fee."
+// "6 cards tie for the most at Gap: 2% cash back, all with no annual fee."
+// The list below names them.
 function tieText(tied: ExploreEntry[], where: string): string {
   const [top] = tied
   if (!top) return ''
   const cash = tied.every((e) => e.currency === 'cash')
-  const names = tied
-    .slice(0, TIED_NAMED)
-    .map(
-      (e) =>
-        `<strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a></strong>`,
-    )
-  const rest = tied.length - names.length
   const free = tied.filter((e) => e.annualFee === 0).length
   const fees =
     free === tied.length
@@ -295,7 +306,7 @@ function tieText(tied: ExploreEntry[], where: string): string {
       : free > 0
         ? `; ${String(free)} of them ${free === 1 ? 'has' : 'have'} no annual fee`
         : ''
-  return `${String(tied.length)} cards tie for the most ${where}: ${pct(top.effectiveReturnPct)}${cash ? ' cash back' : ' back'}. ${rest > 0 ? `${names.join(', ')} and ${String(rest)} more` : listed(names)}${fees}.`
+  return `${String(tied.length)} cards tie for the most ${where}: ${pct(top.effectiveReturnPct)}${cash ? ' cash back' : ' back'}${fees}.`
 }
 
 // The cards a members-only line names below the table.
@@ -326,7 +337,12 @@ function ownCardLine(
       ? (cards.get(id)?.name ?? short)
       : short
   }
-  const link = (id: string) => `<a href="/cards/${id}">${esc(name(id))}</a>`
+  // A card in the list below is linked there.
+  const inList = new Set(shown.map((e) => e.cardId))
+  const link = (id: string) =>
+    inList.has(id)
+      ? esc(name(id))
+      : `<a href="/cards/${id}">${esc(name(id))}</a>`
   const both = (f: (n: (id: string) => string) => string) => ({
     html: f(link),
     text: f(name),
@@ -400,6 +416,9 @@ function ownCardLine(
   }
 }
 
+// What the list below doesn't say: how many cards tie, how the store
+// codes, its own cards, and the best card with no fee or with a membership.
+// The top card, its rate and its conditions are the list's first row.
 function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   if (r.categoryNote !== null) {
     const cards = categoryCards(catalog, r.merchant.category).map(
@@ -410,41 +429,17 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
   const [top] = shown
   if (!top) return `<p>No card in earnrate's data earns a bonus here.</p>`
   const tied = tiedAtTop(r)
-  const where = `${page.merchant === null && (page.categoryId === 'other' || readsOn(page.categoryId)) ? 'on' : 'at'} ${esc(page.label)}`
+  const where = `${page.merchant === null && (page.categoryId === 'other' || readsOn(page.categoryId)) ? 'on' : 'at'} ${esc(page.phrase)}`
   const codes =
     page.merchant === null || r.merchant.source === 'none'
       ? ''
-      : ` ${esc(page.label)} usually counts ${esc(categoryAs(catalog, r.merchant.category))}${r.merchant.likelyMcc === null ? '' : ` (MCC ${String(r.merchant.likelyMcc)})`}.${onlineAssumption(catalog, r.merchant, null) === null ? '' : ` These rates are for buying online, ${esc(sellsOnline(page.label))}.`}`
+      : `${esc(page.label)} usually counts ${esc(categoryAs(catalog, r.merchant.category))}${r.merchant.likelyMcc === null ? '' : ` (MCC ${String(r.merchant.likelyMcc)})`}.${onlineAssumption(catalog, r.merchant, null) === null ? '' : ` These rates are for buying online, ${esc(sellsOnline(page.label))}.`}`
   const credit = r.credits[0]
   const own = ownCardLine(page, r, shown)
-  const parts = [
-    ...(credit
-      ? [
-          `<strong><a href="/cards/${credit.cardId}">${esc(shortName(credit.cardId))}</a></strong> gives ${esc(credit.back)} ${where} with its statement credit${credit.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}.`,
-        ]
-      : []),
-    tied.length > 1
-      ? `${tieText(tied, `${where}${credit ? ' by rate' : ''}`)}${codes}`
-      : `<strong><a href="/cards/${top.cardId}">${esc(shortName(top.cardId))}</a></strong> earns the most ${where}${credit ? ' by rate' : ''}: ${pct(top.effectiveReturnPct)}${top.currency === 'cash' ? ' cash back' : ` in points at ${num(top.centsPerUnit)}¢ each`}.${codes}`,
-  ]
-  const topCard = cards.get(top.cardId)
-  const needs = topCard
-    ? membershipNeeded(
-        catalog,
-        topCard,
-        paidMemberships(catalog, {
-          memberships: [],
-          merchantIds: [r.merchant.merchantId],
-        }),
-      )
-    : []
-  const first = [
-    ...requirementLines(top.cardId, top.requirements, untilText(top)),
-    // "Needs a Costco membership", except where buying means being a member.
-    ...needs.map((c) => c.replace(/\.$/, '')),
-  ]
-  // With a tie, each card's conditions are in the table below.
-  if (first.length > 0 && tied.length < 2) parts.push(`${first.join('. ')}.`)
+  const parts: string[] = []
+  if (tied.length > 1)
+    parts.push(tieText(tied, `${where}${credit ? ' by rate' : ''}`))
+  if (codes !== '') parts.push(codes)
   if (own) parts.push(own.html)
   const noFee = shown.find(
     (e) => e.annualFee === 0 && !cards.get(e.cardId)?.requires_membership,
@@ -464,7 +459,7 @@ function answer(page: Page, r: Exploration, shown: ExploreEntry[]): string {
     parts.push(
       `With ${membershipName(membership.membership)}, <strong>${esc(shortName(membership.entry.cardId))}</strong> earns ${pct(membership.effectiveReturnPct)}${membership.entry.annualFee === 0 && membership.entry !== noFee ? ', also with no annual fee' : ''}.`,
     )
-  return `<p class="answer">${parts.join(' ')}</p>`
+  return parts.length === 0 ? '' : `<p class="answer">${parts.join(' ')}</p>`
 }
 
 function gotchas(r: Exploration, merchant: Merchant | null): string {
@@ -495,13 +490,13 @@ function gotchas(r: Exploration, merchant: Merchant | null): string {
 function table(shown: ExploreEntry[]): string {
   const rows = shown
     .map((e, i) => {
-      const lines = requirementLines(e.cardId, e.requirements, untilText(e))
+      const lines = requirementLines(e.cardId, e.requirements, untilShort(e))
       const upgrade = e.withMembership[0]
       if (upgrade && HIGHLIGHTED.includes(upgrade.membership))
         lines.push(
           `${pct(upgrade.effectiveReturnPct)} with ${membershipName(upgrade.membership)}`,
         )
-      return `<li><span class="rank">${String(i + 1)}</span>${art(e.cardId)}<div><span class="row-head"><strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a></strong> <span class="rate">${pct(e.effectiveReturnPct)}</span></span><span class="muted row-note">${esc(issuerName(e.issuer))} · ${esc(feeLabel(e.cardId))}</span>${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</div></li>`
+      return `<li><span class="rank">${String(i + 1)}</span>${art(e.cardId)}<div><span class="row-head"><a class="row-link" href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a> <span class="rate">${pct(e.effectiveReturnPct)}</span></span><span class="muted row-note">${esc(issuerName(e.issuer))} · ${esc(feeLabel(e.cardId))}</span>${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</div></li>`
     })
     .join('')
   return `<ol class="cards">${rows}</ol>`
@@ -516,12 +511,12 @@ function sources(shown: ExploreEntry[]): string {
       const ev = e.evidence
       if (!ev || !card) return ''
       const host = hostname(ev.url)
-      return `<li><strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a>:</strong> “${esc(ev.quote)}” <a href="${esc(ev.url)}" rel="nofollow noopener">${esc(host)}</a>, checked ${esc(card.last_verified)}.</li>`
+      return `<li><strong><a href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a>:</strong> “${esc(ev.quote)}” <a href="${esc(ev.url)}" rel="nofollow noopener">${esc(host)}</a>, checked ${esc(shortDate(card.last_verified))}.</li>`
     })
     .join('')
   return items === ''
     ? ''
-    : `<h2>From the issuers' terms</h2><ul class="quotes">${items}</ul>`
+    : `<details class="fine section-fine"><summary>From the issuers' terms</summary><ul class="quotes">${items}</ul></details>`
 }
 
 // A category page lists every store that usually counts as it, so it can
@@ -555,7 +550,9 @@ function related(page: Page, all: Page[]): string {
     .slice(0, RELATED)
   const links = [
     ...(category && category !== page
-      ? [`<a href="/best/${category.slug}">${esc(category.label)}</a>`]
+      ? [
+          `<a href="/best/${category.slug}">${esc(capitalize(category.label))}</a>`,
+        ]
       : []),
     ...siblings.map((p) => `<a href="/best/${p.slug}">${esc(p.label)}</a>`),
   ]
@@ -569,7 +566,7 @@ function creditGroup(r: Exploration): string {
   const rows = r.credits
     .map((c) => {
       const ev = c.evidence
-      return `<li>${art(c.cardId)}<div><span class="row-head"><strong><a href="/cards/${c.cardId}">${esc(shortName(c.cardId))}</a></strong> <span class="rate">${esc(money(c.amount))} back</span></span><span class="muted row-note">${esc(issuerName(c.issuer))} · ${esc(feeLabel(c.cardId))}</span><ul><li>${esc(capitalize(c.text))}${c.enroll ? `. ${esc(capitalize(ENROLL_FIRST))}` : ''}.</li>${c.note ? `<li>${esc(c.note)}</li>` : ''}</ul>${ev ? `<p class="muted">“${esc(ev.quote)}” <a href="${esc(ev.url)}" rel="nofollow noopener">${esc(hostname(ev.url))}</a></p>` : ''}</div></li>`
+      return `<li>${art(c.cardId)}<div><span class="row-head"><a class="row-link" href="/cards/${c.cardId}">${esc(shortName(c.cardId))}</a> <span class="rate">${esc(money(c.amount))} back</span></span><span class="muted row-note">${esc(issuerName(c.issuer))} · ${esc(feeLabel(c.cardId))}</span><ul><li>${esc(capitalize(c.text))}${c.enroll ? `. ${esc(capitalize(ENROLL_FIRST))}` : ''}.</li>${c.note ? `<li>${esc(c.note)}</li>` : ''}</ul>${ev ? `<p class="muted">“${esc(ev.quote)}” <a href="${esc(ev.url)}" rel="nofollow noopener">${esc(hostname(ev.url))}</a></p>` : ''}</div></li>`
     })
     .join('')
   return `<h2>${esc(CREDIT_GROUP)}</h2><ol class="cards credits">${rows}</ol>`
@@ -602,7 +599,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
     : store
       ? `Best credit card to use at ${subject}`
       : `${best} for ${subject}`
-  const where = `${!store && (page.categoryId === 'other' || readsOn(page.categoryId)) ? 'on' : 'at'} ${subject}`
+  const where = `${!store && (page.categoryId === 'other' || readsOn(page.categoryId)) ? 'on' : 'at'} ${page.phrase}`
   const tied = tiedAtTop(r)
   const own = ownCardLine(page, r, shown)
   const owned = page.merchant ? ownCards(catalog, page.merchant) : null
@@ -762,8 +759,8 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       ${gotchas(r, page.merchant)}
       ${page.merchant ? howItCodes(ctx, page.merchant, categoryPageFor) : ''}
       ${sources(shown)}
-      <h2>How this is ranked</h2>
-      <p>Every personal card earnrate tracks that's open to new applicants, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, use <a href="/#spending">Find a card</a>.</p>
+      <details class="fine section-fine"><summary>How this is ranked</summary>
+      <p>Every personal card earnrate tracks that's open to new applicants, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, use <a href="/#spending">Find a card</a>.</p></details>
       ${related(page, all)}
       ${definitions ? `<p>What counts as ${esc(definitions)} for each issuer: <a href="/categories/${definitions}">their definitions, side by side</a>.</p>` : ''}`
   const jsonLd = {
@@ -826,7 +823,9 @@ const FILTER_SCRIPT = `(() => {
   const none = document.getElementById('no-match')
   const ask = none.querySelector('a')
   const list = document.querySelector('.cats')
+  const all = list.closest('details')
   const sections = [...list.querySelectorAll('[data-section]')]
+  let wasOpen = null
   wrap.hidden = false
   new ResizeObserver(() => {
     list.style.setProperty('--stick', wrap.offsetHeight + 'px')
@@ -841,6 +840,12 @@ const FILTER_SCRIPT = `(() => {
   let before = null
   input.addEventListener('input', () => {
     const q = input.value.trim().toLowerCase()
+    if (q !== '' && wasOpen === null) wasOpen = all.open
+    if (q !== '') all.open = true
+    else if (wasOpen !== null) {
+      all.open = wasOpen
+      wasOpen = null
+    }
     if (q !== '' && before === null) before = sections.filter((s) => s.open)
     let total = 0
     for (const s of sections) {
@@ -868,6 +873,19 @@ const FILTER_SCRIPT = `(() => {
   })
 })()`
 
+// The cheat sheet's everyday purchases first, as big chips, where most
+// visitors are headed.
+function everydayChips(): string {
+  const links = EVERYDAY_PURCHASES.flatMap((item) => {
+    const slug =
+      'category' in item ? categorySlug(item.category) : bestSlug(item.merchant)
+    return slug === null
+      ? []
+      : [`<a href="/best/${slug}">${esc(item.label)}</a>`]
+  })
+  return `<div class="everyday">${chipLinks(links)}</div>`
+}
+
 const storeCount = (n: number) => `${String(n)} ${n === 1 ? 'store' : 'stores'}`
 
 function renderIndex(all: Page[]): string {
@@ -884,6 +902,7 @@ function renderIndex(all: Page[]): string {
     esc(
       [
         p.label,
+        p.phrase,
         ...((p.merchant
           ? p.merchant.aliases
           : catalog.categories.find((c) => c.id === p.categoryId)?.aliases) ??
@@ -908,17 +927,18 @@ function renderIndex(all: Page[]): string {
   const body = `
       <h1>Best credit card for every store and category</h1>
       <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
-      <p>Which of ${String(catalog.cards.length)} U.S. credit cards earns the most, store by store, from each issuer's own terms. No affiliate links.</p>
+      <p>Which of ${String(catalog.cards.length)} U.S. credit cards earns the most, store by store, from each issuer's own terms.</p>
+      ${everydayChips()}
       <div class="filter" hidden>
         <label for="filter">Find a store or category</label>
         <input id="filter" type="search" placeholder="Costco, gas, Netflix…" autocomplete="off" spellcheck="false" />
       </div>
       <p id="no-match" class="next" hidden>No page for that yet. <a href="/#best">Ask earnrate.dev</a>, which also knows stores without a page.</p>
-      <div class="cats">${all
+      <details class="all-cats"><summary>All ${String(all.filter((p) => p.merchant === null).length)} kinds of purchase</summary><div class="cats">${all
         .filter((p) => p.merchant === null)
         .sort(byLabel)
         .map(category)
-        .join('')}</div>
+        .join('')}</div></details>
       <script>${FILTER_SCRIPT}</script>`
   return layout({
     title: fitTitle(['Best credit card for every store and category']),
@@ -934,16 +954,103 @@ function renderIndex(all: Page[]): string {
   })
 }
 
+// A note short enough for one line stays beside the rate; a longer one goes
+// in the row's fine print, with what the rule leaves out and the quote.
+const SHORT_NOTE = 70
+const shortNote = (note: string | undefined) =>
+  note !== undefined && note.length <= SHORT_NOTE && !/\.\s/.test(note)
+
+function finePrint(parts: string[], summary = 'Fine print'): string {
+  const shown = parts.filter((p) => p !== '')
+  return shown.length === 0
+    ? ''
+    : `<details class="fine"><summary>${summary}</summary>${shown.join('')}</details>`
+}
+
+// A note and the issuer's quote under a credit, free night or other line:
+// the note shown when short, both in the fine print otherwise.
+function noteAndQuote(card: Card, id: string, note?: string): string {
+  const short = shortNote(note)
+  return `${note && short ? `<br /><span class="muted">${esc(note)}</span>` : ''}${finePrint(
+    [
+      note && !short ? `<p class="muted">${esc(note)}</p>` : '',
+      evidenceFor(card, id),
+    ],
+  )}`
+}
+
+type RuleOmit = { cap?: boolean; activation?: boolean; dates?: boolean }
+
+function ruleRow(card: Card, rule: Card['rules'][number], omit: RuleOmit) {
+  const excluded = exclusionLine(rule)
+  const lines = ruleConditions(card, rule, omit).filter((l) => l !== excluded)
+  const short = shortNote(rule.note)
+  return `<li><div><span class="row-head"><strong>${esc(ruleWhat(card, rule))}</strong> <span class="rate">${esc(bareRate(rule.rate, card.currency))}</span></span>${rule.note && short ? `<span class="muted row-note">${esc(rule.note)}</span>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${finePrint(
+    [
+      rule.note && !short ? `<p class="muted">${esc(rule.note)}</p>` : '',
+      excluded ? `<p class="muted">${esc(excluded)}.</p>` : '',
+      evidenceFor(card, rule.id),
+    ],
+  )}</div></li>`
+}
+
+// A rotating card's quarters each get a heading that says the dates, the
+// activation and the shared cap once; its lasting rates follow.
+function quarterLabel(from: string, to: string): string {
+  if (from <= today && today <= to) return 'This quarter'
+  if (to < today) return 'Ended'
+  const end = currentPeriodEnd('quarter', today, null)
+  return end !== null && from === addDays(end, 1) ? 'Next quarter' : 'Coming up'
+}
+
 function rulesList(card: Card): string {
-  const rules = [...card.rules].sort((a, b) => b.rate - a.rate)
-  const items = rules.map((rule) => {
-    const lines = ruleConditions(card, rule)
-    return `<li><span class="rank">${esc(num(rule.rate))}</span><div><span class="row-head"><strong>${esc(ruleWhat(card, rule))}</strong> <span class="rate">${esc(earnText(catalog, rule.rate, card.currency))}</span></span>${rule.note ? `<span class="muted row-note">${esc(rule.note)}</span>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${evidenceFor(card, rule.id)}</div></li>`
-  })
-  items.push(
-    `<li><span class="rank">${esc(String(card.base_rate))}</span><div><span class="row-head"><strong>Everything else</strong> <span class="rate">${esc(earnText(catalog, card.base_rate, card.currency))}</span></span>${evidenceFor(card, 'base_rate')}</div></li>`,
-  )
-  return `<ol class="cards rules">${items.join('')}</ol>`
+  const byRate = (list: Card['rules']) =>
+    [...list].sort((a, b) => b.rate - a.rate)
+  const rotating = card.caps.find((c) => c.rotating)
+  const quarters = new Map<string, Card['rules']>()
+  const lasting: Card['rules'] = []
+  for (const rule of card.rules) {
+    if (
+      rotating &&
+      rule.cap === rotating.id &&
+      rule.valid_from !== undefined &&
+      rule.valid_to !== undefined
+    ) {
+      const key = `${rule.valid_from}|${rule.valid_to}`
+      quarters.set(key, [...(quarters.get(key) ?? []), rule])
+    } else lasting.push(rule)
+  }
+  const base = `<li><div><span class="row-head"><strong>Everything else</strong> <span class="rate">${esc(bareRate(card.base_rate, card.currency))}</span></span>${finePrint([evidenceFor(card, 'base_rate')])}</div></li>`
+  const list = (rules: Card['rules'], omit: RuleOmit, extra = '') =>
+    `<ol class="cards rules">${byRate(rules)
+      .map((r) => ruleRow(card, r, omit))
+      .join('')}${extra}</ol>`
+  if (!rotating || quarters.size === 0) return list(lasting, {}, base)
+  const issuer = issuerName(card.issuer)
+  const groups = [...quarters]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, rules]) => {
+      const [from = '', to = ''] = key.split('|')
+      const activations = [
+        ...new Set(
+          rules.map((r) =>
+            r.requires?.activation === true
+              ? activationLine(issuer, r, today)
+              : '',
+          ),
+        ),
+      ]
+      const once = activations.length === 1 && activations[0] !== ''
+      const cap = capSentence(
+        rotating,
+        earnText(catalog, rotating.then_rate, card.currency),
+        'spending',
+        ' across these',
+      )
+      const said = [...(once ? [activations[0] ?? ''] : []), cap]
+      return `<h3>${esc(`${quarterLabel(from, to)} · ${shortDate(from)} to ${shortDate(to)}`)}</h3><p class="muted rate-group">${esc(said.join('. '))}.</p>${list(rules, { cap: true, activation: once, dates: true })}`
+    })
+  return `${groups.join('')}<h3>Every quarter</h3>${list(lasting, {}, base)}`
 }
 
 function choicesText(card: Card): string {
@@ -967,7 +1074,7 @@ function milestonesText(card: Card): string {
   if (card.milestones.length === 0) return ''
   const items = card.milestones.map(
     (m) =>
-      `<li><strong>${esc(capitalize(`${milestoneWhat(m).replace(/^the /, '')}${milestoneStarts(m, today)}`))}</strong>${m.note ? `<br /><span class="muted">${esc(m.note)}</span>` : ''}${evidenceFor(card, m.id)}</li>`,
+      `<li><strong>${esc(capitalize(`${milestoneWhat(m).replace(/^the /, '')}${milestoneStarts(m, today)}`))}</strong>${noteAndQuote(card, m.id, m.note)}</li>`,
   )
   return `<h2>Spend bonuses</h2><p>Every purchase on the card counts. earnrate adds the bonus points to the purchase that reaches the total, once you track your spending on earnrate.dev, in Claude or with the command line; status, night credits and free nights aren't given a value.</p><ul>${items.join('')}</ul>`
 }
@@ -975,7 +1082,7 @@ function milestonesText(card: Card): string {
 function creditsText(card: Card): string {
   if (card.credits.length === 0) return ''
   const items = card.credits.map((c) => {
-    return `<li><strong>${esc(capitalize(`${creditBack(c)} ${creditWhere(catalog, c)}${creditTerms(c)}`))}</strong>${c.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}${c.note ? `<br /><span class="muted">${esc(c.note)}</span>` : ''}${evidenceFor(card, c.id)}</li>`
+    return `<li><strong>${esc(capitalize(`${creditBack(c)} ${creditWhere(catalog, c)}${creditTerms(c)}`))}</strong>${c.enroll ? ` (${esc(ENROLL_FIRST)})` : ''}${noteAndQuote(card, c.id, c.note)}</li>`
   })
   const all = allCreditsYear(catalog, card, today, {})
   const year = all.yearly - all.nights
@@ -1005,7 +1112,7 @@ function freeNightsText(card: Card): string {
       value === null
         ? NIGHT_NO_CAP
         : `${freeNightValueText(value, cents)}, earnrate's default`
-    return `<li><strong>${esc(capitalize(what))}</strong> (${esc(worth)})${n.note ? `<br /><span class="muted">${esc(n.note)}</span>` : ''}${evidenceFor(card, n.id)}</li>`
+    return `<li><strong>${esc(capitalize(what))}</strong> (${esc(worth)})${noteAndQuote(card, n.id, n.note)}</li>`
   })
   const capped = card.free_nights.some((n) => n.points !== undefined)
   return `<h2>Free night</h2><p>A free night each year after the account anniversary, with no spending needed. ${capped ? "It's worth the most at a hotel that costs its full point cap, on a stay you'd make anyway. With your cards saved, earnrate counts it against the annual fee once you say you use it, and you can mark it as one you don't." : "With your cards saved, earnrate counts it against the annual fee once you say what it's worth to you, and you can mark it as one you don't."}</p><ul>${items.join('')}</ul>`
@@ -1015,7 +1122,7 @@ function introRatesText(card: Card): string {
   if (card.intro_rates.length === 0) return ''
   const items = card.intro_rates.map(
     (i) =>
-      `<li><strong>${esc(capitalize(introWhat(catalog, card, i)))}</strong>${i.note ? `<br /><span class="muted">${esc(i.note)}</span>` : ''}${evidenceFor(card, i.id)}</li>`,
+      `<li><strong>${esc(capitalize(introWhat(catalog, card, i)))}</strong>${noteAndQuote(card, i.id, i.note)}</li>`,
   )
   return `<h2>For new accounts</h2><p>Rates that apply only for a stretch after the account opens. Give earnrate the card's opening date and it ranks the card at them; without one, answers mention them instead.</p><ul>${items.join('')}</ul>`
 }
@@ -1039,13 +1146,17 @@ function foreignFeeSection(card: Card): string {
       : fee === 0
         ? rates
         : `Abroad, earnrate subtracts the ${pct(fee)} from what each purchase earns before ranking it.`
-  return `<h2>Paying abroad</h2><p>${esc(foreignFeeText(fee))}. ${esc(using)}</p>${evidenceFor(card, 'foreign_transaction_fee')}`
+  return `<h2>Paying abroad</h2><p>${esc(foreignFeeText(fee))}. ${esc(using)}</p>${finePrint([evidenceFor(card, 'foreign_transaction_fee')])}`
 }
 
 function offerText(card: Card): string {
   const o = card.welcome_offer
   if (!o || !inEffect(o, today)) return ''
-  return `<h2>Public welcome offer</h2><p>${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(card.last_verified))}. ${OFFERS_MAY_DIFFER}${o.note ? ` ${esc(o.note)}` : ''}</p>`
+  const offer = `${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(card.last_verified))}.`
+  // Who can get it is fine print: the offer line says what it is.
+  return o.note
+    ? `<h2>Public welcome offer</h2><p>${offer} Offers vary by person.</p>${finePrint([`<p>${esc(o.note)}</p>`, `<p>${esc(OFFERS_MAY_DIFFER)}</p>`], 'Who can get it')}`
+    : `<h2>Public welcome offer</h2><p>${offer} ${esc(OFFERS_MAY_DIFFER)}</p>`
 }
 
 function placements(
@@ -1072,28 +1183,38 @@ function placements(
 
 type Placement = { page: Page; rank: number; pct: number }
 
-// A card's placements grouped by kind of purchase, each a collapsible row
-// ("Supermarkets · 2% · 62 stores") of chips: open when there are few, and
-// past the six biggest, folded under one more row.
+// A card's placements grouped by kind of purchase and by whether it's the
+// best there or in the top 3, each a collapsible row ("Groceries · Best ·
+// 2% · 62 stores") of chips: open when there are few, and past the six
+// biggest, folded under one more row. A row of one store is a link to it.
 const SHOWN_GROUPS = 6
 
 function placementGroups(list: Placement[], all: Page[]): string {
-  const nameOf = (categoryId: string) =>
-    catalog.categories.find((c) => c.id === categoryId)?.name ??
-    words(categoryId)
+  const nameOf = (categoryId: string) => capitalize(categoryLabel(categoryId))
   const groups = new Map<string, Placement[]>()
   for (const w of list) {
-    const name = nameOf(w.page.categoryId)
-    groups.set(name, [...(groups.get(name) ?? []), w])
+    const key = `${w.rank === 1 ? 'a' : 'b'}|${nameOf(w.page.categoryId)}`
+    groups.set(key, [...(groups.get(key) ?? []), w])
   }
   const open = list.length <= 8
   const rows = [...groups]
-    .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
-    .map(([name, ws]) => {
+    .sort(
+      (a, b) =>
+        a[0].slice(0, 1).localeCompare(b[0].slice(0, 1)) ||
+        b[1].length - a[1].length ||
+        a[0].localeCompare(b[0]),
+    )
+    .map(([key, ws]) => {
+      const name = key.slice(2)
+      const best = key.startsWith('a')
+      const pill = `<span class="pill${best ? '' : ' pill-top'}">${best ? 'Best' : 'Top 3'}</span>`
       const pcts = [...new Set(ws.map((w) => w.pct))].sort((a, b) => a - b)
       const low = pcts[0] ?? 0
       const high = pcts.at(-1) ?? low
       const rate = low === high ? pct(low) : `${pct(low)}–${pct(high)}`
+      const [only] = ws
+      if (ws.length === 1 && only?.page.merchant)
+        return `<a class="group group-link" href="/best/${only.page.slug}">${pill}<span>${esc(only.page.label)}</span><span class="group-meta">${rate}</span></a>`
       const stores = ws.filter((w) => w.page.merchant !== null).length
       const meta = `${rate}${stores > 0 ? ` · ${String(stores)} ${stores === 1 ? 'store' : 'stores'}` : ''}`
       // The kind of purchase's own page first, then its stores.
@@ -1112,17 +1233,18 @@ function placementGroups(list: Placement[], all: Page[]): string {
         categoryPage && !ws.some((w) => w.page === categoryPage)
           ? `<p class="small"><a href="/best/${categoryPage.slug}">Best cards for ${esc(categoryPage.label)}</a></p>`
           : ''
-      return `<details class="group"${open ? ' open' : ''}><summary><span>${esc(name)}</span><span class="group-meta">${meta}</span></summary>${chipLinks(chips)}${more}</details>`
+      return `<details class="group"${open ? ' open' : ''}><summary>${pill}<span>${esc(name)}</span><span class="group-meta">${meta}</span></summary>${chipLinks(chips)}${more}</details>`
     })
   const stores = list.filter((w) => w.page.merchant !== null).length
+  const kinds = new Set(list.map((w) => nameOf(w.page.categoryId))).size
   const count =
-    list.length > 8 && rows.length > 1
-      ? `<p class="muted">${String(stores)} stores in ${String(rows.length)} kinds of purchase.</p>`
+    list.length > 8 && kinds > 1
+      ? `<p class="muted">${String(stores)} stores in ${String(kinds)} kinds of purchase.</p>`
       : ''
   const rest = rows.slice(SHOWN_GROUPS)
   return `${count}<div class="groups">${rows.slice(0, SHOWN_GROUPS).join('')}${
     rest.length > 0
-      ? `<details class="more-groups"><summary>${String(rest.length)} more kinds of purchase</summary><div class="groups">${rest.join('')}</div></details>`
+      ? `<details class="more-groups"><summary>${String(rest.length)} more</summary><div class="groups">${rest.join('')}</div></details>`
       : ''
   }</div>`
 }
@@ -1252,9 +1374,11 @@ const pageLinks = (list: Page[], n: number) =>
     .slice(0, n)
     .map((p) => `<a href="/best/${p.slug}">${esc(p.label)}</a>`)
 
-// Where it's the best card and in the top 3 at earnrate's default point
-// values; for Amex and Chase points, the same at their transfer value; and
-// where a flat rate ties for the most any card earns.
+// Where it's the best card and in the top 3, at earnrate's default point
+// values and, for Amex and Chase points, at their transfer value behind a
+// switch; and where a flat rate ties for the most any card earns. The
+// switch is two radio buttons and CSS: no script, and the default view is
+// the one shown wherever :has() isn't supported.
 function rankSection(
   card: Card,
   all: Page[],
@@ -1264,20 +1388,10 @@ function rankSection(
   const kind = card.business ? 'business card' : 'personal card'
   const where = placements(card, all, byPage)
   const firsts = where.filter((w) => w.rank === 1)
-  const others = where.filter((w) => w.rank > 1)
-  const parts: string[] = []
-  if (card.requires_membership !== undefined)
-    parts.push(
-      `<p>Ranked for someone with ${esc(withArticle(membershipName(card.requires_membership)))}, which it needs. Without one, earnrate's rankings name it after the cards anyone can get.</p>`,
-    )
-  if (firsts.length > 0)
-    parts.push(
-      `<h2>Where it's the best ${kind}</h2>${placementGroups(firsts, all)}`,
-    )
-  if (others.length > 0)
-    parts.push(
-      `<h2>Where it's in the top 3</h2>${placementGroups(others, all)}`,
-    )
+  const intro =
+    card.requires_membership === undefined
+      ? ''
+      : `<p>Ranked for someone with ${esc(withArticle(membershipName(card.requires_membership)))}, which it needs. Without one, earnrate's rankings name it after the cards anyone can get.</p>`
 
   const flat = topAtBase(card, all, byPage)
   const flatText =
@@ -1294,27 +1408,19 @@ function rankSection(
   const defaultCents =
     catalog.currencies.find((c) => c.id === card.currency)?.value_cents ?? 1
 
-  if (where.length === 0)
-    parts.push(
-      `<h2>Where it ranks</h2><p>${
-        flatText !== ''
-          ? flatText
-          : `At earnrate's default of ${num(defaultCents)}¢ a point, other ${kind}s earn as much or more at every store and kind of purchase earnrate ranks.${gains ? ` Counted at the ${String(cents)}¢ transfer value, below, it moves up.` : ' Its bonus rates are below.'}`
-      }</p>`,
-    )
-  else if (flatText !== '') parts.push(`<p>${flatText}</p>`)
-
-  if (gains && cents !== undefined) {
-    const up = moved.filter((w) => w.rank > 1)
-    parts.push(
-      `<h2>If you transfer ${esc(program)} at ${String(cents)}¢</h2><p>Counting ${esc(program)} at ${String(cents)}¢ each, what transferring them to airlines and hotels can be worth, with other Amex and Chase points counted the same way:</p>${
-        movedFirsts.length > 0
-          ? `<h3>Where it's the best ${kind}</h3>${placementGroups(movedFirsts, all)}`
-          : ''
-      }${up.length > 0 ? `<h3>Where it's in the top 3</h3>${placementGroups(up, all)}` : ''}`,
-    )
-  }
-  return parts.join('')
+  const atDefault =
+    where.length === 0
+      ? `<p>${
+          flatText !== ''
+            ? flatText
+            : `At earnrate's default of ${num(defaultCents)}¢ a point, other ${kind}s earn as much or more at every store and kind of purchase earnrate ranks.${gains ? ' Counted at the transfer value, it moves up.' : ' Its bonus rates are below.'}`
+        }</p>`
+      : `${placementGroups(where, all)}${flatText !== '' ? `<p>${flatText}</p>` : ''}`
+  if (!gains || cents === undefined)
+    return `<h2>Where it ranks</h2>${intro}${atDefault}`
+  const option = (value: string, label: string, checked: boolean) =>
+    `<label><input type="radio" name="rank-value" value="${value}"${checked ? ' checked' : ''} />${esc(label)}</label>`
+  return `<h2>Where it ranks</h2>${intro}<div class="ranks"><div class="seg" role="radiogroup" aria-label="Count points at">${option('default', `Points at ${num(defaultCents)}¢`, true)}${option('transfer', `If you transfer (${num(cents)}¢)`, false)}</div><div class="rank-view" data-view="default">${atDefault}</div><div class="rank-view" data-view="transfer"><p class="muted">${esc(program)} at ${num(cents)}¢ each, what transferring them to airlines and hotels can be worth, with other Amex and Chase points counted the same way.</p>${placementGroups(moved, all)}</div></div>`
 }
 
 // What a visitor does next from a card page, by what their browser has
@@ -1761,30 +1867,49 @@ function compareBasis(c: Comparison): string {
   })
   const creditsText =
     credits.length === 0 ? '' : ` ${esc([...credits, onlyIf].join(' '))}`
-  return `<h2>How this is figured</h2><p>Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks. ${esc(valueText(c))}${creditsText}</p>`
+  return `<details class="fine section-fine"><summary>How this is figured</summary><p>Typical spending here is ${wholeDollars(c.typical.spend)} a year (a month: ${esc(spend)}), each card used on its own for everything, with its best bonus picks. ${esc(valueText(c))}${creditsText}</p></details>`
 }
 
 const unverifiedEntry = (e: ExploreEntry | null) =>
   e !== null && isUnverified(e)
 
+// A cell's rate and what it needs, with its spending cap one tap away.
 function rateCell(cell: CompareCell, win: boolean): string {
   const e = cell.entry
   if (!e)
     return `<td class="muted">${cell.excluded ? 'Not accepted' : 'Not usable'}</td>`
-  const lines = requirementLines(e.cardId, e.requirements, untilText(e))
+  const lines = requirementLines(
+    e.cardId,
+    { ...e.requirements, cap: null },
+    untilShort(e),
+  )
+  const cap = e.requirements.cap
+    ? requirementLines(
+        e.cardId,
+        {
+          ...e.requirements,
+          pick: null,
+          activation: null,
+          membership: null,
+        },
+        null,
+      )
+    : []
   if (unverifiedEntry(e)) lines.push('Not yet confirmed')
-  return `<td${win ? ' class="win"' : ''}><span class="rate">${pct(e.effectiveReturnPct)}</span>${win ? '<span class="visually-hidden"> (earns more)</span>' : ''}${lines.length > 0 ? `<span class="cell-note">${lines.map(esc).join('. ')}</span>` : ''}</td>`
+  return `<td${win ? ' class="win"' : ''}><span class="rate">${pct(e.effectiveReturnPct)}</span>${win ? '<span class="visually-hidden"> (earns more)</span>' : ''}${lines.length > 0 ? `<span class="cell-note">${lines.map(esc).join('. ')}</span>` : ''}${cap.length > 0 ? `<details class="fine cell-fine"><summary>Cap</summary><span class="cell-note">${cap.map(esc).join('. ')}</span></details>` : ''}</td>`
 }
 
+// The everyday purchases every comparison has, then the rest folded.
 function compareTable(c: Comparison): string {
   const head = (card: Card) =>
     `<th scope="col"><a href="/cards/${card.id}">${esc(shortName(card.id))}</a></th>`
-  const rows = c.rows
-    .map(
-      (r) =>
-        `<tr><th scope="row">${esc(r.label)}</th>${rateCell(r.a, r.winner === 'a')}${rateCell(r.b, r.winner === 'b')}</tr>`,
-    )
-    .join('')
+  const row = (r: CompareRow) =>
+    `<tr><th scope="row">${esc(r.label)}</th>${rateCell(r.a, r.winner === 'a')}${rateCell(r.b, r.winner === 'b')}</tr>`
+  const last = c.rows.at(-1)
+  const everyday = c.rows.filter((r) => r.weight === 2 || r === last)
+  const more = c.rows.filter((r) => !everyday.includes(r))
+  const table = (rows: CompareRow[]) =>
+    `<div class="table-box"><table class="compare"><thead><tr><th scope="col">Purchase</th>${head(c.a)}${head(c.b)}</tr></thead><tbody>${rows.map(row).join('')}</tbody></table></div>`
   const reasons = [
     ...new Set(
       c.rows.flatMap((r) =>
@@ -1792,7 +1917,11 @@ function compareTable(c: Comparison): string {
       ),
     ),
   ]
-  return `<div class="table-box"><table class="compare"><thead><tr><th scope="col">Purchase</th>${head(c.a)}${head(c.b)}</tr></thead><tbody>${rows}</tbody></table></div>
+  return `${table(everyday)}${
+    more.length > 0
+      ? `<details class="more-groups more-rows"><summary>${String(more.length)} more ${more.length === 1 ? 'purchase' : 'purchases'}</summary>${table(more)}</details>`
+      : ''
+  }
       <p class="muted">What each purchase earns back, with each card set up at its best for it (the right bonus pick, any activation done, no cap used up yet). The higher rate is highlighted.${reasons.length > 0 ? ` ${reasons.map(esc).join(' ')}` : ''}</p>`
 }
 
@@ -1921,7 +2050,7 @@ function compareQuotes(c: Comparison): string {
       )
       .join('')}</ul>`
   }
-  return `<h2>From the issuers' terms</h2><div class="issuer-quotes">${block('a')}${block('b')}</div>`
+  return `<details class="fine section-fine"><summary>From the issuers' terms</summary><div class="issuer-quotes">${block('a')}${block('b')}</div></details>`
 }
 
 function renderCompare(c: Comparison): string {
@@ -1985,12 +2114,12 @@ function renderCompare(c: Comparison): string {
           html: `${button(`/#spending&card=${c.a.id}&card=${c.b.id}`, 'See where they rank on your spending')} ${textLink(`/#wallet&whatif=${c.a.id}&whatif=${c.b.id}`, 'See what each adds to your cards')}`,
         },
       ])}
+      ${suits(c)}
       <h2>Rates by purchase</h2>
       ${compareTable(c)}
-      ${compareBasis(c)}
-      ${suits(c)}
       ${feesTable(c)}
       ${compareOffers(c)}
+      ${compareBasis(c)}
       ${compareQuotes(c)}
       <h2>Each card in full</h2>
       ${chipLinks([`<a href="/cards/${c.a.id}">${esc(c.a.name)}</a>`, `<a href="/cards/${c.b.id}">${esc(c.b.name)}</a>`, '<a href="/compare/">Every comparison</a>'])}
