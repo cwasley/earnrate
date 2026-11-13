@@ -2538,6 +2538,11 @@ a.chip {
   color: var(--muted);
 }
 
+/* In line with the contents of the fieldsets around it (border + padding). */
+.credit-details {
+  padding: 0 13px;
+}
+
 .credit-details .credit-detail {
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
