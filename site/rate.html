@@ -45,6 +45,34 @@
             JavaScript turned on.
           </p>
         </noscript>
+        <!--earnrate:rate-frame-->
+        <script>
+          // Which report this is, read before the first paint so its outline
+          // shows while the page's script loads (rate.css). A shared report
+          // doesn't read this browser's storage (rate/source.ts). If the
+          // script never starts, the page shows as it would without scripts.
+          ;(() => {
+            const rate = document.currentScript.parentElement
+            const main = rate.parentElement
+            const shared =
+              location.pathname.startsWith('/r/') ||
+              /(^#|&)w=/.test(location.hash)
+            let kind = shared ? 'shared' : 'pick'
+            if (!shared)
+              try {
+                const w = JSON.parse(localStorage.getItem('earnrate:wallet'))
+                if (Array.isArray(w.cards) && w.cards.length > 0) kind = 'own'
+              } catch {}
+            if (shared) rate.querySelector('h1').textContent = 'A shared wallet'
+            main.dataset.rate = kind
+            main.dataset.loading = ''
+            setTimeout(() => {
+              if (main.dataset.loading === undefined) return
+              delete main.dataset.rate
+              delete main.dataset.loading
+            }, 12000)
+          })()
+        </script>
       </div>
 
       <details class="filters rate-how">

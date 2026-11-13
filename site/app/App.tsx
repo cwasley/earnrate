@@ -12,7 +12,7 @@ import {
   type Purchase,
 } from './ThisPurchase.tsx'
 import { track } from './track.ts'
-import { TABS, type Tab } from '../tabs.ts'
+import { TABS, tabFor, type Tab } from '../tabs.ts'
 import { cardCount, issuerName, issuers } from './format.ts'
 import {
   load,
@@ -76,28 +76,26 @@ type View = {
 
 // State lives in the URL fragment, which browsers never send to a server.
 function readHash(landing = false): View {
-  if (landing && location.hash.length <= 1 && holdsCards())
-    return { tab: 'wallet', query: '' }
+  const tab = tabFor(location.hash, landing && holdsCards())
   const hash = new URLSearchParams(location.hash.slice(1))
   // A card page's "See where it ranks on your spending" and "See what it
   // adds to your cards".
-  if (hash.has('spending'))
-    return {
-      tab: 'spending',
-      query: '',
-      ...(hash.has('card') ? { find: 'scratch' as const } : {}),
-    }
-  if (hash.has('whatif')) return { tab: 'spending', query: '', find: 'add' }
-  if (hash.has('wallet')) {
-    // A store sent from a search page is asked of the visitor's own cards.
-    // With none saved yet, At a store's Your cards takes them first and
-    // answers once they're in: the page already gave the all-cards ranking.
-    const query = hash.get('wallet') ?? ''
-    return query === ''
-      ? { tab: 'wallet', query }
-      : { tab: 'best', query, focus: true, scope: 'yours' }
-  }
-  return { tab: 'best', query: hash.get('best') ?? '' }
+  if (tab === 'spending')
+    return hash.has('spending')
+      ? {
+          tab,
+          query: '',
+          ...(hash.has('card') ? { find: 'scratch' as const } : {}),
+        }
+      : { tab, query: '', find: 'add' }
+  if (tab === 'wallet') return { tab, query: '' }
+  // A store sent from a search page is asked of the visitor's own cards.
+  // With none saved yet, At a store's Your cards takes them first and
+  // answers once they're in: the page already gave the all-cards ranking.
+  const query = hash.get('wallet') ?? ''
+  return query !== ''
+    ? { tab, query, focus: true, scope: 'yours' }
+    : { tab, query: hash.get('best') ?? '' }
 }
 
 // A link to a section of the page below the app (/#claude) keeps its

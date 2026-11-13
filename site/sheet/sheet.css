@@ -134,3 +134,29 @@
   font-weight: 600;
   padding: 4px 0;
 }
+
+/* Before the page's script has run, for a sent cheat sheet (sheet.html):
+   its outline in place of the heading. What's below waits for it, so
+   nothing on the page moves when it arrives. */
+.sheet-frame {
+  display: none;
+}
+
+main[data-loading] .sheet-frame {
+  display: block;
+}
+
+main[data-loading] #sheet > :is(h1, noscript) {
+  display: none;
+}
+
+main[data-loading] > :not(header, #sheet) {
+  visibility: hidden;
+}
+
+.sheet-frame .frame-title {
+  font-size: 28px;
+  line-height: 1.15;
+  margin: 4px 0;
+  background-size: min(9em, 80%) 0.6em;
+}

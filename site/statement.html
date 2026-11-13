@@ -32,6 +32,27 @@
             turned on.
           </p>
         </noscript>
+        <!-- The first panel as the page's script draws it (Statement.tsx),
+             until that script replaces it, so nothing below moves. -->
+        <div class="check check-frame" aria-hidden="true" inert>
+          <section class="panel">
+            <h2>Choose an activity file</h2>
+            <p>
+              A CSV file of one card's activity, downloaded from American
+              Express or Chase.
+            </p>
+            <div class="row-buttons">
+              <span class="file-button primary">Choose a CSV file</span>
+            </div>
+            <p class="muted small">
+              On your card's website, download your activity (sometimes called
+              transactions) and choose CSV. A PDF statement won't be read.
+            </p>
+            <details class="where">
+              <summary>Where to find the file</summary>
+            </details>
+          </section>
+        </div>
       </div>
 
       <section class="how">

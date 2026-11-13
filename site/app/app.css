@@ -2657,22 +2657,236 @@ a.chip {
   }
 }
 
-/* The home page for someone with saved cards (main.tsx) keeps its
-   header's top row. */
-main[data-returning] header.hero > h1 {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-main[data-returning] header.hero > .lede {
-  display: none;
-}
-
 /* The story below the app shows with At a store only (App.tsx). */
 main[data-tab]:not([data-tab='best']) > :not(header, footer) {
   display: none;
+}
+
+/* The home page before the app has loaded: the outline of the tab its
+   address opens on (site/index.html), by main's data-tab and data-saved,
+   which the page's first script sets. What's below the app waits for it,
+   so nothing on the page moves when it arrives. */
+.app-frame,
+.app-frame .frame-body,
+.app-frame .frame-held,
+.app-frame .frame-held-text,
+main[data-saved] .app-frame :is(.frame-unheld, [data-frame='best'] .example) {
+  display: none;
+}
+
+main[data-loading] .app-frame,
+main[data-tab='best'] .app-frame [data-frame='best'],
+main[data-tab='spending'] .app-frame [data-frame='spending'] {
+  display: block;
+}
+
+main[data-tab='wallet'][data-saved] .app-frame [data-frame='wallet'],
+main[data-tab='wallet']:not([data-saved])
+  .app-frame
+  [data-frame='wallet-empty'] {
+  display: grid;
+}
+
+main[data-tab][data-loading] > :not(header) {
+  visibility: hidden;
+}
+
+.app-frame .frame-body {
+  margin-top: 20px;
+}
+
+.app-frame .tabs > span {
+  padding: 10px 8px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--muted);
+}
+
+main[data-tab='best'] .app-frame [data-frame-tab='best'],
+main[data-tab='spending'] .app-frame [data-frame-tab='spending'],
+main[data-tab='wallet'] .app-frame [data-frame-tab='wallet'] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+/* A still bar where a line of text will be. */
+.frame-line {
+  display: block;
+  background: linear-gradient(var(--line), var(--line)) left center / 100% 0.6em
+    no-repeat;
+}
+
+.frame-line::before {
+  content: '\00a0';
+}
+
+.frame-line.frame-short {
+  background-size: 55% 0.6em;
+}
+
+.frame-line.frame-heading {
+  background-size: min(14em, 70%) 0.6em;
+}
+
+.frame-line.frame-summary {
+  background-size: 12em 0.6em;
+}
+
+.frame-line.frame-rate {
+  justify-self: end;
+  width: 2.2em;
+  background-position: right center;
+}
+
+.frame-art {
+  flex: none;
+  width: 40px;
+  height: 25px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.app-frame .example-list .frame-art {
+  width: 44px;
+  height: 28px;
+}
+
+.app-frame .held .frame-art {
+  width: 32px;
+  height: 20px;
+}
+
+.app-frame .rank {
+  background: var(--line);
+}
+
+.app-frame .segments .frame-segment {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  border-radius: 8px;
+}
+
+.app-frame .find-mode .frame-segment {
+  min-height: 48px;
+}
+
+.app-frame .frame-segment > .frame-line {
+  width: 5em;
+}
+
+.app-frame .frame-segment.frame-on {
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+
+main[data-saved] .app-frame .frame-held {
+  display: flex;
+  margin-bottom: 14px;
+}
+
+main[data-saved] .app-frame .frame-held-text {
+  display: block;
+  margin: 0 0 14px;
+}
+
+.frame-input {
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 17px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.frame-input::before {
+  content: '\00a0';
+}
+
+.frame-go {
+  width: 56px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+}
+
+.chip.frame-chip {
+  width: 6em;
+  cursor: default;
+}
+
+.chip.frame-chip:nth-child(3n + 2) {
+  width: 5em;
+}
+
+.chip.frame-chip:nth-child(3n) {
+  width: 4em;
+}
+
+.app-frame .more.frame-more {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.frame-more::before {
+  content: '\00a0';
+}
+
+.sheet-head.frame-sheet-head {
+  display: block;
+  background: var(--accent-soft);
+}
+
+.frame-sheet-head .frame-line {
+  --bar: color-mix(in srgb, var(--accent) 18%, transparent);
+  background-image: linear-gradient(var(--bar), var(--bar));
+}
+
+.frame-sheet-head .sheet-brand {
+  width: 4em;
+}
+
+.frame-sheet-head h3.frame-line {
+  background-size: min(11em, 80%) 0.6em;
+}
+
+.sheet-rows .sheet-card.frame-line {
+  display: block;
+  font-weight: 650;
+  font-size: 16px;
+}
+
+.app-frame .add-card.frame-add {
+  border-color: transparent;
+}
+
+.frame-add::before {
+  content: '\00a0';
+}
+
+.quick-card.frame-tile {
+  min-height: 117px;
+  cursor: default;
+}
+
+.frame-tile > .frame-art {
+  width: 56px;
+  height: 35px;
+}
+
+.frame-tile > .frame-line {
+  width: 70%;
+}
+
+.app-frame .held-row {
+  cursor: default;
+}
+
+.app-frame .held-name,
+.app-frame .held-name > span:last-child {
+  flex: 1;
 }

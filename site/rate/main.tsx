@@ -20,4 +20,10 @@ if (root) {
     </WalletBoundary>,
     root,
   )
+  // The outline rate.html showed until now (rate.css).
+  const main = root.closest('main')
+  if (main) {
+    delete main.dataset.loading
+    delete main.dataset.rate
+  }
 }

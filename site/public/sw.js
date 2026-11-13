@@ -10,10 +10,34 @@ const assetsIn = (html) => [
   ...new Set(html.match(/\/assets\/[^"')\s]+/g) ?? []),
 ]
 
+// One download per file, whether the page or refresh() asks for it first:
+// after a deploy both want the new files at once, and the card data alone
+// is a large file.
+const saving = new Map()
+function saveAsset(path) {
+  let job = saving.get(path)
+  if (!job) {
+    job = (async () => {
+      const response = await fetch(path)
+      if (response.ok) {
+        const cache = await caches.open(CACHE)
+        await cache.put(path, response.clone())
+      }
+      return response
+    })().finally(() => saving.delete(path))
+    saving.set(path, job)
+  }
+  return job.then((response) => response.clone())
+}
+
 async function refresh(html) {
   const cache = await caches.open(CACHE)
   const assets = assetsIn(html)
-  await cache.addAll(assets)
+  await Promise.all(
+    assets.map(async (path) => {
+      if (!(await cache.match(path))) await saveAsset(path)
+    }),
+  )
   for (const request of await cache.keys()) {
     const path = new URL(request.url).pathname
     if (path.startsWith('/assets/') && !assets.includes(path))
@@ -98,16 +122,8 @@ self.addEventListener('fetch', (event) => {
   // Hashed files never change, so a saved copy is always right.
   if (url.pathname.startsWith('/assets/')) {
     event.respondWith(
-      (async () => {
-        const saved = await caches.match(request)
-        if (saved) return saved
-        const response = await fetch(request)
-        if (response.ok) {
-          const cache = await caches.open(CACHE)
-          await cache.put(request, response.clone())
-        }
-        return response
-      })(),
+      (async () =>
+        (await caches.match(url.pathname)) ?? saveAsset(url.pathname))(),
     )
   }
 })

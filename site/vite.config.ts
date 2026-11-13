@@ -10,6 +10,7 @@ import { localToday } from '../src/engine/periods.ts'
 import { landingFacts, renderLanding } from '../scripts/landing.ts'
 import { companyParts } from '../scripts/pages/changes.ts'
 import { PAGE_HEADER, siteFooter } from '../scripts/pages/site.ts'
+import { RATE_FRAME } from './rate/frame.ts'
 
 const CATALOG = 'virtual:catalog'
 
@@ -36,9 +37,10 @@ export function catalogModule(): Plugin {
 const FILLED = ['/index.html', '/companies.html']
 
 // Every page's shared footer (renderLanding fills it too, for the pages it
-// fills). The home page's counts, sample cheat sheet and quoted answer, and the
-// companies page's counts and recent changes, come from the card data, the
-// change record and the example wallet, filled in when the page is built.
+// fills), and /rate's outline of a report. The home page's counts, sample
+// cheat sheet and quoted answer, and the companies page's counts and recent
+// changes, come from the card data, the change record and the example
+// wallet, filled in when the page is built.
 export function landingPage(): Plugin {
   return {
     name: 'earnrate-landing',
@@ -46,6 +48,7 @@ export function landingPage(): Plugin {
       const html = source
         .replace('<!--earnrate:footer-->', siteFooter())
         .replace('<!--earnrate:header-->', PAGE_HEADER)
+        .replace('<!--earnrate:rate-frame-->', RATE_FRAME)
       if (!FILLED.some((f) => ctx.filename.endsWith(f))) return html
       const [catalog, sample, releases, version] = await Promise.all([
         loadCatalog(),
@@ -84,6 +87,14 @@ export default defineConfig({
         terms: `${import.meta.dirname}/terms.html`,
         companies: `${import.meta.dirname}/companies.html`,
         support: `${import.meta.dirname}/support.html`,
+      },
+      // The card data in a file of its own: a code change leaves it, and
+      // a data release the code, where the browser and sw.js already have
+      // them.
+      output: {
+        codeSplitting: {
+          groups: [{ name: 'catalog', test: /virtual:catalog/ }],
+        },
       },
     },
   },

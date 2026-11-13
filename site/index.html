@@ -634,6 +634,40 @@
   </head>
   <body>
     <main>
+      <script>
+        // Which tab the app opens on (tabFor in site/tabs.ts) and whether
+        // cards are saved, before the first paint, so the outline of that
+        // tab shows while the app loads (app.css). It reads the saved wallet
+        // and writes nothing. If the app never starts, the page shows as it
+        // would without scripts.
+        ;(() => {
+          const main = document.currentScript.parentElement
+          let saved = false
+          try {
+            const w = JSON.parse(localStorage.getItem('earnrate:wallet'))
+            saved = Array.isArray(w.cards) && w.cards.length > 0
+          } catch {}
+          const hash = location.hash
+          const q = new URLSearchParams(hash.slice(1))
+          main.dataset.tab =
+            hash.length <= 1
+              ? saved
+                ? 'wallet'
+                : 'best'
+              : q.has('spending') || q.has('whatif')
+                ? 'spending'
+                : q.get('wallet') === ''
+                  ? 'wallet'
+                  : 'best'
+          if (saved) main.dataset.saved = ''
+          main.dataset.loading = ''
+          setTimeout(() => {
+            if (main.dataset.loading === undefined) return
+            for (const key of ['tab', 'saved', 'loading'])
+              delete main.dataset[key]
+          }, 12000)
+        })()
+      </script>
       <header class="hero">
         <div class="hero-top">
           <a class="wordmark" href="/"
@@ -676,6 +710,371 @@
           Every card's rate at any store, quoted from the issuer's own terms.
         </p>
         <div id="app">
+          <!-- The outline of the tab the address asks for, until the app
+               replaces it (app.css shows the one main's data-tab picks). -->
+          <div class="app app-frame" aria-hidden="true" inert>
+            <div class="tabs">
+              <span data-frame-tab="best">At a store</span>
+              <span data-frame-tab="spending">Best setups</span>
+              <span data-frame-tab="wallet">My wallet</span>
+            </div>
+            <div class="frame-body" data-frame="best">
+              <div class="panel store-search">
+                <div class="segments scope">
+                  <span class="frame-segment frame-on"
+                    ><span class="frame-line"></span
+                  ></span>
+                  <span class="frame-segment"
+                    ><span class="frame-line"></span
+                  ></span>
+                </div>
+                <div class="ask">
+                  <span class="frame-input"></span>
+                  <span class="frame-go"></span>
+                </div>
+                <div class="chips">
+                  <span class="chip frame-chip"
+                    ><span class="frame-line"></span
+                  ></span>
+                  <span class="chip frame-chip"
+                    ><span class="frame-line"></span
+                  ></span>
+                  <span class="chip frame-chip"
+                    ><span class="frame-line"></span
+                  ></span>
+                  <span class="chip frame-chip"
+                    ><span class="frame-line"></span
+                  ></span>
+                  <span class="chip frame-chip"
+                    ><span class="frame-line"></span
+                  ></span>
+                  <span class="chip frame-chip"
+                    ><span class="frame-line"></span
+                  ></span>
+                  <span class="chip frame-chip"
+                    ><span class="frame-line"></span
+                  ></span>
+                  <span class="chip frame-chip"
+                    ><span class="frame-line"></span
+                  ></span>
+                  <span class="chip frame-chip"
+                    ><span class="frame-line"></span
+                  ></span>
+                  <span class="chip frame-chip"
+                    ><span class="frame-line"></span
+                  ></span>
+                </div>
+                <div class="filters">
+                  <span class="frame-line frame-summary"></span>
+                </div>
+              </div>
+              <section class="example">
+                <h3><span class="frame-line frame-heading"></span></h3>
+                <ol class="example-list">
+                  <li>
+                    <span class="frame-art"></span>
+                    <span class="example-name"
+                      ><strong class="frame-line"></strong
+                      ><span class="muted frame-line frame-short"></span
+                    ></span>
+                    <span class="rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="frame-art"></span>
+                    <span class="example-name"
+                      ><strong class="frame-line"></strong
+                      ><span class="muted frame-line frame-short"></span
+                    ></span>
+                    <span class="rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="frame-art"></span>
+                    <span class="example-name"
+                      ><strong class="frame-line"></strong
+                      ><span class="muted frame-line frame-short"></span
+                    ></span>
+                    <span class="rate frame-line frame-rate"></span>
+                  </li>
+                </ol>
+                <span class="more frame-more"></span>
+              </section>
+            </div>
+            <div class="frame-body" data-frame="spending">
+              <div class="segments find-mode frame-held">
+                <span class="frame-segment frame-on"
+                  ><span class="frame-line"></span
+                ></span>
+                <span class="frame-segment"
+                  ><span class="frame-line"></span
+                ></span>
+              </div>
+              <p class="muted frame-held-text">
+                <span class="frame-line"></span>
+                <span class="frame-line frame-short"></span>
+              </p>
+              <div class="segments frame-held">
+                <span class="frame-segment frame-on"
+                  ><span class="frame-line"></span
+                ></span>
+                <span class="frame-segment"
+                  ><span class="frame-line"></span
+                ></span>
+              </div>
+              <section class="results">
+                <h3 class="frame-unheld">
+                  <span class="frame-line frame-heading"></span>
+                </h3>
+                <ol class="result-list">
+                  <li class="result hero">
+                    <div class="result-top">
+                      <span class="rank"></span>
+                      <span class="frame-art"></span>
+                      <span class="result-name"
+                        ><strong class="frame-line"></strong
+                        ><span class="muted frame-line frame-short"></span
+                      ></span>
+                      <span class="rate frame-line frame-rate"></span>
+                    </div>
+                  </li>
+                  <li class="result">
+                    <div class="result-top">
+                      <span class="rank"></span>
+                      <span class="frame-art"></span>
+                      <span class="result-name"
+                        ><strong class="frame-line"></strong
+                        ><span class="muted frame-line frame-short"></span
+                      ></span>
+                      <span class="rate frame-line frame-rate"></span>
+                    </div>
+                  </li>
+                  <li class="result">
+                    <div class="result-top">
+                      <span class="rank"></span>
+                      <span class="frame-art"></span>
+                      <span class="result-name"
+                        ><strong class="frame-line"></strong
+                        ><span class="muted frame-line frame-short"></span
+                      ></span>
+                      <span class="rate frame-line frame-rate"></span>
+                    </div>
+                  </li>
+                </ol>
+                <span class="more frame-more"></span>
+              </section>
+              <div class="filters">
+                <span class="frame-line frame-summary"></span>
+              </div>
+            </div>
+            <div class="frame-body panels wallet-grid" data-frame="wallet">
+              <section class="panel sheet">
+                <div class="sheet-head frame-sheet-head">
+                  <div>
+                    <span class="sheet-brand frame-line"></span>
+                    <h3 class="frame-line"></h3>
+                    <p class="frame-line frame-short"></p>
+                  </div>
+                </div>
+                <ol class="sheet-rows">
+                  <li>
+                    <span class="sheet-label frame-line frame-short"></span
+                    ><span class="sheet-card frame-line"></span
+                    ><span class="sheet-rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="sheet-label frame-line frame-short"></span
+                    ><span class="sheet-card frame-line"></span
+                    ><span class="sheet-rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="sheet-label frame-line frame-short"></span
+                    ><span class="sheet-card frame-line"></span
+                    ><span class="sheet-rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="sheet-label frame-line frame-short"></span
+                    ><span class="sheet-card frame-line"></span
+                    ><span class="sheet-rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="sheet-label frame-line frame-short"></span
+                    ><span class="sheet-card frame-line"></span
+                    ><span class="sheet-rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="sheet-label frame-line frame-short"></span
+                    ><span class="sheet-card frame-line"></span
+                    ><span class="sheet-rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="sheet-label frame-line frame-short"></span
+                    ><span class="sheet-card frame-line"></span
+                    ><span class="sheet-rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="sheet-label frame-line frame-short"></span
+                    ><span class="sheet-card frame-line"></span
+                    ><span class="sheet-rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="sheet-label frame-line frame-short"></span
+                    ><span class="sheet-card frame-line"></span
+                    ><span class="sheet-rate frame-line frame-rate"></span>
+                  </li>
+                  <li>
+                    <span class="sheet-label frame-line frame-short"></span
+                    ><span class="sheet-card frame-line"></span
+                    ><span class="sheet-rate frame-line frame-rate"></span>
+                  </li>
+                </ol>
+              </section>
+              <div class="wallet-main">
+                <section class="panel">
+                  <h3><span class="frame-line frame-heading"></span></h3>
+                  <ul class="held">
+                    <li>
+                      <span class="held-row">
+                        <span class="held-name"
+                          ><span class="frame-art"></span
+                          ><span
+                            ><strong class="frame-line"></strong
+                            ><span
+                              class="muted held-fee frame-line frame-short"
+                            ></span></span
+                        ></span>
+                      </span>
+                    </li>
+                    <li>
+                      <span class="held-row">
+                        <span class="held-name"
+                          ><span class="frame-art"></span
+                          ><span
+                            ><strong class="frame-line"></strong
+                            ><span
+                              class="muted held-fee frame-line frame-short"
+                            ></span></span
+                        ></span>
+                      </span>
+                    </li>
+                    <li>
+                      <span class="held-row">
+                        <span class="held-name"
+                          ><span class="frame-art"></span
+                          ><span
+                            ><strong class="frame-line"></strong
+                            ><span
+                              class="muted held-fee frame-line frame-short"
+                            ></span></span
+                        ></span>
+                      </span>
+                    </li>
+                  </ul>
+                  <span class="add-card frame-add"></span>
+                </section>
+              </div>
+            </div>
+            <div class="frame-body panels" data-frame="wallet-empty">
+              <section class="panel first">
+                <h3><span class="frame-line frame-heading"></span></h3>
+                <p>
+                  <span class="frame-line"></span>
+                  <span class="frame-line"></span>
+                  <span class="frame-line frame-short"></span>
+                </p>
+                <ul class="quick-cards">
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                  <li>
+                    <span class="quick-card frame-tile"
+                      ><span class="frame-art"></span
+                      ><span class="frame-line"></span
+                    ></span>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
           <noscript>
             <p>
               The card comparison needs JavaScript. The command line version

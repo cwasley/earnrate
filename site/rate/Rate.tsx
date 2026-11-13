@@ -81,6 +81,7 @@ import {
 } from './picture-text.ts'
 import { countedText, shareFigures } from './fee-figures.ts'
 import { SaveImage } from './SaveImage.tsx'
+import { REPORT_FRAME } from './frame.ts'
 import { runReport } from './run.ts'
 import { DELETED, notMade, ownLink, pickLink, UNDELETED } from './share.ts'
 import {
@@ -1709,7 +1710,8 @@ export function Rate() {
     return (
       <>
         <h1>A shared wallet</h1>
-        <p class="muted">Opening the report…</p>
+        <p class="visually-hidden">Opening the report…</p>
+        <div dangerouslySetInnerHTML={{ __html: REPORT_FRAME }} />
       </>
     )
   if (source.kind === 'bad')

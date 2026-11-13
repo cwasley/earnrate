@@ -1,7 +1,6 @@
 import { render } from 'preact'
 import { App } from './App.tsx'
 import { startMyLink } from './my-link.ts'
-import { loadWallet } from './saved-wallet.ts'
 import { copyButtons, trackClicks } from './track.ts'
 import { WalletBoundary } from './WalletBoundary.tsx'
 import './app.css'
@@ -12,9 +11,6 @@ startMyLink()
 
 const root = document.getElementById('app')
 if (root) {
-  // Someone with saved cards skips the headline (app.css).
-  if ((loadWallet()?.cards.length ?? 0) > 0)
-    root.closest('main')?.setAttribute('data-returning', '')
   root.textContent = ''
   render(
     <WalletBoundary ownWallet={() => true}>
@@ -22,6 +18,12 @@ if (root) {
     </WalletBoundary>,
     root,
   )
+  // The outline index.html showed until now (app.css).
+  const main = root.closest('main')
+  if (main) {
+    delete main.dataset.loading
+    delete main.dataset.saved
+  }
 }
 
 // Offline support for the installed app; only the built site has sw.js.

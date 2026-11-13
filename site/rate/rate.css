@@ -471,3 +471,67 @@ svg.rate-bar {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Before the page's script has run (rate.html): the outline of the report,
+   or of the card picker with no saved cards, by main's data-rate. What's
+   below waits for the report, so nothing on the page moves when it
+   arrives. */
+.rate-frame,
+.rate-frame > [data-rate-frame],
+main[data-rate='shared'] .rate-frame-lede {
+  display: none;
+}
+
+main[data-loading] .rate-frame,
+main:is([data-rate='own'], [data-rate='shared']) [data-rate-frame='report'],
+main[data-rate='pick'] [data-rate-frame='pick'] {
+  display: block;
+}
+
+main[data-loading] #rate > .lede,
+main[data-loading] #rate > noscript {
+  display: none;
+}
+
+main[data-loading] > :not(header, #rate) {
+  visibility: hidden;
+}
+
+.rate-report-frame {
+  margin-top: 16px;
+}
+
+main[data-rate='own'] .rate-frame-lede + .rate-report-frame {
+  margin-top: 0;
+}
+
+.rate-report-frame .rate-figure {
+  width: 3.4em;
+}
+
+.rate-frame-figure {
+  background-size: 100% 0.7em;
+}
+
+.rate-frame-per {
+  margin: 4px 0 0;
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.rate-report-frame .rate-cards li {
+  width: 8.5em;
+  min-height: 27px;
+  background:
+    linear-gradient(var(--line), var(--line)) center / calc(100% - 20px) 0.6em
+      no-repeat,
+    var(--surface);
+}
+
+.rate-report-frame .rate-cards li:nth-child(2) {
+  width: 11em;
+}
+
+.rate-frame-panel {
+  min-height: 480px;
+}

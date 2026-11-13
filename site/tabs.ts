@@ -7,3 +7,14 @@ export const TABS = [
 ] as const
 
 export type Tab = (typeof TABS)[number]['id']
+
+// The tab a home page address opens on. The home page's first-paint script
+// (site/index.html) repeats this so the right tab shows before the app has
+// loaded; tests/first-paint.test.ts keeps the two in step.
+export function tabFor(hash: string, holdsCards: boolean): Tab {
+  if (hash.length <= 1) return holdsCards ? 'wallet' : 'best'
+  const params = new URLSearchParams(hash.slice(1))
+  if (params.has('spending') || params.has('whatif')) return 'spending'
+  if (params.has('wallet') && params.get('wallet') === '') return 'wallet'
+  return 'best'
+}

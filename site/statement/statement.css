@@ -578,3 +578,11 @@ table.promises td {
   border-radius: 6px;
   border: 1px solid var(--line);
 }
+
+/* statement.html's copy of the first panel, shown only until the script
+   replaces it. */
+@media (scripting: none) {
+  .check-frame {
+    display: none;
+  }
+}

@@ -37,6 +37,74 @@
             JavaScript turned on.
           </p>
         </noscript>
+        <!-- The outline of a sent cheat sheet, until the page's script
+             replaces it (sheet.css). -->
+        <section class="panel sheet sent-sheet sheet-frame" aria-hidden="true">
+          <div class="sheet-head frame-sheet-head">
+            <div>
+              <span class="sheet-brand frame-line"></span>
+              <span class="frame-line frame-title"></span>
+              <p class="frame-line frame-short"></p>
+            </div>
+          </div>
+          <ol class="sheet-rows">
+            <li>
+              <span class="sheet-label frame-line frame-short"></span
+              ><span class="sheet-card frame-line"></span
+              ><span class="sheet-rate frame-line frame-rate"></span>
+            </li>
+            <li>
+              <span class="sheet-label frame-line frame-short"></span
+              ><span class="sheet-card frame-line"></span
+              ><span class="sheet-rate frame-line frame-rate"></span>
+            </li>
+            <li>
+              <span class="sheet-label frame-line frame-short"></span
+              ><span class="sheet-card frame-line"></span
+              ><span class="sheet-rate frame-line frame-rate"></span>
+            </li>
+            <li>
+              <span class="sheet-label frame-line frame-short"></span
+              ><span class="sheet-card frame-line"></span
+              ><span class="sheet-rate frame-line frame-rate"></span>
+            </li>
+            <li>
+              <span class="sheet-label frame-line frame-short"></span
+              ><span class="sheet-card frame-line"></span
+              ><span class="sheet-rate frame-line frame-rate"></span>
+            </li>
+            <li>
+              <span class="sheet-label frame-line frame-short"></span
+              ><span class="sheet-card frame-line"></span
+              ><span class="sheet-rate frame-line frame-rate"></span>
+            </li>
+            <li>
+              <span class="sheet-label frame-line frame-short"></span
+              ><span class="sheet-card frame-line"></span
+              ><span class="sheet-rate frame-line frame-rate"></span>
+            </li>
+            <li>
+              <span class="sheet-label frame-line frame-short"></span
+              ><span class="sheet-card frame-line"></span
+              ><span class="sheet-rate frame-line frame-rate"></span>
+            </li>
+            <li>
+              <span class="sheet-label frame-line frame-short"></span
+              ><span class="sheet-card frame-line"></span
+              ><span class="sheet-rate frame-line frame-rate"></span>
+            </li>
+          </ol>
+        </section>
+        <script>
+          // A sent cheat sheet is in the address: its outline shows while the
+          // page's script loads. Nothing is read from this browser.
+          ;(() => {
+            const main = document.currentScript.parentElement.parentElement
+            if (!/(^#|&)s=/.test(location.hash)) return
+            main.dataset.loading = ''
+            setTimeout(() => delete main.dataset.loading, 12000)
+          })()
+        </script>
       </div>
 
       <!--earnrate:footer-->
