@@ -221,11 +221,13 @@
         <p>
           <a href="/rate">Rate my wallet</a> works out in your browser what a
           set of cards earns in a year. If a wallet is saved in this browser, it
-          reads that wallet and your amounts from Best setups. The only changes
-          it makes are to save which of the wallet's statement credits you mark
-          as used or not, as My wallet would, and to your synced wallet if sync
-          is on, and to remember your short link once you make one (below).
-          Nothing else leaves your browser unless you make a link to the report.
+          reads that wallet and your amounts from Best setups. If not, the cards
+          you tap in on the page are saved to My wallet, as if you'd added them
+          there. The only other changes it makes are to save which of the
+          wallet's statement credits you mark as used or not, as My wallet
+          would, both to your synced wallet if sync is on, and to remember your
+          short link once you make one (below). Nothing else leaves your browser
+          unless you make a link to the report.
         </p>
         <p>
           A report link holds your cards by product, like amex-gold, their
@@ -255,24 +257,20 @@
           browser keeps it, each change to your wallet, or to your amounts if
           you put spending in the link, sends the new contents to the same name,
           a few seconds after your last change. Nothing else is sent with them.
-          Cards tapped in on the page get one link while the page is open, and
-          only that page knows its key: pressing Copy link or Share again after
-          a change sends the new contents to the same name. Nothing in a link
-          says who you are: no name, account, IP address, device or wallet is
-          kept with it, and it isn't tied to a sync sign-in. Opening the link
-          sends earnrate.dev only its name. Cloudflare's visit counts, described
-          below, record the address of each page opened, which for a short link
-          includes its name. A short link is deleted 13 months after it was last
-          opened or updated. Delete my link, under How this is worked out on
-          Rate my wallet, removes it sooner (copies Cloudflare holds elsewhere
-          can still open it for about a minute): your link from this browser at
-          any time, the link for cards tapped in only while the page that made
-          it is open. Without the key, earnrate has no way to tell which link
-          was yours, so it stays until it expires. Emptying your wallet deletes
-          your link. One IP address can make or update 10 links a minute, and
-          the whole site makes at most 300 new links a day, counted as one
-          number; past either limit, the page says the link couldn't be made and
-          to try again.
+          Nothing in a link says who you are: no name, account, IP address,
+          device or wallet is kept with it, and it isn't tied to a sync sign-in.
+          Opening the link sends earnrate.dev only its name. Cloudflare's visit
+          counts, described below, record the address of each page opened, which
+          for a short link includes its name. A short link is deleted 13 months
+          after it was last opened or updated. Delete my link, under How this is
+          worked out on Rate my wallet, removes it sooner (copies Cloudflare
+          holds elsewhere can still open it for about a minute), from the
+          browser that made it, at any time. Without the key, earnrate has no
+          way to tell which link was yours, so it stays until it expires.
+          Emptying your wallet deletes your link. One IP address can make or
+          update 10 links a minute, and the whole site makes at most 300 new
+          links a day, counted as one number; past either limit, the page says
+          the link couldn't be made and to try again.
         </p>
         <p>
           The page used to offer a longer link too (earnrate.dev/rate#w=…),

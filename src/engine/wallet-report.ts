@@ -365,6 +365,81 @@ export function reportStart(
   }
 }
 
+// Each card's part of the report's figure, in whole dollars: what it earns
+// on the spending it takes plus its credits counted, less its fee. The
+// cards' nets add up to the figure, and while credits are unanswered each
+// card's `upTo` (its net where it has none) adds up to the range's top.
+export type CardShare = {
+  cardId: string
+  fee: number // its annual fee, and a membership it needs that isn't paid
+  earned: number // rewards on the spending it takes, plus credits counted
+  net: number // earned less fee
+  // Its net with every credit and free night not yet answered used; null
+  // when it has none.
+  upTo: number | null
+}
+
+// Whole dollars for `amounts` that add up to `total` rounded: each rounded
+// down, then a dollar more for the largest remainders, or a dollar less for
+// the smallest when cents leave the total lower.
+function apportion(amounts: number[], total: number): number[] {
+  const out = amounts.map((a) => Math.floor(a + EPSILON))
+  let left = Math.round(total) - out.reduce((sum, n) => sum + n, 0)
+  const order = amounts
+    .map((a, i) => ({ i, rest: a - Math.floor(a + EPSILON) }))
+    .sort((a, b) => b.rest - a.rest)
+  for (let k = 0; left !== 0 && order.length > 0; k++) {
+    const up = left > 0
+    const at = up
+      ? order[k % order.length]
+      : order[order.length - 1 - (k % order.length)]
+    if (!at) break
+    out[at.i] = (out[at.i] ?? 0) + (up ? 1 : -1)
+    left += up ? -1 : 1
+  }
+  return out
+}
+
+export function cardShares(catalog: Catalog, r: ReportStart): CardShare[] {
+  const sim = r.simulation
+  const ids = sim.byCard.map((c) => c.cardId)
+  // A membership two cards need is counted once, on the first.
+  const membershipFee = (cardId: string) =>
+    sim.memberships
+      .filter((m) => m.cardIds.find((id) => ids.includes(id)) === cardId)
+      .reduce((sum, m) => sum + m.annualFee, 0)
+  const parts = sim.byCard.map((c) => {
+    const fee =
+      (catalog.cards.find((x) => x.id === c.cardId)?.annual_fee ?? 0) +
+      membershipFee(c.cardId)
+    const credits = r.counted.find((x) => x.cardId === c.cardId)?.yearly ?? 0
+    const unsaid = r.credits.find((x) => x.cardId === c.cardId)?.yearly ?? 0
+    return { cardId: c.cardId, fee, exact: c.rewards + credits - fee, unsaid }
+  })
+  const nets = apportion(
+    parts.map((p) => p.exact),
+    r.net,
+  )
+  const extra =
+    r.range === null
+      ? parts.map(() => 0)
+      : apportion(
+          parts.map((p) => p.unsaid),
+          Math.round(r.range.high) - Math.round(r.net),
+        )
+  return parts.map((p, i) => {
+    const net = nets[i] ?? 0
+    const fee = Math.round(p.fee)
+    return {
+      cardId: p.cardId,
+      fee,
+      earned: net + fee,
+      net,
+      upTo: p.unsaid > 0 ? net + (extra[i] ?? 0) : null,
+    }
+  })
+}
+
 export function reportBest(
   catalog: Catalog,
   input: ReportInput,
@@ -872,6 +947,56 @@ export function insteadShort(catalog: Catalog, v: FeeVerdict): string {
   return whole(i.net) === whole(v.net)
     ? `The ${name} would add about as much in its place, ${withFee}.`
     : `The ${name} would add more in its place: about ${net} a year, ${withFee}.`
+}
+
+// Keep or swap, in a sentence under a fee card's figures on /rate, from its
+// share of the figure and keep-or-replace's numbers. With other cards:
+// "Without it, your other cards would earn $210 of that, so it adds $160
+// after its fee." Alone: "The Citi Double Cash, with no fee, would net $478
+// on the same spending." A cheaper card that would add as much is named.
+export function feeCardKeepShort(
+  catalog: Catalog,
+  share: CardShare,
+  v: FeeVerdict,
+  voice: Voice = 'you',
+): string {
+  if (v.alone) {
+    const i = v.instead
+    if (i === null) return 'No card with a lower fee comes close.'
+    const withFee =
+      i.annualFee === 0 ? 'with no fee' : `with a ${money(i.annualFee)} fee`
+    return `The ${nameOf(catalog, i.cardId)}, ${withFee}, would net ${wholeDollars(i.net)} on the same spending.`
+  }
+  const adds = whole(v.net)
+  const kept = share.earned - share.fee - adds
+  const others = voice === 'you' ? 'your other cards' : 'the other cards'
+  const lead =
+    kept > 0
+      ? `Without it, ${others} would earn ${wholeDollars(kept)} of that`
+      : `Without it, ${others} would earn none of that`
+  const so =
+    adds > 0
+      ? `so it adds ${wholeDollars(adds)} after its fee`
+      : adds === 0
+        ? 'so it adds about what its fee costs'
+        : `so it falls ${wholeDollars(-adds)} short of its fee`
+  return [
+    `${lead}, ${so}.`,
+    v.outcome === 'ahead' ? insteadShort(catalog, v) : '',
+  ]
+    .filter((t) => t !== '')
+    .join(' ')
+}
+
+// A card's credits and free nights not answered yet, under its figures:
+// "With Uber, Grubhub and Resy used, it would net $410." Empty with none.
+export function shareCreditsShort(
+  share: CardShare,
+  unsaid: CreditsYear | undefined,
+): string {
+  if (share.upTo === null || !unsaid || unsaid.yearly <= 0) return ''
+  const upTo = unsaid.nights > 0 ? 'up to ' : ''
+  return `With ${fewCredits(unsaid, true)} used, it would net ${upTo}${wholeDollars(share.upTo)}.`
 }
 
 // Its credits not marked either way, as one short line: what the card

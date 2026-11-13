@@ -10,6 +10,7 @@ import { wholeDollars } from '../src/engine/text.ts'
 import {
   bestNote,
   breakdownText,
+  cardShares,
   feeCardCreditsShort,
   feeCardLead,
   feeCardShort,
@@ -32,7 +33,7 @@ import {
   upToText,
   type RatePicture,
 } from '../site/rate/picture-text.ts'
-import { feeFigures } from '../site/rate/fee-figures.ts'
+import { countedText, shareFigures } from '../site/rate/fee-figures.ts'
 import { TODAY } from './golden/fixtures.ts'
 
 const catalog = await loadCatalog()
@@ -257,26 +258,26 @@ describe("the report's picture", () => {
     expect(breakdownText(catalog, start)).toMatch(/in credits you use/)
   })
 
-  test('a card with a fee is three figures: what it adds, after its fee, and with every credit', () => {
-    const fees = reportFeeCards(catalog, input(), TODAY, typical)
-    const gold = fees.find((v) => v.cardId === 'amex-gold')
-    if (!gold) throw new Error('no Gold')
-    const { figures } = feeFigures(gold)
-    expect(figures.map((f) => f.label)).toEqual([
-      'Adds',
-      'After its fee',
-      'With every credit',
-    ])
-    expect(figures[0]?.value).toBe(wholeDollars(gold.net + gold.fee))
-    expect(figures[1]?.value.replace('+', '')).toBe(wholeDollars(gold.net))
-    expect(figures[2]?.value.replace('+', '')).toBe(
-      wholeDollars(gold.net + gold.unsaid.yearly),
-    )
-    const answered_ = reportFeeCards(catalog, answered(own), TODAY, own)
-    for (const v of answered_) {
-      const f = feeFigures(v)
-      expect(f.figures).toHaveLength(2)
-      if (v.used.length > 0) expect(f.counting).toMatch(/^Counts /)
+  test('a card with a fee is three figures that add up, its part of the headline: what it earns here, its fee and what it nets', () => {
+    for (const given of [input(), answered(own)]) {
+      const start = reportStart(catalog, given, TODAY, typical)
+      const shares = cardShares(catalog, start)
+      for (const s of shares) {
+        const figures = shareFigures(s)
+        expect(figures.map((f) => f.label)).toEqual(['Earns', 'Fee', 'Nets'])
+        expect(figures.map((f) => f.value)).toEqual([
+          wholeDollars(s.earned),
+          wholeDollars(-s.fee),
+          wholeDollars(s.net),
+        ])
+      }
+      expect(wholeDollars(shares.reduce((n, s) => n + s.net, 0))).toBe(
+        wholeDollars(start.net),
+      )
+      for (const c of start.counted)
+        expect(countedText(c.names)).toMatch(/^Counts .+\.$/)
     }
+    expect(countedText([])).toBe('')
+    expect(countedText(['A', 'B', 'C', 'D'])).toBe('Counts 4 credits.')
   })
 })

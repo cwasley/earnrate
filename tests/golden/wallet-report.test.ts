@@ -17,23 +17,32 @@ import {
 } from '../../src/engine/simulate.ts'
 import { usedCreditsYear } from '../../src/engine/credits.ts'
 import { inEffect } from '../../src/engine/periods.ts'
-import { roundCents, wholeDollars } from '../../src/engine/text.ts'
+import {
+  roundCents,
+  shortCardName,
+  wholeDollars,
+} from '../../src/engine/text.ts'
 import {
   bestNote,
   breakdownText,
+  cardShares,
   FEE_BADGES,
   feeCardBadge,
   feeCardCreditsShort,
+  feeCardKeepShort,
   feeCardLead,
   feeCardShort,
   feeCardText,
   flatNote,
   flatRateCard,
   gapText,
+  insteadShort,
   lineName,
   netFigure,
   reportBest,
+  reportFeeCards,
   reportStart,
+  shareCreditsShort,
   type FeeVerdict,
   reportWallet,
   walletReport,
@@ -589,6 +598,206 @@ describe('#42 rate my wallet: credits not answered yet', () => {
       expect(netFigure({ ...one, range: { low: 120, high: 544 } })).toBe(
         '$120 to $544',
       )
+    },
+  )
+})
+
+describe("#43 rate my wallet: each card's part adds up to the figure", () => {
+  const EIGHT = input(
+    [
+      'chase-sapphire-preferred',
+      { id: 'amex-gold', picks: {}, used: ['dunkin'] },
+      {
+        id: 'usbank-cash-plus',
+        picks: { 'five-percent': ['home-utilities', 'cell-phone'] },
+      },
+      'chase-freedom-unlimited',
+      'chase-prime-visa',
+      'amex-platinum',
+      'amex-blue-cash-preferred',
+      'sofi-unlimited-2',
+    ],
+    { memberships: ['amazon-prime'] },
+  )
+  const WALLETS: [string, ReportInput][] = [
+    ['one card', input(['chase-sapphire-preferred'])],
+    [
+      'one card with a credit used',
+      input([
+        {
+          id: 'chase-sapphire-preferred',
+          picks: {},
+          used: ['chase-travel-hotels'],
+        },
+      ]),
+    ],
+    [
+      'two cards',
+      input(['chase-sapphire-preferred', 'amex-blue-cash-preferred']),
+    ],
+    ['eight cards', EIGHT],
+  ]
+  const sum = (ns: number[]) => ns.reduce((a, b) => a + b, 0)
+
+  for (const [name, i] of WALLETS)
+    for (const [basis, s] of [
+      ['typical', typical()],
+      ['everyday', EVERYDAY],
+    ] as const)
+      goldenTest(
+        `#43a ${name}, ${basis} spending: each card earns, less its fee, what it nets, and the nets add up to the headline`,
+        () => {
+          const r = reportStart(catalog, i, TODAY, s)
+          const shares = cardShares(catalog, r)
+          expect(shares.map((c) => c.cardId)).toEqual(
+            r.cards.map((c) => c.cardId),
+          )
+          for (const c of shares) {
+            expect(c.earned - c.fee).toBe(c.net)
+            expect(c.fee).toBe(
+              catalog.cards.find((x) => x.id === c.cardId)?.annual_fee ?? 0,
+            )
+          }
+          expect(wholeDollars(sum(shares.map((c) => c.net)))).toBe(
+            wholeDollars(r.net),
+          )
+          expect(sum(r.simulation.byCard.map((c) => c.rewards))).toBeCloseTo(
+            r.simulation.rewards,
+            1,
+          )
+          if (r.range === null)
+            expect(shares.every((c) => c.upTo === null)).toBe(true)
+          else
+            expect(sum(shares.map((c) => c.upTo ?? c.net))).toBe(
+              Math.round(r.range.high),
+            )
+        },
+      )
+
+  goldenTest(
+    "#43b a card's earnings are its rewards on the spending it takes plus its credits counted",
+    () => {
+      const r = reportStart(
+        catalog,
+        input([
+          {
+            id: 'chase-sapphire-preferred',
+            picks: {},
+            used: ['chase-travel-hotels'],
+          },
+        ]),
+        TODAY,
+        typical(),
+      )
+      const [share] = cardShares(catalog, r)
+      const counted = r.counted[0]?.yearly ?? 0
+      expect(counted).toBeGreaterThan(0)
+      expect(share?.earned).toBe(Math.round(r.simulation.rewards + counted))
+      expect(share?.net).toBe(Math.round(r.net))
+    },
+  )
+
+  goldenTest(
+    "#43c held alone, keep or swap names the cheaper card keep-or-replace puts in its place, at keep-or-replace's figure",
+    () => {
+      const i = input(['chase-sapphire-preferred'])
+      const s = typical()
+      const r = reportStart(catalog, i, TODAY, s)
+      const [share] = cardShares(catalog, r)
+      const [v] = reportFeeCards(catalog, i, TODAY, s)
+      if (!share || !v?.instead) throw new Error('no verdict')
+      expect(v.alone).toBe(true)
+      const name = shortCardName(
+        catalog.cards.find((c) => c.id === v.instead?.cardId)?.name ?? '',
+      )
+      expect(feeCardKeepShort(catalog, share, v)).toBe(
+        `The ${name}, with no fee, would net ${wholeDollars(v.instead.net)} on the same spending.`,
+      )
+      expect(insteadShort(catalog, v)).toContain(wholeDollars(v.instead.net))
+    },
+  )
+
+  goldenTest(
+    '#43d beside other cards, keep or swap says what they would earn of it and what it adds, as keep-or-replace counts it',
+    () => {
+      for (const i of [
+        input(['chase-sapphire-preferred', 'amex-blue-cash-preferred']),
+        EIGHT,
+      ]) {
+        const s = typical()
+        const r = reportStart(catalog, i, TODAY, s)
+        const shares = cardShares(catalog, r)
+        const verdicts = reportFeeCards(catalog, i, TODAY, s)
+        expect(verdicts.length).toBeGreaterThan(0)
+        for (const v of verdicts) {
+          const share = shares.find((c) => c.cardId === v.cardId)
+          if (!share) throw new Error(v.cardId)
+          const text = feeCardKeepShort(catalog, share, v)
+          const adds = Math.round(v.net)
+          const kept = share.earned - share.fee - adds
+          const so =
+            adds > 0
+              ? `so it adds ${wholeDollars(adds)} after its fee.`
+              : adds === 0
+                ? 'so it adds about what its fee costs.'
+                : `so it falls ${wholeDollars(-adds)} short of its fee.`
+          expect(text).toContain(
+            kept > 0
+              ? `Without it, your other cards would earn ${wholeDollars(kept)} of that, ${so}`
+              : `Without it, your other cards would earn none of that, ${so}`,
+          )
+          // What the others would earn of it is what keep-or-replace finds
+          // they pick up: its rewards beyond the cards' rewards without it.
+          const k = keepOrReplace(
+            catalog,
+            reportWallet(catalog, i, TODAY, s).wallet,
+            v.cardId,
+            TODAY,
+            s,
+          )
+          const own =
+            r.simulation.byCard.find((c) => c.cardId === v.cardId)?.rewards ?? 0
+          expect(
+            Math.abs(kept - (own - (k?.renewal.rewardsAdded ?? 0))),
+          ).toBeLessThanOrEqual(1)
+          expect(Math.round(k?.renewal.net ?? NaN)).toBe(adds)
+          if (adds > 0)
+            expect(feeCardShort(catalog, v)).toContain(
+              `about ${wholeDollars(adds)} a year`,
+            )
+          expect(feeCardKeepShort(catalog, share, v, 'neutral')).toBe(
+            text.replace('your other cards', 'the other cards'),
+          )
+        }
+      }
+    },
+  )
+
+  goldenTest(
+    "#43e a credit not answered says what the card would net with it, at its part of the headline's top",
+    () => {
+      const r = reportStart(catalog, EIGHT, TODAY, typical())
+      const shares = cardShares(catalog, r)
+      const gold = shares.find((c) => c.cardId === 'amex-gold')
+      if (!gold) throw new Error('gold')
+      expect(
+        shareCreditsShort(
+          gold,
+          r.credits.find((c) => c.cardId === 'amex-gold'),
+        ),
+      ).toBe(
+        `With Uber, Grubhub and Resy used, it would net ${wholeDollars(gold.upTo ?? NaN)}.`,
+      )
+      const platinum = shares.find((c) => c.cardId === 'amex-platinum')
+      if (!platinum) throw new Error('platinum')
+      expect(
+        shareCreditsShort(
+          platinum,
+          r.credits.find((c) => c.cardId === 'amex-platinum'),
+        ),
+      ).toMatch(/^With all \d+ credits used, it would net \$[\d,]+\.$/)
+      const sofi = shares.find((c) => c.cardId === 'sofi-unlimited-2')
+      expect(sofi?.upTo).toBeNull()
     },
   )
 })

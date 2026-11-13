@@ -8,8 +8,8 @@ import {
   reportCodes,
   shortCode,
 } from '../site/rate/link.ts'
-import { notMade, NOT_UPDATED, pageLink, pickLink } from '../site/rate/share.ts'
-import { writeReport, type Saved, type Written } from '../site/rate/store.ts'
+import { notMade, pickLink } from '../site/rate/share.ts'
+import { writeReport, type Written } from '../site/rate/store.ts'
 import { checkReport } from '../site/report-check.ts'
 import preview from '../site/preview-worker.ts'
 import {
@@ -822,63 +822,5 @@ describe('short report links', () => {
     expect(notMade('full')).toMatch(/won't open\. Try again tomorrow\.$/)
     for (const result of ['busy', 'offline', 'refused', 'full'] as const)
       expect(notMade(result)).not.toMatch(/#|saved anywhere|longer/)
-  })
-
-  test('cards tapped in keep one link for the page: a change rewrites it, and Delete removes the only one', async () => {
-    const names = [
-      { id: '7kq3mdx9', key: newKey() },
-      { id: '8mr4nfy2', key: newKey() },
-    ]
-    const writes: [Saved, string][] = []
-    const removed: Saved[] = []
-    let answer: Written = 'ok'
-    const link = pageLink({
-      name: () => {
-        const next = names.shift()
-        if (!next) throw new Error('named too many')
-        return next
-      },
-      write: (saved, report) => {
-        writes.push([saved, report])
-        return Promise.resolve(answer)
-      },
-      remove: (saved) => {
-        removed.push(saved)
-        return Promise.resolve(true)
-      },
-    })
-    const first = link.tap(SITE, 'one')
-    expect(first.url).toBe(`${SITE}/r/7kq3mdx9`)
-    expect(await first.done).toBeNull()
-    const same = link.tap(SITE, 'one')
-    expect(await same.done).toBeNull()
-    expect(writes).toHaveLength(1)
-    expect(link.holds('two')).toBe(false)
-    const changed = link.tap(SITE, 'two')
-    expect(changed.url).toBe(first.url)
-    expect(link.holds('two')).toBe(true)
-    expect(await changed.done).toBeNull()
-    expect(writes.map(([saved, r]) => [saved.id, r])).toEqual([
-      ['7kq3mdx9', 'one'],
-      ['7kq3mdx9', 'two'],
-    ])
-    expect(writes[1]?.[0].key).toBe(writes[0]?.[0].key)
-
-    answer = 'busy'
-    expect(await link.tap(SITE, 'three').done).toBe(NOT_UPDATED)
-    expect(link.current()?.id).toBe('7kq3mdx9')
-    answer = 'ok'
-    expect(await link.tap(SITE, 'three').done).toBeNull()
-    expect(writes.at(-1)?.[0].id).toBe('7kq3mdx9')
-
-    expect(await link.remove()).toBe(true)
-    expect(removed.map((r) => r.id)).toEqual(['7kq3mdx9'])
-    expect(link.current()).toBeNull()
-
-    answer = 'full'
-    const fresh = link.tap(SITE, 'four')
-    expect(fresh.url).toBe(`${SITE}/r/8mr4nfy2`)
-    expect(await fresh.done).toBe(notMade('full'))
-    expect(link.current()).toBeNull()
   })
 })

@@ -331,6 +331,40 @@ svg.rate-bar {
   justify-self: start;
 }
 
+/* A card with no fee: one line, what it earns at the end. */
+.rate-fees > li.rate-fee-plain {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.rate-fee-amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.rate-fee-amount .muted {
+  font-weight: 400;
+}
+
+/* The cards' nets added up: the figure at the top. */
+.rate-fee-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 2px solid var(--line);
+}
+
+.rate-fee-total strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
 .tag {
   font-size: 13px;
   font-weight: 600;

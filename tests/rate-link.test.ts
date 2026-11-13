@@ -282,7 +282,7 @@ describe('report links', () => {
     expect(reads).toBe(0)
   })
 
-  test("the page writes storage only through the saved wallet's credit answers, and its only requests are those and the short links' own, beyond the event counter", () => {
+  test("the page writes storage only through the visitor's own wallet (cards tapped in and credit answers), and its only requests are those and the short links' own, beyond the event counter", () => {
     const dir = path.join(ROOT, 'site/rate')
     const files = readdirSync(dir).filter((f) => /\.tsx?$/.test(f))
     expect(files).toContain('Rate.tsx')
@@ -300,7 +300,19 @@ describe('report links', () => {
       expect(source, f).not.toMatch(/from '\.\.\/statement/)
     }
     const rate = readFileSync(path.join(dir, 'Rate.tsx'), 'utf8')
-    expect(rate.match(/\bOWN_WALLET\b/g)?.length).toBe(2)
+    // The wallet is read and written only where the page shows the
+    // visitor's own: never where it shows a shared report.
+    const shared = rate.slice(
+      rate.indexOf('function Shared('),
+      rate.indexOf('function RateYourOwn('),
+    )
+    expect(shared).not.toMatch(
+      /OWN_WALLET|pullSynced|storageChanged|readSaved|myLink|answerSaver/,
+    )
+    const own = rate.slice(rate.indexOf('function Mine('))
+    expect(rate.match(/\bOWN_WALLET\b/g)?.length).toBe(
+      (own.match(/\bOWN_WALLET\b/g)?.length ?? 0) + 1,
+    )
     expect(rate).toContain('answerSaver(source, OWN_WALLET)')
     expect(readFileSync(path.join(dir, 'answers.ts'), 'utf8')).not.toMatch(
       /\bsyncRequest\b/,
@@ -321,7 +333,7 @@ describe('report links', () => {
     expect(mine).toContain('localStorage.setItem(LINK_KEY,')
   })
 
-  test("only the visitor's own saved wallet has a link that is kept and updated", () => {
+  test("only the visitor's own wallet, saved or tapped in, has a link that is kept and updated", () => {
     const link = new Proxy({} as LinkUpdater, {
       get: () => {
         throw new Error('touched the saved link')
@@ -340,11 +352,16 @@ describe('report links', () => {
       shared,
       storedSource(catalog, { kind: 'gone' }),
       { kind: 'loading' as const },
-      reportSource(catalog, '', () => ({ wallet: null, rows: null })),
     ]
     for (const source of sources) expect(ownLink(source, link)).toBeNull()
     const own = reportSource(catalog, '', () => ({ wallet, rows: null }))
     expect(ownLink(own, link)).toBe(link)
+    const tapping = reportSource(catalog, '', () => ({
+      wallet: null,
+      rows: null,
+    }))
+    expect(tapping.kind).toBe('pick')
+    expect(ownLink(tapping, link)).toBe(link)
   })
 
   test('a short link is read by its id alone, and a gone one says so plainly', () => {

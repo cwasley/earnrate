@@ -14,10 +14,6 @@ export function notMade(result: Exclude<Written, 'ok'>): string {
     : "That link couldn't be made just now, so it won't open. Try again in a minute."
 }
 
-// Said when a tap couldn't put the page's changes in a link that exists.
-export const NOT_UPDATED =
-  "That link couldn't be updated just now, so it still shows the report as it was. Try again in a minute."
-
 export const DELETED =
   'Deleted. That link now says the report is gone, and nothing of it is kept.'
 
@@ -38,81 +34,9 @@ export function pickLink(
   return { url: shortUrl(origin, fresh.id), fresh }
 }
 
-// Only the visitor's own saved wallet has a link this browser keeps and
-// updates: cards tapped in, or a shared report, never do.
+// Only the visitor's own wallet has a link this browser keeps and updates:
+// the saved one, or the one they start by tapping cards in. A shared report
+// never does.
 export function ownLink(source: Source, link: LinkUpdater): LinkUpdater | null {
-  return source.kind === 'own' ? link : null
-}
-
-export type PageLinkDeps = {
-  name: () => Saved
-  write: (link: Saved, report: string) => Promise<Written>
-  remove: (link: Saved) => Promise<boolean>
-}
-
-// What a tap's write said: null when the link holds the report.
-export type Tapped = string | null
-
-// Cards tapped in on /rate get one link for the page's session, kept only
-// in its memory with its delete key. The first Copy link or Share names it;
-// a later one after a change rewrites it with the key, as the visitor's own
-// link is, so Delete my link leaves nothing behind. Writes go one at a time.
-export function pageLink(deps: PageLinkDeps) {
-  let link: Saved | null = null
-  let made = false // the server has it
-  let asked: string | null = null // the report last written, or on its way
-  let chain: Promise<unknown> = Promise.resolve()
-  const serial = <T>(fn: () => Promise<T>): Promise<T> => {
-    const next = chain.then(fn, fn)
-    chain = next.catch(() => undefined)
-    return next
-  }
-
-  const tap = (
-    origin: string,
-    report: string,
-  ): { url: string; done: Promise<Tapped> } => {
-    link ??= deps.name()
-    const saved = link
-    const url = shortUrl(origin, saved.id)
-    if (report === asked) return { url, done: Promise.resolve(null) }
-    asked = report
-    const done = serial(async (): Promise<Tapped> => {
-      const update = made && link === saved
-      const result = await deps.write(saved, report)
-      if (result === 'ok') {
-        if (link === null) link = saved
-        if (link === saved) made = true
-        // Named again after this one failed: this copy isn't wanted.
-        else await deps.remove(saved)
-        return null
-      }
-      if (asked === report) asked = null
-      if (link === saved && !made) link = null
-      return update ? NOT_UPDATED : notMade(result)
-    })
-    return { url, done }
-  }
-
-  const remove = (): Promise<boolean> => {
-    const saved = link
-    if (saved === null) return Promise.resolve(true)
-    return serial(async () => {
-      const ok = await deps.remove(saved)
-      if (ok && link === saved) {
-        link = null
-        made = false
-        asked = null
-      }
-      return ok
-    })
-  }
-
-  return {
-    current: (): Saved | null => link,
-    // Whether the link has, or is getting, this report.
-    holds: (report: string): boolean => link !== null && asked === report,
-    tap,
-    remove,
-  }
+  return source.kind === 'own' || source.kind === 'pick' ? link : null
 }

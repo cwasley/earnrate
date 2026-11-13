@@ -16,9 +16,11 @@ import {
   assumedPicksText,
   bestNote,
   breakdownText,
+  cardShares,
   feeCardBadge,
   feeCardCreditsShort,
-  insteadShort,
+  feeCardKeepShort,
+  shareCreditsShort,
   flatNote,
   gapText,
   lineName,
@@ -27,6 +29,7 @@ import {
   reportNotes,
   reportStart,
   type BestCards,
+  type CardShare,
   type FeeVerdict,
   type Gap,
   type ReportInput,
@@ -52,16 +55,19 @@ import type { LinkState, LinkUpdater } from '../app/report-link.ts'
 import { sameRows } from '../app/spending-rows.ts'
 import { track } from '../app/track.ts'
 import {
+  addCard,
   answeredMarks,
   answerSaver,
   heldMarks,
+  removeCard,
   sameMarks,
   type Marks,
+  type SaveResult,
   type Saver,
 } from './answers.ts'
 import { Bar } from './Bar.tsx'
 import { decodeReport, encodeReport, reportPart } from './link.ts'
-import { OWN_WALLET } from './own-wallet.ts'
+import { OWN_WALLET, pullSynced, storageChanged } from './own-wallet.ts'
 import { spendingLines, walletReportInput } from './own-report.ts'
 import {
   comparisonRows,
@@ -72,24 +78,15 @@ import {
   type CompareRow,
   type RatePicture,
 } from './picture-text.ts'
-import { feeFigures } from './fee-figures.ts'
+import { countedText, shareFigures } from './fee-figures.ts'
 import { SaveImage } from './SaveImage.tsx'
 import { runReport } from './run.ts'
+import { DELETED, notMade, ownLink, pickLink, UNDELETED } from './share.ts'
 import {
-  DELETED,
-  notMade,
-  ownLink,
-  pageLink,
-  pickLink,
-  UNDELETED,
-} from './share.ts'
-import {
-  deleteReport,
   loadReport,
   newLink,
   shortUrl,
   storedId,
-  writeReport,
   type Saved,
   type Written,
 } from './store.ts'
@@ -139,26 +136,50 @@ const withMarks = (c: ReportCard, m: Marks | undefined): ReportCard => ({
   ...(m && m.skipped.length > 0 ? { skipped: m.skipped } : {}),
 })
 
+const marksOf = (input: ReportInput): Record<string, Marks> =>
+  Object.fromEntries(
+    input.cards.map((c) => [
+      c.id,
+      { used: c.used ?? [], skipped: c.skipped ?? [] },
+    ]),
+  )
+
 // Credit answers change the report at once. Each tap or All / None is one
 // change: the card's whole used and not-used lists. With a saver (the
 // visitor's own wallet) it's saved too, and then shows what was saved: a
-// refusal puts the card's answers back as they are in My wallet.
+// refusal puts the card's answers back as they are in My wallet. When the
+// wallet changes elsewhere (My wallet in another tab, or Claude), its
+// answers replace the page's, except on a card whose answer is still saving.
 function useAnswers(initial: ReportInput, save: Saver | null) {
   const [marks, setMarks] = useState<Record<string, Marks>>(() =>
-    Object.fromEntries(
-      initial.cards.map((c) => [
-        c.id,
-        { used: c.used ?? [], skipped: c.skipped ?? [] },
-      ]),
-    ),
+    marksOf(initial),
   )
   const [error, setError] = useState<string | null>(null)
   const latest = useRef(marks)
   const turns = useRef(new Map<string, number>())
+  const saving = useRef(new Map<string, number>())
   const put = (cardId: string, m: Marks) => {
     latest.current = { ...latest.current, [cardId]: m }
     setMarks(latest.current)
   }
+  useEffect(() => {
+    const now = latest.current
+    const next = Object.fromEntries(
+      Object.entries(marksOf(initial)).map(([id, m]) => [
+        id,
+        (saving.current.get(id) ?? 0) > 0 ? (now[id] ?? m) : m,
+      ]),
+    )
+    const same =
+      Object.keys(next).length === Object.keys(now).length &&
+      Object.entries(next).every(([id, m]) => {
+        const was = now[id]
+        return was !== undefined && sameMarks(was, m)
+      })
+    if (same) return
+    latest.current = next
+    setMarks(next)
+  }, [initial])
   const set = (cardId: string, ids: string[], used: string[]) => {
     const was = latest.current[cardId] ?? NO_MARKS
     const next = answeredMarks(was, ids, used)
@@ -168,7 +189,9 @@ function useAnswers(initial: ReportInput, save: Saver | null) {
     if (!save) return
     const turn = (turns.current.get(cardId) ?? 0) + 1
     turns.current.set(cardId, turn)
+    saving.current.set(cardId, (saving.current.get(cardId) ?? 0) + 1)
     void save(cardId, next).then((result) => {
+      saving.current.set(cardId, (saving.current.get(cardId) ?? 1) - 1)
       if (turns.current.get(cardId) !== turn) return
       if (!result.ok) setError(result.error)
       const held = result.wallet?.cards.find((c) => c.id === cardId)
@@ -187,7 +210,12 @@ const applyMarks = (
   marks: Record<string, Marks>,
 ): ReportInput => ({
   ...input,
-  cards: input.cards.map((c) => withMarks(c, marks[c.id])),
+  cards: input.cards.map((c) =>
+    withMarks(
+      c,
+      marks[c.id] ?? { used: c.used ?? [], skipped: c.skipped ?? [] },
+    ),
+  ),
 })
 
 type Parts = {
@@ -374,33 +402,40 @@ function Comparison({
   )
 }
 
+// Each card's part of the figure at the top: a card with a fee as what it
+// earns here, its fee and what it nets, with whether it earns its place;
+// one without as what it earns; then the total, which is the figure. The
+// figures show at once, from the report's start; the verdicts follow.
 function FeeCards({
-  input,
+  start,
   fees,
   busy,
   voice,
 }: {
-  input: ReportInput
+  start: ReportStart
   fees: Map<string, FeeVerdict | null>
   busy: Busy
   voice: Voice
 }) {
-  const ids = input.cards
-    .map((c) => c.id)
-    .filter((id) => (cards.get(id)?.annual_fee ?? 0) > 0)
-  if (ids.length === 0) return null
+  const shares = useMemo(() => cardShares(catalog, start), [start])
+  const withFee = shares.filter(
+    (s) => (cards.get(s.cardId)?.annual_fee ?? 0) > 0,
+  )
+  if (withFee.length === 0) return null
+  const noFee = shares.filter((s) => !withFee.includes(s))
   return (
     <section
       class="panel rate-part"
-      aria-busy={ids.some((id) => busy(`fee:${id}`))}
+      aria-busy={withFee.some((s) => busy(`fee:${s.cardId}`))}
     >
       <h2>
-        {ids.length === 1
+        {shares.length === 1
           ? 'Card with an annual fee'
-          : 'Cards with an annual fee'}
+          : 'What each card nets'}
       </h2>
       <ul class="rate-fees">
-        {ids.map((id) => {
+        {withFee.map((s) => {
+          const id = s.cardId
           const v = fees.get(id)
           return (
             <li key={id} aria-busy={busy(`fee:${id}`)}>
@@ -410,7 +445,7 @@ function FeeCards({
                   <strong>{shortName(id)}</strong>
                   <span class="muted small">
                     {' · '}
-                    {feeLabel(id).replace(/ a year/g, '\u00a0a\u00a0year')}
+                    {feeLabel(id).replace(/ a year/g, ' a year')}
                   </span>
                 </span>
                 {v ? (
@@ -426,41 +461,78 @@ function FeeCards({
                   </span>
                 ) : null}
               </div>
-              {v === undefined ? (
-                <>
-                  <Lines n={2} />
-                  <div class="small">
-                    <Lines n={1} />
-                  </div>
-                </>
-              ) : v === null ? null : (
-                <FeeLines v={v} voice={voice} />
-              )}
+              <FeeLines share={s} start={start} v={v} voice={voice} />
             </li>
           )
         })}
+        {noFee.map((s) => (
+          <li class="rate-fee-plain" key={s.cardId}>
+            <CardArt id={s.cardId} width={40} />
+            <span>
+              <strong>{shortName(s.cardId)}</strong>
+              <span class="muted small"> · No annual fee</span>
+            </span>
+            <span class="rate-fee-amount">
+              <span class="muted small">Earns </span>
+              <Words text={wholeDollars(s.net)} />
+            </span>
+          </li>
+        ))}
       </ul>
+      {shares.length > 1 ? (
+        <p class="rate-fee-total">
+          <span>
+            {voice === 'you' ? 'Your' : 'The'} {String(shares.length)} cards
+            together
+          </span>
+          <strong>
+            <Words text={wholeDollars(shares.reduce((n, s) => n + s.net, 0))} />
+          </strong>
+        </p>
+      ) : null}
     </section>
   )
 }
 
-// What it adds, after its fee and with every credit used, as figures; the
-// cheaper card that would do as well, and an unvalued free night, in words.
-function FeeLines({ v, voice }: { v: FeeVerdict; voice: Voice }) {
-  const { figures, counting } = feeFigures(v)
-  const night = v.unsaid.yearly > 0 ? '' : feeCardCreditsShort(v, voice)
-  const instead = insteadShort(catalog, v)
-  const notes = [counting ?? '', instead, night].filter((t) => t !== '')
+// Earns, less its fee, nets; then keep or swap in a sentence, the credits
+// counted, and what the ones not answered would make it.
+function FeeLines({
+  share,
+  start,
+  v,
+  voice,
+}: {
+  share: CardShare
+  start: ReportStart
+  v: FeeVerdict | null | undefined
+  voice: Voice
+}) {
+  const counted = start.counted.find((c) => c.cardId === share.cardId)
+  const unsaid = start.credits.find((c) => c.cardId === share.cardId)
+  const notes = [
+    countedText(counted?.names ?? []),
+    shareCreditsShort(share, unsaid),
+    v && v.unsaid.yearly <= 0 ? feeCardCreditsShort(v, voice) : '',
+  ].filter((t) => t !== '')
   return (
     <>
       <dl class="rate-fee-figures">
-        {figures.map((f) => (
+        {shareFigures(share).map((f) => (
           <div key={f.label}>
             <dt>{f.label}</dt>
-            <dd>{f.value}</dd>
+            <dd>
+              <Words text={f.value} />
+            </dd>
           </div>
         ))}
       </dl>
+      {v === undefined ? (
+        <Lines n={2} />
+      ) : v === null ? null : (
+        <p>
+          <Words text={feeCardKeepShort(catalog, share, v, voice)} />
+        </p>
+      )}
       {notes.length === 0 ? null : (
         <p class="muted small">
           <Words text={notes.join(' ')} />
@@ -576,7 +648,6 @@ const ONE_COUNTED = { counted: [null] }
 // goes in the page's own "How this is worked out" section.
 function Report({
   start,
-  input,
   parts,
   busy,
   share,
@@ -587,7 +658,6 @@ function Report({
   nothing = null,
 }: {
   start: ReportStart
-  input: ReportInput
   parts: Parts
   busy: Busy
   share: ComponentChildren
@@ -661,7 +731,7 @@ function Report({
           voice={voice}
         />
         {share}
-        <FeeCards input={input} fees={fees} busy={busy} voice={voice} />
+        <FeeCards start={start} fees={fees} busy={busy} voice={voice} />
         <Next next={next} busy={busy('next')} />
         <Gaps gaps={gaps} busy={busy('gaps')} voice={voice} />
         {closing}
@@ -912,19 +982,11 @@ function Into({
   return null
 }
 
-// Cards tapped in share one link while the page is open (share.ts).
-const tapped = pageLink({
-  name: newLink,
-  write: writeReport,
-  remove: deleteReport,
-})
-
 // Copy link and Share name a short link on the page, so its address is
-// ready inside the tap; the report is saved just after. Your own wallet has
-// one link, which this browser keeps and updates when the wallet changes
-// (app/my-link.ts). Cards tapped in have one for the page, which each tap
-// after a change rewrites. A link that couldn't be made is forgotten, so the
-// next tap names a new one.
+// ready inside the tap; the report is saved just after. Your wallet has one
+// link, which this browser keeps and updates when the wallet changes
+// (app/my-link.ts). A link that couldn't be made is forgotten, so the next
+// tap names a new one.
 function ShareBox({
   input,
   spending,
@@ -941,7 +1003,7 @@ function ShareBox({
   include: boolean
   setInclude: (on: boolean) => void
   picture: RatePicture | null
-  mine: LinkUpdater | null
+  mine: LinkUpdater
   edited: boolean
 }) {
   const [, redraw] = useState(0)
@@ -956,13 +1018,12 @@ function ShareBox({
     input,
     lines: spending.typical ? null : spending.lines,
   }).slice(2)
-  const report = (mine ? mine.report(include) : null) ?? pageReport
-  const linked = mine ? decodeReport(catalog, `w=${report}`) : null
-  const held =
-    linked?.ok === true
-      ? holds(linked.link.input, linked.link.lines)
-      : holds(input, spending.typical ? null : spending.lines)
-  const have: Saved | null = mine ? own : tapped.current()
+  const report = mine.report(include) ?? pageReport
+  const linked = decodeReport(catalog, `w=${report}`)
+  const held = linked.ok
+    ? holds(linked.link.input, linked.link.lines)
+    : holds(input, spending.typical ? null : spending.lines)
+  const have: Saved | null = own
   const boxed = have === null ? null : shortUrl(location.origin, have.id)
   const canShare = typeof navigator.share === 'function'
 
@@ -985,15 +1046,6 @@ function ShareBox({
     setNote(null)
     setShown(null)
     setDeleted(null)
-    if (!mine) {
-      const t = tapped.tap(location.origin, report)
-      redraw((n) => n + 1)
-      void t.done.then((said) => {
-        if (said === null) redraw((n) => n + 1)
-        else failed(said)
-      })
-      return t.url
-    }
     mine.flush()
     const t = pickLink(location.origin, have, newLink)
     if (t.fresh) {
@@ -1027,8 +1079,7 @@ function ShareBox({
 
   const remove = () => {
     if (!have) return
-    const done = mine ? mine.remove() : tapped.remove()
-    void done.then((ok) => {
+    void mine.remove().then((ok) => {
       if (ok) {
         setShown(null)
         setNote(null)
@@ -1043,16 +1094,14 @@ function ShareBox({
       <h2 id="rate-share-title">Share this report</h2>
       {boxed === null ? (
         <p class="small">
-          {mine
-            ? 'Your link stays the same, and updates when your wallet changes.'
-            : 'Copy link saves this report on earnrate.dev under a short random name.'}
+          Your link stays the same, and updates when your wallet changes.
         </p>
       ) : (
         <input
           class="rate-url"
           type="text"
           readOnly
-          aria-label={mine ? 'Your link' : 'The link'}
+          aria-label="Your link"
           value={boxed}
           onFocus={(e) => e.currentTarget.select()}
         />
@@ -1068,11 +1117,8 @@ function ShareBox({
         ) : null}
         <SaveImage picture={picture} />
       </div>
-      {mine && have !== null && edited ? (
+      {have !== null && edited ? (
         <p class="small">Changes made only on this page aren’t in your link.</p>
-      ) : null}
-      {!mine && have !== null && !tapped.holds(report) ? (
-        <p class="small">Copy or share it again to put these changes in it.</p>
       ) : null}
       {linkState?.trouble ? <p class="small">{linkState.trouble}</p> : null}
       {shown === null || shown === boxed ? null : (
@@ -1135,32 +1181,38 @@ function Answers({
   )
 }
 
-// Your own cards, or ones tapped in: editable on the page, never saved.
+// The visitor's own wallet. Credit answers save to it; picks and amounts
+// changed here stay on the page. Amounts saved from Get a card in another
+// tab replace the page's.
 function Rated({
   initial,
   rows: savedRows,
-  saveCards,
   save,
   mine,
 }: {
   initial: ReportInput
   rows: Row[] | null
-  saveCards: boolean
   save: Saver | null
-  mine: LinkUpdater | null
+  mine: LinkUpdater
 }) {
   const today = useMemo(() => localToday(), [])
-  const [firstRows] = useState<Row[]>(
-    () => savedRows ?? TYPICAL_MONTHLY_SPEND.map((t) => ({ ...t })),
-  )
+  const rowsFrom = (saved: Row[] | null) =>
+    saved ?? TYPICAL_MONTHLY_SPEND.map((t) => ({ ...t }))
+  const [firstRows, setFirstRows] = useState<Row[]>(() => rowsFrom(savedRows))
   const [rows, setRows] = useState<Row[]>(firstRows)
+  useEffect(() => {
+    const next = rowsFrom(savedRows)
+    if (sameRows(next, firstRows)) return
+    setFirstRows(next)
+    setRows(next)
+  }, [savedRows])
   const [picks, setPicks] = useState<Record<string, Picks>>({})
   const [include, setIncluded] = useState(
-    () => mine?.state().link?.spending ?? SHARE_SPENDING,
+    () => mine.state().link?.spending ?? SHARE_SPENDING,
   )
   const setInclude = (on: boolean) => {
     setIncluded(on)
-    mine?.setSpending(on)
+    mine.setSpending(on)
   }
   const answers = useAnswers(initial, save)
   const own = useMemo(() => spendingOf(rows), [rows])
@@ -1201,54 +1253,41 @@ function Rated({
     [parts.bestStart, parts.best, today],
   )
   return (
-    <>
-      <Report
-        start={start}
-        input={linked}
-        parts={parts}
-        busy={busy}
-        voice="you"
-        nothing={
-          spending.typical ? null : nothingCounted(catalog, spending.lines)
-        }
-        answers={<Answers start={start} answers={answers} />}
-        editors={
-          <>
-            <SpendingEditor rows={rows} setRows={setRows} start={start} />
-            <PicksEditor
-              start={start}
-              picks={picks}
-              setPicks={(p) => setPicks(p)}
-            />
-          </>
-        }
-        share={
-          <ShareBox
-            input={linked}
-            spending={spending}
-            ownSpending={!own.typical}
-            include={include}
-            setInclude={setInclude}
-            picture={picture}
-            mine={mine}
-            edited={
-              Object.keys(picks).length > 0 ||
-              (include && !sameRows(rows, firstRows))
-            }
+    <Report
+      start={start}
+      parts={parts}
+      busy={busy}
+      voice="you"
+      nothing={
+        spending.typical ? null : nothingCounted(catalog, spending.lines)
+      }
+      answers={<Answers start={start} answers={answers} />}
+      editors={
+        <>
+          <SpendingEditor rows={rows} setRows={setRows} start={start} />
+          <PicksEditor
+            start={start}
+            picks={picks}
+            setPicks={(p) => setPicks(p)}
           />
-        }
-      />
-      {saveCards ? (
-        <p class="rate-save">
-          <a
-            class="button"
-            href={`/#wallet&${input.cards.map((c) => `add=${c.id}`).join('&')}`}
-          >
-            Save these cards to My wallet
-          </a>
-        </p>
-      ) : null}
-    </>
+        </>
+      }
+      share={
+        <ShareBox
+          input={linked}
+          spending={spending}
+          ownSpending={!own.typical}
+          include={include}
+          setInclude={setInclude}
+          picture={picture}
+          mine={mine}
+          edited={
+            Object.keys(picks).length > 0 ||
+            (include && !sameRows(rows, firstRows))
+          }
+        />
+      }
+    />
   )
 }
 
@@ -1334,7 +1373,6 @@ function Shared({
   return (
     <Report
       start={start}
-      input={input}
       parts={parts}
       busy={busy}
       voice="neutral"
@@ -1430,70 +1468,179 @@ function CardFinder({
   )
 }
 
-// No saved wallet: tap cards in, held only on this page.
-function Pick({ rows }: { rows: Row[] | null }) {
-  const [picked, setPicked] = useState<string[]>([])
-  const [rating, setRating] = useState(false)
-  const input = useMemo(
-    (): ReportInput => ({
-      cards: picked.map((id) => ({ id, picks: {} })),
-      memberships: [],
-      valuations: {},
-    }),
-    [picked],
-  )
-  const count = picked.length
-  if (rating && count > 0)
-    return (
-      <>
-        <p class="rate-change">
-          <button type="button" class="link" onClick={() => setRating(false)}>
-            Change cards
-          </button>
-        </p>
-        <Rated initial={input} rows={rows} saveCards save={null} mine={null} />
-      </>
-    )
-  const wallet: Wallet = {
-    valuations: {},
-    memberships: [],
-    cards: picked.map((id) => ({ id, cap_usage: {}, activated: [] })),
-  }
+// No saved cards yet: each card tapped in is added to My wallet, and taken
+// out again if it's tapped again.
+function Pick({
+  wallet,
+  added,
+  error,
+  onAdd,
+  onRemove,
+  onRate,
+}: {
+  wallet: Wallet | null
+  added: string[]
+  error: string | null
+  onAdd: (id: string) => void
+  onRemove: (id: string) => void
+  onRate: () => void
+}) {
+  const held = (wallet?.cards ?? [])
+    .map((c) => c.id)
+    .filter((id) => cards.has(id))
+  const count = held.length
   return (
     <section class="panel first rate-pick">
       <h2>Which cards do you have?</h2>
       <p>
-        Tap the cards you have. See what they earn after fees, and how that
-        compares.
+        Tap the cards you have, then see what they earn after fees and how that
+        compares. They're saved to My wallet.
       </p>
       <QuickCards
         wallet={wallet}
-        added={picked}
-        onAdd={(id) => setPicked((p) => (p.includes(id) ? p : [...p, id]))}
-        onRemove={(id) => setPicked((p) => p.filter((x) => x !== id))}
+        added={added}
+        onAdd={onAdd}
+        onRemove={onRemove}
       />
-      <CardFinder
-        picked={picked}
-        onAdd={(id) => setPicked((p) => (p.includes(id) ? p : [...p, id]))}
-      />
+      <CardFinder picked={held} onAdd={onAdd} />
+      {error === null ? null : <p class="callout small">{error}</p>}
       {count > 0 ? (
         <div class="quick-done">
           <span>
             {count} card{count === 1 ? '' : 's'}
           </span>
-          <button
-            type="button"
-            class="primary"
-            onClick={() => {
-              setRating(true)
-              requestAnimationFrame(() => scrollTo({ top: 0 }))
-            }}
-          >
+          <button type="button" class="primary" onClick={onRate}>
             Rate {count === 1 ? 'it' : 'them'}
           </button>
         </div>
       ) : null}
     </section>
+  )
+}
+
+const WATCHED = ['earnrate:wallet', 'earnrate:spending', 'earnrate:sync']
+
+const hasCards = (w: Wallet | null) =>
+  (w?.cards ?? []).some((c) => cards.has(c.id))
+
+// The same value while its contents are the same, so a wallet read again
+// unchanged doesn't start the report over.
+function useSame<T>(value: T): T {
+  const key = JSON.stringify(value)
+  const kept = useRef({ key, value })
+  if (kept.current.key !== key) kept.current = { key, value }
+  return kept.current.value
+}
+
+// The visitor's own wallet: the one saved in this browser, or synced with
+// Claude. With no cards yet, the cards they tap in become it. It follows
+// changes made elsewhere: in another tab (storage events), when the page is
+// seen again, and, with sync on, the synced wallet on load and when seen.
+function Mine({
+  first,
+  save,
+  mine,
+}: {
+  first: Extract<Source, { kind: 'own' | 'pick' }>
+  save: Saver | null
+  mine: LinkUpdater
+}) {
+  const [wallet, setWallet] = useState<Wallet | null>(() => OWN_WALLET.read())
+  const [rows, setRows] = useState<Row[] | null>(first.rows)
+  const [fromPicker] = useState(first.kind === 'pick')
+  const [picking, setPicking] = useState(first.kind === 'pick')
+  const [added, setAdded] = useState<string[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const reread = () => {
+      setWallet(OWN_WALLET.read())
+      setRows(readSaved().rows)
+    }
+    const pull = () => {
+      void pullSynced().then((w) => {
+        if (w) setWallet(w)
+      })
+    }
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== null && !WATCHED.includes(e.key)) return
+      storageChanged()
+      reread()
+      if (e.key === 'earnrate:sync') pull()
+    }
+    const onSeen = () => {
+      if (document.visibilityState !== 'visible') return
+      reread()
+      pull()
+    }
+    pull()
+    addEventListener('storage', onStorage)
+    document.addEventListener('visibilitychange', onSeen)
+    return () => {
+      removeEventListener('storage', onStorage)
+      document.removeEventListener('visibilitychange', onSeen)
+    }
+  }, [])
+
+  const change = (run: Promise<SaveResult>) => {
+    setError(null)
+    void run.then((result) => {
+      setWallet(result.wallet)
+      if (!result.ok) setError(result.error)
+    })
+  }
+  const saveAnswer: Saver | null = save
+    ? async (cardId, marks) => {
+        const result = await save(cardId, marks)
+        setWallet(result.wallet)
+        return result
+      }
+    : null
+
+  const input = useSame(
+    wallet === null ? null : walletReportInput(catalog, wallet),
+  )
+  const steadyRows = useSame(rows)
+
+  if (picking || !input || input.cards.length === 0 || !hasCards(wallet))
+    return (
+      <Pick
+        wallet={wallet}
+        added={added}
+        error={error}
+        onAdd={(id) => {
+          setAdded((a) => (a.includes(id) ? a : [...a, id]))
+          if (!wallet?.cards.some((c) => c.id === id))
+            change(addCard(OWN_WALLET, id))
+        }}
+        onRemove={(id) => change(removeCard(OWN_WALLET, id))}
+        onRate={() => {
+          setPicking(false)
+          requestAnimationFrame(() => scrollTo({ top: 0 }))
+        }}
+      />
+    )
+  return (
+    <>
+      {fromPicker ? (
+        <>
+          <p class="rate-change">
+            <button type="button" class="link" onClick={() => setPicking(true)}>
+              Change cards
+            </button>
+          </p>
+          <p class="lede">
+            Saved to <a href="/#wallet">My wallet</a>. Credits you mark here
+            save there too.
+          </p>
+        </>
+      ) : (
+        <p class="lede">
+          Your saved cards. Credits you mark here save to My wallet.
+        </p>
+      )}
+      <Rated initial={input} rows={steadyRows} save={saveAnswer} mine={mine} />
+    </>
   )
 }
 
@@ -1507,11 +1654,6 @@ export function Rate() {
     stored !== null
       ? { kind: 'loading' }
       : reportSource(catalog, location.hash, readSaved),
-  )
-  const ownInput = useMemo(
-    () =>
-      source.kind === 'own' ? walletReportInput(catalog, source.wallet) : null,
-    [source],
   )
   useEffect(() => {
     if (stored !== null) {
@@ -1568,25 +1710,17 @@ export function Rate() {
         />
       </>
     )
+  const mine = ownLink(source, myLink)
   return (
     <>
       <h1>Rate my wallet</h1>
-      {ownInput ? (
-        <>
-          <p class="lede">
-            Your saved cards. Credits you mark here save to My wallet.
-          </p>
-          <Rated
-            initial={ownInput}
-            rows={source.kind === 'own' ? source.rows : null}
-            saveCards={false}
-            save={answerSaver(source, OWN_WALLET)}
-            mine={ownLink(source, myLink)}
-          />
-        </>
-      ) : (
-        <Pick rows={source.kind === 'pick' ? source.rows : null} />
-      )}
+      {mine ? (
+        <Mine
+          first={source}
+          save={answerSaver(source, OWN_WALLET)}
+          mine={mine}
+        />
+      ) : null}
     </>
   )
 }

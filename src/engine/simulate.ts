@@ -91,7 +91,16 @@ export type Simulation = {
   // Spend milestones the year's spending on a card reaches; their points
   // are in `rewards`.
   milestones: SimulatedMilestone[]
+  // What each card took and earned, its milestones included: the cards'
+  // `rewards` add up to the simulation's.
+  byCard: CardResult[]
   notes: string[]
+}
+
+export type CardResult = {
+  cardId: string
+  spend: number // dollars a year
+  rewards: number // dollars a year, at the point values given
 }
 
 export type SimulatedCredits = CreditsYear & {
@@ -203,6 +212,7 @@ export function simulateWallet(
     return { card, cents: cardValuation(catalog, wallet, card).centsPerUnit }
   })
   let state = wallet
+  const earnedBy = new Map<string, number>()
   const results = lines.map(() => ({
     spend: 0,
     earned: 0,
@@ -248,6 +258,10 @@ export function simulateWallet(
         const chosen = pick
         const amount = Math.min(left, chosen.room)
         result.earned += amount * chosen.perDollar
+        earnedBy.set(
+          chosen.card.id,
+          (earnedBy.get(chosen.card.id) ?? 0) + amount * chosen.perDollar,
+        )
         result.byCard.set(
           chosen.card.id,
           (result.byCard.get(chosen.card.id) ?? 0) + amount,
@@ -423,6 +437,18 @@ export function simulateWallet(
     credits,
     lines: lineResults,
     milestones,
+    byCard: cards.map(({ card }) => ({
+      cardId: card.id,
+      spend: roundCents(
+        results.reduce((sum, r) => sum + (r.byCard.get(card.id) ?? 0), 0),
+      ),
+      rewards: roundCents(
+        (earnedBy.get(card.id) ?? 0) +
+          milestones
+            .filter((m) => m.cardId === card.id)
+            .reduce((sum, m) => sum + m.value, 0),
+      ),
+    })),
     notes,
   }
 }

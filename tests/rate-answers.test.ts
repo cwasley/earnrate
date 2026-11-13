@@ -7,10 +7,12 @@ import type { Wallet } from '../src/schema/wallet.ts'
 import { enrollLine } from '../site/app/credit-enroll.ts'
 import { ENDED, NEEDS_CONNECTION, type LocalOp } from '../site/app/sync.ts'
 import {
+  addCard,
   answeredMarks,
   answerSaver,
   heldMarks,
   marksOp,
+  removeCard,
   sameMarks,
   type Marks,
   type SaveDeps,
@@ -103,7 +105,7 @@ const throwing: SaveDeps = new Proxy({} as SaveDeps, {
 })
 
 describe("Rate my wallet's credit answers", () => {
-  test('a shared report, cards tapped in, a bad link or one loading get no saver, and touch nothing', () => {
+  test('a shared report, a bad link or one loading get no saver, and touch nothing', () => {
     const link = encodeReport(catalog, {
       input: {
         cards: [{ id: 'amex-platinum', picks: {}, used: ['resy'] }],
@@ -118,12 +120,69 @@ describe("Rate my wallet's credit answers", () => {
     expect(shared.kind).toBe('shared')
     const others: Source[] = [
       shared,
-      { kind: 'pick', rows: null },
       { kind: 'bad', message: 'gone' },
       { kind: 'loading' },
     ]
     for (const source of others)
       expect(answerSaver(source, throwing), source.kind).toBeNull()
+    expect(answerSaver({ kind: 'pick', rows: null }, throwing)).not.toBeNull()
+  })
+
+  test('with no saved cards, each card tapped in is added to the saved wallet, and tapping it again takes it out', async () => {
+    const { deps, log } = harness(null)
+    const first = await addCard(deps, 'chase-sapphire-preferred')
+    expect(first.ok).toBe(true)
+    expect(log.sent).toEqual([])
+    expect(log.writes.at(-1)?.cards.map((c) => c.id)).toEqual([
+      'chase-sapphire-preferred',
+    ])
+    await addCard(deps, 'amex-blue-cash-preferred')
+    expect(log.writes.at(-1)?.cards.map((c) => c.id)).toEqual([
+      'chase-sapphire-preferred',
+      'amex-blue-cash-preferred',
+    ])
+    const again = await addCard(deps, 'amex-blue-cash-preferred')
+    expect(again.ok).toBe(false)
+    expect(log.writes).toHaveLength(2)
+    await removeCard(deps, 'amex-blue-cash-preferred')
+    expect(log.writes.at(-1)?.cards.map((c) => c.id)).toEqual([
+      'chase-sapphire-preferred',
+    ])
+    const memberships = harness({
+      valuations: {},
+      memberships: ['amazon-prime'],
+      cards: [],
+    })
+    await addCard(memberships.deps, 'chase-prime-visa')
+    expect(memberships.log.writes.at(-1)?.memberships).toEqual(['amazon-prime'])
+  })
+
+  test('with sync on, a card tapped in goes to the synced wallet, and nothing is written without a connection', async () => {
+    const synced: Wallet = { valuations: {}, memberships: [], cards: [] }
+    const on = harness(synced, true)
+    on.deps.send = (op) => {
+      on.log.sent.push(op)
+      const change = addToWallet(catalog, synced, { id: 'amex-gold' }, TODAY)
+      return Promise.resolve(
+        change.ok
+          ? { kind: 'ok', wallet: change.wallet }
+          : { kind: 'refused', error: change.error },
+      )
+    }
+    expect((await addCard(on.deps, 'amex-gold')).ok).toBe(true)
+    expect(on.log.sent).toEqual([
+      { tool: 'add_card', input: { cardId: 'amex-gold' } },
+    ])
+    expect(on.log.writes.at(-1)?.cards.map((c) => c.id)).toEqual(['amex-gold'])
+
+    const offline = harness(null, true)
+    offline.deps.online = () => false
+    expect(await addCard(offline.deps, 'amex-gold')).toEqual({
+      ok: false,
+      error: NEEDS_CONNECTION,
+      wallet: null,
+    })
+    expect(offline.log.writes).toEqual([])
   })
 
   test("the saved wallet's answers save through the wallet-change rules, as My wallet's Settings sends them", async () => {

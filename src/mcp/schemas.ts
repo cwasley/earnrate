@@ -644,6 +644,10 @@ const SimulationSchema = z.object({
       value: z.number(),
     }),
   ),
+  // What each card took and earned a year, its milestones included.
+  byCard: z.array(
+    z.object({ cardId: z.string(), spend: z.number(), rewards: z.number() }),
+  ),
   notes: z.array(z.string()),
 })
 

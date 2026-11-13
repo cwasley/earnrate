@@ -1,7 +1,7 @@
 // Which of a rated card's statement credits and free nights its holder
-// uses. On the page they change the report and its link; only for the
-// visitor's own saved wallet are they also saved, through the same
-// wallet-change rules and sync path My wallet uses.
+// uses. On the page they change the report and its link; for the visitor's
+// own wallet they're also saved, through the same wallet-change rules and
+// sync path My wallet uses. A shared report's are never saved.
 import {
   creditInUse,
   isSkipped,
@@ -12,10 +12,12 @@ import type { Card } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import {
+  addOp,
   applyLocally,
   ENDED,
   LIMITED,
   NEEDS_CONNECTION,
+  removeOp,
   updateOp,
   type LocalOp,
   type SyncResult,
@@ -85,19 +87,17 @@ export type Saver = (cardId: string, marks: Marks) => Promise<SaveResult>
 
 const GONE = "This card isn't in My wallet any more. Reload the page."
 
-export async function saveMarks(
+// One change to the visitor's own wallet: made on the synced wallet when
+// sync is on, otherwise here by the shared wallet-change rules, then saved.
+export async function saveChange(
   deps: SaveDeps,
-  cardId: string,
-  marks: Marks,
+  op: LocalOp,
 ): Promise<SaveResult> {
-  const wallet = deps.read()
   const refused = (error: string): SaveResult => ({
     ok: false,
     error,
     wallet: deps.read(),
   })
-  if (!wallet?.cards.some((c) => c.id === cardId)) return refused(GONE)
-  const op = marksOp(cardId, marks)
   if (deps.synced()) {
     if (!deps.online()) return refused(NEEDS_CONNECTION)
     const result = await deps.send(op)
@@ -116,16 +116,34 @@ export async function saveMarks(
         return refused(NEEDS_CONNECTION)
     }
   }
-  const change = applyLocally(deps.catalog, wallet, op, deps.today())
+  const change = applyLocally(deps.catalog, deps.read(), op, deps.today())
   if (!change.ok) return refused(change.error)
   deps.write(change.wallet)
   return { ok: true, wallet: change.wallet }
 }
 
-// Only the visitor's own saved wallet saves answers: a shared report or
-// cards tapped in on the page never touch storage.
+// A card tapped in, or out, on /rate when the visitor has no saved cards.
+export const addCard = (deps: SaveDeps, cardId: string) =>
+  saveChange(deps, addOp(cardId))
+
+export const removeCard = (deps: SaveDeps, cardId: string) =>
+  saveChange(deps, removeOp(cardId))
+
+export async function saveMarks(
+  deps: SaveDeps,
+  cardId: string,
+  marks: Marks,
+): Promise<SaveResult> {
+  const wallet = deps.read()
+  if (!wallet?.cards.some((c) => c.id === cardId))
+    return { ok: false, error: GONE, wallet }
+  return saveChange(deps, marksOp(cardId, marks))
+}
+
+// Only the visitor's own wallet saves answers: the saved one, or the one
+// they start by tapping cards in. A shared report never touches storage.
 export function answerSaver(source: Source, deps: SaveDeps): Saver | null {
-  return source.kind === 'own'
+  return source.kind === 'own' || source.kind === 'pick'
     ? (cardId, marks) => saveMarks(deps, cardId, marks)
     : null
 }
