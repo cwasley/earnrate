@@ -9,7 +9,7 @@ import {
   MERCHANT_CODE_LEAD,
   money,
 } from '../../src/engine/text.ts'
-import type { Recommendation } from '../../src/engine/types.ts'
+import type { RankedCard, Recommendation } from '../../src/engine/types.ts'
 import {
   resolvePlace,
   withCallerCategory,
@@ -20,6 +20,10 @@ import { CardArt } from './CardArt.tsx'
 import { pct, shortName } from './format.ts'
 import { PayingHints } from './PayingWith.tsx'
 import { kindCategory } from './place-kinds.ts'
+
+// A lower-ranked card still shows when it has a credit to use here.
+const creditHere = (c: RankedCard['credit']) =>
+  c !== null && c.enrolled && (c.left ?? 0) > 0 && c.dollars !== 0
 
 // Which of the wallet's cards to use for one purchase: the engine's
 // recommend() with the saved wallet as it is, so memberships, picks,
@@ -143,7 +147,12 @@ export function WalletAnswer({
       <ol class="result-list">
         {rec.ranked
           .map((r, i) => ({ r, rank: i + 1 }))
-          .filter(({ r, rank }) => rank <= 3 || r.cardId === rec.bonus?.cardId)
+          .filter(
+            ({ r, rank }) =>
+              rank <= 3 ||
+              r.cardId === rec.bonus?.cardId ||
+              creditHere(r.credit),
+          )
           .map(({ r, rank }) => (
             <li class="result" key={r.cardId}>
               <div class="result-top">

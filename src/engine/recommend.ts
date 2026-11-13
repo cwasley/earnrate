@@ -40,7 +40,6 @@ import {
   categoryAs,
   categoryPurchases,
   creditFirstText,
-  creditNoAmountText,
   currencyLabel,
   currencyName,
   earnText,
@@ -1047,13 +1046,6 @@ export function recommend(
   // A tie among the top cards doesn't matter when a welcome bonus decides.
   const tie = bonus || creditEntry ? null : tieNote(entries)
   if (tie) notes.push(tie)
-  if (purchase.amount === null)
-    for (const e of entries) {
-      const left = e.credit?.left ?? null
-      if (!e.credit?.enrolled || left === null || left <= 0) continue
-      if (e === firstCredit) continue
-      notes.push(creditNoAmountText(displayName(e), { ...e.credit, left }))
-    }
   const top = ranked.find((r) => r.cardId === chosen?.card.id)
   const first = ranked[0]
   let bonusResult: Recommendation['bonus'] = null
