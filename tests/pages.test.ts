@@ -151,7 +151,10 @@ describe('the built static pages', () => {
         missing.push(`${url} is noindex but in the sitemap`)
       if (!noindex && !listed.has(url))
         missing.push(`${url} not in the sitemap`)
-      if (!linked.has(url)) missing.push(`${url} not linked from any page`)
+      // Links to a store page that isn't indexed go to its category's row.
+      const storeRow = noindex && url.startsWith('/best/')
+      if (!linked.has(url) && !storeRow)
+        missing.push(`${url} not linked from any page`)
     }
     expect(missing).toEqual([])
   })
@@ -181,13 +184,15 @@ describe('the built static pages', () => {
     for (const t of TABS) expect(card).toContain(`href="${t.href}"`)
   })
 
-  test('the store index links every store and category page, each store inside its closed category', () => {
+  test('the store index links every store (or its row on its category page) and category page, each store inside its closed category', () => {
     const index = readFileSync(path.join(out, 'best', 'index.html'), 'utf8')
     const built = readdirSync(path.join(out, 'best'))
       .filter((f) => f.endsWith('.html') && f !== 'index.html')
       .map((f) => `/best/${f.replace(/\.html$/, '')}`)
     const linked = new Set(
-      [...index.matchAll(/href="(\/best\/[^"]+)"/g)].map((m) => m[1]),
+      [...index.matchAll(/href="\/best\/([^"#]+)(?:#([^"]+))?"/g)].map(
+        (m) => `/best/${m[2] ?? m[1] ?? ''}`,
+      ),
     )
     expect(built.filter((p) => !linked.has(p))).toEqual([])
     expect(index).not.toMatch(/<details[^>]*\sopen/)
@@ -294,10 +299,62 @@ describe('the built static pages', () => {
       expect(noindex(slug), slug).toBe(false)
     // Ranked exactly like supermarkets, with nothing about Ralphs itself.
     expect(noindex('ralphs')).toBe(true)
-    // Its category page lists it, so it's still reachable and answerable.
-    expect(page('groceries')).toContain('href="/best/ralphs"')
+    expect(page('groceries')).toContain(
+      '<span class="store-row" id="ralphs">Ralphs</span>',
+    )
     // American Express names Aldi among its example supermarkets.
     expect(noindex('aldi')).toBe(false)
+    expect(page('groceries')).toContain('<a href="/best/aldi">Aldi</a>')
+  })
+
+  test('links to a store page that is not indexed go to its row on its category page', () => {
+    const best = path.join(out, 'best')
+    const noindex = new Set(
+      readdirSync(best)
+        .filter((f) => f.endsWith('.html') && f !== 'index.html')
+        .filter((f) =>
+          readFileSync(path.join(best, f), 'utf8').includes(
+            '<meta name="robots" content="noindex, follow" />',
+          ),
+        )
+        .map((f) => f.replace(/\.html$/, '')),
+    )
+    expect(noindex.size).toBeGreaterThan(0)
+    const ids = new Map<string, string[]>()
+    const idsOn = (slug: string) => {
+      let list = ids.get(slug)
+      if (list === undefined) {
+        const file = path.join(best, `${slug}.html`)
+        list = existsSync(file)
+          ? [...readFileSync(file, 'utf8').matchAll(/\sid="([^"]+)"/g)].map(
+              (m) => m[1] ?? '',
+            )
+          : []
+        ids.set(slug, list)
+      }
+      return list
+    }
+    const bad: string[] = []
+    const rows = new Set<string>()
+    for (const { file, html } of pages)
+      for (const m of html.matchAll(
+        /href="(?:https:\/\/earnrate\.dev)?\/best\/([^"#?/]+)(?:#([^"]*))?"/g,
+      )) {
+        const [href, slug = '', anchor] = m
+        const own = file === path.join(best, `${slug}.html`)
+        if (noindex.has(slug) && !own) bad.push(`${file} → ${href}`)
+        if (anchor === undefined || !noindex.has(anchor)) continue
+        const found = idsOn(slug).filter((id) => id === anchor).length
+        if (found !== 1)
+          bad.push(`${file} → ${href}: ${String(found)} rows with that id`)
+        rows.add(anchor)
+      }
+    // Every such store is linked from somewhere, by its row.
+    for (const slug of noindex)
+      if (!rows.has(slug)) bad.push(`/best/${slug} has no link to its row`)
+    expect(bad).toEqual([])
+    const sitemap = readFileSync(path.join(out, 'sitemap.xml'), 'utf8')
+    for (const slug of noindex) expect(sitemap).not.toContain(`/best/${slug}<`)
   })
 
   test("a store page says what an issuer's list of example stores says about it, with the quote", () => {

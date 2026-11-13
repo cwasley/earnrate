@@ -962,6 +962,43 @@ table.numbers tr:last-child td {
 .chip-links .muted {
   margin-left: 2px;
 }
+/* A store without a page of its own, on its category page: a row other
+   pages link to by its id, marked when a link lands on it. */
+.chip-links .store-row {
+  display: inline-block;
+  padding: 5px 12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.4;
+  scroll-margin: 30vh 0;
+}
+.chip-links .store-row:target {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+/* The list's own note can be a screen or more above the row. */
+.chip-links .store-row:target::after {
+  content: ' · same ranking as above';
+  font-weight: 400;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .chip-links .store-row:target {
+    animation: store-row-arrive 1.6s var(--ease-out);
+  }
+}
+@keyframes store-row-arrive {
+  0%,
+  40% {
+    box-shadow: 0 0 0 6px var(--accent-soft);
+  }
+  100% {
+    box-shadow: 0 0 0 0 var(--accent-soft);
+  }
+}
 .compare-list .chip-links {
   margin: 6px 0 0;
 }

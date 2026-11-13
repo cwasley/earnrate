@@ -45,3 +45,15 @@ export function storeIndexReasons(
     reasons.push('a ranking unlike its category')
   return reasons
 }
+
+// Where a link to a store's page goes. A store page that isn't indexed says
+// nothing its category page doesn't, so links go to the store's row there
+// instead: search engines then spend their visits on pages they keep.
+export const storeHref = (
+  slug: string,
+  indexed: boolean,
+  categorySlug: string | null,
+) =>
+  indexed || categorySlug === null
+    ? `/best/${slug}`
+    : `/best/${categorySlug}#${slug}`

@@ -568,7 +568,7 @@ type Answer = {
 function answerQuestion(
   ctx: PageContext,
   q: Question,
-  bestSlug: (merchantId: string) => string | null,
+  bestHref: (merchantId: string) => string | null,
 ): string | null {
   const merchants = q.merchants(allMerchants(ctx))
   if (merchants.length === 0) return null
@@ -635,8 +635,8 @@ function answerQuestion(
     return `<ul class="muted">${ms.map((m, i) => (each[i] ? `<li>${esc(m.name)}: ${esc(each[i] ?? '')}</li>` : '')).join('')}</ul>`
   }
   const link = (m: Merchant) => {
-    const slug = bestSlug(m.id)
-    return slug ? `<a href="/best/${slug}">${esc(m.name)}</a>` : esc(m.name)
+    const href = bestHref(m.id)
+    return href ? `<a href="${href}">${esc(m.name)}</a>` : esc(m.name)
   }
   const sections = [...groups.values()].map(
     (g) =>
@@ -647,12 +647,12 @@ function answerQuestion(
 
 export function howStoresCodePage(
   ctx: PageContext,
-  bestSlug: (merchantId: string) => string | null,
+  bestHref: (merchantId: string) => string | null,
   lastmod: string,
 ): GeneratedPage {
   const answers = QUESTIONS.map((q) => ({
     q,
-    html: answerQuestion(ctx, q, bestSlug),
+    html: answerQuestion(ctx, q, bestHref),
   })).filter((a) => a.html !== null)
   const title = fitTitle([
     'How stores code: Costco, Target, Uber Eats and more',

@@ -102,7 +102,7 @@ import {
 import { feeWorthKit, TRANSFER_VALUES } from '../src/engine/fee-worth.ts'
 import { feeWorthSection } from './pages/fee-worth.ts'
 import { button, pageActions, textLink, type Visitor } from './pages/actions.ts'
-import { storeIndexReasons } from './pages/indexing.ts'
+import { storeHref, storeIndexReasons } from './pages/indexing.ts'
 import { drawImages, type OgImage } from './pages/og.ts'
 import { quarterlyCardIds, quarterlyPages } from './pages/quarterly.ts'
 import {
@@ -526,41 +526,81 @@ function sources(shown: ExploreEntry[]): string {
 }
 
 // A category page lists every store that usually counts as it, so it can
-// answer for stores whose own pages aren't indexed.
+// answer for stores whose own pages aren't indexed: those are rows that
+// other pages link to by the store's id, not links.
 const STORES_OPEN = 24
+
+// Opens the closed list when the address names a row in it, before the
+// browser scrolls there, and again when the address changes on the page.
+const STORE_ROW_SCRIPT = `(() => {
+  const list = document.currentScript?.previousElementSibling
+  if (!list) return
+  const show = (scroll) => {
+    const id = decodeURIComponent(location.hash.slice(1))
+    const row = id === '' ? null : document.getElementById(id)
+    if (!row || !list.contains(row)) return
+    const box = row.closest('details')
+    if (box && !box.open) box.open = true
+    if (scroll) row.scrollIntoView({ block: 'center' })
+  }
+  show(false)
+  addEventListener('hashchange', () => show(true))
+})()`
 
 function categoryStores(page: Page, all: Page[]): string {
   const stores = all
-    .filter((p) => p.merchant !== null && p.categoryId === page.categoryId)
+    .filter(
+      (p) => p.merchant !== null && categorySlug(p.categoryId) === page.slug,
+    )
     .sort((a, b) => a.label.localeCompare(b.label))
   if (stores.length === 0) return ''
   const heading = `${String(stores.length)} ${stores.length === 1 ? `store that usually counts ${esc(categoryAs(catalog, page.categoryId))}` : `stores that usually count ${esc(categoryAsMany(catalog, page.categoryId))}`}`
+  const rows = stores.filter((p) => !isIndexed(p)).length
+  const note =
+    rows === 0
+      ? ''
+      : `<p class="muted">${rows === stores.length ? `At ${stores.length === 1 ? 'this store' : 'each of these'}, cards rank just as they do above.` : 'At stores without a link, cards rank just as they do above. Linked stores have a page of their own.'}</p>`
   const chips = chipLinks(
-    stores.map((p) => `<a href="/best/${p.slug}">${esc(p.label)}</a>`),
+    stores.map((p) =>
+      isIndexed(p)
+        ? `<a href="/best/${p.slug}">${esc(p.label)}</a>`
+        : `<span class="store-row" id="${p.slug}">${esc(p.label)}</span>`,
+    ),
   )
+  const script = rows === 0 ? '' : `<script>${STORE_ROW_SCRIPT}</script>`
   return stores.length > STORES_OPEN
-    ? `<h2>Stores</h2><details class="group"><summary><span>${heading}</span></summary>${chips}</details>`
-    : `<h2>${capitalize(heading)}</h2>${chips}`
+    ? `<h2>Stores</h2><details class="group"><summary><span>${heading}</span></summary>${note}${chips}</details>${script}`
+    : `<h2>${capitalize(heading)}</h2><div>${note}${chips}</div>${script}`
 }
+
+// Where a link to a search page goes: a store's own page when it's indexed,
+// otherwise its row on its category page.
+const pageHref = (p: Page) =>
+  p.merchant === null
+    ? `/best/${p.slug}`
+    : storeHref(p.slug, isIndexed(p), categorySlug(p.categoryId))
 
 function related(page: Page, all: Page[]): string {
   if (page.merchant === null) return categoryStores(page, all)
   const category = all.find(
-    (p) => p.merchant === null && p.categoryId === page.categoryId,
+    (p) => p.merchant === null && p.slug === categorySlug(page.categoryId),
   )
-  const siblings = all
-    .filter(
-      (p) =>
-        p !== page && p.merchant !== null && p.categoryId === page.categoryId,
-    )
-    .slice(0, RELATED)
+  const siblings = all.filter(
+    (p) =>
+      p !== page && p.merchant !== null && p.categoryId === page.categoryId,
+  )
+  // Stores with pages of their own first.
+  const shown = [
+    ...siblings.filter(isIndexed),
+    ...siblings.filter((p) => !isIndexed(p)),
+  ].slice(0, RELATED)
   const links = [
     ...(category && category !== page
       ? [
           `<a href="/best/${category.slug}">${esc(capitalize(category.label))}</a>`,
         ]
       : []),
-    ...siblings.map((p) => `<a href="/best/${p.slug}">${esc(p.label)}</a>`),
+    ...shown.map((p) => `<a href="${pageHref(p)}">${esc(p.label)}</a>`),
   ]
   return links.length === 0 ? '' : `<h2>Related</h2>${chipLinks(links)}`
 }
@@ -883,11 +923,9 @@ const FILTER_SCRIPT = `(() => {
 // visitors are headed.
 function everydayChips(): string {
   const links = EVERYDAY_PURCHASES.flatMap((item) => {
-    const slug =
-      'category' in item ? categorySlug(item.category) : bestSlug(item.merchant)
-    return slug === null
-      ? []
-      : [`<a href="/best/${slug}">${esc(item.label)}</a>`]
+    const href =
+      'category' in item ? categoryHref(item.category) : bestHref(item.merchant)
+    return href === null ? [] : [`<a href="${href}">${esc(item.label)}</a>`]
   })
   return `<div class="everyday">${chipLinks(links)}</div>`
 }
@@ -926,7 +964,7 @@ function renderIndex(all: Page[]): string {
     return `<details class="cat" data-section><summary><h2>${name}</h2><span class="cat-count" data-all="${count}">${count}</span></summary><ul class="link-list"><li class="cat-all" data-q="${words(cat)}"><a href="/best/${cat.slug}">Best cards for ${esc(cat.label)}</a></li>${list
       .map(
         (p) =>
-          `<li data-q="${words(p)}" data-store><a href="/best/${p.slug}">${esc(p.label)}</a></li>`,
+          `<li data-q="${words(p)}" data-store><a href="${pageHref(p)}">${esc(p.label)}</a></li>`,
       )
       .join('')}</ul></details>`
   }
@@ -1242,7 +1280,7 @@ function placementGroups(list: Placement[], all: Page[]): string {
       const rate = low === high ? pct(low) : `${pct(low)}–${pct(high)}`
       const [only] = ws
       if (ws.length === 1 && only?.page.merchant)
-        return `<a class="group group-link" href="/best/${only.page.slug}">${pill}<span>${esc(only.page.label)}</span><span class="group-meta">${rate}</span></a>`
+        return `<a class="group group-link" href="${pageHref(only.page)}">${pill}<span>${esc(only.page.label)}</span><span class="group-meta">${rate}</span></a>`
       const stores = ws.filter((w) => w.page.merchant !== null).length
       const meta = `${rate}${stores > 0 ? ` · ${String(stores)} ${stores === 1 ? 'store' : 'stores'}` : ''}`
       // The kind of purchase's own page first, then its stores.
@@ -1252,7 +1290,7 @@ function placementGroups(list: Placement[], all: Page[]): string {
       ]
       const chips = ordered.map(
         (w) =>
-          `<a href="/best/${w.page.slug}">${esc(w.page.merchant === null ? `All ${categoryPhrase(catalog, w.page.categoryId)}` : w.page.label)}${low === high ? '' : ` <span class="muted">${pct(w.pct)}</span>`}</a>`,
+          `<a href="${pageHref(w.page)}">${esc(w.page.merchant === null ? `All ${categoryPhrase(catalog, w.page.categoryId)}` : w.page.label)}${low === high ? '' : ` <span class="muted">${pct(w.pct)}</span>`}</a>`,
       )
       const categoryPage = all.find(
         (p) => p.merchant === null && nameOf(p.categoryId) === name,
@@ -1400,7 +1438,7 @@ const pageLinks = (list: Page[], n: number) =>
     ...list.filter((p) => p.merchant !== null),
   ]
     .slice(0, n)
-    .map((p) => `<a href="/best/${p.slug}">${esc(p.label)}</a>`)
+    .map((p) => `<a href="${pageHref(p)}">${esc(p.label)}</a>`)
 
 // Where it's the best card and in the top 3, at earnrate's default point
 // values and, for Amex and Chase points, at their transfer value behind a
@@ -2291,13 +2329,19 @@ const compareDate = (p: ComparePair) =>
 
 const comparisons = comparePairs(catalog, today)
 const all = pages(catalog)
-const bestSlug = (merchantId: string) =>
-  all.find((p) => p.merchant?.id === merchantId)?.slug ?? null
 const categorySlug = (id: string): string | null => {
   const page = catalog.categories.find((c) => c.id === id)?.page ?? id
   return (
     all.find((p) => p.merchant === null && p.categoryId === page)?.slug ?? null
   )
+}
+const bestHref = (merchantId: string) => {
+  const page = all.find((p) => p.merchant?.id === merchantId)
+  return page ? pageHref(page) : null
+}
+const categoryHref = (id: string) => {
+  const slug = categorySlug(id)
+  return slug === null ? null : `/best/${slug}`
 }
 const results = new Map(
   all.map((p) => [p.slug, exploreCards(catalog, p.query, options)]),
@@ -2415,12 +2459,12 @@ await writeFile(
 const generated: GeneratedPage[] = [
   ...quarterlyPages(
     ctx,
-    { category: categorySlug, merchant: bestSlug },
+    { category: categoryHref, merchant: bestHref },
     filesDate,
   ),
   howStoresCodePage(
     ctx,
-    bestSlug,
+    bestHref,
     latest([
       merchantsDate,
       filesDate(catalog.cards.map((c) => `data/cards/${c.id}.yaml`)),

@@ -142,7 +142,7 @@ type Target = {
   merchants: string[]
 }
 
-function targetsOf(ctx: PageContext, q: Quarter, slugs: BestSlugs): Target[] {
+function targetsOf(ctx: PageContext, q: Quarter, links: BestLinks): Target[] {
   const seen = new Map<string, Target>()
   for (const qc of q.cards) {
     if (qc.kind !== 'rotating') continue
@@ -151,7 +151,7 @@ function targetsOf(ctx: PageContext, q: Quarter, slugs: BestSlugs): Target[] {
         const t: Target = {
           key: `c:${c}`,
           label: categoryPhrase(ctx.catalog, c),
-          link: slugs.category(c),
+          link: links.category(c),
           categories: [c],
           merchants: [],
         }
@@ -168,7 +168,7 @@ function targetsOf(ctx: PageContext, q: Quarter, slugs: BestSlugs): Target[] {
               ms.length <= 3
                 ? listed(names)
                 : `the ${String(ms.length)} services ${ctx.shortName(qc.card.id)} lists (${listed(names.slice(0, 3))} and others)`,
-            link: ms.length === 1 ? slugs.merchant(ms[0] ?? '') : null,
+            link: ms.length === 1 ? links.merchant(ms[0] ?? '') : null,
             categories: [],
             merchants: ms,
           })
@@ -178,7 +178,8 @@ function targetsOf(ctx: PageContext, q: Quarter, slugs: BestSlugs): Target[] {
   return [...seen.values()]
 }
 
-export type BestSlugs = {
+// Where a category or store links to on the site, or null for none.
+export type BestLinks = {
   category: (id: string) => string | null
   merchant: (id: string) => string | null
 }
@@ -359,9 +360,9 @@ function cardSection(ctx: PageContext, q: Quarter, qc: QuarterCard): string {
   return `<section class="quarter-card summary-card">${head}${rateChips(ctx, card, qc.rules)}<p>${esc(`${dates}${capSentence(cap, earnText(ctx.catalog, cap.then_rate, card.currency), 'combined purchases in these categories')}.`)}</p>${next}${finePrint(fine)}</section>`
 }
 
-function topSection(ctx: PageContext, q: Quarter, slugs: BestSlugs): string {
+function topSection(ctx: PageContext, q: Quarter, links: BestLinks): string {
   const date = ctx.today > q.start ? ctx.today : q.start
-  const blocks = targetsOf(ctx, q, slugs).map((t) => {
+  const blocks = targetsOf(ctx, q, links).map((t) => {
     const top = topFor(ctx, t, date)
     if (top.length === 0) return ''
     const rows = top
@@ -371,7 +372,7 @@ function topSection(ctx: PageContext, q: Quarter, slugs: BestSlugs): string {
       )
       .join('')
     const heading = t.link
-      ? `<a href="/best/${t.link}">${esc(t.label)}</a>`
+      ? `<a href="${t.link}">${esc(t.label)}</a>`
       : esc(t.label)
     return `<h3>On ${heading}</h3><ol class="cards">${rows}</ol>`
   })
@@ -432,7 +433,7 @@ function renderQuarter(
   ctx: PageContext,
   q: Quarter,
   all: Quarter[],
-  slugs: BestSlugs,
+  links: BestLinks,
   hub: boolean,
   updated: string,
 ): { title: string; description: string; body: string } {
@@ -458,7 +459,7 @@ function renderQuarter(
       ${rotating.map((c) => cardSection(ctx, q, c)).join('')}
       ${picks.length > 0 ? `<h2>Categories you pick each quarter</h2>${picks.map((c) => cardSection(ctx, q, c)).join('')}` : ''}
       ${q.end === `${ctx.today.slice(0, 4)}-12-31` ? `<p>Statement credits, spend bonuses and caps that end or start over with the year, on every card: <a href="/year-end/">year-end deadlines</a>.</p>` : ''}
-      ${topSection(ctx, q, slugs)}
+      ${topSection(ctx, q, links)}
       ${nav}
       <p class="muted">Every rate, cap, date and quote here is from the card's file in earnrate, checked against the issuer's pages on the date each card page shows. Check the issuer's terms before you rely on them.${hub ? ` This page always shows the current quarter. For a link that stays on ${esc(q.label)}, use <a href="/quarterly/${q.slug}">/quarterly/${q.slug}</a>.` : ''}</p>`
   return { title, description, body }
@@ -466,7 +467,7 @@ function renderQuarter(
 
 export function quarterlyPages(
   ctx: PageContext,
-  slugs: BestSlugs,
+  links: BestLinks,
   lastmod: (files: string[]) => string,
 ): GeneratedPage[] {
   const all = quarters(ctx.catalog, ctx.today)
@@ -479,7 +480,7 @@ export function quarterlyPages(
       ctx,
       q,
       all,
-      slugs,
+      links,
       hub,
       date,
     )
