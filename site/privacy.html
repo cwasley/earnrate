@@ -221,7 +221,7 @@
         <p>
           <a href="/rate">Rate my wallet</a> works out in your browser what a
           set of cards earns in a year. If a wallet is saved in this browser, it
-          reads that wallet and your amounts from Find a card. The only changes
+          reads that wallet and your amounts from Get a card. The only changes
           it makes are to save which of the wallet's statement credits you mark
           as used or not, as My wallet would, and to your synced wallet if sync
           is on, and to remember your short link once you make one (below).
@@ -317,7 +317,7 @@
             Running a search (not what it was): <code>search</code>; opening the
             example ranking: <code>example-search</code>; picking what kind of
             place a store earnrate doesn't know is (not which kind, or the
-            store): <code>place-kind</code>; changing an amount in Find a card:
+            store): <code>place-kind</code>; changing an amount in Get a card:
             <code>spending-edit</code>
           </li>
           <li>
@@ -325,34 +325,36 @@
             added in this browser), <code>wallet-card-added</code>,
             <code>wallet-quick-add</code> (added a card by tapping it in the
             list of common cards, not which one),
-            <code>wallet-which-card</code> (asking which card to use),
-            <code>wallet-export</code>, <code>wallet-import</code>,
-            <code>cheat-sheet</code> (the cheat sheet was shown),
-            <code>cheat-sheet-image</code> (downloaded as an image, here or on a
-            cheat sheet someone sent), <code>cheat-sheet-link</code> (sent or
-            copied its link), <code>apple-wallet</code> (pressed Add to Apple
-            Wallet, here or on a cheat sheet someone sent),
-            <code>wallet-two-years</code> (opened the first-two-years view of
-            Would another card help?), <code>wallet-skip-issuers</code> (changed
-            which issuers to leave out, not which ones),
-            <code>wallet-keep-or-replace</code> (asked Keep or replace? about a
-            card, not which one), <code>wallet-sync-on</code> (pressed Use the
-            same wallet as Claude or Connect again),
-            <code>wallet-sync-off</code> (pressed Stop syncing)
+            <code>wallet-which-card</code> (asking At a store which of your
+            cards to use), <code>wallet-export</code>,
+            <code>wallet-import</code>, <code>cheat-sheet</code> (the cheat
+            sheet was shown), <code>cheat-sheet-image</code> (downloaded as an
+            image, here or on a cheat sheet someone sent),
+            <code>cheat-sheet-link</code> (sent or copied its link),
+            <code>apple-wallet</code> (pressed Add to Apple Wallet, here or on a
+            cheat sheet someone sent), <code>wallet-two-years</code> (opened the
+            first-two-years view of A new card for my wallet in Get a card),
+            <code>wallet-skip-issuers</code> (changed which issuers to leave
+            out, not which ones), <code>wallet-keep-or-replace</code> (asked
+            Keep or replace? about a card, not which one),
+            <code>wallet-sync-on</code> (pressed Use the same wallet as Claude
+            or Connect again), <code>wallet-sync-off</code> (pressed Stop
+            syncing)
           </li>
           <li>
             Following a link to set up earnrate elsewhere:
             <code>cta-claude</code>, <code>cta-after-answer</code>,
-            <code>cta-save-cards</code>, <code>cta-pass-hint</code>
+            <code>cta-save-cards</code>
           </li>
           <li>
             Arriving from a button on a card, store or comparison page, counted
             when the app opens (the card or store itself isn't sent):
-            <code>page-spending</code> (to Find a card),
-            <code>page-whatif</code> (to what a card would add),
+            <code>page-spending</code> (to Get a card),
+            <code>page-whatif</code> (to what a card would add to your wallet),
             <code>page-settings</code> (to a held card's Settings),
             <code>page-add</code> (adding a card),
-            <code>page-check</code> (checking a store with your own cards)
+            <code>page-check</code> (checking a store with your own cards on At
+            a store)
           </li>
           <li>
             Following a link to the statement check from My wallet or the home

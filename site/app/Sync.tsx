@@ -15,12 +15,18 @@ export type SyncView =
 
 export type Choice = 'claude' | 'browser' | 'combine'
 
-function ConnectButton({ label }: { label: string }) {
+function ConnectButton({
+  label,
+  primary = true,
+}: {
+  label: string
+  primary?: boolean
+}) {
   const [going, setGoing] = useState(false)
   return (
     <button
       type="button"
-      class="primary"
+      class={primary ? 'primary' : undefined}
       data-count="wallet-sync-on"
       disabled={going}
       onClick={() => {
@@ -33,35 +39,21 @@ function ConnectButton({ label }: { label: string }) {
   )
 }
 
-// What syncing sends and keeps, in the privacy page's words.
-function SyncTerms() {
-  return (
-    <p class="muted small">
-      With sync on, your wallet (cards, picks, activations, memberships, point
-      values, cap and spending totals, credits and free nights used and not
-      used, what a free night is worth to you if you've said, and opening dates)
-      is stored encrypted on earnrate's server, as it is for Claude. Searches,
-      stores and amounts you ask about still never leave your browser.{' '}
-      <a href="/privacy#sync">How sync works</a>
-    </p>
-  )
-}
-
-// For someone not syncing: one wallet for this site and Claude.
+// For someone not syncing: one wallet for this site and Claude. What sync
+// stores is listed on the privacy page.
 export function ConnectPanel({ note }: { note: string | null }) {
   return (
     <section class="panel sync-panel">
       <h3>Sync with Claude</h3>
-      <p>
-        Use one wallet here and in earnrate in Claude, so a card you add in one
-        shows up in the other. You sign in with your earnrate recovery code, or
-        start a wallet if you don't use Claude yet.
+      <p class="muted small">
+        Use one wallet here and in earnrate in Claude. It's stored encrypted on
+        earnrate's server; searches never leave your browser.{' '}
+        <a href="/privacy#sync">What's stored</a>
       </p>
       <div class="row-buttons">
-        <ConnectButton label="Use the same wallet as Claude" />
+        <ConnectButton label="Use the same wallet as Claude" primary={false} />
       </div>
       {note ? <p class="callout">{note}</p> : null}
-      <SyncTerms />
     </section>
   )
 }

@@ -62,7 +62,10 @@ describe('ids and classes say nothing about the visitor', () => {
     const bad: string[] = []
     for (const { file, text } of [
       ...sources('site/rate', /\.tsx$/),
-      ...sources('site/app', /^(MyWallet|CreditPicks)\.tsx$/),
+      ...sources(
+        'site/app',
+        /^(MyWallet|CreditPicks|CardSettings|NewCard|WalletAnswer)\.tsx$/,
+      ),
     ])
       for (const m of text.matchAll(/\sclass(?:Name)?=\{(`[^`]*`|[^}]*)\}/g)) {
         const value = (m[1] ?? '').replace(/\s+/g, ' ').trim()

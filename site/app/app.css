@@ -996,10 +996,6 @@ p[data-tone='warn']::before {
   padding: 0 4px;
 }
 
-.app .editor .credit-use {
-  margin: 0 0 10px;
-}
-
 .field {
   display: grid;
   gap: 4px;
@@ -1160,21 +1156,6 @@ p[data-tone='warn']::before {
 
 [data-kept] .quick-check {
   background: var(--muted);
-}
-
-.quick-open {
-  margin: 10px 0 12px;
-  font-size: 15px;
-}
-
-.quick-open .link {
-  border: 0;
-  background: none;
-  padding: 0;
-  color: var(--accent);
-  font-weight: 600;
-  text-decoration: underline;
-  cursor: pointer;
 }
 
 /* Color only: a bolder name would rewrap and shift the row. */
@@ -1775,14 +1756,7 @@ button:disabled:active {
   margin-top: 8px;
 }
 
-.pass-hint {
-  font-size: 14.5px;
-  color: var(--muted);
-  margin: 12px 0 0;
-}
-
 .next-steps .link,
-.pass-hint .link,
 .skip-saved .link,
 p.muted .link,
 p.callout .link,
@@ -2087,7 +2061,7 @@ p.callout .link,
   margin-top: 0;
 }
 
-/* Find a card: the answer first, the spending folded under it. */
+/* Get a card: the spending folded over the answer. */
 .find-answer {
   margin: 0;
   font-size: 16.5px;
@@ -2245,7 +2219,7 @@ p.callout .link,
   scroll-margin-top: 12px;
 }
 
-/* Find a card's answer wraps to fewer lines on wider screens. */
+/* Get a card's answer wraps to fewer lines on wider screens. */
 @media (min-width: 420px) {
   .skel > .skel-past-mid {
     display: none;
@@ -2256,4 +2230,399 @@ p.callout .link,
   .skel > .skel-past-wide {
     display: none;
   }
+}
+
+/* At a store: Your cards or Every card. */
+.app .scope {
+  max-width: 320px;
+  margin: 0 0 4px;
+}
+
+/* A card the visitor holds, marked by data-*: never a class. */
+[data-yours] {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.6;
+  vertical-align: 2px;
+}
+
+a.chip {
+  color: inherit;
+  text-decoration: none;
+}
+
+.assumes {
+  margin-top: 12px;
+}
+
+/* Get a card: a new card for the wallet, or the best from scratch. Both
+   labels wrap on a phone rather than squeeze. */
+.app .find-mode {
+  margin: 0 0 12px;
+}
+
+.app .find-mode label {
+  flex: 1 1 0;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+  padding: 6px 8px;
+}
+
+/* Each ranking's first row leads, a size up. */
+.result.hero .result-name strong {
+  font-size: 18px;
+}
+
+.result.hero .rate {
+  font-size: 23px;
+}
+
+.result p.pair-split {
+  margin-top: 8px;
+}
+
+.new-card > .whatif-view {
+  margin-top: 10px;
+}
+
+/* My wallet: the add flow is one button under the cards. */
+.app .add-card {
+  display: block;
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wallet-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 14px 0 0;
+  font-size: 15px;
+}
+
+.wallet-links a {
+  font-weight: 600;
+}
+
+/* "Add its renewal date": asked on the row, in data-*, never a class. */
+.row-note[data-ask] {
+  color: var(--accent);
+}
+
+.app button.danger-link {
+  border: 0;
+  background: none;
+  padding: 8px 4px;
+  color: #b3261e;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (prefers-color-scheme: dark) {
+  .app button.danger-link {
+    color: #f2b8b5;
+  }
+}
+
+.delete-wallet {
+  margin-top: 10px;
+}
+
+/* A section folded to one line that says what's in it. */
+.app .fold-panel {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.fold-panel > summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.fold-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.app .fold-panel > summary h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.fold-panel > summary .muted {
+  font-size: 14px;
+  text-align: right;
+}
+
+.fold-panel[open] > summary h3 {
+  color: var(--accent);
+}
+
+.fold-panel > :last-child {
+  margin-bottom: 16px;
+}
+
+.fold-panel .point-value:last-of-type {
+  border-bottom: 0;
+}
+
+.app .sync-panel .row-buttons button {
+  font-weight: 600;
+}
+
+/* An empty wallet's import, a muted link. */
+.import-link p {
+  margin: 0 4px;
+}
+
+.file-link {
+  position: relative;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.file-link input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.file-link:focus-within {
+  outline: 2px solid var(--accent);
+}
+
+/* A card's Settings. */
+.editor fieldset.picks legend .muted {
+  font-size: 13px;
+}
+
+.editor .picks .chips {
+  margin: 4px 0 8px;
+}
+
+.editor .chip {
+  min-height: 36px;
+  color: var(--text);
+}
+
+.editor .chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.editor .chip[aria-checked='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.pick-info {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.pick-info summary {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.pick-info p {
+  margin: 4px 0 0;
+}
+
+.settings-credits {
+  margin: 4px 0 14px;
+}
+
+.app .settings-credits h4 {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.credit-details .credit-detail {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.credit-details .credit-detail:last-child {
+  border-bottom: 0;
+}
+
+.credit-details .credit-detail p {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.credit-details .field {
+  margin: 6px 0 0;
+}
+
+.anniversary-row {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.anniversary-row select {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+}
+
+.anniversary-row select:last-child {
+  flex: 0 0 6em;
+}
+
+.more-settings {
+  margin: 4px 0 10px;
+}
+
+.more-settings fieldset {
+  margin-top: 8px;
+}
+
+/* The cheat sheet on a phone: the purchase over its card, as /sheet has it,
+   so long names stay on one line. */
+@media (max-width: 479px) {
+  .app .sheet-rows li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'label label'
+      'card rate';
+    gap: 2px 12px;
+    align-items: center;
+    padding: 10px 0 12px;
+  }
+
+  .app .sheet-label {
+    grid-area: label;
+    font-size: 14px;
+  }
+
+  .app .sheet-card {
+    grid-area: card;
+  }
+
+  .app .sheet-card-name {
+    font-size: 17px;
+  }
+
+  .app .sheet-rate {
+    grid-area: rate;
+  }
+}
+
+/* My wallet's panels after the cheat sheet, one stack. */
+.wallet-main {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* Wide screens: the cheat sheet beside the cards and to-do list. */
+@media (min-width: 1024px) {
+  .app .wallet-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    width: min(1120px, calc(100vw - 48px));
+    margin-left: calc((100% - min(1120px, 100vw - 48px)) / 2);
+  }
+
+  .app .wallet-grid {
+    grid-auto-flow: row dense;
+  }
+
+  .wallet-grid > * {
+    grid-column: 1 / -1;
+  }
+
+  .wallet-grid > .wallet-main {
+    grid-column: 1;
+  }
+
+  .wallet-grid > .sheet {
+    grid-column: 2;
+  }
+}
+
+@media (min-width: 1024px) and (min-height: 900px) {
+  .wallet-grid > .sheet {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+/* The home page for someone with saved cards (fold.ts): the header keeps
+   its top row, and the story below the app folds behind one button. */
+main[data-fold] header.hero > h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+main[data-fold] header.hero > :is(.lede, .stats, .popular-links) {
+  display: none;
+}
+
+main[data-fold='closed'] > :not(header, footer, .about-fold) {
+  display: none;
+}
+
+.about-fold {
+  margin: 28px 0 8px;
+  text-align: center;
+}
+
+.about-fold button {
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.about-fold button::after {
+  content: ' ▾';
+}
+
+main[data-fold='open'] .about-fold button::after {
+  content: ' ▴';
 }

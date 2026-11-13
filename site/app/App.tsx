@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
-import { catalog, dataVersion } from 'virtual:catalog'
-import { BestFor, SUGGESTIONS } from './BestFor.tsx'
+import { catalog } from 'virtual:catalog'
+import { BestFor, SUGGESTIONS, type Scope } from './BestFor.tsx'
 import { MyWallet } from './MyWallet.tsx'
 import { answerFor, jobFor } from './find/run.ts'
-import { Spending } from './Spending.tsx'
+import { Spending, type FindMode } from './Spending.tsx'
 import { loadSpendingRows } from './spending-rows.ts'
 import {
   ANY_PURCHASE,
@@ -61,24 +61,38 @@ import type { Wallet } from '../../src/schema/wallet.ts'
 // sync coming back doesn't move them; links to the first tab say #best.
 const holdsCards = () => (loadWallet()?.cards.length ?? 0) > 0
 
-// State lives in the URL fragment, which browsers never send to a server.
-// `focus`: a link sent a store to My wallet ("Check with your own cards"),
-// so it opens at the answer rather than the top of the wallet.
-function readHash(landing = false): {
+type View = {
   tab: Tab
   query: string
+  // A link sent a store from its page ("Check with your own cards"), so At
+  // a store opens at the answer from the visitor's own cards.
   focus?: boolean
-} {
+  scope?: Scope
+  find?: FindMode
+}
+
+// State lives in the URL fragment, which browsers never send to a server.
+function readHash(landing = false): View {
   if (landing && location.hash.length <= 1 && holdsCards())
     return { tab: 'wallet', query: '' }
   const hash = new URLSearchParams(location.hash.slice(1))
-  if (hash.has('spending')) return { tab: 'spending', query: '' }
+  // A card page's "See where it ranks on your spending" and "See what it
+  // adds to your cards".
+  if (hash.has('spending'))
+    return {
+      tab: 'spending',
+      query: '',
+      ...(hash.has('card') ? { find: 'scratch' as const } : {}),
+    }
+  if (hash.has('whatif')) return { tab: 'spending', query: '', find: 'add' }
   if (hash.has('wallet')) {
-    // A store sent here from a search page. With no saved cards, My wallet
-    // keeps it and answers once a card is added: the page already gave the
-    // all-cards ranking.
+    // A store sent from a search page is asked of the visitor's own cards.
+    // With none saved yet, At a store offers to add them and answers once
+    // they're in: the page already gave the all-cards ranking.
     const query = hash.get('wallet') ?? ''
-    return { tab: 'wallet', query, focus: query !== '' }
+    return query === ''
+      ? { tab: 'wallet', query }
+      : { tab: 'best', query, focus: true, scope: 'yours' }
   }
   return { tab: 'best', query: hash.get('best') ?? '' }
 }
@@ -160,6 +174,7 @@ function Filters({
   note,
   purchase,
   onPurchase,
+  allCards = true,
 }: {
   settings: Settings
   onChange: (s: Settings) => void
@@ -170,24 +185,29 @@ function Filters({
   note: string | null
   purchase?: Purchase
   onPurchase?: (p: Purchase) => void
+  // Off for an answer from the saved wallet: its cards and point values are
+  // the wallet's own, so only memberships and the purchase apply.
+  allCards?: boolean
 }) {
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch })
   const has = (m: string) => memberships.includes(m)
   const toggle = (m: string, on: boolean) =>
     onMemberships(on ? [...memberships, m] : memberships.filter((x) => x !== m))
   const active =
-    (settings.noFee ? 1 : 0) +
-    (settings.kind !== 'any' ? 1 : 0) +
-    (settings.issuer !== null ? 1 : 0) +
-    (settings.business ? 1 : 0) +
+    (allCards
+      ? (settings.noFee ? 1 : 0) +
+        (settings.kind !== 'any' ? 1 : 0) +
+        (settings.issuer !== null ? 1 : 0) +
+        (settings.business ? 1 : 0) +
+        (settings.pointsHeavy ? 1 : 0)
+      : 0) +
     memberships.length +
-    (settings.pointsHeavy ? 1 : 0) +
     (purchase ? purchaseCount(purchase) : 0)
 
   return (
     <details class="filters">
       <summary>
-        Filters and memberships
+        {allCards ? 'Filters and memberships' : 'Memberships and this purchase'}
         {active > 0 ? <span class="badge">{active}</span> : null}
       </summary>
       <div class="filter-panel">
@@ -198,56 +218,60 @@ function Filters({
             onChange={onPurchase}
           />
         ) : null}
-        <fieldset class="filter-group">
-          <legend>Which cards</legend>
-          <div class="filter-row">
-            <label>
-              Rewards
-              <select
-                value={settings.kind}
-                onChange={(e) =>
-                  set({ kind: e.currentTarget.value as Settings['kind'] })
-                }
-              >
-                <option value="any">Cash back and points</option>
-                <option value="cash">Cash back only</option>
-                <option value="points">Points and miles only</option>
-              </select>
-            </label>
-            <label>
-              Issuer
-              <select
-                value={settings.issuer ?? ''}
-                onChange={(e) => set({ issuer: e.currentTarget.value || null })}
-              >
-                <option value="">Any issuer</option>
-                {issuers.map((i) => (
-                  <option value={i} key={i}>
-                    {issuerName(i)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div class="filter-checks">
-            <label class="check">
-              <input
-                type="checkbox"
-                checked={settings.noFee}
-                onChange={(e) => set({ noFee: e.currentTarget.checked })}
-              />
-              No annual fee
-            </label>
-            <label class="check">
-              <input
-                type="checkbox"
-                checked={settings.business}
-                onChange={(e) => set({ business: e.currentTarget.checked })}
-              />
-              Business cards instead
-            </label>
-          </div>
-        </fieldset>
+        {allCards ? (
+          <fieldset class="filter-group">
+            <legend>Which cards</legend>
+            <div class="filter-row">
+              <label>
+                Rewards
+                <select
+                  value={settings.kind}
+                  onChange={(e) =>
+                    set({ kind: e.currentTarget.value as Settings['kind'] })
+                  }
+                >
+                  <option value="any">Cash back and points</option>
+                  <option value="cash">Cash back only</option>
+                  <option value="points">Points and miles only</option>
+                </select>
+              </label>
+              <label>
+                Issuer
+                <select
+                  value={settings.issuer ?? ''}
+                  onChange={(e) =>
+                    set({ issuer: e.currentTarget.value || null })
+                  }
+                >
+                  <option value="">Any issuer</option>
+                  {issuers.map((i) => (
+                    <option value={i} key={i}>
+                      {issuerName(i)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div class="filter-checks">
+              <label class="check">
+                <input
+                  type="checkbox"
+                  checked={settings.noFee}
+                  onChange={(e) => set({ noFee: e.currentTarget.checked })}
+                />
+                No annual fee
+              </label>
+              <label class="check">
+                <input
+                  type="checkbox"
+                  checked={settings.business}
+                  onChange={(e) => set({ business: e.currentTarget.checked })}
+                />
+                Business cards instead
+              </label>
+            </div>
+          </fieldset>
+        ) : null}
         <fieldset class="filter-group">
           <legend>About you</legend>
           <p class="hint">
@@ -300,17 +324,19 @@ function Filters({
               </div>
             ) : null}
           </fieldset>
-          <label class="check">
-            <input
-              type="checkbox"
-              checked={settings.pointsHeavy}
-              onChange={(e) => set({ pointsHeavy: e.currentTarget.checked })}
-            />
-            <span>
-              I transfer points to airlines and hotels
-              <span class="hint">{POINTS_HEAVY_HINT}</span>
-            </span>
-          </label>
+          {allCards ? (
+            <label class="check">
+              <input
+                type="checkbox"
+                checked={settings.pointsHeavy}
+                onChange={(e) => set({ pointsHeavy: e.currentTarget.checked })}
+              />
+              <span>
+                I transfer points to airlines and hotels
+                <span class="hint">{POINTS_HEAVY_HINT}</span>
+              </span>
+            </label>
+          ) : null}
         </fieldset>
       </div>
     </details>
@@ -345,11 +371,15 @@ async function yamlOf(wallet: Wallet): Promise<string> {
 }
 
 export function App() {
-  const [{ tab, query, focus }, setView] = useState<{
-    tab: Tab
-    query: string
-    focus?: boolean
-  }>(() => readHash(true))
+  const [{ tab, query, focus, ...asked }, setView] = useState<View>(() =>
+    readHash(true),
+  )
+  // At a store ranks the visitor's own cards when they've saved some, and
+  // Get a card looks for one to add to them, until either is switched.
+  const [scopeSet, setScope] = useState<Scope | null>(asked.scope ?? null)
+  const [findSet, setFind] = useState<FindMode | null>(asked.find ?? null)
+  // A store waiting for the visitor's first cards, answered once they're in.
+  const [returnTo, setReturnTo] = useState<string | null>(null)
   const [initial] = useState(loadState)
   const [settings, setSettings] = useState<Settings>(initial.settings)
   const [wallet, setWallet] = useState<Wallet | null>(initial.wallet)
@@ -613,6 +643,9 @@ export function App() {
     sync.state === 'off' ? <ConnectPanel note={sync.note} /> : null
 
   const saved = wallet ?? EMPTY_WALLET
+  const hasCards = saved.cards.length > 0
+  const scope: Scope = scopeSet ?? (hasCards ? 'yours' : 'every')
+  const find: FindMode = findSet ?? (hasCards ? 'add' : 'scratch')
   const [purchase, setPurchase] = useState<Purchase>(ANY_PURCHASE)
   const filterProps = {
     settings,
@@ -646,13 +679,19 @@ export function App() {
     })
     return () => cancelAnimationFrame(frame)
   }, [tab])
-  // Find a card's answer, started off the page's thread while the page is
+  // Get a card's answer, started off the page's thread while the page is
   // idle and again when its tab is pressed, so the tab opens with it.
   const prepareFind = () => {
     if (tab !== 'spending')
       answerFor(
         catalog,
-        jobFor(loadSpendingRows(), settings, saved, localToday()),
+        jobFor(
+          loadSpendingRows(),
+          settings,
+          saved,
+          localToday(),
+          find === 'add' && hasCards ? wallet : null,
+        ),
       )
   }
   const prepareRef = useRef(prepareFind)
@@ -671,7 +710,11 @@ export function App() {
     // A link to a section below (#claude) scrolls there and keeps the app
     // as it is.
     const onHash = () => {
-      if (!linkedSection()) setView(readHash())
+      if (linkedSection()) return
+      const next = readHash()
+      setView(next)
+      if (next.scope) setScope(next.scope)
+      if (next.find) setFind(next.find)
     }
     addEventListener('hashchange', onHash)
     return () => removeEventListener('hashchange', onHash)
@@ -699,29 +742,43 @@ export function App() {
           <BestFor
             settings={settings}
             saved={saved}
+            wallet={wallet}
             filters={
               <Filters
                 {...filterProps}
                 purchase={purchase}
                 onPurchase={setPurchase}
+                allCards={scope === 'every'}
               />
             }
             purchase={purchase}
             onPurchase={setPurchase}
             query={query}
             onQuery={(q) => setView({ tab: 'best', query: q })}
-            hasCards={(wallet?.cards.length ?? 0) > 0}
+            scope={scope}
+            onScope={setScope}
+            focus={focus === true}
             onWallet={() => {
+              setReturnTo(scope === 'yours' && query !== '' ? query : null)
               setView({ tab: 'wallet', query: '' })
               document.querySelector('.tabs')?.scrollIntoView()
             }}
           />
         ) : tab === 'spending' ? (
-          <Spending settings={settings} saved={saved} filters={filters} />
+          <Spending
+            // Each way of asking starts at its own answer.
+            key={find}
+            settings={settings}
+            saved={saved}
+            wallet={wallet}
+            filters={filters}
+            mode={find}
+            onMode={setFind}
+            perform={perform}
+            locked={locked}
+          />
         ) : (
           <MyWallet
-            initialQuery={query}
-            focusAsk={focus === true}
             wallet={wallet}
             perform={perform}
             onDelete={() => replaceWallet(null)}
@@ -730,8 +787,14 @@ export function App() {
             lockNote={edit.note}
             syncTop={syncTop}
             connect={connect}
-            purchase={purchase}
-            onPurchase={setPurchase}
+            onDone={
+              returnTo === null
+                ? undefined
+                : () => {
+                    setReturnTo(null)
+                    setView({ tab: 'best', query: returnTo })
+                  }
+            }
           />
         )}
       </div>
@@ -741,8 +804,7 @@ export function App() {
         ))}
       </datalist>
       <p class="data-version muted">
-        Free, with no sign-up. Runs in your browser, so what you type stays on
-        your device. Card data {dataVersion}, from each issuer's own terms.
+        Free, no sign-up, and what you type stays on your device.
       </p>
     </div>
   )

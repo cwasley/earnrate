@@ -2,7 +2,7 @@
 // static pages' header links to them by these names.
 export const TABS = [
   { id: 'best', name: 'At a store', href: '/#best' },
-  { id: 'spending', name: 'Find a card', href: '/#spending' },
+  { id: 'spending', name: 'Get a card', href: '/#spending' },
   { id: 'wallet', name: 'My wallet', href: '/#wallet' },
 ] as const
 

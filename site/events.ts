@@ -29,7 +29,6 @@ export const EVENTS = [
   'cta-claude',
   'cta-after-answer',
   'cta-save-cards',
-  'cta-pass-hint',
   // Arrivals from the static pages' buttons
   'page-spending',
   'page-whatif',

@@ -1,5 +1,6 @@
 import { render } from 'preact'
 import { App } from './App.tsx'
+import { foldStory } from './fold.ts'
 import { startMyLink } from './my-link.ts'
 import { copyButtons, trackClicks } from './track.ts'
 import './app.css'
@@ -10,6 +11,7 @@ startMyLink()
 
 const root = document.getElementById('app')
 if (root) {
+  foldStory()
   root.textContent = ''
   render(<App />, root)
 }

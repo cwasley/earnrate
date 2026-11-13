@@ -1,18 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
-import { Fragment } from 'preact'
+import type { ComponentChildren } from 'preact'
 import { catalog } from 'virtual:catalog'
 import { walletProblems } from '../../src/data/integrity.ts'
 import { bonusStatus } from '../../src/engine/bonus.ts'
-import {
-  cheatSheet,
-  EVERYDAY_PURCHASES,
-  quickPickText,
-} from '../../src/engine/cheat-sheet.ts'
-import { ALL_PERSONAL_CARDS } from '../../src/engine/explore.ts'
-import { activationGroup } from '../../src/engine/evaluate.ts'
+import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { milestoneSummaries } from '../../src/engine/milestones.ts'
-import { inEffect, localToday } from '../../src/engine/periods.ts'
-import { ABROAD, noteOnly, recommend } from '../../src/engine/recommend.ts'
+import { localToday } from '../../src/engine/periods.ts'
+import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
 import {
   cardInfo,
   knownMemberships,
@@ -21,138 +15,47 @@ import {
   setupNotes,
   type SetupNote,
 } from '../../src/engine/setup.ts'
-import {
-  gainOrder,
-  resolveSpendLines,
-  typicalSpendLines,
-  simulateAdditions,
-  type Addition,
-} from '../../src/engine/simulate.ts'
-import { ifMemberLines, placedAmong } from '../../src/engine/memberships.ts'
-import {
-  categoryAs,
-  categoryPhrase,
-  creditsCountedText,
-  creditsOnlyIf,
-  currencyLabel,
-  currencyName,
-  choiceName,
-  feeText,
-  ifCreditsUsedText,
-  listed,
-  minimumSpendText,
-  offerPerksText,
-  onlyIfText,
-  withArticle,
-} from '../../src/engine/text.ts'
-import { cardValuation, currencyValuation } from '../../src/engine/valuation.ts'
-import type { Recommendation } from '../../src/engine/types.ts'
-import {
-  MAX_NIGHT_VALUE,
-  type CardInput,
-} from '../../src/engine/wallet-change.ts'
-import {
-  resolvePlace,
-  withCallerCategory,
-} from '../../src/merchants/resolve.ts'
+import { currencyLabel, listed } from '../../src/engine/text.ts'
+import { cardValuation } from '../../src/engine/valuation.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
-import { anniversaryOf, type Spending } from '../../src/engine/renewal.ts'
+import { anniversaryOf } from '../../src/engine/renewal.ts'
+import {
+  checklistCalendar,
+  checklistRows,
+  type ChecklistRowItem,
+} from '../../src/engine/checklist.ts'
 import { addsAtOnce, askAddText } from './add-from-link.ts'
 import { CardArt } from './CardArt.tsx'
-import { KeepOrReplace } from './KeepOrReplace.tsx'
-import { PlaceKinds } from './PlaceKinds.tsx'
-import { kindCategory } from './place-kinds.ts'
+import { CardSettings, hasFee } from './CardSettings.tsx'
 import { QuickCards } from './QuickCards.tsx'
 import { Logo } from './Logo.tsx'
 import { track } from './track.ts'
 import { SheetDownload, useSheetSend, WalletPass } from './CheatSheetParts.tsx'
-import { lineFor } from './Spending.tsx'
-import { isTypicalRows, loadSpendingRows } from './spending-rows.ts'
+import { savedSpending } from './saved-spending.ts'
 import {
   cardCount,
   cards,
   feeLabel,
   issuerName,
-  issuers,
   membershipName,
   pct,
   shortName,
   wholeDollars,
-  words,
 } from './format.ts'
-import { ABROAD_NOTE } from './AbroadToggle.tsx'
-import { PayingHints, payingNote } from './PayingWith.tsx'
-import { PurchaseOptions, type Purchase } from './ThisPurchase.tsx'
-import type { Card, PaymentMethod } from '../../src/schema/card.ts'
-import { optionName, ruleWhat } from '../../src/engine/rule-text.ts'
 import { SearchInput } from './SearchInput.tsx'
 import { load, save } from './settings.ts'
 import {
   addOp,
   importOp,
   membershipsOp,
-  pointValueOp,
   removeOp,
-  skippedIssuersOp,
   updateOp,
   type LocalOp,
   type Outcome,
   type WalletOp,
 } from './sync.ts'
-import type { ComponentChildren } from 'preact'
-import {
-  checklistCalendar,
-  checklistRows,
-  type ChecklistRowItem,
-} from '../../src/engine/checklist.ts'
-import {
-  compareOffers,
-  offerOrder,
-  OFFERS_MAY_DIFFER,
-  offerTerms,
-  type OfferPlan,
-  type OfferSummary,
-} from '../../src/engine/offers.ts'
-import {
-  capitalize,
-  creditBack,
-  creditTerms,
-  creditShort,
-  CREDIT_THIS_PERIOD,
-  LISTED_CREDIT_USED,
-  dollarsAndCents,
-  FREE_NIGHT_NAME,
-  freeNightText,
-  freeNightValueText,
-  money,
-  shortDate,
-} from '../../src/engine/text.ts'
-import { creditStates, nightStates } from '../../src/engine/credits.ts'
-
-// The first everyday purchases, as quick picks for one question.
-const QUICK = EVERYDAY_PURCHASES.slice(0, 6).map(quickPickText)
 
 // Setup notes name what to set in CLI terms; this says where on the page.
-// "Grocery stores and American Red Cross, Oct 1 to Dec 31": an activation
-// in the engine's words, with its dates.
-// One activation can turn on several rules (a Freedom Flex quarter), so the
-// label names every rule in its group.
-function activationLabel(card: Card, ruleId: string): string {
-  const rule = card.rules.find((r) => r.id === ruleId)
-  if (!rule) return words(ruleId)
-  const what = capitalize(
-    listed(
-      activationGroup(card, ruleId).flatMap((id) => {
-        const r = card.rules.find((x) => x.id === id)
-        return r ? [ruleWhat(catalog, r, card)] : []
-      }),
-    ),
-  )
-  return rule.valid_from !== undefined && rule.valid_to !== undefined
-    ? `${what}, ${shortDate(rule.valid_from).replace(/, \d{4}$/, '')} to ${shortDate(rule.valid_to)}`
-    : what
-}
-
 function noteText(note: SetupNote, name: string): string {
   switch (note.kind) {
     case 'pick':
@@ -166,156 +69,6 @@ function noteText(note: SetupNote, name: string): string {
     case 'rotation':
       return note.text
   }
-}
-
-function ask(
-  wallet: Wallet,
-  text: string,
-  amount: number | null,
-  abroad: boolean,
-  payment: PaymentMethod | null,
-  kind: string | null,
-) {
-  const purchase = {
-    merchant: text,
-    amount,
-    channel: null,
-    date: localToday(),
-    country: abroad ? ABROAD : 'US',
-    payment,
-  }
-  return recommend(
-    catalog,
-    wallet,
-    purchase,
-    withCallerCategory(
-      resolvePlace(catalog, text, null),
-      kind === null ? null : kindCategory(kind),
-    ),
-  )
-}
-
-function Answer({
-  wallet,
-  rec,
-  onPayment,
-  kinds,
-}: {
-  wallet: Wallet
-  rec: Recommendation
-  onPayment: (payment: PaymentMethod) => void
-  kinds: ComponentChildren
-}) {
-  const decided = rec.decision
-  const top = rec.ranked.find((r) => r.cardId === decided?.cardId)
-  const held = wallet.cards.find((c) => c.id === decided?.cardId)
-  if (noteOnly(rec))
-    return (
-      <div class="answer">
-        <p class="callout">{rec.categoryNote}</p>
-        <ul class="assumptions">
-          {rec.assumptions.map((a) => (
-            <li key={a}>{a}</li>
-          ))}
-        </ul>
-      </div>
-    )
-  return (
-    <div class="answer">
-      {rec.categoryNote ? <p class="callout">{rec.categoryNote}</p> : null}
-      {decided && held ? (
-        <p class="verdict">
-          Use <strong>{shortName(held.id)}</strong>
-          {rec.bonus ? ' for its welcome bonus' : ''}:{' '}
-          {pct(decided.effectiveReturnPct)} back
-          {top?.earned !== null && top?.earned !== undefined
-            ? `, about ${dollarsAndCents(top.earned)}`
-            : ''}
-          {top?.credit?.dollars
-            ? `, plus ${money(top.credit.dollars)} back from its ${top.credit.name} credit`
-            : ''}
-          .
-        </p>
-      ) : (
-        <p class="verdict">None of your cards work here.</p>
-      )}
-      {/* The engine warns about a store it doesn't know first, and what kind
-          of place it is gets asked right under that. */}
-      {rec.warnings.map((w, i) => (
-        <Fragment key={w}>
-          <p class="callout">{w}</p>
-          {i === 0 ? kinds : null}
-        </Fragment>
-      ))}
-      <PayingHints answer={rec} onPick={onPayment} />
-      {rec.notes.map((n) => (
-        <p class="muted" key={n}>
-          {n}
-        </p>
-      ))}
-      <ol class="result-list">
-        {rec.ranked
-          .map((r, i) => ({ r, rank: i + 1 }))
-          .filter(({ r, rank }) => rank <= 3 || r.cardId === rec.bonus?.cardId)
-          .map(({ r, rank }) => (
-            <li class="result" key={r.cardId}>
-              <div class="result-top">
-                <span class="rank">{rank}</span>
-                <CardArt id={r.cardId} />
-                <div class="result-name">
-                  <strong>{shortName(r.cardId)}</strong>
-                  {r.cardId === rec.bonus?.cardId ? (
-                    <span class="muted">The pick, for its welcome bonus</span>
-                  ) : null}
-                </div>
-                <span class="rate">{pct(r.effectiveReturnPct)}</span>
-              </div>
-              {r.credit ? (
-                <p class="upgrade">{creditShort(r.credit, r.credit.dollars)}</p>
-              ) : null}
-              {r.warnings.map((w) => (
-                <p class="warn" key={w}>
-                  {w}
-                </p>
-              ))}
-              <details>
-                <summary>Why</summary>
-                {r.reasoning.map((line) => (
-                  <p key={line}>{line}</p>
-                ))}
-                <p class="muted">
-                  Wrong rate? <a href="/support">Tell us</a>.
-                </p>
-              </details>
-            </li>
-          ))}
-      </ol>
-      {cantUseHere(rec.excluded).map((line) => (
-        <p class="muted" key={line}>
-          {line}
-        </p>
-      ))}
-      {rec.sensitivity ? <p class="muted">{rec.sensitivity}</p> : null}
-      <ul class="assumptions">
-        {rec.assumptions.map((a) => (
-          <li key={a}>{a}</li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-// "Can't use here: Amex Gold. Costco takes only Visa in-store."
-function cantUseHere(excluded: Recommendation['excluded']): string[] {
-  const byReason = new Map<string, string[]>()
-  for (const e of excluded)
-    byReason.set(e.reason, [
-      ...(byReason.get(e.reason) ?? []),
-      shortName(e.cardId),
-    ])
-  return [...byReason].map(
-    ([reason, names]) => `Can't use here: ${listed(names)}. ${reason}`,
-  )
 }
 
 function CheatSheet({ wallet }: { wallet: Wallet }) {
@@ -369,12 +122,6 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
   )
 }
 
-function offerText(card: NonNullable<ReturnType<typeof cards.get>>): string {
-  const o = card.welcome_offer
-  if (!o || !inEffect(o, localToday())) return ''
-  return `Published offer: ${offerTerms(o, currencyName(catalog, card.currency))}.`
-}
-
 function bonusLine(wallet: Wallet, held: WalletCard): string | null {
   const status = bonusStatus(catalog, wallet, held, localToday())
   if (!status) return null
@@ -399,495 +146,8 @@ function milestoneLine(held: WalletCard): string | null {
     : `Spend bonus: ${wholeDollars(next.spent)} of ${wholeDollars(next.spend)}`
 }
 
-type CreditUse = 'using' | 'not-yet' | 'skipped'
-
-// Enrolled is what the issuer calls it. A credit that needs no enrolling
-// starts with neither choice: it offsets the fee only once marked used.
-const ENROLL_CHOICES: { use: CreditUse; label: string }[] = [
-  { use: 'using', label: 'Enrolled' },
-  { use: 'not-yet', label: 'Not yet' },
-  { use: 'skipped', label: "I don't use this" },
-]
-const AUTOMATIC_CHOICES: { use: CreditUse; label: string }[] = [
-  { use: 'using', label: 'Using it' },
-  { use: 'skipped', label: "I don't use this" },
-]
-
-function UseChoices({
-  name,
-  label,
-  choices,
-  value,
-  onPick,
-}: {
-  name: string
-  label: string
-  choices: { use: CreditUse; label: string }[]
-  value: CreditUse | undefined
-  onPick: (use: CreditUse) => void
-}) {
-  return (
-    <div class="segments credit-use" role="radiogroup" aria-label={label}>
-      {choices.map((choice) => {
-        const on = value === choice.use
-        return (
-          <label key={choice.use}>
-            <input
-              type="radio"
-              name={name}
-              checked={on}
-              onChange={() => onPick(choice.use)}
-            />
-            {choice.label}
-          </label>
-        )
-      })}
-    </div>
-  )
-}
-
-function CardEditor({
-  wallet,
-  held,
-  asked,
-  onAsk,
-  onChange,
-  onRemove,
-}: {
-  wallet: Wallet
-  held: WalletCard
-  asked: boolean // "Keep or replace?" is showing its answer
-  onAsk: () => void
-  onChange: (input: CardInput) => void
-  onRemove: (cardId: string) => void
-}) {
-  const card = cards.get(held.id)
-  const info = card ? cardInfo(catalog, card, wallet, localToday()) : null
-  const [picks, setPicks] = useState<Record<string, string[]>>(
-    held.chosen?.picks ?? {},
-  )
-  const [activated, setActivated] = useState<string[]>(held.activated)
-  const [anniversary, setAnniversary] = useState(held.anniversary ?? '')
-  const [tracking, setTracking] = useState(held.bonus !== undefined)
-  // One opening date serves the welcome bonus and any first-year rate.
-  const [opened, setOpened] = useState(held.opened ?? held.bonus?.opened ?? '')
-  const [spent, setSpent] = useState(held.bonus ? String(held.bonus.spent) : '')
-  const milestones = card ? milestoneSummaries(card, held, localToday()) : []
-  const trackedSpend = milestones.find((m) => m.tracked)
-  const [yearSpent, setYearSpent] = useState(
-    trackedSpend ? String(trackedSpend.spent) : '',
-  )
-  const credits = card ? creditStates(catalog, card, held, localToday()) : []
-  const nights = card ? nightStates(catalog, wallet.valuations, card, held) : []
-  // Free nights share the credits' ids, enrolled and skipped_credits.
-  const [creditUse, setCreditUse] = useState<Record<string, CreditUse>>(() =>
-    Object.fromEntries([
-      ...credits.map((c): [string, CreditUse] => [
-        c.credit.id,
-        c.skipped
-          ? 'skipped'
-          : (c.credit.enroll ? c.enrolled : c.confirmed)
-            ? 'using'
-            : 'not-yet',
-      ]),
-      ...nights.map((n): [string, CreditUse] => [
-        n.night.id,
-        n.skipped ? 'skipped' : n.confirmed ? 'using' : 'not-yet',
-      ]),
-    ]),
-  )
-  const [creditUsed, setCreditUsed] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      credits
-        .filter((c) => c.used > 0)
-        .map((c) => [c.credit.id, String(c.used)]),
-    ),
-  )
-  const [nightWorth, setNightWorth] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      nights.flatMap((n) =>
-        n.own === null ? [] : [[n.night.id, String(n.own)]],
-      ),
-    ),
-  )
-  if (!info || !card) return null
-  const offer = card.welcome_offer
-
-  const save = () => {
-    const chosen = Object.fromEntries(
-      Object.entries(picks).filter(([, options]) => options.length > 0),
-    )
-    const input: CardInput = { id: held.id, activated }
-    if (Object.keys(chosen).length > 0) input.picks = chosen
-    if (anniversary !== '') input.anniversary = anniversary
-    if (info.introRates.length > 0) {
-      if (opened !== '') input.opened = opened
-      else if (held.opened !== undefined) input.opened = null
-    }
-    if (tracking && opened !== '')
-      input.bonus = { opened, spent: Math.max(0, Number(spent) || 0) }
-    else if (!tracking && held.bonus) input.bonus = null
-    // Every purchase counts toward every milestone, so one total sets them all.
-    if (milestones.length > 0 && yearSpent !== '') {
-      const dollars = Math.max(0, Number(yearSpent) || 0)
-      input.milestoneSpent = Object.fromEntries(
-        milestones.map((m) => [m.id, dollars]),
-      )
-    }
-    const withUse = (use: CreditUse) =>
-      [
-        ...credits.map((c) => c.credit.id),
-        ...nights.map((n) => n.night.id),
-      ].filter((id) => creditUse[id] === use)
-    if (credits.length + nights.length > 0) {
-      input.enrolled = withUse('using')
-      input.skippedCredits = withUse('skipped')
-    }
-    const used = Object.entries(creditUsed).filter(([, v]) => v !== '')
-    if (used.length > 0)
-      input.creditUsed = Object.fromEntries(
-        used.map(([id, v]) => [id, Math.max(0, Number(v) || 0)]),
-      )
-    // A blank value clears one saved before; the rules refuse a bad one.
-    const worth = nights.flatMap((n): [string, number | null][] => {
-      const text = (nightWorth[n.night.id] ?? '').trim()
-      if (text === '') return n.own === null ? [] : [[n.night.id, null]]
-      return [[n.night.id, Number(text.replace(/[$,]/g, ''))]]
-    })
-    if (worth.length > 0) input.nightValues = Object.fromEntries(worth)
-    onChange(input)
-  }
-
-  return (
-    <div class="editor">
-      {info.choices.map((choice) => {
-        const chosen = picks[choice.id] ?? []
-        return (
-          <fieldset key={choice.id}>
-            <legend>
-              {choiceName(choice.id)}{' '}
-              {choice.pick === 1 ? 'category' : 'categories'}:{' '}
-              {choice.automatic
-                ? `the ${choice.pick === 1 ? 'one' : String(choice.pick)} you expect to spend the most in`
-                : `pick ${String(choice.pick)}`}
-              {choice.period === 'quarter' ? ' this quarter' : ''}
-            </legend>
-            {choice.options.map((option) => {
-              const on = chosen.includes(option)
-              return (
-                <label class="check" key={option}>
-                  <input
-                    type="checkbox"
-                    checked={on}
-                    disabled={!on && chosen.length >= choice.pick}
-                    onChange={(e) => {
-                      const checked = e.currentTarget.checked
-                      setPicks((prev) => {
-                        const now = prev[choice.id] ?? []
-                        return {
-                          ...prev,
-                          [choice.id]: checked
-                            ? [...now, option]
-                            : now.filter((o) => o !== option),
-                        }
-                      })
-                    }}
-                  />
-                  {optionName(catalog, card, choice.id, option)}
-                </label>
-              )
-            })}
-          </fieldset>
-        )
-      })}
-      {info.activation.length > 0 ? (
-        <fieldset>
-          <legend>
-            Bonuses you've activated with {issuerName(info.issuer)}
-          </legend>
-          {info.activation
-            .filter(
-              (rule, i) =>
-                info.activation.findIndex((r) =>
-                  activationGroup(card, r).includes(rule),
-                ) === i,
-            )
-            .map((rule) => (
-              <label class="check" key={rule}>
-                <input
-                  type="checkbox"
-                  checked={activationGroup(card, rule).some((r) =>
-                    activated.includes(r),
-                  )}
-                  onChange={(e) => {
-                    const checked = e.currentTarget.checked
-                    const group = activationGroup(card, rule)
-                    setActivated((prev) =>
-                      checked
-                        ? [...prev, rule]
-                        : prev.filter((r) => !group.includes(r)),
-                    )
-                  }}
-                />
-                {activationLabel(card, rule)}
-              </label>
-            ))}
-        </fieldset>
-      ) : null}
-      {info.introRates.length > 0 ? (
-        <fieldset>
-          <legend>First-year rate</legend>
-          <ul class="muted small">
-            {info.introRates.map((i) => (
-              <li key={i.id}>{capitalize(i.text)}.</li>
-            ))}
-          </ul>
-          <label class="field">
-            Account opened (leave blank if it's been more than a year)
-            <input
-              type="date"
-              value={opened}
-              max={localToday()}
-              onInput={(e) => setOpened(e.currentTarget.value)}
-            />
-          </label>
-        </fieldset>
-      ) : null}
-      {offer || held.bonus ? (
-        <fieldset>
-          <legend>Welcome bonus</legend>
-          {offer ? <p class="muted small">{offerText(card)}</p> : null}
-          <label class="check">
-            <input
-              type="checkbox"
-              checked={tracking}
-              onChange={(e) => setTracking(e.currentTarget.checked)}
-            />
-            I'm working on this card's welcome bonus
-          </label>
-          {tracking ? (
-            <>
-              {info.introRates.length === 0 ? (
-                <label class="field">
-                  Account opened
-                  <input
-                    type="date"
-                    value={opened}
-                    max={localToday()}
-                    onInput={(e) => setOpened(e.currentTarget.value)}
-                  />
-                </label>
-              ) : null}
-              <label class="field">
-                Spent toward it so far
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  min="0"
-                  placeholder="0"
-                  value={spent}
-                  onInput={(e) => setSpent(e.currentTarget.value)}
-                />
-              </label>
-            </>
-          ) : null}
-        </fieldset>
-      ) : null}
-      {milestones.length > 0 ? (
-        <fieldset>
-          <legend>Spend bonus</legend>
-          <ul class="muted small">
-            {info.milestones.map((m) => (
-              <li key={m.id}>{m.text}</li>
-            ))}
-          </ul>
-          <label class="field">
-            Spent on this card so far this year
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              placeholder="Not tracked"
-              value={yearSpent}
-              onInput={(e) => setYearSpent(e.currentTarget.value)}
-            />
-          </label>
-        </fieldset>
-      ) : null}
-      {credits.map((c) => (
-        <fieldset key={c.credit.id}>
-          <legend>{capitalize(c.name)} credit</legend>
-          <p class="muted small">
-            {capitalize(creditBack(c))}
-            {creditTerms(
-              c.credit.min_amount === undefined
-                ? {}
-                : { min_amount: c.credit.min_amount },
-            )}
-            {c.until === null
-              ? ''
-              : `; this one runs through ${shortDate(c.until)}`}
-            .
-            {c.credit.valid_to === undefined
-              ? ''
-              : ` It ends after ${shortDate(c.credit.valid_to)}.`}
-          </p>
-          {c.credit.note ? <p class="muted small">{c.credit.note}</p> : null}
-          {c.credit.listed ? (
-            <p class="muted small">{LISTED_CREDIT_USED}.</p>
-          ) : null}
-          <UseChoices
-            name={`credit-${held.id}-${c.credit.id}`}
-            label={`${c.name} credit`}
-            choices={c.credit.enroll ? ENROLL_CHOICES : AUTOMATIC_CHOICES}
-            value={creditUse[c.credit.id]}
-            onPick={(use) =>
-              setCreditUse((prev) => ({ ...prev, [c.credit.id]: use }))
-            }
-          />
-          {creditUse[c.credit.id] === 'skipped' ? (
-            <p class="muted small">
-              Left out of picks, the to-do list and the annual-fee math.
-            </p>
-          ) : creditUse[c.credit.id] !== 'using' ? null : (
-            <label class="field">
-              Used so far {CREDIT_THIS_PERIOD[c.period]}
-              <input
-                type="number"
-                inputMode="decimal"
-                min="0"
-                max={String(c.periodAmount)}
-                placeholder="0"
-                value={creditUsed[c.credit.id] ?? ''}
-                onInput={(e) => {
-                  const value = e.currentTarget.value
-                  setCreditUsed((prev) => ({ ...prev, [c.credit.id]: value }))
-                }}
-              />
-            </label>
-          )}
-        </fieldset>
-      ))}
-      {nights.map((n) => (
-        <fieldset key={n.night.id}>
-          <legend>{capitalize(FREE_NIGHT_NAME)}</legend>
-          <p class="muted small">
-            {capitalize(
-              freeNightText(n.points, currencyLabel(catalog, card.currency)),
-            )}
-            {n.value === null
-              ? ". It counts against the annual fee once you say what it's worth to you."
-              : `: ${freeNightValueText(
-                  n.value,
-                  currencyValuation(catalog, wallet, card.currency)
-                    .centsPerUnit,
-                )}. It counts against the annual fee once you say you use it.`}
-          </p>
-          <UseChoices
-            name={`credit-${held.id}-${n.night.id}`}
-            label={FREE_NIGHT_NAME}
-            choices={AUTOMATIC_CHOICES}
-            value={creditUse[n.night.id]}
-            onPick={(use) =>
-              setCreditUse((prev) => ({ ...prev, [n.night.id]: use }))
-            }
-          />
-          {creditUse[n.night.id] === 'skipped' ? (
-            <p class="muted small">
-              Left out of the to-do list and the annual-fee math.
-            </p>
-          ) : creditUse[n.night.id] !== 'using' ? null : (
-            <label class="field">
-              Worth to you{n.value === null ? '' : ' (optional)'}, in dollars
-              <input
-                type="number"
-                inputMode="decimal"
-                min="1"
-                max={String(MAX_NIGHT_VALUE)}
-                placeholder={
-                  n.value === null ? '' : String(Math.round(n.value))
-                }
-                value={nightWorth[n.night.id] ?? ''}
-                onInput={(e) => {
-                  const value = e.currentTarget.value
-                  setNightWorth((prev) => ({ ...prev, [n.night.id]: value }))
-                }}
-              />
-            </label>
-          )}
-        </fieldset>
-      ))}
-      {info.needsAnniversary || hasFee(held) ? (
-        <label class="field">
-          Account anniversary (MM-DD), for its{' '}
-          {info.needsAnniversary && hasFee(held)
-            ? 'yearly cap and renewal check'
-            : info.needsAnniversary
-              ? 'yearly cap'
-              : 'renewal check before the fee'}
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="03-15"
-            value={anniversary}
-            onInput={(e) => setAnniversary(e.currentTarget.value)}
-          />
-        </label>
-      ) : null}
-      {hasFee(held) ? (
-        <fieldset class="keep" data-keep={held.id}>
-          <legend>Keep or replace?</legend>
-          {asked ? (
-            <KeepOrReplace
-              wallet={wallet}
-              cardId={held.id}
-              spending={spending}
-            />
-          ) : (
-            <>
-              <p class="muted small">
-                What it adds to your wallet after its fee, and which cards with
-                a lower fee would keep the most of that.
-              </p>
-              <div class="row-buttons">
-                <button type="button" onClick={onAsk}>
-                  Compare with cheaper cards
-                </button>
-              </div>
-            </>
-          )}
-        </fieldset>
-      ) : null}
-      <div class="row-buttons">
-        <button type="button" class="primary" onClick={save}>
-          Save
-        </button>
-        <button type="button" onClick={() => onRemove(held.id)}>
-          Remove card
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// The Find a card tab's spending rows, and whether they're still its typical
-// amounts.
-function spending(fallback = true): Spending {
-  const rows = loadSpendingRows()
-  const typical = isTypicalRows(rows)
-  const lines = resolveSpendLines(
-    catalog,
-    rows.map((r) => lineFor(r.what, r.monthly)),
-  ).filter((l) => l.merchant.source !== 'none')
-  // An emptied tab says nothing about spending; typical amounts do better.
-  return lines.length === 0 && fallback
-    ? { lines: typicalSpendLines(catalog), typical: true }
-    : { lines, typical }
-}
-
-const hasFee = (held: WalletCard) => (cards.get(held.id)?.annual_fee ?? 0) > 0
-
-// A fee card with no date to tell when it renews.
+// A fee card with no date to tell when it renews: asked on its row, where
+// the date goes.
 const renewalAsks = (held: WalletCard) =>
   hasFee(held) && anniversaryOf(held) === null
 
@@ -897,7 +157,7 @@ function CardList({
   setOpen,
   asked,
   onAsk,
-  onChange,
+  save: saveCard,
   onRemove,
 }: {
   wallet: Wallet
@@ -907,81 +167,67 @@ function CardList({
   // Cards whose "Keep or replace?" answer shows when their Settings do.
   asked: string[]
   onAsk: (cardId: string) => void
-  onChange: (op: LocalOp, cardId: string) => Promise<boolean>
+  save: (op: LocalOp) => Promise<string | null>
   onRemove: (cardId: string) => void
 }) {
-  const today = localToday()
-  const untracked = wallet.cards.some(
-    (h) => h.bonus === undefined && cards.get(h.id)?.welcome_offer,
-  )
   return (
-    <>
-      <ul class="held">
-        {wallet.cards.map((held) => {
-          const card = cards.get(held.id)
-          const info = card ? cardInfo(catalog, card, wallet, today) : null
-          const needsPick = info?.choices.some(
-            (c) => c.default === null && !held.chosen?.picks[c.id],
-          )
-          const note = bonusLine(wallet, held) ?? milestoneLine(held)
-          return (
-            <li key={held.id} data-held={held.id}>
-              <button
-                type="button"
-                class="held-row"
-                aria-expanded={open === held.id}
-                onClick={() => setOpen(open === held.id ? null : held.id)}
-              >
-                <span class="held-name">
-                  <CardArt id={held.id} width={40} />
-                  <span>
-                    <strong>{shortName(held.id)}</strong>
-                    <span class="muted"> · {feeLabel(held.id)}</span>
-                    {note ? <span class="row-note">{note}</span> : null}
-                  </span>
+    <ul class="held">
+      {wallet.cards.map((held) => {
+        const card = cards.get(held.id)
+        const info = card ? cardInfo(catalog, card, wallet, localToday()) : null
+        const needsPick = info?.choices.some(
+          (c) => c.default === null && !held.chosen?.picks[c.id],
+        )
+        const note = bonusLine(wallet, held) ?? milestoneLine(held)
+        return (
+          <li key={held.id} data-held={held.id}>
+            <button
+              type="button"
+              class="held-row"
+              aria-expanded={open === held.id}
+              onClick={() => setOpen(open === held.id ? null : held.id)}
+            >
+              <span class="held-name">
+                <CardArt id={held.id} width={40} />
+                <span>
+                  <strong>{shortName(held.id)}</strong>
+                  <span class="muted"> · {feeLabel(held.id)}</span>
+                  {note ? (
+                    <span class="row-note">{note}</span>
+                  ) : renewalAsks(held) ? (
+                    <span class="row-note" data-ask="">
+                      Add its renewal date
+                    </span>
+                  ) : null}
                 </span>
-                <span class="muted">
-                  {open === held.id
-                    ? 'Close'
-                    : needsPick
-                      ? 'Set picks'
-                      : 'Settings'}
-                </span>
-              </button>
-              {open === held.id ? (
-                <CardEditor
-                  wallet={wallet}
-                  held={held}
-                  asked={asked.includes(held.id)}
-                  onAsk={() => onAsk(held.id)}
-                  onChange={(input) => {
-                    void onChange(updateOp(input), held.id).then((ok) => {
-                      if (ok) setOpen(null)
-                    })
-                  }}
-                  onRemove={(id) => {
-                    setOpen(null)
-                    onRemove(id)
-                  }}
-                />
-              ) : null}
-            </li>
-          )
-        })}
-      </ul>
-      {wallet.cards.some((h) => renewalAsks(h) && !h.anniversary) ? (
-        <p class="muted small">
-          Add a fee card's anniversary in its Settings, and earnrate checks
-          whether it still pays for itself before the fee comes due.
-        </p>
-      ) : null}
-      {untracked ? (
-        <p class="muted small">
-          {wallet.cards.length === 1 ? 'Opened it' : 'Opened one of these'}{' '}
-          recently? Its Settings track the welcome bonus.
-        </p>
-      ) : null}
-    </>
+              </span>
+              <span class="muted">
+                {open === held.id
+                  ? 'Close'
+                  : needsPick
+                    ? 'Set picks'
+                    : 'Settings'}
+              </span>
+            </button>
+            {open === held.id ? (
+              <CardSettings
+                wallet={wallet}
+                held={held}
+                asked={asked.includes(held.id)}
+                onAsk={() => onAsk(held.id)}
+                save={(input) => saveCard(updateOp({ id: held.id, ...input }))}
+                onClose={() => setOpen(null)}
+                onRemove={() => {
+                  setOpen(null)
+                  onRemove(held.id)
+                }}
+                spending={savedSpending}
+              />
+            ) : null}
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 
@@ -1012,13 +258,13 @@ function AddCard({
   return (
     <div>
       <label class="visually-hidden" for="card-search">
-        Find a card
+        Add a card
       </label>
       <SearchInput
         id="card-search"
         class="search"
         type="search"
-        placeholder="Find a card, like Sapphire"
+        placeholder="Add a card, like Sapphire"
         autocomplete="off"
         value={query}
         onInput={(e) => setQuery(e.currentTarget.value)}
@@ -1073,9 +319,15 @@ function Memberships({
   )
   const relevant = knownMemberships(catalog).filter((m) => used.has(m))
   if (relevant.length === 0) return null
+  const on = relevant.filter((m) => wallet.memberships.includes(m))
   return (
-    <section class="panel">
-      <h3>Memberships</h3>
+    <details class="panel fold-panel">
+      <summary>
+        <h3>Memberships</h3>
+        <span class="muted">
+          {on.length === 0 ? 'None' : listed(on.map(membershipName))}
+        </span>
+      </summary>
       <p class="muted">Some of your cards earn more with these.</p>
       <fieldset class="lock" disabled={locked}>
         {relevant.map((m) => (
@@ -1097,12 +349,21 @@ function Memberships({
           </label>
         ))}
       </fieldset>
-    </section>
+    </details>
   )
 }
 
-// What the wallet's points are worth to the person, per program: blank
-// means earnrate's own value.
+const HEAVY: Record<string, number> = VALUATION_PROFILES['points-heavy']
+
+const valuesOp = (values: Record<string, number | null>): LocalOp => ({
+  tool: 'set_point_values',
+  input: { values },
+})
+
+const cents = (n: number) => `${String(n)}¢`
+
+// What the wallet's points are worth to the person, per program, folded
+// behind its values: most people never change them.
 function PointValues({
   wallet,
   onChange,
@@ -1121,542 +382,110 @@ function PointValues({
     ),
   ].filter((id) => id !== 'cash')
   if (ids.length === 0) return null
-  return (
-    <section class="panel">
-      <h3>Point values</h3>
-      <p class="muted">
-        What your points are worth to you, from 0.1¢ to 5¢ each. earnrate starts
-        at what they're worth as cash or travel credit; transferring to airlines
-        and hotels can be worth more.
-      </p>
-      {ids.map((id) => {
-        const own = wallet.valuations[id]
-        const set = typeof own === 'number'
-        const base =
-          catalog.currencies.find((c) => c.id === id)?.value_cents ?? 1
-        const value = set ? own : base
-        const save = (cents: number | null) =>
-          void onChange(pointValueOp(id, cents))
-        const step = (by: number) =>
-          save(Math.min(5, Math.max(0.1, Math.round((value + by) * 10) / 10)))
-        const name = currencyLabel(catalog, id)
-        return (
-          <fieldset class="lock point-value" key={id} disabled={locked}>
-            <span>{name}</span>
-            <span class="stepper">
-              <button
-                type="button"
-                aria-label={`Lower ${name}`}
-                disabled={value <= 0.1}
-                onClick={() => step(-0.1)}
-              >
-                −
-              </button>
-              <input
-                type="number"
-                inputMode="decimal"
-                min="0.1"
-                max="5"
-                step="0.1"
-                aria-label={`${name}, cents per point`}
-                value={value}
-                onChange={(e) => {
-                  const cents = Number(e.currentTarget.value)
-                  if (cents > 0 && cents <= 5) save(cents)
-                }}
-              />
-              <button
-                type="button"
-                aria-label={`Raise ${name}`}
-                disabled={value >= 5}
-                onClick={() => step(0.1)}
-              >
-                +
-              </button>
-              ¢
-            </span>
-            {set ? (
-              <button type="button" class="link" onClick={() => save(null)}>
-                Reset
-              </button>
-            ) : null}
-          </fieldset>
-        )
-      })}
-    </section>
-  )
-}
-
-function AdditionCredits({ addition }: { addition: Addition }) {
-  const credits = addition.simulation.credits.find(
-    (c) => c.cardId === addition.cardId && !c.held,
-  )
-  if (!credits) return null
-  return (
-    <p class="muted">
-      {ifCreditsUsedText(credits, addition.gainIfCreditsUsed, 'adds')}{' '}
-      {creditsOnlyIf(credits)}
-    </p>
-  )
-}
-
-// Issuers with a card "Would another card help?" can suggest.
-const SKIPPABLE = issuers.filter((id) =>
-  catalog.cards.some(
-    (c) => c.issuer === id && !c.business && c.network !== 'store',
-  ),
-)
-
-// Never assumed: nothing is left out until the person checks an issuer.
-function SkipIssuers({
-  wallet,
-  locked,
-  onChange,
-}: {
-  wallet: Wallet
-  locked: boolean
-  onChange: (op: LocalOp) => Promise<boolean>
-}) {
-  const skipped = wallet.skipped_issuers ?? []
-  const set = (list: string[]) => {
-    track('wallet-skip-issuers')
-    void onChange(skippedIssuersOp(list))
+  const valueOf = (id: string) => {
+    const own = wallet.valuations[id]
+    return typeof own === 'number'
+      ? own
+      : (catalog.currencies.find((c) => c.id === id)?.value_cents ?? 1)
   }
+  const values = [...new Set(ids.map(valueOf))].sort((a, b) => a - b)
+  const range =
+    values.length === 1
+      ? `${cents(values[0] ?? 1)} each`
+      : `${cents(values[0] ?? 1)} to ${cents(values.at(-1) ?? 1)}`
+  // "I transfer points": the transfer programs at the points-heavy values.
+  const transferable = ids.filter((id) => HEAVY[id] !== undefined)
+  const transfers =
+    transferable.length > 0 &&
+    transferable.every((id) => wallet.valuations[id] === HEAVY[id])
   return (
-    <>
-      {skipped.length > 0 ? (
-        <p class="skip-saved">
-          Leaving out cards from {listed(skipped.map(issuerName))}.{' '}
-          <button
-            type="button"
-            class="link"
-            disabled={locked}
-            onClick={() => set([])}
-          >
-            Clear
-          </button>
-        </p>
-      ) : null}
-      <details class="filters whatif-more skip-issuers">
-        <summary>Can't get cards from some issuers? Leave them out</summary>
-        <fieldset class="lock" disabled={locked}>
-          <legend class="visually-hidden">Issuers to leave out</legend>
-          <div class="issuer-checks">
-            {SKIPPABLE.map((id) => (
-              <label class="check" key={id}>
-                <input
-                  type="checkbox"
-                  checked={skipped.includes(id)}
-                  onChange={(e) =>
-                    set(
-                      e.currentTarget.checked
-                        ? [...skipped, id]
-                        : skipped.filter((x) => x !== id),
-                    )
-                  }
-                />
-                {issuerName(id)}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <p class="muted small">
-          Both views leave out every card from the issuers you check. Saved with
-          your wallet.
-        </p>
-      </details>
-    </>
-  )
-}
-
-type WhatIfView = 'yearly' | 'two-years'
-
-const VIEWS: { view: WhatIfView; label: string }[] = [
-  { view: 'yearly', label: 'Every year' },
-  { view: 'two-years', label: 'First two years' },
-]
-
-const NEW_PERSONAL_CARDS = {
-  kind: 'any',
-  business: false,
-  noAnnualFee: false,
-  includeHeld: false,
-} as const
-
-function OfferRow({
-  offer: o,
-  plan,
-  rank,
-  typical,
-  open,
-  setOpen,
-  locked,
-  onAdd,
-}: {
-  offer: OfferSummary
-  plan: OfferPlan
-  rank: number
-  typical: boolean
-  open: boolean
-  setOpen: (cardId: string | null) => void
-  locked: boolean
-  onAdd: (cardId: string) => void
-}) {
-  return (
-    <li class="result" data-whatif={o.cardId}>
-      <button
-        type="button"
-        class="result-top result-toggle"
-        aria-expanded={open}
-        onClick={() => setOpen(open ? null : o.cardId)}
-      >
-        <span class="rank">{rank}</span>
-        <CardArt id={o.cardId} />
-        <span class="result-name">
-          <strong>{shortName(o.cardId)}</strong>
-          <span class="muted">
-            <span class="year-split">
-              {wholeDollars(plan.yearOne)} year one ·
-            </span>{' '}
-            <span class="year-split">
-              {wholeDollars(plan.yearTwo)} year two
-            </span>
-          </span>
-        </span>
-        <span class="rate">
-          {plan.twoYears > 0 ? '+' : ''}
-          {wholeDollars(plan.twoYears)}
-          <small>/2 yrs</small>
-        </span>
-      </button>
-      {plan.minimumSpend ? (
-        <p data-tone={plan.minimumSpend.reachable ? undefined : 'warn'}>
-          {minimumSpendText(o.spend, o.months, plan.minimumSpend, typical)}
-        </p>
-      ) : null}
-      {o.ineligible ? <p class="warn">{o.ineligible}</p> : null}
-      <p class="muted">
-        {offerTerms(o, currencyName(catalog, o.currency))}.
-        {o.validTo ? ` Offer ends ${shortDate(o.validTo)}.` : ''} Public offer
-        as of {shortDate(o.lastVerified)}.
-      </p>
-      {open ? (
-        <p class="muted">
-          {capitalize(feeText(o))}.{o.note ? ` ${o.note}` : ''}
-          {o.credits + o.freeNights > 0
-            ? ` ${offerPerksText(o.credits, o.freeNights)
-                .map((t) => `${capitalize(t)}.`)
-                .join(' ')} ${onlyIfText(o.credits > 0, o.freeNights > 0)}`
-            : ''}
-        </p>
-      ) : null}
-      {open ? (
-        <div class="row-buttons">
-          <a class="row-link" href={`/cards/${o.cardId}`}>
-            See card details
-          </a>
-          <button
-            type="button"
-            class="primary"
-            disabled={locked}
-            onClick={() => {
-              setOpen(null)
-              onAdd(o.cardId)
-            }}
-          >
-            Add to my wallet
-          </button>
-        </div>
-      ) : null}
-    </li>
-  )
-}
-
-function WhatIf({
-  wallet,
-  locked,
-  onAdd,
-  onChange,
-  focus,
-}: {
-  wallet: Wallet
-  locked: boolean
-  onAdd: (cardId: string) => void
-  onChange: (op: LocalOp) => Promise<boolean>
-  // A card or comparison page's "See what it adds to your cards": shown,
-  // and the first one open, even when they aren't in the top 3.
-  focus: string[]
-}) {
-  const [open, setOpen] = useState<string | null>(focus[0] ?? null)
-  const [view, setView] = useState<WhatIfView>('yearly')
-  useEffect(() => {
-    const [first] = focus
-    if (first === undefined) return
-    setOpen(first)
-    requestAnimationFrame(() => {
-      document
-        .querySelector(`[data-whatif="${CSS.escape(first)}"]`)
-        ?.scrollIntoView({ block: 'center' })
-    })
-  }, [focus])
-  // The spending rows come from storage and change only on the other tab.
-  const spent = useMemo(() => spending(false), [wallet])
-  const result = useMemo(
-    () =>
-      spent.lines.length === 0
-        ? null
-        : simulateAdditions(catalog, wallet, spent.lines, {
-            filters: ALL_PERSONAL_CARDS,
-            memberships: wallet.memberships,
-            valuations: wallet.valuations,
-            start: localToday(),
-          }),
-    [wallet, spent],
-  )
-  const offers = useMemo(
-    () =>
-      view === 'two-years' && spent.lines.length > 0
-        ? compareOffers(
-            catalog,
-            wallet,
-            NEW_PERSONAL_CARDS,
-            localToday(),
-            spent,
-          )
-        : null,
-    [wallet, spent, view],
-  )
-  if (!result) return null
-  const positive = result.additions.filter((a) => a.gain > 0)
-  const gains = positive.slice(0, 3)
-  const members = ifMemberLines(
-    catalog,
-    placedAmong(
-      result.membersOnly.filter((a) => a.gain > 0),
-      positive,
-      3,
-      gainOrder,
-    ).map((a) => ({
-      membership: a.membership,
-      text: `${shortName(a.cardId)}, +${wholeDollars(a.gain)} a year`,
-    })),
-  )
-  const focused = focus
-    .filter((id) => !gains.some((a) => a.cardId === id))
-    .flatMap((id) =>
-      [...result.additions, ...result.membersOnly].filter(
-        (a) => a.cardId === id,
-      ),
-    )
-  // A card that needs a membership the wallet doesn't have, placed as for a
-  // member.
-  const rankOf = (f: Addition) =>
-    result.additions.filter((a) => gainOrder(a, f) < 0).length + 1
-  const needs = (cardId: string) => {
-    const id = cards.get(cardId)?.requires_membership
-    return id !== undefined &&
-      [...result.membersOnly, ...(offers?.membersOnly ?? [])].some(
-        (m) => m.cardId === cardId,
-      )
-      ? `With ${withArticle(membershipName(id))}, which it needs, `
-      : ''
-  }
-  const row = (a: (typeof result.additions)[number], rank: number) => (
-    <li class="result" key={a.cardId} data-whatif={a.cardId}>
-      <button
-        type="button"
-        class="result-top result-toggle"
-        aria-expanded={open === a.cardId}
-        onClick={() => setOpen(open === a.cardId ? null : a.cardId)}
-      >
-        <span class="rank">{rank}</span>
-        <CardArt id={a.cardId} />
-        <span class="result-name">
-          <strong>{shortName(a.cardId)}</strong>
-          <span class="muted">
-            +{wholeDollars(a.extraRewards)} back · {feeLabel(a.cardId)}
-          </span>
-        </span>
-        <span class="rate">
-          {a.gain > 0 ? '+' : ''}
-          {wholeDollars(a.gain)}
-          <small>/yr</small>
-        </span>
-      </button>
-      {open === a.cardId ? <AdditionCredits addition={a} /> : null}
-      {open === a.cardId ? (
-        <div class="row-buttons">
-          <a class="row-link" href={`/cards/${a.cardId}`}>
-            See card details
-          </a>
-          <button
-            type="button"
-            class="primary"
-            disabled={locked}
-            onClick={() => {
-              setOpen(null)
-              onAdd(a.cardId)
-            }}
-          >
-            Add to my wallet
-          </button>
-        </div>
-      ) : null}
-    </li>
-  )
-
-  const withPlans = (list: OfferSummary[]) =>
-    list.flatMap((o) => (o.plan ? [{ offer: o, plan: o.plan }] : []))
-  const planned = withPlans(offers?.offers ?? [])
-  const memberPlans = withPlans(offers?.membersOnly ?? [])
-  const ahead = planned.filter((p) => p.plan.twoYears > 0)
-  const topOffers = ahead.slice(0, 3)
-  const memberOffers = ifMemberLines(
-    catalog,
-    placedAmong(
-      (offers?.membersOnly ?? []).filter(
-        (o) => (o.plan?.twoYears ?? 0) > 0 && o.ineligible === null,
-      ),
-      ahead.map((p) => p.offer),
-      3,
-      offerOrder,
-    ).map((o) => ({
-      membership: o.membership,
-      text: `${shortName(o.cardId)}, about ${wholeDollars(o.plan?.twoYears ?? 0)} over the first two years`,
-    })),
-  )
-  const focusedOffers = focus
-    .filter((id) => !topOffers.some((p) => p.offer.cardId === id))
-    .flatMap((id) =>
-      [...planned, ...memberPlans].filter((p) => p.offer.cardId === id),
-    )
-  const offerRank = (p: (typeof planned)[number]) =>
-    planned.filter((x) => offerOrder(x.offer, p.offer) < 0).length + 1
-  const offerRow = (p: (typeof planned)[number], rank: number) => (
-    <OfferRow
-      key={p.offer.cardId}
-      offer={p.offer}
-      plan={p.plan}
-      rank={rank}
-      typical={spent.typical}
-      open={open === p.offer.cardId}
-      setOpen={setOpen}
-      locked={locked}
-      onAdd={onAdd}
-    />
-  )
-
-  return (
-    <section class="panel" id="whatif">
-      <h3>Would another card help?</h3>
-      <p class="muted">
-        {spent.typical
-          ? `On typical U.S. spending, your cards earn about ${wholeDollars(result.current.rewards)} a year. Put in your own on the Find a card tab.`
-          : `On your spending from the Find a card tab, your cards earn about ${wholeDollars(result.current.rewards)} a year.`}
-      </p>
-      {result.current.credits
-        .filter((c) => c.held)
-        .map((c) => (
-          <p class="muted" key={c.cardId}>
-            {creditsCountedText(
-              shortName(c.cardId),
-              cards.get(c.cardId)?.annual_fee ?? 0,
-              c,
-            )}
-          </p>
-        ))}
-      <div
-        class="segments whatif-view"
-        role="radiogroup"
-        aria-label="What to count"
-      >
-        {VIEWS.map((v) => (
-          <label key={v.view}>
+    <details class="panel fold-panel">
+      <summary>
+        <h3>Point values</h3>
+        <span class="muted">{range}</span>
+      </summary>
+      <fieldset class="lock" disabled={locked}>
+        {transferable.length > 0 ? (
+          <label class="check">
             <input
-              type="radio"
-              name="whatif-view"
-              checked={view === v.view}
-              onChange={() => {
-                if (v.view === 'two-years') track('wallet-two-years')
-                setView(v.view)
-              }}
+              type="checkbox"
+              checked={transfers}
+              onChange={(e) =>
+                void onChange(
+                  valuesOp(
+                    Object.fromEntries(
+                      transferable.map((id) => [
+                        id,
+                        e.currentTarget.checked ? (HEAVY[id] ?? null) : null,
+                      ]),
+                    ),
+                  ),
+                )
+              }
             />
-            {v.label}
+            I transfer points to airlines and hotels
           </label>
-        ))}
-      </div>
-      {view === 'yearly' ? (
-        <>
-          {gains.length === 0 ? (
-            <p>No card would add more than its annual fee costs.</p>
-          ) : (
-            <ol class="result-list" key="yearly">
-              {gains.map((a, i) => row(a, i + 1))}
-            </ol>
-          )}
-          {members.map((m) => (
-            <p class="muted" key={m}>
-              {m}
-            </p>
-          ))}
-          {focused.map((f) => (
-            <Fragment key={f.cardId}>
-              <p class="muted">
-                {needs(f.cardId)}
-                {shortName(f.cardId)}{' '}
-                {f.gain > 0
-                  ? 'would add this much, after its annual fee:'
-                  : 'would add less than its annual fee costs:'}
-              </p>
-              <ol class="result-list">{row(f, rankOf(f))}</ol>
-            </Fragment>
-          ))}
-        </>
-      ) : (
-        <>
-          <p class="muted">
-            With each card's welcome bonus, if the minimum spend fits, less its
-            fees.
-          </p>
-          {topOffers.length === 0 ? (
-            <p>No card's first two years would add more than its fees cost.</p>
-          ) : (
-            <ol class="result-list" key="two-years">
-              {topOffers.map((p, i) => offerRow(p, i + 1))}
-            </ol>
-          )}
-          {memberOffers.map((m) => (
-            <p class="muted" key={m}>
-              {m}
-            </p>
-          ))}
-          {focusedOffers.map((p) => (
-            <Fragment key={p.offer.cardId}>
-              <p class="muted">
-                {needs(p.offer.cardId)}
-                {shortName(p.offer.cardId)}
-                {p.plan.twoYears > 0
-                  ? ' over its first two years:'
-                  : "'s first two years would add less than its fees cost:"}
-              </p>
-              <ol class="result-list">{offerRow(p, offerRank(p))}</ol>
-            </Fragment>
-          ))}
-          <p class="muted small">{OFFERS_MAY_DIFFER}</p>
-          {offers ? (
-            <details class="filters whatif-more">
-              <summary>How this is ranked</summary>
-              {offers.notes.map((n) => (
-                <p class="muted small" key={n}>
-                  {n}
-                </p>
-              ))}
-            </details>
-          ) : null}
-        </>
-      )}
-      <SkipIssuers wallet={wallet} locked={locked} onChange={onChange} />
-    </section>
+        ) : null}
+        {ids.map((id) => {
+          const set = typeof wallet.valuations[id] === 'number'
+          const value = valueOf(id)
+          const saveValue = (c: number | null) =>
+            void onChange(valuesOp({ [id]: c }))
+          const step = (by: number) =>
+            saveValue(
+              Math.min(5, Math.max(0.1, Math.round((value + by) * 10) / 10)),
+            )
+          const name = currencyLabel(catalog, id)
+          return (
+            <div class="point-value" key={id}>
+              <span>{name}</span>
+              <span class="stepper">
+                <button
+                  type="button"
+                  aria-label={`Lower ${name}`}
+                  disabled={value <= 0.1}
+                  onClick={() => step(-0.1)}
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0.1"
+                  max="5"
+                  step="0.1"
+                  aria-label={`${name}, cents per point`}
+                  value={value}
+                  onChange={(e) => {
+                    const c = Number(e.currentTarget.value)
+                    if (c > 0 && c <= 5) saveValue(c)
+                  }}
+                />
+                <button
+                  type="button"
+                  aria-label={`Raise ${name}`}
+                  disabled={value >= 5}
+                  onClick={() => step(0.1)}
+                >
+                  +
+                </button>
+                ¢
+              </span>
+              {set ? (
+                <button
+                  type="button"
+                  class="link"
+                  onClick={() => saveValue(null)}
+                >
+                  Reset
+                </button>
+              ) : null}
+            </div>
+          )
+        })}
+        <p class="muted small">From 0.1¢ to 5¢ a point.</p>
+      </fieldset>
+    </details>
   )
 }
 
@@ -1719,7 +548,7 @@ function ThisQuarter({
         localToday(),
         undefined,
         shortName,
-        spending(),
+        savedSpending(),
       ),
     // The spending rows come from storage and change only on the other tab.
     [wallet],
@@ -1878,24 +707,15 @@ function InstallHint() {
   )
 }
 
-function Transfer({
-  wallet,
-  synced,
-  locked,
-  onImport,
-  onDelete,
-}: {
-  wallet: Wallet | null
-  synced: boolean
-  locked: boolean
-  onImport: (op: WalletOp) => Promise<Outcome>
-  onDelete: () => void
-}) {
+// A wallet file from the command line or Claude Desktop, read here. Synced,
+// it replaces the Claude wallet too, so it asks first.
+function useImport(
+  synced: boolean,
+  onImport: (op: WalletOp) => Promise<Outcome>,
+) {
   const [error, setError] = useState<string | null>(null)
-  const [confirming, setConfirming] = useState(false)
-  // Synced, an import replaces the Claude wallet too, so it asks first.
   const [pending, setPending] = useState<string | null>(null)
-  const runImport = (yaml: string) => {
+  const run = (yaml: string) => {
     void onImport(importOp(yaml)).then((result) => {
       if (!result.ok) setError(result.error)
       else {
@@ -1904,102 +724,146 @@ function Transfer({
       }
     })
   }
+  const input = (
+    <input
+      type="file"
+      accept=".yaml,.yml,text/yaml"
+      onChange={(e) => {
+        const file = e.currentTarget.files?.[0]
+        if (!file) return
+        void file.text().then((yaml) => {
+          if (synced) setPending(yaml)
+          else run(yaml)
+        })
+        e.currentTarget.value = ''
+      }}
+    />
+  )
+  const confirm =
+    pending === null ? null : (
+      <div class="row-buttons">
+        <button
+          type="button"
+          class="danger"
+          onClick={() => {
+            run(pending)
+            setPending(null)
+          }}
+        >
+          Replace my synced wallet with this file
+        </button>
+        <button type="button" onClick={() => setPending(null)}>
+          Cancel
+        </button>
+      </div>
+    )
+  const shown = error ? <p class="callout">{error}</p> : null
+  return { input, confirm, error: shown }
+}
+
+// An empty wallet's one way in besides tapping cards.
+function ImportLink({
+  synced,
+  locked,
+  onImport,
+}: {
+  synced: boolean
+  locked: boolean
+  onImport: (op: WalletOp) => Promise<Outcome>
+}) {
+  const file = useImport(synced, onImport)
   return (
-    <section class="panel">
-      <h3>Move your wallet</h3>
+    <fieldset class="lock import-link" disabled={locked}>
+      <p class="muted small">
+        Have a wallet file?{' '}
+        <label class="file-link">
+          Import it
+          {file.input}
+        </label>
+      </p>
+      {file.confirm}
+      {file.error}
+    </fieldset>
+  )
+}
+
+function Transfer({
+  wallet,
+  synced,
+  locked,
+  onImport,
+  onDelete,
+}: {
+  wallet: Wallet
+  synced: boolean
+  locked: boolean
+  onImport: (op: WalletOp) => Promise<Outcome>
+  onDelete: () => void
+}) {
+  const [confirming, setConfirming] = useState(false)
+  const file = useImport(synced, onImport)
+  return (
+    <details class="panel fold-panel">
+      <summary>
+        <h3>Back up or move your wallet</h3>
+      </summary>
       <p class="muted">
         {synced
-          ? 'Your wallet is synced with earnrate in Claude. Export it to keep a copy or use it with the command line; importing a file replaces the synced wallet.'
-          : wallet
-            ? 'Your wallet is saved only in this browser. Export it to keep a copy, or to use it with the command line or earnrate for Claude Desktop; import one to bring it here.'
-            : 'Have a wallet file from the command line or earnrate for Claude Desktop? Import it here.'}
+          ? 'Your wallet is synced with earnrate in Claude. Download a backup to keep a copy or use it with the command line; importing a file replaces the synced wallet.'
+          : 'Your wallet is saved only in this browser. Download a backup to keep a copy, or to use it with the command line or earnrate for Claude Desktop; import one to bring it here.'}
       </p>
       <fieldset class="lock" disabled={locked}>
         <div class="row-buttons">
-          {wallet ? (
-            <button type="button" onClick={() => void exportWallet(wallet)}>
-              Export wallet.yaml
-            </button>
-          ) : null}
+          <button type="button" onClick={() => void exportWallet(wallet)}>
+            Download a backup
+          </button>
           <label class="file-button">
             Import a wallet file
-            <input
-              type="file"
-              accept=".yaml,.yml,text/yaml"
-              onChange={(e) => {
-                const file = e.currentTarget.files?.[0]
-                if (!file) return
-                void file.text().then((yaml) => {
-                  if (synced) setPending(yaml)
-                  else runImport(yaml)
-                })
-                e.currentTarget.value = ''
-              }}
-            />
+            {file.input}
           </label>
-          {wallet && !synced ? (
-            confirming ? (
-              <>
-                <button
-                  type="button"
-                  class="danger"
-                  onClick={() => {
-                    setConfirming(false)
-                    onDelete()
-                  }}
-                >
-                  Yes, delete it from this browser
-                </button>
-                <button type="button" onClick={() => setConfirming(false)}>
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <button type="button" onClick={() => setConfirming(true)}>
-                Delete wallet
-              </button>
-            )
-          ) : null}
         </div>
-        {pending !== null ? (
-          <div class="row-buttons">
-            <button
-              type="button"
-              class="danger"
-              onClick={() => {
-                runImport(pending)
-                setPending(null)
-              }}
-            >
-              Replace my synced wallet with this file
-            </button>
-            <button type="button" onClick={() => setPending(null)}>
-              Cancel
-            </button>
-          </div>
-        ) : null}
+        {file.confirm}
       </fieldset>
-      {error ? <p class="callout">{error}</p> : null}
+      {file.error}
       {synced ? (
         <p class="muted small">
           To delete the synced wallet, ask earnrate in Claude to delete it. Stop
           syncing keeps a copy in this browser.
         </p>
-      ) : null}
-      <p class="muted small">
-        Have an American Express or Chase activity file?{' '}
-        <a href="/statement" onClick={() => track('statement-check')}>
-          Check it against your cards
-        </a>
-        : it's read on this device and never sent anywhere.
-      </p>
-    </section>
+      ) : (
+        <fieldset class="lock delete-wallet" disabled={locked}>
+          {confirming ? (
+            <div class="row-buttons">
+              <button
+                type="button"
+                class="danger"
+                onClick={() => {
+                  setConfirming(false)
+                  onDelete()
+                }}
+              >
+                Yes, delete it from this browser
+              </button>
+              <button type="button" onClick={() => setConfirming(false)}>
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              class="link danger-link"
+              onClick={() => setConfirming(true)}
+            >
+              Delete wallet
+            </button>
+          )}
+        </fieldset>
+      )}
+    </details>
   )
 }
 
 export function MyWallet({
-  initialQuery,
-  focusAsk,
   wallet,
   perform,
   onDelete,
@@ -2008,11 +872,8 @@ export function MyWallet({
   lockNote,
   syncTop,
   connect,
-  purchase,
-  onPurchase,
+  onDone,
 }: {
-  initialQuery: string
-  focusAsk: boolean
   wallet: Wallet | null
   perform: (op: WalletOp) => Promise<Outcome>
   onDelete: () => void
@@ -2021,40 +882,20 @@ export function MyWallet({
   lockNote: string | null
   syncTop: ComponentChildren // sync status, the first-connection choice
   connect: ComponentChildren // "Use the same wallet as Claude"
-  purchase: Purchase
-  onPurchase: (p: Purchase) => void
+  // A store At a store is waiting to answer once the first cards are in.
+  onDone?: (() => void) | undefined
 }) {
   const [message, setMessage] = useState<{
     text: string
     error: boolean
     undo?: () => void
   } | null>(null)
-  const [query, setQuery] = useState(initialQuery)
-  const [amount, setAmount] = useState('')
-  const { abroad, payment } = purchase
   const [openCard, setOpenCard] = useState<string | null>(null)
   const [keepAsked, setKeepAsked] = useState<string[]>([])
   const askKeep = (cardId: string) => {
     track('wallet-keep-or-replace')
     setKeepAsked((ids) => (ids.includes(cardId) ? ids : [...ids, cardId]))
   }
-  const [asked, setAsked] = useState<{
-    text: string
-    amount: number | null
-    kind?: string // for a store earnrate doesn't know
-  } | null>(
-    initialQuery.trim() === ''
-      ? null
-      : { text: initialQuery.trim(), amount: null },
-  )
-  // A store sent here from its page ("Check with your own cards") lands on
-  // the answer, not the top of the wallet.
-  const askSection = useRef<HTMLElement>(null)
-  useEffect(() => {
-    if (!focusAsk) return
-    track('page-check')
-    askSection.current?.scrollIntoView({ block: 'start' })
-  }, [])
 
   // One change: refused, or done with what the card still needs.
   const apply = async (op: LocalOp, cardId?: string): Promise<boolean> => {
@@ -2078,9 +919,9 @@ export function MyWallet({
     return true
   }
 
-  // The common-cards grid stays up from its first add, or from "Pick from
-  // common cards", until Done. `gridAdded` is what it added: the only cards
-  // it may take back out.
+  // The add flow (common cards and the search) stays up from its first add,
+  // or from "Add a card", until Done. `gridAdded` is what it added: the only
+  // cards it may take back out.
   const [building, setBuilding] = useState(false)
   const [gridAdded, setGridAdded] = useState<string[]>([])
   const openGrid = () => {
@@ -2122,17 +963,18 @@ export function MyWallet({
         ? { text: [...new Set(needs)].join(' '), error: false }
         : null,
     )
+    if (onDone) {
+      onDone()
+      return
+    }
     requestAnimationFrame(() => {
-      const answers = asked
-        ? askSection.current
-        : document.getElementById('cheat-sheet')
-      answers?.scrollIntoView({ block: 'start' })
+      document.querySelector('.tabs')?.scrollIntoView({ block: 'start' })
     })
   }
 
   // Opens a card's Settings in Your cards and scrolls to it: from the to-do
-  // list, from a card page's "Add it to your wallet", and from "Would another
-  // card help?". `keep` opens its "Keep or replace?" answer.
+  // list, and from a card page's "Add it to your wallet". `keep` opens its
+  // "Keep or replace?" answer.
   const openCardSettings = (cardId: string, keep = false) => {
     setOpenCard(cardId)
     if (keep) askKeep(cardId)
@@ -2216,9 +1058,7 @@ export function MyWallet({
   // A card page's "Add it to your wallet" arrives as #wallet&add=<card id>,
   // on load or as a change to the address. The id is read once and cleared.
   // From anywhere but an earnrate.dev page, the cards are asked about first.
-  // `whatif=<card>` opens "Would another card help?" at that card, and
-  // `card=<card>` opens a held card's Settings, both from a card page.
-  const [whatIf, setWhatIf] = useState<string[]>([])
+  // `card=<card>` opens a held card's Settings, from a card page.
   const [asking, setAsking] = useState<string[] | null>(null)
   const addNamed = (ids: string[]) => {
     track('page-add')
@@ -2228,10 +1068,8 @@ export function MyWallet({
   }
   const addFromAddress = () => {
     const params = new URLSearchParams(location.hash.slice(1))
-    const param = (['add', 'whatif', 'card'] as const).find((k) =>
-      params.has(k),
-    )
-    if (param === undefined) return
+    const param = (['add', 'card'] as const).find((k) => params.has(k))
+    if (param === undefined || !params.has('wallet')) return
     const atOnce = addsAtOnce({
       hash: location.hash,
       referrer: document.referrer,
@@ -2240,7 +1078,7 @@ export function MyWallet({
     const ids = params
       .getAll(param)
       .filter((id) => catalog.cards.some((c) => c.id === id))
-    for (const k of ['add', 'whatif', 'card']) params.delete(k)
+    for (const k of ['add', 'card']) params.delete(k)
     const rest = params.toString().replace(/=(?=&|$)/g, '')
     history.replaceState(null, '', `#${rest || 'wallet'}`)
     const [cardId] = ids
@@ -2254,9 +1092,6 @@ export function MyWallet({
         setAsking(unheld)
         requestAnimationFrame(() => scrollTo({ top: 0 }))
       }
-    } else if (param === 'whatif') {
-      track('page-whatif')
-      setWhatIf(ids)
     } else {
       track('page-settings')
       if (wallet?.cards.some((c) => c.id === cardId)) openCardSettings(cardId)
@@ -2315,30 +1150,7 @@ export function MyWallet({
     )
 
   const problems = wallet ? walletProblems(wallet, catalog) : []
-  const rec = useMemo(
-    () =>
-      wallet && wallet.cards.length > 0 && asked && problems.length === 0
-        ? ask(
-            wallet,
-            asked.text,
-            asked.amount,
-            abroad,
-            payment,
-            asked.kind ?? null,
-          )
-        : null,
-    [wallet, asked, abroad, payment, problems.length],
-  )
 
-  const transfer = (
-    <Transfer
-      wallet={wallet}
-      synced={synced}
-      locked={locked}
-      onImport={perform}
-      onDelete={onDelete}
-    />
-  )
   const shown: typeof message =
     message ?? (lockNote ? { text: lockNote, error: false } : null)
   const messageLine = shown ? (
@@ -2362,7 +1174,13 @@ export function MyWallet({
         <p class="callout">
           The wallet saved in this browser has problems: {problems.join(' ')}
         </p>
-        {transfer}
+        <Transfer
+          wallet={wallet}
+          synced={synced}
+          locked={locked}
+          onImport={perform}
+          onDelete={onDelete}
+        />
       </div>
     )
   }
@@ -2375,15 +1193,14 @@ export function MyWallet({
         {syncTop}
         {askAdd}
         <section class="panel first" aria-labelledby="quick-title">
-          <h3 id="quick-title">Which cards do you have?</h3>
-          <p>
-            {synced
-              ? "Tap the ones you have, and earnrate tells you which to use anywhere. They're saved in your Claude wallet too: never a card number."
-              : 'Tap the ones you have, and earnrate tells you which to use anywhere. Your wallet is saved only in this browser: no account, and never a card number.'}
-          </p>
-          {asked ? (
+          <h3 id="quick-title">
+            {count === 0 ? 'Which cards do you have?' : 'Add a card'}
+          </h3>
+          {count === 0 ? (
             <p>
-              Add yours, and earnrate says which one to use at {asked.text}.
+              {synced
+                ? "Tap the ones you have, and earnrate tells you which to use anywhere. They're saved in your Claude wallet too: never a card number."
+                : 'Tap the ones you have, and earnrate tells you which to use anywhere. Your wallet is saved only in this browser: no account, and never a card number.'}
             </p>
           ) : null}
           {wallet?.cards.some((c) => !gridAdded.includes(c.id)) ? (
@@ -2412,9 +1229,7 @@ export function MyWallet({
             <AddCard wallet={wallet} onAdd={addFromGrid} />
           </fieldset>
           {messageLine}
-          {count === 0 ? (
-            <InstallHint />
-          ) : (
+          {count === 0 ? null : (
             <div class="quick-done">
               <span>{cardCount(count)} in your wallet</span>
               <button type="button" class="primary" onClick={doneBuilding}>
@@ -2423,189 +1238,66 @@ export function MyWallet({
             </div>
           )}
         </section>
-        {connect}
-        {transfer}
+        {count === 0 ? (
+          <ImportLink synced={synced} locked={locked} onImport={perform} />
+        ) : null}
       </div>
     )
   }
 
   const remove = (cardId: string) => {
-    void apply(removeOp(cardId), cardId).then((ok) => {
-      if (ok && wallet.cards.length === 1) setAsked(null)
-    })
+    void apply(removeOp(cardId), cardId)
   }
 
+  // A returning visitor's order: the cheat sheet, what to do, their cards,
+  // then everything else folded. Wide screens keep the cheat sheet beside
+  // the rest (data-area places it).
   return (
-    <div class="panels">
+    <div class="panels wallet-grid">
       {syncTop}
       {askAdd}
-      <section
-        class="panel first"
-        aria-labelledby="wallet-ask-title"
-        ref={askSection}
-      >
-        <h3 id="wallet-ask-title">Where do you want to make a purchase?</h3>
-        <form
-          class="ask"
-          role="search"
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (query.trim() !== '') {
-              track('wallet-which-card')
-              setAsked({ text: query.trim(), amount: Number(amount) || null })
-            }
-          }}
-        >
-          <label class="visually-hidden" for="wallet-ask">
-            Store or category
-          </label>
-          <SearchInput
-            id="wallet-ask"
-            type="search"
-            list="suggestions"
-            placeholder="Store or category"
-            autocomplete="off"
-            enterkeyhint="search"
-            value={query}
-            onInput={(e) => setQuery(e.currentTarget.value)}
-            onClear={() => setQuery('')}
-          />
-          <input
-            class="amount"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            placeholder="$"
-            aria-label="Amount (optional)"
-            value={amount}
-            onInput={(e) => setAmount(e.currentTarget.value)}
-          />
-          <button type="submit">Ask</button>
-        </form>
-        <div class="chips">
-          {QUICK.map((q) => (
-            <button
-              type="button"
-              class="chip"
-              aria-pressed={asked?.text === q}
-              key={q}
-              onClick={() => {
-                track('wallet-which-card')
-                setQuery(q)
-                setAsked({ text: q, amount: Number(amount) || null })
-              }}
-            >
-              {q}
-            </button>
-          ))}
-        </div>
-        <PurchaseOptions purchase={purchase} onChange={onPurchase} />
-        <div aria-live="polite">
-          {rec ? (
-            <div
-              class="results"
-              // A new question arrives; an amount, country or way of paying
-              // updates it in place.
-              key={asked?.text ?? ''}
-            >
-              <h4>
-                {rec.merchant.source === 'category'
-                  ? `For ${categoryPhrase(catalog, rec.merchant.category)}`
-                  : `At ${rec.merchant.resolvedName}`}
-                {abroad ? <span class="muted">{ABROAD_NOTE}</span> : null}
-                {payment ? (
-                  <span class="muted">{payingNote(payment)}</span>
-                ) : null}
-                {rec.merchant.source !== 'category' &&
-                rec.merchant.source !== 'none' ? (
-                  <span class="muted">
-                    {' '}
-                    · counts {categoryAs(catalog, rec.merchant.category)}
-                  </span>
-                ) : null}
-              </h4>
-              <Answer
-                wallet={wallet}
-                rec={rec}
-                onPayment={(p) => onPurchase({ ...purchase, payment: p })}
-                kinds={
-                  <PlaceKinds
-                    merchant={rec.merchant}
-                    kind={asked?.kind ?? null}
-                    onKind={(kind) =>
-                      asked &&
-                      setAsked(
-                        kind === null
-                          ? { text: asked.text, amount: asked.amount }
-                          : { ...asked, kind },
-                      )
-                    }
-                  />
-                }
-              />
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      <section class="panel">
-        <h3>Your cards</h3>
-        <fieldset class="lock" disabled={locked}>
-          <CardList
-            wallet={wallet}
-            open={openCard}
-            setOpen={setOpenCard}
-            asked={keepAsked}
-            onAsk={askKeep}
-            onChange={apply}
-            onRemove={remove}
-          />
-          <AddCard
-            wallet={wallet}
-            onAdd={(cardId) => apply(addOp(cardId), cardId)}
-          />
-          <p class="quick-open">
-            <button type="button" class="link" onClick={openGrid}>
-              Pick from common cards
-            </button>
-          </p>
-        </fieldset>
-        {messageLine}
-        <div class="row-buttons">
-          <a class="row-link" href="/rate" data-count="wallet-rate">
-            Rate my wallet
-          </a>
-        </div>
-        <p class="pass-hint">
-          At the register: your{' '}
-          <button
-            type="button"
-            class="link"
-            onClick={() => {
-              track('cta-pass-hint')
-              document.getElementById('cheat-sheet')?.scrollIntoView()
-            }}
-          >
-            cheat sheet
-          </button>{' '}
-          shows which card to use for everything, and goes in Apple Wallet.
-        </p>
-        <InstallHint />
-      </section>
-
-      <ThisQuarter wallet={wallet} onOpenCard={openCardSettings} />
       <CheatSheet wallet={wallet} />
-      <Memberships wallet={wallet} onChange={apply} locked={locked} />
-      <PointValues wallet={wallet} onChange={apply} locked={locked} />
-      <WhatIf
-        wallet={wallet}
-        locked={locked}
-        onAdd={(cardId) => void addAndOpen(cardId)}
-        onChange={apply}
-        focus={whatIf}
-      />
-      {connect}
-      {transfer}
+      <div class="wallet-main">
+        <ThisQuarter wallet={wallet} onOpenCard={openCardSettings} />
+        <section class="panel" aria-labelledby="your-cards-title">
+          <h3 id="your-cards-title">Your cards</h3>
+          <fieldset class="lock" disabled={locked}>
+            <CardList
+              wallet={wallet}
+              open={openCard}
+              setOpen={setOpenCard}
+              asked={keepAsked}
+              onAsk={askKeep}
+              save={(op) => perform(op).then((r) => (r.ok ? null : r.error))}
+              onRemove={remove}
+            />
+            <button type="button" class="add-card" onClick={openGrid}>
+              Add a card
+            </button>
+          </fieldset>
+          {messageLine}
+          <p class="wallet-links">
+            <a href="/rate" data-count="wallet-rate">
+              Rate my wallet
+            </a>
+            <a href="#spending">Would another card help?</a>
+            <a href="/statement" data-count="statement-check">
+              Check a statement
+            </a>
+          </p>
+          <InstallHint />
+        </section>
+        <Memberships wallet={wallet} onChange={apply} locked={locked} />
+        <PointValues wallet={wallet} onChange={apply} locked={locked} />
+        {connect}
+        <Transfer
+          wallet={wallet}
+          synced={synced}
+          locked={locked}
+          onImport={perform}
+          onDelete={onDelete}
+        />
+      </div>
     </div>
   )
 }

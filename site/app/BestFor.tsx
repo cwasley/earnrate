@@ -10,6 +10,10 @@ import {
   type ExploreEntry,
 } from '../../src/engine/explore.ts'
 import { localToday } from '../../src/engine/periods.ts'
+import { walletProblems } from '../../src/data/integrity.ts'
+import type { MerchantResolution } from '../../src/engine/types.ts'
+import type { Wallet } from '../../src/schema/wallet.ts'
+import { askWallet, Assumes, WalletAnswer } from './WalletAnswer.tsx'
 import {
   resolvePlace,
   splitPurchaseText,
@@ -71,14 +75,14 @@ export const SUGGESTIONS = [
 ].sort((a, b) => a.localeCompare(b))
 
 function explore(
-  text: string,
+  merchant: string,
+  amount: number | null,
   abroad: boolean,
   payment: PaymentMethod | null,
   settings: Settings,
   saved: Saved,
   kind: string | null = null,
 ): Exploration {
-  const { merchant, amount } = splitPurchaseText(text)
   return exploreCards(
     catalog,
     {
@@ -100,22 +104,34 @@ function explore(
   )
 }
 
-function title(r: Exploration): string {
-  const m = r.merchant
+function title(m: MerchantResolution): string {
   if (m.source === 'category') return categoryPhrase(catalog, m.category)
   return m.source === 'none' ? `“${m.input}”` : m.resolvedName
 }
 
-function CardRow({ entry, rank }: { entry: ExploreEntry; rank: number }) {
+// A card the visitor holds says so in data-*, never a class: Cloudflare's
+// analytics reports the element path behind its speed figures.
+function CardRow({
+  entry,
+  rank,
+  held,
+}: {
+  entry: ExploreEntry
+  rank: number
+  held: boolean
+}) {
   const card = cards.get(entry.cardId)
   const upgrade = entry.withMembership[0]
   return (
-    <li class="result">
+    <li class="result" data-held={held ? '' : undefined}>
       <div class="result-top">
         <span class="rank">{rank}</span>
         <CardArt id={entry.cardId} />
         <div class="result-name">
-          <strong>{shortName(entry.cardId)}</strong>
+          <strong>
+            {shortName(entry.cardId)}
+            {held ? <span data-yours="">Yours</span> : null}
+          </strong>
           <span class="muted">
             {issuerName(entry.issuer)} ·{' '}
             {feeLabel(entry.cardId, {
@@ -136,7 +152,7 @@ function CardRow({ entry, rank }: { entry: ExploreEntry; rank: number }) {
         ) : null
       })()}
       {upgrade ? (
-        <p class="upgrade">
+        <p class="muted small">
           {entry.withMembership.length > 1 ? 'Up to ' : ''}
           {pct(upgrade.effectiveReturnPct)} with{' '}
           {membershipName(upgrade.membership)}
@@ -218,7 +234,7 @@ function Excluded({ r }: { r: Exploration }) {
   return (
     <>
       {[...byReason].map(([reason, count]) => (
-        <p class="muted" key={reason}>
+        <p class="callout" key={reason}>
           {reason} {count === 1 ? 'One card' : `${String(count)} cards`} left
           out.
         </p>
@@ -237,7 +253,7 @@ function Example({
   return (
     <section class="example" aria-labelledby="example-title">
       <h3 id="example-title">
-        For example, {title(result).toLowerCase()}
+        For example, {title(result.merchant).toLowerCase()}
         <span class="muted"> · top 3 personal cards</span>
       </h3>
       <ol class="example-list">
@@ -253,22 +269,55 @@ function Example({
         ))}
       </ol>
       <button type="button" class="more" onClick={onOpen}>
-        See all {result.ranked.length} personal cards and why
+        Rank all {result.ranked.length} personal cards
       </button>
     </section>
   )
 }
 
+export type Scope = 'yours' | 'every'
+
+const SCOPES: { scope: Scope; label: string }[] = [
+  { scope: 'yours', label: 'Your cards' },
+  { scope: 'every', label: 'Every card' },
+]
+
+// Which cards an answer ranks. The choice is the visitor's, so it lives in
+// the checked input, never a class.
+function ScopeSwitch({
+  scope,
+  onScope,
+}: {
+  scope: Scope
+  onScope: (scope: Scope) => void
+}) {
+  return (
+    <div class="segments scope" role="radiogroup" aria-label="Which cards">
+      {SCOPES.map((s) => (
+        <label key={s.scope}>
+          <input
+            type="radio"
+            name="best-scope"
+            checked={scope === s.scope}
+            onChange={() => onScope(s.scope)}
+          />
+          {s.label}
+        </label>
+      ))}
+    </div>
+  )
+}
+
 function NextSteps({
-  hasCards,
+  addCards,
   onWallet,
 }: {
-  hasCards: boolean
+  addCards: boolean
   onWallet: () => void
 }) {
   return (
     <div class="next-steps">
-      {!hasCards ? (
+      {addCards ? (
         <p>
           Have some of these?{' '}
           <button
@@ -295,28 +344,59 @@ function NextSteps({
   )
 }
 
+// Your cards, before any are saved.
+function AddYours({ onWallet }: { onWallet: () => void }) {
+  return (
+    <div class="next-steps">
+      <p>
+        <button
+          type="button"
+          class="link"
+          onClick={() => {
+            track('cta-save-cards')
+            onWallet()
+          }}
+        >
+          Add your cards
+        </button>
+        , and earnrate says which one to use. They stay in this browser.
+      </p>
+    </div>
+  )
+}
+
 export function BestFor({
   settings,
   saved,
+  wallet,
   filters,
   purchase,
   onPurchase,
   query,
   onQuery,
+  scope,
+  onScope,
   onWallet,
-  hasCards,
+  focus,
 }: {
   settings: Settings
   saved: Saved
+  wallet: Wallet | null
   filters: ComponentChildren
   purchase: Purchase
   onPurchase: (p: Purchase) => void
   query: string
   onQuery: (q: string) => void
+  scope: Scope
+  onScope: (scope: Scope) => void
   onWallet: () => void
-  hasCards: boolean
+  // A store page's "Check with your own cards" opened this answer.
+  focus: boolean
 }) {
   const [text, setText] = useState(query)
+  // The amount box, and the amount the answer on screen was asked with.
+  const [amountText, setAmountText] = useState('')
+  const [askedAmount, setAskedAmount] = useState<number | null>(null)
   const [all, setAll] = useState(false)
   // A kind of place picked for a store earnrate doesn't know, for this
   // search only.
@@ -325,50 +405,113 @@ export function BestFor({
   )
   const kind = picked?.query === query ? picked.kind : null
   const { abroad, payment } = purchase
+  const yours = scope === 'yours'
+  const hasCards = (wallet?.cards.length ?? 0) > 0
+  const problems = useMemo(
+    () => (wallet ? walletProblems(wallet, catalog) : []),
+    [wallet],
+  )
+  const asked = useMemo(() => splitPurchaseText(query), [query])
+  const amount = askedAmount ?? asked.amount
+  const empty = query.trim() === ''
   const result = useMemo(
     () =>
-      query.trim() === ''
+      yours || empty
         ? null
-        : explore(query, abroad, payment, settings, saved, kind),
-    [query, abroad, payment, settings, saved, kind],
+        : explore(
+            asked.merchant,
+            amount,
+            abroad,
+            payment,
+            settings,
+            saved,
+            kind,
+          ),
+    [yours, empty, asked, amount, abroad, payment, settings, saved, kind],
+  )
+  const rec = useMemo(
+    () =>
+      !yours || empty || !wallet || !hasCards || problems.length > 0
+        ? null
+        : askWallet(wallet, asked.merchant, amount, abroad, payment, kind),
+    [
+      yours,
+      empty,
+      wallet,
+      hasCards,
+      problems,
+      asked,
+      amount,
+      abroad,
+      payment,
+      kind,
+    ],
   )
   const example = useMemo(
-    () => (result ? null : explore(EXAMPLE, false, null, settings, saved)),
-    [result, settings, saved],
+    () =>
+      yours || !empty
+        ? null
+        : explore(EXAMPLE, null, false, null, settings, saved),
+    [yours, empty, settings, saved],
+  )
+  const heldIds = useMemo(
+    () => new Set(wallet?.cards.map((c) => c.id) ?? []),
+    [wallet],
   )
   useEffect(() => {
-    if (query.trim() !== '') track('search')
+    if (!empty) track('search')
   }, [query])
+  useEffect(() => {
+    if (rec) track('wallet-which-card')
+  }, [rec])
+  useEffect(() => {
+    if (focus) track('page-check')
+  }, [])
   // Back, Forward or a link can change the search without the box.
   useEffect(() => setText(query), [query])
 
   // Counts the searches the visitor runs (not Back, Forward, a link or the
   // tab opening), so each one can bring its answer into view.
-  const [asked, setAsked] = useState(0)
+  const [shownCount, setShownCount] = useState(focus ? 1 : 0)
   const heading = useRef<HTMLHeadingElement>(null)
   useEffect(() => {
-    if (asked === 0 || !matchMedia(SMALL).matches) return
+    if (shownCount === 0 || !matchMedia(SMALL).matches) return
     // Closes the phone's keyboard, which would cover the answer.
     if (document.activeElement instanceof HTMLInputElement)
       document.activeElement.blur()
     heading.current?.scrollIntoView({ block: 'start' })
-  }, [asked])
+  }, [shownCount])
 
   const ask = (q: string, show = true) => {
     setText(q)
     setAll(false)
+    setAskedAmount(Number(amountText) || null)
     onQuery(q)
-    if (show) setAsked((n) => n + 1)
+    if (show) setShownCount((n) => n + 1)
   }
 
+  const answer = result ?? rec
   const shown = result
     ? all
       ? result.ranked
       : result.ranked.slice(0, TOP)
     : []
+  const headingText = answer
+    ? noteOnly(answer)
+      ? capitalize(title(answer.merchant))
+      : `${yours ? 'Best of your cards' : 'Best cards'} for ${title(answer.merchant)}`
+    : ''
+  const kinds = answer ? (
+    <PlaceKinds
+      merchant={answer.merchant}
+      kind={kind}
+      onKind={(k) => setPicked(k === null ? null : { query, kind: k })}
+    />
+  ) : null
   return (
     <div>
       <div class="panel">
+        <ScopeSwitch scope={scope} onScope={onScope} />
         <form
           class="ask"
           role="search"
@@ -404,7 +547,17 @@ export function BestFor({
             }}
             onClear={() => setText('')}
           />
-          <button type="submit">Compare</button>
+          <input
+            class="amount"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            placeholder="$"
+            aria-label="Amount (optional)"
+            value={amountText}
+            onInput={(e) => setAmountText(e.currentTarget.value)}
+          />
+          <button type="submit">Go</button>
         </form>
         <div class="chips" role="list">
           {QUICK.map((q) => (
@@ -420,9 +573,12 @@ export function BestFor({
               {q}
             </button>
           ))}
+          <a class="chip" role="listitem" href="/best/">
+            Every store and category
+          </a>
         </div>
       </div>
-      {!result && example ? (
+      {example ? (
         <Example
           result={example}
           onOpen={() => {
@@ -431,105 +587,117 @@ export function BestFor({
           }}
         />
       ) : null}
+      {yours && !hasCards ? <AddYours onWallet={onWallet} /> : null}
+      {yours && hasCards && problems.length > 0 ? (
+        <p class="callout">
+          The wallet saved in this browser has problems: {problems.join(' ')}{' '}
+          Open My wallet to fix it.
+        </p>
+      ) : null}
       {filters}
 
       <div aria-live="polite">
-        {result ? (
+        {answer ? (
           <section
             class="results"
             // A new question arrives; changing how you pay updates it in place.
-            key={query}
+            key={`${scope} ${query}`}
           >
             <h3 ref={heading}>
-              {noteOnly(result)
-                ? capitalize(title(result))
-                : `Best cards for ${title(result)}`}
-              {splitPurchaseText(query).amount !== null ? (
-                <span class="muted">
-                  {' '}
-                  · {money(splitPurchaseText(query).amount ?? 0)}
-                </span>
+              {headingText}
+              {amount !== null ? (
+                <span class="muted"> · {money(amount)}</span>
               ) : null}
               {abroad ? <span class="muted">{ABROAD_NOTE}</span> : null}
               {payment ? (
                 <span class="muted">{payingNote(payment)}</span>
               ) : null}
-              {result.merchant.source !== 'category' &&
-              result.merchant.source !== 'none' ? (
+              {answer.merchant.source !== 'category' &&
+              answer.merchant.source !== 'none' ? (
                 <span class="muted">
                   {' '}
-                  · counts {categoryAs(catalog, result.merchant.category)}
+                  · counts {categoryAs(catalog, answer.merchant.category)}
                 </span>
               ) : null}
             </h3>
-            {result.categoryNote ? (
-              <p class="callout">{result.categoryNote}</p>
-            ) : null}
-            {result.categoryNote ? (
-              <NamedCards
-                ids={categoryCards(catalog, result.merchant.category)}
+            {rec && wallet ? (
+              <WalletAnswer
+                wallet={wallet}
+                rec={rec}
+                onPayment={(p) => onPurchase({ ...purchase, payment: p })}
+                kinds={kinds}
               />
-            ) : null}
-            {result.warnings.map((w) => (
-              <p class="callout" key={w}>
-                {w}
-              </p>
-            ))}
-            <PlaceKinds
-              merchant={result.merchant}
-              kind={kind}
-              onKind={(k) => setPicked(k === null ? null : { query, kind: k })}
-            />
-            {result.ranked.length === 0 && !noteOnly(result) ? (
-              <p class="callout">
-                No card matches your filters. Open Filters and memberships to
-                widen them.
-              </p>
-            ) : null}
-            <PayingHints
-              answer={result}
-              onPick={(payment) => onPurchase({ ...purchase, payment })}
-            />
-            {result.credits.length > 0 ? (
+            ) : result ? (
               <>
-                <h4 class="credit-group">{CREDIT_GROUP}</h4>
-                <ul class="result-list">
-                  {result.credits.map((c) => (
-                    <CreditRow pick={c} key={`${c.cardId} ${c.creditId}`} />
+                <Excluded r={result} />
+                {result.categoryNote ? (
+                  <p class="callout">{result.categoryNote}</p>
+                ) : null}
+                {result.categoryNote ? (
+                  <NamedCards
+                    ids={categoryCards(catalog, result.merchant.category)}
+                  />
+                ) : null}
+                {result.warnings.map((w) => (
+                  <p class="callout" key={w}>
+                    {w}
+                  </p>
+                ))}
+                {kinds}
+                {result.ranked.length === 0 && !noteOnly(result) ? (
+                  <p class="callout">
+                    No card matches your filters. Open Filters and memberships
+                    to widen them.
+                  </p>
+                ) : null}
+                <PayingHints
+                  answer={result}
+                  onPick={(p) => onPurchase({ ...purchase, payment: p })}
+                />
+                {result.credits.length > 0 ? (
+                  <>
+                    <h4 class="credit-group">{CREDIT_GROUP}</h4>
+                    <ul class="result-list">
+                      {result.credits.map((c) => (
+                        <CreditRow pick={c} key={`${c.cardId} ${c.creditId}`} />
+                      ))}
+                    </ul>
+                    <h4 class="credit-group">By rate</h4>
+                  </>
+                ) : null}
+                <ol class="result-list">
+                  {shown.map((e, i) => (
+                    <CardRow
+                      entry={e}
+                      rank={i + 1}
+                      held={heldIds.has(e.cardId)}
+                      key={e.cardId}
+                    />
                   ))}
-                </ul>
-                <h4 class="credit-group">By rate</h4>
+                </ol>
+                {result.ranked.length > shown.length ? (
+                  <button
+                    type="button"
+                    class="more"
+                    onClick={() => setAll(true)}
+                  >
+                    Show all {result.ranked.length} cards
+                  </button>
+                ) : null}
+                {membersOnlyLines(
+                  catalog,
+                  all ? result.membersOnly : topOf(result, TOP).membersOnly,
+                  (e) => shortName(e.cardId),
+                ).map((m) => (
+                  <p class="muted small" key={m}>
+                    {m}
+                  </p>
+                ))}
+                <Assumes lines={result.assumptions} />
               </>
             ) : null}
-            <ol class="result-list">
-              {shown.map((e, i) => (
-                <CardRow entry={e} rank={i + 1} key={e.cardId} />
-              ))}
-            </ol>
-            {result.ranked.length > shown.length ? (
-              <button type="button" class="more" onClick={() => setAll(true)}>
-                Show all {result.ranked.length} cards
-              </button>
-            ) : null}
-            {membersOnlyLines(
-              catalog,
-              all ? result.membersOnly : topOf(result, TOP).membersOnly,
-              (e) => shortName(e.cardId),
-            ).map((m) => (
-              <p class="muted small" key={m}>
-                {m}
-              </p>
-            ))}
-            <Excluded r={result} />
-            {result.assumptions.length > 0 ? (
-              <ul class="assumptions">
-                {result.assumptions.map((a) => (
-                  <li key={a}>{a}</li>
-                ))}
-              </ul>
-            ) : null}
-            {noteOnly(result) ? null : (
-              <NextSteps hasCards={hasCards} onWallet={onWallet} />
+            {noteOnly(answer) ? null : (
+              <NextSteps addCards={!hasCards} onWallet={onWallet} />
             )}
           </section>
         ) : null}

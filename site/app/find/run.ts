@@ -2,6 +2,7 @@
 // stays responsive while it runs. Without workers it runs on the page, one
 // part per task.
 import type { Catalog } from '../../../src/schema/catalog.ts'
+import type { Wallet } from '../../../src/schema/wallet.ts'
 import { engineOptions, type Saved, type Settings } from '../settings.ts'
 import { isTypicalRows, type Row } from '../spending-rows.ts'
 import { steps, type Job, type Part, type WorkerRequest } from './steps.ts'
@@ -56,11 +57,14 @@ export function runAnswer(
 
 // The job for these rows and settings, built the same way wherever it's
 // asked for, so an answer started before the tab opens is found again.
+// With `wallet`, the job is a new card for it rather than the best cards
+// from scratch.
 export function jobFor(
   rows: Row[],
   settings: Settings,
   saved: Saved,
   today: string,
+  wallet: Wallet | null = null,
 ): Job {
   return {
     rows,
@@ -73,6 +77,7 @@ export function jobFor(
       includeHeld: true,
     },
     today,
+    ...(wallet ? { wallet } : {}),
   }
 }
 

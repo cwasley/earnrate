@@ -133,21 +133,35 @@ const STEPS: Step[] = [
     },
   },
   {
-    name: 'Would another card help?',
+    name: 'A new card for my wallet, at a card',
     url: '/#wallet&whatif=chase-sapphire-preferred',
-    ready: '#whatif .result',
+    ready: '.new-card .result',
   },
   {
-    name: 'the common cards grid with held cards in it',
+    name: 'At a store from your own cards',
+    url: '/#best=groceries',
+    ready: '.results .verdict',
+  },
+  {
+    name: 'At a store from every card, with yours marked',
+    url: '/#best=groceries',
+    ready: '.results',
+    act: async (page) => {
+      await page.getByText('Every card', { exact: true }).click()
+      await page.waitForSelector('.results [data-yours]')
+    },
+  },
+  {
+    name: 'the add flow with held cards in it',
     url: '/#wallet',
     ready: '.held-row',
     act: async (page) => {
-      await page.getByRole('button', { name: 'Pick from common cards' }).click()
+      await page.getByRole('button', { name: 'Add a card' }).click()
       await page.waitForSelector('.quick-cards')
     },
   },
   {
-    name: 'Find a card at a card',
+    name: 'Get a card at a card',
     url: '/#spending&card=amex-platinum',
     ready: '.result-list',
   },
@@ -211,6 +225,34 @@ const STEPS: Step[] = [
       check(
         'the year-end page marks your cards, and only those',
         shown.length > 0 && shown.every(Boolean),
+      )
+    },
+  },
+  // Last: tapping saves the answers, which Rate my wallet would then fold.
+  {
+    name: "a held card's Settings after tapping credits, All and None",
+    url: '/#wallet&card=amex-platinum',
+    ready: '.editor .credit-picks',
+    act: async (page) => {
+      // Credits answered on Rate my wallet start folded to one line.
+      const line = page.locator('.editor .credit-picks-line')
+      if ((await line.count()) > 0) await line.click()
+      await page.waitForSelector('.editor .credit-use')
+      const classes = async () =>
+        (await marks(page)).map((m) => /class="([^"]*)"/.exec(m)?.[1] ?? '')
+      const before = new Set(await classes())
+      await page.locator('.editor .credit-use').first().click()
+      await page.waitForSelector('.editor .credit-use[aria-pressed="true"]')
+      await page
+        .getByRole('button', { name: /^I use none of/ })
+        .first()
+        .click()
+      await page.waitForTimeout(300)
+      const added = (await classes()).filter((c) => !before.has(c))
+      check(
+        "marking credits in a card's Settings adds no class",
+        added.length === 0,
+        added.join(' '),
       )
     },
   },

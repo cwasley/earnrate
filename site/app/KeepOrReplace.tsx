@@ -25,7 +25,7 @@ import { CardArt } from './CardArt.tsx'
 import { feeLabel, shortName, wholeDollars } from './format.ts'
 
 // Where the spending amounts are entered, for "add them as their own lines".
-const SPENDING_TAB = ' in Find a card'
+const SPENDING_TAB = ' in Get a card'
 
 // A read of the wallet: nothing here changes it or leaves the browser.
 export function KeepOrReplace({
@@ -57,7 +57,7 @@ export function KeepOrReplace({
         {best ? ` ${feeSavedText(k, best)}` : ''}
       </p>
       {unsaid === '' ? null : (
-        <p class="keep-unsaid">{unsaid} Say which you use above, then save.</p>
+        <p class="keep-unsaid">{unsaid} Say which you use above.</p>
       )}
       {k.replacements.length > 0 ? (
         <ol class="result-list keep-list">
