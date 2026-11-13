@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import type { CreditChoice } from '../../src/engine/credits.ts'
 import { possessive } from '../../src/engine/text.ts'
+import { noneChange, tapChange, type MarksChange } from '../rate/answers.ts'
 import { enrollLine } from './credit-enroll.ts'
 import { shortestName, wholeDollars } from './format.ts'
 import { Check } from './QuickCards.tsx'
@@ -16,20 +17,29 @@ const worth = (c: CreditChoice) =>
       ? `up to ${wholeDollars(c.yearly)}`
       : `${wholeDollars(c.yearly)}/yr`
 
-const usedIds = (choices: CreditChoice[]) =>
-  choices.filter((c) => c.answer === 'used').map((c) => c.id)
+const idsWith = (choices: CreditChoice[], answer: CreditChoice['answer']) =>
+  choices.filter((c) => c.answer === answer).map((c) => c.id)
 
-// A card's answer is the credits it uses; the rest of its credits are then
-// not used. Every credit on it has an answer once any tile or All / None on
-// it is tapped.
-const answered = (choices: CreditChoice[]) =>
-  choices.every((c) => c.answer !== null)
+// "2 of 4 used", "1 used · 3 to answer"
+function foldedCount(choices: CreditChoice[]): string {
+  const used = idsWith(choices, 'used').length
+  const open = idsWith(choices, null).length
+  if (open === 0)
+    return used === 0
+      ? 'None used'
+      : `${String(used)} of ${String(choices.length)} used`
+  return used === 0
+    ? `${String(open)} to answer`
+    : `${String(used)} used · ${String(open)} to answer`
+}
 
 // One card's statement credits and free nights as tiles, in the card
-// picker's look: a tap toggles a credit between used and not. Which is which
-// lives only in aria-pressed: every tile has the same elements, its check
-// shown by CSS. A card answered before the page opened starts folded to one
-// line; Done folds it again.
+// picker's look. A tap marks one credit used; another tap puts it back as it
+// was, unanswered unless it had been answered "no". The rest stay
+// unanswered until None marks them not used. The answer lives only in
+// aria-pressed and data-answer: every tile has the same elements, its check
+// and "Not used" shown by CSS. A card answered before the page opened starts
+// folded to one line; Done folds it again.
 function CardCredits({
   cardId,
   choices,
@@ -41,10 +51,13 @@ function CardCredits({
   choices: CreditChoice[]
   named: boolean
   focus: string[]
-  onSet: (used: string[]) => void
+  onSet: (change: MarksChange) => void
 }) {
-  const used = usedIds(choices)
-  const done = answered(choices)
+  const unanswered = idsWith(choices, null)
+  const done = unanswered.length === 0
+  const started = unanswered.length < choices.length
+  // What each tile was before this view marked it used.
+  const before = useRef(new Map<string, CreditChoice['answer']>())
   const name = shortestName(cardId)
   // Once opened, the rest stay shown; they start shown when one of them
   // is used, or is the one a to-do row opened Settings for.
@@ -89,9 +102,7 @@ function CardCredits({
             ) : null}
             <span class="nowrap">
               {named ? '· ' : null}
-              {used.length === 0
-                ? 'None used'
-                : `${String(used.length)} of ${String(choices.length)} used`}
+              {foldedCount(choices)}
             </span>
           </span>
           <span class="credit-picks-change">Change</span>
@@ -111,9 +122,9 @@ function CardCredits({
             class="credit-pill credit-done"
             aria-expanded={true}
             aria-label={`Done with ${possessive(name)} credits`}
-            aria-hidden={!done}
-            tabIndex={done ? undefined : -1}
-            disabled={!done}
+            aria-hidden={!started}
+            tabIndex={started ? undefined : -1}
+            disabled={!started}
             onClick={() => setFolded(true)}
           >
             Done
@@ -122,15 +133,26 @@ function CardCredits({
             type="button"
             class="credit-pill"
             aria-label={`I use all of ${possessive(name)} credits`}
-            onClick={() => onSet(choices.map((c) => c.id))}
+            onClick={() => {
+              for (const c of choices)
+                if (c.answer !== 'used') before.current.set(c.id, c.answer)
+              onSet({ use: choices.map((c) => c.id) })
+            }}
           >
             All
           </button>
           <button
             type="button"
             class="credit-pill"
-            aria-label={`I use none of ${possessive(name)} credits`}
-            onClick={() => onSet([])}
+            aria-label={
+              done || !started
+                ? `I use none of ${possessive(name)} credits`
+                : `I don't use ${possessive(name)} other credits`
+            }
+            onClick={() => {
+              before.current.clear()
+              onSet(noneChange(choices))
+            }}
           >
             None
           </button>
@@ -147,14 +169,19 @@ function CardCredits({
                 class="credit-use"
                 ref={i === SHOWN ? firstMore : i === 0 ? firstTile : null}
                 aria-pressed={on}
-                onClick={() =>
-                  onSet(on ? used.filter((id) => id !== c.id) : [...used, c.id])
-                }
+                data-answer={c.answer ?? 'none'}
+                onClick={() => {
+                  const was = before.current.get(c.id)
+                  if (on) before.current.delete(c.id)
+                  else before.current.set(c.id, c.answer)
+                  onSet(tapChange(c, was))
+                }}
               >
                 <span class="credit-name">{c.name}</span>
                 {value === null ? null : (
                   <span class="credit-value">{value}</span>
                 )}
+                <span class="credit-no">Not used</span>
                 <Check />
               </button>
             </li>
@@ -186,7 +213,7 @@ export function CreditPicks({
   cards: { cardId: string; choices: CreditChoice[] }[]
   // Credits a to-do row opened Settings for: shown, not folded away.
   focus?: string[]
-  onSet: (cardId: string, ids: string[], used: string[]) => void
+  onSet: (cardId: string, change: MarksChange) => void
 }) {
   // Checks arrive with the motion vocabulary's fade only after first paint.
   const [settled, setSettled] = useState(false)
@@ -201,13 +228,7 @@ export function CreditPicks({
           choices={c.choices}
           named={cards.length > 1}
           focus={focus}
-          onSet={(used) =>
-            onSet(
-              c.cardId,
-              c.choices.map((x) => x.id),
-              used,
-            )
-          }
+          onSet={(change) => onSet(c.cardId, change)}
         />
       ))}
     </div>

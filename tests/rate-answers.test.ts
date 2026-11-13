@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
+import { checklist } from '../src/engine/checklist.ts'
 import { creditChoices } from '../src/engine/credits.ts'
 import { addToWallet } from '../src/engine/wallet-change.ts'
 import { reportStart, type ReportInput } from '../src/engine/wallet-report.ts'
@@ -13,12 +14,15 @@ import {
 } from '../site/app/sync.ts'
 import {
   addCard,
-  answeredMarks,
   answerSaver,
+  changedMarks,
   heldMarks,
   marksOp,
+  noneChange,
   removeCard,
   sameMarks,
+  settledMarks,
+  tapChange,
   type Marks,
   type SaveDeps,
 } from '../site/rate/answers.ts'
@@ -202,11 +206,10 @@ describe("Rate my wallet's credit answers", () => {
       used: ['resy'],
       skipped: ['equinox'],
     })
-    const marks = answeredMarks(
-      heldMarks(platinum, held),
-      ['uber-cash', 'equinox', 'resy'],
-      ['uber-cash', 'equinox'],
-    )
+    const marks = changedMarks(heldMarks(platinum, held), {
+      use: ['uber-cash', 'equinox'],
+      skip: ['resy'],
+    })
     expect(marks).toEqual({
       used: ['uber-cash', 'equinox'],
       skipped: ['resy'],
@@ -298,53 +301,112 @@ describe("Rate my wallet's credit answers", () => {
     expect(away.log.writes).toEqual([])
   })
 
-  test('the first tap on a card answers all of it: that credit used, every other one not, saved as one change', async () => {
+  test('a tap marks only that credit used, saved as one change; the rest stay unanswered and the range stays open', async () => {
     const wallet = saved('amex-gold', [], [])
     const ids = tileIds(wallet, 'amex-gold')
     expect(ids.length).toBeGreaterThan(1)
     expect(report([{ id: 'amex-gold', picks: {} }]).range).not.toBeNull()
-    const marks = answeredMarks(NONE, ids, ['uber-cash'])
-    expect(marks).toEqual({
-      used: ['uber-cash'],
-      skipped: ids.filter((id) => id !== 'uber-cash'),
-    })
+    const marks = changedMarks(
+      NONE,
+      tapChange({ id: 'uber-cash', answer: null }, undefined),
+    )
+    expect(marks).toEqual({ used: ['uber-cash'], skipped: [] })
     const { deps, log } = harness(wallet, true)
     const save = answerSaver({ kind: 'own', wallet, rows: null }, deps)
     expect((await save?.('amex-gold', marks))?.ok).toBe(true)
     expect(log.sent).toEqual([marksOp('amex-gold', marks)])
-    expect(log.writes).toHaveLength(1)
     const held = log.writes[0]?.cards[0]
     if (!held) throw new Error('not saved')
     expect(sameMarks(heldMarks(gold, held), marks)).toBe(true)
     const after = report([{ id: 'amex-gold', picks: {}, ...marks }])
-    expect(after.range).toBeNull()
+    expect(after.range).not.toBeNull()
     expect(
       after.creditChoices[0]?.choices.map((c) => [c.id, c.answer]),
-    ).toEqual(ids.map((id) => [id, id === 'uber-cash' ? 'used' : 'skipped']))
+    ).toEqual(ids.map((id) => [id, id === 'uber-cash' ? 'used' : null]))
   })
 
-  test('All and None are one change each, with the whole card in it', async () => {
-    const wallet = saved('amex-gold', [], [])
-    const ids = tileIds(wallet, 'amex-gold')
+  test('a second tap puts a credit back as it was: unanswered, or not used if it had been answered no', () => {
+    const used = changedMarks(NONE, { use: ['resy'] })
+    const tile = { id: 'resy', answer: 'used' } as const
+    expect(changedMarks(used, tapChange(tile, null))).toEqual(NONE)
+    expect(changedMarks(used, tapChange(tile, undefined))).toEqual(NONE)
+    expect(changedMarks(used, tapChange(tile, 'skipped'))).toEqual({
+      used: [],
+      skipped: ['resy'],
+    })
+  })
+
+  test("a credit that has paid out can't go back to unanswered, so a second tap marks it not used", () => {
+    const wallet = saved('amex-gold', ['uber-cash'], [])
+    const held = wallet.cards[0]
+    if (!held) throw new Error('no card')
+    const paid = {
+      ...held,
+      credit_usage: { 'uber-cash': { period: TODAY.slice(0, 7), used: 10 } },
+    }
+    const cleared = changedMarks(heldMarks(gold, paid), {
+      clear: ['uber-cash'],
+    })
+    expect(cleared).toEqual(NONE)
+    expect(settledMarks(gold, paid, cleared)).toEqual({
+      used: [],
+      skipped: ['uber-cash'],
+    })
+    expect(settledMarks(gold, held, cleared)).toEqual(NONE)
+  })
+
+  test("after one tap the to-do still asks about the card's other credits", async () => {
+    const wallet = saved('amex-platinum', [], [])
     const { deps, log } = harness(wallet, true)
     const save = answerSaver({ kind: 'own', wallet, rows: null }, deps)
-    const all = answeredMarks(NONE, ids, ids)
-    expect(all).toEqual({ used: ids, skipped: [] })
-    await save?.('amex-gold', all)
-    expect(log.sent).toEqual([marksOp('amex-gold', all)])
-    const none = answeredMarks(all, ids, [])
-    expect(none).toEqual({ used: [], skipped: ids })
-    await save?.('amex-gold', none)
-    expect(log.sent).toEqual([
-      marksOp('amex-gold', all),
-      marksOp('amex-gold', none),
-    ])
-    expect(log.writes).toHaveLength(2)
-    expect(report([{ id: 'amex-gold', picks: {}, ...none }]).range).toBeNull()
-    expect(sameMarks(answeredMarks(none, ids, []), none)).toBe(true)
+    await save?.('amex-platinum', changedMarks(NONE, { use: ['resy'] }))
+    const after = log.writes.at(-1)
+    if (!after) throw new Error('not saved')
+    expect(after.cards[0]?.skipped_credits ?? []).toEqual([])
+    const todo = checklist(catalog, after, TODAY).filter(
+      (i) => i.cardId === 'amex-platinum' && i.kind === 'enroll',
+    )
+    expect(todo.some((i) => /airline fee credit/.test(i.text))).toBe(true)
+    const asked = todo.find((i) => /Do you use/.test(i.text))
+    expect(asked?.ref?.split(',')).toContain('uber-cash')
+    expect(asked?.ref?.split(',')).not.toContain('resy')
   })
 
-  test("a card partly answered in My wallet shows what's used and stays unanswered until it's tapped", () => {
+  test('All marks every credit used; None marks only the unanswered ones not used, and once all are answered, every one', async () => {
+    const wallet = saved('amex-gold', [], [])
+    const ids = tileIds(wallet, 'amex-gold')
+    const tiles = (m: Marks) =>
+      ids.map((id) => ({
+        id,
+        answer: m.used.includes(id)
+          ? ('used' as const)
+          : m.skipped.includes(id)
+            ? ('skipped' as const)
+            : null,
+      }))
+    const { deps, log } = harness(wallet, true)
+    const save = answerSaver({ kind: 'own', wallet, rows: null }, deps)
+
+    const tapped = changedMarks(NONE, { use: ['resy'] })
+    const rest = changedMarks(tapped, noneChange(tiles(tapped)))
+    expect(rest).toEqual({
+      used: ['resy'],
+      skipped: ids.filter((id) => id !== 'resy'),
+    })
+    await save?.('amex-gold', rest)
+    expect(log.sent).toEqual([marksOp('amex-gold', rest)])
+    expect(report([{ id: 'amex-gold', picks: {}, ...rest }]).range).toBeNull()
+
+    const all = changedMarks(rest, { use: ids })
+    expect(all).toEqual({ used: ids, skipped: [] })
+    const none = changedMarks(all, noneChange(tiles(all)))
+    expect(none).toEqual({ used: [], skipped: ids })
+    expect(sameMarks(changedMarks(none, noneChange(tiles(none))), none)).toBe(
+      true,
+    )
+  })
+
+  test("a card partly answered in My wallet shows what's used, and a tap leaves the rest as they were", () => {
     const wallet = saved()
     const held = wallet.cards[0]
     if (!held) throw new Error('no card')
@@ -357,15 +419,12 @@ describe("Rate my wallet's credit answers", () => {
     expect(
       report([{ id: 'amex-platinum', picks: {}, ...was }]).range,
     ).not.toBeNull()
-    const ids = choices.map((c) => c.id)
-    const tapped = answeredMarks(was, ids, ['resy', 'uber-cash'])
+    const tapped = changedMarks(was, { use: ['uber-cash'] })
     expect([...tapped.used].sort()).toEqual(['resy', 'uber-cash'])
-    expect([...tapped.skipped].sort()).toEqual(
-      ids.filter((id) => id !== 'resy' && id !== 'uber-cash').sort(),
-    )
+    expect(tapped.skipped).toEqual(['equinox'])
     expect(
       report([{ id: 'amex-platinum', picks: {}, ...tapped }]).range,
-    ).toBeNull()
+    ).not.toBeNull()
   })
 
   test('the enroll line reminds that used credits pay only once enrolled, with their issuer', () => {

@@ -108,13 +108,37 @@ test('rules matched only by store codes are named, not read out as codes', () =>
   )
 })
 
-test("the credits verdict says why a fee card's lead ends", () => {
+test("the credits verdict names the no-fee card that overtakes and says why a fee card's lead ends", () => {
   expect(search('chase-sapphire-preferred')).toMatch(
-    /past that, the best no-fee card earns more, since each extra dollar earns less on this card than on that one\./,
+    /past that, the Wells Fargo Autograph earns more, since each extra dollar earns less on this card than on that one\./,
   )
   expect(search('amex-blue-cash-preferred')).toMatch(
-    /past that, the best no-fee card earns more, since a spending cap ends its lead\./,
+    /past that, the [A-Z][^,.]+ earns more, since a spending cap ends this card's lead\./,
   )
+}, 20_000)
+
+test("the no-fee card that overtakes is named, and the person's own value for its points is in the assumptions", () => {
+  const card = catalog.cards.find(
+    (c) => c.id === 'capital-one-venture-x-business',
+  )
+  if (!card) throw new Error('no Venture X Business')
+  const wallet = WalletSchema.parse({
+    valuations: { UR: 1.7, MR: 1.7 },
+    cards: [],
+  })
+  const [details] = cardDetails(catalog, [card.id], wallet, TODAY) ?? []
+  const text = formatCardInfo(
+    catalog,
+    cardInfo(catalog, card, null, TODAY),
+    details,
+  )
+  expect(text).toMatch(
+    /from about \$50 a month of spending the Amex Blue Business Plus earns more, since each extra dollar earns less on this card than on that one\./,
+  )
+  expect(text).toMatch(
+    /Capital One miles at 1¢ each \(earnrate's default\); Amex Membership Rewards at your 1\.7¢ each;/,
+  )
+  expect(search(card.id)).not.toMatch(/at your/)
 }, 20_000)
 
 test("a card's note on how its rates count comes with them", () => {

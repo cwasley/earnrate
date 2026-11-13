@@ -56,12 +56,13 @@ import { sameRows } from '../app/spending-rows.ts'
 import { track } from '../app/track.ts'
 import {
   addCard,
-  answeredMarks,
   answerSaver,
+  changedMarks,
   heldMarks,
   removeCard,
   sameMarks,
   type Marks,
+  type MarksChange,
   type SaveResult,
   type Saver,
 } from './answers.ts'
@@ -180,9 +181,9 @@ function useAnswers(initial: ReportInput, save: Saver | null) {
     latest.current = next
     setMarks(next)
   }, [initial])
-  const set = (cardId: string, ids: string[], used: string[]) => {
+  const set = (cardId: string, change: MarksChange) => {
     const was = latest.current[cardId] ?? NO_MARKS
-    const next = answeredMarks(was, ids, used)
+    const next = changedMarks(was, change)
     setError(null)
     if (sameMarks(was, next)) return
     put(cardId, next)

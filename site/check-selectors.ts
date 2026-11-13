@@ -193,6 +193,11 @@ const STEPS: Step[] = [
       await page.locator('.credit-use').nth(1).click()
       await page.waitForSelector('.credit-use[aria-pressed="true"]')
       await page
+        .getByRole('button', { name: /^I don't use .* other credits/ })
+        .first()
+        .click()
+      await page.waitForSelector('.credit-use[data-answer="skipped"]')
+      await page
         .getByRole('button', { name: /^I use all of/ })
         .first()
         .click()
@@ -244,7 +249,7 @@ const STEPS: Step[] = [
       await page.locator('.editor .credit-use').first().click()
       await page.waitForSelector('.editor .credit-use[aria-pressed="true"]')
       await page
-        .getByRole('button', { name: /^I use none of/ })
+        .getByRole('button', { name: /^I (use none of|don't use)/ })
         .first()
         .click()
       await page.waitForTimeout(300)

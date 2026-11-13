@@ -174,6 +174,33 @@ describe('tools', () => {
     )
   })
 
+  test("a parameter a tool doesn't take is refused by name, with the ones it takes", async () => {
+    const client = await connect(await walletCopy())
+    const only = await client.callTool({
+      name: 'compare_welcome_offers',
+      arguments: { only: ['chase-sapphire-preferred'] },
+    })
+    expect(only.isError).toBe(true)
+    expect(text(only)).toMatch(
+      /compare_welcome_offers doesn't take `only`\. It takes: [a-zA-Z, ]*\bcompare\b[a-zA-Z, ]*\./,
+    )
+    const nested = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: {
+        merchant: 'Chipotle',
+        cards: [{ cardId: 'amex-gold', pick: ['dining'] }],
+      },
+    })
+    expect(nested.isError).toBe(true)
+    expect(text(nested)).toMatch(
+      /cards\.0: A card in cards doesn't take `pick`\. It takes: cardId, picks,/,
+    )
+    const { tools } = await client.listTools()
+    for (const t of tools)
+      if (Object.keys(t.inputSchema.properties ?? {}).length > 0)
+        expect(t.inputSchema.additionalProperties, t.name).toBe(false)
+  })
+
   test('compare_welcome_offers takes the memberships the user names', async () => {
     const client = await connect(await walletCopy())
     const known = await client.callTool({

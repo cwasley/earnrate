@@ -1193,7 +1193,8 @@ p[data-tone='warn']::before {
 }
 
 /* A card's credits as tiles (CreditPicks.tsx): a tap toggles "I use it".
-   The answer is only in aria-pressed. */
+   The answer is only in aria-pressed and data-answer: used, skipped (not
+   used) or none (unanswered). */
 .credit-picks-card + .credit-picks-card {
   margin-top: 18px;
 }
@@ -1226,7 +1227,7 @@ p[data-tone='warn']::before {
   cursor: pointer;
 }
 
-/* Done, before All and None, keeps its room until the card is answered, so
+/* Done, before All and None, keeps its room until a credit is answered, so
    nothing moves when it shows. */
 .app .credit-pill.credit-done {
   min-width: 0;
@@ -1363,6 +1364,27 @@ p[data-tone='warn']::before {
 }
 
 .credit-use:not([aria-pressed='true']) .quick-check {
+  display: none;
+}
+
+/* Answered "no": muted, so None shows it worked, but still a tile to tap. */
+.app .credit-use[data-answer='skipped'] {
+  border-style: dashed;
+  background: none;
+}
+
+.credit-use[data-answer='skipped'] .credit-name,
+.credit-use[data-answer='skipped'] .credit-value {
+  color: var(--muted);
+}
+
+.credit-no {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.credit-use:not([data-answer='skipped']) .credit-no {
   display: none;
 }
 

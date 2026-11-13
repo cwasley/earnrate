@@ -2,12 +2,37 @@ import { z } from 'zod'
 import { ALL_PERSONAL_CARDS } from '../engine/explore.ts'
 import { profileText, VALUATION_PROFILES } from '../engine/profiles.ts'
 import { knownMemberships } from '../engine/setup.ts'
+import { listed } from '../engine/text.ts'
 import type { CardInput } from '../engine/wallet-change.ts'
 import { PaymentMethod } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { IsoDate } from '../schema/common.ts'
 import { COUNTRY_CODE } from '../schema/common.ts'
 import type { Wallet } from '../schema/wallet.ts'
+
+// "compare_welcome_offers doesn't take `only`. It takes: cards, compare, …"
+export const unknownParamsText = (
+  what: string,
+  unknown: string[],
+  takes: string[],
+) =>
+  `${what} doesn't take ${listed(unknown.map((k) => `\`${k}\``))}. It takes: ${takes.join(', ')}.`
+
+// An object that refuses keys it doesn't take: a misspelled one would
+// otherwise be dropped and quietly change the answer.
+const strictShape = <S extends z.ZodRawShape>(what: string, shape: S) =>
+  z.strictObject(shape, {
+    error: (issue) =>
+      issue.code === 'unrecognized_keys'
+        ? unknownParamsText(what, issue.keys, Object.keys(shape))
+        : undefined,
+  })
+
+// A tool's parameters, refusing any it doesn't take.
+export const strictInput = <S extends z.ZodRawShape>(
+  tool: string,
+  schema: z.ZodObject<S>,
+) => strictShape(tool, schema.shape)
 
 export const Merchant = z
   .string()
@@ -62,7 +87,7 @@ const OfferFilters = {
     .describe('Business cards instead of personal ones.'),
 }
 
-const NamedCard = z.object({
+const NamedCard = strictShape('A card in cards', {
   cardId: z.string().min(1).describe('A card id from search_cards.'),
   picks: z
     .record(z.string(), z.array(z.string()).min(1))
@@ -166,25 +191,24 @@ const cardFields = {
     .describe(
       'What a yearly free night is worth to the user, in dollars, only if they say: free night id → dollars, e.g. {"anniversary-night": 300}. The night then counts at that instead of its point cap, and a night with no point cap counts only this way. Setting one marks the night used, even when enrolled in the same call leaves it out (only skippedCredits naming it says otherwise). null clears it; other nights keep theirs.',
     ),
-  bonus: z
-    .object({
-      opened: IsoDate.describe('The day the account opened, YYYY-MM-DD.'),
-      spent: z
-        .number()
-        .nonnegative()
-        .optional()
-        .describe('Dollars already spent toward the bonus. Default 0.'),
-      spend: z
-        .number()
-        .positive()
-        .optional()
-        .describe(
-          "Dollars of spending the bonus needs, only if the user's offer differs from the published one.",
-        ),
-      by: IsoDate.optional().describe(
-        "The deadline, YYYY-MM-DD, only if the user's offer differs from the published one.",
+  bonus: strictShape('bonus', {
+    opened: IsoDate.describe('The day the account opened, YYYY-MM-DD.'),
+    spent: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Dollars already spent toward the bonus. Default 0.'),
+    spend: z
+      .number()
+      .positive()
+      .optional()
+      .describe(
+        "Dollars of spending the bonus needs, only if the user's offer differs from the published one.",
       ),
-    })
+    by: IsoDate.optional().describe(
+      "The deadline, YYYY-MM-DD, only if the user's offer differs from the published one.",
+    ),
+  })
     .nullable()
     .optional()
     .describe(

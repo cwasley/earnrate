@@ -42,19 +42,71 @@ export function heldMarks(card: Card, held: WalletCard): Marks {
   }
 }
 
-// A card's marks once it's answered on /rate: of its credits `ids`, those in
-// `used` are used and every other one is not. Marks for credits it no longer
-// lists stay as they were.
-export function answeredMarks(
-  was: Marks,
-  ids: string[],
-  used: string[],
-): Marks {
-  const out = (list: string[]) => list.filter((id) => !ids.includes(id))
+// One tap, or All / None, on a card's tiles: credits now used, now not
+// used, and back to unanswered. Credits it doesn't name keep their marks.
+export type MarksChange = { use?: string[]; skip?: string[]; clear?: string[] }
+
+export function changedMarks(was: Marks, change: MarksChange): Marks {
+  const use = [...new Set(change.use ?? [])]
+  const skip = [...new Set(change.skip ?? [])].filter((id) => !use.includes(id))
+  const touched = [...use, ...skip, ...(change.clear ?? [])]
+  const keep = (list: string[]) => list.filter((id) => !touched.includes(id))
   return {
-    used: [...out(was.used), ...ids.filter((id) => used.includes(id))],
-    skipped: [...out(was.skipped), ...ids.filter((id) => !used.includes(id))],
+    used: [...keep(was.used), ...use],
+    skipped: [...keep(was.skipped), ...skip],
   }
+}
+
+type Tile = { id: string; answer: 'used' | 'skipped' | null }
+
+// A tile tapped: used, or, when it was, back to what it was before it was
+// marked used (unanswered unless it had been answered "no").
+export const tapChange = (
+  tile: Tile,
+  before: Tile['answer'] | undefined,
+): MarksChange =>
+  tile.answer !== 'used'
+    ? { use: [tile.id] }
+    : before === 'skipped'
+      ? { skip: [tile.id] }
+      : { clear: [tile.id] }
+
+// None: the card's unanswered credits aren't used. Once every one is
+// answered, none of them is.
+export function noneChange(tiles: Tile[]): MarksChange {
+  const open = tiles.filter((t) => t.answer === null).map((t) => t.id)
+  return { skip: open.length > 0 ? open : tiles.map((t) => t.id) }
+}
+
+// A credit that has paid out, or a night given a value, stays used without
+// its `enrolled` entry, so it can't go back to unanswered: it's not used.
+export function settledMarks(
+  card: Card,
+  held: WalletCard,
+  marks: Marks,
+): Marks {
+  const after = {
+    ...held,
+    enrolled: marks.used,
+    skipped_credits: marks.skipped,
+  }
+  const stuck = heldMarks(card, after).used.filter(
+    (id) => !marks.used.includes(id),
+  )
+  return stuck.length === 0
+    ? marks
+    : { used: marks.used, skipped: [...marks.skipped, ...stuck] }
+}
+
+// The same, for a card in the visitor's own saved wallet.
+function settledOwn(
+  deps: Pick<SaveDeps, 'catalog' | 'read'>,
+  cardId: string,
+  marks: Marks,
+): Marks {
+  const held = deps.read()?.cards.find((c) => c.id === cardId)
+  const card = deps.catalog.cards.find((c) => c.id === cardId)
+  return held && card ? settledMarks(card, held, marks) : marks
 }
 
 const sameSet = (a: string[], b: string[]) =>
@@ -153,7 +205,7 @@ export async function saveMarks(
   const wallet = deps.read()
   if (!wallet?.cards.some((c) => c.id === cardId))
     return { ok: false, error: GONE, wallet }
-  return saveChange(deps, marksOp(cardId, marks))
+  return saveChange(deps, marksOp(cardId, settledOwn(deps, cardId, marks)))
 }
 
 // Only the visitor's own wallet saves answers: the saved one, or the one

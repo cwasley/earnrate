@@ -33,7 +33,7 @@ import {
 } from '../../src/engine/wallet-change.ts'
 import type { Card } from '../../src/schema/card.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
-import { answeredMarks, heldMarks } from '../rate/answers.ts'
+import { changedMarks, heldMarks, settledMarks } from '../rate/answers.ts'
 import { CreditPicks } from './CreditPicks.tsx'
 import { usedSoFarShown } from './credit-enroll.ts'
 import { openedChange, spentChange, trackingChange } from './bonus-change.ts'
@@ -401,8 +401,12 @@ export function CardSettings({
           <CreditPicks
             cards={[{ cardId: held.id, choices }]}
             focus={focus?.used === false ? focus.ids : []}
-            onSet={(_, ids, used) => {
-              const marks = answeredMarks(heldMarks(card, held), ids, used)
+            onSet={(_, tap) => {
+              const marks = settledMarks(
+                card,
+                held,
+                changedMarks(heldMarks(card, held), tap),
+              )
               change({ enrolled: marks.used, skippedCredits: marks.skipped })
             }}
           />

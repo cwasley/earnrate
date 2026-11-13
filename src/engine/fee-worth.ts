@@ -332,6 +332,14 @@ export function feeWorthCredits(
     .join(' ')
 }
 
+// The no-fee card that overtakes the fee card once its credits stop being
+// enough: the best one just past that amount. Null when it never does.
+function overtaker(catalog: Catalog, w: FeeWorth): Card | null {
+  if (w.credits === null || w.creditsStopAt === null) return null
+  const id = w.at(w.creditsStopAt + STEP).best.cards[0]?.cardId
+  return catalog.cards.find((c) => c.id === id) ?? null
+}
+
 function creditsSentences(
   catalog: Catalog,
   w: FeeWorth,
@@ -343,12 +351,15 @@ function creditsSentences(
   // the no-fee card's, so each dollar more narrows it.
   const why =
     w.stopsAt !== null
-      ? ', since a spending cap ends its lead'
+      ? ", since a spending cap ends this card's lead"
       : ', since each extra dollar earns less on this card than on that one'
+  const rival = overtaker(catalog, w)
+  const rivalName =
+    rival === null ? 'the best no-fee card' : `the ${shortCardName(rival.name)}`
   const pastThat =
     w.creditsStopAt === null
       ? ''
-      : `; past about ${esc(wholeDollars(w.creditsStopAt))} a month, the best no-fee card earns more${why}`
+      : `; past about ${esc(wholeDollars(w.creditsStopAt))} a month, ${esc(rivalName)} earns more${why}`
   // "all its statement credits", "its statement credit", "its free night",
   // "all its statement credits and free night", "its statement credit and
   // free night"
@@ -375,9 +386,9 @@ function creditsSentences(
     w.creditsBreakEven === null
       ? `Even if you'd use ${esc(perks)} (${esc(year)}), it doesn't come out ahead within ${esc(wholeDollars(MAX_MONTHLY))} a month.`
       : w.creditsBreakEven === 0 && w.creditsStopAt === 0
-        ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, but from about ${esc(wholeDollars(STEP))} a month of spending the best no-fee card earns more${why}.`
+        ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, but from about ${esc(wholeDollars(STEP))} a month of spending ${esc(rivalName)} earns more${why}.`
         : w.creditsBreakEven === 0
-          ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, so it comes out ahead ${w.creditsStopAt === null ? 'at any amount' : `up to about ${esc(wholeDollars(w.creditsStopAt))} a month; past that, the best no-fee card earns more${why}`}.`
+          ? `If you'd use ${esc(perks)} (${esc(year)}), ${worthMore} more than its ${esc(fee)} fee, so it comes out ahead ${w.creditsStopAt === null ? 'at any amount' : `up to about ${esc(wholeDollars(w.creditsStopAt))} a month; past that, ${esc(rivalName)} earns more${why}`}.`
           : `If you'd use ${esc(perks)} (${esc(year)}), the fee pays off from about ${strong(`${esc(wholeDollars(w.creditsBreakEven))} a month`)}${pastThat}.`
   const onlyIf = creditsOnlyIf(w.credits, true)
   return onlyIf === '' ? sentence : `${sentence} ${esc(onlyIf)}`
@@ -419,13 +430,23 @@ export function feeWorthAnswer(
     card.currency === 'cash'
       ? 'cash back at face value'
       : `${currencyName(catalog, card.currency)} at ${num(centsPerUnit)}¢ each (${savedValue ? 'the saved point value' : "earnrate's default"})`
+  // The person's own value for the overtaking card's points, which can be
+  // what puts it ahead.
+  const rival = overtaker(catalog, w)
+  const rivalValue =
+    rival === null ||
+    rival.currency === 'cash' ||
+    rival.currency === card.currency ||
+    valuations[rival.currency] === undefined
+      ? ''
+      : `; ${currencyName(catalog, rival.currency)} at your ${num(currencyValuation(catalog, { valuations }, rival.currency).centsPerUnit)}¢ each`
   const mix = feeWorthMix(w)
   const membership =
     w.at(STEP).card.membershipFees > 0
       ? ', the membership it needs counted like a fee'
       : ''
   const yearly = yearlyPointsCounted(catalog, card)
-  const assumes = `Assumes typical U.S. spending (${w.everywhere ? `no typical category earns it a bonus, so earnrate's whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`}), the same every month for a year; ${value}; the regular annual fee${membership}${yearly === null ? '' : `; ${yearly}`}; no welcome bonus or first-year rates. Compared with the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards that need no membership.`
+  const assumes = `Assumes typical U.S. spending (${w.everywhere ? `no typical category earns it a bonus, so earnrate's whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`}), the same every month for a year; ${value}${rivalValue}; the regular annual fee${membership}${yearly === null ? '' : `; ${yearly}`}; no welcome bonus or first-year rates. Compared with the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards that need no membership.`
   return {
     annualFee: card.annual_fee ?? 0,
     mix: w.lines.map((l, i) => ({

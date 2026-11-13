@@ -35,6 +35,7 @@ import {
   ChannelInput,
   DateInput,
   Merchant,
+  strictInput,
   type makeInputs,
 } from '../inputs.ts'
 import {
@@ -485,7 +486,7 @@ export function registerWalletTools(
     {
       title: 'Record a purchase',
       description: `Records a purchase the user has already made, so spending caps, welcome-bonus progress, yearly spend bonuses and statement credits used stay accurate for future recommendations. It updates the user's saved wallet. Only call it after the purchase has happened, and only once per purchase: calling it twice counts the spend twice. Purchases with no cap, no open welcome bonus, no spend bonus and no enrolled statement credit are acknowledged and nothing is written. For a merchant earnrate doesn't recognize it asks for category first, so caps aren't missed. ${ctx.walletUse}`,
-      inputSchema: tools.record_purchase.input,
+      inputSchema: strictInput('record_purchase', tools.record_purchase.input),
       outputSchema: RecordResultSchema,
       annotations: {
         title: 'Record a purchase',
@@ -503,7 +504,7 @@ export function registerWalletTools(
     {
       title: 'Add a card',
       description: `Adds a card the user holds to their wallet by its id from search_cards, creating the wallet if there isn't one. The reply says what the card still needs (category picks, memberships, activations); ask the user about those. Stores only the card's product id and settings, never card numbers. ${ctx.walletUse}`,
-      inputSchema: tools.add_card.input,
+      inputSchema: strictInput('add_card', tools.add_card.input),
       outputSchema: WalletChangeSchema,
       annotations: {
         title: 'Add a card',
@@ -520,7 +521,7 @@ export function registerWalletTools(
     {
       title: 'Update a card',
       description: `Changes settings on a card already in the wallet: its category picks for this period, checkout label, anniversary, opening date (optional; for first-year rates), activated categories, cap spending so far (capSpent), spending this year toward its spend bonuses (milestoneSpent), statement credits enrolled in and free nights used (enrolled), credits used this period (creditUsed), credits or free nights not used at all (skippedCredits), what a free night is worth to the user (nightValues, only if they say), or a welcome bonus to track. Picks replace the saved ones in each choice group you set (other groups are kept) for the current period. Use it when the user picks new categories, such as each quarter on U.S. Bank Cash+. ${ctx.walletUse}`,
-      inputSchema: tools.update_card.input,
+      inputSchema: strictInput('update_card', tools.update_card.input),
       outputSchema: WalletChangeSchema,
       annotations: {
         title: 'Update a card',
@@ -537,7 +538,7 @@ export function registerWalletTools(
     {
       title: 'Remove a card',
       description: `Removes a card from the wallet, with its tracked cap usage, bonus progress and yearly spending. Memberships and point values stay, even when the last card goes. Only when the user says they no longer have it or don't want it considered. ${ctx.walletUse}`,
-      inputSchema: tools.remove_card.input,
+      inputSchema: strictInput('remove_card', tools.remove_card.input),
       outputSchema: WalletChangeSchema,
       annotations: {
         title: 'Remove a card',
@@ -554,7 +555,7 @@ export function registerWalletTools(
     {
       title: 'Set memberships',
       description: `Sets the memberships that unlock some cards' rates, such as amazon-prime for Prime Visa's 5% or a Bank of America Preferred Rewards tier, and costco for a Costco membership (so spending answers don't count its cost against Costco Anywhere). Replaces the whole list, so include the ones to keep. It saves them even with no cards saved, and every answer then uses them. With skippedIssuers, it also saves the issuers the user can't or won't get a new card from (Chase over its 5/24 rule), which next-card answers leave out; either can be given alone. ${ctx.walletUse}`,
-      inputSchema: tools.set_memberships.input,
+      inputSchema: strictInput('set_memberships', tools.set_memberships.input),
       outputSchema: WalletChangeSchema,
       annotations: {
         title: 'Set memberships',
@@ -571,7 +572,10 @@ export function registerWalletTools(
     {
       title: 'Set point values',
       description: `Saves what the user's points are worth to them, in cents per point, in their saved wallet; every answer then compares cards at those values unless a valuation profile is asked for. No saved cards are needed. Use it when the user says what their points are worth ("I value Chase points at 1.5¢") or that they transfer points to airlines and hotels (profile points-heavy). Values change only the currencies given; null goes back to earnrate's default. Currencies by id: ${catalog.currencies.map((c) => `${c.id} (${c.name})`).join(', ')}. ${ctx.walletUse}`,
-      inputSchema: tools.set_point_values.input,
+      inputSchema: strictInput(
+        'set_point_values',
+        tools.set_point_values.input,
+      ),
       outputSchema: WalletChangeSchema,
       annotations: {
         title: 'Set point values',

@@ -50,6 +50,7 @@ import {
   DateInput,
   Merchant,
   settings,
+  strictInput,
   type makeInputs,
 } from '../inputs.ts'
 import {
@@ -102,22 +103,25 @@ export function registerAnswerTools(
       title: 'Best card for a purchase',
       description:
         "Which credit card earns the most rewards for a purchase, and why. With no cards given and no saved wallet, it ranks every card earnrate knows (in `allCards`): a complete answer for anyone. With cards named in the conversation (`cards`) or a saved wallet, it picks the best of the user's own: `decision.cardId` is the pick and `decision.checkoutLabel` is how the card appears at checkout, with every usable card ranked with reasons, cards the merchant won't take, assumptions, warnings, and when a different point valuation would change the pick. For a business earnrate may not know, like a local restaurant, pass `category` when you can tell what kind of business it is. When the user is paying outside the U.S. or in another currency, pass `country`: abroad, each card is ranked after its foreign transaction fee. Pass `payment` only when the user says how they're paying, like Apple Pay or PayPal checkout. A statement credit (a card's `credit`, like Amex Platinum's lululemon credit) counts toward the pick only once it's enrolled in the wallet and has dollars left this period, and only when the amount is given; say its dollars apart from the % back. With no cards, `allCards.credits` lists cards with a credit at the store; present those first. Never needs or returns card numbers.",
-      inputSchema: z.object({
-        merchant: Merchant,
-        amount: z
-          .number()
-          .positive()
-          .optional()
-          .describe('Purchase amount in US dollars. Improves cap math.'),
-        channel: ChannelInput,
-        date: DateInput,
-        country: CountryInput,
-        payment: PaymentInput,
-        category: CategoryInput,
-        cards: NamedCards,
-        memberships: NamedMemberships,
-        valuation: CatalogFilters.valuation,
-      }),
+      inputSchema: strictInput(
+        'best_card_for_purchase',
+        z.object({
+          merchant: Merchant,
+          amount: z
+            .number()
+            .positive()
+            .optional()
+            .describe('Purchase amount in US dollars. Improves cap math.'),
+          channel: ChannelInput,
+          date: DateInput,
+          country: CountryInput,
+          payment: PaymentInput,
+          category: CategoryInput,
+          cards: NamedCards,
+          memberships: NamedMemberships,
+          valuation: CatalogFilters.valuation,
+        }),
+      ),
       outputSchema: PurchaseAnswerSchema,
       annotations: {
         title: 'Best card for a purchase',
@@ -227,11 +231,14 @@ export function registerAnswerTools(
       title: 'Resolve a merchant',
       description:
         'Shows how earnrate identifies a merchant: its spend category, likely MCC, which card networks it takes, confidence, and whether that came from curated data, Claude, or nowhere. Use it to explain or double-check a recommendation.',
-      inputSchema: z.object({
-        merchant: Merchant,
-        channel: ChannelInput,
-        category: CategoryInput,
-      }),
+      inputSchema: strictInput(
+        'resolve_merchant',
+        z.object({
+          merchant: Merchant,
+          channel: ChannelInput,
+          category: CategoryInput,
+        }),
+      ),
       outputSchema: MerchantResolutionSchema,
       annotations: {
         title: 'Resolve a merchant',
@@ -311,27 +318,30 @@ export function registerAnswerTools(
       title: 'Compare welcome offers',
       description:
         "Ranks cards the user doesn't have by what they'd be worth over the first two years: what each adds to the user's cards (or, with none, earns) on their spending, plus the public welcome (sign-up) bonus in year one if its minimum spend fits in the window, less each year's annual fee. A card that needs a membership the user hasn't given (Verizon Visa) is left out of the ranking and named after it, in `membersOnly`. Each offer also shows the bonus alone (first-year value), year one and year two, and how many weeks of spending the minimum takes. Offers the issuer rules out because of a card in the user's wallet are marked likely not eligible and listed last; issuers the user can't get cards from (skippedIssuers, or saved with set_memberships) are left out. Use it when the user asks which card to get next or which has the best sign-up bonus. With `compare`, it compares just the cards the user names (\"Sapphire Preferred or Venture X?\"), held or not, whatever the other filters. Spending is optional (typical amounts otherwise). It covers only the cards earnrate knows, offers vary by person, and each offer's note gives the issuer's eligibility rules; pass those caveats on. Never suggest applying through a link.",
-      inputSchema: z.object({
-        ...OfferFilters,
-        valuation: CatalogFilters.valuation,
-        includeHeld: z
-          .boolean()
-          .optional()
-          .describe('Include cards already in the wallet.'),
-        compare: z
-          .array(CardId)
-          .min(1)
-          .optional()
-          .describe(
-            "Card ids from search_cards to compare, when the user names the cards they're choosing between. Only these are ranked. Leave out to rank every card.",
+      inputSchema: strictInput(
+        'compare_welcome_offers',
+        z.object({
+          ...OfferFilters,
+          valuation: CatalogFilters.valuation,
+          includeHeld: z
+            .boolean()
+            .optional()
+            .describe('Include cards already in the wallet.'),
+          compare: z
+            .array(CardId)
+            .min(1)
+            .optional()
+            .describe(
+              "Card ids from search_cards to compare, when the user names the cards they're choosing between. Only these are ranked. Leave out to rank every card.",
+            ),
+          cards: NamedCards,
+          memberships: NamedMemberships,
+          spending: SpendingLines,
+          skippedIssuers: SkippedIssuers.optional().describe(
+            "Issuers the user says they can't or won't get a new card from (for example Chase, over its 5/24 rule), for this answer. Replaces the saved list. Never assume it.",
           ),
-        cards: NamedCards,
-        memberships: NamedMemberships,
-        spending: SpendingLines,
-        skippedIssuers: SkippedIssuers.optional().describe(
-          "Issuers the user says they can't or won't get a new card from (for example Chase, over its 5/24 rule), for this answer. Replaces the saved list. Never assume it.",
-        ),
-      }),
+        }),
+      ),
       outputSchema: OfferComparisonSchema,
       annotations: {
         title: 'Compare welcome offers',
@@ -422,19 +432,22 @@ export function registerAnswerTools(
       title: 'Best cards for a purchase',
       description:
         'Ranks every card earnrate knows that takes new applicants, not only the user\'s, for one purchase or category, each set up at its best (the right category pick, activated, cap unused), with its annual fee and what earning the rate takes. Use it for questions like "what\'s the best card for groceries?" or "which card should I get for Amazon?". It needs no wallet. For which of the user\'s own cards to use, call best_card_for_purchase instead. Mention the annual fee and any conditions alongside each card. Cards that need a membership the user hasn\'t given (Verizon Visa) are in `membersOnly`, not the ranking: name them after it, as the text does. For a store, cards with a statement credit there come first in `credits` ("$75 back each quarter, then 1x Amex Membership Rewards"): present them first, in dollars and never as a percentage, saying when the cardholder must enroll, then the ranking by rate.',
-      inputSchema: z.object({
-        merchant: Merchant.optional(),
-        category: CatalogCategory.optional(),
-        amount: z
-          .number()
-          .positive()
-          .optional()
-          .describe('Purchase amount in US dollars, if known.'),
-        channel: ChannelInput,
-        country: CountryInput,
-        payment: PaymentInput,
-        ...CatalogFilters,
-      }),
+      inputSchema: strictInput(
+        'best_cards_for',
+        z.object({
+          merchant: Merchant.optional(),
+          category: CatalogCategory.optional(),
+          amount: z
+            .number()
+            .positive()
+            .optional()
+            .describe('Purchase amount in US dollars, if known.'),
+          channel: ChannelInput,
+          country: CountryInput,
+          payment: PaymentInput,
+          ...CatalogFilters,
+        }),
+      ),
       outputSchema: ExplorationSchema,
       annotations: {
         title: 'Best cards for a purchase',
@@ -482,17 +495,20 @@ export function registerAnswerTools(
       title: 'Simulate a year of spending',
       description:
         'Spends monthly amounts for a year across every card earnrate knows, and ranks single cards and two-card pairs by rewards minus annual fees. A card that needs a membership the user hasn\'t given (Verizon Visa; spending at Costco counts as Costco\'s) is left out of singles and pairs and named after them, in `membersOnly`. Spending is optional: without it, typical U.S. household amounts are used and the answer says so. With `cards` (named in the conversation) or compareToWallet (the saved wallet), it ranks the cards that would add the most to those cards instead. Use it for "which card fits my spending?" or "is it worth adding a card?". It leaves out welcome bonuses.',
-      inputSchema: z.object({
-        spending: SpendingLines,
-        cards: NamedCards,
-        compareToWallet: z
-          .boolean()
-          .optional()
-          .describe(
-            "Rank the cards that would add the most to the user's saved wallet.",
-          ),
-        ...CatalogFilters,
-      }),
+      inputSchema: strictInput(
+        'simulate_spending',
+        z.object({
+          spending: SpendingLines,
+          cards: NamedCards,
+          compareToWallet: z
+            .boolean()
+            .optional()
+            .describe(
+              "Rank the cards that would add the most to the user's saved wallet.",
+            ),
+          ...CatalogFilters,
+        }),
+      ),
       outputSchema: SpendingSimulationSchema,
       annotations: {
         title: 'Simulate a year of spending',
@@ -579,22 +595,25 @@ export function registerAnswerTools(
       title: 'Cheat sheet',
       description:
         "The card to use for each everyday kind of purchase right now: groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores and everything else. With no cards given and no saved wallet, it picks from every card earnrate knows (`scope: all cards`, each row noting the card's fee and conditions). With cards named in the conversation or a saved wallet, it picks from the user's own cards, with caps, picks and activations as they are. The kind, noAnnualFee, business and issuer filters apply only when it picks from every card. For one specific store, call best_card_for_purchase instead. Pass on the notes.",
-      inputSchema: z.object({
-        date: DateInput,
-        cards: NamedCards,
-        everyCard: z
-          .boolean()
-          .optional()
-          .describe(
-            'true to pick from every card earnrate knows even when the user has a saved wallet ("which cards should I get?"); the filters then apply.',
-          ),
-        memberships: NamedMemberships,
-        kind: CatalogFilters.kind,
-        noAnnualFee: CatalogFilters.noAnnualFee,
-        business: CatalogFilters.business,
-        issuer: CatalogFilters.issuer,
-        valuation: CatalogFilters.valuation,
-      }),
+      inputSchema: strictInput(
+        'cheat_sheet',
+        z.object({
+          date: DateInput,
+          cards: NamedCards,
+          everyCard: z
+            .boolean()
+            .optional()
+            .describe(
+              'true to pick from every card earnrate knows even when the user has a saved wallet ("which cards should I get?"); the filters then apply.',
+            ),
+          memberships: NamedMemberships,
+          kind: CatalogFilters.kind,
+          noAnnualFee: CatalogFilters.noAnnualFee,
+          business: CatalogFilters.business,
+          issuer: CatalogFilters.issuer,
+          valuation: CatalogFilters.valuation,
+        }),
+      ),
       outputSchema: CheatSheetSchema,
       annotations: {
         title: 'Cheat sheet',
@@ -646,12 +665,15 @@ export function registerAnswerTools(
     {
       title: 'Search cards',
       description: `Finds credit cards in earnrate's catalog by name or issuer, e.g. "sapphire", "amex gold" or "bofa". Returns each card's id (for add_card), network, annual fee (and any first-year waiver), foreign transaction fee, whether it's already in the wallet, what it needs set up (category picks and their options, memberships, activations and when they open), its yearly spend bonuses, first-year rates, statement credits and yearly free nights (valued at their point cap, "up to"), each with the id update_card takes, and the points it gives every year with nothing to enroll in. When it finds ${String(DETAILED_UP_TO)} cards or fewer, also each card's earning rates (with a note on how they're counted where they'd read oddly), its published welcome offer, its recent changes and, for a card with an annual fee, whether the fee is worth it: the monthly spending in its bonus categories at which it nets more than the best no-fee card, and the same with all its statement credits and free nights used, on typical U.S. spending at the saved point values (earnrate's defaults without them, and again at transfer value for Amex and Chase points). Call it for "is the <card> worth it?" or "is its annual fee worth it?" and quote that line. Leave the query out to list every card. US cards only.`,
-      inputSchema: z.object({
-        query: z
-          .string()
-          .optional()
-          .describe('Card name or issuer, as the user said it.'),
-      }),
+      inputSchema: strictInput(
+        'search_cards',
+        z.object({
+          query: z
+            .string()
+            .optional()
+            .describe('Card name or issuer, as the user said it.'),
+        }),
+      ),
       outputSchema: CardSearchSchema,
       annotations: {
         title: 'Search cards',

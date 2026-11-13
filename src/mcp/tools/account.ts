@@ -7,6 +7,7 @@ import { savedSettingsText } from '../../engine/wallet-summary.ts'
 import type { Catalog } from '../../schema/catalog.ts'
 import type { Wallet } from '../../schema/wallet.ts'
 import { fail, type Context } from '../context.ts'
+import { strictInput } from '../inputs.ts'
 import { WalletChangeSchema } from '../schemas.ts'
 import type { Handler } from './wallet.ts'
 
@@ -119,7 +120,7 @@ export function registerAccountTools(
       title: 'Import a wallet',
       description:
         'Replaces the saved wallet with a wallet.yaml from the earnrate command line or earnrate.dev, when the user pastes or attaches one. Wallet files only: never statements or card numbers. If anything is already saved (cards, memberships or point values), it refuses unless replace is true: confirm with the user first.',
-      inputSchema: importWallet.input,
+      inputSchema: strictInput('import_wallet', importWallet.input),
       outputSchema: WalletChangeSchema,
       annotations: {
         title: 'Import a wallet',
@@ -138,26 +139,29 @@ export function registerAccountTools(
       title: 'Delete the wallet',
       description:
         "Deletes the saved wallet and its recovery code now and for good, and signs out every app connected to it, this one included. earnrate.dev and the earnrate command line keep their own wallets and aren't affected. Only when the user asks to delete it: show it with list_wallet, offer export_wallet, and pass confirm, cards and saved only after the user confirms. It refuses if the wallet no longer holds what list_wallet showed, so a retried call can't delete a different wallet.",
-      inputSchema: z.object({
-        confirm: z
-          .literal(true)
-          .describe('true, only after the user confirms the deletion.'),
-        cards: z
-          .number()
-          .int()
-          .nonnegative()
-          .describe(
-            'How many cards the wallet held when the user confirmed, from list_wallet: 0 for an empty wallet.',
-          ),
-        saved: z
-          .number()
-          .int()
-          .nonnegative()
-          .optional()
-          .describe(
-            'How many memberships and point values list_wallet showed, counted together: 0 if none.',
-          ),
-      }),
+      inputSchema: strictInput(
+        'delete_wallet',
+        z.object({
+          confirm: z
+            .literal(true)
+            .describe('true, only after the user confirms the deletion.'),
+          cards: z
+            .number()
+            .int()
+            .nonnegative()
+            .describe(
+              'How many cards the wallet held when the user confirmed, from list_wallet: 0 for an empty wallet.',
+            ),
+          saved: z
+            .number()
+            .int()
+            .nonnegative()
+            .optional()
+            .describe(
+              'How many memberships and point values list_wallet showed, counted together: 0 if none.',
+            ),
+        }),
+      ),
       outputSchema: z.object({ deleted: z.boolean() }),
       annotations: {
         title: 'Delete the wallet',
