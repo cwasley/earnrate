@@ -107,10 +107,10 @@ const cardFields = {
       'How the card appears at checkout or in a browser wallet, e.g. "Amex Gold". Optional; null goes back to the card\'s own name.',
     ),
   picks: z
-    .record(z.string(), z.array(z.string()).min(1))
+    .record(z.string(), z.array(z.string()))
     .optional()
     .describe(
-      'For cards where the cardholder picks bonus categories: choice id → option ids, from search_cards, e.g. {"five-percent": ["tv-internet-streaming", "fast-food"]}. Saved for the current period. Ask the user; don\'t guess.',
+      'For cards where the cardholder picks bonus categories: choice id → option ids, from search_cards, e.g. {"five-percent": ["tv-internet-streaming", "fast-food"]}. Saved for the current period; [] clears a choice\'s picks. Ask the user; don\'t guess.',
     ),
   anniversary: z
     .string()

@@ -21,6 +21,7 @@ import {
   membershipsOp,
   pointValueOp,
   removeOp,
+  restoreOp,
   syncRequest,
   disconnect,
   syncReturn,
@@ -193,6 +194,30 @@ describe('combining two wallets', () => {
     const later = heldToInput(catalog, held, nextQuarter)
     expect(later.picks).toBeUndefined()
     expect(later.capSpent).toBeUndefined()
+  })
+
+  test('Undo after Remove card puts back everything the card held', () => {
+    const before = run(walletWith('amex-gold', 'usbank-cash-plus'), [
+      updateOp({
+        id: 'amex-gold',
+        checkoutLabel: 'Gold',
+        anniversary: '03-15',
+        enrolled: ['dunkin', 'resy'],
+        skippedCredits: ['dining'],
+        creditUsed: { dunkin: 4 },
+        bonus: { opened: '2026-09-01', spent: 1200 },
+      }),
+      updateOp({
+        id: 'usbank-cash-plus',
+        picks: { 'five-percent': ['fast-food', 'cell-phone'] },
+        capSpent: { 'five-percent-combined': 400 },
+      }),
+    ])
+    for (const held of before.cards) {
+      const gone = run(before, [removeOp(held.id)])
+      const back = run(gone, [restoreOp(catalog, held, TODAY)])
+      expect(back.cards.find((c) => c.id === held.id)).toEqual(held)
+    }
   })
 
   test('nothing to send when the browser adds nothing', () => {

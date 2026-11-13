@@ -129,8 +129,9 @@ describe("the report's picture", () => {
     expect(text.per).toBe(
       'a\u00a0year in rewards and credits I use, after\u00a0fees',
     )
-    expect(text.notes).toContain('Credits count only in my figure.')
-    expect(text.notes.at(-1)).toMatch(/^On my own spending\./)
+    expect(text.notes).toEqual([
+      'On my own spending. Credits count only in my figure, once marked used.',
+    ])
   })
 
   test("a picture of someone else's report never says my or I", () => {

@@ -18,11 +18,12 @@ export const Check = () => (
   </span>
 )
 
-// Common cards to tap in or out of the wallet. Only a card added since the
-// grid opened (`added`, in order, kept after it's tapped out) can be tapped
-// out: one held before may carry picks, totals or bonus progress, so it's
-// removed under Your cards, where there's Undo. Cards added by search join
-// the grid.
+// Common cards to tap in or out of the wallet. Every tile has the same
+// elements and classes: which are held is only in data-kept and
+// aria-pressed, shown by CSS. Only a card added since the grid opened
+// (`added`, in order, kept after it's tapped out) can be tapped out: one
+// held before may carry picks, totals or bonus progress, so it's removed
+// under Your cards, where there's Undo. Cards added by search join the grid.
 export function QuickCards({
   wallet,
   added,
@@ -45,30 +46,25 @@ export function QuickCards({
     <ul class="quick-cards" aria-label="Common cards">
       {shown.map((id) => {
         const on = held.has(id)
+        const kept = on && !added.includes(id)
         return (
           <li key={id}>
-            {on && !added.includes(id) ? (
-              <div class="quick-card" data-kept>
-                <CardArt id={id} width={64} />
-                <span class="quick-name">{shortName(id)}</span>
-                <span class="quick-held">{keptLabel}</span>
-                <Check />
-              </div>
-            ) : (
-              <button
-                type="button"
-                class="quick-card"
-                aria-pressed={on}
-                onClick={() => {
-                  if (on) onRemove(id)
-                  else onAdd(id)
-                }}
-              >
-                <CardArt id={id} width={64} />
-                <span class="quick-name">{shortName(id)}</span>
-                {on ? <Check /> : null}
-              </button>
-            )}
+            <button
+              type="button"
+              class="quick-card"
+              data-kept={kept ? '' : undefined}
+              aria-pressed={on}
+              disabled={kept}
+              onClick={() => {
+                if (on) onRemove(id)
+                else onAdd(id)
+              }}
+            >
+              <CardArt id={id} width={64} />
+              <span class="quick-name">{shortName(id)}</span>
+              <span class="quick-held">{keptLabel}</span>
+              <Check />
+            </button>
           </li>
         )
       })}

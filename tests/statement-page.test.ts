@@ -23,6 +23,7 @@ import {
   gainByCard,
   GAIN_CHART_MIN_PURCHASES,
   dateRange,
+  missedByStore,
 } from '../site/statement/check.ts'
 import preview from '../site/preview-worker.ts'
 import {
@@ -359,6 +360,30 @@ describe('the check', () => {
     expect(
       check.unknown.find((s) => s.name === 'HARBOR NOODLE BAR'),
     ).toMatchObject({ category: 'dining', count: 1, spend: 38.75 })
+  })
+
+  test('a store in both files is one row, naming both cards used', () => {
+    const miss = (usedCardId: string, earned: number, best: number) => ({
+      merchant: 'Whole Foods Market',
+      usedCardId,
+      categoryFromStatement: false,
+      count: 2,
+      spend: 100,
+      earned,
+      best,
+      bestCardId: 'amex-blue-cash-preferred',
+      bestCard: 'Amex Blue Cash Preferred',
+    })
+    const rows = missedByStore([
+      miss('amex-gold', 4, 6),
+      { ...miss('amex-gold', 1, 2), merchant: 'Shell' },
+      miss('chase-sapphire-preferred', 1, 6),
+    ])
+    expect(rows.map((r) => [r.merchant, r.usedCardIds, r.count])).toEqual([
+      ['Whole Foods Market', ['amex-gold', 'chase-sapphire-preferred'], 4],
+      ['Shell', ['amex-gold'], 2],
+    ])
+    expect(rows[0]).toMatchObject({ spend: 200, earned: 5, best: 12 })
   })
 
   test('a saved wallet is used as it is, with a file card it lacks added for the check', () => {

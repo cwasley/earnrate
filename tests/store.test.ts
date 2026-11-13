@@ -104,6 +104,29 @@ describe.each(stores)('the %s store', (_name, make) => {
     expect((await store.load())?.cards.map((c) => c.id)).toEqual(['amex-gold'])
   })
 
+  test('a pick list emptied saves as empty, and the last one emptied removes the picks', async () => {
+    const store = await make()
+    await store.addCard({ id: 'usbank-cash-plus' }, TODAY)
+    const pick = (picks: Record<string, string[]>) =>
+      store.updateCard({ id: 'usbank-cash-plus', picks }, TODAY)
+    expect(
+      (
+        await pick({
+          'five-percent': ['fast-food', 'cell-phone'],
+          'two-percent': ['grocery-stores'],
+        })
+      ).ok,
+    ).toBe(true)
+    expect((await pick({ 'five-percent': [] })).ok).toBe(true)
+    const card = async () =>
+      (await store.load())?.cards.find((c) => c.id === 'usbank-cash-plus')
+    expect((await card())?.chosen?.picks).toEqual({
+      'two-percent': ['grocery-stores'],
+    })
+    expect((await pick({ 'two-percent': [] })).ok).toBe(true)
+    expect((await card())?.chosen).toBeUndefined()
+  })
+
   test('saves memberships and point values before any card', async () => {
     const store = await make()
     const set = await store.setMemberships(['costco'])

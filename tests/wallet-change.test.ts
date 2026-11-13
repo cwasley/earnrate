@@ -8,6 +8,8 @@ import {
   withMemberships,
 } from '../src/engine/wallet-change.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
+import { addDays } from '../src/engine/periods.ts'
+import { shortDate } from '../src/engine/text.ts'
 import { TODAY } from './golden/fixtures.ts'
 
 const catalog = await loadCatalog()
@@ -23,6 +25,27 @@ describe('wallet changes without a file', () => {
     const wallet = walletOf(change)
     expect(WalletSchema.parse(wallet)).toEqual(wallet)
     expect(change.ok && change.notes.map((n) => n.kind)).toEqual(['membership'])
+  })
+
+  test("a bonus can't be marked activated before its activation opens", () => {
+    const card = catalog.cards.find((c) =>
+      c.rules.some((r) => r.activate_from !== undefined),
+    )
+    const rule = card?.rules.find((r) => r.activate_from !== undefined)
+    const opens = rule?.activate_from
+    if (!card || !rule || opens === undefined) return
+    const before = addDays(opens, -1)
+    const wallet = walletOf(addToWallet(catalog, null, { id: card.id }, before))
+    const mark = (w: typeof wallet, ids: string[], today: string) =>
+      updateInWallet(catalog, w, { id: card.id, activated: ids }, today)
+    const early = mark(wallet, [rule.id], before)
+    expect(!early.ok && early.error).toBe(
+      `'${rule.id}' can't be activated until ${shortDate(opens)}; mark it once you have.`,
+    )
+    const open = walletOf(mark(wallet, [rule.id], opens))
+    expect(open.cards[0]?.activated).toEqual([rule.id])
+    // One saved already stays, so other changes still go through.
+    expect(mark(open, [rule.id], before).ok).toBe(true)
   })
 
   test('picks are checked and filed under the current period', () => {

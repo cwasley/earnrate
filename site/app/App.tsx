@@ -707,14 +707,20 @@ export function App() {
     return () => clearTimeout(timer)
   }, [])
   useEffect(() => {
-    // A link to a section below (#claude) scrolls there and keeps the app
-    // as it is.
+    // An address typed or followed on the page reads like a fresh load. A
+    // link to a section below (#claude) keeps the app as it is and scrolls
+    // there once the fold (fold.ts) has opened it.
     const onHash = () => {
-      if (linkedSection()) return
-      const next = readHash()
+      const below = linkedSection()
+      if (below) {
+        requestAnimationFrame(() => below.scrollIntoView())
+        return
+      }
+      const next = readHash(true)
       setView(next)
-      if (next.scope) setScope(next.scope)
-      if (next.find) setFind(next.find)
+      setScope(next.scope ?? null)
+      setFind(next.find ?? null)
+      setReturnTo(null)
     }
     addEventListener('hashchange', onHash)
     return () => removeEventListener('hashchange', onHash)

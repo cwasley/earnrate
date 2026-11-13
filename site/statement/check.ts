@@ -5,6 +5,7 @@ import {
   analyzeStatement,
   resolveLine,
   type CardLine,
+  type MissedRewards,
   type StatementAnalysis,
 } from '../../src/import/analyze.ts'
 import { AMEX_COLUMNS } from '../../src/import/amex.ts'
@@ -260,4 +261,30 @@ export function monthSpan(from: string, to: string): string {
   return year(from) === year(to)
     ? `${month(from)} – ${month(to)} ${year(to)}`
     : `${month(from)} ${year(from)} – ${month(to)} ${year(to)}`
+}
+
+export type StoreMiss = MissedRewards & { usedCardIds: string[] }
+
+// One row a store and better card, whichever cards the files used there:
+// two files can each put the same store in the list.
+export function missedByStore(missed: MissedRewards[]): StoreMiss[] {
+  const rows = new Map<string, StoreMiss>()
+  for (const m of missed) {
+    const key = `${m.merchant}|${m.bestCardId}`
+    const row = rows.get(key)
+    if (!row) {
+      rows.set(key, { ...m, usedCardIds: [m.usedCardId] })
+      continue
+    }
+    if (!row.usedCardIds.includes(m.usedCardId))
+      row.usedCardIds.push(m.usedCardId)
+    row.categoryFromStatement ||= m.categoryFromStatement
+    row.count += m.count
+    row.spend = roundCents(row.spend + m.spend)
+    row.earned = roundCents(row.earned + m.earned)
+    row.best = roundCents(row.best + m.best)
+  }
+  return [...rows.values()].sort(
+    (a, b) => b.best - b.earned - (a.best - a.earned),
+  )
 }

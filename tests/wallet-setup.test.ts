@@ -276,6 +276,21 @@ describe('setupNotes', () => {
     expect(note?.kind).toBe('activation')
     expect(note?.text).toMatch(/q4-2026-grocery/)
   })
+
+  test("a quarter whose activation hasn't opened isn't asked to be marked", () => {
+    const wallet = WalletSchema.parse({ cards: [{ id: 'chase-freedom-flex' }] })
+    const held = wallet.cards[0]
+    if (!held) throw new Error('no card')
+    const before = setupNotes(catalog, wallet, held, '2026-12-01')
+      .map((n) => n.text)
+      .join(' ')
+    expect(before).toMatch(/q4-2026-grocery/)
+    expect(before).not.toMatch(/q1-2027/)
+    const after = setupNotes(catalog, wallet, held, '2026-12-16')
+      .map((n) => n.text)
+      .join(' ')
+    expect(after).toMatch(/q1-2027-grocery/)
+  })
 })
 
 describe('wallet operations', () => {

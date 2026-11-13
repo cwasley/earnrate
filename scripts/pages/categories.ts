@@ -228,7 +228,11 @@ function definitionBlock(ctx: PageContext, defs: Definition[]): string {
     )
     .join('')}</ul>`
   const words = `${possessive(ctx.issuerName(card.issuer))} words`
-  return `<div class="definition"><p><strong>${esc(capitalize(what))}</strong></p>${chips}${rule.note ? `<p class="muted">${esc(rule.note)}</p>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${finePrint(quotes.length > 0 ? `<ul class="quotes">${quotes.map((q) => `<li>${ctx.quoteHtml(q)}</li>`).join('')}</ul>` : '', words)}</div>`
+  // Stores a rule leaves out by name are fine print, folded with the quotes.
+  const shown = lines.filter((l) => !/^Not /.test(l))
+  const named = lines.filter((l) => /^Not /.test(l))
+  const fine = `${named.map((l) => `<p class="muted">${esc(l)}.</p>`).join('')}${quotes.length > 0 ? `<ul class="quotes">${quotes.map((q) => `<li>${ctx.quoteHtml(q)}</li>`).join('')}</ul>` : ''}`
+  return `<div class="definition"><p><strong>${esc(capitalize(what))}</strong></p>${chips}${rule.note ? `<p class="muted">${esc(rule.note)}</p>` : ''}${shown.length > 0 ? `<ul>${shown.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${finePrint(fine, words)}</div>`
 }
 
 export function categoryPages(

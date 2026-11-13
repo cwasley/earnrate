@@ -16,7 +16,13 @@ import {
   setupNotes,
   type SetupNote,
 } from './setup.ts'
-import { CREDIT_PERIODS, CREDIT_THIS_PERIOD, idList, money } from './text.ts'
+import {
+  CREDIT_PERIODS,
+  CREDIT_THIS_PERIOD,
+  idList,
+  money,
+  shortDate,
+} from './text.ts'
 
 // Node-free: earnrate.dev runs these on the wallet it keeps in the browser.
 
@@ -27,7 +33,7 @@ export const MAX_NIGHT_VALUE = 5000
 export type CardInput = {
   id: string
   checkoutLabel?: string | null // null goes back to the card's name
-  picks?: Record<string, string[]> // choice id → option ids
+  picks?: Record<string, string[]> // choice id → option ids; [] clears one
   anniversary?: string // MM-DD
   // YYYY-MM-DD the account opened, for intro rates; null removes it.
   opened?: string | null
@@ -71,7 +77,7 @@ export type CardFields = {
   checkout_label?: string | null // null removes it
   anniversary?: string
   opened?: string | null // null removes it
-  chosen?: { period: string; picks: Record<string, string[]> }
+  chosen?: { period: string; picks: Record<string, string[]> } | null // null removes it
   activated?: string[]
   cap_usage?: Record<string, { period: string; spent: number }>
   milestone_usage?: Record<string, { period: string; spent: number }>
@@ -159,6 +165,17 @@ export function cardFields(
             : `${card.id} has no rules that need activating.`,
         )
       }
+      // The to-do reminds from the day activation opens, and a mark saved
+      // before then would end that reminder.
+      const opens = card.rules.find((r) => r.id === id)?.activate_from
+      if (
+        opens !== undefined &&
+        opens > today &&
+        !(held?.activated.includes(id) ?? false)
+      )
+        problems.push(
+          `'${id}' can't be activated until ${shortDate(opens)}; mark it once you have.`,
+        )
     }
     fields.activated = [...new Set(input.activated)]
   }
@@ -181,9 +198,9 @@ export function cardFields(
           )
         }
       }
-      if (picks.length === 0 || picks.length > choice.pick) {
+      if (picks.length > choice.pick) {
         problems.push(
-          `${choiceId} takes ${choice.pick === 1 ? '1 pick' : `1 to ${String(choice.pick)} picks`}, not ${String(picks.length)}.`,
+          `${choiceId} takes ${choice.pick === 1 ? '1 pick' : `up to ${String(choice.pick)} picks`}, not ${String(picks.length)}.`,
         )
       }
     }
@@ -194,10 +211,12 @@ export function cardFields(
       )
     } else {
       const kept = held?.chosen?.period === period ? held.chosen.picks : {}
-      fields.chosen = {
-        period,
-        picks: { ...kept, ...input.picks },
-      }
+      const picks = Object.fromEntries(
+        Object.entries({ ...kept, ...input.picks }).filter(
+          ([, ids]) => ids.length > 0,
+        ),
+      )
+      fields.chosen = Object.keys(picks).length > 0 ? { period, picks } : null
     }
   }
   if (input.capSpent !== undefined) {
@@ -413,7 +432,7 @@ const newHolding = (id: string): WalletCard => ({
 })
 
 const withFields = (
-  { bonus, checkout_label, opened, night_values, ...held }: WalletCard,
+  { bonus, checkout_label, opened, night_values, chosen, ...held }: WalletCard,
   f: CardFields,
 ): WalletCard => ({
   ...held,
@@ -431,7 +450,8 @@ const withFields = (
     : {}),
   ...(f.checkout_label ? { checkout_label: f.checkout_label } : {}),
   ...(f.anniversary === undefined ? {} : { anniversary: f.anniversary }),
-  ...(f.chosen === undefined ? {} : { chosen: f.chosen }),
+  ...(chosen && f.chosen === undefined ? { chosen } : {}),
+  ...(f.chosen ? { chosen: f.chosen } : {}),
   ...(f.activated === undefined ? {} : { activated: f.activated }),
   ...(f.cap_usage === undefined ? {} : { cap_usage: f.cap_usage }),
   ...(f.milestone_usage === undefined

@@ -3,8 +3,10 @@ import { listed } from '../../src/engine/text.ts'
 import { issuerName } from '../../src/format/card-text.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 
-// "Enroll in Grubhub and Resy with American Express so they pay.": the
-// credits marked used that pay only once enrolled. Null when there are none.
+// "Grubhub and Resy pay only once you've enrolled with American Express.":
+// the credits marked used that pay only once enrolled. Marked used and
+// enrolled are one mark, so it reminds rather than tells. Null when there
+// are none.
 export function enrollLine(
   catalog: Catalog,
   cardId: string,
@@ -15,5 +17,5 @@ export function enrollLine(
     .map((c) => c.name)
   const card = catalog.cards.find((c) => c.id === cardId)
   if (names.length === 0 || !card) return null
-  return `Enroll in ${listed(names)} with ${issuerName(catalog, card.issuer)} so ${names.length === 1 ? 'it pays' : 'they pay'}.`
+  return `${listed(names)} ${names.length === 1 ? 'pays' : 'pay'} only once you've enrolled with ${issuerName(catalog, card.issuer)}.`
 }

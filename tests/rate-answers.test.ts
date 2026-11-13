@@ -265,7 +265,7 @@ describe("Rate my wallet's credit answers", () => {
     ).toBeNull()
   })
 
-  test('the enroll line names the used credits that need enrolling, with their issuer', () => {
+  test('the enroll line reminds that used credits pay only once enrolled, with their issuer', () => {
     const held = saved('amex-gold', [], []).cards[0]
     if (!held) throw new Error('no card')
     const line = (used: string[], skipped: string[] = []) =>
@@ -284,10 +284,10 @@ describe("Rate my wallet's credit answers", () => {
     expect(line(['uber-cash'])).toBeNull()
     expect(line(['uber-cash'], ['resy', 'dining'])).toBeNull()
     expect(line(['resy'])).toBe(
-      'Enroll in Resy with American Express so it pays.',
+      "Resy pays only once you've enrolled with American Express.",
     )
     expect(line(['uber-cash', 'resy', 'dining'])).toBe(
-      'Enroll in Grubhub and Resy with American Express so they pay.',
+      "Grubhub and Resy pay only once you've enrolled with American Express.",
     )
   })
 })

@@ -355,6 +355,8 @@ export function howItCodes(
   ctx: PageContext,
   merchant: Merchant,
   categorySlug: (id: string) => string | null,
+  // The page's answer already said how it usually counts.
+  said = false,
 ): string {
   const lists = issuerListsHtml(ctx, merchant)
   if (!hasCodingNotes(merchant) && lists === '') return ''
@@ -368,9 +370,15 @@ export function howItCodes(
       ? `as <a href="/categories/${slug}">${esc(words)}</a>`
       : `as ${esc(words)}`
   }
-  parts.push(
-    `<p>${esc(merchant.name)} usually counts ${asLink(merchant.category)}${merchant.likely_mcc === undefined ? '' : ` (MCC ${String(merchant.likely_mcc)})`}${merchant.ambiguity ? `, and may count ${listed(merchant.ambiguity.may_code_as.map(asLink), 'or')}` : ''}.</p>`,
-  )
+  const also = merchant.ambiguity
+    ? listed(merchant.ambiguity.may_code_as.map(asLink), 'or')
+    : null
+  if (!said)
+    parts.push(
+      `<p>${esc(merchant.name)} usually counts ${asLink(merchant.category)}${merchant.likely_mcc === undefined ? '' : ` (MCC ${String(merchant.likely_mcc)})`}${also === null ? '' : `, and may count ${also}`}.</p>`,
+    )
+  else if (also !== null)
+    parts.push(`<p>${esc(merchant.name)} may also count ${also}.</p>`)
   const notes = [merchant.note, merchant.ambiguity?.note].filter(
     (n) => n !== undefined,
   )

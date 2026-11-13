@@ -125,7 +125,7 @@ function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
       ].join('')
     }
     case 'chosen': {
-      if (f.chosen === undefined) return ''
+      if (!f.chosen) return ''
       const picks = Object.entries(f.chosen.picks)
         .map(([choice, ids]) => `${indent}    ${choice}: ${flowList(ids)}\n`)
         .join('')

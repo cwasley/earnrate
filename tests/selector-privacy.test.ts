@@ -64,7 +64,7 @@ describe('ids and classes say nothing about the visitor', () => {
       ...sources('site/rate', /\.tsx$/),
       ...sources(
         'site/app',
-        /^(MyWallet|CreditPicks|CardSettings|NewCard|WalletAnswer)\.tsx$/,
+        /^(MyWallet|CreditPicks|CardSettings|NewCard|WalletAnswer|QuickCards)\.tsx$/,
       ),
     ])
       for (const m of text.matchAll(/\sclass(?:Name)?=\{(`[^`]*`|[^}]*)\}/g)) {
@@ -73,6 +73,17 @@ describe('ids and classes say nothing about the visitor', () => {
           bad.push(`${file}: class={${value}}`)
       }
     expect(bad).toEqual([])
+  })
+
+  test('the add-card grid draws every tile with the same elements and classes', () => {
+    // An element only a held tile draws puts its class in that tile's path.
+    const text = readFileSync(
+      path.join(ROOT, 'site/app/QuickCards.tsx'),
+      'utf8',
+    )
+    const body = text.slice(text.indexOf('export function QuickCards'))
+    expect(body).not.toMatch(/(\?|&&|\|\||:)\s*(\(\s*)?<[A-Za-z]/)
+    expect(body).not.toMatch(/\?\s*\(\s*$/m)
   })
 
   test("the static pages' browser scripts mark a held card with data-*, not an id or class", () => {

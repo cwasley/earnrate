@@ -79,6 +79,7 @@ import {
   creditWhere,
   introWhat,
   rulePreposition,
+  ruleWhat as shortRuleWhat,
 } from '../src/engine/rule-text.ts'
 import { changeDates, latest } from './lastmod.ts'
 import { pageContext, type GeneratedPage } from './pages/context.ts'
@@ -757,7 +758,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       ${membersOnly(r)}
       ${hidden.length > 0 ? `<p class="muted">Not ranked: ${hidden.map((e) => esc(shortName(e.cardId))).join(', ')}, whose rate here isn't confirmed against the issuer's terms yet.</p>` : ''}
       ${gotchas(r, page.merchant)}
-      ${page.merchant ? howItCodes(ctx, page.merchant, categoryPageFor) : ''}
+      ${page.merchant ? howItCodes(ctx, page.merchant, categoryPageFor, r.categoryNote === null && r.merchant.source !== 'none' && shown.length > 0) : ''}
       ${sources(shown)}
       <details class="fine section-fine"><summary>How this is ranked</summary>
       <p>Every personal card earnrate tracks that's open to new applicants, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, use <a href="/#spending">Get a card</a>.</p></details>
@@ -985,8 +986,13 @@ function ruleRow(card: Card, rule: Card['rules'][number], omit: RuleOmit) {
   const excluded = exclusionLine(rule)
   const lines = ruleConditions(card, rule, omit).filter((l) => l !== excluded)
   const short = shortNote(rule.note)
-  return `<li><div><span class="row-head"><strong>${esc(ruleWhat(card, rule))}</strong> <span class="rate">${esc(bareRate(rule.rate, card.currency))}</span></span>${rule.note && short ? `<span class="muted row-note">${esc(rule.note)}</span>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${finePrint(
+  // A long list of stores of one kind is titled by the kind ("Select
+  // streaming services"), with every store named in the fine print.
+  const every = ruleWhat(card, rule)
+  const title = capitalize(shortRuleWhat(catalog, rule, card))
+  return `<li><div><span class="row-head"><strong>${esc(title)}</strong> <span class="rate">${esc(bareRate(rule.rate, card.currency))}</span></span>${rule.note && short ? `<span class="muted row-note">${esc(rule.note)}</span>` : ''}${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${finePrint(
     [
+      title === every ? '' : `<p class="muted">${esc(every)}.</p>`,
       rule.note && !short ? `<p class="muted">${esc(rule.note)}</p>` : '',
       excluded ? `<p class="muted">${esc(excluded)}.</p>` : '',
       evidenceFor(card, rule.id),
@@ -1189,8 +1195,11 @@ type Placement = { page: Page; rank: number; pct: number }
 // biggest, folded under one more row. A row of one store is a link to it.
 const SHOWN_GROUPS = 6
 
+// Rows go by the category's own name ("Restaurants"), as the card's rates
+// below do, not the home page's chip ("Dining").
 function placementGroups(list: Placement[], all: Page[]): string {
-  const nameOf = (categoryId: string) => capitalize(categoryLabel(categoryId))
+  const nameOf = (categoryId: string) =>
+    capitalize(categoryPhrase(catalog, categoryId))
   const groups = new Map<string, Placement[]>()
   for (const w of list) {
     const key = `${w.rank === 1 ? 'a' : 'b'}|${nameOf(w.page.categoryId)}`
@@ -1224,7 +1233,7 @@ function placementGroups(list: Placement[], all: Page[]): string {
       ]
       const chips = ordered.map(
         (w) =>
-          `<a href="/best/${w.page.slug}">${esc(w.page.merchant === null ? `All ${w.page.label}` : w.page.label)}${low === high ? '' : ` <span class="muted">${pct(w.pct)}</span>`}</a>`,
+          `<a href="/best/${w.page.slug}">${esc(w.page.merchant === null ? `All ${categoryPhrase(catalog, w.page.categoryId)}` : w.page.label)}${low === high ? '' : ` <span class="muted">${pct(w.pct)}</span>`}</a>`,
       )
       const categoryPage = all.find(
         (p) => p.merchant === null && nameOf(p.categoryId) === name,

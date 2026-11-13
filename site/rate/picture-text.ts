@@ -147,8 +147,11 @@ export function ratePictureText(
           ],
     ),
     notes: [
-      ...(start.counted.length > 0 ? [countedNote(voice)] : []),
-      `${start.typical ? 'On typical U.S. spending' : mine ? 'On my own spending' : 'On the cardholder’s spending'}. Credits count only once marked used.`,
+      `${start.typical ? 'On typical U.S. spending' : mine ? 'On my own spending' : 'On the cardholder’s spending'}. ${
+        start.counted.length > 0
+          ? countedNote(voice).replace(/\.$/, ', once marked used.')
+          : 'Credits count only once marked used.'
+      }`,
     ],
     link: 'earnrate.dev/rate',
   }

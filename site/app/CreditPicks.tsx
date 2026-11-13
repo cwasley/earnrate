@@ -34,22 +34,28 @@ function CardCredits({
   cardId,
   choices,
   named,
+  focus,
   onSet,
 }: {
   cardId: string
   choices: CreditChoice[]
   named: boolean
+  focus: string[]
   onSet: (used: string[]) => void
 }) {
   const used = usedIds(choices)
   const done = answered(choices)
   const name = shortestName(cardId)
   // Once opened, the rest stay shown; they start shown when one of them
-  // is used.
+  // is used, or is the one a to-do row opened Settings for.
   const [more, setMore] = useState(() =>
-    choices.slice(SHOWN).some((c) => c.answer === 'used'),
+    choices
+      .slice(SHOWN)
+      .some((c) => c.answer === 'used' || focus.includes(c.id)),
   )
-  const [folded, setFolded] = useState(done)
+  const [folded, setFolded] = useState(
+    () => done && !choices.some((c) => focus.includes(c.id)),
+  )
   const opened = useRef(false)
   const firstMore = useRef<HTMLButtonElement>(null)
   const firstTile = useRef<HTMLButtonElement>(null)
@@ -135,7 +141,7 @@ function CardCredits({
           const on = c.answer === 'used'
           const value = worth(c)
           return (
-            <li key={c.id} class="credit-tile">
+            <li key={c.id} class="credit-tile" data-credit={c.id}>
               <button
                 type="button"
                 class="credit-use"
@@ -174,9 +180,12 @@ function CardCredits({
 
 export function CreditPicks({
   cards,
+  focus = [],
   onSet,
 }: {
   cards: { cardId: string; choices: CreditChoice[] }[]
+  // Credits a to-do row opened Settings for: shown, not folded away.
+  focus?: string[]
   onSet: (cardId: string, ids: string[], used: string[]) => void
 }) {
   // Checks arrive with the motion vocabulary's fade only after first paint.
@@ -191,6 +200,7 @@ export function CreditPicks({
           cardId={c.cardId}
           choices={c.choices}
           named={cards.length > 1}
+          focus={focus}
           onSet={(used) =>
             onSet(
               c.cardId,

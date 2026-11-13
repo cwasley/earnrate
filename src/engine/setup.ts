@@ -416,8 +416,12 @@ export function setupNotes(
     })
   }
 
+  // A quarter whose activation hasn't opened can't be marked yet; the to-do
+  // says when it opens.
   const toActivate = activationRules(card, today).filter(
-    (id) => !isActivated(card, held, id),
+    (id) =>
+      !isActivated(card, held, id) &&
+      !((card.rules.find((r) => r.id === id)?.activate_from ?? '') > today),
   )
   if (toActivate.length > 0) {
     notes.push({

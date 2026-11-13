@@ -179,6 +179,10 @@ function SavedNumber({
   )
 }
 
+// Credits a to-do row opened Settings for: their tiles, or with `used`, the
+// "Used so far" box under Credit details.
+export type CreditFocus = { ids: string[]; used: boolean }
+
 // A card's Settings. Every control saves as it changes, through the same
 // wallet change My wallet makes everywhere (and sync, when it's on).
 export function CardSettings({
@@ -186,6 +190,7 @@ export function CardSettings({
   held,
   asked,
   onAsk,
+  focus,
   save,
   onRemove,
   onClose,
@@ -194,6 +199,7 @@ export function CardSettings({
   wallet: Wallet
   held: WalletCard
   asked: boolean // "Keep or replace?" is showing its answer
+  focus: CreditFocus | null
   onAsk: () => void
   // The change, or why it was refused.
   save: (input: Omit<CardInput, 'id'>) => Promise<string | null>
@@ -205,8 +211,6 @@ export function CardSettings({
   const today = localToday()
   const info = card ? cardInfo(catalog, card, wallet, today) : null
   const [error, setError] = useState<string | null>(null)
-  // A pick list emptied on the page: the rules need one pick, so it waits.
-  const [emptied, setEmptied] = useState<string[]>([])
   const [tracking, setTracking] = useState(held.bonus !== undefined)
   // One opening date serves the welcome bonus and any first-year rate.
   const [opened, setOpened] = useState(held.opened ?? held.bonus?.opened ?? '')
@@ -242,9 +246,7 @@ export function CardSettings({
     <div class="editor">
       {error ? <p class="callout">{error}</p> : null}
       {info.choices.map((choice) => {
-        const chosen = emptied.includes(choice.id)
-          ? []
-          : (picks[choice.id] ?? [])
+        const chosen = picks[choice.id] ?? []
         const one = choice.pick === 1
         const pick = (option: string) => {
           const on = chosen.includes(option)
@@ -253,11 +255,6 @@ export function CardSettings({
             : on
               ? chosen.filter((o) => o !== option)
               : [...chosen, option]
-          if (next.length === 0) {
-            setEmptied((e) => [...e, choice.id])
-            return
-          }
-          setEmptied((e) => e.filter((id) => id !== choice.id))
           change({ picks: { [choice.id]: next } })
         }
         const listedOptions = choice.options.filter(
@@ -326,25 +323,41 @@ export function CardSettings({
                   activationGroup(card, r).includes(rule),
                 ) === i,
             )
-            .map((rule) => (
-              <label class="check" key={rule}>
-                <input
-                  type="checkbox"
-                  checked={activationGroup(card, rule).some((r) =>
-                    held.activated.includes(r),
-                  )}
-                  onChange={(e) => {
-                    const group = activationGroup(card, rule)
-                    change({
-                      activated: e.currentTarget.checked
-                        ? [...held.activated, rule]
-                        : held.activated.filter((r) => !group.includes(r)),
-                    })
-                  }}
-                />
-                {activationLabel(card, rule)}
-              </label>
-            ))}
+            .map((rule) => {
+              const group = activationGroup(card, rule)
+              const on = group.some((r) => held.activated.includes(r))
+              // Next quarter's bonus waits until the issuer opens it.
+              const opens = on
+                ? undefined
+                : group
+                    .map((r) => info.activationOpens[r])
+                    .find((d) => d !== undefined)
+              return (
+                <label class="check" key={rule}>
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    disabled={opens !== undefined}
+                    onChange={(e) => {
+                      change({
+                        activated: e.currentTarget.checked
+                          ? [...held.activated, rule]
+                          : held.activated.filter((r) => !group.includes(r)),
+                      })
+                    }}
+                  />
+                  <span>
+                    {activationLabel(card, rule)}
+                    {opens === undefined ? null : (
+                      <span class="muted">
+                        {' '}
+                        · opens {shortDate(opens).replace(/, \d{4}$/, '')}
+                      </span>
+                    )}
+                  </span>
+                </label>
+              )
+            })}
         </fieldset>
       ) : null}
       {choices.length > 0 ? (
@@ -352,15 +365,20 @@ export function CardSettings({
           <h4>Credits you use</h4>
           <CreditPicks
             cards={[{ cardId: held.id, choices }]}
+            focus={focus?.used === false ? focus.ids : []}
             onSet={(_, ids, used) => {
               const marks = answeredMarks(heldMarks(card, held), ids, used)
               change({ enrolled: marks.used, skippedCredits: marks.skipped })
             }}
           />
-          <details class="how credit-details">
+          <details class="how credit-details" open={focus?.used === true}>
             <summary>Credit details</summary>
             {credits.map((c) => (
-              <div class="credit-detail" key={c.credit.id}>
+              <div
+                class="credit-detail"
+                key={c.credit.id}
+                data-credit={c.credit.id}
+              >
                 <p>
                   <strong>{capitalize(c.name)}</strong>
                 </p>
@@ -400,7 +418,11 @@ export function CardSettings({
               </div>
             ))}
             {nights.map((n) => (
-              <div class="credit-detail" key={n.night.id}>
+              <div
+                class="credit-detail"
+                key={n.night.id}
+                data-credit={n.night.id}
+              >
                 <p>
                   <strong>{capitalize(FREE_NIGHT_NAME)}</strong>
                 </p>

@@ -26,7 +26,7 @@ import {
 } from '../../src/engine/checklist.ts'
 import { addsAtOnce, askAddText } from './add-from-link.ts'
 import { CardArt } from './CardArt.tsx'
-import { CardSettings, hasFee } from './CardSettings.tsx'
+import { CardSettings, hasFee, type CreditFocus } from './CardSettings.tsx'
 import { QuickCards } from './QuickCards.tsx'
 import { Logo } from './Logo.tsx'
 import { track } from './track.ts'
@@ -49,6 +49,7 @@ import {
   importOp,
   membershipsOp,
   removeOp,
+  restoreOp,
   updateOp,
   type LocalOp,
   type Outcome,
@@ -155,6 +156,7 @@ function CardList({
   wallet,
   open,
   setOpen,
+  focus,
   asked,
   onAsk,
   save: saveCard,
@@ -164,6 +166,9 @@ function CardList({
   // The card whose Settings are showing; the to-do list can open one.
   open: string | null
   setOpen: (cardId: string | null) => void
+  // The credits a to-do row opened them for. A new one (`n`) opens them
+  // afresh, so a folded list or Credit details shows it.
+  focus: (CreditFocus & { cardId: string; n: number }) | null
   // Cards whose "Keep or replace?" answer shows when their Settings do.
   asked: string[]
   onAsk: (cardId: string) => void
@@ -211,9 +216,11 @@ function CardList({
             </button>
             {open === held.id ? (
               <CardSettings
+                key={focus?.cardId === held.id ? focus.n : 0}
                 wallet={wallet}
                 held={held}
                 asked={asked.includes(held.id)}
+                focus={focus?.cardId === held.id ? focus : null}
                 onAsk={() => onAsk(held.id)}
                 save={(input) => saveCard(updateOp({ id: held.id, ...input }))}
                 onClose={() => setOpen(null)}
@@ -492,6 +499,17 @@ function PointValues({
 // Rows past these wait behind "N more"; the list is soonest first.
 const TODO_SHOWN = 3
 
+type OpenCard = (cardId: string, keep?: boolean, credits?: CreditFocus) => void
+
+// A credit row's button opens Settings at that credit: "Mark used" at its
+// Used so far box, Answer, Enroll and Set up at its tiles.
+function creditFocus(item: ChecklistRowItem): CreditFocus | undefined {
+  if (item.ref === undefined) return undefined
+  if (item.kind === 'credit') return { ids: [item.ref], used: true }
+  if (item.kind === 'enroll') return { ids: item.ref.split(','), used: false }
+  return undefined
+}
+
 // A row's button: a link for a change (the issuer's page or the card's),
 // "Keep or replace?" for a renewal, and the card's Settings for the rest.
 function TodoButton({
@@ -499,7 +517,7 @@ function TodoButton({
   onOpenCard,
 }: {
   item: ChecklistRowItem
-  onOpenCard: (cardId: string, keep?: boolean) => void
+  onOpenCard: OpenCard
 }) {
   const { button, url } = item.row
   if (button === null) return null
@@ -522,7 +540,7 @@ function TodoButton({
       type="button"
       class="todo-go"
       onClick={() => {
-        onOpenCard(item.cardId, item.kind === 'renewal')
+        onOpenCard(item.cardId, item.kind === 'renewal', creditFocus(item))
       }}
     >
       {button}
@@ -538,7 +556,7 @@ function ThisQuarter({
   onOpenCard,
 }: {
   wallet: Wallet
-  onOpenCard: (cardId: string, keep?: boolean) => void
+  onOpenCard: OpenCard
 }) {
   const items = useMemo(
     () =>
@@ -891,6 +909,9 @@ export function MyWallet({
     undo?: () => void
   } | null>(null)
   const [openCard, setOpenCard] = useState<string | null>(null)
+  const [focus, setFocus] = useState<
+    (CreditFocus & { cardId: string; n: number }) | null
+  >(null)
   const [keepAsked, setKeepAsked] = useState<string[]>([])
   const askKeep = (cardId: string) => {
     track('wallet-keep-or-replace')
@@ -974,15 +995,31 @@ export function MyWallet({
 
   // Opens a card's Settings in Your cards and scrolls to it: from the to-do
   // list, and from a card page's "Add it to your wallet". `keep` opens its
-  // "Keep or replace?" answer.
-  const openCardSettings = (cardId: string, keep = false) => {
+  // "Keep or replace?" answer; `credits` scrolls to those credits and puts
+  // the focus on the first.
+  const openCardSettings: OpenCard = (cardId, keep = false, credits) => {
     setOpenCard(cardId)
+    setFocus((f) =>
+      credits ? { ...credits, cardId, n: (f?.n ?? 0) + 1 } : null,
+    )
     if (keep) askKeep(cardId)
     requestAnimationFrame(() => {
+      const card = `[data-held="${CSS.escape(cardId)}"]`
+      const [first] = credits?.ids ?? []
+      const at =
+        first === undefined
+          ? null
+          : document.querySelector<HTMLElement>(
+              `${card} ${credits?.used ? '.credit-detail' : '.credit-tile'}[data-credit="${CSS.escape(first)}"]`,
+            )
+      if (at) {
+        const control = at.querySelector<HTMLElement>('input, button')
+        at.scrollIntoView({ block: 'center' })
+        control?.focus({ preventScroll: true })
+        return
+      }
       document
-        .querySelector(
-          `[data-${keep ? 'keep' : 'held'}="${CSS.escape(cardId)}"]`,
-        )
+        .querySelector(keep ? `[data-keep="${CSS.escape(cardId)}"]` : card)
         ?.scrollIntoView({ block: 'start' })
     })
   }
@@ -1245,8 +1282,36 @@ export function MyWallet({
     )
   }
 
+  // Removed at once, with Undo, which adds the card back with what it held.
+  // The page stays at Your cards rather than where the closed Settings were.
   const remove = (cardId: string) => {
-    void apply(removeOp(cardId), cardId)
+    const held = wallet.cards.find((c) => c.id === cardId)
+    if (!held) return
+    const name = shortName(cardId)
+    void apply(removeOp(cardId), cardId).then((ok) => {
+      if (!ok) return
+      setMessage({
+        text: `Removed ${name}.`,
+        error: false,
+        undo: () => {
+          void apply(restoreOp(catalog, held, localToday()), cardId).then(
+            (back) => {
+              if (back)
+                setMessage({
+                  text: `${name} is back in your wallet.`,
+                  error: false,
+                })
+            },
+          )
+        },
+      })
+      // Remove card went with its Settings, so Undo takes the focus.
+      requestAnimationFrame(() => {
+        const line = document.querySelector('.message-line')
+        line?.scrollIntoView({ block: 'center' })
+        line?.querySelector('button')?.focus({ preventScroll: true })
+      })
+    })
   }
 
   // A returning visitor's order: the cheat sheet, what to do, their cards,
@@ -1265,7 +1330,11 @@ export function MyWallet({
             <CardList
               wallet={wallet}
               open={openCard}
-              setOpen={setOpenCard}
+              setOpen={(cardId) => {
+                setFocus(null)
+                setOpenCard(cardId)
+              }}
+              focus={focus}
               asked={keepAsked}
               onAsk={askKeep}
               save={(op) => perform(op).then((r) => (r.ok ? null : r.error))}

@@ -197,6 +197,16 @@ export function heldToInput(
   return input
 }
 
+// Undo for a removed card: add_card with everything it held this period.
+export const restoreOp = (
+  catalog: Catalog,
+  held: WalletCard,
+  today: string,
+): LocalOp => ({
+  tool: 'add_card',
+  input: cardChangeOf(heldToInput(catalog, held, today)),
+})
+
 // "Combine them": every card from both, the Claude wallet's settings where a
 // card is in both, the memberships of both, and point values from both (the
 // Claude wallet's where both set one). Sent as changes, never as a whole
@@ -210,10 +220,7 @@ export function combineOps(
   const held = new Set(claude.cards.map((c) => c.id))
   const ops: LocalOp[] = browser.cards
     .filter((c) => !held.has(c.id))
-    .map((c) => ({
-      tool: 'add_card',
-      input: cardChangeOf(heldToInput(catalog, c, today)),
-    }))
+    .map((c) => restoreOp(catalog, c, today))
   const memberships = [
     ...new Set([...claude.memberships, ...browser.memberships]),
   ]

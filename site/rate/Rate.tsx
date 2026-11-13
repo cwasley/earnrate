@@ -75,7 +75,14 @@ import {
 import { feeFigures } from './fee-figures.ts'
 import { SaveImage } from './SaveImage.tsx'
 import { runReport } from './run.ts'
-import { DELETED, notMade, ownLink, pickLink, UNDELETED } from './share.ts'
+import {
+  DELETED,
+  notMade,
+  ownLink,
+  pageLink,
+  pickLink,
+  UNDELETED,
+} from './share.ts'
 import {
   deleteReport,
   loadReport,
@@ -905,12 +912,19 @@ function Into({
   return null
 }
 
+// Cards tapped in share one link while the page is open (share.ts).
+const tapped = pageLink({
+  name: newLink,
+  write: writeReport,
+  remove: deleteReport,
+})
+
 // Copy link and Share name a short link on the page, so its address is
 // ready inside the tap; the report is saved just after. Your own wallet has
 // one link, which this browser keeps and updates when the wallet changes
-// (app/my-link.ts). Cards tapped in get a link per report, kept only in this
-// page's memory with its delete key. A link that couldn't be saved is
-// forgotten, so the next tap names a new one.
+// (app/my-link.ts). Cards tapped in have one for the page, which each tap
+// after a change rewrites. A link that couldn't be made is forgotten, so the
+// next tap names a new one.
 function ShareBox({
   input,
   spending,
@@ -930,7 +944,6 @@ function ShareBox({
   mine: LinkUpdater | null
   edited: boolean
 }) {
-  const made = useRef(new Map<string, Saved>())
   const [, redraw] = useState(0)
   const [note, setNote] = useState<string | null>(null)
   const [deleted, setDeleted] = useState<string | null>(null)
@@ -949,7 +962,7 @@ function ShareBox({
     linked?.ok === true
       ? holds(linked.link.input, linked.link.lines)
       : holds(input, spending.typical ? null : spending.lines)
-  const have: Saved | null = mine ? own : (made.current.get(report) ?? null)
+  const have: Saved | null = mine ? own : tapped.current()
   const boxed = have === null ? null : shortUrl(location.origin, have.id)
   const canShare = typeof navigator.share === 'function'
 
@@ -959,48 +972,53 @@ function ShareBox({
     setTimeout(() => setCopied(false), 1500)
   }
 
-  // Saves a link named in this tap; if it can't be, says so, and the next
-  // tap tries again under a new name.
-  const save = (fresh: Saved) => {
-    if (!mine) made.current.set(report, fresh)
-    const done: Promise<Written> = mine
-      ? mine.make(fresh, include)
-      : writeReport(fresh, report)
+  const failed = (text: string) => {
+    setCopied(false)
+    setShown(null)
+    setNote(text)
     redraw((n) => n + 1)
-    void done.then((result) => {
-      if (result === 'ok') return
-      if (made.current.get(report) === fresh) made.current.delete(report)
-      setCopied(false)
-      setShown(null)
-      setNote(notMade(result))
-      redraw((n) => n + 1)
-    })
   }
 
-  const target = () => {
+  // The link for this tap, its report on the way: a new one if it can't be
+  // made says so, and the next tap tries again under a new name.
+  const target = (): string => {
     setNote(null)
     setShown(null)
     setDeleted(null)
-    mine?.flush()
-    return pickLink(location.origin, have, newLink)
+    if (!mine) {
+      const t = tapped.tap(location.origin, report)
+      redraw((n) => n + 1)
+      void t.done.then((said) => {
+        if (said === null) redraw((n) => n + 1)
+        else failed(said)
+      })
+      return t.url
+    }
+    mine.flush()
+    const t = pickLink(location.origin, have, newLink)
+    if (t.fresh) {
+      redraw((n) => n + 1)
+      void mine.make(t.fresh, include).then((result: Written) => {
+        if (result !== 'ok') failed(notMade(result))
+      })
+    }
+    return t.url
   }
 
   // Both run inside the tap: Safari allows the clipboard and the share
   // sheet only there, so nothing is awaited first.
   const copy = () => {
-    const t = target()
+    const url = target()
     const clipboard = navigator.clipboard as Clipboard | undefined
     const write = clipboard
-      ? clipboard.writeText(t.url)
+      ? clipboard.writeText(url)
       : Promise.reject(new Error())
-    if (t.fresh) save(t.fresh)
-    write.then(flash, () => setShown(t.url))
+    write.then(flash, () => setShown(url))
   }
 
   const share = () => {
-    const t = target()
-    const sheet = navigator.share({ url: t.url })
-    if (t.fresh) save(t.fresh)
+    const url = target()
+    const sheet = navigator.share({ url })
     sheet.then(
       () => track('report-made'),
       () => undefined,
@@ -1009,10 +1027,9 @@ function ShareBox({
 
   const remove = () => {
     if (!have) return
-    const done = mine ? mine.remove() : deleteReport(have)
+    const done = mine ? mine.remove() : tapped.remove()
     void done.then((ok) => {
       if (ok) {
-        if (made.current.get(report) === have) made.current.delete(report)
         setShown(null)
         setNote(null)
       }
@@ -1053,6 +1070,9 @@ function ShareBox({
       </div>
       {mine && have !== null && edited ? (
         <p class="small">Changes made only on this page aren’t in your link.</p>
+      ) : null}
+      {!mine && have !== null && !tapped.holds(report) ? (
+        <p class="small">Copy or share it again to put these changes in it.</p>
       ) : null}
       {linkState?.trouble ? <p class="small">{linkState.trouble}</p> : null}
       {shown === null || shown === boxed ? null : (

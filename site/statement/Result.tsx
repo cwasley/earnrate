@@ -3,16 +3,23 @@ import { HALF_CENT } from '../../src/engine/compare.ts'
 import {
   categoryAs,
   dollarsAndCents,
+  listed,
   pointValuesText,
   roundCents,
   wholeDollars,
 } from '../../src/engine/text.ts'
 import { cardValuation } from '../../src/engine/valuation.ts'
-import type { MissedRewards } from '../../src/import/analyze.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { cards, shortName } from '../app/format.ts'
 import { Bar, DataTable, useMore } from './charts.tsx'
-import { dateRange, gainByCard, yearlyPace, type Check } from './check.ts'
+import {
+  dateRange,
+  gainByCard,
+  missedByStore,
+  yearlyPace,
+  type Check,
+  type StoreMiss,
+} from './check.ts'
 import { pictureText } from './picture-text.ts'
 import { SaveImage } from './SaveImage.tsx'
 
@@ -146,7 +153,7 @@ export function Result({
       {a.missed.length > 0 ? (
         <>
           <h3>Where another of your cards would have earned more</h3>
-          <MissedTable missed={a.missed} nameOf={nameOf} />
+          <MissedTable missed={missedByStore(a.missed)} nameOf={nameOf} />
         </>
       ) : null}
 
@@ -257,7 +264,7 @@ function MissedTable({
   missed,
   nameOf,
 }: {
-  missed: MissedRewards[]
+  missed: StoreMiss[]
   nameOf: (id: string) => string
 }) {
   const { shown, more } = useMore(missed, SHOWN_STORES)
@@ -293,10 +300,7 @@ function MissedTable({
           {shown.map((m) => {
             const gain = roundCents(m.best - m.earned)
             return (
-              <tr
-                role="row"
-                key={`${m.merchant}|${m.usedCardId}|${m.bestCardId}`}
-              >
+              <tr role="row" key={`${m.merchant}|${m.bestCardId}`}>
                 <th scope="row" role="rowheader" class="store">
                   {m.merchant}
                   {m.categoryFromStatement ? (
@@ -319,7 +323,7 @@ function MissedTable({
                   {dollarsAndCents(m.spend)}
                 </td>
                 <td role="cell" class="used">
-                  {nameOf(m.usedCardId)}
+                  {listed(m.usedCardIds.map(nameOf))}
                   <span class="sub">{dollarsAndCents(m.earned)}</span>
                 </td>
                 <td role="cell" class="better">

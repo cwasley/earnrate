@@ -687,6 +687,10 @@ p[data-tone='warn']::before {
   accent-color: var(--accent);
 }
 
+.app label.check:has(input:disabled) {
+  color: var(--muted);
+}
+
 /* A thumb-sized target at the register. */
 .app label.check.abroad {
   align-items: center;
@@ -1147,6 +1151,7 @@ p[data-tone='warn']::before {
 /* Held before the grid opened: shown, not a control, so it has no press. */
 .quick-card[data-kept] {
   cursor: default;
+  color: inherit;
 }
 
 .quick-held {
@@ -1154,12 +1159,19 @@ p[data-tone='warn']::before {
   color: var(--muted);
 }
 
+/* Every tile has the label and the check; data-kept and aria-pressed show
+   them, so no class says which cards are held. */
+.quick-card:not([data-kept]) .quick-held,
+.quick-card:not([aria-pressed='true']) .quick-check {
+  display: none;
+}
+
 [data-kept] .quick-check {
   background: var(--muted);
 }
 
 /* Color only: a bolder name would rewrap and shift the row. */
-.quick-card[aria-pressed='true'] {
+.quick-card[aria-pressed='true']:not([data-kept]) {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
