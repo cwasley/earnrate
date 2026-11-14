@@ -24,6 +24,7 @@ import {
   hostname,
   inOrder,
   listed,
+  pct,
   possessive,
 } from '../../src/engine/text.ts'
 import {
@@ -44,9 +45,7 @@ import {
   SITE,
 } from './site.ts'
 import { pickName, rulePreposition } from '../../src/engine/rule-text.ts'
-
-const EXCLUSION =
-  /\bexclud|\bnot at\b|\bnot (be )?(included|eligible|count|qualify)|\bdo(es)? not\b|\bdon['’]t\b|\bisn['’]t\b|\baren['’]t\b|\bwon['’]t\b|\bexcept\b|\bmay not\b/i
+import { EXCLUSION, supportingQuote } from '../../src/engine/quotes.ts'
 
 const SHOWN = 6 // cards named per line before "and N more"
 const SHOWN_LEFT_OUT = 4 // cards a store page names before the rest
@@ -117,17 +116,63 @@ function rulePays(
     memberships: rule.requires?.membership ? [rule.requires.membership] : [],
     cards: [held],
   }
-  return (['in_store', 'online'] as const).some((channel) => {
-    const m = resolveMerchantById(ctx.catalog, merchantId, channel)
-    if (!m) return false
-    const at = category === m.category ? m : { ...m, category, likelyMcc: null }
-    const p = purchaseContext(ctx.catalog, wallet, at, category, {
-      amount: null,
-      date: ctx.today,
-      country: 'US',
-    })
-    return evaluateCard(only, held, p).best.rule?.id === rule.id
+  // Bought the way the page's ranking assumes: an online-only rule pays only
+  // where the store is bought online.
+  const m = resolveMerchantById(ctx.catalog, merchantId, null)
+  if (!m) return false
+  const at = category === m.category ? m : { ...m, category, likelyMcc: null }
+  const p = purchaseContext(ctx.catalog, wallet, at, category, {
+    amount: null,
+    date: ctx.today,
+    country: 'US',
   })
+  return evaluateCard(only, held, p).best.rule?.id === rule.id
+}
+
+// Of a card's paying rules, highest first, the one rankings show (it asks no
+// membership) and a higher one a membership adds.
+function plainFirst(rules: Rule[]): {
+  rule: Rule | null
+  member: Rule | undefined
+} {
+  const plain = rules.find((r) => r.requires?.membership === undefined)
+  const [top] = rules
+  return plain
+    ? { rule: plain, member: top !== plain ? top : undefined }
+    : { rule: top ?? null, member: undefined }
+}
+
+const withMembership = (ctx: PageContext, rule: Rule) =>
+  rule.requires?.membership
+    ? ` with ${esc(ctx.membershipName(rule.requires.membership))}`
+    : ''
+
+// "3% cash back, up to 5.25% with BofA Rewards Premier"
+const rateWithMember = (
+  ctx: PageContext,
+  card: Card,
+  rule: Rule,
+  member: Rule | undefined,
+) =>
+  `${esc(earnText(ctx.catalog, rule.rate, card.currency))}${withMembership(ctx, rule)}${member ? `, up to ${esc(bareRate(member.rate, card.currency))}${withMembership(ctx, member)}` : ''}`
+
+// What a card earns at the store, set up as rankings assume, with no
+// membership.
+function rateAt(
+  ctx: PageContext,
+  card: Card,
+  merchantId: string,
+): number | null {
+  const m = resolveMerchantById(ctx.catalog, merchantId, null)
+  if (!m) return null
+  const held = idealHolding(card, ctx.today, {})
+  const wallet = { valuations: {}, memberships: [], cards: [held] }
+  const p = purchaseContext(ctx.catalog, wallet, m, m.category, {
+    amount: null,
+    date: ctx.today,
+    country: 'US',
+  })
+  return evaluateCard(card, held, p).best.rate
 }
 
 // A card's bonus rules in a category family.
@@ -147,7 +192,8 @@ function familyRules(card: Card, family: string): Rule[] {
 
 export type Treatment = {
   card: Card
-  pays: Rule | null // its best rule that pays there
+  pays: Rule | null // its best rule that pays there, without a membership
+  member: Rule | undefined // a higher rate a membership adds
   rules: Rule[] // its rules in the family
   quote: Quote | null // an exclusion from its terms, when it doesn't pay
   note: string | null // the rule's own note saying so, when no quote does
@@ -217,14 +263,14 @@ function treatments(
     const paying = rules
       .filter((r) => rulePays(ctx, card, r, merchant.id, category, family))
       .sort((a, b) => b.rate - a.rate)
-    const pays = paying[0] ?? null
+    const { rule: pays, member } = plainFirst(paying)
     const why = pays
       ? { quote: null, note: null }
       : exclusionText(ctx, card, rules, words)
     const byName = rules.some((r) =>
       r.exclude?.merchants?.includes(merchant.id),
     )
-    list.push({ card, pays, rules, ...why, byName })
+    list.push({ card, pays, member, rules, ...why, byName })
   }
   return list.sort(
     (a, b) =>
@@ -264,7 +310,7 @@ function treatmentItems(
       `<strong>Counts</strong> for ${namedList(
         paying.map(
           (t) =>
-            `${cardLink(ctx, t.card)} (${esc(earnText(ctx.catalog, t.pays?.rate ?? 0, t.card.currency))}${t.pays?.requires?.membership ? ` with ${esc(ctx.membershipName(t.pays.requires.membership))}` : ''})`,
+            `${cardLink(ctx, t.card)} (${t.pays ? rateWithMember(ctx, t.card, t.pays, t.member) : ''})`,
         ),
       )}.`,
     )
@@ -594,6 +640,13 @@ function namingSentence(
     return examples
       ? `${subject} names ${store} among its examples of stores where these cards don't pay their bonus on ${what}: ${named}.`
       : `${subject} says these cards don't pay their bonus on ${what} at ${store}: ${named}.`
+  const instead = merchantsOnly ? rateAt(ctx, card, merchant.id) : null
+  if (instead !== null) {
+    const earns = esc(bareRate(instead, card.currency))
+    return examples
+      ? `${subject} says ${bonusOn} is for ${what}, and names ${store} among the stores that earn ${earns} instead.`
+      : `${subject} says ${bonusOn} is for ${what}, not purchases at ${store}, which earn ${earns}.`
+  }
   return examples
     ? `${subject} names ${store} among its examples of stores where ${named} doesn't pay its ${rate} on ${what}.`
     : `${subject} says ${named} doesn't pay its ${rate} on ${what} at ${store}.`
@@ -618,6 +671,70 @@ const codesText = (ctx: PageContext, category: string, mcc?: number) =>
 // Where a merchant's notes say how it codes.
 export const hasCodingNotes = (m: Merchant) =>
   m.note !== undefined || m.ambiguity !== undefined
+
+// What a rule leaving the store out covers: on a pick, the options a reader
+// would expect to cover it ("restaurants"), else the rule's own words.
+function leftOutOf(
+  ctx: PageContext,
+  card: Card,
+  rule: Rule,
+  ways: string[],
+): string {
+  const choice = card.choices.find((c) => c.id === rule.match.choice)
+  const options = Object.entries(choice?.options ?? {})
+    .filter(([, o]) =>
+      o.categories.some((c) => ways.some((w) => categoryMatches(c, w))),
+    )
+    .map(([id]) => pickName(ctx.catalog, card, choice?.id ?? '', id))
+  return options.length > 0
+    ? inOrder(options, 'or')
+    : ctx.ruleWhatRaw(card, rule)
+}
+
+// A card's rules that name the store, one line each, except that a rate with
+// a membership and the same purchase's rate without it share one line.
+function namedItems(
+  ctx: PageContext,
+  card: Card,
+  rules: Rule[],
+  merchant: Merchant,
+): string[] {
+  const line = (rule: Rule, rest: string) => {
+    const quote = supportingQuote(ctx.catalog, card, rule.id, {
+      merchantId: merchant.id,
+      category: merchant.category,
+    })
+    // Points the quote gives as a percent back say so too, so the two agree.
+    const cents = ctx.catalog.currencies.find(
+      (c) => c.id === card.currency,
+    )?.value_cents
+    const percent = cents === undefined ? '' : pct(rule.rate * cents)
+    const back =
+      card.currency !== 'cash' &&
+      percent !== '' &&
+      (quote?.quote ?? '').includes(percent)
+        ? ` (${percent} back)`
+        : ''
+    return `<li>${cardLink(ctx, card)}: ${esc(earnText(ctx.catalog, rule.rate, card.currency))}${back} ${rulePreposition(ctx.catalog, [rule])} ${esc(ctx.ruleWhatRaw(card, rule))}${rest}${quote ? `. ${ctx.quoteHtml(quote)}` : '.'}</li>`
+  }
+  const [member, plain, ...more] = rules
+  const membership = member?.requires?.membership
+  if (
+    member &&
+    plain &&
+    more.length === 0 &&
+    membership !== undefined &&
+    plain.requires === undefined &&
+    plain.geography === member.geography
+  )
+    return [
+      line(
+        member,
+        ` with ${esc(ctx.membershipName(membership))}, ${esc(bareRate(plain.rate, card.currency))} without`,
+      ),
+    ]
+  return rules.map((r) => line(r, ''))
+}
 
 // A store page's "How it codes": the category, the notes, and the rules that
 // name it, pay there or leave it out, for each way it may code.
@@ -661,15 +778,16 @@ export function howItCodes(
   // A rule whose issuer names the store as not earning it is said above.
   let saidAbove = false
   for (const card of openCards(ctx)) {
-    for (const rule of card.rules.filter((r) => inEffect(r, ctx.today))) {
-      const quote = ctx.quotesFor(card, rule.id)
-      if (
-        rule.match.merchants?.includes(merchant.id) &&
-        rule.rate > card.base_rate
+    const naming = card.rules
+      .filter(
+        (r) =>
+          inEffect(r, ctx.today) &&
+          r.match.merchants?.includes(merchant.id) &&
+          r.rate > card.base_rate,
       )
-        named.push(
-          `<li>${cardLink(ctx, card)}: ${esc(earnText(ctx.catalog, rule.rate, card.currency))} ${rulePreposition(ctx.catalog, [rule])} ${esc(ctx.ruleWhatRaw(card, rule))}${quote[0] ? `. ${ctx.quoteHtml(quote[0])}` : '.'}</li>`,
-        )
+      .sort((a, b) => b.rate - a.rate)
+    named.push(...namedItems(ctx, card, naming, merchant))
+    for (const rule of card.rules.filter((r) => inEffect(r, ctx.today))) {
       const ex = rule.exclude
       // An issuer that names the store as earning has settled how it codes.
       const leftOut =
@@ -688,7 +806,7 @@ export function howItCodes(
         excluding.push({
           card,
           rule,
-          html: `<li>${cardLink(ctx, card)}: its ${esc(earnText(ctx.catalog, rule.rate, card.currency))} on ${esc(ctx.ruleWhatRaw(card, rule))} leaves it out${why.quote ? `: ${ctx.quoteHtml(why.quote)}` : why.note ? `: ${esc(why.note)}` : '.'}</li>`,
+          html: `<li>${cardLink(ctx, card)}: its ${esc(earnText(ctx.catalog, rule.rate, card.currency))} on ${esc(leftOutOf(ctx, card, rule, ways))} leaves it out${why.quote ? `: ${ctx.quoteHtml(why.quote)}` : why.note ? `: ${esc(why.note)}` : '.'}</li>`,
         })
       }
     }
@@ -717,7 +835,7 @@ export function howItCodes(
   for (const way of ways) {
     const paying = openCards(ctx)
       .flatMap((card) => {
-        const best = card.rules
+        const rules = card.rules
           .filter(
             (r) =>
               r.rate > card.base_rate &&
@@ -725,8 +843,9 @@ export function howItCodes(
               !r.match.merchants?.includes(merchant.id),
           )
           .filter((r) => rulePays(ctx, card, r, merchant.id, way))
-          .sort((a, b) => b.rate - a.rate)[0]
-        return best ? [{ card, rule: best }] : []
+          .sort((a, b) => b.rate - a.rate)
+        const { rule, member } = plainFirst(rules)
+        return rule ? [{ card, rule, member }] : []
       })
       .sort(
         (a, b) =>
@@ -737,7 +856,7 @@ export function howItCodes(
       `<p>${way === merchant.category ? 'Counted' : 'If it counts'} ${esc(codesText(ctx, way))}, ${String(paying.length)} ${paying.length === 1 ? 'card pays' : 'cards pay'} a category bonus here: ${namedList(
         paying.map(
           (p) =>
-            `${cardLink(ctx, p.card)} (${esc(earnText(ctx.catalog, p.rule.rate, p.card.currency))}${p.rule.requires?.membership ? ` with ${esc(ctx.membershipName(p.rule.requires.membership))}` : ''})`,
+            `${cardLink(ctx, p.card)} (${rateWithMember(ctx, p.card, p.rule, p.member)})`,
         ),
       )}.</p>`,
     )

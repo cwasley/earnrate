@@ -21,7 +21,7 @@ import {
   capSentence,
 } from '../../src/engine/text.ts'
 import { findMerchant } from '../../src/merchants/resolve.ts'
-import { optionName } from '../../src/engine/rule-text.ts'
+import { pickName } from '../../src/engine/rule-text.ts'
 import type { Cap, Card, Choice, Rule } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
@@ -305,9 +305,7 @@ function cardSection(ctx: PageContext, q: Quarter, qc: QuarterCard): string {
   const head = `<div class="card-head small">${ctx.art(card.id, 64)}<h3><a href="/cards/${card.id}">${esc(card.name)}</a></h3></div>`
   if (qc.kind === 'pick') {
     const option = (choice: Choice, id: string) =>
-      (choice.options[id]?.merchants.length ?? 0) > 3
-        ? words(id)
-        : optionName(ctx.catalog, card, choice.id, id)
+      pickName(ctx.catalog, card, choice.id, id)
     const picks = qc.choices.map((choice) => {
       const rates = qc.rules
         .filter((r) => r.match.choice === choice.id)

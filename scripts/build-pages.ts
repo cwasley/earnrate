@@ -83,6 +83,7 @@ import {
   creditName,
   creditWhere,
   introWhat,
+  pickName,
   rulePreposition,
   ruleWhat as shortRuleWhat,
 } from '../src/engine/rule-text.ts'
@@ -1105,11 +1106,12 @@ function rulesList(card: Card): string {
 function choicesText(card: Card): string {
   if (card.choices.length === 0) return ''
   const items = card.choices.map((c) => {
-    const options = Object.keys(c.options).map(words)
+    const name = (o: string) => pickName(catalog, card, c.id, o)
+    const options = Object.keys(c.options).map(name).join('; ')
     const when = PICK_PERIODS[c.period]
     return c.automatic
-      ? `<li>${esc(capitalize(`${issuerName(card.issuer)} applies it to ${c.pick === 1 ? 'the one' : `the ${String(c.pick)}`} with the most spending ${when}`))}, of: ${esc(listed(options))}. Set the one you expect in your wallet.</li>`
-      : `<li>Pick ${String(c.pick)} of: ${esc(listed(options))} (${esc(when)})${c.default ? `. If you don't pick, it's ${esc(listed(c.default.map(words)))}` : ''}.</li>`
+      ? `<li>${esc(capitalize(`${issuerName(card.issuer)} applies it to ${c.pick === 1 ? 'the one' : `the ${String(c.pick)}`} with the most spending ${when}`))}, of: ${esc(options)}. Set the one you expect in your wallet.</li>`
+      : `<li>Pick ${String(c.pick)} of: ${esc(options)} (${esc(when)})${c.default ? `. If you don't pick, it's ${esc(listed(c.default.map(name)))}` : ''}.</li>`
   })
   const heading = card.choices.every((c) => c.automatic)
     ? 'Categories chosen by your spending'

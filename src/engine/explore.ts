@@ -62,6 +62,7 @@ import type {
 import { cardValuation } from './valuation.ts'
 import { EPSILON } from './compare.ts'
 import { namedBy } from './named.ts'
+import { supportingQuote } from './quotes.ts'
 
 export type CardFilters = {
   kind: 'any' | 'cash' | 'points'
@@ -469,7 +470,10 @@ export function exploreCards(
     const payment = card.rules.find((r) => r.id === top.matchedRule)?.requires
       ?.payment
     const evidenceRule = top.matchedRule ?? 'base_rate'
-    const evidence = card.evidence.find((e) => e.rule === evidenceRule)
+    const evidence = supportingQuote(catalog, card, evidenceRule, {
+      merchantId: merchant.merchantId,
+      category: merchant.category,
+    })
     ranked.push({
       ...top,
       issuer: card.issuer,

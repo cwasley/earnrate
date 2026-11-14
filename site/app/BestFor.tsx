@@ -31,6 +31,7 @@ import {
   ENROLL_FIRST,
   hostname,
   money,
+  onlineAssumption,
 } from '../../src/engine/text.ts'
 import {
   cards,
@@ -102,6 +103,15 @@ function explore(
           kindCategory(kind),
         ),
   )
+}
+
+// "as a streaming service, bought online": a store bought only online says
+// so, as "as online retail" already does.
+function countsAs(m: MerchantResolution): string {
+  const as = categoryAs(catalog, m.category)
+  return onlineAssumption(catalog, m, null) !== null && !as.includes('online')
+    ? `${as}, bought online`
+    : as
 }
 
 function title(m: MerchantResolution): string {
@@ -604,10 +614,7 @@ export function BestFor({
               ) : null}
               {answer.merchant.source !== 'category' &&
               answer.merchant.source !== 'none' ? (
-                <span class="muted">
-                  {' '}
-                  · counts {categoryAs(catalog, answer.merchant.category)}
-                </span>
+                <span class="muted"> · counts {countsAs(answer.merchant)}</span>
               ) : null}
             </h3>
             {rec && wallet ? (

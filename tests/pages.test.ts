@@ -406,6 +406,54 @@ describe('the built static pages', () => {
     )
   })
 
+  test("a store page's How it codes reads as its ranking does", () => {
+    const page = (slug: string) =>
+      unescape(
+        readFileSync(path.join(out, 'best', `${slug}.html`), 'utf8').replace(
+          /<[^>]+>/g,
+          '',
+        ),
+      )
+    const walmart = page('walmart')
+    expect(walmart).not.toContain('Counted as a superstore')
+    expect(page('best-buy')).not.toContain('Amex Blue Cash Everyday (3%')
+    expect(page('netflix')).toContain(
+      'Bank of America Customized Cash Rewards (3% cash back, up to 5.25% with BofA Rewards Premier)',
+    )
+    expect(page('costco')).not.toMatch(/\(3\.5% cash back with/)
+    const wholeFoods = page('whole-foods')
+    expect(wholeFoods).toContain(
+      'Prime Visa: 5% cash back at Whole Foods Market with Amazon Prime, 3% without. “including any physical Whole Foods Market locations',
+    )
+    expect(wholeFoods).not.toContain('Prime Visa: 3% cash back')
+    expect(page('comcast')).toContain(
+      'Discover it Cash Back: “purchases made over the phone or online for internet, cable',
+    )
+    expect(page('starbucks')).toContain(
+      "U.S. Bank Cash+: its 2% cash back on restaurants leaves it out: “Excludes most fast food restaurants like McDonald's”",
+    )
+    expect(walmart).toContain(
+      "Verizon says Verizon Visa's 4% bonus is for Verizon store purchases, and names Walmart among the stores that earn 1% instead.",
+    )
+    expect(page('expedia')).toContain(
+      'SoFi says the 3x bonus on SoFi Unlimited 2% is for SoFi Travel purchases, not purchases at Expedia, which earn 2x.',
+    )
+    expect(page('best-buy')).toContain(
+      'My Best Buy Visa: 2.5x My Best Buy rewards (5% back) at Best Buy',
+    )
+  })
+
+  test("a card page names each pick as the issuer's categories, not its id", () => {
+    const html = unescape(
+      readFileSync(path.join(out, 'cards', 'usbank-cash-plus.html'), 'utf8'),
+    )
+    expect(html).toContain(
+      'Pick 1 of: gas stations and EV charging; grocery stores; restaurants (each quarter).',
+    )
+    expect(html).toContain('TV, internet & streaming (each quarter)')
+    expect(html).not.toContain('gas ev charging')
+  })
+
   test('an online store page says its rates are for buying online; a store with shops of its own says nothing of it', () => {
     const answer = (slug: string) =>
       /<p class="answer">[\s\S]*?<\/p>/.exec(
