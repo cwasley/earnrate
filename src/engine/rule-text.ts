@@ -38,7 +38,10 @@ export function optionName(
   choiceId: string,
   option: string,
 ): string {
-  const o = card.choices.find((c) => c.id === choiceId)?.options[option]
+  const choice = card.choices.find((c) => c.id === choiceId)
+  const named = choice?.names?.[option]
+  if (named !== undefined) return named
+  const o = choice?.options[option]
   if (!o) return words(option)
   const parts = [
     ...o.categories.map((c) => categoryPhrase(catalog, c)),
@@ -56,8 +59,9 @@ export function pickName(
   choiceId: string,
   option: string,
 ): string {
-  const o = card.choices.find((c) => c.id === choiceId)?.options[option]
-  return (o?.merchants.length ?? 0) > 3
+  const choice = card.choices.find((c) => c.id === choiceId)
+  const o = choice?.options[option]
+  return (o?.merchants.length ?? 0) > 3 && choice?.names?.[option] === undefined
     ? words(option)
     : optionName(catalog, card, choiceId, option)
 }

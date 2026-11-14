@@ -54,6 +54,9 @@ rules:
     # 7-Eleven (gas to Bank of America) and Wayfair (home furnishings) are left
     # out: earnrate codes them as a convenience store and online retail, so
     # they'd pass the data check only through online shopping, the wrong pick.
+    # Comcast, Nordstrom, Ticketmaster and Walmart, on the online shopping
+    # list, are left out too: earnrate doesn't take a purchase there to be
+    # online unless the person says so, so no answer would show the 3%.
     named:
       earning:
         [
@@ -66,12 +69,8 @@ rules:
           shell,
           wawa,
           amazon,
-          comcast,
           etsy,
           netflix,
-          nordstrom,
-          ticketmaster,
-          walmart,
           chipotle,
           dominos,
           grubhub,

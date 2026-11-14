@@ -2927,7 +2927,7 @@ describe('#39 cards that need a membership, when every card is ranked', () => {
       )
       expect(picks.length).toBeGreaterThan(0)
       expect(text).toMatch(
-        /cell phone service, streaming services, TV and internet service as its 5% picks/,
+        /cell phone service and TV, internet & streaming as its 5% picks/,
       )
       for (const p of picks)
         expect(p).not.toMatch(

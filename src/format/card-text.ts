@@ -6,6 +6,7 @@ import type { Catalog } from '../schema/catalog.ts'
 // pages show them. Node-free: the site bundles it.
 
 import { membershipName, membershipText } from '../engine/memberships.ts'
+import { pickName } from '../engine/rule-text.ts'
 import {
   capSentence,
   earnText,
@@ -47,25 +48,28 @@ export function cardText(catalog: Catalog) {
     until: string | null = null,
   ): string[] {
     const lines: string[] = []
+    const card = cards.get(cardId)
+    const picks = (options: string[], choice: string) =>
+      options
+        .map((o) => (card ? pickName(catalog, card, choice, o) : words(o)))
+        .join(' or ')
     if (r.pick)
       lines.push(
         r.pick.automatic
           ? pickCondition(
               {
                 pick:
-                  cards
-                    .get(cardId)
-                    ?.choices.find((c) => c.id === r.pick?.choice)?.pick ?? 1,
+                  card?.choices.find((c) => c.id === r.pick?.choice)?.pick ?? 1,
                 ...r.pick,
               },
-              r.pick.options.map(words).join(' or '),
+              picks(r.pick.options, r.pick.choice),
               '',
             )
-          : `Pick ${r.pick.options.map(words).join(' or ')} as a bonus category (${PICK_PERIODS[r.pick.period]})`,
+          : `Pick ${picks(r.pick.options, r.pick.choice)} as a bonus category (${PICK_PERIODS[r.pick.period]})`,
       )
     if (r.activation !== null)
       lines.push(
-        `Activate the bonus with ${issuerName(catalog, cards.get(cardId)?.issuer ?? '')} (free)`,
+        `Activate the bonus with ${issuerName(catalog, card?.issuer ?? '')} (free)`,
       )
     if (r.membership !== null)
       lines.push(`With ${membershipName(catalog, r.membership)}`)

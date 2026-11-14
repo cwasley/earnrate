@@ -2,6 +2,17 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.13.4
+
+No card's rates changed. Corrections to where a purchase is taken to be made online, and to the stores and picks named in 2026.11.13.2 and .3:
+
+- `streaming` (category) is now bought online (`channel: online`, as `online_retail` is since 2026.11.11.1): a streaming subscription counts as an online purchase unless you say it's in store. So Bank of America Customized Cash Rewards' online shopping pick pays 3% at Netflix and other streaming services, as Bank of America's own merchant examples say. Blue Cash Everyday's and Hilton Surpass's online retail rates cover physical goods only, so they still don't apply to streaming.
+- `etsy` (merchant) counts as online retail (was "other"), bought online: Customized Cash's online shopping pick pays 3% there, as Bank of America's examples say, and so do Blue Cash Everyday's and Hilton Surpass's online retail rates.
+- `bank-of-america-customized-cash-rewards`: Comcast, Nordstrom, Ticketmaster and Walmart are no longer recorded among the online shopping examples (https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/). Bank of America lists them, but its 3% needs the purchase paid online, and earnrate doesn't take a purchase at those stores to be online unless you say so, so their pages quoted a 3% their answers never showed. The data check now refuses a store named as earning a rate that an answer not told how it's bought wouldn't pay.
+- `usbank-cash-plus`: each store U.S. Bank names as left out of a pick now records which pick (`named.picks`): Walmart, Target and Costco are left out of department stores and Applebee's and Olive Garden out of fast food (https://cashplus.usbank.com/cash-plus/samplemerchants, under each category's heading); McDonald's, Subway and Domino's out of restaurants (same page); and Walmart and Target out of grocery stores (https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html). Two 5% picks now go by U.S. Bank's names (`choices.five-percent.names`): ground transportation (was "transit") and TV, internet & streaming (was "streaming services, TV and internet service").
+
+Store pages now name the pick a store is left out of, show an issuer's list of stores as names rather than a run of words, match a store's name only as whole words outside a longer name ("Kroger Fuel Center" is on the gas list, not the grocery one), say "among its examples" only when the issuer calls them examples, and use a card's pick names the same way in the ranking and in the issuers' lists.
+
 ## 2026.11.13.3
 
 No rates changed. Two more issuers' named stores (`named`, as in 2026.11.11):

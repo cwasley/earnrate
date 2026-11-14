@@ -27,6 +27,9 @@ choices:
   - id: five-percent
     pick: 2
     period: quarter
+    names:
+      ground-transportation: ground transportation
+      tv-internet-streaming: TV, internet & streaming
     options:
       cell-phone: [phone]
       department-stores: [department_store]
@@ -218,6 +221,12 @@ rules:
           yellow-cab,
         ]
       not_earning: [walmart, target, costco, applebees, olive-garden]
+      picks:
+        walmart: department-stores
+        target: department-stores
+        costco: department-stores
+        applebees: fast-food
+        olive-garden: fast-food
   - id: two-percent
     match: { choice: two-percent }
     # Fast food is its own 5% option, not part of Restaurants. Gas at grocery
@@ -296,6 +305,12 @@ rules:
           tgi-fridays,
         ]
       not_earning: [target, walmart, mcdonalds, subway, dominos]
+      picks:
+        target: grocery-stores
+        walmart: grocery-stores
+        mcdonalds: restaurants
+        subway: restaurants
+        dominos: restaurants
   - id: travel-center
     match: { merchants: [usbank-travel-center] }
     rate: 5

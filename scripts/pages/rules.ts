@@ -21,6 +21,15 @@ import { esc } from './site.ts'
 
 export type Quote = Card['evidence'][number]
 
+// A quote as a reader sees it. Quotes match the issuer's page text, which
+// can space out marks ("Target ® , Walmart ®") and lead with a tab's label
+// ("CURRENT QUARTER").
+export const quoteText = (quote: string) =>
+  quote
+    .replace(/^(CURRENT|NEXT) QUARTER\s+/, '')
+    .replace(/\s+([®™©])/g, '$1')
+    .replace(/([®™©])\s+([,.;:)])/g, '$1$2')
+
 export function ruleKit(catalog: Catalog, today: string) {
   const { membershipName, issuerName } = cardText(catalog)
   const merchantName = (id: string) => findMerchant(catalog, id)?.name
@@ -99,7 +108,7 @@ export function ruleKit(catalog: Catalog, today: string) {
   }
 
   const quoteHtml = (ev: Quote) =>
-    `“${esc(ev.quote)}” <a href="${esc(ev.url)}" rel="nofollow noopener">${esc(hostname(ev.url))}</a>`
+    `“${esc(quoteText(ev.quote))}” <a href="${esc(ev.url)}" rel="nofollow noopener">${esc(hostname(ev.url))}</a>`
 
   function evidenceFor(card: Card, ruleId: string): string {
     const ev = card.evidence.find((e) => e.rule === ruleId)

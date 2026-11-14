@@ -10,6 +10,7 @@ import { evaluateCard, purchaseContext } from '../engine/evaluate.ts'
 import { idealHolding } from '../engine/explore.ts'
 import { NAMED_LISTS, namedKey, quoteNames } from '../engine/named.ts'
 import { isAnniversary } from '../engine/periods.ts'
+import type { Channel } from '../engine/types.ts'
 import { MONTH_NAMES } from '../engine/text.ts'
 import { WALLET_VERSION, type Wallet } from '../schema/wallet.ts'
 
@@ -90,11 +91,15 @@ function lookupProblems(catalog: Catalog): string[] {
 
 // Whether the engine pays a rule at a store, with the card set up at its
 // best: every option picked, activated, any membership or payment it asks.
+// Whether the rule pays at the store, set up at its best. `channels` are the
+// ways the purchase is taken: null is how an answer takes it when the person
+// doesn't say, as the store's page ranks it.
 function rulePaysAt(
   catalog: Catalog,
   card: Card,
   rule: Rule,
   merchantId: string,
+  channels: readonly (Channel | null)[] = ['in_store', 'online'],
 ): boolean {
   const date = rule.valid_from ?? rule.valid_to ?? '2026-01-01'
   const choice = card.choices.find((c) => c.id === rule.match.choice)
@@ -109,7 +114,7 @@ function rulePaysAt(
     memberships: rule.requires?.membership ? [rule.requires.membership] : [],
     cards: [held],
   }
-  return (['in_store', 'online'] as const).some((channel) => {
+  return channels.some((channel) => {
     const m = resolveMerchantById(catalog, merchantId, channel)
     if (!m) return false
     const p = purchaseContext(catalog, wallet, m, m.category, {
@@ -379,6 +384,11 @@ function cardProblems(
         `${where} choice ${choice.id}: pick ${String(choice.pick)} but only ${String(options.length)} options`,
       )
     }
+    for (const named of Object.keys(choice.names ?? {}))
+      if (!(named in choice.options))
+        problems.push(
+          `${where} choice ${choice.id}: names '${named}', which is not an option`,
+        )
     for (const d of choice.default ?? []) {
       if (!(d in choice.options))
         problems.push(
@@ -437,7 +447,36 @@ function cardProblems(
           problems.push(
             `${where} ${context}: the issuer names ${merchant.name} as ${list === 'earning' ? 'earning' : 'not earning'} it, but earnrate's data ${list === 'earning' ? "doesn't pay it there" : 'pays it there'}`,
           )
+        else if (
+          list === 'earning' &&
+          !rulePaysAt(catalog, card, rule, id, [null])
+        )
+          problems.push(
+            `${where} ${context}: the issuer names ${merchant.name} as earning it, but an answer that isn't told how it's bought doesn't pay it there, so its page would quote a rate it never shows`,
+          )
       }
+    const picks = Object.entries(rule.named?.picks ?? {})
+    const choice = card.choices.find((c) => c.id === rule.match.choice)
+    if (picks.length > 0 && !choice)
+      problems.push(
+        `${where} ${context}: named.picks needs a rule paid on a pick`,
+      )
+    for (const [id, option] of picks) {
+      if (!rule.named?.not_earning?.includes(id))
+        problems.push(
+          `${where} ${context}: named.picks names ${id}, which isn't in not_earning`,
+        )
+      if (choice && !(option in choice.options))
+        problems.push(
+          `${where} ${context}: named.picks.${id}: '${option}' is not an option of ${choice.id}`,
+        )
+    }
+    if (choice)
+      for (const id of rule.named?.not_earning ?? [])
+        if (rule.named?.picks?.[id] === undefined)
+          problems.push(
+            `${where} ${context}: named.picks needs the pick ${id} is left out of`,
+          )
   }
   for (const cap of card.caps.filter((c) => c.rotating)) {
     const rules = card.rules.filter((r) => r.cap === cap.id)

@@ -45,6 +45,7 @@ import { recentChangesSection } from '../scripts/pages/changes.ts'
 import { cardChangesUrl } from '../src/engine/changes.ts'
 import { ChangesFileSchema } from '../src/schema/changes.ts'
 import { DESCRIPTION_MAX, esc, TITLE_MAX } from '../scripts/pages/site.ts'
+import { quoteText } from '../scripts/pages/rules.ts'
 import { ROOT } from './helpers.ts'
 
 const catalog = await loadCatalog()
@@ -366,7 +367,7 @@ describe('the built static pages', () => {
     )
     expect(vons).toMatch(/<a href="\/cards\/amex-gold">[^<]+<\/a> \(4x [^)]+\)/)
     expect(vons).toContain(
-      "Trader Joe's Vons Whole Foods Winn-Dixie This is not a complete list.",
+      "American Express's examples include Smart &amp; Final, Stop &amp; Shop, Trader Joe's, Vons, Whole Foods and Winn-Dixie.",
     )
     expect(vons).toContain(
       'href="https://www.americanexpress.com/us/content/rewards-info/retail.html"',
@@ -389,8 +390,14 @@ describe('the built static pages', () => {
     expect(sprouts).toContain(
       "pays its bonus on grocery stores, when that's your pick.",
     )
-    expect(sprouts).toContain('Kroger Sprouts Farmers Market Fred Meyer')
-    expect(sprouts).not.toContain("Applebee's Grubhub Red Lobster")
+    expect(sprouts).toContain('Kroger, Sprouts Farmers Market and Fred Meyer.')
+    expect(sprouts).not.toContain("Applebee's, Grubhub")
+    // The gas list's "Kroger Fuel Center" is about the gas pick.
+    const kroger = page('kroger')
+    expect(kroger).not.toContain('Phillips 66')
+    expect(kroger).not.toContain('Fuel Center')
+    // "XFINITY MOBILE" names Xfinity Mobile, not Comcast Xfinity.
+    expect(page('comcast')).not.toContain('XFINITY MOBILE')
     const netflix = page('netflix')
     expect(netflix).toContain("when that's one of your picks.")
     expect(netflix).not.toContain('Sonic Chick-fil-A')
@@ -629,7 +636,7 @@ describe('quarterly pages', () => {
             expect(html).toContain(`by ${shortDate(rule.activate_by)}`)
           if (rule.note) expect(html).toContain(esc(rule.note))
           for (const e of qc.card.evidence.filter((e) => e.rule === rule.id))
-            expect(html).toContain(esc(e.quote))
+            expect(html).toContain(esc(quoteText(e.quote)))
         }
       }
     }

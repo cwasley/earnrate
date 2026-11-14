@@ -3,6 +3,133 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.13.4'
+  date: 2026-11-13
+  changes:
+    - cause: correction
+      categories: [streaming]
+      field: channel
+      was: null
+      now: online
+      summary: A streaming subscription counts as an online purchase unless you say it's in store, so Bank of America Customized Cash Rewards' online shopping pick pays 3% there, as Bank of America's own examples say.
+    - cause: correction
+      merchants: [etsy]
+      field: category
+      was: other
+      now: online_retail
+      summary: Etsy counts as online retail, bought online, so online shopping and online retail rates apply there.
+    - cause: correction
+      card: bank-of-america-customized-cash-rewards
+      field: rules.three-percent.named.earning
+      was:
+        [
+          chargepoint,
+          exxon-mobil,
+          electrify-america,
+          evgo,
+          quiktrip,
+          racetrac,
+          shell,
+          wawa,
+          amazon,
+          comcast,
+          etsy,
+          netflix,
+          nordstrom,
+          ticketmaster,
+          walmart,
+          chipotle,
+          dominos,
+          grubhub,
+          starbucks,
+          sweetgreen,
+          airbnb,
+          american-airlines,
+          amtrak,
+          delta,
+          enterprise,
+          expedia,
+          e-zpass,
+          marriott,
+          parkmobile,
+          royal-caribbean,
+          uber,
+          cvs,
+          walgreens,
+          ace-hardware,
+          ikea,
+          home-depot,
+        ]
+      now:
+        [
+          chargepoint,
+          exxon-mobil,
+          electrify-america,
+          evgo,
+          quiktrip,
+          racetrac,
+          shell,
+          wawa,
+          amazon,
+          etsy,
+          netflix,
+          chipotle,
+          dominos,
+          grubhub,
+          starbucks,
+          sweetgreen,
+          airbnb,
+          american-airlines,
+          amtrak,
+          delta,
+          enterprise,
+          expedia,
+          e-zpass,
+          marriott,
+          parkmobile,
+          royal-caribbean,
+          uber,
+          cvs,
+          walgreens,
+          ace-hardware,
+          ikea,
+          home-depot,
+        ]
+      summary: Comcast, Nordstrom, Ticketmaster and Walmart are no longer recorded as Bank of America's online shopping examples. Their 3% needs the purchase paid online, and earnrate doesn't take a purchase there to be online unless you say so, so their pages quoted a rate their answers never showed. No rates changed.
+      source: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    - cause: addition
+      card: usbank-cash-plus
+      field: rules.five-percent.named.picks
+      was: null
+      now:
+        walmart: department-stores
+        target: department-stores
+        costco: department-stores
+        applebees: fast-food
+        olive-garden: fast-food
+      summary: Records which pick each store U.S. Bank leaves out is about, from the section of its sample merchants page that says so. No rates changed.
+      source: https://cashplus.usbank.com/cash-plus/samplemerchants
+    - cause: addition
+      card: usbank-cash-plus
+      field: rules.two-percent.named.picks
+      was: null
+      now:
+        target: grocery-stores
+        walmart: grocery-stores
+        mcdonalds: restaurants
+        subway: restaurants
+        dominos: restaurants
+      summary: Records which pick each store U.S. Bank leaves out is about, from the section of its pages that says so. No rates changed.
+      source: https://cashplus.usbank.com/cash-plus/samplemerchants
+    - cause: wording
+      card: usbank-cash-plus
+      field: choices.five-percent.names
+      was: null
+      now:
+        ground-transportation: ground transportation
+        tv-internet-streaming: TV, internet & streaming
+      summary: Two 5% picks go by U.S. Bank's names, "ground transportation" (was "transit") and "TV, internet & streaming" (was "streaming services, TV and internet service", which read as two picks).
+
 - version: '2026.11.13.3'
   date: 2026-11-13
   changes:

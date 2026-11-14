@@ -311,6 +311,44 @@ evidence:
         "card usbank-cash-plus rule dining: the issuer names Chez Panisse as not earning it, but earnrate's data pays it there",
       ])
     })
+
+    test('are refused as earning a rate only an online purchase gets, at a store not bought only online', () => {
+      const online = named(['chez-panisse'], ['burger-hut'], quotes)
+      online.cards = online.cards.map((card) => ({
+        ...card,
+        rules: card.rules.map((r) =>
+          r.id === 'dining' ? { ...r, channel: 'online' as const } : r,
+        ),
+      }))
+      expect(catalogProblems(withStores(online))).toEqual([
+        "card usbank-cash-plus rule dining: the issuer names Chez Panisse as earning it, but an answer that isn't told how it's bought doesn't pay it there, so its page would quote a rate it never shows",
+      ])
+    })
+
+    test('on a rule paid on a pick, say which pick leaves each store out', () => {
+      const onPick = (picks: string) =>
+        catalog(
+          cashPlusYaml
+            .replace(
+              '    cap: five-percent-combined\n  - id: bonus-at-costco',
+              `    cap: five-percent-combined\n    named: { not_earning: [costco]${picks} }\n  - id: bonus-at-costco`,
+            )
+            .concat(
+              '  - { rule: five-percent.not_earning, url: https://www.usbank.com/, quote: Not at Costco }\n',
+            ),
+        )
+      expect(catalogProblems(onPick(''))).toEqual([
+        'card usbank-cash-plus rule five-percent: named.picks needs the pick costco is left out of',
+      ])
+      expect(catalogProblems(onPick(', picks: { costco: fast-food }'))).toEqual(
+        [],
+      )
+      expect(catalogProblems(onPick(', picks: { costco: groceries }'))).toEqual(
+        [
+          "card usbank-cash-plus rule five-percent: named.picks.costco: 'groceries' is not an option of five-percent",
+        ],
+      )
+    })
   })
 
   test('catches a child category without its parent', () => {

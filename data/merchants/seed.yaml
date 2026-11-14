@@ -1361,7 +1361,7 @@
     aliases: [7 eleven, seven eleven],
     category: convenience_store,
   }
-- { id: etsy, name: Etsy, domains: [etsy.com], category: other }
+- { id: etsy, name: Etsy, domains: [etsy.com], category: online_retail }
 - { id: ebay, name: eBay, domains: [ebay.com], category: other }
 - {
     id: jcpenney,

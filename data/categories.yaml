@@ -110,6 +110,7 @@
 - id: streaming
   preposition: on
   name: Streaming services
+  channel: online
   aliases: [streaming, subscriptions]
   mccs: [4899, 5815]
 - id: tv_internet

@@ -139,8 +139,14 @@ export const RuleSchema = z
       .strictObject({
         earning: z.array(KebabId).min(1).optional(),
         not_earning: z.array(KebabId).min(1).optional(),
+        // On a rule paid on a pick: the option each not_earning store is
+        // left out of, the one a reader would expect to cover it.
+        picks: z.record(KebabId, KebabId).optional(),
       })
-      .refine(hasAny, 'named needs earning, not_earning or both')
+      .refine(
+        (n) => n.earning !== undefined || n.not_earning !== undefined,
+        'named needs earning, not_earning or both',
+      )
       .optional(),
     note: z.string().optional(),
   })
@@ -199,6 +205,9 @@ export const ChoiceSchema = z.strictObject({
   automatic: z.literal(true).optional(),
   // Option ids that apply when the wallet hasn't picked, e.g. Bilt's dining.
   default: z.array(KebabId).min(1).optional(),
+  // The issuer's name for an option whose categories' own names would read
+  // as several picks or as another category: "ground transportation".
+  names: z.record(KebabId, z.string().min(1)).optional(),
   // Option id → what that option covers: a list of categories; or, when the
   // issuer publishes the only qualifying stores, `{ merchants: [...] }`; or,
   // for "online shopping" picks, `{ channel: online, exclude: [...] }`, any

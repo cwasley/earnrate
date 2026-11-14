@@ -293,7 +293,7 @@ const tiedIn = (list: ExploreEntry[]) => {
 function tiedFees(tied: ExploreEntry[]): string {
   const free = tied.filter((e) => e.annualFee === 0).length
   return free === tied.length
-    ? 'None of them has an annual fee.'
+    ? `${tied.length === 2 ? 'Neither' : 'None of them'} has an annual fee.`
     : free > 0
       ? `${String(free)} of them ${free === 1 ? 'has' : 'have'} no annual fee.`
       : ''
@@ -308,7 +308,7 @@ function tieText(tied: ExploreEntry[], where: string): string {
   const free = tied.filter((e) => e.annualFee === 0).length
   const fees =
     free === tied.length
-      ? ', all with no annual fee'
+      ? `, ${tied.length === 2 ? 'both' : 'all'} with no annual fee`
       : free > 0
         ? `; ${String(free)} of them ${free === 1 ? 'has' : 'have'} no annual fee`
         : ''

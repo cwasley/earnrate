@@ -8,27 +8,33 @@ import {
 } from '../../src/engine/evaluate.ts'
 import { idealHolding, type Picks } from '../../src/engine/explore.ts'
 import {
+  NAMED_LISTS,
   namedKey,
+  namesInQuote,
   namings,
-  quoteNames,
   type Naming,
 } from '../../src/engine/named.ts'
 import { inEffect } from '../../src/engine/periods.ts'
 import {
   categoryAs,
   bareRate,
+  capitalize,
   categoryPhrase,
   earnText,
+  hostname,
+  inOrder,
   listed,
+  possessive,
 } from '../../src/engine/text.ts'
 import {
   findMerchant,
+  onlineCategory,
   resolveMerchantById,
 } from '../../src/merchants/resolve.ts'
 import type { Card, Rule } from '../../src/schema/card.ts'
 import type { Merchant } from '../../src/schema/merchant.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
-import type { Quote } from './rules.ts'
+import { quoteText, type Quote } from './rules.ts'
 import {
   chipLinks,
   esc,
@@ -59,7 +65,10 @@ const valueOf = (ctx: PageContext, card: Card, rate: number) =>
 const related = (a: string, b: string) =>
   categoryMatches(a, b) || categoryMatches(b, a)
 
+// The pick that covers the category. An online shopping pick covers nearly
+// every store, so it counts only for a category bought only online.
 function choicePicks(
+  ctx: PageContext,
   card: Card,
   rule: Rule,
   category: string,
@@ -69,12 +78,21 @@ function choicePicks(
   if (rule.match.choice === undefined) return {}
   const choice = card.choices.find((c) => c.id === rule.match.choice)
   if (!choice) return null
-  const option = Object.entries(choice.options).find(
-    ([, o]) =>
-      (family === null || o.categories.some((c) => related(c, family))) &&
-      (o.categories.some((c) => categoryMatches(c, category)) ||
-        o.merchants.includes(merchantId)),
-  )?.[0]
+  const options = Object.entries(choice.options)
+  const option =
+    options.find(
+      ([, o]) =>
+        (family === null || o.categories.some((c) => related(c, family))) &&
+        (o.categories.some((c) => categoryMatches(c, category)) ||
+          o.merchants.includes(merchantId)),
+    )?.[0] ??
+    (family === null && onlineCategory(ctx.catalog, category)
+      ? options.find(
+          ([, o]) =>
+            o.online?.exclude.every((c) => !categoryMatches(c, category)) ??
+            false,
+        )?.[0]
+      : undefined)
   return option === undefined ? null : { [choice.id]: [option] }
 }
 
@@ -90,7 +108,7 @@ function rulePays(
   family: string | null = null,
 ): boolean {
   if (!inEffect(rule, ctx.today)) return false
-  const picks = choicePicks(card, rule, category, merchantId, family)
+  const picks = choicePicks(ctx, card, rule, category, merchantId, family)
   if (picks === null) return false
   const only = { ...card, rules: [rule] }
   const held = idealHolding(only, ctx.today, picks)
@@ -284,88 +302,44 @@ function treatmentItems(
   return { items, fine }
 }
 
-// What issuers' own lists of example stores say about this one: a sentence
-// for each issuer, list and quote, naming every card that shares it, then
-// the quotes. A list of examples says nothing about the stores it leaves out.
-function issuerListsHtml(ctx: PageContext, merchant: Merchant): string {
-  // A long list is quoted in pieces: this page shows the pieces that name
-  // the store and any that name no store on the list (a lead-in).
-  const quotesOf = (n: Naming) => {
-    const others = (n.rule.named?.[n.list] ?? []).flatMap((id) => {
-      const m = findMerchant(ctx.catalog, id)
-      return m && m.id !== merchant.id ? [m] : []
-    })
-    return ctx
-      .quotesFor(n.card, namedKey(n.rule.id, n.list))
-      .filter(
-        (q) =>
-          quoteNames(q.quote, merchant) ||
-          !others.some((m) => quoteNames(q.quote, m)),
-      )
-  }
-  const bonusOf = (n: Naming) => {
-    const pick =
-      n.list === 'earning' ? pickFor(ctx, n.card, n.rule, merchant) : null
-    return pick ?? ctx.ruleWhatRaw(n.card, n.rule)
-  }
-  const groups = new Map<string, Naming[]>()
-  for (const n of namings(openCards(ctx), merchant.id, ctx.today)) {
-    const key = JSON.stringify([
-      n.card.issuer,
-      n.list,
-      countsAs(ctx, n.rule) ?? bonusOf(n),
-      quotesOf(n).map((q) => [q.url, q.quote]),
-    ])
-    groups.set(key, [...(groups.get(key) ?? []), n])
-  }
-  return [...groups.values()]
-    .map((list) => {
-      const [first] = list
-      if (!first) return ''
-      const earning = first.list === 'earning'
-      const as = countsAs(ctx, first.rule)
-      const store = esc(merchant.name)
-      const cards = list
-        .sort(
-          (a, b) =>
-            valueOf(ctx, b.card, b.rule.rate) -
-              valueOf(ctx, a.card, a.rule.rate) ||
-            a.card.name.localeCompare(b.card.name),
-        )
-        .map(
-          (n) =>
-            `${cardLink(ctx, n.card)}${earning ? ` (${esc(earnText(ctx.catalog, n.rule.rate, n.card.currency))})` : ''}`,
-        )
-      const one = cards.length === 1
-      const named = one ? (cards[0] ?? '') : namedList(cards)
-      const bonus = esc(bonusOf(first))
-      const which = as
-        ? `stores that ${earning ? 'count' : "don't count"} ${esc(as)} for the bonus on ${one ? named : `these cards: ${named}`}`
-        : `stores where ${one ? `${named} ${earning ? 'pays' : "doesn't pay"} its` : `these cards ${earning ? 'pay' : "don't pay"} their`} bonus on ${bonus}${one ? '' : `: ${named}`}`
-      const sentence = `${esc(ctx.issuerName(first.card.issuer))} names ${store} among its examples of ${which}.`
-      const byUrl = new Map<string, Quote[]>()
-      for (const q of quotesOf(first))
-        byUrl.set(q.url, [...(byUrl.get(q.url) ?? []), q])
-      const quotes = [...byUrl.values()].map(
-        (qs) =>
-          `<li>${ctx.quoteHtml({ ...(qs[0] as Quote), quote: qs.map((q) => q.quote).join(' … ') })}</li>`,
-      )
-      return `<p>${sentence}</p><ul class="quotes">${quotes.join('')}</ul>`
-    })
-    .join('')
+// Words an issuer uses when its stores are examples, not the whole list.
+const EXAMPLES = /\b(e\.g\.|examples?|like|such as|includ(e|es|ing)|sample)\b/i
+
+// A quote that's a run of store names off an issuer's list, not a sentence,
+// after any lead-in that ends in a colon ("…rewards include: ALDI Hy-Vee").
+function isNameList(quote: string): boolean {
+  const colon = quote.lastIndexOf(': ')
+  const run = colon === -1 ? quote : quote.slice(colon + 2)
+  if (/[,;:()"!?]/.test(run)) return false
+  const words = run.split(/\s+/)
+  const lower = words.filter((w) => /^[a-z]/.test(w) && !w.includes('.'))
+  return lower.length * 4 <= words.length
 }
 
-// "TV, internet and streaming, when that's one of your picks": the picks of
-// a rule paid on a pick that cover the store. An online shopping pick covers
-// nearly every store, so it's named only when no other pick does.
-function pickFor(
-  ctx: PageContext,
-  card: Card,
-  rule: Rule,
-  merchant: Merchant,
-): string | null {
+const squash = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+// "U.S. Bank's", "Barclays'", "American Express's".
+const whose = (name: string) => (/[^s]s$/.test(name) ? `${name}'` : `${name}'s`)
+
+// Who says it: the issuer on its own site, else the company whose site it
+// is ("Venmo" for a Synchrony card's page on venmo.com).
+function speaker(ctx: PageContext, card: Card, urls: string[]): string {
+  const issuer = ctx.catalog.issuers.find((i) => i.id === card.issuer)
+  const own = [card.issuer, issuer?.name ?? '', ...(issuer?.search ?? [])]
+    .map(squash)
+    .filter((w) => w.length >= 3)
+  const hosts = urls.map(hostname)
+  if (hosts.some((h) => own.some((w) => squash(h).includes(w))))
+    return ctx.issuerName(card.issuer)
+  const site = hosts[0]?.split('.').at(-2)
+  return site ? capitalize(site) : ctx.issuerName(card.issuer)
+}
+
+// The options of a rule's pick that cover the store. An online shopping pick
+// covers nearly every store, so it counts only when no other pick does.
+function pickOptions(card: Card, rule: Rule, merchant: Merchant): string[] {
   const choice = card.choices.find((c) => c.id === rule.match.choice)
-  if (!choice) return null
+  if (!choice) return []
   const ways = [
     merchant.category,
     merchant.in_store?.category,
@@ -384,11 +358,245 @@ function pickFor(
       !ways.every((w) => exclude.some((c) => categoryMatches(c, w)))
     )
   })
-  const picks = (covering.length > 0 ? covering : online).map(([id]) =>
-    pickName(ctx.catalog, card, choice.id, id),
+  return (covering.length > 0 ? covering : online).map(([id]) => id)
+}
+
+// The pick a naming is about: the one that covers a store named as earning,
+// the one the data says leaves out a store named as not earning.
+const pickOf = (n: Naming, m: Merchant): string[] => {
+  if (n.list === 'earning') return pickOptions(n.card, n.rule, m)
+  const pick = n.rule.named?.picks?.[m.id]
+  return pick === undefined ? [] : [pick]
+}
+
+type Piece = {
+  quote: Quote
+  lead: boolean // names no store on the list
+  list: boolean // a run of names, shown as a list
+  names: string[] // the stores it names, in the issuer's spelling
+}
+
+// The quotes of a naming that are about this store: the pieces of a long
+// list that name it alone (not inside a longer name), among stores on the
+// same pick, and any lead-in that names no store.
+function piecesOf(ctx: PageContext, n: Naming, merchant: Merchant): Piece[] {
+  const ids = n.rule.named?.[n.list] ?? []
+  const pool = [
+    merchant,
+    ...NAMED_LISTS.flatMap((l) => n.rule.named?.[l] ?? []).flatMap((id) => {
+      const m = findMerchant(ctx.catalog, id)
+      return m && m.id !== merchant.id ? [m] : []
+    }),
+  ]
+  const mine = pickOf(n, merchant)
+  const samePick = (m: Merchant) =>
+    mine.length === 0 || pickOf(n, m).some((o) => mine.includes(o))
+  return ctx
+    .quotesFor(n.card, namedKey(n.rule.id, n.list))
+    .flatMap((q): Piece[] => {
+      const found = namesInQuote(q.quote, pool)
+      const others = found.filter(
+        (f) => f.merchant.id !== merchant.id && ids.includes(f.merchant.id),
+      )
+      if (!found.some((f) => f.merchant.id === merchant.id))
+        return others.length === 0
+          ? [{ quote: q, lead: true, list: false, names: [] }]
+          : []
+      // A piece is about the pick most of the stores it names are on: "Kroger
+      // Fuel Center" in a list of gas stations isn't about Kroger's groceries.
+      const tally = new Map<string, number>()
+      for (const f of found)
+        if (f.merchant.id === merchant.id || ids.includes(f.merchant.id))
+          for (const o of pickOf(n, f.merchant))
+            tally.set(o, (tally.get(o) ?? 0) + 1)
+      const most = Math.max(0, ...tally.values())
+      if (mine.length > 0 && !mine.some((o) => tally.get(o) === most)) return []
+      return [
+        {
+          quote: q,
+          lead: false,
+          list: isNameList(q.quote),
+          names: found
+            .filter(
+              (f) =>
+                f.merchant.id === merchant.id ||
+                (ids.includes(f.merchant.id) && samePick(f.merchant)),
+            )
+            .map((f) => f.text),
+        },
+      ]
+    })
+}
+
+// What issuers' own lists of stores say about this one: a sentence for each
+// issuer, list and quote, naming every card that shares it, then the quotes.
+// A list of examples says nothing about the stores it leaves out.
+function issuerListsHtml(ctx: PageContext, merchant: Merchant): string {
+  const link = (url: string) =>
+    `<a href="${esc(url)}" rel="nofollow noopener">${esc(hostname(url))}</a>`
+  const groups = new Map<
+    string,
+    { namings: Naming[]; who: string; examples: boolean; lines: string[] }
+  >()
+  for (const n of namings(openCards(ctx), merchant.id, ctx.today)) {
+    const all = piecesOf(ctx, n, merchant)
+    const hasList = all.some((p) => p.list)
+    // A list shown as names says it's the issuer's examples itself.
+    const pieces = hasList ? all.filter((p) => !p.lead) : all
+    const onlyStores = pickOf(n, merchant).some(
+      (o) =>
+        n.card.choices
+          .find((c) => c.id === n.rule.match.choice)
+          ?.options[o]?.merchants.includes(merchant.id) ?? false,
+    )
+    const examples =
+      all.some((p) => !p.list && EXAMPLES.test(p.quote.quote)) ||
+      (hasList && !onlyStores)
+    const who = speaker(
+      ctx,
+      n.card,
+      pieces.map((p) => p.quote.url),
+    )
+    const byUrl = new Map<string, Piece[]>()
+    for (const p of pieces)
+      byUrl.set(p.quote.url, [...(byUrl.get(p.quote.url) ?? []), p])
+    const lines = [...byUrl].flatMap(([url, ps]) => {
+      const prose = ps.filter((p) => !p.list)
+      const names = [
+        ...new Set(ps.filter((p) => p.list).flatMap((p) => p.names)),
+      ]
+      return [
+        ...(prose.length > 0
+          ? [
+              `“${esc(quoteText(prose.map((p) => p.quote.quote).join(' … ')))}” ${link(url)}`,
+            ]
+          : []),
+        ...(names.length > 0
+          ? [
+              `${esc(whose(who))} ${examples ? 'examples include' : 'list includes'} ${esc(inOrder(names))}. ${link(url)}`,
+            ]
+          : []),
+      ]
+    })
+    const key = JSON.stringify([
+      who,
+      n.list,
+      examples,
+      countsAs(ctx, n.rule) ??
+        n.rule.match.choice ??
+        ctx.ruleWhatRaw(n.card, n.rule),
+      pickOf(n, merchant),
+      lines,
+    ])
+    const g = groups.get(key)
+    if (g) g.namings.push(n)
+    else groups.set(key, { namings: [n], who, examples, lines })
+  }
+  return [...groups.values()]
+    .sort(
+      (a, b) =>
+        a.who.localeCompare(b.who) ||
+        Number(a.namings[0]?.list !== 'earning') -
+          Number(b.namings[0]?.list !== 'earning'),
+    )
+    .map(({ namings: list, who, examples, lines }) => {
+      const [first] = list
+      if (!first) return ''
+      const sentence = namingSentence(ctx, merchant, list, who, examples)
+      return `<p>${sentence}</p><ul class="quotes">${lines.map((l) => `<li>${l}</li>`).join('')}</ul>`
+    })
+    .join('')
+}
+
+// The sentence for a group of namings that share an issuer, list and quotes:
+// "U.S. Bank names Kroger among its examples of stores where U.S. Bank Cash+
+// (2% cash back) pays its bonus on grocery stores, when that's your pick."
+// Example wording only when the issuer calls them examples.
+function namingSentence(
+  ctx: PageContext,
+  merchant: Merchant,
+  list: Naming[],
+  who: string,
+  examples: boolean,
+): string {
+  const [first] = list
+  if (!first) return ''
+  const { card, rule } = first
+  const earning = first.list === 'earning'
+  const store = esc(merchant.name)
+  const subject = esc(who)
+  const sorted = [...list].sort(
+    (a, b) =>
+      valueOf(ctx, b.card, b.rule.rate) - valueOf(ctx, a.card, a.rule.rate) ||
+      a.card.name.localeCompare(b.card.name),
   )
-  if (picks.length === 0) return null
-  return `${listed(picks, 'or')}, when that's ${choice.pick > 1 ? 'one of your picks' : 'your pick'}`
+  const one = sorted.length === 1
+  const named = namedList(
+    sorted.map(
+      (n) =>
+        `${cardLink(ctx, n.card)}${earning ? ` (${esc(earnText(ctx.catalog, n.rule.rate, n.card.currency))})` : ''}`,
+    ),
+  )
+  const rate = esc(bareRate(rule.rate, card.currency))
+  // "Chase Freedom Flex's 5% bonus", but "the 3x bonus on SoFi Unlimited 2%".
+  const bonusOn = /\d%$/.test(ctx.shortName(card.id))
+    ? `the ${rate} bonus on ${cardLink(ctx, card)}`
+    : `<a href="/cards/${card.id}">${esc(possessive(ctx.shortName(card.id)))}</a> ${rate} bonus`
+  const cardsWord = one ? named : `these cards: ${named}`
+  const as = countsAs(ctx, rule)
+  if (as !== null) {
+    const category = rule.match.categories?.[0] ?? ''
+    if (examples)
+      return `${subject} names ${store} among its examples of stores that ${earning ? 'count' : "don't count"} ${esc(as)} for the bonus on ${cardsWord}.`
+    if (earning)
+      return one
+        ? `${subject} says ${store} counts ${esc(as)} for ${bonusOn}.`
+        : `${subject} says ${store} counts ${esc(as)} for the bonus on ${cardsWord}.`
+    return one
+      ? `${subject} leaves ${store} out of ${esc(categoryPhrase(ctx.catalog, category))} for ${bonusOn}.`
+      : `${subject} leaves ${store} out of ${esc(categoryPhrase(ctx.catalog, category))} for the bonus on ${cardsWord}.`
+  }
+  const choice = card.choices.find((c) => c.id === rule.match.choice)
+  const picks = pickOf(first, merchant).map((o) =>
+    pickName(ctx.catalog, card, choice?.id ?? '', o),
+  )
+  const merchantsOnly =
+    rule.match.merchants !== undefined &&
+    rule.match.categories === undefined &&
+    rule.match.choice === undefined
+  // Of a rule over several categories, the ones the store counts as.
+  const ways = [
+    merchant.category,
+    merchant.in_store?.category,
+    merchant.online?.category,
+  ].filter((w) => w !== undefined)
+  const covering = earning
+    ? (rule.match.categories ?? []).filter((c) =>
+        ways.some((w) => categoryMatches(c, w)),
+      )
+    : []
+  const what = esc(
+    choice && picks.length > 0
+      ? inOrder(picks, 'or')
+      : covering.length > 0 && choice === undefined
+        ? inOrder(covering.map((c) => categoryPhrase(ctx.catalog, c)))
+        : `${ctx.ruleWhatRaw(card, rule)}${merchantsOnly ? ' purchases' : ''}`,
+  )
+  const when =
+    earning && choice && picks.length > 0
+      ? `, when that's ${choice.pick > 1 ? 'one of your picks' : 'your pick'}`
+      : ''
+  if (earning)
+    return examples
+      ? `${subject} names ${store} among its examples of stores where ${one ? `${named} pays its` : 'these cards pay their'} bonus on ${what}${when}${one ? '' : `: ${named}`}.`
+      : `${subject} says ${one ? `${named} pays its` : 'these cards pay their'} bonus on ${what} at ${store}${when}${one ? '' : `: ${named}`}.`
+  if (!one)
+    return examples
+      ? `${subject} names ${store} among its examples of stores where these cards don't pay their bonus on ${what}: ${named}.`
+      : `${subject} says these cards don't pay their bonus on ${what} at ${store}: ${named}.`
+  return examples
+    ? `${subject} names ${store} among its examples of stores where ${named} doesn't pay its ${rate} on ${what}.`
+    : `${subject} says ${named} doesn't pay its ${rate} on ${what} at ${store}.`
 }
 
 // "as a supermarket", for a rule that covers one category and nothing else.
@@ -450,6 +658,8 @@ export function howItCodes(
 
   const named: string[] = []
   const excluding: { card: Card; rule: Rule; html: string }[] = []
+  // A rule whose issuer names the store as not earning it is said above.
+  let saidAbove = false
   for (const card of openCards(ctx)) {
     for (const rule of card.rules.filter((r) => inEffect(r, ctx.today))) {
       const quote = ctx.quotesFor(card, rule.id)
@@ -466,7 +676,9 @@ export function howItCodes(
         !rule.named?.earning?.includes(merchant.id) &&
         (ex?.merchants?.includes(merchant.id) ||
           ways.some((w) => ex?.categories?.some((c) => categoryMatches(c, w))))
-      if (leftOut) {
+      if (leftOut && rule.named?.not_earning?.includes(merchant.id))
+        saidAbove = true
+      else if (leftOut) {
         const why = exclusionText(
           ctx,
           card,
@@ -485,6 +697,7 @@ export function howItCodes(
     parts.push(
       `<h3>Cards whose terms name ${esc(merchant.name)}</h3><ul class="quotes">${named.join('')}</ul>`,
     )
+  const leftOutHeading = `${saidAbove ? 'Other cards' : 'Cards'} whose terms leave it out`
   if (excluding.length > SHOWN_LEFT_OUT) {
     // The bonuses worth most as chips, every card with its terms behind a tap.
     const top = [...excluding]
@@ -494,11 +707,11 @@ export function howItCodes(
       )
       .slice(0, SHOWN_LEFT_OUT)
     parts.push(
-      `<h3>Cards whose terms leave it out</h3><ul class="rate-chips">${top.map((e) => `<li>${cardLink(ctx, e.card)} <b>${esc(bareRate(e.rule.rate, e.card.currency))}</b></li>`).join('')}</ul>${finePrint(`<ul class="quotes">${excluding.map((e) => e.html).join('')}</ul>`, `All ${String(excluding.length)}, with their terms`)}`,
+      `<h3>${leftOutHeading}</h3><ul class="rate-chips">${top.map((e) => `<li>${cardLink(ctx, e.card)} <b>${esc(bareRate(e.rule.rate, e.card.currency))}</b></li>`).join('')}</ul>${finePrint(`<ul class="quotes">${excluding.map((e) => e.html).join('')}</ul>`, `All ${String(excluding.length)}, with their terms`)}`,
     )
   } else if (excluding.length > 0)
     parts.push(
-      `<h3>Cards whose terms leave it out</h3><ul class="quotes">${excluding.map((e) => e.html).join('')}</ul>`,
+      `<h3>${leftOutHeading}</h3><ul class="quotes">${excluding.map((e) => e.html).join('')}</ul>`,
     )
 
   for (const way of ways) {

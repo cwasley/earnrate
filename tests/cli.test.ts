@@ -208,7 +208,9 @@ test('the bin runs under plain node', async () => {
       },
     },
   )
-  expect(stdout).toMatch(/^Netflix\n\nUse Blue Cash Preferred: 6% back\./)
+  expect(stdout).toMatch(
+    /^Netflix · online\n\nUse Blue Cash Preferred: 6% back\./,
+  )
 })
 
 describe('wallet setup commands', () => {
