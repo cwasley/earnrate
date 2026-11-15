@@ -230,6 +230,6 @@ test('search names each pick in words, with the id the picks input takes', () =>
   expect(text).toContain('TV, internet & streaming (tv-internet-streaming)')
   expect(text).toContain('gyms and fitness (gyms-fitness)')
   expect(search('bank-of-america-customized-cash-rewards')).toMatch(
-    /three-percent: pick 1 of gas stations and EV charging \(gas-ev-charging\), online-shopping, restaurants \(dining\),[^\n]* \(default gas stations and EV charging\)/,
+    /three-percent: pick 1 of gas stations and EV charging \(gas-ev-charging\), online-shopping, restaurants \(dining\),[^\n]* \(default gas stations and EV charging \(gas-ev-charging\)\)/,
   )
 })

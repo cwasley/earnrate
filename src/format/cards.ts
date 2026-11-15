@@ -38,11 +38,9 @@ export function formatCardInfo(
             return name === o.replaceAll('-', ' ') ? o : `${name} (${o})`
           })
           .join(', ')
-      const plain = (ids: string[]) =>
-        ids.map((o) => (full ? pickName(catalog, full, c.id, o) : o)).join(', ')
       return c.automatic
-        ? `${c.id}: the issuer applies it to the ${c.pick === 1 ? 'one' : String(c.pick)} with the most spending; the wallet can set the expected ${c.pick === 1 ? 'one' : String(c.pick)} of ${named(c.options)}${c.default ? ` (assumed ${plain(c.default)})` : ''}`
-        : `${c.id}: pick ${String(c.pick)} of ${named(c.options)}${c.default ? ` (default ${plain(c.default)})` : ''}`
+        ? `${c.id}: the issuer applies it to the ${c.pick === 1 ? 'one' : String(c.pick)} with the most spending; the wallet can set the expected ${c.pick === 1 ? 'one' : String(c.pick)} of ${named(c.options)}${c.default ? ` (assumed ${named(c.default)})` : ''}`
+        : `${c.id}: pick ${String(c.pick)} of ${named(c.options)}${c.default ? ` (default ${named(c.default)})` : ''}`
     }),
     ...(card.requiresMembership
       ? [

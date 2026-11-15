@@ -375,7 +375,7 @@ function reasoningFor(
             ...picks.flatMap((p) => choice.notes?.[p] ?? []),
             ...(best.cap
               ? [
-                  `${capSentence(best.cap.cap, earnText(catalog, best.cap.cap.then_rate, currency))}.`,
+                  `${capSentence(best.cap.cap, earnText(catalog, best.afterCap ?? best.cap.cap.then_rate, currency))}.`,
                 ]
               : []),
           ]

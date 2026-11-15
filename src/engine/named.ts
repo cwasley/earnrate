@@ -119,14 +119,21 @@ export function namings(
 export const namesAsItsCategory = (
   rule: Rule | null | undefined,
   merchant: MerchantResolution,
-  card?: Pick<Card, 'choices'>,
+  card?: Pick<Card, 'choices' | 'rules'>,
 ): boolean => {
-  if (merchant.merchantId === null) return false
-  if (!(rule?.named?.earning?.includes(merchant.merchantId) ?? false))
-    return false
-  if (rule?.match.categories?.includes(merchant.category)) return true
+  if (merchant.merchantId === null || !rule) return false
+  // A membership tier's rule pays on the same purchases as the rule the
+  // issuer's list is recorded on.
+  const same = JSON.stringify(rule.match)
+  const named =
+    rule.named ??
+    card?.rules.find(
+      (r) => r.named !== undefined && JSON.stringify(r.match) === same,
+    )?.named
+  if (!(named?.earning?.includes(merchant.merchantId) ?? false)) return false
+  if (rule.match.categories?.includes(merchant.category)) return true
   // A rule paying on a pick names the store as one of an option's categories.
-  const choice = card?.choices.find((c) => c.id === rule?.match.choice)
+  const choice = card?.choices.find((c) => c.id === rule.match.choice)
   return Object.values(choice?.options ?? {}).some((o) =>
     o.categories.includes(merchant.category),
   )

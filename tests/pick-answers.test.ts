@@ -63,3 +63,15 @@ test("a month's own amount reads without nested parentheses inside them", () => 
   expect(creditBack(uber)).toBe('$15 back each month ($35 in December)')
   expect(creditBack(uber, true)).toBe('$15 back each month, $35 in December')
 })
+
+test("with a tier saved, the tier's rule names the store and the cap's after rate", () => {
+  const wallet = withPick('gas-ev-charging')
+  wallet.memberships = ['bofa-rewards-preferred-plus']
+  const rec = recommend(catalog, wallet, purchase('Exxon', { amount: 40 }))
+  expect(rec.ranked[0]?.reasoning[0]).toBe(
+    '3.75% cash back on gas stations and EV charging, your pick, with BofA Rewards Preferred Plus. Gas excludes EV charging billed by parking lots. Up to $2,500 of spending a quarter, then 1.25% cash back.',
+  )
+  expect(rec.assumptions).toContain(
+    'Assumes ExxonMobil counts as a gas station; for Bank of America Customized Cash Rewards, Bank of America names it as one.',
+  )
+})
