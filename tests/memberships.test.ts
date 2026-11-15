@@ -4,7 +4,10 @@ import { walletProblems } from '../src/data/integrity.ts'
 import { addCardText } from '../src/data/wallet-edit.ts'
 import { catalogCheatSheet } from '../src/engine/cheat-sheet.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../src/engine/explore.ts'
-import { membershipCosts } from '../src/engine/memberships.ts'
+import {
+  membershipCosts,
+  membershipUpgradeText,
+} from '../src/engine/memberships.ts'
 import {
   resolveSpendLines,
   simulateAdditions,
@@ -140,4 +143,30 @@ test('wallets carry a format version, and a newer one is refused', () => {
     /newer earnrate/,
   )
   expect(walletProblems(wallet, catalog)).toEqual([])
+})
+
+test('a ranking names the best tier a card earns more with', () => {
+  const entry = (memberships: string[]) =>
+    exploreCards(
+      catalog,
+      {
+        merchant: 'home-depot',
+        category: null,
+        amount: null,
+        channel: null,
+        date: START,
+      },
+      { filters: ALL_PERSONAL_CARDS, memberships, valuations: {} },
+    ).ranked.find((e) => e.cardId === 'bank-of-america-customized-cash-rewards')
+  const upgrades = entry([])?.withMembership ?? []
+  expect(membershipUpgradeText(catalog, upgrades)).toBe(
+    'Up to 5.25% with BofA Rewards Premier',
+  )
+  expect(
+    membershipUpgradeText(
+      catalog,
+      entry(['bofa-rewards-preferred-honors'])?.withMembership ?? [],
+    ),
+  ).toBe('5.25% with BofA Rewards Premier')
+  expect(membershipUpgradeText(catalog, [])).toBeNull()
 })

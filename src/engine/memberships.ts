@@ -1,7 +1,7 @@
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Membership } from '../schema/membership.ts'
-import { money, withArticle, words } from './text.ts'
+import { money, pct, withArticle, words } from './text.ts'
 
 export type MembershipCost = {
   id: string
@@ -19,6 +19,18 @@ export function membership(
 
 export function membershipName(catalog: Catalog, id: string): string {
   return membership(catalog, id)?.name ?? words(id)
+}
+
+// What a ranked card earns with a membership the ranking didn't assume,
+// best first: "5% with Amazon Prime", or "Up to 5.25% with BofA Rewards
+// Premier" when more than one would raise it.
+export function membershipUpgradeText(
+  catalog: Catalog,
+  upgrades: readonly { membership: string; effectiveReturnPct: number }[],
+): string | null {
+  const best = upgrades[0]
+  if (best === undefined) return null
+  return `${upgrades.length > 1 ? 'Up to ' : ''}${pct(best.effectiveReturnPct)} with ${membershipName(catalog, best.membership)}`
 }
 
 // Tiers of one membership: holding one, the others in its group aren't

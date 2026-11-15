@@ -16,7 +16,10 @@ import {
 } from '../src/engine/explore.ts'
 import { EPSILON } from '../src/engine/compare.ts'
 import { noteOnly } from '../src/engine/recommend.ts'
-import { membershipText } from '../src/engine/memberships.ts'
+import {
+  membershipText,
+  membershipUpgradeText,
+} from '../src/engine/memberships.ts'
 import { findMerchant } from '../src/merchants/resolve.ts'
 import {
   addDays,
@@ -498,11 +501,8 @@ function table(shown: ExploreEntry[]): string {
   const rows = shown
     .map((e, i) => {
       const lines = requirementLines(e.cardId, e.requirements, untilShort(e))
-      const upgrade = e.withMembership[0]
-      if (upgrade && HIGHLIGHTED.includes(upgrade.membership))
-        lines.push(
-          `${pct(upgrade.effectiveReturnPct)} with ${membershipName(upgrade.membership)}`,
-        )
+      const upgrade = membershipUpgradeText(catalog, e.withMembership)
+      if (upgrade) lines.push(upgrade)
       return `<li><span class="rank">${String(i + 1)}</span>${art(e.cardId)}<div><span class="row-head"><a class="row-link" href="/cards/${e.cardId}">${esc(shortName(e.cardId))}</a> <span class="rate">${pct(e.effectiveReturnPct)}</span></span><span class="muted row-note">${esc(issuerName(e.issuer))} · ${esc(feeLabel(e.cardId))}</span>${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</div></li>`
     })
     .join('')
@@ -1992,12 +1992,23 @@ function compareTable(c: Comparison): string {
       ),
     ),
   ]
+  // Said once under the table, not in every cell the membership raises.
+  const members = (['a', 'b'] as const).flatMap((side) => {
+    const best = c.rows
+      .flatMap((r) => r[side].entry?.withMembership.slice(0, 1) ?? [])
+      .sort((x, y) => y.effectiveReturnPct - x.effectiveReturnPct)[0]
+    return best
+      ? [
+          `With ${membershipName(best.membership)}, the ${shortName(c[side].id)} earns more, up to ${pct(best.effectiveReturnPct)}.`,
+        ]
+      : []
+  })
   return `${table(everyday)}${
     more.length > 0
       ? `<details class="more-groups more-rows"><summary>${String(more.length)} more ${more.length === 1 ? 'purchase' : 'purchases'}</summary>${table(more)}</details>`
       : ''
   }
-      <p class="muted">What each purchase earns back, with each card set up at its best for it (the right bonus pick, any activation done, no cap used up yet). The higher rate is highlighted.${reasons.length > 0 ? ` ${reasons.map(esc).join(' ')}` : ''}</p>`
+      <p class="muted">What each purchase earns back, with each card set up at its best for it (the right bonus pick, any activation done, no cap used up yet). The higher rate is highlighted.${[...reasons, ...members].map((t) => ` ${esc(t)}`).join('')}</p>`
 }
 
 function suits(c: Comparison): string {

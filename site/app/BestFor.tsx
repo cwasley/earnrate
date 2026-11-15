@@ -37,7 +37,7 @@ import {
   cards,
   feeLabel,
   issuerName,
-  membershipName,
+  membershipUpgrade,
   pct,
   requirementLines,
   shortName,
@@ -131,7 +131,7 @@ function CardRow({
   held: boolean
 }) {
   const card = cards.get(entry.cardId)
-  const upgrade = entry.withMembership[0]
+  const upgrade = membershipUpgrade(entry.withMembership)
   return (
     <li class="result" data-held={held ? '' : undefined}>
       <div class="result-top">
@@ -161,13 +161,7 @@ function CardRow({
           </ul>
         ) : null
       })()}
-      {upgrade ? (
-        <p class="muted small">
-          {entry.withMembership.length > 1 ? 'Up to ' : ''}
-          {pct(upgrade.effectiveReturnPct)} with{' '}
-          {membershipName(upgrade.membership)}
-        </p>
-      ) : null}
+      {upgrade ? <p class="muted small">{upgrade}</p> : null}
       {entry.warnings.map((w) => (
         <p class="warn" key={w}>
           {w}

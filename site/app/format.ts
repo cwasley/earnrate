@@ -1,4 +1,5 @@
 import { catalog } from 'virtual:catalog'
+import { membershipUpgradeText } from '../../src/engine/memberships.ts'
 import { cardText } from '../../src/format/card-text.ts'
 
 export { pct, wholeDollars, words } from '../../src/engine/text.ts'
@@ -16,6 +17,10 @@ export const {
 // Venture X"), for places with room for little more than a word or two.
 export const shortestName = (id: string) =>
   cards.get(id)?.short_name ?? shortName(id)
+
+export const membershipUpgrade = (
+  upgrades: Parameters<typeof membershipUpgradeText>[1],
+) => membershipUpgradeText(catalog, upgrades)
 
 export const cardCount = (n: number) => `${String(n)} card${n === 1 ? '' : 's'}`
 

@@ -15,7 +15,7 @@ import {
 } from '../engine/simulate.ts'
 import {
   ifMemberLines,
-  membershipName,
+  membershipUpgradeText,
   placedAmong,
 } from '../engine/memberships.ts'
 import {
@@ -90,11 +90,8 @@ export function formatExploration(
       `${String(i + 1).padStart(2)}. ${e.cardName.padEnd(width)}  ${pct(e.effectiveReturnPct).padStart(5)}${earned}  ${feeText(e)}`,
     )
     for (const c of e.conditions) lines.push(`    ${c}`)
-    const upgrade = e.withMembership[0]
-    if (upgrade)
-      lines.push(
-        `    With ${membershipName(catalog, upgrade.membership)}: ${pct(upgrade.effectiveReturnPct)}.`,
-      )
+    const upgrade = membershipUpgradeText(catalog, e.withMembership)
+    if (upgrade) lines.push(`    ${upgrade}.`)
     for (const w of e.warnings) lines.push(`    ! ${w}`)
   })
   if (r.ranked.length > shown.length)
