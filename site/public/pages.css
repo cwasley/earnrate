@@ -1242,6 +1242,11 @@ a.button,
     height: auto;
     opacity: 1;
   }
+  /* A sticky summary inside: hidden would make this box its scroll
+     container and pin the summary over its own rows. */
+  .all-cats::details-content {
+    overflow: clip;
+  }
   @media (prefers-reduced-motion: reduce) {
     details::details-content {
       height: auto;
