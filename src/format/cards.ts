@@ -1,5 +1,6 @@
 import type { CardDetails } from '../engine/card-details.ts'
 import { membershipName } from '../engine/memberships.ts'
+import { pickName } from '../engine/rule-text.ts'
 import {
   foreignFeeText,
   money,
@@ -27,11 +28,22 @@ export function formatCardInfo(
     ...(card.ratesNote === null
       ? []
       : [`about these rates: ${card.ratesNote}`]),
-    ...card.choices.map((c) =>
-      c.automatic
-        ? `${c.id}: the issuer applies it to the ${c.pick === 1 ? 'one' : String(c.pick)} with the most spending; the wallet can set the expected ${c.pick === 1 ? 'one' : String(c.pick)} of ${c.options.join(', ')}${c.default ? ` (assumed ${c.default.join(', ')})` : ''}`
-        : `${c.id}: pick ${String(c.pick)} of ${c.options.join(', ')}${c.default ? ` (default ${c.default.join(', ')})` : ''}`,
-    ),
+    ...card.choices.map((c) => {
+      // Named in words for people, with the id the picks input takes.
+      const full = catalog.cards.find((k) => k.id === card.id)
+      const named = (ids: string[]) =>
+        ids
+          .map((o) => {
+            const name = full ? pickName(catalog, full, c.id, o) : o
+            return name === o.replaceAll('-', ' ') ? o : `${name} (${o})`
+          })
+          .join(', ')
+      const plain = (ids: string[]) =>
+        ids.map((o) => (full ? pickName(catalog, full, c.id, o) : o)).join(', ')
+      return c.automatic
+        ? `${c.id}: the issuer applies it to the ${c.pick === 1 ? 'one' : String(c.pick)} with the most spending; the wallet can set the expected ${c.pick === 1 ? 'one' : String(c.pick)} of ${named(c.options)}${c.default ? ` (assumed ${plain(c.default)})` : ''}`
+        : `${c.id}: pick ${String(c.pick)} of ${named(c.options)}${c.default ? ` (default ${plain(c.default)})` : ''}`
+    }),
     ...(card.requiresMembership
       ? [
           `needs ${card.requiresMembership.name} (${money(card.requiresMembership.annualFee)} a year; membership id ${card.requiresMembership.id})`,

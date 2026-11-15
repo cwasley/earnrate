@@ -224,3 +224,12 @@ test('a credit the user says they use gets its use-by reminder', async () => {
   expect(items([]).map((i) => i.ref)).not.toContain('uber-cash')
   expect(items(['uber-cash']).map((i) => i.ref)).toContain('uber-cash')
 })
+
+test('search names each pick in words, with the id the picks input takes', () => {
+  const text = search('usbank-cash-plus')
+  expect(text).toContain('TV, internet & streaming (tv-internet-streaming)')
+  expect(text).toContain('gyms and fitness (gyms-fitness)')
+  expect(search('bank-of-america-customized-cash-rewards')).toMatch(
+    /three-percent: pick 1 of gas stations and EV charging \(gas-ev-charging\), online-shopping, restaurants \(dining\),[^\n]* \(default gas stations and EV charging\)/,
+  )
+})

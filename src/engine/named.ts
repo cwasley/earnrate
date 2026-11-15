@@ -119,10 +119,18 @@ export function namings(
 export const namesAsItsCategory = (
   rule: Rule | null | undefined,
   merchant: MerchantResolution,
-): boolean =>
-  merchant.merchantId !== null &&
-  (rule?.named?.earning?.includes(merchant.merchantId) ?? false) &&
-  (rule?.match.categories?.includes(merchant.category) ?? false)
+  card?: Pick<Card, 'choices'>,
+): boolean => {
+  if (merchant.merchantId === null) return false
+  if (!(rule?.named?.earning?.includes(merchant.merchantId) ?? false))
+    return false
+  if (rule?.match.categories?.includes(merchant.category)) return true
+  // A rule paying on a pick names the store as one of an option's categories.
+  const choice = card?.choices.find((c) => c.id === rule?.match.choice)
+  return Object.values(choice?.options ?? {}).some((o) =>
+    o.categories.includes(merchant.category),
+  )
+}
 
 // The issuers that name the store as counting as its category, each with the
 // cards in an answer that earn by such a rule, by name.
@@ -133,7 +141,7 @@ export function namedBy(
 ): { issuer: string; cards: string[] }[] {
   const byIssuer = new Map<string, string[]>()
   for (const { card, rule, name } of earning)
-    if (namesAsItsCategory(rule, merchant))
+    if (namesAsItsCategory(rule, merchant, card))
       byIssuer.set(card.issuer, [...(byIssuer.get(card.issuer) ?? []), name])
   return [...byIssuer].map(([id, cards]) => ({
     issuer: catalog.issuers.find((i) => i.id === id)?.name ?? id,

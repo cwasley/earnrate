@@ -448,7 +448,7 @@ export function setupNotes(
       text: `Some of ${possessive(name)} rates need ${listed(
         missing.map((m) => `${membershipName(catalog, m)} (${m})`),
         'or',
-      )}; they're counted without it.`,
+      )}; they're counted without ${missing.length > 1 ? 'one' : 'it'}.`,
     })
   }
 

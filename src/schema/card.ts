@@ -208,6 +208,9 @@ export const ChoiceSchema = z.strictObject({
   // The issuer's name for an option whose categories' own names would read
   // as several picks or as another category: "ground transportation".
   names: z.record(KebabId, z.string().min(1)).optional(),
+  // One option's own fine print, taken word for word from the note of the
+  // rule that pays on the choice, for answers that know the pick.
+  notes: z.record(KebabId, z.string().min(1)).optional(),
   // Option id → what that option covers: a list of categories; or, when the
   // issuer publishes the only qualifying stores, `{ merchants: [...] }`; or,
   // for "online shopping" picks, `{ channel: online, exclude: [...] }`, any

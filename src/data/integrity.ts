@@ -389,6 +389,19 @@ function cardProblems(
         problems.push(
           `${where} choice ${choice.id}: names '${named}', which is not an option`,
         )
+    const choiceNotes = card.rules
+      .filter((r) => r.match.choice === choice.id)
+      .map((r) => r.note ?? '')
+    for (const [option, note] of Object.entries(choice.notes ?? {})) {
+      if (!(option in choice.options))
+        problems.push(
+          `${where} choice ${choice.id}: notes '${option}', which is not an option`,
+        )
+      if (!choiceNotes.some((n) => n.includes(note)))
+        problems.push(
+          `${where} choice ${choice.id}: the note for '${option}' isn't in the note of a rule paying on the choice`,
+        )
+    }
     for (const d of choice.default ?? []) {
       if (!(d in choice.options))
         problems.push(

@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.15
+
+No rates changed. `bank-of-america-customized-cash-rewards`: each 3% pick's own fine print (`choices.three-percent.notes`), word for word from the `three-percent` rule's note: gas and EV charging, travel, and online shopping. An answer that knows the pick now says "3% cash back on gas stations and EV charging, your pick" with only that pick's fine print, instead of every pick's. The data check holds each pick's note to the text of the note on a rule that pays on the choice.
+
 ## 2026.11.13.4
 
 No card's rates changed. Corrections to where a purchase is taken to be made online, and to the stores and picks named in 2026.11.13.2 and .3:

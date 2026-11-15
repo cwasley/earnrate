@@ -45,6 +45,10 @@ choices:
       travel: [travel, transit]
       drug-stores: [drugstore]
       home-improvement-furnishings: [home_improvement, furniture]
+    notes:
+      gas-ev-charging: Gas excludes EV charging billed by parking lots.
+      travel: Travel includes parking, transit, rideshare and tolls.
+      online-shopping: Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded.
 rules:
   - id: three-percent
     match: { choice: three-percent }

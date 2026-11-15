@@ -61,6 +61,8 @@ export type FeeWorth = {
   rivals: number // no-fee cards it was compared with
   // Why a break-even past typical spending in these lines is that high.
   high: HighBreakEven | null
+  // With no break-even, the no-fee card that leads at typical spending.
+  leader: Card | null
   at: (monthly: number) => { card: Simulation; best: Simulation }
 }
 
@@ -193,6 +195,12 @@ export function feeWorthKit(
       breakEven === null || breakEven <= HIGH_TIMES_TYPICAL * total
         ? null
         : highBreakEven(lines, breakEven, total, at)
+    const leaderId =
+      breakEven === null
+        ? at(Math.max(STEP, Math.round(total / STEP) * STEP)).best.cards[0]
+            ?.cardId
+        : undefined
+    const leader = catalog.cards.find((c) => c.id === leaderId) ?? null
     const own = held.find((h) => h.id === card.id) ?? null
     const year = allCreditsYear(catalog, card, today, valuations, own)
     // The simulation counts each night at its cap; the person's own value
@@ -221,6 +229,7 @@ export function feeWorthKit(
       creditsStopAt: withCredits.stopsAt,
       rivals: noFee(card).length,
       high,
+      leader,
       at,
     }
   }
@@ -340,7 +349,7 @@ export function feeWorthVerdict(
     : `spending on ${inOrder(w.lines.map(lineWords))}`
   const verdict =
     w.breakEven === null
-      ? `On earning alone, the ${esc(name)} doesn't earn more than the best no-fee card after its ${esc(fee)} fee, at any amount up to ${esc(wholeDollars(MAX_MONTHLY))} a month of ${esc(where)}.`
+      ? `On earning alone, the ${esc(name)} doesn't earn more than the best no-fee card${w.leader === null ? '' : `, the ${esc(shortCardName(w.leader.name))},`} after its ${esc(fee)} fee, at any amount up to ${esc(wholeDollars(MAX_MONTHLY))} a month of ${esc(where)}.`
       : `On earning alone, the ${esc(name)} earns more than the best no-fee card, after its ${esc(fee)} fee, from about ${strong(`${esc(wholeDollars(w.breakEven))} a month`)} of ${esc(where)}${w.stopsAt === null ? '' : `, up to about ${esc(wholeDollars(w.stopsAt))} a month (past that, a spending cap ends its lead)`}.`
   const why = withWhy ? highText(w) : ''
   return why === '' ? verdict : `${verdict} ${esc(why)}`
@@ -504,7 +513,7 @@ export function feeWorthAnswer(
       : `${currencyName(catalog, card.currency)} at ${num(centsPerUnit)}¢ each (${savedValue ? 'the saved point value' : "earnrate's default"})`
   // The person's own value for the overtaking card's points, which can be
   // what puts it ahead.
-  const rival = overtaker(catalog, w)
+  const rival = overtaker(catalog, w) ?? w.leader
   const rivalValue =
     rival === null ||
     rival.currency === 'cash' ||

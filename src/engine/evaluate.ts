@@ -112,6 +112,9 @@ export type Earning = {
   // uncapped rate for this purchase if that's higher (Freedom Flex's 3%
   // dining once its quarterly 5% is used up).
   afterCap: number | null
+  // For a rule paying on a choice, the picked options that cover this
+  // purchase.
+  picks?: string[]
 }
 
 export type CardEvaluation = {
@@ -126,6 +129,23 @@ export type PickedCoverage = {
   categories: string[]
   merchants: string[]
   online: { exclude: string[] }[] // picked "any online purchase" options
+  // Each picked option's own coverage, by option id.
+  options: { id: string; coverage: Omit<PickedCoverage, 'options'> }[]
+}
+
+// Whether picked categories, stores or online shopping cover the purchase.
+function covers(
+  coverage: Omit<PickedCoverage, 'options'>,
+  ctx: PurchaseContext,
+): boolean {
+  const inCategory = (cats: string[]) =>
+    cats.some((c) => categoryMatches(c, ctx.category))
+  return (
+    coverage.merchants.some((id) => ctx.merchantIds.includes(id)) ||
+    (ctx.channel === 'online' &&
+      coverage.online.some((o) => !inCategory(o.exclude))) ||
+    inCategory(coverage.categories)
+  )
 }
 
 export function pickedCategories(
@@ -149,11 +169,17 @@ export function pickedCategories(
     }
     picks ??= choice.default
     if (!picks) continue
-    const options = picks.flatMap((p) => choice.options[p] ?? [])
+    const coverage = (ids: string[]) => {
+      const options = ids.flatMap((p) => choice.options[p] ?? [])
+      return {
+        categories: options.flatMap((o) => o.categories),
+        merchants: options.flatMap((o) => o.merchants),
+        online: options.flatMap((o) => (o.online ? [o.online] : [])),
+      }
+    }
     picked.set(choice.id, {
-      categories: options.flatMap((o) => o.categories),
-      merchants: options.flatMap((o) => o.merchants),
-      online: options.flatMap((o) => (o.online ? [o.online] : [])),
+      ...coverage(picks),
+      options: picks.map((id) => ({ id, coverage: coverage([id]) })),
     })
   }
   return { picked, staleChoice }
@@ -208,16 +234,7 @@ function applicability(
     return 'no'
   if (match.choice !== undefined) {
     const covered = picked.get(match.choice)
-    const merchantPicked = named(covered?.merchants)
-    const onlinePicked =
-      ctx.channel === 'online' &&
-      (covered?.online.some((o) => !inCategory(o.exclude)) ?? false)
-    if (
-      !merchantPicked &&
-      !onlinePicked &&
-      !inCategory(covered?.categories ?? [])
-    )
-      return 'no'
+    if (!covered || !covers(covered, ctx)) return 'no'
   }
 
   if (exclude?.categories && inCategory(exclude.categories)) return 'no'
@@ -359,6 +376,14 @@ export function evaluateCard(
       cap,
       afterCap,
     }
+    const choice =
+      rule.match.choice === undefined
+        ? undefined
+        : picked.get(rule.match.choice)
+    if (choice)
+      earning.picks = choice.options
+        .filter((o) => covers(o.coverage, ctx))
+        .map((o) => o.id)
     if (beats(earning, earning.rate, best, best.rate)) best = earning
     if (beats(earning, earning.nominalRate, nominal, nominal.nominalRate))
       nominal = earning

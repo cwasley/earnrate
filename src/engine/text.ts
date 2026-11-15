@@ -631,16 +631,20 @@ export const subscriptionPaidText = (
 ) =>
   `${possessive(card)} ${c.name} credit pays this subscription ${CREDIT_PERIODS[c.period]}, so there's nothing to track for it.`
 
-// "$75 back each quarter", "$15 back each month ($35 in December)"
+// "$75 back each quarter", "$15 back each month ($35 in December)", or
+// inside parentheses already, "$15 back each month, $35 in December"
 export const creditBack = (
   c: Pick<Credit, 'amount' | 'period'> & {
     month_amounts?: Credit['month_amounts']
   },
+  inParens = false,
 ) => {
   const months = Object.entries(c.month_amounts ?? {})
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([m, v]) => `${money(v)} in ${MONTH_NAMES[Number(m) - 1] ?? m}`)
-  return `${money(c.amount)} back ${CREDIT_PERIODS[c.period]}${months.length > 0 ? ` (${listed(months)})` : ''}`
+  const back = `${money(c.amount)} back ${CREDIT_PERIODS[c.period]}`
+  if (months.length === 0) return back
+  return inParens ? `${back}, ${listed(months)}` : `${back} (${listed(months)})`
 }
 
 const minPurchase = (amount: number) =>
@@ -701,7 +705,7 @@ export function creditFirstText(
 // A line for an answer that uses the card's credit, or says why it doesn't.
 export function creditAnswerText(c: CreditWords, dollars: number | null) {
   const min = c.minAmount ?? null
-  const credit = `${c.name} credit (${creditBack(c)})`
+  const credit = `${c.name} credit (${creditBack(c, true)})`
   if (!c.enrolled)
     return `Has ${withArticle(credit)} here; ${ENROLL_FIRST} with the issuer, then mark it enrolled in your wallet. It isn't counted until then.`
   if (c.left === null)

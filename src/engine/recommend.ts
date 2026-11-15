@@ -26,13 +26,14 @@ import {
 } from './milestones.ts'
 import { daysBetween } from './periods.ts'
 import { creditAt, creditDollars, type CreditState } from './credits.ts'
-import { ruleWhat } from './rule-text.ts'
+import { pickName, ruleWhat } from './rule-text.ts'
 import { heldRotationGap } from './rotation.ts'
 import { namedBy, namesAsItsCategory } from './named.ts'
 import { EPSILON, isClose } from './compare.ts'
 import {
   amountUnknownText,
   CAP_ADJECTIVES,
+  capSentence,
   categoryNote,
   categoryUnranked,
   codesAs,
@@ -359,10 +360,40 @@ function reasoningFor(
     currency,
   )
   if (best.rule) {
-    const note = best.rule.note ? ` ${best.rule.note}` : ''
-    lines.push(
-      `${standard} on ${ruleWhat(catalog, best.rule, card)}${best.rule.requires?.membership === undefined ? '' : `, with ${membershipName(catalog, best.rule.requires.membership)}`}.${note}`,
-    )
+    const rule = best.rule
+    const membership =
+      rule.requires?.membership === undefined
+        ? ''
+        : `, with ${membershipName(catalog, rule.requires.membership)}`
+    const choice = card.choices.find((c) => c.id === rule.match.choice)
+    const picks = choice === undefined ? [] : (best.picks ?? [])
+    if (choice && picks.length > 0) {
+      // The pick that pays here, with only its own fine print when the
+      // choice has it, since the rule's note covers every option.
+      const own = choice.notes
+        ? [
+            ...picks.flatMap((p) => choice.notes?.[p] ?? []),
+            ...(best.cap
+              ? [
+                  `${capSentence(best.cap.cap, earnText(catalog, best.cap.cap.then_rate, currency))}.`,
+                ]
+              : []),
+          ]
+        : rule.note
+          ? [rule.note]
+          : []
+      lines.push(
+        [
+          `${standard} on ${listed(picks.map((p) => pickName(catalog, card, choice.id, p)))}, ${choice.automatic ? 'when it has the most spending' : `your ${picks.length > 1 ? 'picks' : 'pick'}`}${membership}.`,
+          ...own,
+        ].join(' '),
+      )
+    } else {
+      const note = rule.note ? ` ${rule.note}` : ''
+      lines.push(
+        `${standard} on ${ruleWhat(catalog, rule, card)}${membership}.${note}`,
+      )
+    }
   } else {
     lines.push(`${standard}, its base rate. No bonus category applies here.`)
   }
@@ -1098,7 +1129,7 @@ export function recommend(
   if (
     confidence === 'medium' &&
     merchant.ambiguity !== null &&
-    namesAsItsCategory(chosen?.evaluation.best.rule, merchant)
+    namesAsItsCategory(chosen?.evaluation.best.rule, merchant, chosen?.card)
   )
     confidence = 'high'
   if (confidence === 'high' && chosen && top) {

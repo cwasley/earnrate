@@ -6,7 +6,7 @@ exports[`output > comcast, chosen category 1`] = `
 Use Cash+: 5% back. High confidence.
 
   1. Cash+        5%
-     5% cash back on the 2 categories you pick each quarter.
+     5% cash back on TV, internet & streaming, your pick.
   2. Double Cash  2%
      2% cash back, its base rate. No bonus category applies here.
   3. SoFi         2%
@@ -14,7 +14,7 @@ Use Cash+: 5% back. High confidence.
      Valued at 1¢ per point: 2% back.
   + 6 more cards (--all lists them)
 
-Assumes Comcast Xfinity counts as TV and internet service.
+Assumes Comcast Xfinity counts as TV and internet service; for Cash+, U.S. Bank names it as one.
 Point values: SoFi Member Rewards at 1¢, Chase Ultimate Rewards (UR) at 1¢ and Amex Membership Rewards (MR) at 1¢.
 Usual merchant code: MCC 4899.
 "
@@ -83,7 +83,7 @@ Use Sapphire Preferred: 3% back. High confidence.
      2x SoFi Member Rewards, its base rate. No bonus category applies here.
      Valued at 1¢ per point: 2% back.
   6. Cash+                2%
-     2% cash back on the category you pick each quarter.
+     2% cash back on gas stations and EV charging, your pick.
   7. Freedom Flex         1%
      1x Chase Ultimate Rewards, its base rate. No bonus category applies here.
      Pools into Chase Ultimate Rewards because you hold Sapphire Preferred.
@@ -96,7 +96,7 @@ Use Sapphire Preferred: 3% back. High confidence.
 
 Blue Cash Preferred also earns 3% here. Sapphire Preferred wins the tie because its points can be worth more.
 
-Assumes Shell counts as a gas station.
+Assumes Shell counts as a gas station; for Cash+, U.S. Bank names it as one.
 Point values: Chase Ultimate Rewards (UR) at 1¢, SoFi Member Rewards at 1¢ and Amex Membership Rewards (MR) at 1¢.
 "
 `;
