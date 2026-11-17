@@ -788,6 +788,15 @@ describe('wallet setup', () => {
     expect(client.getInstructions()).toMatch(/search_cards.*add_card/s)
   })
 
+  test('the server tells an agent about to pay with a card to pick it first', async () => {
+    const client = await connect(await walletCopy())
+    const first = client.getInstructions()?.split('\n\n')[0] ?? ''
+    expect(first).toContain(
+      'call best_card_for_purchase first to pick the card',
+    )
+    expect(first).toContain('never pays')
+  })
+
   test('the every-card cheat sheet takes catalog filters', async () => {
     const client = await connect(await missingWallet())
     const sheet = await client.callTool({

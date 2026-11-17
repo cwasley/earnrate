@@ -142,6 +142,28 @@ export const finePrint = (html: string, label = 'Fine print') =>
     ? ''
     : `<details class="fine"><summary>${esc(label)}</summary>${html}</details>`
 
+// Safari on a Mac, iPhone or iPad, and not another browser that also says
+// "Safari" (Chrome, Edge, Firefox and Opera on iOS, the Google app).
+const SAFARI = /Safari\//
+const APPLE = /Macintosh|iPhone|iPad/
+const NOT_SAFARI = /Chrome|CriOS|FxiOS|EdgiOS|Edg\/|OPR|GSA\//
+
+export const safariOnApple = (ua: string) =>
+  SAFARI.test(ua) && APPLE.test(ua) && !NOT_SAFARI.test(ua)
+
+// Shows the line just before it; reads only the user agent.
+export const NOTIFY_SCRIPT = `(() => {
+  const tip = document.currentScript?.previousElementSibling
+  const ua = navigator.userAgent
+  if (tip && tip.hasAttribute('data-notify-tip') && ${String(SAFARI)}.test(ua) && ${String(APPLE)}.test(ua) && !${String(NOT_SAFARI)}.test(ua)) tip.hidden = false
+})()`
+
+// A line about Safari's Notify Me, shown only in Safari on Apple devices.
+// Safari 26 and older don't have it, so the wording says it can, not that
+// it will.
+export const notifyTip = (text: string) =>
+  `<p class="muted" data-notify-tip hidden>${esc(text)}</p><script>${NOTIFY_SCRIPT}</script>`
+
 export type Crumb = { name: string; path: string }
 
 export type PageSpec = {

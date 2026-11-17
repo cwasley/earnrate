@@ -8,6 +8,7 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { runInNewContext } from 'node:vm'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
 import { localToday } from '../src/engine/periods.ts'
@@ -40,12 +41,23 @@ import {
 } from '../scripts/pages/year-end.ts'
 import { creditWhere } from '../src/engine/rule-text.ts'
 import { offerCheckedOn } from '../src/engine/offers.ts'
-import { currentPeriodEnd, inEffect, periodKey } from '../src/engine/periods.ts'
+import {
+  addDays,
+  currentPeriodEnd,
+  inEffect,
+  periodKey,
+} from '../src/engine/periods.ts'
 import { allCreditsYear, periodAmount } from '../src/engine/credits.ts'
 import { recentChangesSection } from '../scripts/pages/changes.ts'
 import { cardChangesUrl } from '../src/engine/changes.ts'
 import { ChangesFileSchema } from '../src/schema/changes.ts'
-import { DESCRIPTION_MAX, esc, TITLE_MAX } from '../scripts/pages/site.ts'
+import {
+  DESCRIPTION_MAX,
+  esc,
+  NOTIFY_SCRIPT,
+  safariOnApple,
+  TITLE_MAX,
+} from '../scripts/pages/site.ts'
 import { quoteText } from '../scripts/pages/rules.ts'
 import { ROOT } from './helpers.ts'
 
@@ -658,6 +670,46 @@ describe('the built static pages', () => {
     }
   })
 
+  test("Safari's Notify Me line is hidden on the pages worth watching: the quarter hub while a card's next quarter is missing, a card's offer and /changes", () => {
+    const read = (...p: string[]) => readFileSync(path.join(out, ...p), 'utf8')
+    const tip = (html: string) =>
+      /<p class="muted" data-notify-tip hidden>([^<]*)<\/p><script>/.exec(
+        html,
+      )?.[1]
+    const all = quarters(catalog, today)
+    const now = all.find((q) => q.start <= today && today <= q.end)
+    const nextKey = periodKey('quarter', addDays(now?.end ?? today, 1), null)
+    const next = all.find((q) => q.key === nextKey)
+    const waiting =
+      next === undefined ||
+      next.cards.some((c) => c.kind === 'rotating' && c.rules.length === 0)
+    const hub = read('quarterly', 'index.html')
+    expect(hub).toContain(
+      `Next quarter: Q${nextKey?.slice(-1) ?? ''} ${nextKey?.slice(0, 4) ?? ''}`,
+    )
+    expect(tip(hub)).toBe(
+      waiting
+        ? "On a Mac or iPhone, Safari's Notify Me (in the page menu) can tell you when next quarter's categories are posted."
+        : undefined,
+    )
+    for (const qc of next?.cards ?? [])
+      if (qc.kind === 'rotating' && qc.rules.length === 0)
+        expect(hub).toContain(
+          `">${esc(ctx.shortName(qc.card.id))}</a>: not posted yet.`,
+        )
+    expect(tip(read('cards', 'amex-gold.html'))).toBe(
+      "Safari's Notify Me (in the page menu) can tell you when this offer changes.",
+    )
+    const offerless = catalog.cards.find(
+      (c) => !c.welcome_offer || !inEffect(c.welcome_offer, today),
+    )
+    if (offerless)
+      expect(tip(read('cards', `${offerless.id}.html`))).toBeUndefined()
+    expect(tip(read('changes.html'))).toBe(
+      "Safari's Notify Me (in the page menu) can tell you when something new is added here.",
+    )
+  })
+
   test("every built page's header opens the app's tabs by their names, and the home page has only the tabs", () => {
     const nav = TABS.map((t) => `<a href="${t.href}">${t.name}</a>`).join('')
     for (const { file, html } of pages) {
@@ -1147,4 +1199,55 @@ test("a card page's recent changes list earnrate's recent corrections, where the
   expect(html).toContain('5% at Audible.com with Prime.')
   expect(html).not.toContain('An older fix.')
   expect(recentChangesSection(ctx, releases, 'amex-gold')).toBe('')
+})
+
+describe("Safari's Notify Me line", () => {
+  const UA = {
+    macSafari:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Safari/605.1.15',
+    iPhoneSafari:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Mobile/15E148 Safari/604.1',
+    iPadSafari:
+      'Mozilla/5.0 (iPad; CPU OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Mobile/15E148 Safari/604.1',
+    iPhoneChrome:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/142.0.7444.77 Mobile/15E148 Safari/604.1',
+    iPhoneFirefox:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/144.0 Mobile/15E148 Safari/605.1.15',
+    iPhoneGoogleApp:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/392.0.802498612 Mobile/15E148 Safari/604.1',
+    macChrome:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
+    macEdge:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0',
+    macFirefox:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:145.0) Gecko/20100101 Firefox/145.0',
+    windowsChrome:
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
+    androidChrome:
+      'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36',
+  }
+  const safari = new Set(['macSafari', 'iPhoneSafari', 'iPadSafari'])
+
+  test('is for Safari on a Mac, iPhone or iPad only', () => {
+    for (const [name, ua] of Object.entries(UA))
+      expect(safariOnApple(ua), name).toBe(safari.has(name))
+  })
+
+  test("the page's script shows it exactly where safariOnApple says, reading nothing but the user agent", () => {
+    expect(NOTIFY_SCRIPT).not.toMatch(
+      /fetch|sendBeacon|XMLHttpRequest|Storage|cookie/,
+    )
+    for (const [name, ua] of Object.entries(UA)) {
+      const tip = {
+        hidden: true,
+        hasAttribute: (a: string) => a === 'data-notify-tip',
+      }
+      const document = { currentScript: { previousElementSibling: tip } }
+      runInNewContext(NOTIFY_SCRIPT, {
+        document,
+        navigator: { userAgent: ua },
+      })
+      expect(tip.hidden, name).toBe(!safariOnApple(ua))
+    }
+  })
 })

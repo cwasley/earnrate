@@ -7,7 +7,7 @@ import {
   exploreCards,
   type ExploreEntry,
 } from '../../src/engine/explore.ts'
-import { periodEnd, periodKey } from '../../src/engine/periods.ts'
+import { addDays, periodEnd, periodKey } from '../../src/engine/periods.ts'
 import { rotationGap, rotationGapText } from '../../src/engine/rotation.ts'
 import {
   activationText,
@@ -21,7 +21,11 @@ import {
   capSentence,
 } from '../../src/engine/text.ts'
 import { findMerchant } from '../../src/merchants/resolve.ts'
-import { pickName } from '../../src/engine/rule-text.ts'
+import {
+  pickName,
+  rulePreposition,
+  ruleWhat,
+} from '../../src/engine/rule-text.ts'
 import type { Cap, Card, Choice, Rule } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
@@ -31,6 +35,7 @@ import {
   finePrint,
   fitDescription,
   fitTitle,
+  notifyTip,
   SITE,
 } from './site.ts'
 
@@ -378,6 +383,43 @@ function topSection(ctx: PageContext, q: Quarter, links: BestLinks): string {
   return `<h2>Cards that earn the most on this quarter's categories</h2><p class="muted">Ranked on ${esc(shortDate(date))} across every personal card, each set up at its best: categories activated or picked, and no cap used yet. Points count at earnrate's default value.</p>${blocks.join('')}`
 }
 
+// The quarter after `q`, card by card, saying plainly which issuers haven't
+// posted it: a visitor can watch this page for that line to change.
+function nextSection(ctx: PageContext, q: Quarter, all: Quarter[]): string {
+  const key = periodKey('quarter', addDays(q.end, 1), null) ?? ''
+  const next = all.find((o) => o.key === key)
+  const label = next?.label ?? `Q${key.slice(-1)} ${key.slice(0, 4)}`
+  const rotating = (next ?? q).cards.filter((c) => c.kind === 'rotating')
+  if (rotating.length === 0) return ''
+  const posted = (qc: QuarterCard) => (next ? qc.rules : [])
+  const items = rotating.map((qc) => {
+    const name = `<a href="/cards/${qc.card.id}">${esc(ctx.shortName(qc.card.id))}</a>`
+    const rules = posted(qc)
+    if (rules.length === 0)
+      return `<li>${name}: not posted yet. earnrate adds them when ${esc(ctx.issuerName(qc.card.issuer))} posts them.</li>`
+    const byRate = new Map<number, Rule[]>()
+    for (const r of rules)
+      byRate.set(r.rate, [...(byRate.get(r.rate) ?? []), r])
+    const what = [...byRate]
+      .sort((a, b) => b[0] - a[0])
+      .map(
+        ([rate, rs]) =>
+          `${pct(rate)} ${rulePreposition(ctx.catalog, rs)} ${listed(rs.map((r) => ruleWhat(ctx.catalog, r, qc.card)))}`,
+      )
+      .join('; ')
+    return `<li>${name}: ${esc(what)}.</li>`
+  })
+  const more = next
+    ? `<p><a href="/quarterly/${next.slug}">${esc(label)} in full</a></p>`
+    : ''
+  const tip = rotating.some((qc) => posted(qc).length === 0)
+    ? notifyTip(
+        "On a Mac or iPhone, Safari's Notify Me (in the page menu) can tell you when next quarter's categories are posted.",
+      )
+    : ''
+  return `<h2>Next quarter: ${esc(label)}</h2><ul>${items.join('')}</ul>${more}${tip}`
+}
+
 const namesFor = (ctx: PageContext, ids: string[], style: number) =>
   listed(
     ids.map((id, i) => {
@@ -458,6 +500,7 @@ function renderQuarter(
       ${picks.length > 0 ? `<h2>Categories you pick each quarter</h2>${picks.map((c) => cardSection(ctx, q, c)).join('')}` : ''}
       ${q.end === `${ctx.today.slice(0, 4)}-12-31` ? `<p>Statement credits, spend bonuses and caps that end or start over with the year, on every card: <a href="/year-end/">year-end deadlines</a>.</p>` : ''}
       ${topSection(ctx, q, links)}
+      ${hub ? nextSection(ctx, q, all) : ''}
       ${nav}
       <p class="muted">Every rate, cap, date and quote here is from the card's file in earnrate, checked against the issuer's pages on the date each card page shows. Check the issuer's terms before you rely on them.${hub ? ` This page always shows the current quarter. For a link that stays on ${esc(q.label)}, use <a href="/quarterly/${q.slug}">/quarterly/${q.slug}</a>.` : ''}</p>`
   return { title, description, body }

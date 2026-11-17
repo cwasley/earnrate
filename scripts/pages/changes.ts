@@ -25,7 +25,14 @@ import { findMerchant } from '../../src/merchants/resolve.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Change, ChangeCause, Release } from '../../src/schema/changes.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
-import { esc, finePrint, fitDescription, fitTitle, SITE } from './site.ts'
+import {
+  esc,
+  finePrint,
+  fitDescription,
+  fitTitle,
+  notifyTip,
+  SITE,
+} from './site.ts'
 
 const RECENT_ON_CARD = 3
 const RECENT_ON_COMPANIES = 5
@@ -129,6 +136,7 @@ export function changesPage(
       <h1>Credit card term changes</h1>
       <p class="updated">${esc(count)} by issuers since ${esc(shortDate(facts.since))} · Card data ${esc(facts.latestVersion)}, ${esc(shortDate(facts.latestRelease))}</p>
       <p>When an issuer changes a card's earning rate, fee, welcome offer or statement credit, earnrate records the old and new terms, the date and the issuer page they came from. Every rule's quote is re-checked against the issuer's pages each week. Follow along with the <a href="/changes.xml">RSS feed</a>.</p>
+      ${notifyTip("Safari's Notify Me (in the page menu) can tell you when something new is added here.")}
       <h2>Changes issuers made</h2>
       ${issuer.length === 0 ? '<p>None recorded yet.</p>' : `<ul class="compare-list change-list">${issuer.map((d) => issuerItem(ctx, d)).join('')}</ul>`}
       <h2>earnrate's own changes</h2>

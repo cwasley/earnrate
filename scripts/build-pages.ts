@@ -124,6 +124,7 @@ import {
   fitDescription,
   fitSentences,
   fitTitle,
+  notifyTip,
   SITE,
   slugify,
 } from './pages/site.ts'
@@ -1223,9 +1224,12 @@ function offerText(card: Card): string {
   if (!o || !inEffect(o, today)) return ''
   const offer = `${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(offerCheckedOn(card)))}.`
   // Who can get it is fine print: the offer line says what it is.
+  const tip = notifyTip(
+    "Safari's Notify Me (in the page menu) can tell you when this offer changes.",
+  )
   return o.note
-    ? `<h2>Public welcome offer</h2><p>${offer} Offers vary by person.</p>${finePrint([`<p>${esc(o.note)}</p>`, `<p>${esc(OFFERS_MAY_DIFFER)}</p>`], 'Who can get it')}`
-    : `<h2>Public welcome offer</h2><p>${offer} ${esc(OFFERS_MAY_DIFFER)}</p>`
+    ? `<h2>Public welcome offer</h2><p>${offer} Offers vary by person.</p>${tip}${finePrint([`<p>${esc(o.note)}</p>`, `<p>${esc(OFFERS_MAY_DIFFER)}</p>`], 'Who can get it')}`
+    : `<h2>Public welcome offer</h2><p>${offer} ${esc(OFFERS_MAY_DIFFER)}</p>${tip}`
 }
 
 function placements(
