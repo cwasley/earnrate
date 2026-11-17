@@ -6,6 +6,7 @@ network: mastercard
 currency: cash
 last_verified: 2026-11-01
 verified_by: claude
+offer_checked: 2026-11-07
 source_urls:
   - https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
   - https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household

@@ -6,6 +6,7 @@ network: visa
 currency: cash
 last_verified: 2026-11-01
 verified_by: claude
+offer_checked: 2026-11-07
 source_urls:
   - https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards
   - https://www.chase.com/personal/credit-cards/rewards-category-faq

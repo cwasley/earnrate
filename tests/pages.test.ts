@@ -39,6 +39,7 @@ import {
   yearEndRedirects,
 } from '../scripts/pages/year-end.ts'
 import { creditWhere } from '../src/engine/rule-text.ts'
+import { offerCheckedOn } from '../src/engine/offers.ts'
 import { currentPeriodEnd, inEffect, periodKey } from '../src/engine/periods.ts'
 import { allCreditsYear, periodAmount } from '../src/engine/credits.ts'
 import { recentChangesSection } from '../scripts/pages/changes.ts'
@@ -289,6 +290,21 @@ describe('the built static pages', () => {
     expect(
       readFileSync(path.join(out, 'cards', 'citi-double-cash.html'), 'utf8'),
     ).toContain('<li><a href="/year-end/">')
+  })
+
+  test("a card page dates its offer from the offer's last reading", () => {
+    let rechecked = 0
+    for (const card of catalog.cards) {
+      const html = readFileSync(
+        path.join(out, 'cards', `${card.id}.html`),
+        'utf8',
+      )
+      const dated = /per the issuer's page as of ([^.<]+)\./.exec(html)?.[1]
+      if (dated === undefined) continue
+      expect(dated, card.id).toBe(shortDate(offerCheckedOn(card)))
+      if (card.offer_checked !== undefined) rechecked++
+    }
+    expect(rechecked).toBeGreaterThan(0)
   })
 
   test('only store pages with something of their own are indexed', () => {

@@ -87,6 +87,18 @@ describe('catalogProblems', () => {
     ])
   })
 
+  test('offer_checked must be after last_verified', () => {
+    const withDate = (date: string) =>
+      cashPlusYaml.replace(
+        'verified_by: claude',
+        `verified_by: claude\noffer_checked: ${date}`,
+      )
+    expect(catalogProblems(catalog(withDate('2026-11-17')))).toEqual([])
+    expect(catalogProblems(catalog(withDate('2026-10-24')))).toEqual([
+      "card usbank-cash-plus: offer_checked 2026-10-24 isn't after last_verified 2026-10-24, so it says nothing; remove it",
+    ])
+  })
+
   test('catches a dangling shared cap', () => {
     const broken = cashPlusYaml.replace(
       'cap: five-percent-combined',

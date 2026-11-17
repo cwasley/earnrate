@@ -111,6 +111,20 @@ test('an offer that varies reads as "up to", and every offer says when it was ch
   expect(text).toMatch(/Public offer as of Oct 1, 2026; yours may differ\./)
 })
 
+test("an offer re-read after the card's last full check is dated that day", () => {
+  const reread = card('reread', {
+    offer_checked: '2026-11-17',
+    welcome_offer: { dollars: 200, spend: 500, months: 3 },
+  })
+  const { offers } = compareOffers(
+    { ...catalog, cards: [reread] },
+    wallet,
+    filters(),
+    TODAY,
+  )
+  expect(offers.map((o) => o.lastVerified)).toEqual(['2026-11-17'])
+})
+
 test('skips held, business, store and expired cards, and lists those with no offer', () => {
   const c = compareOffers(catalog, wallet, filters(), TODAY)
   const ids = c.offers.map((o) => o.cardId)

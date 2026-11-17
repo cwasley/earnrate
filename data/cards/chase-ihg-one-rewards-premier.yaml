@@ -6,6 +6,7 @@ network: mastercard
 currency: ihg-points
 last_verified: 2026-11-01
 verified_by: claude
+offer_checked: 2026-11-17
 source_urls:
   - https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
   - https://www.chase.com/personal/credit-cards/rewards-category-faq

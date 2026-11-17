@@ -366,6 +366,9 @@ export const CardSchema = z
     last_verified: IsoDate,
     // Who last checked the rules against source_urls, e.g. claude or collin.
     verified_by: z.string().min(1),
+    // The day the welcome offer, or its absence, was last read on the
+    // issuer's page, when that's after last_verified.
+    offer_checked: IsoDate.optional(),
     source_urls: z.array(z.url()).min(1),
     base_rate: z.number().nonnegative(),
     business: z.boolean().default(false),

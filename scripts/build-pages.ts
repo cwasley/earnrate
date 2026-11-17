@@ -75,7 +75,11 @@ import type { Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import type { Category } from '../src/schema/category.ts'
 import type { Merchant } from '../src/schema/merchant.ts'
-import { OFFERS_MAY_DIFFER, offerTerms } from '../src/engine/offers.ts'
+import {
+  OFFERS_MAY_DIFFER,
+  offerCheckedOn,
+  offerTerms,
+} from '../src/engine/offers.ts'
 import { milestoneStarts, milestoneWhat } from '../src/engine/milestones.ts'
 import {
   yearlyPointsCounted,
@@ -1217,7 +1221,7 @@ function foreignFeeSection(card: Card): string {
 function offerText(card: Card): string {
   const o = card.welcome_offer
   if (!o || !inEffect(o, today)) return ''
-  const offer = `${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(card.last_verified))}.`
+  const offer = `${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(offerCheckedOn(card)))}.`
   // Who can get it is fine print: the offer line says what it is.
   return o.note
     ? `<h2>Public welcome offer</h2><p>${offer} Offers vary by person.</p>${finePrint([`<p>${esc(o.note)}</p>`, `<p>${esc(OFFERS_MAY_DIFFER)}</p>`], 'Who can get it')}`
@@ -2102,8 +2106,8 @@ function compareOffers(c: Comparison): string {
     const o = card.welcome_offer
     const name = `<strong>${esc(shortName(card.id))}:</strong>`
     if (!o || !inEffect(o, today))
-      return `<li>${name} no public welcome offer on its issuer's page as of ${esc(shortDate(card.last_verified))}.</li>`
-    return `<li>${name} ${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(card.last_verified))}.</li>`
+      return `<li>${name} no public welcome offer on its issuer's page as of ${esc(shortDate(offerCheckedOn(card)))}.</li>`
+    return `<li>${name} ${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(offerCheckedOn(card)))}.</li>`
   })
   return `<h2>Public welcome offers</h2><ul>${items.join('')}</ul><p class="muted">${esc(OFFERS_MAY_DIFFER)}</p>`
 }

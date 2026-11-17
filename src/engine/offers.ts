@@ -1,3 +1,4 @@
+import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { bonusDollars } from './bonus.ts'
@@ -95,6 +96,13 @@ export function ineligibleText(
 
 export const OFFERS_MAY_DIFFER =
   'Yours may differ: issuers test and target offers, so use the one shown to you when you apply.'
+
+export const offerCheckedOn = (
+  card: Pick<Card, 'last_verified' | 'offer_checked'>,
+): string =>
+  card.offer_checked !== undefined && card.offer_checked > card.last_verified
+    ? card.offer_checked
+    : card.last_verified
 
 type OfferTerms = {
   points?: number | null | undefined
@@ -269,7 +277,7 @@ export function compareOffers(
       freeNights: year.nights,
       plan,
       held: held.has(card.id),
-      lastVerified: card.last_verified,
+      lastVerified: offerCheckedOn(card),
       verifiedBy: card.verified_by,
     }
     if (membership === null) offers.push(summary)

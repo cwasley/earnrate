@@ -9,6 +9,7 @@ import {
   freshness,
   issuerChanges,
 } from '../src/engine/changes.ts'
+import { offerCheckedOn } from '../src/engine/offers.ts'
 import {
   ChangeSchema,
   ChangesFileSchema,
@@ -261,4 +262,22 @@ test('freshness facts come from the record and the cards', () => {
   expect(facts.latestVersion).toBe(releases[0]?.version)
   expect(facts.issuerChanges).toBe(issuerChanges(releases).length)
   expect(facts.reviewedFrom <= facts.reviewedTo).toBe(true)
+})
+
+test("each card's offer date is no older than its newest recorded offer change", () => {
+  const stale: string[] = []
+  for (const release of releases)
+    for (const change of release.changes) {
+      if (change.field !== 'welcome_offer') continue
+      if (['wording', 'quote', 'review'].includes(change.cause)) continue
+      const read = change.date ?? release.date
+      for (const id of change.cards ?? []) {
+        const card = catalog.cards.find((c) => c.id === id)
+        if (card === undefined || offerCheckedOn(card) >= read) continue
+        stale.push(
+          `${id}: release ${release.version} changed its welcome_offer, but its offer is dated ${offerCheckedOn(card)}; set offer_checked: ${read}`,
+        )
+      }
+    }
+  expect(stale).toEqual([])
 })

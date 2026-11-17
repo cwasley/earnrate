@@ -6,6 +6,7 @@ network: visa
 currency: UR
 last_verified: 2026-11-01
 verified_by: claude
+offer_checked: 2026-11-17
 source_urls:
   - https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
   - https://www.chase.com/personal/credit-cards/rewards-category-faq

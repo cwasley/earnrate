@@ -152,6 +152,13 @@ function cardProblems(
   if (!currencies.has(card.currency)) {
     problems.push(`${where}: unknown currency '${card.currency}'`)
   }
+  if (
+    card.offer_checked !== undefined &&
+    card.offer_checked <= card.last_verified
+  )
+    problems.push(
+      `${where}: offer_checked ${card.offer_checked} isn't after last_verified ${card.last_verified}, so it says nothing; remove it`,
+    )
   for (const id of card.welcome_offer?.not_with ?? [])
     if (!cardIds.has(id))
       problems.push(`${where} welcome_offer.not_with: unknown card '${id}'`)
