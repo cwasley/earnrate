@@ -341,6 +341,27 @@ async function server() {
       /Use American Express Gold Card/.test(mine.text),
       mine.text.slice(0, 80),
     )
+
+    const history = await tool(token, 'set_card_history', {
+      pastCards: [{ cardId: 'chase-southwest-plus', bonusReceived: '2025-03' }],
+    })
+    check(
+      'set_card_history',
+      !history.isError && /Southwest/.test(history.text),
+      history.text.slice(0, 80),
+    )
+
+    const removed = await tool(token, 'remove_card', {
+      cardId: 'amex-gold',
+      keepHistory: true,
+    })
+    if (!removed.isError) saved = false
+    const kept = await tool(token, 'list_wallet')
+    check(
+      'remove_card keeps history',
+      !removed.isError && /amex-gold/.test(kept.text),
+      removed.text.slice(0, 80),
+    )
   } finally {
     let deleted = await tool(token, 'delete_wallet', {
       confirm: true,
