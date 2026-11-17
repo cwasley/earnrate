@@ -14,13 +14,21 @@ import {
   removeFromWallet,
   updateInWallet,
   withMemberships,
+  pastCardInputOf,
+  pastFromHeld,
+  withPastCards,
   withSkippedIssuers,
   withValuations,
   type CardInput,
+  type PastCardInput,
   type WalletChange,
 } from '../../src/engine/wallet-change.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
-import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
+import type { PastCard, Wallet, WalletCard } from '../../src/schema/wallet.ts'
+import {
+  countsForRepeat,
+  type MonthAsk,
+} from '../../src/engine/repeat-bonus.ts'
 import { SYNC_HEADER } from '../api.ts'
 import { normalizeWallet } from './saved-wallet.ts'
 
@@ -31,7 +39,8 @@ export type CardChangeInput = Omit<CardInput, 'id'> & { cardId: string }
 export type LocalOp =
   | { tool: 'add_card'; input: CardChangeInput }
   | { tool: 'update_card'; input: CardChangeInput }
-  | { tool: 'remove_card'; input: { cardId: string } }
+  | { tool: 'remove_card'; input: { cardId: string; keepHistory?: boolean } }
+  | { tool: 'set_card_history'; input: { pastCards: PastCardOpInput[] } }
   | {
       tool: 'set_memberships'
       input: { memberships?: string[]; skippedIssuers?: string[] }
@@ -69,10 +78,70 @@ export const updateOp = (input: CardInput): LocalOp => ({
   tool: 'update_card',
   input: cardChangeOf(input),
 })
-export const removeOp = (cardId: string): LocalOp => ({
+export const removeOp = (cardId: string, keepHistory = false): LocalOp => ({
   tool: 'remove_card',
-  input: { cardId },
+  input: keepHistory ? { cardId, keepHistory } : { cardId },
 })
+
+// set_card_history's input for one card: months YYYY-MM, 'none' for a card
+// that never paid a bonus.
+export type PastCardOpInput = Omit<PastCardInput, 'id'> & { cardId: string }
+
+export const pastCardOpInput = (p: PastCard): PastCardOpInput => {
+  const { id, ...rest } = pastCardInputOf(p)
+  return { cardId: id, ...rest }
+}
+
+export const historyOp = (pastCards: PastCardOpInput[]): LocalOp => ({
+  tool: 'set_card_history',
+  input: { pastCards },
+})
+
+// The change that saves the month a repeat-bonus note asked for: a held
+// card's bonus month, or one entry of the card history. Null when the
+// entry it names is gone.
+export function monthAskOp(
+  wallet: Wallet,
+  ask: MonthAsk,
+  month: string,
+): LocalOp | null {
+  if (ask.held)
+    return ask.field === 'bonus_received' &&
+      wallet.cards.some((c) => c.id === ask.cardId)
+      ? updateOp({ id: ask.cardId, bonusReceived: month })
+      : null
+  const past = wallet.past_cards ?? []
+  if (ask.pastIndex === null || past[ask.pastIndex]?.id !== ask.cardId)
+    return null
+  return historyOp(
+    past
+      .map((p, i) => (i === ask.pastIndex ? { ...p, [ask.field]: month } : p))
+      .map(pastCardOpInput),
+  )
+}
+
+// Removing a card from the site: the removal alone, and the history change
+// that keeps it under Cards you've had, offered only for a card an
+// issuer's repeat-bonus rule can count, and only made if the person taps.
+export function removalOps(
+  catalog: Catalog,
+  wallet: Wallet,
+  cardId: string,
+  today: string,
+): { remove: LocalOp; keep: LocalOp | null } {
+  const held = wallet.cards.find((c) => c.id === cardId)
+  return {
+    remove: removeOp(cardId),
+    keep:
+      held && countsForRepeat(catalog, cardId)
+        ? historyOp(
+            [...(wallet.past_cards ?? []), pastFromHeld(held, today)].map(
+              pastCardOpInput,
+            ),
+          )
+        : null,
+  }
+}
 export const membershipsOp = (memberships: string[]): LocalOp => ({
   tool: 'set_memberships',
   input: { memberships },
@@ -112,8 +181,22 @@ export function applyLocally(
         : failed('Add a card first.')
     case 'remove_card':
       return wallet
-        ? removeFromWallet(wallet, op.input.cardId)
+        ? removeFromWallet(
+            wallet,
+            op.input.cardId,
+            op.input.keepHistory === true ? { today } : null,
+          )
         : failed('Add a card first.')
+    case 'set_card_history':
+      return withPastCards(
+        catalog,
+        wallet ?? EMPTY_WALLET,
+        op.input.pastCards.map(({ cardId, ...rest }) => ({
+          id: cardId,
+          ...rest,
+        })),
+        today,
+      )
     case 'set_memberships': {
       const { memberships, skippedIssuers } = op.input
       const withSkip =
@@ -145,14 +228,18 @@ export function heldToInput(
   if (held.activated.length > 0) input.activated = held.activated
   if (held.enrolled && held.enrolled.length > 0) input.enrolled = held.enrolled
   if (held.bonus) {
-    const { opened, spent, spend, by } = held.bonus
+    const { opened, spent, spend, by, met } = held.bonus
     input.bonus = {
       opened,
       spent,
       ...(spend === undefined ? {} : { spend }),
       ...(by === undefined ? {} : { by }),
+      ...(met === undefined ? {} : { met }),
     }
   }
+  if (held.bonus_received !== undefined)
+    input.bonusReceived =
+      held.bonus_received === false ? 'none' : held.bonus_received
   const card = catalog.cards.find((c) => c.id === held.id)
   if (!card) return input
   const anniversary = held.anniversary ?? null
@@ -237,6 +324,14 @@ export function combineOps(
   ]
   if (skipped.length > (claude.skipped_issuers ?? []).length)
     ops.push(skippedIssuersOp(skipped))
+  // The history keeps every card either side had; where both list a card,
+  // the Claude wallet's entry stays.
+  const theirs = claude.past_cards ?? []
+  const added = (browser.past_cards ?? []).filter(
+    (p) => !theirs.some((c) => c.id === p.id),
+  )
+  if (added.length > 0)
+    ops.push(historyOp([...theirs, ...added].map(pastCardOpInput)))
   // A point value only this browser set carries over; where both set one,
   // the Claude wallet's stays.
   const values = Object.fromEntries(
@@ -257,11 +352,24 @@ const isEmpty = (w: Wallet | null) =>
   (w.cards.length === 0 &&
     w.memberships.length === 0 &&
     Object.keys(w.valuations).length === 0 &&
-    (w.skipped_issuers ?? []).length === 0)
+    (w.skipped_issuers ?? []).length === 0 &&
+    (w.past_cards ?? []).length === 0)
 
 const sameWallet = (a: Wallet, b: Wallet) =>
-  JSON.stringify([a.cards, a.memberships, a.valuations, a.skipped_issuers]) ===
-  JSON.stringify([b.cards, b.memberships, b.valuations, b.skipped_issuers])
+  JSON.stringify([
+    a.cards,
+    a.memberships,
+    a.valuations,
+    a.skipped_issuers,
+    a.past_cards,
+  ]) ===
+  JSON.stringify([
+    b.cards,
+    b.memberships,
+    b.valuations,
+    b.skipped_issuers,
+    b.past_cards,
+  ])
 
 // Order-free and blind to empty values, so a field one side leaves out and
 // the other holds empty doesn't count as a difference.
@@ -291,7 +399,7 @@ const CARD_PARTS: [string, (keyof WalletCard)[]][] = [
   ['picks', ['chosen']],
   ['activations', ['activated']],
   ['credits', ['enrolled', 'credit_usage', 'skipped_credits', 'night_values']],
-  ['bonus progress', ['bonus', 'milestone_usage']],
+  ['bonus progress', ['bonus', 'bonus_received', 'milestone_usage']],
   ['spending totals', ['cap_usage']],
   ['card dates', ['anniversary', 'opened']],
   ['checkout labels', ['checkout_label']],
@@ -320,6 +428,8 @@ export function walletDifferences(
   if (differs(claude.valuations, browser.valuations)) parts.push('point values')
   if (differs(claude.skipped_issuers, browser.skipped_issuers))
     parts.push('issuers left out of next-card answers')
+  if (differs(claude.past_cards, browser.past_cards))
+    parts.push("cards you've had")
   const order = (w: Wallet) => w.cards.map((c) => c.id).join(' ')
   const sameCards =
     claude.cards.length === browser.cards.length &&

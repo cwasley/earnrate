@@ -5,6 +5,7 @@ import {
   KebabId,
   PeriodKey,
   ValueRange,
+  YearMonth,
 } from './common.ts'
 import {
   CARD_NUMBER_LABEL,
@@ -85,8 +86,25 @@ export const WalletCardSchema = z.strictObject({
       by: IsoDate.optional(),
       points: z.number().positive().optional(),
       dollars: z.number().positive().optional(),
+      // The month a recorded purchase reached the spend. The bonus posts
+      // then or later.
+      met: YearMonth.optional(),
     })
     .optional(),
+  // The month the welcome bonus posted, or false when the card never paid
+  // one. Issuers count repeat-bonus waits from it.
+  bonus_received: z.union([YearMonth, z.literal(false)]).optional(),
+})
+
+// A card the person used to have, for issuers' repeat-bonus rules. Months
+// only; a bare id is enough for once-per-card rules.
+export const PastCardSchema = z.strictObject({
+  id: KebabId,
+  opened: YearMonth.optional(),
+  closed: YearMonth.optional(),
+  bonus_received: z.union([YearMonth, z.literal(false)]).optional(),
+  // Carried over from a tracked bonus when the card left the wallet.
+  bonus_met: YearMonth.optional(),
 })
 
 // The wallet file's format. A file without `version` is version 1; bump it
@@ -101,7 +119,9 @@ export const WalletSchema = z.strictObject({
   // 5/24): left out of next-card answers. Never assumed.
   skipped_issuers: z.array(KebabId).optional(),
   cards: z.array(WalletCardSchema).default([]),
+  past_cards: z.array(PastCardSchema).optional(),
 })
 
 export type WalletCard = z.output<typeof WalletCardSchema>
+export type PastCard = z.output<typeof PastCardSchema>
 export type Wallet = z.output<typeof WalletSchema>

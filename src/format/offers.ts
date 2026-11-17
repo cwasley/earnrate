@@ -65,6 +65,7 @@ export function formatOffers(
         `    ${minimumSpendText(o.spend, o.months, o.plan.minimumSpend, c.typical)}`,
       )
     if (o.ineligible) lines.push(`    ${o.ineligible}`)
+    if (o.eligibilityNote) lines.push(`    ${o.eligibilityNote}`)
     if (o.note) lines.push(`    ${o.note}`)
   })
   const ruledOut = c.offers.filter(
@@ -72,7 +73,7 @@ export function formatOffers(
   )
   if (ruledOut.length > 0)
     lines.push(
-      `  ${String(ruledOut.length)} more left out as likely not eligible with a card you hold: ${ruledOut.map((o) => o.cardName).join(', ')}.`,
+      `  ${String(ruledOut.length)} more left out as likely not eligible for you: ${ruledOut.map((o) => o.cardName).join(', ')}.`,
     )
   if (c.offers.length > shown.length + ruledOut.length)
     lines.push(

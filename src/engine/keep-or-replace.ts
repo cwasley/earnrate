@@ -11,7 +11,7 @@ import { evaluateCard, purchaseContext } from './evaluate.ts'
 import { ALL_PERSONAL_CARDS, idealHolding } from './explore.ts'
 import { TRANSFER_VALUES, transferIfText } from './fee-worth.ts'
 import { ifMemberLines, placedAmong } from './memberships.ts'
-import { ineligibleText, OFFERS_MAY_DIFFER, offerTerms } from './offers.ts'
+import { OFFERS_MAY_DIFFER, offerEligibility, offerTerms } from './offers.ts'
 import { inEffect } from './periods.ts'
 import { merchantName } from './rule-text.ts'
 import { findMerchant } from '../merchants/resolve.ts'
@@ -70,6 +70,8 @@ export type ReplacementOffer = {
   terms: string // "60,000 Chase Ultimate Rewards after $4,000 in purchases within 3 months"
   value: number | null // dollars at the wallet's point values; null for cash
   ineligible: string | null
+  // A repeat-bonus note that doesn't rule it out (a month it needs).
+  eligibilityNote: string | null
   validTo: string | null
 }
 
@@ -406,6 +408,7 @@ function offerOf(
     { ...without, cards: [...without.cards, holding] },
     card,
   )
+  const eligibility = offerEligibility(catalog, wallet, card.id, today)
   return {
     terms: offerTerms(
       {
@@ -428,7 +431,8 @@ function offerOf(
               offer.dollars,
             ) ?? 0,
           ),
-    ineligible: ineligibleText(catalog, wallet, offer.not_with ?? []),
+    ineligible: eligibility.ineligible,
+    eligibilityNote: eligibility.eligibilityNote,
     validTo: offer.valid_to ?? null,
   }
 }
@@ -705,7 +709,7 @@ export function replacementExtras(catalog: Catalog, r: Replacement): string[] {
       r.offer.validTo === null ? '' : ` It ends ${shortDate(r.offer.validTo)}.`
     const terms = r.offer.terms.replace(/^Up to /, 'up to ')
     lines.push(
-      `Welcome offer, once and not in the figures: ${terms}${value}.${ends}${r.offer.ineligible === null ? '' : ` ${r.offer.ineligible}`}`,
+      `Welcome offer, once and not in the figures: ${terms}${value}.${ends}${[r.offer.ineligible, r.offer.eligibilityNote].flatMap((t) => (t === null ? [] : [` ${t}`])).join('')}`,
     )
   }
   return lines

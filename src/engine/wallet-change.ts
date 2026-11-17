@@ -3,6 +3,7 @@ import { CARD_NUMBER_LABEL, labelHasCardNumber } from '../schema/card-number.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import {
   WALLET_VERSION,
+  type PastCard,
   type Wallet,
   type WalletCard,
 } from '../schema/wallet.ts'
@@ -61,8 +62,39 @@ export type CardInput = {
     spent?: number // dollars toward it so far
     spend?: number // dollars needed, when the offer differs
     by?: string // YYYY-MM-DD deadline, when the offer differs
+    met?: string // YYYY-MM the spend was reached
   } | null
+  // YYYY-MM the welcome bonus posted, or 'none' when the card never paid
+  // one; null forgets it.
+  bonusReceived?: string | null
 }
+
+// A card the person used to have. Months are YYYY-MM; bonusReceived is
+// 'none' when it never paid a bonus, and bonusMet is the month a tracked
+// bonus's spend was reached, carried over from the wallet.
+export type PastCardInput = {
+  id: string
+  opened?: string
+  closed?: string
+  bonusReceived?: string
+  bonusMet?: string
+}
+
+export const pastCardInputOf = (p: PastCard): PastCardInput => ({
+  id: p.id,
+  ...(p.opened === undefined ? {} : { opened: p.opened }),
+  ...(p.closed === undefined ? {} : { closed: p.closed }),
+  ...(p.bonus_received === undefined
+    ? {}
+    : {
+        bonusReceived: p.bonus_received === false ? 'none' : p.bonus_received,
+      }),
+  ...(p.bonus_met === undefined ? {} : { bonusMet: p.bonus_met }),
+})
+
+const NO_BONUS = 'none'
+const receivedOf = (month: string): string | false =>
+  month === NO_BONUS ? false : month
 
 type BonusFields = {
   opened: string
@@ -71,6 +103,7 @@ type BonusFields = {
   by?: string
   points?: number
   dollars?: number
+  met?: string
 }
 
 export type CardFields = {
@@ -86,6 +119,7 @@ export type CardFields = {
   skipped_credits?: string[]
   night_values?: Record<string, number> // the whole map; {} removes it
   bonus?: BonusFields | null // null removes it
+  bonus_received?: string | false | null // null removes it
 }
 
 export type WalletChange =
@@ -384,6 +418,10 @@ export function cardFields(
       problems.push('Spending toward the bonus must be $0 or more.')
     if (b.spend !== undefined && !(b.spend > 0))
       problems.push('The spending needed must be more than $0.')
+    if (b.met !== undefined) {
+      const problem = monthProblem(b.met, today)
+      if (problem) problems.push(problem)
+    }
     if (b.by !== undefined && (!isDate(b.by) || b.by < b.opened))
       problems.push(`"${b.by}" isn't a deadline after the opening date.`)
     if (!card.welcome_offer && (b.spend === undefined || b.by === undefined))
@@ -405,6 +443,7 @@ export function cardFields(
       before?.points ?? (before?.dollars ? undefined : offer?.points)
     const dollars =
       before?.dollars ?? (points !== undefined ? undefined : offer?.dollars)
+    const met = b.met ?? before?.met
     fields.bonus = {
       opened: b.opened,
       spent: b.spent ?? held?.bonus?.spent ?? 0,
@@ -412,7 +451,15 @@ export function cardFields(
       ...(by === undefined ? {} : { by }),
       ...(points === undefined ? {} : { points }),
       ...(dollars === undefined ? {} : { dollars }),
+      ...(met === undefined ? {} : { met }),
     }
+  }
+  if (input.bonusReceived === null) fields.bonus_received = null
+  else if (input.bonusReceived !== undefined) {
+    const month = receivedOf(input.bonusReceived)
+    const problem = month === false ? null : monthProblem(month, today)
+    if (problem) problems.push(problem)
+    fields.bonus_received = month
   }
   const opened =
     fields.opened === undefined ? (held?.opened ?? null) : fields.opened
@@ -434,10 +481,22 @@ const newHolding = (id: string): WalletCard => ({
 })
 
 const withFields = (
-  { bonus, checkout_label, opened, night_values, chosen, ...held }: WalletCard,
+  {
+    bonus,
+    checkout_label,
+    opened,
+    night_values,
+    chosen,
+    bonus_received,
+    ...held
+  }: WalletCard,
   f: CardFields,
 ): WalletCard => ({
   ...held,
+  ...(bonus_received !== undefined && f.bonus_received === undefined
+    ? { bonus_received }
+    : {}),
+  ...(f.bonus_received != null ? { bonus_received: f.bonus_received } : {}),
   ...(night_values !== undefined && f.night_values === undefined
     ? { night_values }
     : {}),
@@ -527,15 +586,109 @@ export function updateInWallet(
   }
 }
 
-export function removeFromWallet(wallet: Wallet, id: string): WalletChange {
-  if (!wallet.cards.some((c) => c.id === id)) {
+// With `keep`, the card stays in the wallet's card history, closed this
+// month, for issuers' repeat-bonus rules.
+export function removeFromWallet(
+  wallet: Wallet,
+  id: string,
+  keep: { today: string } | null = null,
+): WalletChange {
+  const held = wallet.cards.find((c) => c.id === id)
+  if (!held) {
     return failed(
       `${id} isn't in the wallet. Cards: ${idList(wallet.cards.map((c) => c.id))}.`,
     )
   }
+  const cards = wallet.cards.filter((c) => c.id !== id)
   return {
     ok: true,
-    wallet: { ...wallet, cards: wallet.cards.filter((c) => c.id !== id) },
+    wallet: keep
+      ? {
+          ...wallet,
+          cards,
+          past_cards: [
+            ...(wallet.past_cards ?? []),
+            pastFromHeld(held, keep.today),
+          ],
+        }
+      : { ...wallet, cards },
+    fields: {},
+    notes: [],
+  }
+}
+
+export function pastFromHeld(held: WalletCard, today: string): PastCard {
+  const opened = (held.opened ?? held.bonus?.opened)?.slice(0, 7)
+  return {
+    id: held.id,
+    ...(opened === undefined ? {} : { opened }),
+    closed: today.slice(0, 7),
+    ...(held.bonus_received === undefined
+      ? {}
+      : { bonus_received: held.bonus_received }),
+    ...(held.bonus?.met === undefined ? {} : { bonus_met: held.bonus.met }),
+  }
+}
+
+const isMonth = (m: string) => /^\d{4}-(0[1-9]|1[0-2])$/.test(m)
+
+function monthProblem(month: string, today: string): string | null {
+  if (!isMonth(month)) return `"${month}" isn't a month. Use YYYY-MM.`
+  if (month > today.slice(0, 7)) return `${month} is in the future.`
+  return null
+}
+
+// The cards the person used to have, replacing the list; [] clears it.
+export function withPastCards(
+  catalog: Catalog,
+  wallet: Wallet,
+  list: PastCardInput[],
+  today: string,
+): WalletChange {
+  const problems: string[] = []
+  const past: PastCard[] = []
+  for (const p of list) {
+    if (!catalog.cards.some((c) => c.id === p.id)) {
+      const found = findCatalogCard(catalog, p.id, today)
+      problems.push(typeof found === 'string' ? found : `No card '${p.id}'.`)
+      continue
+    }
+    const received =
+      p.bonusReceived === undefined ? undefined : receivedOf(p.bonusReceived)
+    for (const m of [p.opened, p.closed, received, p.bonusMet])
+      if (typeof m === 'string') {
+        const problem = monthProblem(m, today)
+        if (problem) problems.push(`${p.id}: ${problem}`)
+      }
+    if (p.opened && p.closed && p.closed < p.opened)
+      problems.push(
+        `${p.id}: closed (${p.closed}) is before opened (${p.opened}).`,
+      )
+    if (p.opened && typeof received === 'string' && received < p.opened)
+      problems.push(
+        `${p.id}: the bonus (${received}) is before the card opened (${p.opened}).`,
+      )
+    // A tracked bonus's met month carries over while the card stays listed,
+    // for callers that leave it out.
+    const met =
+      p.bonusMet ??
+      (wallet.past_cards ?? []).find(
+        (c) =>
+          c.id === p.id && c.opened === p.opened && c.bonus_met !== undefined,
+      )?.bonus_met
+    past.push({
+      id: p.id,
+      ...(p.opened === undefined ? {} : { opened: p.opened }),
+      ...(p.closed === undefined ? {} : { closed: p.closed }),
+      ...(received === undefined ? {} : { bonus_received: received }),
+      ...(met === undefined ? {} : { bonus_met: met }),
+    })
+  }
+  if (problems.length > 0) return failed(problems.join('\n'))
+  const { past_cards: _, ...rest } = wallet
+  return {
+    ok: true,
+    wallet: past.length > 0 ? { ...rest, past_cards: past } : rest,
     fields: {},
     notes: [],
   }

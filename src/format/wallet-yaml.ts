@@ -45,6 +45,9 @@ function compact(wallet: Wallet) {
         CARD_FIELDS.flatMap((k) => (isEmpty(c[k]) ? [] : [[k, c[k]]])),
       ),
     ),
+    ...(wallet.past_cards && wallet.past_cards.length > 0
+      ? { past_cards: wallet.past_cards }
+      : {}),
   }
 }
 

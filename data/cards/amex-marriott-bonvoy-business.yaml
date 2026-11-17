@@ -18,6 +18,7 @@ welcome_offer:
   points: 75000
   spend: 6000
   months: 6
+  repeat: { may: true }
   note: 'Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card or the Starwood Preferred Guest® Business Credit Card from American Express or previous versions of these Cards," and may also decline based on your card history. Also not available to anyone who had a Marriott business card from Chase in the last 30 days, opened the Marriott Bonvoy Bountiful, Boundless or Bold card from Chase in the last 90 days, or got a new Card Member bonus on one of those Chase cards in the last 24 months.'
 rules:
   - id: marriott-hotels
@@ -113,6 +114,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
     quote: 'within your first 6 months of Card Membership'
+  - rule: repeat
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0#offer-terms
+    quote: 'You may not be eligible to receive a welcome offer if you have or have had this Card'
   - rule: anniversary-night
     url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/
     quote: 'Receive 1 Free Night Award every year after your Card renewal month.'

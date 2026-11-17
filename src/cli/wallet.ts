@@ -12,7 +12,14 @@ import { cardDetails, DETAILS_LEFT_OUT } from '../engine/card-details.ts'
 import { membershipName } from '../engine/memberships.ts'
 import { issuerName } from '../format/card-text.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
-import { currencyChanges, type CardInput } from '../engine/wallet-change.ts'
+import {
+  currencyChanges,
+  pastCardInputOf,
+  type CardInput,
+  type PastCardInput,
+} from '../engine/wallet-change.ts'
+import { walletSummary } from '../engine/wallet-summary.ts'
+import { formatPastCards } from '../format/wallet.ts'
 import { formatCardInfo, formatNotes } from '../format/cards.ts'
 import type { Wallet } from '../schema/wallet.ts'
 import { displayPath, RUNTIME_ERROR, USAGE_ERROR, type Io } from './run.ts'
@@ -61,6 +68,9 @@ const CARD_OPTIONS = `Options:
   --bonus-spend <dollars>    The spending needed, if your offer differs.
   --bonus-by <date>          The deadline, if your offer differs.
   --no-bonus                 Stop tracking the welcome bonus.
+  --bonus-received <month>   The month the welcome bonus posted (YYYY-MM), or
+                             none if it never paid one. Issuers count
+                             repeat-bonus waits from it.
   -h, --help                 Show this help.`
 
 export const WALLET_HELP = {
@@ -89,11 +99,37 @@ already set.
 
 ${CARD_OPTIONS}
 `,
-  remove: `Usage: ${CLI_NAME} remove <card-id>
+  remove: `Usage: ${CLI_NAME} remove <card-id> [--keep-history]
 
 Removes a card from your wallet, with its tracked cap usage, welcome-bonus
 progress, spend-bonus spending and statement credits used. Your memberships
 and point values stay.
+
+Options:
+  --keep-history   Keep it in your card history, closed this month, so
+                   ${CLI_NAME} offers can say when its welcome bonus can be
+                   earned again.
+`,
+  history: `Usage: ${CLI_NAME} history [<card-id> [options]] [--remove <card-id>] [--none]
+
+Cards you used to have. ${CLI_NAME} offers checks each issuer's published
+repeat-bonus rule against them ("Chase says you may not get this bonus
+again", "Not before March 2027"). With no arguments, shows the list. With a
+card id, adds it, or sets the months given on its latest entry and keeps
+the rest. Months are YYYY-MM and optional; give the ones the issuer's rule
+counts from.
+
+Examples:
+  ${CLI_NAME} history chase-sapphire-preferred
+  ${CLI_NAME} history chase-southwest-plus --bonus-received 2025-03
+  ${CLI_NAME} history wells-fargo-active-cash --opened 2025-06 --closed 2026-01
+
+Options:
+  --opened <month>           When the account opened.
+  --closed <month>           When you closed it.
+  --bonus-received <month>   When its welcome bonus posted, or none.
+  --remove <card-id>         Take a card out of the history.
+  --none                     Clear the history.
 `,
   memberships: `Usage: ${CLI_NAME} memberships [<membership>...] [--none]
 
@@ -124,6 +160,29 @@ Options:
 }
 
 type Command = keyof typeof WALLET_HELP
+
+// `history` shares --opened with the card options; the others it takes are
+// its own.
+function onlyHistoryOptions(values: Record<string, unknown>): boolean {
+  const card = [
+    'label',
+    'pick',
+    'anniversary',
+    'activated',
+    'enrolled',
+    'skipped-credits',
+    'credit-used',
+    'night-value',
+    'cap-spent',
+    'milestone-spent',
+    'bonus-opened',
+    'bonus-spent',
+    'bonus-spend',
+    'bonus-by',
+    'no-bonus',
+  ]
+  return card.every((k) => values[k] === undefined)
+}
 
 const HINTS: Record<string, (id: string) => string> = {
   pick: (id) => `${CLI_NAME} update ${id} --pick <choice>=<option>,...`,
@@ -206,6 +265,10 @@ export async function runWalletCommand(
         'bonus-spend': { type: 'string' },
         'bonus-by': { type: 'string' },
         'no-bonus': { type: 'boolean' },
+        'bonus-received': { type: 'string' },
+        'keep-history': { type: 'boolean' },
+        closed: { type: 'string' },
+        remove: { type: 'string' },
         none: { type: 'boolean' },
         profile: { type: 'string' },
         help: { type: 'boolean', short: 'h' },
@@ -243,11 +306,34 @@ export async function runWalletCommand(
     values['bonus-spend'] !== undefined ||
     values['bonus-by'] !== undefined ||
     values['no-bonus'] !== undefined
-  if (command !== 'add' && command !== 'update' && cardOptionsGiven) {
+  const historyOption =
+    values.closed !== undefined || values.remove !== undefined
+  if (
+    command !== 'add' &&
+    command !== 'update' &&
+    cardOptionsGiven &&
+    !(command === 'history' && onlyHistoryOptions(values))
+  ) {
     return usage(`${CLI_NAME} ${command} doesn't take card options.`)
   }
-  if (command !== 'memberships' && command !== 'skip-issuers' && values.none) {
-    return usage('--none is only for memberships and skip-issuers.')
+  if (command !== 'history' && historyOption)
+    return usage('--closed and --remove are only for history.')
+  if (command !== 'remove' && values['keep-history'])
+    return usage('--keep-history is only for remove.')
+  if (
+    values['bonus-received'] !== undefined &&
+    command !== 'add' &&
+    command !== 'update' &&
+    command !== 'history'
+  )
+    return usage('--bonus-received is only for add, update and history.')
+  if (
+    command !== 'memberships' &&
+    command !== 'skip-issuers' &&
+    command !== 'history' &&
+    values.none
+  ) {
+    return usage('--none is only for memberships, skip-issuers and history.')
   }
 
   const catalog = await loadCatalog()
@@ -347,6 +433,69 @@ export async function runWalletCommand(
     )
   }
 
+  if (command === 'history') {
+    const held = await heldWallet(io)
+    const list: PastCardInput[] = (held?.past_cards ?? []).map(pastCardInputOf)
+    const nameOf = (id: string) =>
+      catalog.cards.find((c) => c.id === id)?.name ?? id
+    if (values.none) {
+      if (positionals.length > 0 || values.remove !== undefined)
+        return usage('Give --none alone.')
+      return report(
+        await store.setPastCards([], io.today),
+        `Card history cleared in ${where}.`,
+        null,
+        io,
+      )
+    }
+    if (values.remove !== undefined) {
+      if (positionals.length > 0) return usage('Give a card or --remove.')
+      const id = values.remove
+      if (!list.some((p) => p.id === id))
+        return usage(`${id} isn't in your card history.`)
+      return report(
+        await store.setPastCards(
+          list.filter((p) => p.id !== id),
+          io.today,
+        ),
+        `Took ${nameOf(id)} out of your card history in ${where}.`,
+        null,
+        io,
+      )
+    }
+    if (positionals.length === 0) {
+      const past = held ? walletSummary(catalog, held, io.today).pastCards : []
+      io.stdout(
+        past.length === 0
+          ? `No card history saved. Add one with ${CLI_NAME} history <card-id>.\n`
+          : `${formatPastCards(past)}\n`,
+      )
+      return 0
+    }
+    if (positionals.length !== 1) return usage('Give one card id.')
+    const id = positionals[0] ?? ''
+    const given: Omit<PastCardInput, 'id'> = {
+      ...(values.opened === undefined ? {} : { opened: values.opened }),
+      ...(values.closed === undefined ? {} : { closed: values.closed }),
+      ...(values['bonus-received'] === undefined
+        ? {}
+        : { bonusReceived: values['bonus-received'] }),
+    }
+    // The months given go on the card's latest entry; what it already
+    // holds, and any earlier entries for the same card, stay.
+    const at = list.findLastIndex((p) => p.id === id)
+    const next =
+      at === -1
+        ? [...list, { id, ...given }]
+        : list.map((p, i) => (i === at ? { ...p, ...given } : p))
+    return report(
+      await store.setPastCards(next, io.today),
+      `${at === -1 ? 'Added' : 'Updated'} ${nameOf(id)} in your card history (${where}).`,
+      null,
+      io,
+    )
+  }
+
   if (command === 'memberships') {
     if (positionals.length === 0 && !values.none) {
       const held = await heldWallet(io)
@@ -376,9 +525,10 @@ export async function runWalletCommand(
   const name = catalog.cards.find((c) => c.id === id)?.name ?? id
 
   if (command === 'remove') {
+    const keep = values['keep-history'] === true
     return report(
-      await store.removeCard(id),
-      `Removed ${name} from ${where}.`,
+      await store.removeCard(id, keep ? { today: io.today } : null),
+      `Removed ${name} from ${where}${keep ? ', and kept it in your card history' : ''}.`,
       null,
       io,
     )
@@ -451,6 +601,8 @@ export async function runWalletCommand(
     input.nightValues = nightValues
   }
   if (typeof milestoneSpent === 'object') input.milestoneSpent = milestoneSpent
+  if (values['bonus-received'] !== undefined)
+    input.bonusReceived = values['bonus-received']
   if (values['no-bonus']) {
     input.bonus = null
   } else if (values['bonus-opened'] !== undefined) {

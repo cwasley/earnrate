@@ -79,6 +79,7 @@ Save your cards (optional):
   ${CLI_NAME} memberships [names...]               Show or set memberships (amazon-prime, costco).
   ${CLI_NAME} values [UR=1.5 ...]                  Show or set what your points are worth.
   ${CLI_NAME} skip-issuers [chase ...]             Issuers to leave out of next-card answers.
+  ${CLI_NAME} history [card-id]                    Cards you used to have, for repeat-bonus rules.
 
 Other commands:
   ${CLI_NAME} cheatsheet                           The best card for each category this quarter.

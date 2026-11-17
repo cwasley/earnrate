@@ -27,6 +27,7 @@ import {
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { followingOwnLink } from './add-from-link.ts'
 import { CardArt } from './CardArt.tsx'
+import { MonthAskField } from './MonthAsk.tsx'
 import type { Additions } from './find/steps.ts'
 import {
   cards,
@@ -160,6 +161,9 @@ function OfferRow({
   typical,
   open,
   setOpen,
+  wallet,
+  locked,
+  onChange,
 }: {
   offer: OfferSummary
   plan: OfferPlan
@@ -167,6 +171,9 @@ function OfferRow({
   typical: boolean
   open: boolean
   setOpen: (cardId: string | null) => void
+  wallet: Wallet
+  locked: boolean
+  onChange: (op: LocalOp) => void
 }) {
   return (
     <li class={rank === 1 ? 'result hero' : 'result'} data-whatif={o.cardId}>
@@ -201,6 +208,21 @@ function OfferRow({
         </p>
       ) : null}
       {o.ineligible ? <p class="warn">{o.ineligible}</p> : null}
+      {o.eligibilityNote ? (
+        <p class="muted">
+          {o.eligibilityNote}
+          {o.monthAsk && !locked ? (
+            <>
+              {' '}
+              <MonthAskField
+                wallet={wallet}
+                ask={o.monthAsk}
+                onChange={onChange}
+              />
+            </>
+          ) : null}
+        </p>
+      ) : null}
       <p class="muted">
         {offerTerms(o, currencyName(catalog, o.currency))}.
         {o.validTo ? ` Offer ends ${shortDate(o.validTo)}.` : ''} Public offer
@@ -399,6 +421,9 @@ export function NewCard({
       typical={typical}
       open={open === p.offer.cardId}
       setOpen={setOpen}
+      wallet={wallet}
+      locked={locked}
+      onChange={onChange}
     />
   )
   const left = (view === 'yearly' ? positive.length : ahead.length) - shownRows

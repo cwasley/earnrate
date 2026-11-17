@@ -28,6 +28,7 @@ welcome_offer:
   dollars: 200
   spend: 500
   months: 3
+  repeat: { after_months: 48, from: bonus, may: true }
   note: One-time $200 statement credit, available by applying through the card page. Existing or previous cardmembers may not be eligible if they received a new cardmember bonus for this product in the past 48 months. New cardmembers also get Cashback Match, which doubles every rate for the first year; earnrate ranks it as a first-year rate, not as part of this offer.
 caps:
   # Discover's quarterly maximum on the rotating 5% categories.
@@ -177,6 +178,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.discover.com/credit-cards/cash-back/it-card/
     quote: 'Get an unlimited dollar-for-dollar match of all the cash back you earn at the end of your first year'
+  - rule: repeat
+    url: https://www.discover.com/credit-cards/cash-back/it-card/
+    quote: 'received a new cardmember bonus for this product in the past 48 months'
   - rule: cashback-match
     url: https://www.discover.com/credit-cards/cash-back/it-card/
     quote: 'Get an unlimited dollar-for-dollar match of all the cash back you earn'

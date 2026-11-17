@@ -20,6 +20,7 @@ welcome_offer:
   spend: 6000
   months: 6
   valid_to: 2027-01-13
+  repeat: { may: true }
   note: 'Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card or previous versions of these Cards," and may also decline based on your history with balance transfers, as a Card Member, and the number of cards you have opened and closed. Offers may vary between advertisements.'
 rules:
   - id: hilton-purchases
@@ -139,6 +140,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'Offer ends 01/13/2027 at 11:59 PM MST.'
+  - rule: repeat
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
+    quote: 'You may not be eligible to receive a welcome offer if you have or have had this Card'
   - rule: spend-30k
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0#offer-terms
     quote: 'Account reach $30,000 or more in a calendar year.'

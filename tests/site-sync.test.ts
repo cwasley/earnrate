@@ -7,6 +7,7 @@ import {
   withMemberships,
   withValuations,
   type CardInput,
+  type PastCardInput,
 } from '../src/engine/wallet-change.ts'
 import { loadCatalog } from '../src/data/load.ts'
 import type { Wallet } from '../src/schema/wallet.ts'
@@ -478,6 +479,7 @@ test('the privacy page names everything a synced change can send', async () => {
     skippedCredits: "and the ones you don't",
     nightValues: 'what a free night is worth to you',
     bonus: 'welcome bonus progress and its terms',
+    bonusReceived: 'the months your welcome bonuses posted',
   }
   const wallet = [
     'memberships',
@@ -485,12 +487,23 @@ test('the privacy page names everything a synced change can send', async () => {
     'redemption notes',
     "card issuers you've left out of next-card answers",
   ]
+  const past: Record<keyof Omit<PastCardInput, 'id'>, string> = {
+    opened: "the cards you've had, with the months you opened and closed them",
+    closed: "the cards you've had, with the months you opened and closed them",
+    bonusReceived: 'and their bonuses posted',
+    bonusMet: "the month you reached a bonus's spending",
+  }
   const page = (
     await readFile(new URL('../site/privacy.html', import.meta.url), 'utf8')
   ).replace(/\s+/g, ' ')
   const section = page.slice(page.indexOf('id="sync"'))
-  for (const phrase of [...Object.values(card), ...wallet])
+  for (const phrase of [
+    ...Object.values(card),
+    ...Object.values(past),
+    ...wallet,
+  ])
     expect(section).toContain(phrase)
+  expect(section).toContain('A card you remove goes there only if you tap')
   expect(section).not.toContain('purchase you record')
 })
 

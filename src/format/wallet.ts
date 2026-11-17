@@ -17,13 +17,41 @@ import {
   shortDate,
   possessive,
 } from '../engine/text.ts'
-import type { WalletSummary } from '../engine/wallet-summary.ts'
+import type {
+  PastCardSummary,
+  WalletSummary,
+} from '../engine/wallet-summary.ts'
 
 // "To do now", above the card details; nothing when all's done.
 export function formatChecklist(items: ChecklistItem[]): string {
   return items.length === 0
     ? ''
     : `To do now:\n${items.map((i) => `- ${i.text}`).join('\n')}\n\n`
+}
+
+export function formatPastCards(past: PastCardSummary[]): string {
+  return past
+    .map((p) => {
+      const known = [
+        p.opened === null ? null : `opened ${p.opened}`,
+        p.closed === null ? null : `closed ${p.closed}`,
+        p.bonusReceived === 'none'
+          ? 'no welcome bonus'
+          : p.bonusReceived !== null
+            ? `bonus posted ${p.bonusReceived}`
+            : p.bonusMet !== null
+              ? `bonus spending reached ${p.bonusMet}`
+              : null,
+      ].filter((t) => t !== null)
+      const again =
+        p.bonusAgain === null
+          ? ''
+          : p.bonusAgain.state === 'eligible'
+            ? " Its bonus is available again under the issuer's rule."
+            : ` ${p.bonusAgain.text ?? ''}`
+      return `- ${p.cardName} (${p.cardId})${known.length > 0 ? `: ${known.join(', ')}` : ''}.${again}`
+    })
+    .join('\n')
 }
 
 export function formatWalletSummary(summary: WalletSummary): string {
@@ -107,7 +135,13 @@ export function formatWalletSummary(summary: WalletSummary): string {
           `Next-card answers leave out: ${summary.skippedIssuers.map((i) => `${i.name} (${i.id})`).join(', ')}.`,
         ]
       : []
-  return [...cards, memberships, ...skipped, values].join('\n')
+  const history =
+    summary.pastCards.length > 0
+      ? [
+          `Cards you've had, for issuers' repeat-bonus rules:\n${formatPastCards(summary.pastCards)}`,
+        ]
+      : []
+  return [...cards, memberships, ...skipped, values, ...history].join('\n')
 }
 
 export function formatBooking(

@@ -18,7 +18,8 @@ welcome_offer:
   spend: 15000
   months: 3
   varies: true
-  note: 'The public offer is "as high as" 200,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. Not available if you have or have had this Card or previous versions of it, and Amex may also decline based on your card history. One offer per Card Account.'
+  repeat: { may: true }
+  note: 'The public offer is "as high as" 200,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. May not be available if you have or have had this Card or previous versions of it, and Amex may also decline based on your card history. One offer per Card Account.'
 choices:
   # Amex picks these itself: the 2 of 6 categories with the most eligible
   # purchases each billing period. Tell earnrate the two you expect.
@@ -146,6 +147,9 @@ evidence:
     url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-gold-card-amex/
     quote: 'after you spend $15,000 in purchases on your new Card within the first 3 months of Card Membership'
   - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
+    quote: 'if you have or have had this Card or previous versions of this Card'
+  - rule: repeat
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0#offer-terms
     quote: 'if you have or have had this Card or previous versions of this Card'
   - rule: foreign_transaction_fee

@@ -1,3 +1,4 @@
+import { repeatRuleText } from './repeat-bonus.ts'
 import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { WalletCardSchema, type Wallet } from '../schema/wallet.ts'
@@ -38,7 +39,7 @@ export type CardDetails = {
 function welcomeOfferText(catalog: Catalog, card: Card, today: string) {
   const o = card.welcome_offer
   if (!o || !inEffect(o, today)) return null
-  return `${offerTerms(o, currencyName(catalog, card.currency))}${o.valid_to === undefined ? '' : `; the offer ends ${shortDate(o.valid_to)}`}.${o.note === undefined ? '' : ` ${o.note}`}`
+  return `${offerTerms(o, currencyName(catalog, card.currency))}${o.valid_to === undefined ? '' : `; the offer ends ${shortDate(o.valid_to)}`}.${o.note === undefined ? '' : ` ${o.note}`} Again? ${repeatRuleText(catalog, card)}`
 }
 
 function recentChanges(catalog: Catalog, id: string, today: string) {

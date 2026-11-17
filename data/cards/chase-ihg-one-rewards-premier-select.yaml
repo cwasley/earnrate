@@ -19,6 +19,7 @@ welcome_offer:
   points: 150000
   spend: 4000
   months: 3
+  repeat: { after_months: 24, from: bonus }
   note: 'Plus 10,000 points after adding an authorized user in the first 3 months. No free night in the welcome offer; the yearly Anniversary Free Night is a separate perk. Chase: "available to you if you do not have this card and have not received a new Cardmember bonus for this card in the past 24 months."'
 rules:
   - id: ihg-hotels
@@ -87,6 +88,9 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
     quote: 'Earn 150,000 Bonus Points after you spend $4,000 on purchases in the first 3 months from account opening'
+  - rule: repeat
+    url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    quote: 'have not received a new Cardmember bonus for this card in the past 24 months'
   - rule: travel-and-dining
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Purchases from gift card merchants or merchants that sell points or miles will not qualify in the travel category'

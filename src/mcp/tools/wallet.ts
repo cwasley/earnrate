@@ -35,6 +35,8 @@ import {
   ChannelInput,
   DateInput,
   Merchant,
+  PastCardsInput,
+  pastCardInput,
   strictInput,
   type makeInputs,
 } from '../inputs.ts'
@@ -116,6 +118,10 @@ function changes(catalog: Catalog, args: z.infer<typeof CardChange>): string[] {
         ? `your value for ${id} cleared`
         : `${id} worth ${money(dollars)} to you`,
     )
+  if (args.bonusReceived === null) out.push('bonus month forgotten')
+  else if (args.bonusReceived === 'none') out.push('never paid a welcome bonus')
+  else if (args.bonusReceived !== undefined)
+    out.push(`welcome bonus posted in ${args.bonusReceived}`)
   if (args.bonus === null) out.push('welcome bonus no longer tracked')
   else if (args.bonus !== undefined)
     out.push(
@@ -355,15 +361,44 @@ export function walletHandlers(
     },
   }
 
-  const RemoveInput = z.object({ cardId: CardId })
+  const RemoveInput = z.object({
+    cardId: CardId,
+    keepHistory: z
+      .boolean()
+      .optional()
+      .describe(
+        'Ask the user once whether to keep the card in their card history, so offer answers can say when the issuer lets them earn its welcome bonus again. true keeps it, closed this month, with its opening date and bonus months; false or omitted removes it entirely.',
+      ),
+  })
   const removeCard: Handler<typeof RemoveInput> = {
     input: RemoveInput,
-    run: async ({ cardId }) =>
+    run: async ({ cardId, keepHistory }) =>
       ctx.changed(
-        await store.removeCard(cardId),
-        `Removed ${ctx.cardName(cardId)} (${cardId}).`,
+        await store.removeCard(
+          cardId,
+          keepHistory === true ? { today: deps.today() } : null,
+        ),
+        `Removed ${ctx.cardName(cardId)} (${cardId})${keepHistory === true ? ', and kept it in your card history' : ''}.`,
         { notes: false },
       ),
+  }
+
+  const HistoryInput = z.object({ pastCards: PastCardsInput })
+  const setCardHistory: Handler<typeof HistoryInput> = {
+    input: HistoryInput,
+    run: async ({ pastCards }) => {
+      const result = await store.setPastCards(
+        pastCards.map(pastCardInput),
+        deps.today(),
+      )
+      return ctx.changed(
+        result,
+        pastCards.length === 0
+          ? 'Card history cleared.'
+          : `Card history set to ${listed(pastCards.map((p) => ctx.cardName(p.cardId)))}. compare_welcome_offers now checks each issuer's repeat-bonus rule against it.`,
+        { notes: false },
+      )
+    },
   }
 
   const MembershipsInput = z.object({
@@ -451,6 +486,7 @@ export function walletHandlers(
     add_card: addCard,
     update_card: updateCard,
     remove_card: removeCard,
+    set_card_history: setCardHistory,
     set_memberships: setMemberships,
     set_point_values: setPointValues,
   }
@@ -537,7 +573,7 @@ export function registerWalletTools(
     'remove_card',
     {
       title: 'Remove a card',
-      description: `Removes a card from the wallet, with its tracked cap usage, bonus progress and yearly spending. Memberships and point values stay, even when the last card goes. Only when the user says they no longer have it or don't want it considered. ${ctx.walletUse}`,
+      description: `Removes a card from the wallet, with its tracked cap usage, bonus progress and yearly spending. Memberships and point values stay, even when the last card goes. Only when the user says they no longer have it or don't want it considered. If they closed it, ask once whether to keep it in their card history (keepHistory), so offer answers can say when its welcome bonus can be earned again. ${ctx.walletUse}`,
       inputSchema: strictInput('remove_card', tools.remove_card.input),
       outputSchema: WalletChangeSchema,
       annotations: {
@@ -548,6 +584,26 @@ export function registerWalletTools(
       },
     },
     (args) => tools.remove_card.run(args),
+  )
+
+  server.registerTool(
+    'set_card_history',
+    {
+      title: 'Set card history',
+      description: `Saves the cards the user used to have and no longer holds, with the months they know (opened, closed, when the welcome bonus posted). compare_welcome_offers then checks each issuer's published repeat-bonus rule against them and the saved cards: "Chase says you may not get this bonus again", or "Not before March 2027". Only the card id is needed; ask for months only when the issuer's rule counts from one. Replaces the whole list, so call list_wallet first and include the ones to keep. Only rules issuers publish are checked; never assume one (5/24 is skippedIssuers on set_memberships). Never suggest closing a card to earn a bonus again. ${ctx.walletUse}`,
+      inputSchema: strictInput(
+        'set_card_history',
+        tools.set_card_history.input,
+      ),
+      outputSchema: WalletChangeSchema,
+      annotations: {
+        title: 'Set card history',
+        ...WRITE,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
+    },
+    (args) => tools.set_card_history.run(args),
   )
 
   server.registerTool(

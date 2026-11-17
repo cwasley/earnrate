@@ -19,6 +19,7 @@ welcome_offer:
   spend: 2000
   months: 6
   valid_to: 2027-01-13
+  repeat: { may: true }
   note: 'Plus one Free Night Reward (a standard room, expiring 12 months after it is issued), which earnrate does not value. Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card or previous versions of these Cards," and may also decline based on your history with balance transfers, as a Card Member, and the number of cards you have opened and closed. Offers may vary between advertisements.'
 rules:
   - id: hilton-purchases
@@ -143,6 +144,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
     quote: 'Offer ends 01/13/2027 at 11:59 PM MST.'
+  - rule: repeat
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0#offer-terms
+    quote: 'You may not be eligible to receive a welcome offer if you have or have had this Card'
 todo:
   - Complimentary Hilton Honors Silver status (automatic with the card) isn't modeled.
   - The welcome offer's Free Night Reward isn't valued; a welcome offer holds only points.

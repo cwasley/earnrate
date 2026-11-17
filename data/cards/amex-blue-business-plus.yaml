@@ -18,7 +18,8 @@ welcome_offer:
   spend: 5000
   months: 3
   varies: true
-  note: 'The public offer is "as high as" 50,000 points; Amex shows the exact amount after you apply and before you accept. Not available if you have or have had this Card or previous versions of it, and Amex may also decline based on your card history. One offer per Card Account.'
+  repeat: { may: true }
+  note: 'The public offer is "as high as" 50,000 points; Amex shows the exact amount after you apply and before you accept. May not be available if you have or have had this Card or previous versions of it, and Amex may also decline based on your card history. One offer per Card Account.'
 rules:
   - id: amex-travel
     match:
@@ -71,6 +72,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-blue-business-plus-credit-card-amex/
     quote: 'after you spend $5,000 in purchases on your new Card within the first 3 months of Card Membership'
+  - rule: repeat
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinessplus-credit-card/45094-9-0
+    quote: 'if you have or have had this Card or previous versions of this Card'
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinessplus-credit-card/45094-9-0
     quote: 'Foreign Transaction 2.7% of each transaction after conversion to US dollars'

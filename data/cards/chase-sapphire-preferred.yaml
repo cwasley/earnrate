@@ -18,6 +18,7 @@ welcome_offer:
   points: 75000
   spend: 5000
   months: 3
+  repeat: { may: true }
   note: 'Chase: "This credit card is unavailable to you if you currently have this card open. The new cardmember bonus may not be available to you if you previously held this card or received a new cardmember bonus for this card." Chase may also weigh how many cards you''ve opened and closed.'
 rules:
   - id: chase-travel
@@ -161,6 +162,9 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: 'purchases in the first 3 months from account opening'
+  - rule: repeat
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'The new cardmember bonus may not be available to you if you previously held this card'
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65222.html
     quote: 'Foreign Transactions None Penalty Fees'

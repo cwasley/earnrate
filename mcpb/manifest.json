@@ -84,7 +84,11 @@
     },
     {
       "name": "remove_card",
-      "description": "Removes a card from your wallet."
+      "description": "Removes a card from your wallet, and can keep it in your card history."
+    },
+    {
+      "name": "set_card_history",
+      "description": "Saves cards you used to have, so welcome offer answers can check each issuer's repeat-bonus rule."
     },
     {
       "name": "set_memberships",

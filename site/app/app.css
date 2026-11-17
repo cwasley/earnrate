@@ -1791,6 +1791,7 @@ button:disabled:active {
 
 .next-steps .link,
 .skip-saved .link,
+.past-card-name .link,
 p.muted .link,
 p.callout .link,
 .rate-part > .link,
@@ -2453,6 +2454,57 @@ a.chip {
 
 .fold-panel > :last-child {
   margin-bottom: 16px;
+}
+
+.past-cards {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+.past-cards li {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.past-card-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.past-card-name .link {
+  margin-left: auto;
+  font-weight: 400;
+}
+
+.past-card-month {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  font-size: 15px;
+}
+
+.past-cards li p {
+  margin: 0;
+}
+
+.month-ask {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 15px;
+}
+
+.past-card-add select {
+  display: block;
+  margin-top: 4px;
+  max-width: 100%;
 }
 
 .fold-panel .point-value:last-of-type {

@@ -116,10 +116,47 @@ const RecommendationSchema = z.object({
   ifPaying: IfPayingSchema,
 })
 
+// The month that would settle a repeat-bonus note: a held card's
+// bonusReceived (update_card), or an entry of the card history
+// (set_card_history; pastIndex is its place in the list).
+const MonthAskSchema = z.object({
+  cardId: z.string(),
+  held: z.boolean(),
+  pastIndex: z.number().nullable(),
+  field: z.enum(['bonus_received', 'opened', 'closed']),
+})
+
 export const WalletSummarySchema = z.object({
   memberships: z.array(z.string()),
   membershipNames: z.array(z.string()),
   skippedIssuers: z.array(z.object({ id: z.string(), name: z.string() })),
+  pastCards: z.array(
+    z.object({
+      cardId: z.string(),
+      cardName: z.string(),
+      opened: z.string().nullable(),
+      closed: z.string().nullable(),
+      bonusReceived: z.string().nullable(),
+      bonusMet: z.string().nullable(),
+      bonusAgain: z
+        .object({
+          state: z.enum([
+            'eligible',
+            'likely',
+            'once-used',
+            'not-yet',
+            'needs-date',
+            'unstated',
+          ]),
+          from: z.string().nullable(),
+          // `from` is only the earliest the wait can end.
+          earliest: z.boolean(),
+          text: z.string().nullable(),
+          ask: MonthAskSchema.nullable(),
+        })
+        .nullable(),
+    }),
+  ),
   pointValues: z.array(
     z.object({
       currency: z.string(),
@@ -144,6 +181,7 @@ export const WalletSummarySchema = z.object({
           'enroll',
           'renewal',
           'change',
+          'bonus-again',
         ]),
         cardId: z.string(),
         ref: z.string().optional(),
@@ -351,6 +389,12 @@ export const OfferComparisonSchema = z.object({
       annualFee: z.number().nullable(),
       firstYearFee: z.number().nullable(),
       ineligible: z.string().nullable(),
+      // YYYY-MM when a repeat-bonus wait ends.
+      eligibleFrom: z.string().nullable(),
+      // The repeat-bonus rule's note when it doesn't rule the offer out: a
+      // month it needs, or a date that's only approximate. Pass it on.
+      eligibilityNote: z.string().nullable(),
+      monthAsk: MonthAskSchema.nullable(),
       bonusValue: z.number(),
       firstYearValue: z.number(),
       // Statement credits, a year at face value, and the first-year value

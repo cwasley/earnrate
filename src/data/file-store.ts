@@ -5,9 +5,11 @@ import {
   removeFromWallet,
   updateInWallet,
   withMemberships,
+  withPastCards,
   withSkippedIssuers,
   withValuations,
   type CardInput,
+  type PastCardInput,
   type WalletChange,
 } from '../engine/wallet-change.ts'
 import type { Catalog } from '../schema/catalog.ts'
@@ -25,6 +27,7 @@ import {
   EMPTY_WALLET_TEXT,
   readWalletText,
   removeCardText,
+  setPastCardsText,
   setMembershipsText,
   setTopListText,
   setValuationsText,
@@ -118,10 +121,29 @@ export class FileWalletStore implements WalletStore {
     )
   }
 
-  removeCard(cardId: string): Promise<SetupResult> {
+  removeCard(
+    cardId: string,
+    keep: { today: string } | null = null,
+  ): Promise<SetupResult> {
     return this.change(
-      this.existing((w) => removeFromWallet(w, cardId)),
-      (text) => removeCardText(text ?? '', cardId),
+      this.existing((w) => removeFromWallet(w, cardId, keep)),
+      (text, change) => {
+        const removed = removeCardText(text ?? '', cardId)
+        return keep
+          ? setPastCardsText(removed, change.wallet.past_cards ?? [])
+          : removed
+      },
+    )
+  }
+
+  setPastCards(list: PastCardInput[], today: string): Promise<SetupResult> {
+    return this.change(
+      (w) => withPastCards(this.catalog, w ?? emptyWallet(), list, today),
+      (text, change) =>
+        setPastCardsText(
+          text ?? EMPTY_WALLET_TEXT,
+          change.wallet.past_cards ?? [],
+        ),
     )
   }
 

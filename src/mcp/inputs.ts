@@ -3,10 +3,10 @@ import { ALL_PERSONAL_CARDS } from '../engine/explore.ts'
 import { profileText, VALUATION_PROFILES } from '../engine/profiles.ts'
 import { knownMemberships } from '../engine/setup.ts'
 import { listed } from '../engine/text.ts'
-import type { CardInput } from '../engine/wallet-change.ts'
+import type { CardInput, PastCardInput } from '../engine/wallet-change.ts'
 import { PaymentMethod } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
-import { IsoDate } from '../schema/common.ts'
+import { IsoDate, YearMonth } from '../schema/common.ts'
 import { COUNTRY_CODE } from '../schema/common.ts'
 import type { Wallet } from '../schema/wallet.ts'
 
@@ -63,6 +63,8 @@ export const CountryInput = z
 export const PaymentInput = PaymentMethod.optional().describe(
   "How the purchase is paid, only when the user says: card (the card itself or its number), apple-pay, google-pay or paypal (PayPal checkout). Optional; omit it when unknown, and never assume Apple Pay. Some rates need one (Apple Card's 2% with Apple Pay, PayPal Cashback's 3% through PayPal checkout), and the answer's assumptions say when paying another way would change the pick.",
 )
+
+const MonthInput = YearMonth.describe('A month, YYYY-MM.')
 
 export const CardId = z
   .string()
@@ -208,14 +210,55 @@ const cardFields = {
     by: IsoDate.optional().describe(
       "The deadline, YYYY-MM-DD, only if the user's offer differs from the published one.",
     ),
+    met: MonthInput.optional().describe(
+      'The month the spending was reached, YYYY-MM, only if the user says; recorded purchases set it.',
+    ),
   })
     .nullable()
     .optional()
     .describe(
       "A welcome bonus the user is working toward, so purchases recorded on this card count toward it and answers can favor it. Ask when they opened the account; spending needed and the deadline default to the card's published offer. null stops tracking it.",
     ),
+  bonusReceived: z
+    .union([MonthInput, z.literal('none')])
+    .nullable()
+    .optional()
+    .describe(
+      'The month the welcome bonus posted, YYYY-MM, or "none" if the card never paid one, only if the user says. Issuers count repeat-bonus waits from it. null forgets it.',
+    ),
 }
 export const CardChange = z.object({ cardId: CardId, ...cardFields })
+
+export const PastCardsInput = z
+  .array(
+    strictShape('pastCards', {
+      cardId: CardId,
+      opened: MonthInput.optional().describe('YYYY-MM the account opened.'),
+      closed: MonthInput.optional().describe('YYYY-MM the user closed it.'),
+      bonusReceived: z
+        .union([MonthInput, z.literal('none')])
+        .optional()
+        .describe(
+          'YYYY-MM its welcome bonus posted, or "none" if it never paid one.',
+        ),
+      bonusMet: MonthInput.optional().describe(
+        "YYYY-MM a tracked bonus's spending was reached, as list_wallet gives it (bonusMet). Pass it back unchanged; never ask for it.",
+      ),
+    }),
+  )
+  .describe(
+    'Cards the user used to have and no longer holds, with the months they know. Only the card is needed; months make the dates exact. Replaces the saved list, so include the ones to keep; [] clears it.',
+  )
+
+export const pastCardInput = (
+  p: z.infer<typeof PastCardsInput>[number],
+): PastCardInput => ({
+  id: p.cardId,
+  ...(p.opened === undefined ? {} : { opened: p.opened }),
+  ...(p.closed === undefined ? {} : { closed: p.closed }),
+  ...(p.bonusReceived === undefined ? {} : { bonusReceived: p.bonusReceived }),
+  ...(p.bonusMet === undefined ? {} : { bonusMet: p.bonusMet }),
+})
 
 // Drops keys whose value is undefined, which optional zod fields produce and
 // exactOptionalPropertyTypes won't accept.
@@ -228,12 +271,14 @@ export function defined<T extends object>(value: T) {
 export function cardInput({
   cardId,
   bonus,
+  bonusReceived,
   ...rest
 }: z.infer<typeof CardChange>): CardInput {
   return {
     id: cardId,
     ...defined(rest),
     ...(bonus === undefined ? {} : { bonus: bonus && defined(bonus) }),
+    ...(bonusReceived === undefined ? {} : { bonusReceived }),
   }
 }
 

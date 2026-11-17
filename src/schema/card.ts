@@ -13,6 +13,7 @@ import {
 export const OFFER_RULES: ReadonlySet<string> = new Set([
   'welcome_offer',
   'not_with',
+  'repeat',
   'first_year_fee',
 ])
 
@@ -168,6 +169,24 @@ export const RuleSchema = z
     'activate_from must not be after activate_by',
   )
 
+// Without `after_months`, the bonus is once per card: having had this card
+// (or one in `also`) at all rules it out. With it, the wait runs from the
+// last bonus received, the account's opening, or the last day it was held.
+export const RepeatSchema = z
+  .strictObject({
+    after_months: z.number().int().positive().optional(),
+    from: z.enum(['bonus', 'opened', 'held']).optional(),
+    // Other cards whose history counts too (any personal Southwest card,
+    // Platinum for Gold). Not symmetric: each card lists its own.
+    also: z.array(KebabId).min(1).optional(),
+    // The issuer says the bonus "may not" be available, not that it isn't.
+    may: z.literal(true).optional(),
+  })
+  .refine(
+    (r) => (r.after_months === undefined) === (r.from === undefined),
+    'repeat needs from with after_months, and neither without the other',
+  )
+
 // The public sign-up bonus on the issuer's page. Offers vary by person and
 // channel, so a wallet can override it.
 export const WelcomeOfferSchema = z
@@ -186,6 +205,9 @@ export const WelcomeOfferSchema = z
     // Other cards whose holders the issuer says can't get this offer
     // (Southwest's personal cards, Blue Cash Everyday with Preferred).
     not_with: z.array(KebabId).min(1).optional(),
+    // Whether someone who has had the card can get the bonus again, as the
+    // issuer's pages state it. Absent when they state no rule.
+    repeat: RepeatSchema.optional(),
     note: z.string().optional(),
   })
   .refine(

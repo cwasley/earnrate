@@ -17,6 +17,7 @@ welcome_offer:
   points: 20000
   spend: 1000
   months: 3
+  repeat: { after_months: 60, from: bonus }
   note: The window is 90 days from account opening (about 3 months). Not available to existing or previous Altitude Go cardmembers who received a new account bonus for it in the last five years.
 rules:
   - id: dining
@@ -122,6 +123,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
     quote: 'if you have received a new account bonus for this product in the last five years'
+  - rule: repeat
+    url: https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
+    quote: 'received a new account bonus for this product in the last five years'
   - rule: foreign_transaction_fee
     url: https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=HQWRM3D57Q&sourceCode=88268&page=terms
     quote: 'Foreign Transaction 3% of each foreign transaction'

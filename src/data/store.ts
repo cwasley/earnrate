@@ -6,9 +6,11 @@ import {
   removeFromWallet,
   updateInWallet,
   withMemberships,
+  withPastCards,
   withSkippedIssuers,
   withValuations,
   type CardInput,
+  type PastCardInput,
   type WalletChange,
 } from '../engine/wallet-change.ts'
 import { withoutCardNumbers } from '../schema/card-number.ts'
@@ -35,7 +37,13 @@ export interface WalletStore {
   load(): Promise<Wallet | null> // throws when a saved wallet can't be read
   addCard(input: CardInput, today: string): Promise<SetupResult>
   updateCard(input: CardInput, today: string): Promise<SetupResult>
-  removeCard(cardId: string): Promise<SetupResult>
+  // With `keep`, the card moves to the card history, closed this month.
+  removeCard(
+    cardId: string,
+    keep?: { today: string } | null,
+  ): Promise<SetupResult>
+  // The cards the person used to have; [] clears them.
+  setPastCards(list: PastCardInput[], today: string): Promise<SetupResult>
   setMemberships(memberships: string[]): Promise<SetupResult>
   // Issuers to leave out of next-card answers; [] clears them.
   setSkippedIssuers(issuers: string[]): Promise<SetupResult>
@@ -132,8 +140,19 @@ export class JsonWalletStore implements AccountStore {
     )
   }
 
-  removeCard(cardId: string): Promise<SetupResult> {
-    return this.change(this.needsWallet((w) => removeFromWallet(w, cardId)))
+  removeCard(
+    cardId: string,
+    keep: { today: string } | null = null,
+  ): Promise<SetupResult> {
+    return this.change(
+      this.needsWallet((w) => removeFromWallet(w, cardId, keep)),
+    )
+  }
+
+  setPastCards(list: PastCardInput[], today: string): Promise<SetupResult> {
+    return this.change((w) =>
+      withPastCards(this.catalog, w ?? emptyWallet(), list, today),
+    )
   }
 
   setMemberships(memberships: string[]): Promise<SetupResult> {

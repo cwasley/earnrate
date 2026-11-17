@@ -261,7 +261,7 @@ Or install it as a Claude Code plugin, which connects Claude Code and Cowork to 
 
 Use the connector (or plugin) or the local extension, not both: each keeps its own wallet, and with both connected Claude may answer from either. Each one says which wallet it used.
 
-**Or run it on your computer:** `earnrate mcp` runs earnrate as a local MCP server over stdio, with 14 tools (the connector has the same ones, plus `export_wallet`, `import_wallet`, `delete_wallet` and `switch_wallet` for its saved wallets):
+**Or run it on your computer:** `earnrate mcp` runs earnrate as a local MCP server over stdio, with 15 tools (the connector has the same ones, plus `export_wallet`, `import_wallet`, `delete_wallet` and `switch_wallet` for its saved wallets):
 
 - `best_card_for_purchase`: which card to use, with reasons
 - `best_cards_for` and `simulate_spending`: compare every card earnrate knows, for one purchase or a year of spending, with no wallet needed
@@ -271,6 +271,7 @@ Use the connector (or plugin) or the local extension, not both: each keeps its o
 - `compare_welcome_offers`: the best public sign-up offers on cards you don't have
 - `record_purchase`: books a purchase against its cap, any open welcome bonus, the card's yearly spend bonuses and an enrolled statement credit in your wallet file, keeping your comments
 - `search_cards`, `add_card`, `update_card`, `remove_card`, `set_memberships` and `set_point_values`: set up the wallet in conversation, including what your points are worth (memberships and point values need no cards)
+- `set_card_history`: cards you used to have, so `compare_welcome_offers` can check each issuer's published repeat-bonus rule ("Not before March 2027")
 
 Both servers also offer four prompts, ready-made questions you can pick in Claude instead of typing one. None needs your cards:
 

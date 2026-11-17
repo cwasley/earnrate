@@ -2,11 +2,11 @@
   "version": 1,
   "pages": {
     "https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-blue-business-plus-credit-card-amex/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": []
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinessplus-credit-card/45094-9-0": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "3e0d74aebc3b1eb1",
         "4db3311144b50bb6",
@@ -18,7 +18,7 @@
       ]
     },
     "https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "06f0ff4aa405d916",
         "1ba4e0ef0ccc7c50",
@@ -34,7 +34,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "17e42cee15b8f34c",
@@ -49,13 +49,13 @@
       ]
     },
     "https://www.americanexpress.com/us/content/rewards-info/retail.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "df29fd27d91d1ea7"
       ]
     },
     "https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "06f0ff4aa405d916",
         "1ba4e0ef0ccc7c50",
@@ -69,7 +69,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "49179b7362a6540b",
@@ -82,13 +82,13 @@
       ]
     },
     "https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-gold-card-amex/": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "c22bf8ba7f51c6a2"
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "3e0d74aebc3b1eb1",
         "45c7e9de37ed451e",
@@ -103,7 +103,7 @@
       ]
     },
     "https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "0c6233fd6738c274",
         "2ed7d4bf99732756",
@@ -116,7 +116,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "00e15a095514ede5",
         "01c94a93deb9a84c",
@@ -147,7 +147,7 @@
       ]
     },
     "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-blue-american-express-card/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "3deb5a470e9d1450",
         "3e477134c66f847f",
@@ -157,7 +157,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "4567b6426d9a5fb9",
@@ -169,7 +169,7 @@
       ]
     },
     "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-gold-american-express-card/": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "2d6db1f5a9edb39d",
         "3e477134c66f847f",
@@ -178,7 +178,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "4567b6426d9a5fb9",
@@ -192,7 +192,7 @@
       ]
     },
     "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-platinum-american-express-card/": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "2d6db1f5a9edb39d",
         "3e477134c66f847f",
@@ -201,7 +201,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "4567b6426d9a5fb9",
@@ -223,7 +223,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "4567b6426d9a5fb9",
@@ -245,7 +245,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "3e0d74aebc3b1eb1",
@@ -268,7 +268,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "4567b6426d9a5fb9",
@@ -277,18 +277,18 @@
       ]
     },
     "https://www.americanexpress.com/us/content/rewards-info/travel.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": []
     },
     "https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/hilton-honors/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "349aab33d16be4eb",
         "c9c49a10782f54d4"
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "4db3311144b50bb6",
         "56f120e8a90bf874",
@@ -309,7 +309,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-surpass-credit-card/25330-10-0": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "4567b6426d9a5fb9",
@@ -331,7 +331,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "4567b6426d9a5fb9",
@@ -355,7 +355,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "4567b6426d9a5fb9",
@@ -376,7 +376,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0": {
-      "checked": "2026-11-08",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "4567b6426d9a5fb9",
@@ -386,7 +386,7 @@
       ]
     },
     "https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/amex-marriott-bonvoy-business-credit-card/": {
-      "checked": "2026-11-08",
+      "checked": "2026-11-17",
       "lines": [
         "1f6e49b615f94723",
         "77676e50771e7a40",
@@ -394,7 +394,7 @@
       ]
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0": {
-      "checked": "2026-11-08",
+      "checked": "2026-11-17",
       "lines": [
         "3913041596a193d5",
         "4db3311144b50bb6",
@@ -410,7 +410,7 @@
       "lines": []
     },
     "https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "0232396b0a8716b1",
         "1e1c9e465bade44e",
@@ -620,14 +620,14 @@
       ]
     },
     "https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "34831fccb972883f",
         "749128751b4a132b"
       ]
     },
     "https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "178db1c2e1019edd",
         "181cd25987d30b34",
@@ -754,7 +754,7 @@
       ]
     },
     "https://www.capitalone.com/credit-cards/quicksilver/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "0b6e4b03eb961a5d",
         "27001d379f83a940",
@@ -766,7 +766,7 @@
       ]
     },
     "https://disclosures.capitalone.com/disclosure.42159.en-US.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "4b2ffcd689217804",
         "936b95da59e7e7ea",
@@ -776,7 +776,7 @@
       ]
     },
     "https://www.capitalone.com/credit-cards/rei/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "0a0ca955982259a8",
         "12e1bb7baf852590",
@@ -787,7 +787,7 @@
       ]
     },
     "https://www.capitalone.com/credit-cards/savor/": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "02ec1ed2620f44d7",
         "0a53af1deb629045",
@@ -803,7 +803,7 @@
       ]
     },
     "https://disclosures.capitalone.com/disclosure.42167.en-US.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "486ed9f7ec8d05e7",
         "5197cc77ba31965b",
@@ -815,7 +815,7 @@
       ]
     },
     "https://www.capitalone.com/small-business/credit-cards/spark-cash-plus/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "2b1a946f503b7064",
         "87af96444529bc13",
@@ -824,7 +824,7 @@
       ]
     },
     "https://disclosures.capitalone.com/disclosure.41737.en-US.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "50c2d54fdd6014d6",
         "6944597d56228dd0",
@@ -833,7 +833,7 @@
       ]
     },
     "https://www.capitalone.com/small-business/credit-cards/venture-x-business/": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "20f095d5d7cbf2a0",
         "2b1a946f503b7064",
@@ -843,7 +843,7 @@
       ]
     },
     "https://disclosures.capitalone.com/disclosure.42243.en-US.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "480eb3fe2cafb4bf",
         "b0e93cb41f424ddc",
@@ -852,7 +852,7 @@
       ]
     },
     "https://www.capitalone.com/credit-cards/venture-x/": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "219c07631a88a8fa",
         "80cbc7d5b721ec63",
@@ -860,7 +860,7 @@
       ]
     },
     "https://disclosures.capitalone.com/disclosure.42201.en-US.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "b4d5d7100d10cb8f",
         "c69e5c49f35e5fe6",
@@ -869,7 +869,7 @@
       ]
     },
     "https://www.capitalone.com/credit-cards/venture/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "4b0f75ac43076dd7",
         "5bedb96fb44ca784",
@@ -882,7 +882,7 @@
       ]
     },
     "https://disclosures.capitalone.com/disclosure.42174.en-US.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "5ff9f14132ccb0de",
         "88319de65d864f4d",
@@ -924,9 +924,9 @@
       ]
     },
     "https://creditcards.chase.com/cash-back-credit-cards/freedom/flex": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
-        "0be1973dd1080ca4",
+        "8d5b43ecfae20c4f",
         "c4aa062a6cebb860",
         "c8d1771b5db67c2a",
         "cd20353bc41ed6d8",
@@ -934,14 +934,14 @@
       ]
     },
     "https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "143c532e0f7f1e5a",
         "4d1bf77c451033bf"
       ]
     },
     "https://www.chase.com/personal/credit-cards/freedom/flex-learnmore": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "171083c20b5bc170",
         "2c28b6aed108a5f2",
@@ -955,7 +955,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65280.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "33839a64c41979a9",
         "38f76b2bdb0cb431",
@@ -985,16 +985,16 @@
       ]
     },
     "https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "9768a41fb6c19bf8",
-        "a1d2c263cf20ede8",
+        "bea12cf09f1d17f7",
         "e405536e5a8932b3",
         "f8dd9b3fb42e70fc"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61498.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "33839a64c41979a9",
         "38f76b2bdb0cb431",
@@ -1075,6 +1075,7 @@
       "lines": [
         "06ad7fcb06f7294d",
         "0b0cee3df4a6021f",
+        "31ed9091bc25b31c",
         "688e7d2d1a9370d8",
         "99f426c28bdea280",
         "a7e9b1401312bc81",
@@ -1092,7 +1093,7 @@
       ]
     },
     "https://creditcards.chase.com/business-credit-cards/ink/cash": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-17",
       "lines": [
         "207a5e59bf1f68c0",
         "4b2522f997a15f72",
@@ -1102,7 +1103,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63827.html": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-17",
       "lines": [
         "29f2aac9a943305c",
         "444f2a7b16b80787",
@@ -1115,7 +1116,7 @@
       ]
     },
     "https://creditcards.chase.com/business-credit-cards/ink/business-preferred": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "31889854f5e20444",
         "96aab39b6978a389",
@@ -1123,7 +1124,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63764.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "1661d1dd310f3cb0",
         "29f2aac9a943305c",
@@ -1134,7 +1135,7 @@
       ]
     },
     "https://creditcards.chase.com/business-credit-cards/ink/unlimited": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-17",
       "lines": [
         "2ce9844322f05c1b",
         "bfaa049f5a74f401",
@@ -1142,7 +1143,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63749.html": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-17",
       "lines": [
         "29f2aac9a943305c",
         "444f2a7b16b80787",
@@ -1155,7 +1156,7 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold": {
-      "checked": "2026-11-09",
+      "checked": "2026-11-17",
       "lines": [
         "00780198e19331cb",
         "02dd7c920f34ea36",
@@ -1168,7 +1169,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65105.html": {
-      "checked": "2026-11-09",
+      "checked": "2026-11-17",
       "lines": [
         "444f2a7b16b80787",
         "46311fe706cc594a",
@@ -1238,14 +1239,14 @@
       ]
     },
     "https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "2b2df50c7248b432",
         "faddb298329961b5"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64842.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1280,14 +1281,14 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/southwest/plus": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "1df3212c22205922",
         "d335efa354650248"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64433.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1324,14 +1325,14 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/southwest/premier": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "1e8f9a9dc6b709c5",
         "9502f678ac5d4486"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64337.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1341,13 +1342,13 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/southwest/priority": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "50db4f32171a404f"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64414.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1357,7 +1358,7 @@
       ]
     },
     "https://creditcards.chase.com/business-credit-cards/united/united-business-card": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "00f9a2e44e685e2b",
         "6fdd517d9cbc7765",
@@ -1368,7 +1369,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65426.html": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "07e263573004b121",
         "1661d1dd310f3cb0",
@@ -1399,7 +1400,7 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/united/united-club": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "12d6d7c814ea379b",
         "25232bf961299699",
@@ -1410,7 +1411,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC62957.html": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "07e263573004b121",
         "1661d1dd310f3cb0",
@@ -1420,7 +1421,7 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/united/united-explorer": {
-      "checked": "2026-11-10",
+      "checked": "2026-11-17",
       "lines": [
         "06e43184dedb5443",
         "07b9d3215a046aec",
@@ -1431,7 +1432,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63218.html": {
-      "checked": "2026-11-10",
+      "checked": "2026-11-17",
       "lines": [
         "07e263573004b121",
         "1661d1dd310f3cb0",
@@ -1441,7 +1442,7 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/united/united-gateway": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "04eeefc81c134dd8",
         "18dfb64eaf7baceb",
@@ -1453,7 +1454,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65777.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "07e263573004b121",
         "444f2a7b16b80787",
@@ -1485,28 +1486,28 @@
       ]
     },
     "https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-17",
       "lines": [
         "bd408fed829740c9"
       ]
     },
     "https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": []
     },
     "https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": []
     },
     "https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-17",
       "lines": [
         "1b7075266ec6af7f",
         "3b761d6e62c6b637"
       ]
     },
     "https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-17",
       "lines": [
         "cfe799d2d1ef3950"
       ]
@@ -1562,7 +1563,7 @@
       ]
     },
     "https://www.citi.com/credit-cards/citi-strata-elite-credit-card": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": [
         "345e2953751d3064",
         "60d4f69954950949",
@@ -1570,11 +1571,11 @@
       ]
     },
     "https://www.thankyou.com/terms": {
-      "checked": "2026-11-11",
+      "checked": "2026-11-17",
       "lines": []
     },
     "https://www.citi.com/credit-cards/citi-strata-premier-credit-card": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-17",
       "lines": [
         "678ee2632a0c3c58",
         "bd07ce94d6d0ee03",
@@ -1585,7 +1586,7 @@
       ]
     },
     "https://www.citi.com/credit-cards/citi-strata-credit-card": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "02a380f3e13487b4",
         "3b761d6e62c6b637",
@@ -1600,7 +1601,7 @@
       ]
     },
     "https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "0fa60f74ca00d844",
         "1674cdbc90d39a25",
@@ -1618,7 +1619,7 @@
       ]
     },
     "https://www.discover.com/credit-cards/cash-back/it-card/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "7a419d2907b1b9e0",
         "9092b929d2a0f2bc",
@@ -1627,7 +1628,7 @@
       ]
     },
     "https://disclosures.capitalone.com/disclosure.42300.en-US.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "0e9ac1e1d90ceec6",
         "0fc353e78464cc6c",
@@ -1643,7 +1644,7 @@
       ]
     },
     "https://www.discover.com/credit-cards/cash-back/cashback-calendar.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "0d6db959891b759a",
         "27465d9877e40886",
@@ -1660,7 +1661,7 @@
       ]
     },
     "https://www.discover.com/credit-cards/cash-back/cashback-bonus.html": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "0660085a08511401",
         "0d6db959891b759a",
@@ -1672,7 +1673,7 @@
       ]
     },
     "https://www.discover.com/credit-cards/card-smarts/using-cashback-bonus/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "1cfa3090ce6b26a3",
         "2e6f455d338c8a88",
@@ -1691,7 +1692,7 @@
       ]
     },
     "https://www.discover.com/credit-cards/card-smarts/best-international-travel-credit-card/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "852946f210d2ad39"
       ]
@@ -1850,18 +1851,17 @@
       ]
     },
     "https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "00842af7ccbbf061",
         "386263aa536e7495",
-        "6a557384b005a7f6",
         "c93f5ff24c14e214",
         "ea189f0599727bb2",
         "ef5d61e335fc38a4"
       ]
     },
     "https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=8BB5BD89H1&sourceCode=88416&page=terms": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "28f3a7958b0f39c6",
         "2edb34d356e8170c",
@@ -1872,7 +1872,7 @@
       ]
     },
     "https://rewards.usbank.com/benefits/card/AltitudeConnectBenefits/program-rules": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "0f432cc5f17b1e58",
         "1dcb345b404fb068",
@@ -1880,7 +1880,7 @@
       ]
     },
     "https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "00842af7ccbbf061",
         "22b654b83f1bd3cf",
@@ -1889,7 +1889,7 @@
       ]
     },
     "https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=18569&offerId=HQWRM3D57Q&sourceCode=88268&page=terms": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "28f3a7958b0f39c6",
         "2edb34d356e8170c",
@@ -1900,7 +1900,7 @@
       ]
     },
     "https://rewards.usbank.com/benefits/card/AltitudeGoBenefits/program-rules": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "1dcb345b404fb068",
         "85edd74f981f1a6f",
@@ -1908,7 +1908,7 @@
       ]
     },
     "https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "00842af7ccbbf061",
         "0b6d4028a18f85c0",
@@ -1930,11 +1930,11 @@
       ]
     },
     "https://cashplus.usbank.com/cash-plus/samplemerchants": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": []
     },
     "https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=8069&offerId=WRH8D23H2R&sourceCode=88256&page=terms": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-17",
       "lines": [
         "0b6d4028a18f85c0",
         "28f3a7958b0f39c6",
@@ -2056,7 +2056,7 @@
       "lines": []
     },
     "https://creditcards.wellsfargo.com/active-cash-credit-card/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "173b2661f632bfc9",
         "2518f48920d4242a",
@@ -2070,27 +2070,27 @@
       ]
     },
     "https://www.wellsfargo.com/credit-cards/active-cash/terms/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "8e909a3d61561885",
         "bd3e1fe145104712"
       ]
     },
     "https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-17",
       "lines": [
         "ec4ade0ea696641b"
       ]
     },
     "https://www.wellsfargo.com/credit-cards/autograph-journey-visa/terms/": {
-      "checked": "2026-11-07",
+      "checked": "2026-11-17",
       "lines": [
         "5cff0c2c84f78cd5",
         "bd3e1fe145104712"
       ]
     },
     "https://creditcards.wellsfargo.com/autograph-visa-credit-card/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "0def7c696a93398a",
         "d3a593020688c6e9",
@@ -2098,13 +2098,13 @@
       ]
     },
     "https://www.wellsfargo.com/credit-cards/autograph-visa/streaming/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "3664e9ebab9a65e0"
       ]
     },
     "https://www.wellsfargo.com/credit-cards/autograph-visa/terms/": {
-      "checked": "2026-11-05",
+      "checked": "2026-11-17",
       "lines": [
         "9a650adedc36ca88",
         "bd3e1fe145104712"

@@ -145,7 +145,8 @@ cards:
     enrolled: [lululemon]
     credit_usage: { lululemon: { period: 2026-Q4, used: 75 } }
     skipped_credits: [equinox, oura]
-    bonus: { opened: '2026-10-01', spent: 100 }
+    bonus: { opened: '2026-10-01', spent: 100, met: '2026-11' }
+    bonus_received: '2025-06'
   - id: usbank-cash-plus
     chosen: { period: 2026-Q4, picks: { five-percent: [fast-food, cell-phone] } }
   - id: discover-it-cash-back
@@ -153,6 +154,9 @@ cards:
   - id: chase-ihg-one-rewards-premier
     enrolled: [anniversary-night]
     night_values: { anniversary-night: 300 }
+past_cards:
+  - { id: chase-sapphire-preferred, opened: '2019-04', closed: '2023-08', bonus_received: '2019-07' }
+  - { id: capital-one-venture, bonus_received: false, bonus_met: '2021-02' }
 `,
       catalog,
     )

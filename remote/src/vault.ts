@@ -7,7 +7,10 @@ import type {
   MerchantResolution,
   RecordedPurchase,
 } from '../../src/engine/types.ts'
-import type { CardInput } from '../../src/engine/wallet-change.ts'
+import type {
+  CardInput,
+  PastCardInput,
+} from '../../src/engine/wallet-change.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import {
@@ -217,8 +220,24 @@ export class WalletVault {
     )
   }
 
-  removeCard(walletKey: string, cardId: string): Promise<SetupResult> {
-    return this.withStore(walletKey, failed(), (s) => s.removeCard(cardId))
+  removeCard(
+    walletKey: string,
+    cardId: string,
+    keep: { today: string } | null = null,
+  ): Promise<SetupResult> {
+    return this.withStore(walletKey, failed(), (s) =>
+      s.removeCard(cardId, keep),
+    )
+  }
+
+  setPastCards(
+    walletKey: string,
+    list: PastCardInput[],
+    today: string,
+  ): Promise<SetupResult> {
+    return this.withStore(walletKey, failed(), (s) =>
+      s.setPastCards(list, today),
+    )
   }
 
   setMemberships(
@@ -289,6 +308,7 @@ export type VaultApi = Pick<
   | 'addCard'
   | 'updateCard'
   | 'removeCard'
+  | 'setPastCards'
   | 'setMemberships'
   | 'setSkippedIssuers'
   | 'setValuations'

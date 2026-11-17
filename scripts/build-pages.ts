@@ -80,6 +80,7 @@ import {
   offerCheckedOn,
   offerTerms,
 } from '../src/engine/offers.ts'
+import { repeatRuleText } from '../src/engine/repeat-bonus.ts'
 import { milestoneStarts, milestoneWhat } from '../src/engine/milestones.ts'
 import {
   yearlyPointsCounted,
@@ -96,6 +97,7 @@ import {
 } from '../src/engine/rule-text.ts'
 import { changeDates, latest } from './lastmod.ts'
 import { pageContext, type GeneratedPage } from './pages/context.ts'
+import { bonusRulesPage } from './pages/bonus-rules.ts'
 import { categoryPageFor, categoryPages } from './pages/categories.ts'
 import {
   changesFeed,
@@ -1227,9 +1229,10 @@ function offerText(card: Card): string {
   const tip = notifyTip(
     "Safari's Notify Me (in the page menu) can tell you when this offer changes.",
   )
+  const again = `<p><b>Can you get it again?</b> ${esc(repeatRuleText(catalog, card))} <a href="/bonus-rules">Every card's rule</a></p>${o.repeat ? finePrint([evidenceFor(card, 'repeat')], "The issuer's words") : ''}`
   return o.note
-    ? `<h2>Public welcome offer</h2><p>${offer} Offers vary by person.</p>${tip}${finePrint([`<p>${esc(o.note)}</p>`, `<p>${esc(OFFERS_MAY_DIFFER)}</p>`], 'Who can get it')}`
-    : `<h2>Public welcome offer</h2><p>${offer} ${esc(OFFERS_MAY_DIFFER)}</p>${tip}`
+    ? `<h2>Public welcome offer</h2><p>${offer} Offers vary by person.</p>${tip}${again}${finePrint([`<p>${esc(o.note)}</p>`, `<p>${esc(OFFERS_MAY_DIFFER)}</p>`], 'Who can get it')}`
+    : `<h2>Public welcome offer</h2><p>${offer} ${esc(OFFERS_MAY_DIFFER)}</p>${tip}${again}`
 }
 
 function placements(
@@ -2492,6 +2495,14 @@ const generated: GeneratedPage[] = [
     ]),
   ),
   ...categoryPages(ctx, categorySlug, filesDate),
+  bonusRulesPage(
+    ctx,
+    filesDate(
+      catalog.cards
+        .filter((c) => c.welcome_offer !== undefined)
+        .map((c) => `data/cards/${c.id}.yaml`),
+    ),
+  ),
   changesPage(ctx, releases),
   ...yearEndPages(ctx, filesDate),
 ]

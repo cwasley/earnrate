@@ -19,7 +19,8 @@ welcome_offer:
   spend: 20000
   months: 3
   varies: true
-  note: 'The public offer is "as high as" 300,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. Not available if you have or have had this Card or previous versions of it, and Amex may also decline based on your card history.'
+  repeat: { may: true }
+  note: 'The public offer is "as high as" 300,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. May not be available if you have or have had this Card or previous versions of it, and Amex may also decline based on your card history.'
 caps:
   - id: key-business-categories
     amount: 2000000
@@ -176,6 +177,9 @@ evidence:
     url: https://www.americanexpress.com/us/credit-cards/business/business-credit-cards/american-express-business-platinum-credit-card-amex/
     quote: 'after you spend $20,000 in purchases on your new Card within the first 3 months of Card Membership'
   - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
+    quote: 'if you have or have had this Card or previous versions of this Card'
+  - rule: repeat
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
     quote: 'if you have or have had this Card or previous versions of this Card'
   - rule: foreign_transaction_fee

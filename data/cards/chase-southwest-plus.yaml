@@ -19,6 +19,10 @@ welcome_offer:
   spend: 1000
   months: 3
   not_with: [chase-southwest-priority, chase-southwest-premier]
+  repeat:
+    after_months: 24
+    from: bonus
+    also: [chase-southwest-premier, chase-southwest-priority]
   note: 'Chase labels it a limited-time offer and states no end date. Not available to current cardmembers of any Southwest Rapid Rewards Credit Card, or previous cardmembers of any Southwest Rapid Rewards Credit Card who received a new Cardmember bonus within the last 24 months (this does not apply to business cards).'
 caps:
   - id: gas-and-grocery
@@ -83,6 +87,9 @@ evidence:
     url: https://creditcards.chase.com/travel-credit-cards/southwest/plus
     quote: 'not available to either (i) current Cardmembers of any Southwest Rapid Rewards® Credit Card'
     in_collapsed: true
+  - rule: repeat
+    url: https://creditcards.chase.com/travel-credit-cards/southwest/plus
+    quote: 'have not received a new Cardmember bonus within the last 24 months'
   - rule: annual_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64433.html
     quote: 'Annual Membership Fee $99'

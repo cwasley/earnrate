@@ -21,6 +21,7 @@ welcome_offer:
   dollars: 200
   spend: 500
   months: 3
+  repeat: { after_months: 48, from: bonus }
   note: One-time cash bonus, available by applying through the card page. Existing or previous cardmembers are not eligible if they received a new cardmember bonus for this product in the past 48 months.
 rules:
   - id: capital-one-entertainment
@@ -117,6 +118,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.capitalone.com/credit-cards/savor/
     quote: 'Earn a one-time $200 cash bonus once you spend $500 on purchases within the first 3 months'
+  - rule: repeat
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'received a new cardmember bonus for this product in the past 48 months'
   - rule: foreign_transaction_fee
     url: https://www.capitalone.com/credit-cards/savor/
     quote: 'Plus, there are no hidden or foreign transaction fees'

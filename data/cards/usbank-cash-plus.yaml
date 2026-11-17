@@ -17,6 +17,7 @@ welcome_offer:
   dollars: 200
   spend: 1000
   months: 3
+  repeat: {}
   note: The page says within 90 days of account opening (about 3 months). Existing and previous Cash Rewards accounts don't qualify, and it can't be combined with any other bonus offer.
 caps:
   - id: five-percent-combined
@@ -473,6 +474,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
     quote: 'Earn a $200 rewards bonus after you spend $1,000 in eligible purchases within the first 90 days of account opening'
+  - rule: repeat
+    url: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    quote: 'Existing and previous Cash Rewards accounts do not qualify for this one-time bonus'
   - rule: foreign_transaction_fee
     url: https://onboarding.usbank.com/gateway/partner/credit-card/begin?locationCode=8069&offerId=WRH8D23H2R&sourceCode=88256&page=terms
     quote: 'Foreign Transaction 3% of each foreign transaction'

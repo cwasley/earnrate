@@ -20,6 +20,7 @@ welcome_offer:
   dollars: 2000
   spend: 30000
   months: 3
+  repeat: { also: [capital-one-venture-x-business], may: true }
   note: Only through the card page; existing or previous account holders may not be eligible. A separate first-year bonus pays another $2,000 for every $500,000 spent in the first 12 months, which isn't counted here.
 rules:
   - id: business-travel
@@ -72,6 +73,9 @@ evidence:
   - rule: welcome_offer
     url: https://disclosures.capitalone.com/disclosure.41737.en-US.html
     quote: 'You will earn a $2,000 bonus if you spend at least $30,000 within 3 months'
+  - rule: repeat
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash-plus/
+    quote: 'The bonuses may not be available for existing or previous Capital One Business card holders'
   - rule: foreign_transaction_fee
     url: https://www.capitalone.com/small-business/credit-cards/spark-cash-plus/
     quote: 'Pay zero foreign transaction fees on purchases made outside of the United States'

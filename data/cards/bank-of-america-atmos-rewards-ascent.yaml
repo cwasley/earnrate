@@ -16,6 +16,7 @@ welcome_offer:
   points: 70000
   spend: 2500
   months: 3
+  repeat: { after_months: 24, from: held, may: true }
   note: Limited-time online offer, no end date stated; it may not be available elsewhere after leaving the page. The window is 90 days from account opening. The offer also includes a $99 Companion Fare (plus taxes and fees from $23).
 rules:
   - id: alaska-and-hawaiian
@@ -81,6 +82,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
     quote: 'Get 70,000 bonus points and a $99 Companion Fare (plus taxes and fees from $23) with this offer.'
+  - rule: repeat
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081060&productoffercode=RS&locale=en_US
+    quote: 'currently have or have had the card in the preceding 24 month period'
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/products/alaska-airlines-credit-card/
     quote: 'spend $2,500 or more on purchases within the first 90 days of opening your account'

@@ -19,6 +19,7 @@ welcome_offer:
   points: 60000
   spend: 3000
   months: 3
+  repeat: { after_months: 24, from: bonus }
   note: 'Up to 80,000 points: plus 50% more points (1.5X) on purchases that normally earn 1 point, for the first 2 months from opening, up to 20,000 more; that part is only for people who have never held an Aeroplan card of any kind, in the US or Canada. Labeled a limited-time offer; no end date given. Chase: "available to you if you do not have the Chase Air Canada Aeroplan Card or previous versions and have not received a new cardmember bonus for the Chase Air Canada Aeroplan Card or previous versions in the past 24 months."'
 rules:
   - id: air-canada
@@ -132,6 +133,9 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
     quote: 'Earn 60,000 bonus points after spending $3,000 on purchases in the first 3 months from account opening'
+  - rule: repeat
+    url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    quote: 'Aeroplan® Card or previous versions in the past 24 months'
   - rule: travel
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Purchases from gift card merchants or merchants that sell points or miles will not qualify in the travel category'

@@ -17,6 +17,7 @@ welcome_offer:
   points: 40000
   spend: 1000
   months: 3
+  repeat: { after_months: 24, from: bonus }
   note: 'Up to 50,000 in total: plus 10,000 bonus miles after adding an authorized user in the first 3 months. Not available to current cardmembers of this card, or previous cardmembers who received a new Cardmember bonus for this card within the last 24 months.'
 rules:
   - id: united
@@ -53,6 +54,9 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/travel-credit-cards/united/united-gateway
     quote: 'Earn 40,000 bonus miles after you spend $1,000 on purchases in the first 3 months your account is open'
+  - rule: repeat
+    url: https://creditcards.chase.com/travel-credit-cards/united/united-gateway
+    quote: 'have not received a new cardmember bonus for this card in the past 24 months'
   - rule: base_rate
     url: https://creditcards.chase.com/travel-credit-cards/united/united-gateway
     quote: '1x mile on all other purchases'

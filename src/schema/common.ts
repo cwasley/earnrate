@@ -24,6 +24,10 @@ export const CardNetwork = z.enum([...Network.options, 'store'])
 
 export const IsoDate = z.iso.date()
 
+export const YearMonth = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'expected a month like 2025-03')
+
 // YAML reads `period: 2026` as a number, so accept both and normalize.
 export const PeriodKey = z.preprocess(
   (v) => (typeof v === 'number' ? String(v) : v),

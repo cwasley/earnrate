@@ -20,6 +20,7 @@ welcome_offer:
   points: 150000
   spend: 40000
   months: 4
+  repeat: { also: [capital-one-spark-cash-plus], may: true }
   note: 'The first tier of a limited-time two-tier offer: 150,000 miles after $40,000 in the first 4 months, plus another 150,000 miles and a $1,000 Capital One Business Travel credit after $120,000 in the same 4 months. Only through the card page; it may not be available to existing or previous Capital One Business cardholders.'
 rules:
   - id: business-travel-hotels-and-car-rentals
@@ -109,6 +110,9 @@ evidence:
   - rule: welcome_offer
     url: https://disclosures.capitalone.com/disclosure.42243.en-US.html
     quote: 'You will earn 150,000 bonus miles when you spend $40,000'
+  - rule: repeat
+    url: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
+    quote: 'The bonuses may not be available for existing or previous Capital One Business card holders'
   - rule: foreign_transaction_fee
     url: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
     quote: 'Pay zero foreign transaction fees on purchases made outside of the United States'

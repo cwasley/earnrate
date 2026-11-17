@@ -19,6 +19,7 @@ welcome_offer:
   points: 20000
   spend: 1000
   months: 3
+  repeat: {}
   note: Not available if you currently have or previously had a Citi Strata or Citi Strata Student account; Citi may also decline the bonus based on your history of opening, closing and using credit cards. Offers may vary.
 choices:
   # Select Streaming Services until changed; it can be changed once each
@@ -156,6 +157,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-strata-credit-card
     quote: 'if you currently have or previously had a Citi Strata® or a Citi Strata Student account'
+  - rule: repeat
+    url: https://www.citi.com/credit-cards/citi-strata-credit-card
+    quote: 'not available if you currently have or previously had a Citi Strata® or a Citi Strata Student account'
   - rule: foreign_transaction_fee
     url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
     quote: 'Foreign Purchase Transaction 3% of each purchase transaction in U.S. dollars.'

@@ -16,6 +16,7 @@ welcome_offer:
   dollars: 100
   spend: 500
   months: 3
+  repeat: { after_months: 48, from: opened, may: true }
   note: Paid as cash rewards. You may not be eligible for bonus offers if you have this card or opened one within the last 48 months, even if it's closed.
 # Not modeled: the intro APR.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
@@ -41,6 +42,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.wellsfargo.com/credit-cards/active-cash/terms/
     quote: 'opened one within the last 48 months from the date of this application'
+  - rule: repeat
+    url: https://creditcards.wellsfargo.com/active-cash-credit-card/
+    quote: 'or opened one within the last 48 months from the date of the application'
   - rule: foreign_transaction_fee
     url: https://www.wellsfargo.com/credit-cards/active-cash/terms/
     quote: 'Foreign Currency Conversion/Foreign Transaction 3% of each transaction converted to U.S. dollars'

@@ -18,6 +18,7 @@ welcome_offer:
   points: 100000
   spend: 8000
   months: 3
+  repeat: { may: true }
   note: 'Chase: "The new cardmember bonus may not be available to you if you have ever had this card." Chase may also consider factors about your business.'
 caps:
   - id: three-x-combined
@@ -98,6 +99,9 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
     quote: 'Earn 100,000 bonus points after you spend $8,000 on purchases in the first 3 months after account opening'
+  - rule: repeat
+    url: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    quote: 'The new cardmember bonus may not be available to you if you have ever had this card'
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63764.html
     quote: 'Foreign Transactions None Penalty Fees'

@@ -162,6 +162,21 @@ function cardProblems(
   for (const id of card.welcome_offer?.not_with ?? [])
     if (!cardIds.has(id))
       problems.push(`${where} welcome_offer.not_with: unknown card '${id}'`)
+  for (const id of card.welcome_offer?.repeat?.also ?? [])
+    if (!cardIds.has(id) || id === card.id)
+      problems.push(
+        `${where} welcome_offer.repeat.also: ${id === card.id ? 'lists the card itself' : `unknown card '${id}'`}`,
+      )
+  const wait = card.welcome_offer?.repeat?.after_months
+  if (
+    wait !== undefined &&
+    !card.evidence.some(
+      (e) => e.rule === 'repeat' && statesMonths(e.quote, wait),
+    )
+  )
+    problems.push(
+      `${where} welcome_offer.repeat: no evidence quote states ${String(wait)} months`,
+    )
   const memberships = new Set(catalog.memberships.map((m) => m.id))
   for (const id of [
     ...(card.requires_membership === undefined
@@ -321,6 +336,7 @@ function cardProblems(
     ...(card.first_year_fee !== undefined ? ['first_year_fee'] : []),
     ...(card.welcome_offer ? ['welcome_offer'] : []),
     ...(card.welcome_offer?.not_with ? ['not_with'] : []),
+    ...(card.welcome_offer?.repeat ? ['repeat'] : []),
     ...(card.requires_membership ? ['requires_membership'] : []),
     ...card.rules.map((r) => r.id),
     ...card.milestones.map((m) => m.id),
@@ -611,6 +627,9 @@ export function walletProblems(wallet: Wallet, catalog: Catalog): string[] {
   for (const id of duplicates(wallet.cards.map((c) => c.id))) {
     problems.push(`wallet: card '${id}' is listed twice`)
   }
+  for (const past of wallet.past_cards ?? [])
+    if (!cards.has(past.id))
+      problems.push(`wallet past_cards: unknown card '${past.id}'`)
   const issuers = new Set(catalog.cards.map((c) => c.issuer))
   for (const id of wallet.skipped_issuers ?? [])
     if (!issuers.has(id))
@@ -691,4 +710,18 @@ export function walletProblems(wallet: Wallet, catalog: Catalog): string[] {
     }
   }
   return problems
+}
+
+const NUMBER_WORDS = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven']
+
+// "past 24 months", "48 months", "last five years", "5 years".
+export function statesMonths(quote: string, months: number): boolean {
+  const q = quote.toLowerCase()
+  if (new RegExp(`(^|\\D)${String(months)}[- ]months?\\b`).test(q)) return true
+  const years = months / 12
+  if (!Number.isInteger(years)) return false
+  const spelled = [String(years), NUMBER_WORDS[years]].filter(Boolean)
+  return spelled.some((y) =>
+    new RegExp(`\\b${y as string}[- ]years?\\b`).test(q),
+  )
 }

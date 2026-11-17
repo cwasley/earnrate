@@ -20,6 +20,7 @@ welcome_offer:
   points: 25000
   spend: 1000
   months: 3
+  repeat: { after_months: 24, from: held, may: true }
   note: Online offer; the window is 90 days from account opening (about 3 months). The offer may not be available elsewhere after leaving the page. The card may not be available to anyone who has or had it in the past 24 months.
 rules:
   - id: travel-center
@@ -112,6 +113,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/products/travel-rewards-credit-card/
     quote: '25,000 online bonus points if you make at least $1,000 in purchases in the first 90 days'
+  - rule: repeat
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US
+    quote: 'currently have or have had the card in the preceding 24 month period'
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US
     quote: 'This card may not be available to you if you currently have or have had the card'

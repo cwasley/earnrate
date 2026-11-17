@@ -30,6 +30,7 @@ import {
   renewalText,
   useCreditText,
   wholeDollars,
+  monthYear,
   possessive,
   capNamed,
   quarterName,
@@ -62,6 +63,7 @@ export type ChecklistItem = {
     | 'enroll'
     | 'renewal'
     | 'change'
+    | 'bonus-again'
   cardId: string
   // Tells apart a card's items of the same kind and date (two credits).
   ref?: string
@@ -433,6 +435,40 @@ export function checklistRows(
       })
     }
   }
+  // A card the person used to have whose repeat-bonus wait ends within
+  // BONUS_AGAIN_DAYS, or ends this month: said once a card, however many
+  // times it's in the history (each entry gives the same answer), and never
+  // as advice to apply.
+  const said = new Set<string>()
+  for (const p of summary.pastCards) {
+    const again = p.bonusAgain
+    if (again?.from == null || said.has(p.cardId)) continue
+    const starts = `${again.from}-01`
+    const soon = addDays(today, BONUS_AGAIN_DAYS)
+    const thisMonth = again.from === today.slice(0, 7)
+    if (!(thisMonth || (again.state === 'not-yet' && starts <= soon))) continue
+    said.add(p.cardId)
+    const name = shortName?.(p.cardId) ?? p.cardName
+    const issuer = issuerOf(
+      catalog,
+      catalog.cards.find((c) => c.id === p.cardId)?.issuer ?? '',
+    )
+    const ends = `${thisMonth ? 'ends this month' : `ends in ${monthYear(starts)}`}${again.earliest ? ' at the earliest' : ''}`
+    items.push({
+      kind: 'bonus-again',
+      cardId: p.cardId,
+      text: `${possessive(name)} welcome bonus: ${possessive(issuer)} wait for it ${ends}, by the card history you gave.`,
+      due: starts,
+      row: {
+        title: 'Its bonus again',
+        card: name,
+        when: `${again.earliest ? 'no earlier than' : 'from'} ${monthYear(starts)}`,
+        amount: null,
+        button: 'See the offer',
+        url: `https://earnrate.dev/cards/${p.cardId}`,
+      },
+    })
+  }
   return [
     ...items.sort(
       (a, b) =>
@@ -442,6 +478,9 @@ export function checklistRows(
     ...changeItems(catalog, wallet, today, summary, names),
   ]
 }
+
+// How far ahead the to-do mentions a past card's bonus coming back.
+const BONUS_AGAIN_DAYS = 31
 
 function changeItems(
   catalog: Catalog,

@@ -13,7 +13,12 @@ import {
   type MilestoneBooking,
 } from '../engine/record.ts'
 import type { CardFields } from '../engine/wallet-change.ts'
-import { WALLET_VERSION, WalletSchema, type Wallet } from '../schema/wallet.ts'
+import {
+  WALLET_VERSION,
+  WalletSchema,
+  type PastCard,
+  type Wallet,
+} from '../schema/wallet.ts'
 
 type CardEntry = CardFields & { id: string }
 
@@ -122,7 +127,14 @@ function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
         b.dollars === undefined
           ? ''
           : `${indent}  dollars: ${String(b.dollars)}\n`,
+        b.met === undefined ? '' : `${indent}  met: ${scalar(b.met)}\n`,
       ].join('')
+    }
+    case 'bonus_received': {
+      const value = f.bonus_received
+      return value == null
+        ? ''
+        : `${indent}bonus_received: ${value === false ? 'false' : scalar(value)}\n`
     }
     case 'chosen': {
       if (!f.chosen) return ''
@@ -147,6 +159,7 @@ const FIELDS = [
   'skipped_credits',
   'night_values',
   'bonus',
+  'bonus_received',
 ] as const
 
 function cardsSeq(text: string) {
@@ -426,22 +439,135 @@ function usageText(
   )
 }
 
-function bonusSpentText(text: string, cardId: string, spent: number): string {
+// Sets one key of a card's welcome bonus (`spent`, `met`).
+function bonusKeyText(
+  text: string,
+  cardId: string,
+  key: 'spent' | 'met',
+  value: string,
+): string {
   const bonus = findCard(text, cardId).get('bonus', true)
   if (!isMap(bonus)) throw new Error(`card '${cardId}' has no bonus`)
-  const value = String(spent)
-  const existing = bonus.items.find((p) => keyOf(p) === 'spent')
+  const existing = bonus.items.find((p) => keyOf(p) === key)
   if (existing) {
     const [start, end] = range(existing.value)
     return text.slice(0, start) + value + text.slice(end)
   }
   if (bonus.flow) {
     const close = text.lastIndexOf('}', range(bonus)[1])
-    return `${text.slice(0, close).trimEnd()}, spent: ${value} ${text.slice(close)}`
+    return `${text.slice(0, close).trimEnd()}, ${key}: ${value} ${text.slice(close)}`
   }
   const indent = ' '.repeat(column(text, range(bonus.items[0]?.key)[0]))
   const at = afterLine(text, range(bonus)[1] - 1)
-  return insertLines(text, at, `${indent}spent: ${value}\n`)
+  return insertLines(text, at, `${indent}${key}: ${value}\n`)
+}
+
+const pastCardMap = (c: PastCard) =>
+  `{ ${[
+    `id: ${c.id}`,
+    ...(c.opened ? [`opened: ${scalar(c.opened)}`] : []),
+    ...(c.closed ? [`closed: ${scalar(c.closed)}`] : []),
+    ...(c.bonus_received === undefined
+      ? []
+      : [
+          `bonus_received: ${c.bonus_received === false ? 'false' : scalar(c.bonus_received)}`,
+        ]),
+    ...(c.bonus_met ? [`bonus_met: ${scalar(c.bonus_met)}`] : []),
+  ].join(', ')} }`
+
+// The card history, as a block list of one-line maps at the end of the
+// file, or no key at all when it's empty. An existing block list changes
+// only in the entries that differ, so comments around the rest stay.
+export function setPastCardsText(text: string, list: PastCard[]): string {
+  const root = rootMap(text)
+  const pair = root.items.find((p) => keyOf(p) === 'past_cards')
+  const spliced = pair ? splicePastCards(text, pair.value, list) : null
+  if (spliced !== null) return spliced
+  const block =
+    list.length === 0
+      ? ''
+      : `past_cards:\n${list.map((c) => `  - ${pastCardMap(c)}\n`).join('')}`
+  if (pair) {
+    const start = lineStart(text, range(pair.key)[0])
+    const end = afterLine(
+      text,
+      (pair.value === null ? range(pair.key) : range(pair.value))[1] - 1,
+    )
+    return text.slice(0, start) + block + text.slice(end)
+  }
+  return block === '' ? text : insertLines(text, text.length, block)
+}
+
+// Keeps the entries both lists share at the start and the end, and
+// rewrites, drops or adds only those between. Null when the list isn't a
+// block list to splice, or the result wouldn't read back as `list`.
+function splicePastCards(
+  text: string,
+  value: unknown,
+  list: PastCard[],
+): string | null {
+  if (!isSeq(value) || value.flow || list.length === 0) return null
+  const items = value.items as Node[]
+  if (items.length === 0 || items.some((i) => !isMap(i))) return null
+  const old = items.map((i) => i.toJSON() as unknown)
+  let head = 0
+  while (
+    head < old.length &&
+    head < list.length &&
+    isDeepStrictEqual(old[head], list[head])
+  )
+    head++
+  let tail = 0
+  while (
+    tail < old.length - head &&
+    tail < list.length - head &&
+    isDeepStrictEqual(old.at(-1 - tail), list.at(-1 - tail))
+  )
+    tail++
+  const was = items.slice(head, items.length - tail)
+  const now = list.slice(head, list.length - tail)
+  const dash = ' '.repeat(column(text, range(items[0])[0]) - 2)
+  // Edits from the end back, so earlier positions hold.
+  const edits: { start: number; end: number; with: string }[] = []
+  was.forEach((item, i) => {
+    const [start, end] = range(item)
+    const card = now[i]
+    if (card === undefined)
+      edits.push({
+        start: lineStart(text, start),
+        end: afterLine(text, end - 1),
+        with: '',
+      })
+    else if ((item as { flow?: boolean }).flow)
+      edits.push({ start, end, with: pastCardMap(card) })
+    else
+      edits.push({
+        start,
+        end: afterLine(text, end - 1),
+        with: `${pastCardMap(card)}\n`,
+      })
+  })
+  const before = was.at(-1) ?? items[head - 1]
+  const at =
+    before === undefined
+      ? lineStart(text, range(items[0])[0])
+      : afterLine(text, range(before)[1] - 1)
+  const added = now
+    .slice(was.length)
+    .map((c) => `${dash}- ${pastCardMap(c)}\n`)
+    .join('')
+  if (added !== '') edits.push({ start: at, end: at, with: added })
+  let out = text
+  for (const e of edits.toSorted((a, b) => b.start - a.start))
+    out = out.slice(0, e.start) + e.with + out.slice(e.end)
+  const back = parseDocument(out)
+  return back.errors.length === 0 &&
+    isDeepStrictEqual(
+      (back.toJS() as { past_cards?: unknown } | null)?.past_cards,
+      list,
+    )
+    ? out
+    : null
 }
 
 // Writes spending toward caps, welcome bonuses and spend milestones, and
@@ -449,7 +575,9 @@ function bonusSpentText(text: string, cardId: string, spent: number): string {
 export async function writeProgress(
   file: string,
   caps: CapBooking[],
-  bonuses: Pick<BonusBooking, 'cardId' | 'after'>[],
+  bonuses: (Pick<BonusBooking, 'cardId' | 'after'> & {
+    met?: string | null
+  })[],
   milestones: Pick<
     MilestoneBooking,
     'cardId' | 'milestoneId' | 'period' | 'after'
@@ -484,7 +612,8 @@ export async function writeProgress(
     expected = applyMilestoneBooking(expected, m)
   }
   for (const b of bonuses) {
-    after = bonusSpentText(after, b.cardId, b.after)
+    after = bonusKeyText(after, b.cardId, 'spent', String(b.after))
+    if (b.met) after = bonusKeyText(after, b.cardId, 'met', scalar(b.met))
     expected = applyBonusBooking(expected, b)
   }
   for (const c of credits) {
@@ -502,7 +631,10 @@ export async function writeProgress(
       (b) =>
         `${b.cardId} cap_usage ${b.capKey}: ${flowUsage(b.period, b.after)}`,
     ),
-    ...bonuses.map((b) => `${b.cardId} bonus spent: ${String(b.after)}`),
+    ...bonuses.map(
+      (b) =>
+        `${b.cardId} bonus spent: ${String(b.after)}${b.met ? `, met: ${b.met}` : ''}`,
+    ),
     ...milestones.map(
       (m) =>
         `${m.cardId} milestone_usage ${m.milestoneId}: ${flowUsage(m.period, m.after)}`,

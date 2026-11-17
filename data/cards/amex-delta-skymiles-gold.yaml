@@ -21,6 +21,9 @@ welcome_offer:
   months: 6
   varies: true
   not_with: [amex-delta-skymiles-platinum, amex-delta-skymiles-reserve]
+  repeat:
+    also: [amex-delta-skymiles-platinum, amex-delta-skymiles-reserve]
+    may: true
   note: 'The public offer is "as high as" 80,000 bonus miles; Amex shows the exact miles (which may be lower, or no offer) after you apply and before you accept. Amex: "You may not be eligible for a welcome offer if you have or have had this Card or previous versions of this Card, or if you have or have had the Delta SkyMiles® Platinum American Express Card, the Delta SkyMiles® Reserve American Express Card or previous versions of these Cards." Amex may also decline based on your card history.'
 rules:
   - id: restaurants
@@ -154,6 +157,9 @@ evidence:
   - rule: not_with
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
     quote: 'if you have or have had the Delta SkyMiles® Platinum American Express Card, the Delta SkyMiles® Reserve American Express Card'
+  - rule: repeat
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
+    quote: 'or if you have or have had the Delta SkyMiles® Platinum American Express Card'
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'

@@ -19,6 +19,7 @@ welcome_offer:
   dollars: 100
   spend: 0
   months: 2
+  repeat: {}
   note: A $100 REI gift card, not cash back, after the first purchase outside REI within 60 days of account opening (about 2 months). Existing or previous REI Co-op Mastercard cardmembers aren't eligible.
 rules:
   - id: rei
@@ -54,6 +55,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.capitalone.com/credit-cards/rei/
     quote: 'Existing or previous REI Co-op Mastercard cardmembers will not be eligible for this one-time gift card.'
+  - rule: repeat
+    url: https://www.capitalone.com/credit-cards/rei/
+    quote: 'Existing or previous REI Co-op Mastercard cardmembers will not be eligible for this one-time gift card'
 todo:
   - 'The foreign transaction fee and annual fee are quoted from the card page''s benefit tiles and FAQ. The page''s "View important rates and disclosures" link opens a modal that needs JavaScript, so its disclosures.capitalone.com address isn''t known; add it to source_urls and quote its fee rows once read in a browser.'
   - "Requires an REI Co-op membership (Capital One validates it before the application). No readable page states the membership's price (rei.com refuses plain fetches, and Capital One's page doesn't say), so the rei-co-op membership has annual_fee 0 as a placeholder and nothing is counted against the card for it. Check the price and whether it's one-time or yearly on rei.com/membership by hand."

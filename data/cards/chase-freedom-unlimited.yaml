@@ -17,6 +17,7 @@ welcome_offer:
   dollars: 200
   spend: 500
   months: 3
+  repeat: { after_months: 24, from: bonus }
   note: 'Paid as 20,000 Ultimate Rewards points. Chase: "available to you if you do not have this card and have not received a new cardmember bonus for this card in the past 24 months."'
 # Its cash back is earned as points, which Chase lets you move to another
 # Ultimate Rewards card on your account, where they transfer like any other UR.
@@ -73,6 +74,9 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
     quote: 'Earn a $200 bonus after you spend $500 on purchases in the first 3 months from account opening'
+  - rule: repeat
+    url: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
+    quote: 'have not received a new cardmember bonus for this card in the past 24 months'
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61498.html
     quote: 'Foreign Transactions 3% of the amount of each transaction in U.S. dollars'

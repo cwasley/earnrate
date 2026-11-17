@@ -23,7 +23,8 @@ welcome_offer:
       chase-marriott-bonvoy-boundless,
       chase-marriott-bonvoy-bold,
     ]
-  note: 'No end date given. Not available if you have or have had this Card, the Marriott Bonvoy Brilliant Card or previous versions; Amex may also decline based on your card history. Also not available to anyone who had a Ritz-Carlton card from J.P. Morgan or a Marriott card from Chase (including Bountiful, Boundless and Bold) in the last 30 days, opened Bountiful, Boundless or Bold in the last 90 days, or got a new cardmember or upgrade bonus on one of those in the last 24 months.'
+  repeat: { also: [amex-marriott-bonvoy-brilliant], may: true }
+  note: 'No end date given. May not be available if you have or have had this Card, the Marriott Bonvoy Brilliant Card or previous versions; Amex may also decline based on your card history. Also not available to anyone who had a Ritz-Carlton card from J.P. Morgan or a Marriott card from Chase (including Bountiful, Boundless and Bold) in the last 30 days, opened Bountiful, Boundless or Bold in the last 90 days, or got a new cardmember or upgrade bonus on one of those in the last 24 months.'
 caps:
   - {
       id: dining-and-supermarkets,
@@ -113,6 +114,9 @@ evidence:
   - rule: not_with
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
     quote: 'the Marriott Bonvoy Bold® Credit Card from Chase, the Marriott Bonvoy® Premier Plus Business Credit Card'
+  - rule: repeat
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0#offer-terms
+    quote: 'have or have had this Card, the Marriott Bonvoy Brilliant® American Express® Card'
 todo:
   - 1,000 bonus points per paid eligible stay booked directly with Marriott is per stay, not per dollar, so it isn't modeled.
   - Complimentary Gold Elite status and 15 Elite Night Credits each calendar year aren't modeled; they don't depend on spending.

@@ -3,6 +3,554 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.17.2'
+  date: 2026-11-17
+  changes:
+    - cause: addition
+      card: amex-blue-business-plus
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinessplus-credit-card/45094-9-0
+    - cause: addition
+      card: amex-blue-cash-everyday
+      field: welcome_offer.repeat
+      was: null
+      now: { also: [amex-blue-cash-preferred], may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card or Amex Blue Cash Preferred."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
+    - cause: addition
+      card: amex-blue-cash-preferred
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-preferred-credit-card/25330-10-0
+    - cause: addition
+      card: amex-business-gold
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/businessgold-card/64573-9-0
+    - cause: addition
+      card: amex-business-platinum
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0
+    - cause: addition
+      card: amex-delta-skymiles-blue
+      field: welcome_offer.repeat
+      was: null
+      now:
+        {
+          also:
+            [
+              amex-delta-skymiles-gold,
+              amex-delta-skymiles-platinum,
+              amex-delta-skymiles-reserve,
+            ],
+          may: true,
+        }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card or Delta SkyMiles Gold American Express, Delta SkyMiles Platinum American Express or Delta SkyMiles Reserve American Express."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0
+    - cause: addition
+      card: amex-delta-skymiles-gold
+      field: welcome_offer.repeat
+      was: null
+      now:
+        {
+          also: [amex-delta-skymiles-platinum, amex-delta-skymiles-reserve],
+          may: true,
+        }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card or Delta SkyMiles Platinum American Express or Delta SkyMiles Reserve American Express."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-gold-american-express-card/25330-10-0
+    - cause: addition
+      card: amex-delta-skymiles-platinum
+      field: welcome_offer.repeat
+      was: null
+      now: { also: [amex-delta-skymiles-reserve], may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card or Delta SkyMiles Reserve American Express."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-platinum-american-express-card/25330-10-0
+    - cause: addition
+      card: amex-delta-skymiles-reserve
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-reserve-american-express-card/25330-10-0
+    - cause: addition
+      card: amex-gold
+      field: welcome_offer.repeat
+      was: null
+      now: { also: [amex-platinum], may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card or Amex Platinum."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/gold-card/25330-10-0
+    - cause: addition
+      card: amex-hilton-honors
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-credit-card/25330-10-0
+    - cause: addition
+      card: amex-hilton-honors-aspire
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-aspire-credit-card/25330-10-0
+    - cause: addition
+      card: amex-hilton-honors-business
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/hilton-honors-american-express-business-credit-card/45094-9-0
+    - cause: addition
+      card: amex-hilton-honors-surpass
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/hilton-honors-surpass-credit-card/25330-10-0
+    - cause: addition
+      card: amex-marriott-bonvoy-bevy
+      field: welcome_offer.repeat
+      was: null
+      now: { also: [amex-marriott-bonvoy-brilliant], may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card or Marriott Bonvoy Brilliant American Express."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-bevy-card/25330-10-0
+    - cause: addition
+      card: amex-marriott-bonvoy-brilliant
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/marriott-bonvoy-brilliant-card/25330-10-0
+    - cause: addition
+      card: amex-marriott-bonvoy-business
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/marriott-bonvoy-business-american-express-card/45094-9-0
+    - cause: addition
+      card: amex-platinum
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "American Express's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0
+    - cause: addition
+      card: barclays-jetblue-plus
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "Barclays's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+    - cause: addition
+      card: capital-one-quicksilver
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus }
+      summary: "Capital One's repeat-bonus rule: you can't get it within 48 months of your last new cardmember bonus on this card."
+      source: https://www.capitalone.com/credit-cards/quicksilver/
+    - cause: addition
+      card: capital-one-rei-co-op-mastercard
+      field: welcome_offer.repeat
+      was: null
+      now: {}
+      summary: "Capital One's repeat-bonus rule: you can't get it if you have or have had this card."
+      source: https://www.capitalone.com/credit-cards/rei/
+    - cause: addition
+      card: capital-one-savor
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus }
+      summary: "Capital One's repeat-bonus rule: you can't get it within 48 months of your last new cardmember bonus on this card."
+      source: https://www.capitalone.com/credit-cards/savor/
+    - cause: addition
+      card: capital-one-spark-cash-plus
+      field: welcome_offer.repeat
+      was: null
+      now: { also: [capital-one-venture-x-business], may: true }
+      summary: "Capital One's repeat-bonus rule: you may not get it if you have or have had this card or Capital One Venture X Business."
+      source: https://www.capitalone.com/small-business/credit-cards/spark-cash-plus/
+    - cause: addition
+      card: capital-one-venture
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus, also: [capital-one-venture-x] }
+      summary: "Capital One's repeat-bonus rule: you can't get it within 48 months of your last new cardmember bonus on this card or Capital One Venture X Rewards."
+      source: https://www.capitalone.com/credit-cards/venture/
+    - cause: addition
+      card: capital-one-venture-x
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus }
+      summary: "Capital One's repeat-bonus rule: you can't get it within 48 months of your last new cardmember bonus on this card."
+      source: https://www.capitalone.com/credit-cards/venture-x/
+    - cause: addition
+      card: capital-one-venture-x-business
+      field: welcome_offer.repeat
+      was: null
+      now: { also: [capital-one-spark-cash-plus], may: true }
+      summary: "Capital One's repeat-bonus rule: you may not get it if you have or have had this card or Capital One Spark Cash Plus."
+      source: https://www.capitalone.com/small-business/credit-cards/venture-x-business/
+    - cause: addition
+      card: chase-aeroplan
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: bonus }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card."
+      source: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+    - cause: addition
+      card: chase-freedom-flex
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: bonus }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card."
+      source: https://creditcards.chase.com/cash-back-credit-cards/freedom/flex
+    - cause: addition
+      card: chase-freedom-unlimited
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: bonus }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card."
+      source: https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited
+    - cause: addition
+      card: chase-ihg-one-rewards
+      field: welcome_offer.repeat
+      was: null
+      now:
+        {
+          after_months: 24,
+          from: bonus,
+          also:
+            [
+              chase-ihg-one-rewards-premier,
+              chase-ihg-one-rewards-premier-select,
+            ],
+        }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card or IHG One Rewards Premier or IHG One Rewards Premier Select."
+      source: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards
+    - cause: addition
+      card: chase-ihg-one-rewards-premier
+      field: welcome_offer.repeat
+      was: null
+      now:
+        {
+          after_months: 24,
+          from: bonus,
+          also: [chase-ihg-one-rewards, chase-ihg-one-rewards-premier-select],
+        }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card or IHG One Rewards or IHG One Rewards Premier Select."
+      source: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
+    - cause: addition
+      card: chase-ihg-one-rewards-premier-select
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: bonus }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card."
+      source: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+    - cause: addition
+      card: chase-ink-business-cash
+      field: welcome_offer.repeat
+      was: null
+      now: { also: [chase-ink-business-unlimited], may: true }
+      summary: "Chase's repeat-bonus rule: you may not get it if you have or have had this card or Ink Business Unlimited."
+      source: https://creditcards.chase.com/business-credit-cards/ink/cash
+    - cause: addition
+      card: chase-ink-business-preferred
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "Chase's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://creditcards.chase.com/business-credit-cards/ink/business-preferred
+    - cause: addition
+      card: chase-ink-business-unlimited
+      field: welcome_offer.repeat
+      was: null
+      now: { also: [chase-ink-business-cash], may: true }
+      summary: "Chase's repeat-bonus rule: you may not get it if you have or have had this card or Ink Business Cash."
+      source: https://creditcards.chase.com/business-credit-cards/ink/unlimited
+    - cause: addition
+      card: chase-marriott-bonvoy-bold
+      field: welcome_offer.repeat
+      was: null
+      now:
+        {
+          after_months: 24,
+          from: bonus,
+          also:
+            [
+              chase-marriott-bonvoy-boundless,
+              amex-marriott-bonvoy-business,
+              amex-marriott-bonvoy-brilliant,
+              amex-marriott-bonvoy-bevy,
+            ],
+        }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card or Marriott Bonvoy Boundless, Marriott Bonvoy Business American Express, Marriott Bonvoy Brilliant American Express or Marriott Bonvoy Bevy American Express."
+      source: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    - cause: addition
+      card: chase-sapphire-preferred
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "Chase's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    - cause: addition
+      card: chase-sapphire-reserve
+      field: welcome_offer.repeat
+      was: null
+      now: { may: true }
+      summary: "Chase's repeat-bonus rule: you may not get it if you have or have had this card."
+      source: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
+    - cause: addition
+      card: chase-southwest-plus
+      field: welcome_offer.repeat
+      was: null
+      now:
+        {
+          after_months: 24,
+          from: bonus,
+          also: [chase-southwest-premier, chase-southwest-priority],
+        }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card or Southwest Rapid Rewards Premier or Southwest Rapid Rewards Priority."
+      source: https://creditcards.chase.com/travel-credit-cards/southwest/plus
+    - cause: addition
+      card: chase-southwest-premier
+      field: welcome_offer.repeat
+      was: null
+      now:
+        {
+          after_months: 24,
+          from: bonus,
+          also: [chase-southwest-plus, chase-southwest-priority],
+        }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card or Southwest Rapid Rewards Plus or Southwest Rapid Rewards Priority."
+      source: https://creditcards.chase.com/travel-credit-cards/southwest/premier
+    - cause: addition
+      card: chase-southwest-priority
+      field: welcome_offer.repeat
+      was: null
+      now:
+        {
+          after_months: 24,
+          from: bonus,
+          also: [chase-southwest-plus, chase-southwest-premier],
+        }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card or Southwest Rapid Rewards Plus or Southwest Rapid Rewards Premier."
+      source: https://creditcards.chase.com/travel-credit-cards/southwest/priority
+    - cause: addition
+      card: chase-united-business
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: bonus }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card."
+      source: https://creditcards.chase.com/business-credit-cards/united/united-business-card
+    - cause: addition
+      card: chase-united-club
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: bonus }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card."
+      source: https://creditcards.chase.com/travel-credit-cards/united/united-club
+    - cause: addition
+      card: chase-united-club-business
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: bonus }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card."
+      source: https://creditcards.chase.com/business-credit-cards/united/united-club-business
+    - cause: addition
+      card: chase-united-explorer
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: bonus }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card."
+      source: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
+    - cause: addition
+      card: chase-united-gateway
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: bonus }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card."
+      source: https://creditcards.chase.com/travel-credit-cards/united/united-gateway
+    - cause: addition
+      card: chase-united-quest
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: bonus }
+      summary: "Chase's repeat-bonus rule: you can't get it within 24 months of your last new cardmember bonus on this card."
+      source: https://creditcards.chase.com/travel-credit-cards/united/united-quest
+    - cause: addition
+      card: citi-aadvantage-business
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus }
+      summary: "Citi's repeat-bonus rule: you can't get it within 48 months of your last new cardmember bonus on this card."
+      source: https://www.citi.com/credit-cards/citi-aadvantage-business-credit-card
+    - cause: addition
+      card: citi-aadvantage-executive
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus }
+      summary: "Citi's repeat-bonus rule: you can't get it within 48 months of your last new cardmember bonus on this card."
+      source: https://www.citi.com/credit-cards/citi-aadvantage-executive-world-legend-mastercard
+    - cause: addition
+      card: citi-aadvantage-globe
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus }
+      summary: "Citi's repeat-bonus rule: you can't get it within 48 months of your last new cardmember bonus on this card."
+      source: https://www.citi.com/credit-cards/citi-aadvantage-globe-mastercard
+    - cause: addition
+      card: citi-aadvantage-mileup
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus }
+      summary: "Citi's repeat-bonus rule: you can't get it within 48 months of your last new cardmember bonus on this card."
+      source: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    - cause: addition
+      card: citi-aadvantage-platinum-select
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus }
+      summary: "Citi's repeat-bonus rule: you can't get it within 48 months of your last new cardmember bonus on this card."
+      source: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    - cause: addition
+      card: citi-double-cash
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus }
+      summary: "Citi's repeat-bonus rule: you can't get it within 48 months of your last new cardmember bonus on this card."
+      source: https://www.citi.com/credit-cards/citi-double-cash-credit-card
+    - cause: addition
+      card: citi-strata
+      field: welcome_offer.repeat
+      was: null
+      now: {}
+      summary: "Citi's repeat-bonus rule: you can't get it if you have or have had this card."
+      source: https://www.citi.com/credit-cards/citi-strata-credit-card
+    - cause: addition
+      card: citi-strata-elite
+      field: welcome_offer.repeat
+      was: null
+      now: {}
+      summary: "Citi's repeat-bonus rule: you can't get it if you have or have had this card."
+      source: https://www.citi.com/credit-cards/citi-strata-elite-credit-card
+    - cause: addition
+      card: citi-strata-premier
+      field: welcome_offer.repeat
+      was: null
+      now: {}
+      summary: "Citi's repeat-bonus rule: you can't get it if you have or have had this card."
+      source: https://www.citi.com/credit-cards/citi-strata-premier-credit-card
+    - cause: addition
+      card: discover-it-cash-back
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: bonus, may: true }
+      summary: "Discover's repeat-bonus rule: you may not get it within 48 months of your last new cardmember bonus on this card."
+      source: https://www.discover.com/credit-cards/cash-back/it-card/
+    - cause: addition
+      card: usbank-altitude-connect
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 60, from: bonus }
+      summary: "U.S. Bank's repeat-bonus rule: you can't get it within 5 years of your last new cardmember bonus on this card."
+      source: https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html
+    - cause: addition
+      card: usbank-altitude-go
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 60, from: bonus }
+      summary: "U.S. Bank's repeat-bonus rule: you can't get it within 5 years of your last new cardmember bonus on this card."
+      source: https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html
+    - cause: addition
+      card: usbank-cash-plus
+      field: welcome_offer.repeat
+      was: null
+      now: {}
+      summary: "U.S. Bank's repeat-bonus rule: you can't get it if you have or have had this card."
+      source: https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html
+    - cause: addition
+      card: wells-fargo-active-cash
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: opened, may: true }
+      summary: "Wells Fargo's repeat-bonus rule: you may not get it within 48 months of opening this card."
+      source: https://creditcards.wellsfargo.com/active-cash-credit-card/
+    - cause: addition
+      card: wells-fargo-autograph
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: opened, may: true }
+      summary: "Wells Fargo's repeat-bonus rule: you may not get it within 48 months of opening this card."
+      source: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
+    - cause: addition
+      card: wells-fargo-autograph-journey
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 48, from: opened, may: true }
+      summary: "Wells Fargo's repeat-bonus rule: you may not get it within 48 months of opening this card."
+      source: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    - cause: addition
+      card: bank-of-america-atmos-rewards-ascent
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: held, may: true }
+      summary: "Bank of America's repeat rule: the card may not be available to anyone who has had it in the preceding 24 months."
+      source: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4081060&productoffercode=RS&locale=en_US
+    - cause: addition
+      card: bank-of-america-customized-cash-rewards
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: held, may: true }
+      summary: "Bank of America's repeat rule: the card may not be available to anyone who has had it in the preceding 24 months."
+      source: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    - cause: addition
+      card: bank-of-america-premium-rewards
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: held, may: true }
+      summary: "Bank of America's repeat rule: the card may not be available to anyone who has had it in the preceding 24 months."
+      source: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+    - cause: addition
+      card: bank-of-america-travel-rewards
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: held, may: true }
+      summary: "Bank of America's repeat rule: the card may not be available to anyone who has had it in the preceding 24 months."
+      source: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079333&productoffercode=75&locale=en_US
+    - cause: addition
+      card: bank-of-america-unlimited-cash-rewards
+      field: welcome_offer.repeat
+      was: null
+      now: { after_months: 24, from: held, may: true }
+      summary: "Bank of America's repeat rule: the card may not be available to anyone who has had it in the preceding 24 months."
+      source: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4082058&productoffercode=6E&locale=en_US
+    - cause: wording
+      cards:
+        [
+          amex-blue-business-plus,
+          amex-blue-cash-everyday,
+          amex-blue-cash-preferred,
+          amex-business-gold,
+          amex-business-platinum,
+          amex-gold,
+          amex-marriott-bonvoy-bevy,
+          amex-marriott-bonvoy-brilliant,
+          amex-platinum,
+        ]
+      field: welcome_offer.note
+      summary: The notes say the welcome offer "may not" be available to anyone who has had the card, as American Express's terms do, instead of "not available".
+
 - version: '2026.11.17.1'
   date: 2026-11-17
   changes:

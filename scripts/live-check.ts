@@ -297,7 +297,7 @@ async function server() {
     const { body } = await rpc(token, 'tools/list', {})
     const tools =
       (body.result as { tools?: unknown[] } | undefined)?.tools ?? []
-    check('18 tools', tools.length === 18, String(tools.length))
+    check('19 tools', tools.length === 19, String(tools.length))
 
     const best = await tool(token, 'best_card_for_purchase', {
       merchant: 'Whole Foods',

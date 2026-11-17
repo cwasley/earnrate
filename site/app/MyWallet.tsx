@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
-import type { ComponentChildren } from 'preact'
+import { Fragment, type ComponentChildren } from 'preact'
 import { catalog } from 'virtual:catalog'
 import { walletProblems } from '../../src/data/integrity.ts'
 import { bonusStatus } from '../../src/engine/bonus.ts'
@@ -16,7 +16,8 @@ import {
 } from '../../src/engine/setup.ts'
 import { currencyLabel, listed } from '../../src/engine/text.ts'
 import { cardValuation } from '../../src/engine/valuation.ts'
-import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
+import type { PastCard, Wallet, WalletCard } from '../../src/schema/wallet.ts'
+import { countsForRepeat } from '../../src/engine/repeat-bonus.ts'
 import { anniversaryOf } from '../../src/engine/renewal.ts'
 import {
   checklistCalendar,
@@ -25,9 +26,11 @@ import {
 } from '../../src/engine/checklist.ts'
 import { addsAtOnce, askAddText } from './add-from-link.ts'
 import { CardArt } from './CardArt.tsx'
+import { pastCardNote } from './card-history.ts'
 import { CardPicker } from './AddCards.tsx'
 import { CardSettings, hasFee, type CreditFocus } from './CardSettings.tsx'
 import { Logo } from './Logo.tsx'
+import { MONTH_LABELS, MonthAskField, monthFieldsFor } from './MonthAsk.tsx'
 import { track } from './track.ts'
 import { SheetDownload, useSheetSend, WalletPass } from './CheatSheetParts.tsx'
 import { savedSpending } from './saved-spending.ts'
@@ -35,6 +38,8 @@ import {
   cardCount,
   cards,
   feeLabel,
+  issuerName,
+  issuers,
   membershipName,
   pct,
   shortName,
@@ -43,8 +48,11 @@ import {
 import { load, save } from './settings.ts'
 import {
   addOp,
+  historyOp,
   importOp,
   membershipsOp,
+  pastCardOpInput,
+  removalOps,
   removeOp,
   restoreOp,
   updateOp,
@@ -281,6 +289,158 @@ function Memberships({
             {membershipName(m)}
           </label>
         ))}
+      </fieldset>
+    </details>
+  )
+}
+
+// Cards the person used to have, folded like Memberships. Each issuer's
+// published repeat-bonus rule is checked against them in next-card answers;
+// only the months a rule counts from are asked for, and none is required.
+function CardHistory({
+  wallet,
+  onChange,
+  locked,
+}: {
+  wallet: Wallet
+  onChange: (op: LocalOp) => Promise<boolean>
+  locked: boolean
+}) {
+  const past = wallet.past_cards ?? []
+  const today = localToday()
+  const set = (list: PastCard[]) =>
+    void onChange(historyOp(list.map(pastCardOpInput)))
+  const change = (at: number, field: keyof PastCard, value: string | false) =>
+    set(
+      past.map((p, i) => {
+        if (i !== at) return p
+        const { [field]: _, ...rest } = p
+        return (value === '' ? rest : { ...rest, [field]: value }) as PastCard
+      }),
+    )
+  return (
+    <details class="panel fold-panel">
+      <summary>
+        <h3>Cards you've had</h3>
+        <span class="muted">
+          {past.length === 0 ? 'None' : cardCount(past.length)}
+        </span>
+      </summary>
+      <p class="muted">
+        Issuers limit who can earn a card's sign-up bonus again. Add cards
+        you've closed, and next-card answers say when you can.
+      </p>
+      <fieldset class="lock" disabled={locked}>
+        {past.length > 0 ? (
+          <ul class="past-cards">
+            {past.map((p, i) => {
+              const fields = monthFieldsFor(p.id)
+              const again = pastCardNote(catalog, wallet, p.id, today)
+              // A month asked of this same row is already one of its fields.
+              const ask =
+                again.ask !== null &&
+                !(
+                  !again.ask.held &&
+                  again.ask.pastIndex === i &&
+                  fields.includes(again.ask.field)
+                )
+                  ? again.ask
+                  : null
+              return (
+                <li key={`${p.id}-${String(i)}`} data-past={p.id}>
+                  <div class="past-card-name">
+                    <CardArt id={p.id} width={32} />
+                    <span>{shortName(p.id)}</span>
+                    <button
+                      type="button"
+                      class="link"
+                      onClick={() => set(past.filter((_, j) => j !== i))}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  {fields.length === 0 ? null : (
+                    <div class="past-card-month">
+                      {fields.map((field) => {
+                        const month = p[field]
+                        return (
+                          <Fragment key={field}>
+                            <label>
+                              {MONTH_LABELS[field]}{' '}
+                              <input
+                                type="month"
+                                value={typeof month === 'string' ? month : ''}
+                                max={today.slice(0, 7)}
+                                disabled={month === false}
+                                onChange={(e) =>
+                                  change(i, field, e.currentTarget.value)
+                                }
+                              />
+                            </label>
+                            {field === 'bonus_received' ? (
+                              <label class="check">
+                                <input
+                                  type="checkbox"
+                                  checked={month === false}
+                                  onChange={(e) =>
+                                    change(
+                                      i,
+                                      'bonus_received',
+                                      e.currentTarget.checked ? false : '',
+                                    )
+                                  }
+                                />
+                                It never paid one
+                              </label>
+                            ) : null}
+                          </Fragment>
+                        )
+                      })}
+                    </div>
+                  )}
+                  {again.text === null ? null : (
+                    <p class="small">{again.text}</p>
+                  )}
+                  {ask === null ? null : (
+                    <MonthAskField
+                      wallet={wallet}
+                      ask={ask}
+                      onChange={onChange}
+                    />
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        ) : null}
+        <label class="past-card-add">
+          Add a card you've had{' '}
+          <select
+            value=""
+            onChange={(e) => {
+              const id = e.currentTarget.value
+              if (id !== '') set([...past, { id }])
+            }}
+          >
+            <option value="">Choose a card</option>
+            {issuers.map((issuer) => (
+              <optgroup key={issuer} label={issuerName(issuer)}>
+                {catalog.cards
+                  .filter(
+                    (c) =>
+                      c.issuer === issuer &&
+                      countsForRepeat(catalog, c.id) &&
+                      !past.some((p) => p.id === c.id),
+                  )
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {shortName(c.id)}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
       </fieldset>
     </details>
   )
@@ -830,6 +990,9 @@ export function MyWallet({
     text: string
     error: boolean
     undo?: () => void
+    // A second choice beside Undo, like keeping a removed card in the
+    // card history.
+    other?: { label: string; run: () => void }
   } | null>(null)
   const [openCard, setOpenCard] = useState<string | null>(null)
   const [focus, setFocus] = useState<
@@ -1120,6 +1283,14 @@ export function MyWallet({
           </button>
         </>
       ) : null}
+      {shown.other ? (
+        <>
+          {' '}
+          <button type="button" class="link" onClick={shown.other.run}>
+            {shown.other.label}
+          </button>
+        </>
+      ) : null}
     </p>
   ) : null
 
@@ -1189,28 +1360,58 @@ export function MyWallet({
     )
   }
 
-  // Removed at once, with Undo, which adds the card back with what it held.
-  // The page stays at Your cards rather than where the closed Settings were.
+  // Removed at once, with Undo (the card back with what it held, the
+  // history as it was) and, for a card an issuer's repeat-bonus rule can
+  // count, a tap to keep it under Cards you've had. Nothing is kept unless
+  // the person taps it. The page stays at Your cards rather than where the
+  // closed Settings were.
   const remove = (cardId: string) => {
     const held = wallet.cards.find((c) => c.id === cardId)
     if (!held) return
     const name = shortName(cardId)
-    void apply(removeOp(cardId), cardId).then((ok) => {
+    const before = wallet.past_cards ?? []
+    const undo = (kept: boolean) => () => {
+      void (
+        kept
+          ? apply(historyOp(before.map(pastCardOpInput)))
+          : Promise.resolve(true)
+      )
+        .then((reset) =>
+          reset ? apply(restoreOp(catalog, held, localToday()), cardId) : false,
+        )
+        .then((back) => {
+          if (back)
+            setMessage({
+              text: `${name} is back in your wallet.`,
+              error: false,
+            })
+        })
+    }
+    const ops = removalOps(catalog, wallet, cardId, localToday())
+    const { keep } = ops
+    void apply(ops.remove, cardId).then((ok) => {
       if (!ok) return
       setMessage({
         text: `Removed ${name}.`,
         error: false,
-        undo: () => {
-          void apply(restoreOp(catalog, held, localToday()), cardId).then(
-            (back) => {
-              if (back)
-                setMessage({
-                  text: `${name} is back in your wallet.`,
-                  error: false,
-                })
-            },
-          )
-        },
+        undo: undo(false),
+        ...(keep === null
+          ? {}
+          : {
+              other: {
+                label: "Keep it under Cards you've had",
+                run: () => {
+                  void apply(keep).then((done) => {
+                    if (done)
+                      setMessage({
+                        text: `Kept ${name} under Cards you've had.`,
+                        error: false,
+                        undo: undo(true),
+                      })
+                  })
+                },
+              },
+            }),
       })
       // Remove card went with its Settings, so Undo takes the focus.
       requestAnimationFrame(() => {
@@ -1265,6 +1466,7 @@ export function MyWallet({
         </section>
         <Memberships wallet={wallet} onChange={apply} locked={locked} />
         <PointValues wallet={wallet} onChange={apply} locked={locked} />
+        <CardHistory wallet={wallet} onChange={apply} locked={locked} />
         {connect}
         <Transfer
           wallet={wallet}

@@ -19,6 +19,7 @@ welcome_offer:
   dollars: 750
   spend: 6000
   months: 3
+  repeat: { also: [chase-ink-business-unlimited], may: true }
   note: 'Chase: "The new cardmember bonus may not be available to you if you have ever had this card or any other Chase for Business card without an annual fee." Chase may also consider factors about your business.'
 # Its cash back is earned as points, which Chase lets you move to another
 # Ultimate Rewards card on your account.
@@ -115,6 +116,9 @@ evidence:
   - rule: welcome_offer
     url: https://creditcards.chase.com/business-credit-cards/ink/cash
     quote: 'Earn $750 cash back after you spend $6,000 on purchases in the first 3 months after account opening'
+  - rule: repeat
+    url: https://creditcards.chase.com/business-credit-cards/ink/cash
+    quote: 'if you have ever had this card or any other Chase for Business card without an annual fee'
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63827.html
     quote: 'Foreign Transactions 3% of the amount of each transaction in U.S. dollars'

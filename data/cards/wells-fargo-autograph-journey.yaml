@@ -17,6 +17,7 @@ welcome_offer:
   points: 60000
   spend: 4000
   months: 3
+  repeat: { after_months: 48, from: opened, may: true }
   note: Offers may differ by marketing channel. Not available if you have the card or opened one in the last 48 months, even if it's closed.
 rules:
   - id: hotels
@@ -79,6 +80,9 @@ evidence:
     url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
     quote: 'Earn 60,000 bonus points'
   - rule: welcome_offer
+    url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
+    quote: 'or opened one within the last 48 months from the date of the application'
+  - rule: repeat
     url: https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/
     quote: 'or opened one within the last 48 months from the date of the application'
   - rule: foreign_transaction_fee

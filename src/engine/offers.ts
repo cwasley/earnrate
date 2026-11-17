@@ -12,6 +12,7 @@ import {
   type MembersOnly,
 } from './simulate.ts'
 import { missingMembership, paidMemberships } from './memberships.ts'
+import { bonusEligibility, type MonthAsk } from './repeat-bonus.ts'
 import { inEffect } from './periods.ts'
 import { CREDITS_APART, heldName, listed, money, roundCents } from './text.ts'
 import { cardValuation } from './valuation.ts'
@@ -45,6 +46,12 @@ export type OfferSummary = {
   bonusValue: number // dollars, at the wallet's point values
   // Why the issuer may not give this offer to this wallet's holder, if so.
   ineligible: string | null
+  eligibleFrom: string | null // YYYY-MM a repeat-bonus wait ends
+  // What the repeat-bonus rule says when it doesn't rule the offer out: a
+  // month it needs, or a date that's only approximate.
+  eligibilityNote: string | null
+  // The month that would settle eligibilityNote, and where it goes.
+  monthAsk: MonthAsk | null
   firstYearValue: number // bonus value minus the first year's fee
   // Its statement credits, a year at face value, and firstYearValue with
   // them all used: shown apart, never ranked on.
@@ -81,17 +88,59 @@ export type OfferComparison = {
   notes: string[]
 }
 
-export function ineligibleText(
+export type OfferEligibility = {
+  // Why the issuer may not give this offer to this wallet's holder, if so.
+  ineligible: string | null
+  // The month a repeat-bonus wait ends, when one applies.
+  eligibleFrom: string | null
+  // The repeat-bonus rule's note when it doesn't rule the offer out (a
+  // month it needs, an approximate date), with the month to ask for.
+  eligibilityNote: string | null
+  monthAsk: MonthAsk | null
+}
+
+// A card held now is the wallet's own business; only the cards it rules out
+// (`not_with`) and the issuer's repeat rule speak to someone getting it new.
+export function offerEligibility(
   catalog: Catalog,
   wallet: Wallet,
-  notWith: string[],
-): string | null {
+  cardId: string,
+  today: string,
+): OfferEligibility {
+  const offer = catalog.cards.find((c) => c.id === cardId)?.welcome_offer
+  const notWith = offer?.not_with ?? []
   const held = wallet.cards
     .filter((c) => notWith.includes(c.id))
     .map((c) => heldName(catalog, c))
-  return held.length === 0
-    ? null
-    : `Likely not eligible: you hold ${listed(held)}, and the issuer's terms rule out its cardholders.`
+  const none = { eligibleFrom: null, eligibilityNote: null, monthAsk: null }
+  if (held.length > 0)
+    return {
+      ...none,
+      ineligible: `Likely not eligible: you hold ${listed(held)}, and the issuer's terms rule out its cardholders.`,
+    }
+  if (wallet.cards.some((c) => c.id === cardId))
+    return { ...none, ineligible: null }
+  const repeat = bonusEligibility(catalog, wallet, cardId, today)
+  if (
+    repeat === null ||
+    repeat.state === 'eligible' ||
+    repeat.state === 'unstated'
+  )
+    return { ...none, ineligible: null }
+  // A missing or approximate month never rules the offer out.
+  if (repeat.state === 'needs-date' || repeat.state === 'likely')
+    return {
+      ineligible: null,
+      eligibleFrom: repeat.from,
+      eligibilityNote: repeat.text,
+      monthAsk: repeat.ask,
+    }
+  return {
+    ineligible: repeat.text,
+    eligibleFrom: repeat.from,
+    eligibilityNote: null,
+    monthAsk: null,
+  }
 }
 
 export const OFFERS_MAY_DIFFER =
@@ -270,7 +319,7 @@ export function compareOffers(
       annualFee: card.annual_fee ?? null,
       firstYearFee,
       bonusValue: roundCents(value),
-      ineligible: ineligibleText(catalog, wallet, offer.not_with ?? []),
+      ...offerEligibility(catalog, wallet, card.id, today),
       firstYearValue,
       credits,
       firstYearValueIfCreditsUsed: roundCents(firstYearValue + credits),
@@ -292,7 +341,7 @@ export function compareOffers(
     only === null
       ? `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`
       : `Compares only the cards you named: ${listed(only.map(cardName))}.`,
-    `Each offer is the public one on the issuer's page on the date shown, checked weekly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how.`,
+    `Each offer is the public one on the issuer's page on the date shown, checked weekly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how, and cards you have or had are checked against the issuer's repeat-bonus rule.`,
     `Ranked on the first two years together: what each card ${wallet.cards.length > 0 ? 'adds to your cards' : 'earns'} on ${spending.typical ? 'typical U.S. spending' : 'your spending'}${wallet.cards.length > 0 ? ' (it takes the purchases where it earns more)' : ''}, plus the welcome bonus in year one if the minimum spend fits in the window with all your spending on it, less each year's annual fee. Year one counts the card at its standard rates${offers.some((o) => (catalog.cards.find((c) => c.id === o.cardId)?.yearly_points.length ?? 0) > 0) ? ', and points a card gives every year from year two, after its first anniversary' : ''}.`,
     "First-year value is the bonus alone at your point values, less the first year's fee.",
     CREDITS_APART,

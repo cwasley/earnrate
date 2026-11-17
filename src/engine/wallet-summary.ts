@@ -1,3 +1,4 @@
+import { bonusEligibility, type BonusEligibility } from './repeat-bonus.ts'
 import type { Card, Cap, Credit, Rule } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Wallet, WalletCard } from '../schema/wallet.ts'
@@ -161,6 +162,19 @@ export type WalletSummary = {
   }[]
   started: string | null // ISO time, for a hosted wallet
   cards: CardSummary[]
+  // Cards the person used to have, with what the issuer's repeat-bonus rule
+  // says now. Months are YYYY-MM.
+  pastCards: PastCardSummary[]
+}
+
+export type PastCardSummary = {
+  cardId: string
+  cardName: string
+  opened: string | null
+  closed: string | null
+  bonusReceived: string | null // a month, or 'none'
+  bonusMet: string | null
+  bonusAgain: BonusEligibility | null
 }
 
 const matchKeys = (rule: Rule) =>
@@ -557,6 +571,28 @@ export function walletSummary(
   return {
     memberships: wallet.memberships,
     membershipNames: wallet.memberships.map((m) => membershipName(catalog, m)),
+    pastCards: (wallet.past_cards ?? []).flatMap((p) => {
+      const card = catalog.cards.find((c) => c.id === p.id)
+      if (!card) return []
+      return [
+        {
+          cardId: p.id,
+          cardName: card.name,
+          opened: p.opened ?? null,
+          closed: p.closed ?? null,
+          bonusReceived:
+            p.bonus_received === undefined
+              ? null
+              : p.bonus_received === false
+                ? 'none'
+                : p.bonus_received,
+          bonusMet: p.bonus_met ?? null,
+          bonusAgain: wallet.cards.some((c) => c.id === p.id)
+            ? null
+            : bonusEligibility(catalog, wallet, p.id, today),
+        },
+      ]
+    }),
     skippedIssuers: (wallet.skipped_issuers ?? []).map((id) => ({
       id,
       name: catalog.issuers.find((i) => i.id === id)?.name ?? id,

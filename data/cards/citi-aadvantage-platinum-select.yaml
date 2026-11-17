@@ -17,6 +17,7 @@ welcome_offer:
   points: 50000
   spend: 2500
   months: 3
+  repeat: { after_months: 48, from: bonus }
   note: 'Not available if you received a new account bonus for a Citi / AAdvantage Platinum Select account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into one.'
 rules:
   - id: american-airlines
@@ -83,6 +84,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'new account bonus for a Citi® / AAdvantage® Platinum Select® account in the past 48 months'
+  - rule: repeat
+    url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
+    quote: 'received a new account bonus for a Citi® / AAdvantage® Platinum Select® account in the past 48 months'
   - rule: foreign_transaction_fee
     url: https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card
     quote: 'there are no foreign transaction fees'

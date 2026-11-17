@@ -18,6 +18,14 @@ welcome_offer:
   spend: 1000
   months: 3
   not_with: [chase-marriott-bonvoy-boundless]
+  repeat:
+    after_months: 24
+    from: bonus
+    also:
+      - chase-marriott-bonvoy-boundless
+      - amex-marriott-bonvoy-business
+      - amex-marriott-bonvoy-brilliant
+      - amex-marriott-bonvoy-bevy
   note: 'No end date given. Chase: "This credit card is not available to you if (1) you currently have any of the following cards or (2) you received a new cardmember bonus for any of the following cards within the last 24 months" (Marriott Bonvoy Premier, Rewards Premier, Boundless, Rewards Premier Plus, Bold). The bonus also isn''t available to holders of the Marriott Bonvoy American Express Card in the last 30 days, or anyone approved for the Marriott Bonvoy Business, Brilliant or Bevy American Express cards in the last 90 days or paid their bonus in the last 24 months.'
 rules:
   - id: marriott-hotels
@@ -119,6 +127,10 @@ evidence:
   - rule: not_with
     url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
     quote: 'This credit card is not available to you if (1) you currently have any of the following cards'
+    in_collapsed: true
+  - rule: repeat
+    url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold
+    quote: 'you received a new cardmember bonus for any of the following cards within the last 24 months'
     in_collapsed: true
 todo:
   - Automatic Silver Elite status and 5 Elite Night Credits each calendar year aren't modeled; they don't depend on spending.

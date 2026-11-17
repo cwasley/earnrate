@@ -21,6 +21,7 @@ welcome_offer:
   points: 75000
   spend: 4000
   months: 3
+  repeat: { after_months: 48, from: bonus, also: [capital-one-venture-x] }
   note: Labeled a limited-time offer, with no end date stated. Comes with a one-time $300 Capital One Travel Stays credit for hotel and vacation rental bookings through Capital One Travel, expiring one year after account opening. Available by applying through the card page. Not available to anyone who received a new cardmember bonus for the Venture or Venture X in the past 48 months.
 rules:
   - id: capital-one-travel-hotels-vacation-rentals-car-rentals
@@ -72,6 +73,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.capitalone.com/credit-cards/venture/
     quote: 'plus earn 75,000 bonus miles once you spend $4,000 on purchases within the first 3 months'
+  - rule: repeat
+    url: https://www.capitalone.com/credit-cards/venture/
+    quote: 'bonus for the Capital One Venture card or the Capital One Venture X card in the past 48 months'
   - rule: foreign_transaction_fee
     url: https://www.capitalone.com/credit-cards/venture/
     quote: 'No foreign transaction fees, blackout dates or seat restrictions'

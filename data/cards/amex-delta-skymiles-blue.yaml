@@ -24,6 +24,12 @@ welcome_offer:
       amex-delta-skymiles-platinum,
       amex-delta-skymiles-reserve,
     ]
+  repeat:
+    also:
+      - amex-delta-skymiles-gold
+      - amex-delta-skymiles-platinum
+      - amex-delta-skymiles-reserve
+    may: true
   note: 'No end date given. Amex: "You may not be eligible to receive a welcome offer if you have or have had this Card, the Delta SkyMiles® Options Credit Card, the Delta SkyMiles® Gold American Express Card, the Delta SkyMiles® Platinum American Express Card, the Delta SkyMiles® Reserve American Express Card or previous versions of these Cards." Amex may also decline based on your card history.'
 rules:
   - id: restaurants
@@ -84,6 +90,9 @@ evidence:
   - rule: not_with
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'the Delta SkyMiles® Gold American Express Card, the Delta SkyMiles® Platinum American Express Card'
+  - rule: repeat
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
+    quote: 'if you have or have had this Card, the Delta SkyMiles® Options Credit Card'
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/delta-skymiles-blue-american-express-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'

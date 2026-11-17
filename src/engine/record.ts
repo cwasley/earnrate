@@ -96,6 +96,8 @@ export type BonusBooking = {
   after: number
   spend: number
   deadline: string | null
+  // YYYY-MM when this purchase reaches the spend.
+  met: string | null
 }
 
 // The purchase's progress toward the card's open welcome bonus, if it counts.
@@ -119,18 +121,29 @@ function bonusBooking(
     after: roundCents(status.spent + purchase.amount),
     spend: status.spend,
     deadline: status.deadline,
+    met:
+      roundCents(status.spent + purchase.amount) >= status.spend
+        ? purchase.date.slice(0, 7)
+        : null,
   }
 }
 
 export function applyBonusBooking(
   wallet: Wallet,
-  b: Pick<BonusBooking, 'cardId' | 'after'>,
+  b: Pick<BonusBooking, 'cardId' | 'after'> & { met?: string | null },
 ): Wallet {
   return {
     ...wallet,
     cards: wallet.cards.map((c) =>
       c.id === b.cardId && c.bonus
-        ? { ...c, bonus: { ...c.bonus, spent: b.after } }
+        ? {
+            ...c,
+            bonus: {
+              ...c.bonus,
+              spent: b.after,
+              ...(b.met ? { met: b.met } : {}),
+            },
+          }
         : c,
     ),
   }

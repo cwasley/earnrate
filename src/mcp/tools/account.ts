@@ -24,6 +24,11 @@ const contentsOf = (catalog: Catalog, w: Wallet) => [
         `next-card answers leaving out ${listed((w.skipped_issuers ?? []).map((id) => catalog.issuers.find((i) => i.id === id)?.name ?? id))}`,
       ]
     : []),
+  ...((w.past_cards ?? []).length > 0
+    ? [
+        `a card history of ${cardsText((w.past_cards ?? []).length)} (${(w.past_cards ?? []).map((c) => c.id).join(', ')})`,
+      ]
+    : []),
 ]
 
 const ImportInput = z.object({

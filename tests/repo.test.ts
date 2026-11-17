@@ -242,7 +242,8 @@ test('server.json lists every environment variable the package reads', async () 
 })
 
 test("the privacy page says everything a saved wallet's card can hold", async () => {
-  const { WalletCardSchema } = await import('../src/schema/wallet.ts')
+  const { PastCardSchema, WalletCardSchema } =
+    await import('../src/schema/wallet.ts')
   const privacy = await readFile(path.join(ROOT, 'site/privacy.html'), 'utf8')
   const said = privacy.replace(/\s+/g, ' ')
   // A new wallet field needs a phrase here and on the privacy page.
@@ -260,10 +261,23 @@ test("the privacy page says everything a saved wallet's card can hold", async ()
     skipped_credits: "which ones you don't use",
     night_values: "what it's worth to you",
     bonus: 'welcome bonus',
+    bonus_received: 'the month it posted',
   }
   for (const key of Object.keys(WalletCardSchema.shape)) {
     const phrase = phrases[key]
     expect(phrase, `no privacy phrase for ${key}`).toBeDefined()
+    expect(said, key).toContain(phrase)
+  }
+  const past: Record<string, string> = {
+    id: 'cards you used to have',
+    opened: 'opening and closing them',
+    closed: 'opening and closing them',
+    bonus_received: 'and their bonuses',
+    bonus_met: 'and their bonuses',
+  }
+  for (const key of Object.keys(PastCardSchema.shape)) {
+    const phrase = past[key]
+    expect(phrase, `no privacy phrase for past_cards ${key}`).toBeDefined()
     expect(said, key).toContain(phrase)
   }
 })

@@ -18,6 +18,7 @@ welcome_offer:
   points: 15000
   spend: 500
   months: 3
+  repeat: { after_months: 48, from: bonus }
   note: 'Plus a $100 statement credit for the same $500 spend. Not available if you received a new account bonus for an AAdvantage MileUp account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into a MileUp.'
 rules:
   - id: american-airlines
@@ -65,6 +66,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'new account bonus for an AAdvantage® MileUp® account in the past 48 months'
+  - rule: repeat
+    url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
+    quote: 'received a new account bonus for an AAdvantage® MileUp® account in the past 48 months'
   - rule: foreign_transaction_fee
     url: https://www.citi.com/credit-cards/aadvantage-mile-up-credit-card
     quote: 'Fee for Foreign Purchases - 3% of the U.S. dollar amount of each purchase'

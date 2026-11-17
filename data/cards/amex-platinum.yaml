@@ -17,7 +17,8 @@ welcome_offer:
   spend: 12000
   months: 6
   varies: true
-  note: 'The public offer is "as high as" 175,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. Not available if you have or have had this Card, the Schwab or Morgan Stanley Platinum Card, or previous versions of these Cards; Amex may also decline based on your card history.'
+  repeat: { may: true }
+  note: 'The public offer is "as high as" 175,000 points; Amex shows the exact amount (which may be lower, or no offer) after you apply and before you accept. May not be available if you have or have had this Card, the Schwab or Morgan Stanley Platinum Card, or previous versions of these Cards; Amex may also decline based on your card history.'
 # One cap covers flights booked directly and through Amex Travel.
 caps:
   - { id: flights, amount: 500000, period: calendar_year, then_rate: 1 }
@@ -187,6 +188,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.americanexpress.com/us/credit-cards/card/platinum/
     quote: 'after you spend $12,000 in purchases on your new Card within the first 6 months'
+  - rule: repeat
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
+    quote: 'You may not be eligible for a welcome offer if you have or have had this Card'
   - rule: foreign_transaction_fee
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/platinum-card/25330-10-0#offer-terms
     quote: 'Foreign Transaction None Penalty Fees'

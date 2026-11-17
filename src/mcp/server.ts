@@ -43,6 +43,7 @@ export const SAVED_WALLET_TOOLS = [
   'add_card',
   'update_card',
   'remove_card',
+  'set_card_history',
   'set_memberships',
   'set_point_values',
   'export_wallet',

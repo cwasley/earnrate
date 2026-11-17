@@ -17,6 +17,7 @@ welcome_offer:
   points: 60000
   spend: 1000
   months: 3
+  repeat: { may: true }
   note: 'Within 90 days of account opening, and the $99 annual fee must also be paid in full within those 90 days (paying only the minimum each month may not cover it). Not for current or previous JetBlue Plus cardmembers; Barclays may also decline for suspected abusive or gaming activity.'
 rules:
   - id: jetblue
@@ -104,6 +105,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
     quote: 'Earn 60,000 bonus TrueBlue points after spending $1,000 on purchases'
+  - rule: repeat
+    url: https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/
+    quote: 'if you currently have or previously had an account with us in this program'
   - rule: foreign_transaction_fee
     url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc48255
     quote: 'Foreign Transaction 0% of each transaction in U.S. dollars.'

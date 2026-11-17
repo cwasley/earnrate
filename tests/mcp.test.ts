@@ -94,7 +94,7 @@ async function serve(
 }
 
 describe('tools', () => {
-  test('lists the fourteen tools with descriptions and hints', async () => {
+  test('lists the fifteen tools with descriptions and hints', async () => {
     const client = await connect(await walletCopy())
     const { tools } = await client.listTools()
     for (const tool of tools) {
@@ -112,6 +112,7 @@ describe('tools', () => {
       'remove_card',
       'resolve_merchant',
       'search_cards',
+      'set_card_history',
       'set_memberships',
       'set_point_values',
       'simulate_spending',
@@ -1195,7 +1196,21 @@ describe('wallet setup', () => {
         'set_point_values',
         { values: { 'Chase points': 1.5 }, profile: 'points-heavy' },
       ],
-      ['remove_card', { cardId: 'chase-freedom-unlimited' }],
+      ['remove_card', { cardId: 'chase-freedom-unlimited', keepHistory: true }],
+      [
+        'set_card_history',
+        {
+          pastCards: [
+            { cardId: 'chase-freedom-unlimited', closed: '2026-10' },
+            {
+              cardId: 'chase-sapphire-preferred',
+              opened: '2019-04',
+              bonusReceived: '2019-07',
+            },
+          ],
+        },
+      ],
+      ['compare_welcome_offers', { compare: ['chase-sapphire-preferred'] }],
       ['export_wallet', {}],
       [
         'delete_wallet',
@@ -1372,6 +1387,7 @@ describe('wallet setup', () => {
       pointValues: [],
       started: null,
       cards: [],
+      pastCards: [],
       checklist: [],
     })
 
@@ -2492,5 +2508,59 @@ describe('search_cards: is the annual fee worth it', () => {
     expect(result.detailed).toBe(false)
     expect(result.cards.every((c) => c.feeWorth === null)).toBe(true)
     expect(answer).toContain(DETAILS_LEFT_OUT)
+  })
+})
+
+describe('card history on a hosted wallet', () => {
+  test('import_wallet asks before replacing a wallet that holds only card history', async () => {
+    const client = await serve({
+      savedWallets: 'account',
+      store: new JsonWalletStore(catalog, memoryBackend(), 'your saved wallet'),
+    })
+    await client.callTool({
+      name: 'set_card_history',
+      arguments: { pastCards: [{ cardId: 'chase-sapphire-preferred' }] },
+    })
+    const over = { yaml: 'cards:\n  - id: amex-gold\n' }
+    const refused = await client.callTool({
+      name: 'import_wallet',
+      arguments: over,
+    })
+    expect(refused.isError).toBe(true)
+    expect(text(refused)).toMatch(
+      /replace what's saved: a card history of 1 card \(chase-sapphire-preferred\)\./,
+    )
+    const replaced = await client.callTool({
+      name: 'import_wallet',
+      arguments: { ...over, replace: true },
+    })
+    expect(text(replaced)).toMatch(/^Replaced what was saved/)
+  })
+
+  test('set_card_history keeps the month a tracked bonus was met', async () => {
+    const backend = memoryBackend()
+    const client = await serve({
+      savedWallets: 'account',
+      store: new JsonWalletStore(catalog, backend, 'your saved wallet'),
+    })
+    const set = await client.callTool({
+      name: 'set_card_history',
+      arguments: {
+        pastCards: [
+          {
+            cardId: 'capital-one-savor',
+            opened: '2024-02',
+            bonusMet: '2024-03',
+          },
+        ],
+      },
+    })
+    expect(set.isError, text(set)).toBeFalsy()
+    const saved = JSON.parse((await backend.read()) ?? '{}') as {
+      past_cards?: unknown
+    }
+    expect(saved.past_cards).toEqual([
+      { id: 'capital-one-savor', opened: '2024-02', bonus_met: '2024-03' },
+    ])
   })
 })

@@ -73,7 +73,7 @@ test('offers ruled out by a held card stay in view past the top ten', () => {
   )
   const text = formatOffers(comparison, (id) => id, false)
   expect(text).toMatch(
-    /more left out as likely not eligible with a card you hold: American Express Gold Card/,
+    /more left out as likely not eligible for you: American Express Gold Card/,
   )
 })
 

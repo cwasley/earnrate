@@ -20,6 +20,7 @@ welcome_offer:
   points: 60000
   spend: 4000
   months: 3
+  repeat: { after_months: 24, from: held, may: true }
   note: Online offer; the window is 90 days from account opening (about 3 months). The offer may not be available elsewhere after leaving the page. The card may not be available to anyone who has or had it in the past 24 months.
 rules:
   - id: travel-dining
@@ -120,6 +121,9 @@ evidence:
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/products/premium-rewards-credit-card/
     quote: 'after you make at least $4,000 in purchases in the first 90 days of account opening'
+  - rule: repeat
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+    quote: 'currently have or have had the card in the preceding 24 month period'
   - rule: welcome_offer
     url: https://www.bankofamerica.com/credit-cards/products/premium-rewards-credit-card/
     quote: '60,000 online bonus points offer'
