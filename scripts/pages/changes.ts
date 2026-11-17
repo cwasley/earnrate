@@ -135,7 +135,7 @@ export function changesPage(
   const body = `
       <h1>Credit card term changes</h1>
       <p class="updated">${esc(count)} by issuers since ${esc(shortDate(facts.since))} · Card data ${esc(facts.latestVersion)}, ${esc(shortDate(facts.latestRelease))}</p>
-      <p>When an issuer changes a card's earning rate, fee, welcome offer or statement credit, earnrate records the old and new terms, the date and the issuer page they came from. Every rule's quote is re-checked against the issuer's pages each week. Follow along with the <a href="/changes.xml">RSS feed</a>.</p>
+      <p>When an issuer changes a card's earning rate, fee, welcome offer or statement credit, earnrate records the old and new terms, the date and the issuer page they came from. Every rule's quote is re-checked against the issuer's pages each week. Follow along in a feed reader app with the <a href="/changes.xml">RSS feed</a>.</p>
       ${notifyTip("Safari's Notify Me (in the page menu) can tell you when something new is added here.")}
       <h2>Changes issuers made</h2>
       ${issuer.length === 0 ? '<p>None recorded yet.</p>' : `<ul class="compare-list change-list">${issuer.map((d) => issuerItem(ctx, d)).join('')}</ul>`}
