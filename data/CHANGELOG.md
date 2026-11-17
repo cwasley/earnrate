@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.17.1
+
+No rates or offers changed. A card can now record when its welcome offer was last read on the issuer's page (`offer_checked`), when that's after its last full check (`last_verified`). Card and comparison pages, the site's offer views and `compare_welcome_offers` date the offer from it, so an offer updated from the weekly source check no longer reads "as of" the older full-check date. Set from the releases that changed each offer: 2026-11-17 for `chase-ihg-one-rewards`, `-premier`, `-premier-select`, `-business`, `chase-aeroplan`, `citi-double-cash` and `chase-sapphire-preferred`; 2026-11-07 for `chase-freedom-flex` and `chase-prime-visa`; 2026-11-02 for `citi-aadvantage-executive`. A test now fails when a recorded offer change is newer than the card's offer date.
+
 ## 2026.11.17
 
 No rates changed. Welcome offers the weekly source check found changed (detected 2026-11-16):
