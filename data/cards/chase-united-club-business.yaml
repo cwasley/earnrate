@@ -146,3 +146,4 @@ evidence:
   - rule: farelock
     url: https://creditcards.chase.com/business-credit-cards/united/united-club-business
     quote: 'Earn up to $50 back as a statement credit each anniversary year after you buy FareLock'
+    in_popup: true

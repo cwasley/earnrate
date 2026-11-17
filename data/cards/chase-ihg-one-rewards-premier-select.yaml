@@ -15,10 +15,10 @@ base_rate: 3
 annual_fee: 350
 foreign_transaction_fee: 0
 welcome_offer:
-  points: 200000
-  spend: 5000
+  points: 150000
+  spend: 4000
   months: 3
-  note: 'Labeled a launch offer; no end date given. Plus 10,000 points after adding an authorized user in the first 3 months. No free night in the welcome offer; the yearly Anniversary Free Night is a separate perk. Chase: "available to you if you do not have this card and have not received a new Cardmember bonus for this card in the past 24 months."'
+  note: 'Plus 10,000 points after adding an authorized user in the first 3 months. No free night in the welcome offer; the yearly Anniversary Free Night is a separate perk. Chase: "available to you if you do not have this card and have not received a new Cardmember bonus for this card in the past 24 months."'
 rules:
   - id: ihg-hotels
     match: { merchants: [ihg] }
@@ -85,7 +85,7 @@ evidence:
     quote: 'ANNUAL FEE $350'
   - rule: welcome_offer
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
-    quote: 'Earn 200,000 Bonus Points after you spend $5,000 on purchases in the first 3 months from account opening'
+    quote: 'Earn 150,000 Bonus Points after you spend $4,000 on purchases in the first 3 months from account opening'
   - rule: travel-and-dining
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Purchases from gift card merchants or merchants that sell points or miles will not qualify in the travel category'
@@ -98,6 +98,7 @@ evidence:
   - rule: spend-15k
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
     quote: 'Earn 20,000 bonus points after you spend $15,000 on purchases each calendar year.'
+    in_popup: true
   - rule: spend-15k
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
     quote: 'will qualify for 5 Elite Night credits and 20,000 bonus points after spending $15,000'
@@ -116,6 +117,7 @@ evidence:
   - rule: instacart
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
     quote: 'Active Instacart+ membership is required to receive your $10 monthly credit.'
+    in_popup: true
   - rule: anniversary-night
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
     quote: "Each year, after your card anniversary, you'll receive an Anniversary Free Night with a redemption cap of 60,000 points"

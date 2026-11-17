@@ -20,7 +20,8 @@ welcome_offer:
   dollars: 200
   spend: 1500
   months: 6
-  note: 'Paid as bonus ThankYou Points. Not available if you received a new account bonus for a Citi Double Cash account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into a Double Cash.'
+  varies: true
+  note: "Paid as bonus ThankYou Points. Some visits to Citi's page show $200 after $500 in purchases in the first 3 months instead. Not available if you received a new account bonus for a Citi Double Cash account in the past 48 months, or converted another Citi card on which you earned a new account bonus in the last 48 months into a Double Cash."
 # Points can be combined into one ThankYou account, which then runs on that
 # account's terms: pooled with a Strata card, they transfer like Strata points.
 pools_into:
@@ -43,7 +44,7 @@ rules:
 evidence:
   - rule: base_rate
     url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
-    quote: 'Earn unlimited 1% cash back when you buy, plus an additional 1% as you pay'
+    quote: 'Earn unlimited 2% cash back on purchases: 1% when you buy, 1% as you pay'
   - rule: base_rate
     url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
     quote: 'Cash back is earned in the form of ThankYou® Points'
@@ -68,10 +69,10 @@ evidence:
     quote: 'You can combine them into one ThankYou Account'
   - rule: annual_fee
     url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
-    quote: 'Annual Fee – None. Fee for foreign purchases – 3%'
+    quote: 'Annual Fee – $0. Fee for foreign purchases – 3%'
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
-    quote: 'Earn $200 cash back bonus after spending $1,500 on purchases in the first 6 months of account opening'
+    quote: 'Earn $200 cash back bonus after $1,500 in purchases in the first 6 months of account opening'
   - rule: welcome_offer
     url: https://www.citi.com/credit-cards/citi-double-cash-credit-card
     quote: 'new account bonus for a Citi Double Cash account in the past 48 months'

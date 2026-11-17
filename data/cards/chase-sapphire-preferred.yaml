@@ -120,13 +120,13 @@ evidence:
     quote: 'online grocery (excluding Target ® , Walmart ® and wholesale clubs)'
   - rule: online-grocery
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
-    quote: 'wholesale clubs such as Costco and BJs, liquor stores and merchants that specialize in only a few grocery items'
+    quote: "wholesale clubs such as Costco and BJ's, liquor stores and merchants that specialize in only a few grocery items"
   - rule: online-grocery.not_earning
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Online grocery (excluding Target®, Walmart® and wholesale clubs)'
   - rule: online-grocery.not_earning
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
-    quote: 'wholesale clubs such as Costco and BJs, liquor stores'
+    quote: "wholesale clubs such as Costco and BJ's, liquor stores"
   - rule: travel
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: 'spent on purchases made in the travel category'
@@ -156,7 +156,10 @@ evidence:
     quote: 'Annual Membership Fee $95'
   - rule: welcome_offer
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
-    quote: 'Earn 75,000 points after you spend $5,000 in purchases in the first 3 months from account opening'
+    quote: 'Earn 75,000 points after you spend $5,000'
+  - rule: welcome_offer
+    url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
+    quote: 'purchases in the first 3 months from account opening'
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65222.html
     quote: 'Foreign Transactions None Penalty Fees'

@@ -3,6 +3,66 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.17'
+  date: 2026-11-17
+  changes:
+    - cause: issuer
+      card: chase-ihg-one-rewards
+      field: welcome_offer
+      was: { points: 125000, spend: 2000, months: 3 }
+      now: { points: 80000, spend: 2000, months: 3 }
+      source: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards
+      detected: 2026-11-16
+    - cause: issuer
+      card: chase-ihg-one-rewards-premier
+      field: welcome_offer
+      was: { points: 180000, spend: 3000, months: 3 }
+      now: { points: 140000, spend: 3000, months: 3 }
+      source: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
+      detected: 2026-11-16
+    - cause: issuer
+      card: chase-ihg-one-rewards-premier-select
+      field: welcome_offer
+      was: { points: 200000, spend: 5000, months: 3 }
+      now: { points: 150000, spend: 4000, months: 3 }
+      source: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select
+      detected: 2026-11-16
+    - cause: issuer
+      card: chase-ihg-one-rewards-business
+      field: welcome_offer
+      was: { points: 190000, spend: 5000, months: 3 }
+      now: { points: 150000, spend: 4000, months: 3 }
+      source: https://creditcards.chase.com/business-credit-cards/IHG/business
+      detected: 2026-11-16
+    - cause: issuer
+      card: chase-aeroplan
+      field: welcome_offer
+      was: { points: 75000, spend: 4000, months: 3 }
+      now: { points: 60000, spend: 3000, months: 3 }
+      source: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
+      detected: 2026-11-16
+    - cause: addition
+      card: citi-double-cash
+      field: welcome_offer.varies
+      was: null
+      now: true
+      summary: Citi's page shows two offers between visits, $200 after $1,500 in purchases in 6 months and $200 after $500 in 3 months; the first is recorded and the note names the second.
+    - cause: quote
+      cards:
+        [
+          chase-aeroplan,
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-sapphire-preferred,
+          chase-united-club-business,
+          chase-united-quest,
+          citi-double-cash,
+        ]
+      field: evidence
+      summary: Quotes follow the issuers' new wording (Sapphire Preferred's offer is worded two ways between visits; its quotes now match both), and quotes Chase moved into drawers and overlays are marked in_popup after each was seen there open. No rates changed.
+
 - version: '2026.11.15'
   date: 2026-11-15
   changes:

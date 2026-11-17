@@ -15,10 +15,10 @@ business: true
 annual_fee: 200
 foreign_transaction_fee: 0
 welcome_offer:
-  points: 190000
-  spend: 5000
+  points: 150000
+  spend: 4000
   months: 3
-  note: 'Labeled a launch offer; no end date given. Plus 10,000 points after adding an employee card in the first 3 months. The page and its offer details state no bonus-eligibility rule for this card.'
+  note: 'Plus 10,000 points after adding an employee card in the first 3 months. The page and its offer details state no bonus-eligibility rule for this card.'
 rules:
   - id: ihg-hotels
     match: { merchants: [ihg] }
@@ -124,7 +124,7 @@ evidence:
     quote: 'ANNUAL FEE $200'
   - rule: welcome_offer
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
-    quote: 'Earn 190,000 Bonus Points after spending $5,000 in the first 3 months from account opening'
+    quote: 'Earn 150,000 Bonus Points after spending $4,000 on purchases in the first 3 months from account opening'
   - rule: flights-direct-and-car-rental
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Only purchases for airline tickets made directly with the airline will qualify'
@@ -157,16 +157,16 @@ evidence:
     quote: 'Receive a $10 Instacart credit monthly for purchases made directly through Instacart'
   - rule: instacart
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
-    quote: 'Active Instacart+ membership is required to receive your $10 monthly credit.'
+    quote: 'each month you have an active Instacart+ membership'
   - rule: expensify
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
     quote: 'up to a maximum accumulation of $100 in a calendar year'
   - rule: expensify
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
-    quote: 'Enjoy up to $100 in statement credits towards Expensify purchases each calendar year.'
+    quote: 'Up to $100 in statement credits for Expensify purchases each calendar year.'
   - rule: anniversary-night
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
-    quote: "Each year, after your card anniversary, you'll receive an Anniversary Free Night with a redemption cap of 50,000 points"
+    quote: 'with a point redemption value of 50,000 points or less'
   - rule: anniversary-night
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
     quote: 'Anniversary Free Night will be available for redemption on your account anniversary date each year.'

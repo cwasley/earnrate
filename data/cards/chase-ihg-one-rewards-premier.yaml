@@ -14,11 +14,11 @@ base_rate: 3
 annual_fee: 150
 foreign_transaction_fee: 0
 welcome_offer:
-  points: 180000
+  points: 140000
   spend: 3000
   months: 3
   not_with: [chase-ihg-one-rewards, chase-ihg-one-rewards-premier-select]
-  note: 'Labeled a launch offer; no end date given. Plus 10,000 points after adding an authorized user in the first 3 months. No free night in the welcome offer; the yearly Anniversary Free Night is a separate perk. Chase: "available to you if you do not have any personal IHG One Rewards Credit Cards and have not received a new Cardmember bonus within the last 24 months. This does not apply to Business Card Credit Card products."'
+  note: 'Plus 10,000 points after adding an authorized user in the first 3 months. No free night in the welcome offer; the yearly Anniversary Free Night is a separate perk. Chase: "available to you if you do not have any personal IHG One Rewards Credit Cards and have not received a new Cardmember bonus within the last 24 months. This does not apply to Business Card Credit Card products."'
 rules:
   - id: ihg-hotels
     match: { merchants: [ihg] }
@@ -99,7 +99,7 @@ evidence:
     quote: 'ANNUAL FEE $150'
   - rule: welcome_offer
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
-    quote: 'Earn 180,000 Bonus Points after you spend $3,000 on purchases in the first 3 months from account opening'
+    quote: 'Earn 140,000 Bonus Points after you spend $3,000 on purchases in the first 3 months from account opening'
   - rule: not_with
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
     quote: 'not available to either (i) current cardmembers of any personal IHG One Rewards Credit Card'

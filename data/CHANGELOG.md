@@ -2,6 +2,19 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.17
+
+No rates changed. Welcome offers the weekly source check found changed (detected 2026-11-16):
+
+- `chase-ihg-one-rewards`: 80,000 points after $2,000 in 3 months (was 125,000), https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards. Chase's launch offers on all four IHG cards have ended.
+- `chase-ihg-one-rewards-premier`: 140,000 points after $3,000 in 3 months (was 180,000), https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier.
+- `chase-ihg-one-rewards-premier-select`: 150,000 points after $4,000 in 3 months (was 200,000 after $5,000), https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select.
+- `chase-ihg-one-rewards-business`: 150,000 points after $4,000 in 3 months (was 190,000 after $5,000), https://creditcards.chase.com/business-credit-cards/IHG/business.
+- `chase-aeroplan`: 60,000 points after $3,000 in 3 months (was 75,000 after $4,000), plus 50% more points on purchases that normally earn 1 point for the first 2 months, up to 20,000 more, for people who have never held an Aeroplan card. That part is in the offer note: an intro rate can't be limited to the base rate or capped in points (`docs/feature-gaps.md`). https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan.
+- `citi-double-cash`: Citi's page shows two offers between visits, $200 after $1,500 in 6 months (recorded, as before) and $200 after $500 in 3 months (in the note); `varies: true`.
+
+Quotes follow new wording on the Double Cash page (2% "1% when you buy, 1% as you pay", "Annual Fee – $0") and Chase's category FAQ ("BJ's"). Sapphire Preferred's offer is worded two ways between visits ("in purchases" and "on purchases"), for the same 75,000 points after $5,000 in 3 months; its quotes now match both. Chase moved some credit and milestone terms into drawers and overlays: those quotes on the IHG Premier Select, United Quest and United Club Business pages are marked `in_popup` after each was seen there open, and the IHG Business card's Instacart, Expensify and anniversary-night quotes now come from its current text and offer details.
+
 ## 2026.11.15
 
 No rates changed. `bank-of-america-customized-cash-rewards`: each 3% pick's own fine print (`choices.three-percent.notes`), word for word from the `three-percent` rule's note: gas and EV charging, travel, and online shopping. An answer that knows the pick now says "3% cash back on gas stations and EV charging, your pick" with only that pick's fine print, instead of every pick's. The data check holds each pick's note to the text of the note on a rule that pays on the choice.

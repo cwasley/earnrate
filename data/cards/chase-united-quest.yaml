@@ -176,15 +176,19 @@ evidence:
   - rule: rideshare
     url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
     quote: 'up to $8 back as a statement credit each month from January through November'
+    in_popup: true
   - rule: rideshare
     url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
     quote: 'Yearly opt-in is required.'
+    in_popup: true
   - rule: rideshare
     url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
     quote: 'up to $12 back as a statement credit in December when you pay for rideshare purchases'
   - rule: jsx
     url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
     quote: 'Get up to $150 back as a statement credit each anniversary year when you book flights directly with JSX'
+    in_popup: true
   - rule: renowned-hotels-credit
     url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
     quote: 'Receive up to $150 back in statement credits each anniversary year on hotel accommodations'
+    in_popup: true
