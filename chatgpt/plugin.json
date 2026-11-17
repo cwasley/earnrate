@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "earnrate",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Which credit card earns the most for a purchase, from each issuer's own terms.",
   "author": {
     "name": "Collin Wasley",
@@ -16,7 +16,7 @@
       "interface": {
         "displayName": "earnrate",
         "shortDescription": "Which credit card to use",
-        "longDescription": "earnrate tells you which credit card earns the most for a purchase, from each issuer's own terms. Ask about a store, a kind of place or an amount, like \"which card at Whole Foods for $80?\", and it names the card, the rate and the reason, with the rule it used and what it assumed.\n\nIt works with no setup. Without your cards, it answers from all 101 U.S. credit cards it knows, from 18 issuers. Name your cards for an answer from just those, or save them to an anonymous wallet so earnrate can track spending caps, quarterly bonus categories and activations, welcome bonuses and yearly spend bonuses. It can also make a cheat sheet of which card to use for everyday spending, list what to do with your cards this quarter, compare welcome offers, and run a year of spending through every card and pair of cards.\n\nThe saved wallet has no email or name: you get a recovery code, which you type only on earnrate's own page. earnrate never asks for card numbers. It doesn't apply for cards, make payments, or show ads or affiliate links, and nothing but the issuer's terms and your own cards and settings decides a ranking.\n\nLimitations: U.S. personal and small-business credit cards only. Card terms are checked against the issuers' pages every week, but issuers can change them at any time, so check the issuer's page before relying on an answer for a large purchase.",
+        "longDescription": "earnrate tells you which credit card earns the most for a purchase, from each issuer's own terms. Ask about a store, a kind of place or an amount, like \"which card at Whole Foods for $80?\", and it names the card, the rate and the reason, with the rule it used and what it assumed.\n\nIt works with no setup. Without your cards, it answers from all 101 U.S. credit cards it knows, from 18 issuers. Name your cards for an answer from just those, or save them to an anonymous wallet so earnrate can track spending caps, quarterly bonus categories and activations, welcome bonuses and yearly spend bonuses. It can also make a cheat sheet of which card to use for everyday spending, list what to do with your cards this quarter, compare welcome offers (leaving out bonuses the issuer says you can't get again, from cards you used to have), and run a year of spending through every card and pair of cards.\n\nThe saved wallet has no email or name: you get a recovery code, which you type only on earnrate's own page. earnrate never asks for card numbers. It doesn't apply for cards, make payments, or show ads or affiliate links, and nothing but the issuer's terms and your own cards and settings decides a ranking.\n\nLimitations: U.S. personal and small-business credit cards only. Card terms are checked against the issuers' pages every week, but issuers can change them at any time, so check the issuer's page before relying on an answer for a large purchase.",
         "developerName": "Collin Wasley",
         "category": "Finance",
         "capabilities": [
@@ -66,10 +66,10 @@
               "expected_behavior": "Lists the wallet's to-dos with dates, such as activating the Chase Freedom Flex's quarterly 5% categories before Chase's deadline, then summarizes the saved cards."
             },
             {
-              "description": "A cheat sheet for everyday spending",
-              "prompt": "Make me a cheat sheet of which card to use for everyday spending.",
-              "tools_triggered": "cheat_sheet",
-              "expected_behavior": "Shows one card from the test wallet for each everyday kind of purchase (groceries, dining, gas, Amazon, Costco, travel, streaming, drugstores and everything else), with its rate and any note such as an activation."
+              "description": "Welcome offers the user can still get, given a card they used to have",
+              "prompt": "I had the Amex Platinum from February 2023 until April 2025 and got its welcome bonus in May 2023. Which welcome offers can I still get?",
+              "tools_triggered": "set_card_history, compare_welcome_offers",
+              "expected_behavior": "Saves The Platinum Card from American Express to the wallet's card history with those months, then compares welcome offers and leaves the Platinum Card out as likely not eligible, since American Express gives its welcome bonus once per card."
             }
           ],
           "negative": [
@@ -92,7 +92,7 @@
       },
       "publication": {
         "countries": ["US"],
-        "release_notes": "First release: the best card for a purchase from every card or the user's own, cheat sheets, quarterly to-dos, welcome-offer comparisons and spending simulations, with an optional anonymous saved wallet."
+        "release_notes": "101 cards from 18 issuers (was 69 from 11). Cards you used to have (set_card_history): welcome-offer answers now leave out bonuses the issuer says you can't get again and say when you can."
       }
     }
   }
