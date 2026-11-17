@@ -58,7 +58,7 @@ export function formatOffers(
       `    ${offerTerms(o, currencyName(o.currency))}${pace}. ${capitalize(feeText(o))}.${o.held ? ' In your wallet.' : ''}`,
     )
     lines.push(
-      `    ${o.validTo ? `Offer ends ${shortDate(o.validTo)}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ. The bonus alone is worth about ${wholeDollars(o.firstYearValue)} after the first year's fee.`,
+      `    ${o.validTo ? `Offer ends ${shortDate(o.validTo)}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ. The bonus alone is worth about ${wholeDollars(o.firstYearValue)}${o.firstYearFee === 0 ? '' : " after the first year's fee"}.`,
     )
     if (o.plan?.minimumSpend)
       lines.push(
