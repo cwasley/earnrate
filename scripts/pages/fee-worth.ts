@@ -34,7 +34,7 @@ const HTML: Markup = { esc, strong: (s) => `<strong>${s}</strong>` }
 // The monthly spending from which it comes out ahead, as an answer cell.
 function fromAmount(breakEven: number | null, stopsAt: number | null): string {
   if (breakEven === null)
-    return `Not within ${wholeDollars(MAX_MONTHLY)} a month`
+    return `At no amount up to ${wholeDollars(MAX_MONTHLY)} a month`
   return stopsAt === null
     ? `From ${wholeDollars(breakEven)} a month`
     : `${wholeDollars(breakEven)} to ${wholeDollars(stopsAt)} a month`
