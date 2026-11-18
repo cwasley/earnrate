@@ -231,6 +231,23 @@ describe('repeat-bonus review fixes', () => {
     expect(text).not.toMatch(/likely not eligible for you: .*Freedom Unlimited/)
   })
 
+  test('a held card compared again is checked against its own rule', () => {
+    const holds = WalletSchema.parse({
+      cards: [{ id: 'chase-sapphire-preferred' }],
+    })
+    const c = compareOffers(
+      catalog,
+      holds,
+      { ...filters, includeHeld: true },
+      TODAY,
+    )
+    const csp = c.offers.find((o) => o.cardId === 'chase-sapphire-preferred')
+    expect(csp?.held).toBe(true)
+    expect(csp?.ineligible).toBe(
+      'Chase says you may not get this bonus again, since you have this card now.',
+    )
+  })
+
   test("a card counted only by another card's rule still gets that rule's month", () => {
     expect(
       repeatMonthFields(catalog, 'amex-marriott-bonvoy-brilliant'),

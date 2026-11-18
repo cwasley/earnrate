@@ -122,11 +122,12 @@ export function bonusEligibility(
   const may = repeat.may === true
   if (repeat.after_months === undefined || repeat.from === undefined) {
     const self = had.some((r) => r.id === cardId)
+    const holdsIt = had.some((r) => r.id === cardId && r.held)
     const others = [...new Set(had.map((r) => r.id))].map(name)
     return plain(
       'once-used',
       self
-        ? `${issuer} says you ${may ? 'may not' : "can't"} get this bonus again, since you've had this card before.`
+        ? `${issuer} says you ${may ? 'may not' : "can't"} get this bonus again, since ${holdsIt ? 'you have this card now' : "you've had this card before"}.`
         : `${issuer} says you ${may ? 'may not' : "can't"} get this bonus if you have or have had ${listed(others)}.`,
     )
   }

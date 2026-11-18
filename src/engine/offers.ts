@@ -353,7 +353,7 @@ export function compareOffers(
       firstYearFee,
       bonusValue: roundCents(value),
       ...(history === null
-        ? offerEligibility(catalog, wallet, card.id, today)
+        ? offerEligibility(catalog, wallet, card.id, today, held.has(card.id))
         : offerEligibility(catalog, history, card.id, today, true)),
       firstYearValue,
       credits,
