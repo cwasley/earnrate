@@ -337,9 +337,13 @@ details.section-fine + details.section-fine {
   list-style: none;
   line-height: 1.6;
 }
-.link-list li[hidden],
+[data-q][hidden],
 [data-section][hidden] {
   display: none;
+}
+/* A filtered table's last shown row, like its last row. */
+table.compare tbody tr:not([hidden]):not(:has(~ tr:not([hidden]))) > * {
+  border-bottom: 0;
 }
 .filter {
   position: sticky;

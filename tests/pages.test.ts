@@ -61,6 +61,7 @@ import {
 import { quoteText } from '../scripts/pages/rules.ts'
 import { ROOT } from './helpers.ts'
 import { PAGES_CSS_LINK } from '../scripts/pages/site.ts'
+import { FILTER_SCRIPT, filterScript } from '../scripts/pages/filter.ts'
 import { landingPage } from '../site/vite.config.ts'
 
 const catalog = await loadCatalog()
@@ -223,6 +224,70 @@ describe('the built static pages', () => {
     const card = readFileSync(path.join(out, 'cards', 'amex-gold.html'), 'utf8')
     expect(card).toContain('<a href="/rate">Rate my wallet</a>')
     for (const t of TABS) expect(card).toContain(`href="${t.href}"`)
+  })
+
+  test('the store, card and bonus-rule lists share one search box and script, hidden until the script runs', () => {
+    for (const file of [
+      'best/index.html',
+      'cards/index.html',
+      'bonus-rules.html',
+    ]) {
+      const html = readFileSync(path.join(out, file), 'utf8')
+      expect(html.split(filterScript()).length - 1, file).toBe(1)
+      expect(html, file).toMatch(
+        /<div class="filter" hidden>\s*<label for="filter">/,
+      )
+      expect(
+        html.match(/<input id="filter" type="search"/g),
+        file,
+      ).toHaveLength(1)
+      expect(html.match(/ data-filtered>/g), file).toHaveLength(1)
+      expect(html, file).toMatch(/<p id="no-match"[^>]* hidden>/)
+    }
+    expect(FILTER_SCRIPT).not.toMatch(
+      /fetch|sendBeacon|XMLHttpRequest|Storage|cookie|history|location/,
+    )
+  })
+
+  test('the card index and bonus rules find cards by name, short name and issuer', () => {
+    const rows = (file: string, tag: string) =>
+      new Map(
+        [
+          ...readFileSync(path.join(out, file), 'utf8').matchAll(
+            new RegExp(
+              `<${tag} (?:data-anchor="[^"]*" )?data-q="([^"]*)"[^>]*>[\\s\\S]*?href="/cards/([^"]+)"`,
+              'g',
+            ),
+          ),
+        ].map((m) => [m[2] ?? '', unescape(m[1] ?? '')]),
+      )
+    const index = rows('cards/index.html', 'li')
+    const bonus = rows('bonus-rules.html', 'tr')
+    expect([...index.keys()].sort()).toEqual(
+      catalog.cards.map((c) => c.id).sort(),
+    )
+    expect(bonus.size).toBeGreaterThan(40)
+    const found = (list: Map<string, string>, q: string) =>
+      [...list]
+        .filter(([, text]) => q.split(' ').every((w) => text.includes(w)))
+        .map(([id]) => id)
+    for (const list of [index, bonus]) {
+      expect(found(list, 'amex plat')).toContain('amex-platinum')
+      expect(found(list, 'sapphire')).toContain('chase-sapphire-preferred')
+      expect(found(list, 'southwest').length).toBeGreaterThan(1)
+      expect(
+        found(list, 'chase').every(
+          (id) => catalog.cards.find((c) => c.id === id)?.issuer === 'chase',
+        ),
+      ).toBe(true)
+      expect(found(list, 'bofa').length).toBeGreaterThan(0)
+    }
+    for (const [id, text] of index) {
+      const card = catalog.cards.find((c) => c.id === id)
+      expect(text).toContain(card?.name.toLowerCase())
+      if (card?.short_name)
+        expect(text).toContain(card.short_name.toLowerCase())
+    }
   })
 
   test('the store index links every store (or its row on its category page) and category page, each store inside its closed category', () => {

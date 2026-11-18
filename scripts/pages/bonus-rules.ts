@@ -3,6 +3,7 @@
 import { repeatRuleParts } from '../../src/engine/repeat-bonus.ts'
 import type { Card } from '../../src/schema/card.ts'
 import type { GeneratedPage, PageContext } from './context.ts'
+import { cardSearchText, filterBox, filterScript } from './filter.ts'
 import { esc, fitDescription, fitTitle, SITE } from './site.ts'
 
 // Shortest wait first; once per card last, then cards with no stated rule.
@@ -35,7 +36,7 @@ export function bonusRulesPage(
   const row = (card: Card) => {
     const quote = card.evidence.find((e) => e.rule === 'repeat')
     const { label, detail } = repeatRuleParts(ctx.catalog, card)
-    return `<tr data-anchor="${esc(card.id)}">
+    return `<tr data-anchor="${esc(card.id)}" data-q="${cardSearchText(ctx.catalog, card, ctx.shortName)}">
       <th scope="row"><a href="/cards/${esc(card.id)}">${esc(ctx.shortName(card.id))}</a></th>
       <td><b>${esc(label ?? 'Not stated')}</b>. ${esc(detail)}${quote ? `<br><span class="muted">"${esc(quote.quote)}"</span>` : ''}</td>
     </tr>`
@@ -55,20 +56,23 @@ export function bonusRulesPage(
       <p>Each issuer's terms say who can earn a card's welcome bonus. Of the ${String(offered.length)} cards here with a public offer, ${String(stated)} have a stated rule, and ${String(once)} of those pay it once per card. Each rule below is quoted from the issuer's own page.</p>
       <p>Issuers can also turn down a bonus for reasons they don't spell out, like how many cards you've opened lately. Rules they don't publish aren't here.</p>
       <p><a href="/#wallet&amp;had">Add cards you've had</a> under My wallet, and next-card answers say when you can earn each bonus again.</p>
-      ${issuers
+      ${filterBox('Find a card or bank', 'Sapphire, Amex Platinum, Southwest…')}
+      <p id="no-match" hidden>No cards match.</p>
+      <div data-filtered>${issuers
         .map((id) => {
           const list = (byIssuer.get(id) ?? []).toSorted(
             (a, b) =>
               waitOrder(a) - waitOrder(b) ||
               ctx.shortName(a.id).localeCompare(ctx.shortName(b.id)),
           )
-          return `<section class="issuer"><h2>${esc(ctx.issuerName(id))}</h2>
+          return `<section class="issuer" data-section><h2>${esc(ctx.issuerName(id))}</h2>
         <div class="table-box"><table class="compare">
           <thead><tr><th scope="col">Card</th><th scope="col">Can you get it again?</th></tr></thead>
           <tbody>${list.map(row).join('')}</tbody>
         </table></div></section>`
         })
-        .join('')}`
+        .join('')}</div>
+      ${filterScript()}`
   return {
     file: 'bonus-rules.html',
     path,

@@ -100,6 +100,13 @@ import { pageContext, type GeneratedPage } from './pages/context.ts'
 import { bonusRulesPage } from './pages/bonus-rules.ts'
 import { categoryPageFor, categoryPages } from './pages/categories.ts'
 import {
+  cardNames,
+  cardSearchText,
+  filterBox,
+  filterScript,
+  searchText,
+} from './pages/filter.ts'
+import {
   changesFeed,
   changesPage,
   recentChangesSection,
@@ -867,66 +874,6 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   })
 }
 
-// Narrows the lists as you type and opens each category with a match. It runs
-// only in the page: nothing typed is sent anywhere, and without it the
-// categories still open and close. Closing a category whose name was stuck
-// to the top scrolls back to it, so the visitor isn't left far down the page.
-const FILTER_SCRIPT = `(() => {
-  const input = document.getElementById('filter')
-  const wrap = input.closest('.filter')
-  const none = document.getElementById('no-match')
-  const ask = none.querySelector('a')
-  const list = document.querySelector('.cats')
-  const all = list.closest('details')
-  const sections = [...list.querySelectorAll('[data-section]')]
-  let wasOpen = null
-  wrap.hidden = false
-  new ResizeObserver(() => {
-    list.style.setProperty('--stick', wrap.offsetHeight + 'px')
-  }).observe(wrap)
-  list.addEventListener('click', (e) => {
-    const summary = e.target.closest('summary')
-    const details = summary && summary.parentElement
-    if (!details || !details.open) return
-    if (details.getBoundingClientRect().top >= summary.getBoundingClientRect().top - 1) return
-    details.addEventListener('toggle', () => summary.scrollIntoView({ block: 'start' }), { once: true })
-  })
-  let before = null
-  input.addEventListener('input', () => {
-    const q = input.value.trim().toLowerCase()
-    if (q !== '' && wasOpen === null) wasOpen = all.open
-    if (q !== '') all.open = true
-    else if (wasOpen !== null) {
-      all.open = wasOpen
-      wasOpen = null
-    }
-    if (q !== '' && before === null) before = sections.filter((s) => s.open)
-    let total = 0
-    for (const s of sections) {
-      let shown = 0
-      let stores = 0
-      for (const el of s.querySelectorAll('[data-q]')) {
-        const hit = q === '' || el.dataset.q.includes(q)
-        el.hidden = !hit
-        if (hit) shown++
-        if (hit && el.dataset.store !== undefined) stores++
-      }
-      s.hidden = shown === 0
-      const count = s.querySelector('.cat-count')
-      if (count) count.textContent = q === '' ? count.dataset.all : stores + ' of ' + count.dataset.all
-      if (s.tagName === 'DETAILS') s.open = q === '' ? before !== null && before.includes(s) : shown > 0
-      total += shown
-    }
-    if (q === '') before = null
-    none.hidden = total > 0
-    const first = none.hidden ? list : none
-    const above = first.getBoundingClientRect().top - wrap.getBoundingClientRect().bottom
-    if (above < 0) window.scrollBy({ top: above, behavior: 'instant' })
-    ask.href = '/#best=' + encodeURIComponent(input.value.trim())
-    ask.textContent = 'Ask earnrate.dev about \u201c' + input.value.trim() + '\u201d'
-  })
-})()`
-
 // The cheat sheet's everyday purchases first, as big chips, where most
 // visitors are headed.
 function everydayChips(): string {
@@ -951,18 +898,14 @@ function renderIndex(all: Page[]): string {
     stores.set(slug, [...(stores.get(slug) ?? []), p])
   }
   const words = (p: Page) =>
-    esc(
-      [
-        p.label,
-        p.phrase,
-        ...((p.merchant
-          ? p.merchant.aliases
-          : catalog.categories.find((c) => c.id === p.categoryId)?.aliases) ??
-          []),
-      ]
-        .join(' ')
-        .toLowerCase(),
-    )
+    searchText([
+      p.label,
+      p.phrase,
+      ...((p.merchant
+        ? p.merchant.aliases
+        : catalog.categories.find((c) => c.id === p.categoryId)?.aliases) ??
+        []),
+    ])
   const category = (cat: Page) => {
     const list = (stores.get(cat.slug) ?? []).sort(byLabel)
     const name = esc(capitalize(cat.label))
@@ -981,17 +924,14 @@ function renderIndex(all: Page[]): string {
       <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
       <p>Which of ${String(catalog.cards.length)} U.S. credit cards earns the most, store by store, from each issuer's own terms.</p>
       ${everydayChips()}
-      <div class="filter" hidden>
-        <label for="filter">Find a store or category</label>
-        <input id="filter" type="search" placeholder="Costco, gas, Netflix…" autocomplete="off" spellcheck="false" />
-      </div>
-      <p id="no-match" class="next" hidden>No page for that yet. <a href="/#best">Ask earnrate.dev</a>, which also knows stores without a page.</p>
-      <details class="all-cats"><summary>All ${String(all.filter((p) => p.merchant === null).length)} kinds of purchase</summary><div class="cats">${all
+      ${filterBox('Find a store or category', 'Costco, gas, Netflix…')}
+      <p id="no-match" class="next" hidden>No page for that yet. <a href="/#best" data-ask>Ask earnrate.dev</a>, which also knows stores without a page.</p>
+      <details class="all-cats"><summary>All ${String(all.filter((p) => p.merchant === null).length)} kinds of purchase</summary><div class="cats" data-filtered>${all
         .filter((p) => p.merchant === null)
         .sort(byLabel)
         .map(category)
         .join('')}</div></details>
-      <script>${FILTER_SCRIPT}</script>`
+      ${filterScript()}`
   return layout({
     title: fitTitle(['Best credit card for every store and category']),
     description: `Which credit card earns the most at ${String(all.filter((p) => p.merchant).length)} stores and ${String(all.filter((p) => !p.merchant).length)} spending categories, from issuer terms. No affiliate links.`,
@@ -1547,7 +1487,7 @@ function renderCard(
   transferByPage: Map<string, Exploration>,
 ): string {
   // A store card's short name is the store's ("Kohl's").
-  const name = card.only_at ? card.name : shortName(card.id)
+  const { name, spoken, abbreviated } = cardNames(card, shortName)
   const issuer = issuerName(card.issuer)
   const currency = catalog.currencies.find((c) => c.id === card.currency)
   const clauses = headlineFor(card)
@@ -1634,13 +1574,8 @@ function renderCard(
       : fx === 0
         ? 'no foreign transaction fee'
         : withArticle(foreignFeeText(fx))
-  // The names people search for; an abbreviation ("NFCU cashRewards") only
-  // once every shorter wording with them is too long.
-  const spoken = [...new Set([card.name, name])]
-  const abbreviated =
-    card.short_name !== undefined && !spoken.includes(card.short_name)
-      ? [card.short_name]
-      : []
+  // An abbreviation ("NFCU cashRewards") only once every shorter wording
+  // with the spoken names is too long.
   const leads = (says: string, ns: string[]) => [
     ...new Set(
       ns.flatMap((n) => [
@@ -1783,12 +1718,12 @@ function renderCardIndex(): string {
     .sort((a, b) => issuerName(a[0]).localeCompare(issuerName(b[0])))
     .map(
       ([issuer, list]) =>
-        `<h2>${esc(issuerName(issuer))}</h2><ul class="card-grid">${list
+        `<section data-section><h2>${esc(issuerName(issuer))}</h2><ul class="card-grid">${list
           .map(
             (c) =>
-              `<li><a href="/cards/${c.id}">${art(c.id, 44)}<span>${esc(c.short_name ?? shortName(c.id))}</span></a></li>`,
+              `<li data-q="${cardSearchText(catalog, c, shortName)}"><a href="/cards/${c.id}">${art(c.id, 44)}<span>${esc(c.short_name ?? shortName(c.id))}</span></a></li>`,
           )
-          .join('')}</ul>`,
+          .join('')}</ul></section>`,
     )
     .join('')
   return layout({
@@ -1800,8 +1735,11 @@ function renderCardIndex(): string {
       <h1>Credit cards earnrate tracks</h1>
       <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
       <p>Every earning rule for ${String(catalog.cards.length)} U.S. cards, quoted from the issuer's own terms, and where each card beats the others.</p>
-      ${sections}
-      <p class="muted">The card pictures are earnrate's drawings in each card's color, not the issuers' designs.</p>`,
+      ${filterBox('Find a card', 'Sapphire, Amex Gold, Southwest…')}
+      <p id="no-match" hidden>No cards match.</p>
+      <div data-filtered>${sections}</div>
+      <p class="muted">The card pictures are earnrate's drawings in each card's color, not the issuers' designs.</p>
+      ${filterScript()}`,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
