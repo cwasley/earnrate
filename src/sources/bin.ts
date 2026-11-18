@@ -5,8 +5,14 @@ import { parseArgs } from 'node:util'
 import { DATA_DIR, loadCatalog } from '../data/load.ts'
 import { localToday } from '../engine/periods.ts'
 import {
+  compareOfferSources,
   compareSources,
   formatReport,
+  offerSourceUrls,
+  pagesToLoadAgain,
+  type PageSnapshot,
+  takingTurns,
+  withLoads,
   type LineCache,
   hasChanges,
   SourcesLockSchema,
@@ -25,8 +31,23 @@ const { values } = parseArgs({
     dump: { type: 'string' },
     // Comma-separated card ids: check only their pages.
     cards: { type: 'string' },
+    // Only the welcome offer quotes, on the pages that carry them (the
+    // Thursday run). Reports only; the lock stays as it is.
+    offers: { type: 'boolean' },
   },
 })
+
+if (values.offers && values.update) {
+  process.stderr.write(
+    '--offers checks only offer quotes and never updates the lock; run --update without it.\n',
+  )
+  process.exit(1)
+}
+const offersOnly = values.offers === true
+
+// Between two pages from one site in the offers-only run, which is
+// scheduled and has time to spare.
+const SAME_HOST_PAUSE_MS = 10_000
 
 const LOCK = path.join(DATA_DIR, 'sources.lock.json')
 // Gitignored: issuer text stays on this machine.
@@ -57,15 +78,21 @@ if (unknown.length > 0) {
   process.stderr.write(`Unknown card id: ${unknown.join(', ')}\n`)
   process.exit(1)
 }
-const urls = [...sourceUrls(catalog, only).keys()]
+const urls = offersOnly
+  ? takingTurns([...offerSourceUrls(catalog, only).keys()])
+  : [...sourceUrls(catalog, only).keys()]
 let started = Date.now()
-const snapshots = await fetchSnapshots(urls, (s) => {
-  const seconds = Math.round((Date.now() - started) / 1000)
-  started = Date.now()
-  process.stderr.write(
-    `${s.ok ? 'ok  ' : 'FAIL'} ${String(seconds).padStart(3)}s ${s.url}${s.ok ? '' : ` (${s.reason})`}\n`,
-  )
-})
+const snapshots = await fetchSnapshots(
+  urls,
+  (s) => {
+    const seconds = Math.round((Date.now() - started) / 1000)
+    started = Date.now()
+    process.stderr.write(
+      `${s.ok ? 'ok  ' : 'FAIL'} ${String(seconds).padStart(3)}s ${s.url}${s.ok ? '' : ` (${s.reason})`}\n`,
+    )
+  },
+  offersOnly ? SAME_HOST_PAUSE_MS : 0,
+)
 
 if (values.dump) {
   await mkdir(values.dump, { recursive: true })
@@ -89,14 +116,34 @@ try {
   // No local copy yet (or in CI): removed lines are reported as counts.
 }
 
-const { report, nextLock } = compareSources(
-  catalog,
-  snapshots,
-  lock,
-  today,
-  only,
-)
-const text = formatReport(report, today, previous)
+const compare = (loaded: Map<string, PageSnapshot>) =>
+  offersOnly
+    ? {
+        report: compareOfferSources(catalog, loaded, lock, only),
+        nextLock: lock,
+      }
+    : compareSources(catalog, loaded, lock, today, only)
+const first = compare(snapshots)
+const again = pagesToLoadAgain(catalog, first.report)
+const { report, nextLock } =
+  again.length === 0
+    ? first
+    : compare(
+        withLoads(
+          snapshots,
+          await fetchSnapshots(
+            again,
+            (s) => {
+              process.stderr.write(
+                `${s.ok ? 'ok  ' : 'FAIL'} again ${s.url}${s.ok ? '' : ` (${s.reason})`}\n`,
+              )
+            },
+            SAME_HOST_PAUSE_MS,
+            1,
+          ),
+        ),
+      )
+const text = formatReport(report, today, previous, offersOnly)
 process.stdout.write(text)
 if (values.report) await writeFile(values.report, text)
 if (values.update) {

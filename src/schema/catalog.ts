@@ -1,5 +1,5 @@
 import type { Card } from './card.ts'
-import type { Release } from './changes.ts'
+import type { OfferRecord, Release } from './changes.ts'
 import type { Category } from './category.ts'
 import type { Currency } from './currency.ts'
 import type { Issuer } from './issuer.ts'
@@ -16,4 +16,6 @@ export type Catalog = {
   // Issuer changes and corrections to cards from data/changes.yaml, newest
   // release first (holderReleases), for the to-do list.
   changes?: Release[]
+  // Each card's welcome offer starts and issuer changes, for its history.
+  offerRecords?: OfferRecord[]
 }

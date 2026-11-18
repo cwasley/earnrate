@@ -1,10 +1,15 @@
 import { describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
 import {
+  compareOfferSources,
   compareSources,
   formatReport,
   hasChanges,
+  offerSourceUrls,
+  pagesToLoadAgain,
   sourceUrls,
+  takingTurns,
+  withLoads,
   type PageSnapshot,
   type SourcesLock,
 } from '../src/sources/check.ts'
@@ -432,5 +437,181 @@ describe('compareSources', () => {
       compareSources(marked, loads, baseline(PAGE), 'today').report
         .varyingOffers,
     ).toEqual([])
+  })
+})
+
+describe('offers-only check', () => {
+  const offer = 'Earn a $300 bonus after you spend $3,000'
+  const offerPage = 'https://example.com/card-offer'
+  const withOffer = {
+    ...catalog,
+    cards: [
+      {
+        ...card,
+        source_urls: [url, offerPage],
+        welcome_offer: { dollars: 300, spend: 3000, months: 3 },
+        evidence: [
+          ...card.evidence,
+          { rule: 'welcome_offer', url: offerPage, quote: offer },
+        ],
+      },
+    ],
+  }
+  const snap = (page: string, ...texts: string[]): PageSnapshot => ({
+    url: page,
+    ok: true,
+    loads: texts.map((t) => ({ innerText: t, fullText: t, pageData: '' })),
+  })
+
+  test('reads only the pages with offer quotes', () => {
+    expect([...offerSourceUrls(withOffer).keys()]).toEqual([offerPage])
+    expect([...offerSourceUrls(withOffer, new Set(['other'])).keys()]).toEqual(
+      [],
+    )
+  })
+
+  test('an unchanged offer reports nothing, and earning lines are left alone', () => {
+    const report = compareOfferSources(
+      withOffer,
+      new Map([
+        [offerPage, snap(offerPage, `New line: earn 9x on gas.\n${offer}.`)],
+      ]),
+      { version: 1, pages: {} },
+    )
+    expect(hasChanges(report)).toBe(false)
+    expect(report.newPages).toEqual([])
+    expect(formatReport(report, '2026-11-20', {}, true)).toMatch(
+      /^# Welcome offer check, 2026-11-20[\s\S]*Every welcome offer is still on its issuer page\./,
+    )
+  })
+
+  test('a changed offer, or one shown on only some visits, is reported', () => {
+    const changed = compareOfferSources(
+      withOffer,
+      new Map([
+        [
+          offerPage,
+          snap(offerPage, 'Earn a $200 bonus after you spend $3,000.'),
+        ],
+      ]),
+      { version: 1, pages: {} },
+    )
+    expect(changed.missingEvidence.map((m) => m.rule)).toEqual([
+      'welcome_offer',
+    ])
+    expect(hasChanges(changed)).toBe(true)
+    expect(formatReport(changed, '2026-11-20', {}, true)).toMatch(
+      /## Offers whose text is gone[\s\S]*\*\*sofi-unlimited-2\*\* `welcome_offer`/,
+    )
+    const varying = compareOfferSources(
+      withOffer,
+      new Map([[offerPage, snap(offerPage, `${offer}.`, 'Another offer.')]]),
+      { version: 1, pages: {} },
+    )
+    expect(varying.varyingOffers).toEqual([
+      { cardId: card.id, url: offerPage, quote: offer },
+    ])
+  })
+
+  test('an "up to" offer missing from both loads gets a third, and is reported only if it is missing there too', () => {
+    const varies = {
+      ...withOffer,
+      cards: withOffer.cards.map((c) => ({
+        ...c,
+        welcome_offer: { ...c.welcome_offer, varies: true as const },
+      })),
+    }
+    const other = 'Earn a $200 bonus after you spend $500.'
+    const twoLoads = new Map([[offerPage, snap(offerPage, other, other)]])
+    const lock: SourcesLock = { version: 1, pages: {} }
+    const first = compareOfferSources(varies, twoLoads, lock)
+    expect(first.missingEvidence).toHaveLength(1)
+    expect(pagesToLoadAgain(varies, first)).toEqual([offerPage])
+    expect(pagesToLoadAgain(withOffer, first)).toEqual([])
+
+    const shown = withLoads(
+      twoLoads,
+      new Map([[offerPage, snap(offerPage, `${offer}.`)]]),
+    )
+    expect(compareOfferSources(varies, shown, lock).missingEvidence).toEqual([])
+    const stillGone = withLoads(
+      twoLoads,
+      new Map([[offerPage, snap(offerPage, other)]]),
+    )
+    expect(
+      compareOfferSources(varies, stillGone, lock).missingEvidence,
+    ).toHaveLength(1)
+    expect(
+      withLoads(
+        twoLoads,
+        new Map([
+          [offerPage, { url: offerPage, ok: false, reason: 'HTTP 503' }],
+        ]),
+      ).get(offerPage),
+    ).toEqual(twoLoads.get(offerPage))
+  })
+
+  test('the full check takes the third load the same way', () => {
+    const varies = {
+      ...withOffer,
+      cards: withOffer.cards.map((c) => ({
+        ...c,
+        welcome_offer: { ...c.welcome_offer, varies: true as const },
+      })),
+    }
+    const lock: SourcesLock = { version: 1, pages: {} }
+    const loads = new Map([
+      [url, ok(PAGE, PAGE)],
+      [offerPage, snap(offerPage, 'Other offer.', 'Other offer.')],
+    ])
+    const first = compareSources(varies, loads, lock, 'today').report
+    expect(pagesToLoadAgain(varies, first)).toEqual([offerPage])
+    const again = withLoads(
+      loads,
+      new Map([[offerPage, snap(offerPage, `${offer}.`)]]),
+    )
+    expect(
+      compareSources(varies, again, lock, 'today').report.missingEvidence,
+    ).toEqual([])
+  })
+
+  test('a page it could not read lists only its offer quotes', () => {
+    const report = compareOfferSources(
+      withOffer,
+      new Map([[offerPage, { url: offerPage, ok: false, reason: 'HTTP 503' }]]),
+      {
+        version: 1,
+        pages: { [offerPage]: { checked: '2026-11-16', lines: [] } },
+      },
+    )
+    expect(report.unreachable).toEqual([
+      {
+        url: offerPage,
+        reason: 'HTTP 503',
+        cards: [card.id],
+        lastRead: '2026-11-16',
+        quotes: [{ cardId: card.id, rule: 'welcome_offer', quote: offer }],
+      },
+    ])
+  })
+
+  test('pages take turns by site', () => {
+    expect(
+      takingTurns([
+        'https://a.com/1',
+        'https://a.com/2',
+        'https://a.com/3',
+        'https://b.com/1',
+        'https://c.com/1',
+        'https://b.com/2',
+      ]),
+    ).toEqual([
+      'https://a.com/1',
+      'https://b.com/1',
+      'https://c.com/1',
+      'https://a.com/2',
+      'https://b.com/2',
+      'https://a.com/3',
+    ])
   })
 })

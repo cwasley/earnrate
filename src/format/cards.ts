@@ -72,6 +72,9 @@ export function formatCardInfo(
     ...(details?.welcomeOffer
       ? [`welcome offer (published): ${details.welcomeOffer}`]
       : []),
+    ...(details?.offerHigh
+      ? [`welcome offer history: ${details.offerHigh.text}`]
+      : []),
     ...(details?.feeWorth
       ? [`is the fee worth it? ${details.feeWorth.text}`]
       : []),

@@ -15,6 +15,7 @@ import {
   HOLDER_NEWS_DAYS,
   holderNews,
 } from './changes.ts'
+import { offerHigh, type OfferHigh } from './offer-history.ts'
 import { offerTerms } from './offers.ts'
 import { addDays, inEffect } from './periods.ts'
 import { currencyName, shortDate } from './text.ts'
@@ -34,6 +35,8 @@ export type CardDetails = {
   changes: string[]
   // The published welcome offer, with its end date and fine print.
   welcomeOffer: string | null
+  // The highest public offer earnrate has recorded for the card.
+  offerHigh: OfferHigh | null
 }
 
 function welcomeOfferText(catalog: Catalog, card: Card, today: string) {
@@ -110,6 +113,7 @@ export function cardDetails(
           : feeWorthAnswer(catalog, worth, valuations, transfer),
       changes: recentChanges(catalog, id, today),
       welcomeOffer: welcomeOfferText(catalog, card, today),
+      offerHigh: offerHigh(catalog, card, today),
     }
   })
 }

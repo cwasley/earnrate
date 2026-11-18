@@ -205,7 +205,7 @@ Ranks the cards you don't have by their first two years together, to answer "whi
 
 If you can't or won't get cards from an issuer (Chase, over its 5/24 rule), `earnrate skip-issuers chase` saves that, and next-card answers here, in "would another card help?" and in Claude leave its cards out; `--skip-issuer chase` does it for one answer, and `--none` clears the list. earnrate never assumes an issuer's application rules, since they aren't published as terms it can quote.
 
-An offer the issuer rules out because of a card in your wallet (or one you name with `--cards`) is marked "likely not eligible" and listed last. `--points`, `--no-fee` and `--business` narrow it down. Each offer is the public one on the issuer's page, checked weekly like the earning rules, with the issuer's eligibility rules in its note. Offers can differ by person and by how you apply, and it covers only the cards earnrate knows. There are no affiliate or apply links.
+An offer the issuer rules out because of a card in your wallet (or one you name with `--cards`) is marked "likely not eligible" and listed last. `--points`, `--no-fee` and `--business` narrow it down. Each offer is the public one on the issuer's page, checked twice a week (the earning rules weekly), with the issuer's eligibility rules in its note and the highest public offer earnrate has recorded for the card since it started tracking it. Offers can differ by person and by how you apply, and it covers only the cards earnrate knows. There are no affiliate or apply links.
 
 ### Import a statement
 

@@ -15,6 +15,7 @@ import { localToday } from '../src/engine/periods.ts'
 import { rotationGapText } from '../src/engine/rotation.ts'
 import { simulateSingles } from '../src/engine/simulate.ts'
 import {
+  dateRange,
   earnText,
   longDate,
   money,
@@ -23,7 +24,7 @@ import {
   wholeDollars,
 } from '../src/engine/text.ts'
 import { ALL_PERSONAL_CARDS, exploreCards } from '../src/engine/explore.ts'
-import { pageContext } from '../scripts/pages/context.ts'
+import { pageContext, type PageContext } from '../scripts/pages/context.ts'
 import { TABS } from '../site/tabs.ts'
 import { EVENTS } from '../site/events.ts'
 import {
@@ -41,6 +42,14 @@ import {
 } from '../scripts/pages/year-end.ts'
 import { creditWhere } from '../src/engine/rule-text.ts'
 import { offerCheckedOn } from '../src/engine/offers.ts'
+import {
+  OFFER_HISTORY_CAVEAT,
+  offerHistoryText,
+  offerRecords,
+} from '../src/engine/offer-history.ts'
+import { offerHistorySection } from '../scripts/pages/offer-history.ts'
+import { CardSchema } from '../src/schema/card.ts'
+import type { Catalog } from '../src/schema/catalog.ts'
 import {
   addDays,
   currentPeriodEnd,
@@ -409,6 +418,24 @@ describe('the built static pages', () => {
       if (card.offer_checked !== undefined) rechecked++
     }
     expect(rechecked).toBeGreaterThan(0)
+  })
+
+  test("a card page's offer history is the engine's, with its caveat, and never calls an offer a deal", () => {
+    for (const card of catalog.cards) {
+      const html = unescape(
+        readFileSync(path.join(out, 'cards', `${card.id}.html`), 'utf8'),
+      )
+      expect(html, card.id).not.toMatch(/\b(good|great|best) (deal|offer)\b/i)
+      const history = offerHistoryText(catalog, card, today)
+      if (history === null) {
+        expect(html, card.id).not.toContain('Offer history')
+        continue
+      }
+      expect(html, card.id).toContain(history.lead)
+      expect(html, card.id).toContain(OFFER_HISTORY_CAVEAT)
+      for (const e of history.earlier)
+        expect(html, card.id).toContain(`${dateRange(e.from, e.to)}</time>: `)
+    }
   })
 
   test('only store pages with something of their own are indexed', () => {
@@ -810,6 +837,92 @@ describe('the built static pages', () => {
         expect(html, file).not.toContain('class="app-nav"')
     }
   })
+})
+
+test("a card page's offer history names the higher offer it fell from, and lists earlier ones", () => {
+  const card = CardSchema.parse({
+    id: 'hotel',
+    name: 'Hotel Card',
+    issuer: 'chase',
+    network: 'visa',
+    currency: 'hotel-points',
+    last_verified: '2026-11-17',
+    verified_by: 'test',
+    source_urls: ['https://example.com/card'],
+    base_rate: 1,
+    foreign_transaction_fee: 0,
+    annual_fee: 0,
+    welcome_offer: { points: 140000, spend: 3000, months: 3 },
+  })
+  const offer = (points: number, spend: number) => ({
+    points,
+    spend,
+    months: 3,
+  })
+  const releases = ChangesFileSchema.parse([
+    {
+      version: '2026.11.17',
+      date: '2026-11-17',
+      changes: [
+        {
+          cause: 'issuer',
+          card: 'hotel',
+          field: 'welcome_offer',
+          was: offer(180000, 3000),
+          now: offer(140000, 3000),
+          source: 'https://example.com/card',
+          detected: '2026-11-16',
+        },
+      ],
+    },
+    {
+      version: '2026.11.01',
+      date: '2026-11-01',
+      changes: [
+        {
+          cause: 'issuer',
+          card: 'hotel',
+          field: 'welcome_offer',
+          was: offer(100000, 2000),
+          now: offer(180000, 3000),
+          source: 'https://example.com/card',
+        },
+      ],
+    },
+    {
+      version: '2026.10.27',
+      date: '2026-10-27',
+      changes: [
+        {
+          cause: 'addition',
+          card: 'hotel',
+          field: 'welcome_offer',
+          summary: 'Public welcome offers.',
+        },
+      ],
+    },
+  ])
+  const fixture = {
+    ...catalog,
+    cards: [card],
+    currencies: [
+      { id: 'hotel-points', name: 'Hotel points', value_cents: 0.5 },
+    ],
+    offerRecords: offerRecords(releases),
+  } as Catalog
+  const html = unescape(
+    offerHistorySection(
+      { catalog: fixture, today: '2026-11-17' } as PageContext,
+      card,
+    ),
+  )
+  expect(html).toContain(
+    "<h3>Offer history</h3><p>It's been the public offer since Nov 16, 2026. Lower than the 180,000 Hotel points after $3,000 in purchases within 3 months seen Nov 1 – Nov 15, 2026.</p>",
+  )
+  expect(html).toContain(
+    '<li><time datetime="2026-11-01">Nov 1 – Nov 15, 2026</time>: 180,000 Hotel points after $3,000 in purchases within 3 months</li><li><time datetime="2026-10-27">Oct 27 – Oct 31, 2026</time>: 100,000 Hotel points after $2,000 in purchases within 3 months</li>',
+  )
+  expect(html).toContain(OFFER_HISTORY_CAVEAT)
 })
 
 describe('quarterly pages', () => {

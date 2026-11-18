@@ -12,6 +12,7 @@ import { WALLET_ENV_VAR } from '../src/brand.ts'
 import { parseWalletYaml } from '../src/format/wallet-yaml.ts'
 import { FileWalletStore } from '../src/data/file-store.ts'
 import { loadCatalog } from '../src/data/load.ts'
+import { offerHigh } from '../src/engine/offer-history.ts'
 import { JsonWalletStore, type WalletStore } from '../src/data/store.ts'
 import { DETAILS_LEFT_OUT } from '../src/engine/card-details.ts'
 import type { CheatSheet } from '../src/engine/cheat-sheet.ts'
@@ -242,6 +243,37 @@ describe('tools', () => {
     })
     expect(unknown.isError).toBe(true)
     expect(text(unknown)).toMatch(/Closest: chase-sapphire-preferred/)
+  })
+
+  test('offer answers give the highest public offer earnrate has recorded', async () => {
+    const id = 'chase-ihg-one-rewards-premier'
+    const card = catalog.cards.find((c) => c.id === id)
+    if (!card) throw new Error(`${id} missing`)
+    const expected = offerHigh(catalog, card, TODAY)
+    expect(expected).not.toBeNull()
+    const client = await connect(await walletCopy())
+    const compared = await client.callTool({
+      name: 'compare_welcome_offers',
+      arguments: { compare: [id] },
+    })
+    const [offer] = (
+      compared.structuredContent as { offers: { offerHigh: unknown }[] }
+    ).offers
+    expect(offer?.offerHigh).toEqual(expected)
+    expect(text(compared)).toContain(expected?.text)
+    const found = await client.callTool({
+      name: 'search_cards',
+      arguments: { query: id },
+    })
+    const cards = (
+      found.structuredContent as {
+        cards: { id: string; offerHigh: unknown }[]
+      }
+    ).cards
+    expect(cards.find((c) => c.id === id)?.offerHigh).toEqual(expected)
+    expect(text(found)).toContain(
+      `welcome offer history: ${expected?.text ?? ''}`,
+    )
   })
 
   test('best_card_for_purchase returns the decision and readable text', async () => {

@@ -9,6 +9,7 @@ import { CardSchema, type Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { CategoriesFileSchema } from '../schema/category.ts'
 import { holderReleases } from '../engine/changes.ts'
+import { offerRecords } from '../engine/offer-history.ts'
 import { ChangesFileSchema, type Release } from '../schema/changes.ts'
 import { CurrenciesFileSchema } from '../schema/currency.ts'
 import { IssuersFileSchema } from '../schema/issuer.ts'
@@ -74,6 +75,7 @@ export async function loadCatalog(dir = DATA_DIR): Promise<Catalog> {
     cards,
     merchants: { seed, overrides },
     changes: holderReleases(releases),
+    offerRecords: offerRecords(releases),
   }
 }
 

@@ -100,5 +100,17 @@ export const ReleaseSchema = z
 // Newest release first, like data/CHANGELOG.md.
 export const ChangesFileSchema = z.array(ReleaseSchema).min(1)
 
+// What the catalog keeps of the change record for a card's welcome offer
+// history (offerRecords in src/engine/offer-history.ts): the day earnrate
+// started recording the offer, and each issuer change to it, oldest first.
+export type OfferRecord = {
+  card: string
+  // The start: the day of that release. A change: the day the new terms
+  // took over (effective, else detected, else the release's day), and never
+  // before the day after the old offer's own end date.
+  from: string
+  change?: { field: string; was: unknown; now: unknown }
+}
+
 export type Change = z.output<typeof ChangeSchema>
 export type Release = z.output<typeof ReleaseSchema>

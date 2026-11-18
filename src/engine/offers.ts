@@ -13,6 +13,7 @@ import {
 } from './simulate.ts'
 import { missingMembership, paidMemberships } from './memberships.ts'
 import { bonusEligibility, type MonthAsk } from './repeat-bonus.ts'
+import { offerHigh, type OfferHigh } from './offer-history.ts'
 import { inEffect } from './periods.ts'
 import { CREDITS_APART, heldName, listed, money, roundCents } from './text.ts'
 import { cardValuation } from './valuation.ts'
@@ -66,6 +67,9 @@ export type OfferSummary = {
   held: boolean
   lastVerified: string
   verifiedBy: string
+  // The highest public offer earnrate has recorded for the card, and how
+  // this one compares; null before earnrate has a record of its offers.
+  offerHigh: OfferHigh | null
 }
 
 export type OfferPlan = {
@@ -363,6 +367,7 @@ export function compareOffers(
       held: held.has(card.id),
       lastVerified: offerCheckedOn(card),
       verifiedBy: card.verified_by,
+      offerHigh: offerHigh(catalog, card, today),
     }
     if (membership === null) offers.push(summary)
     else membersOnly.push({ ...summary, membership })
@@ -376,7 +381,7 @@ export function compareOffers(
     only === null
       ? `Compares the ${String(catalog.cards.length)} cards earnrate knows, not every card on the market.`
       : `Compares only the cards you named: ${listed(only.map(cardName))}.`,
-    `Each offer is the public one on the issuer's page on the date shown, checked weekly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how, and cards you have or had are checked against the issuer's repeat-bonus rule.`,
+    `Each offer is the public one on the issuer's page on the date shown, checked twice a week; its history line is the highest public offer earnrate has recorded for the card, which misses offers that came and went between checks and offers sent to people directly. ${OFFERS_MAY_DIFFER} Issuers also limit who can get a bonus; each card's note says how, and cards you have or had are checked against the issuer's repeat-bonus rule.`,
     `Ranked on the first two years together: what each card ${wallet.cards.length > 0 ? 'adds to your cards' : 'earns'} on ${spending.typical ? 'typical U.S. spending' : 'your spending'}${wallet.cards.length > 0 ? ' (it takes the purchases where it earns more)' : ''}, plus the welcome bonus in year one if the minimum spend fits in the window with all your spending on it, less each year's annual fee. Year one counts the card at its standard rates${offers.some((o) => (catalog.cards.find((c) => c.id === o.cardId)?.yearly_points.length ?? 0) > 0) ? ', and points a card gives every year from year two, after its first anniversary' : ''}.`,
     "First-year value is the bonus alone at your point values, less the first year's fee.",
     CREDITS_APART,

@@ -60,6 +60,7 @@ export function formatOffers(
     lines.push(
       `    ${o.validTo ? `Offer ends ${shortDate(o.validTo)}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}; yours may differ. The bonus alone is worth about ${wholeDollars(o.firstYearValue)}${o.firstYearFee === 0 ? '' : " after the first year's fee"}.`,
     )
+    if (o.offerHigh) lines.push(`    ${o.offerHigh.text}`)
     if (o.plan?.minimumSpend)
       lines.push(
         `    ${minimumSpendText(o.spend, o.months, o.plan.minimumSpend, c.typical)}`,

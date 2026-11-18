@@ -370,6 +370,23 @@ export const RecordResultSchema = z.object({
   message: z.string(),
 })
 
+// The highest public welcome offer earnrate has recorded for a card, by
+// value at earnrate's default point values. `text` says it in one line:
+// pass it on with the caveat that offers vary by person and visit.
+const OfferHighSchema = z.object({
+  text: z.string(),
+  since: z.string(), // when earnrate started recording the card's offer
+  only: z.boolean(), // no other offer recorded
+  isCurrent: z.boolean(), // the current offer is the highest recorded
+  points: z.number().nullable(),
+  dollars: z.number().nullable(),
+  spend: z.number(),
+  months: z.number(),
+  varies: z.boolean(), // "up to"
+  value: z.number(),
+  seen: z.array(z.object({ from: z.string(), to: z.string() })),
+})
+
 export const OfferComparisonSchema = z.object({
   offers: z.array(
     z.object({
@@ -419,6 +436,7 @@ export const OfferComparisonSchema = z.object({
       held: z.boolean(),
       lastVerified: z.string(),
       verifiedBy: z.string(),
+      offerHigh: OfferHighSchema.nullable(),
     }),
   ),
   // Offers on cards that need a membership the user hasn't given, valued for
@@ -545,6 +563,8 @@ export const CardSearchSchema = z.object({
       // Null when the search found more cards than it details.
       changes: z.array(z.string()).nullable(),
       welcomeOffer: z.string().nullable(),
+      // Null when the search found more cards than it details.
+      offerHigh: OfferHighSchema.nullable(),
     }),
   ),
   detailed: z.boolean(), // earning and feeWorth were worked out

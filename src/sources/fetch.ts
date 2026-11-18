@@ -93,17 +93,26 @@ function withDeadline<T>(
   })
 }
 
+// `sameHostPauseMs`: a wait before a page from the same site as the one
+// just read.
 export async function fetchSnapshots(
   urls: string[],
   onPage: (s: PageSnapshot) => void = () => undefined,
+  sameHostPauseMs = 0,
+  loadsPerPage = LOADS_PER_PAGE,
 ): Promise<Map<string, PageSnapshot>> {
   const browser = await chromium.launch()
   const snapshots = new Map<string, PageSnapshot>()
+  let lastHost: string | null = null
   try {
     for (const url of urls) {
+      const host = new URL(url).hostname
+      if (host === lastHost && sameHostPauseMs > 0)
+        await new Promise((resolve) => setTimeout(resolve, sameHostPauseMs))
+      lastHost = host
       const loads: PageLoad[] = []
       let failure: string | null = null
-      for (let i = 0; i < LOADS_PER_PAGE && failure === null; i++) {
+      for (let i = 0; i < loadsPerPage && failure === null; i++) {
         const result = await withDeadline(load(browser, url), PAGE_DEADLINE_MS)
         if (result.ok) loads.push(result.load)
         else failure = result.reason

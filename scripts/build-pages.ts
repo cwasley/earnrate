@@ -118,6 +118,7 @@ import {
 } from './pages/coding.ts'
 import { feeWorthKit, TRANSFER_VALUES } from '../src/engine/fee-worth.ts'
 import { feeWorthSection } from './pages/fee-worth.ts'
+import { offerHistorySection } from './pages/offer-history.ts'
 import { button, pageActions, textLink, type Visitor } from './pages/actions.ts'
 import { storeHref, storeIndexReasons } from './pages/indexing.ts'
 import { drawImages, type OgImage } from './pages/og.ts'
@@ -1163,16 +1164,19 @@ function foreignFeeSection(card: Card): string {
 
 function offerText(card: Card): string {
   const o = card.welcome_offer
-  if (!o || !inEffect(o, today)) return ''
+  const history = offerHistorySection(ctx, card)
+  if (!o || !inEffect(o, today)) return history
   const offer = `${esc(offerTerms(o, currencyName(catalog, card.currency)))}${o.valid_to ? `, through ${esc(shortDate(o.valid_to))}` : ''}, per the issuer's page as of ${esc(shortDate(offerCheckedOn(card)))}.`
   // Who can get it is fine print: the offer line says what it is.
   const tip = notifyTip(
     "Safari's Notify Me (in the page menu) can tell you when this offer changes.",
   )
   const again = `<p><b>Can you get it again?</b> ${esc(repeatRuleText(catalog, card))} <a href="/bonus-rules">Every card's rule</a></p>${o.repeat ? finePrint([evidenceFor(card, 'repeat')], "The issuer's words") : ''}`
+  // The history's caveat says what OFFERS_MAY_DIFFER does, and more.
+  const differ = history === '' ? esc(OFFERS_MAY_DIFFER) : ''
   return o.note
-    ? `<h2>Public welcome offer</h2><p>${offer} Offers vary by person.</p>${tip}${again}${finePrint([`<p>${esc(o.note)}</p>`, `<p>${esc(OFFERS_MAY_DIFFER)}</p>`], 'Who can get it')}`
-    : `<h2>Public welcome offer</h2><p>${offer} ${esc(OFFERS_MAY_DIFFER)}</p>${tip}${again}`
+    ? `<h2>Public welcome offer</h2><p>${offer} Offers vary by person.</p>${tip}${again}${finePrint([`<p>${esc(o.note)}</p>`, differ === '' ? '' : `<p>${differ}</p>`], 'Who can get it')}${history}`
+    : `<h2>Public welcome offer</h2><p>${offer}${differ === '' ? '' : ` ${differ}`}</p>${tip}${again}${history}`
 }
 
 function placements(

@@ -68,6 +68,51 @@ export function sourceUrls(
   return pages
 }
 
+// The quotes the Thursday offers-only run checks: what a welcome offer
+// is, its first-year fee and the cards it rules out. A repeat-bonus rule
+// sits in the issuer's terms, which change rarely: the weekly run has it.
+export const OFFER_CHECK_RULES: ReadonlySet<string> = new Set([
+  'welcome_offer',
+  'not_with',
+  'first_year_fee',
+])
+
+// The pages carrying those quotes (mostly each card's own page), with the
+// cards whose quotes are on them.
+export function offerSourceUrls(
+  catalog: Catalog,
+  only?: ReadonlySet<string>,
+): Map<string, string[]> {
+  const pages = new Map<string, string[]>()
+  for (const card of catalog.cards) {
+    if (only && !only.has(card.id)) continue
+    for (const e of card.evidence) {
+      if (!OFFER_CHECK_RULES.has(e.rule)) continue
+      const key = pageKey(e.url)
+      pages.set(key, [...new Set([...(pages.get(key) ?? []), card.id])])
+    }
+  }
+  return pages
+}
+
+// One page from each site in turn, so no issuer gets a run of requests
+// (Amex answers a long run with its "Loading Error" page).
+export function takingTurns(urls: string[]): string[] {
+  const byHost = new Map<string, string[]>()
+  for (const url of urls) {
+    const host = new URL(url).hostname
+    byHost.set(host, [...(byHost.get(host) ?? []), url])
+  }
+  const queues = [...byHost.values()].sort((a, b) => b.length - a.length)
+  const out: string[] = []
+  for (let i = 0; out.length < urls.length; i++)
+    for (const q of queues) {
+      const url = q[i]
+      if (url !== undefined) out.push(url)
+    }
+  return out
+}
+
 // Each page is loaded more than once: a line counts as new only if every load
 // shows it, and as removed only if no load does, so copy that varies between
 // visits (A/B tests, rotating promos) isn't reported.
@@ -131,9 +176,61 @@ export function compareSources(
     nextLock.pages[url] = { checked: today, lines: [...seen].sort() }
   }
 
+  checkQuotes(catalog, snapshots, report, only)
+  return { report, nextLock }
+}
+
+// Offer quotes only, on the pages that carry them: no earning lines and no
+// lock. A changed or missing offer reads as it does in the weekly report.
+export function compareOfferSources(
+  catalog: Catalog,
+  snapshots: Map<string, PageSnapshot>,
+  lock: SourcesLock,
+  only?: ReadonlySet<string>,
+): SourcesReport {
+  const report: SourcesReport = {
+    missingEvidence: [],
+    newLines: [],
+    removedLines: [],
+    unreachable: [],
+    newPages: [],
+    varyingOffers: [],
+  }
+  for (const [url, cards] of offerSourceUrls(catalog, only)) {
+    const snap = snapshots.get(url)
+    if (snap?.ok) continue
+    report.unreachable.push({
+      url,
+      reason: snap?.ok === false ? snap.reason : 'not fetched',
+      cards,
+      lastRead: lock.pages[url]?.checked ?? null,
+      quotes: catalog.cards
+        .filter((c) => cards.includes(c.id))
+        .flatMap((c) =>
+          c.evidence
+            .filter(
+              (e) => pageKey(e.url) === url && OFFER_CHECK_RULES.has(e.rule),
+            )
+            .map((e) => ({ cardId: c.id, rule: e.rule, quote: e.quote })),
+        ),
+    })
+  }
+  checkQuotes(catalog, snapshots, report, only, OFFER_CHECK_RULES)
+  return report
+}
+
+// Every quote (or just those for `rules`) against the pages it cites.
+function checkQuotes(
+  catalog: Catalog,
+  snapshots: Map<string, PageSnapshot>,
+  report: SourcesReport,
+  only?: ReadonlySet<string>,
+  rules?: ReadonlySet<string>,
+): void {
   for (const card of catalog.cards) {
     if (only && !only.has(card.id)) continue
     for (const e of card.evidence) {
+      if (rules && !rules.has(e.rule)) continue
       const snap = snapshots.get(pageKey(e.url))
       if (!snap?.ok) continue
       // An old offer left in hidden markup must not back the current one.
@@ -176,7 +273,41 @@ export function compareSources(
       }
     }
   }
-  return { report, nextLock }
+}
+
+// Pages to load once more before reporting a missing offer: an "up to"
+// offer (`varies`) can show another variant on two visits in a row.
+export function pagesToLoadAgain(
+  catalog: Catalog,
+  report: SourcesReport,
+): string[] {
+  const varies = new Set(
+    catalog.cards
+      .filter((c) => c.welcome_offer?.varies === true)
+      .map((c) => c.id),
+  )
+  return [
+    ...new Set(
+      report.missingEvidence
+        .filter((m) => m.rule === 'welcome_offer' && varies.has(m.cardId))
+        .map((m) => pageKey(m.url)),
+    ),
+  ]
+}
+
+// A page's extra loads added to its earlier ones; a failed extra load
+// leaves the page as it was.
+export function withLoads(
+  snapshots: Map<string, PageSnapshot>,
+  extra: Map<string, PageSnapshot>,
+): Map<string, PageSnapshot> {
+  const merged = new Map(snapshots)
+  for (const [url, more] of extra) {
+    const before = merged.get(url)
+    if (before?.ok && more.ok)
+      merged.set(url, { ...before, loads: [...before.loads, ...more.loads] })
+  }
+  return merged
 }
 
 // Removed lines alone don't count: a rule that loses its backing text is
@@ -209,18 +340,39 @@ export function formatReport(
   report: SourcesReport,
   today: string,
   previous: LineCache = {},
+  offersOnly = false,
 ): string {
-  const out = [`# Card source check, ${today}`, '']
+  const out = [
+    offersOnly
+      ? `# Welcome offer check, ${today}`
+      : `# Card source check, ${today}`,
+    '',
+  ]
+  if (offersOnly)
+    out.push(
+      "Offers only: the welcome offer, first-year fee and ruled-out-card quotes, on the pages that carry them. Monday's full check covers the rest.",
+      '',
+    )
   if (!hasChanges(report) && report.unreachable.length === 0) {
     out.push(
-      'Every rule is still backed by its issuer page. No new earning lines.',
+      offersOnly
+        ? 'Every welcome offer is still on its issuer page.'
+        : 'Every rule is still backed by its issuer page. No new earning lines.',
     )
   }
   if (report.missingEvidence.length > 0) {
     out.push(
-      '## Rules whose backing text is gone',
-      '',
-      'The rule may have changed. Re-read the page and update the card file.',
+      ...(offersOnly
+        ? [
+            '## Offers whose text is gone',
+            '',
+            'The offer may have changed, or both visits were shown a different one: issuers show different offers to different people. Re-read the page in a clean browser and with `yarn check-sources --offers --cards <ids>` before changing the card file.',
+          ]
+        : [
+            '## Rules whose backing text is gone',
+            '',
+            'The rule may have changed. Re-read the page and update the card file.',
+          ]),
       '',
     )
     for (const m of report.missingEvidence) {

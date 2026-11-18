@@ -52,6 +52,16 @@ export const longDate = (date: string) =>
 export const monthYear = (date: string) =>
   dateWords(date, { month: 'long', year: 'numeric' })
 
+// "Oct 27 – Nov 15, 2026", "Dec 20, 2026 – Jan 4, 2027", or one day.
+export function dateRange(from: string, to: string): string {
+  if (from === to) return shortDate(from)
+  const start =
+    from.slice(0, 4) === to.slice(0, 4)
+      ? dateWords(from, { month: 'short', day: 'numeric' })
+      : shortDate(from)
+  return `${start} – ${shortDate(to)}`
+}
+
 // "Nov 30", with the year only when it isn't this one: "Apr 1, 2027".
 export const nearDate = (date: string, today: string) =>
   date.slice(0, 4) === today.slice(0, 4)
