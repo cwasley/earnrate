@@ -21,6 +21,7 @@ import {
   CREDIT_PERIODS,
   CREDIT_THIS_PERIOD,
   idList,
+  listed,
   money,
   shortDate,
 } from './text.ts'
@@ -33,6 +34,9 @@ export const MAX_NIGHT_VALUE = 5000
 
 export type CardInput = {
   id: string
+  // YYYY-MM-DD the card was first saved; adding a card sets today, so only a
+  // card put back after a removal gives it.
+  added?: string
   checkoutLabel?: string | null // null goes back to the card's name
   picks?: Record<string, string[]> // choice id → option ids; [] clears one
   anniversary?: string // MM-DD
@@ -107,6 +111,7 @@ type BonusFields = {
 }
 
 export type CardFields = {
+  added?: string
   checkout_label?: string | null // null removes it
   anniversary?: string
   opened?: string | null // null removes it
@@ -163,6 +168,13 @@ export function cardFields(
 ): CardFields | string {
   const problems: string[] = []
   const fields: CardFields = {}
+  if (input.added !== undefined) {
+    if (!isDate(input.added))
+      problems.push(`"${input.added}" isn't a date. Use YYYY-MM-DD.`)
+    else if (input.added > today)
+      problems.push('The day the card was added is in the future.')
+    fields.added = input.added
+  }
   if (input.checkoutLabel === null) fields.checkout_label = null
   else if (input.checkoutLabel !== undefined) {
     if (input.checkoutLabel.trim() === '')
@@ -524,6 +536,7 @@ const withFields = (
     ? {}
     : { skipped_credits: f.skipped_credits }),
   ...(f.bonus ? { bonus: f.bonus } : {}),
+  ...(f.added === undefined ? {} : { added: f.added }),
 })
 
 // `wallet` is null when there isn't one yet; adding a card starts it.
@@ -538,8 +551,9 @@ export function addToWallet(
   if (wallet?.cards.some((c) => c.id === card.id)) {
     return failed(`${card.id} is already in the wallet. Update it instead.`)
   }
-  const fields = cardFields(card, null, input, today)
-  if (typeof fields === 'string') return failed(fields)
+  const given = cardFields(card, null, input, today)
+  if (typeof given === 'string') return failed(given)
+  const fields: CardFields = { added: today, ...given }
   const held = withFields(newHolding(card.id), fields)
   const next: Wallet = wallet
     ? { ...wallet, cards: [...wallet.cards, held] }
@@ -692,6 +706,24 @@ export function withPastCards(
     fields: {},
     notes: [],
   }
+}
+
+// The card history may list a card the wallet holds now (closed and opened
+// again); set_card_history and `earnrate history` say so in one line.
+export function heldInHistoryLine(
+  catalog: Catalog,
+  wallet: Wallet,
+  ids: string[],
+): string | null {
+  const held = [...new Set(ids)].filter((id) =>
+    wallet.cards.some((c) => c.id === id),
+  )
+  if (held.length === 0) return null
+  const names = held.map(
+    (id) => catalog.cards.find((c) => c.id === id)?.name ?? id,
+  )
+  const one = held.length === 1
+  return `${listed(names)} ${one ? 'is' : 'are'} in your wallet now, so offer answers treat ${one ? 'it' : 'them'} as held.`
 }
 
 export function withMemberships(

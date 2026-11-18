@@ -14,6 +14,7 @@ import { issuerName } from '../format/card-text.ts'
 import { knownMemberships, searchCards } from '../engine/setup.ts'
 import {
   currencyChanges,
+  heldInHistoryLine,
   pastCardInputOf,
   type CardInput,
   type PastCardInput,
@@ -488,9 +489,13 @@ export async function runWalletCommand(
       at === -1
         ? [...list, { id, ...given }]
         : list.map((p, i) => (i === at ? { ...p, ...given } : p))
+    const result = await store.setPastCards(next, io.today)
+    const heldNow = result.ok
+      ? heldInHistoryLine(catalog, result.wallet, [id])
+      : null
     return report(
-      await store.setPastCards(next, io.today),
-      `${at === -1 ? 'Added' : 'Updated'} ${nameOf(id)} in your card history (${where}).`,
+      result,
+      `${at === -1 ? 'Added' : 'Updated'} ${nameOf(id)} in your card history (${where}).${heldNow === null ? '' : `\n${heldNow}`}`,
       null,
       io,
     )

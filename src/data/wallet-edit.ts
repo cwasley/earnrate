@@ -57,6 +57,7 @@ const flowList = (ids: string[]) => `[${ids.join(', ')}]`
 
 function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
   switch (field) {
+    case 'added':
     case 'checkout_label':
     case 'anniversary':
     case 'opened': {
@@ -147,6 +148,7 @@ function fieldLines(field: keyof CardFields, f: CardFields, indent: string) {
 }
 
 const FIELDS = [
+  'added',
   'checkout_label',
   'anniversary',
   'opened',

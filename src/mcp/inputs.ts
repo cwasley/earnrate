@@ -226,6 +226,9 @@ const cardFields = {
     .describe(
       'The month the welcome bonus posted, YYYY-MM, or "none" if the card never paid one, only if the user says. Issuers count repeat-bonus waits from it. null forgets it.',
     ),
+  added: IsoDate.optional().describe(
+    'Leave this out: adding a card saves today. earnrate.dev gives it when putting back a card it removed.',
+  ),
 }
 export const CardChange = z.object({ cardId: CardId, ...cardFields })
 

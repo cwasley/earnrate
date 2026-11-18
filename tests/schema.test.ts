@@ -137,6 +137,7 @@ valuations: { MR: 1.6 }
 memberships: [amazon-prime]
 cards:
   - id: amex-platinum
+    added: '2026-01-05'
     checkout_label: Platinum
     anniversary: '03-14'
     opened: '2025-03-14'

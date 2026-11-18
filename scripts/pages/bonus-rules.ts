@@ -54,7 +54,7 @@ export function bonusRulesPage(
       <p class="updated">Updated ${esc(ctx.dayWords(lastmod))}</p>
       <p>Each issuer's terms say who can earn a card's welcome bonus. Of the ${String(offered.length)} cards here with a public offer, ${String(stated)} have a stated rule, and ${String(once)} of those pay it once per card. Each rule below is quoted from the issuer's own page.</p>
       <p>Issuers can also turn down a bonus for reasons they don't spell out, like how many cards you've opened lately. Rules they don't publish aren't here.</p>
-      <p><a href="/#wallet">Add cards you've had</a> under My wallet, and next-card answers say when you can earn each bonus again.</p>
+      <p><a href="/#wallet&amp;had">Add cards you've had</a> under My wallet, and next-card answers say when you can earn each bonus again.</p>
       ${issuers
         .map((id) => {
           const list = (byIssuer.get(id) ?? []).toSorted(

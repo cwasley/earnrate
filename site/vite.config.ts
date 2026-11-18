@@ -9,7 +9,12 @@ import {
 import { localToday } from '../src/engine/periods.ts'
 import { landingFacts, renderLanding } from '../scripts/landing.ts'
 import { companyParts } from '../scripts/pages/changes.ts'
-import { PAGE_HEADER, siteFooter } from '../scripts/pages/site.ts'
+import {
+  PAGE_HEADER,
+  PAGES_CSS,
+  PAGES_CSS_LINK,
+  siteFooter,
+} from '../scripts/pages/site.ts'
 import { RATE_FRAME } from './rate/frame.ts'
 
 const CATALOG = 'virtual:catalog'
@@ -37,7 +42,7 @@ export function catalogModule(): Plugin {
 const FILLED = ['/index.html', '/companies.html']
 
 // Every page's shared footer (renderLanding fills it too, for the pages it
-// fills), and /rate's outline of a report. The home page's counts, sample
+// fills), the page-to-page fade's opt-in, and /rate's outline of a report. The home page's counts, sample
 // cheat sheet and quoted answer, and the companies page's counts and recent
 // changes, come from the card data, the change record and the example
 // wallet, filled in when the page is built.
@@ -49,6 +54,7 @@ export function landingPage(): Plugin {
         .replace('<!--earnrate:footer-->', siteFooter())
         .replace('<!--earnrate:header-->', PAGE_HEADER)
         .replace('<!--earnrate:rate-frame-->', RATE_FRAME)
+        .replace(PAGES_CSS_LINK, PAGES_CSS)
       if (!FILLED.some((f) => ctx.filename.endsWith(f))) return html
       const [catalog, sample, releases, version] = await Promise.all([
         loadCatalog(),

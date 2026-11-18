@@ -19,6 +19,7 @@ import { cardValuation } from '../../src/engine/valuation.ts'
 import type { PastCard, Wallet, WalletCard } from '../../src/schema/wallet.ts'
 import { countsForRepeat } from '../../src/engine/repeat-bonus.ts'
 import { anniversaryOf } from '../../src/engine/renewal.ts'
+import { EMPTY_WALLET } from '../../src/engine/transient.ts'
 import {
   checklistCalendar,
   checklistRows,
@@ -31,6 +32,7 @@ import { CardPicker } from './AddCards.tsx'
 import { CardSettings, hasFee, type CreditFocus } from './CardSettings.tsx'
 import { Logo } from './Logo.tsx'
 import { MONTH_LABELS, MonthAskField, monthFieldsFor } from './MonthAsk.tsx'
+import { MonthPick } from './MonthPick.tsx'
 import { track } from './track.ts'
 import { SheetDownload, useSheetSend, WalletPass } from './CheatSheetParts.tsx'
 import { savedSpending } from './saved-spending.ts'
@@ -301,13 +303,21 @@ function CardHistory({
   wallet,
   onChange,
   locked,
+  opened,
 }: {
   wallet: Wallet
   onChange: (op: LocalOp) => Promise<boolean>
   locked: boolean
+  opened: number // goes up each time a link asks for it open
 }) {
   const past = wallet.past_cards ?? []
   const today = localToday()
+  const fold = useRef<HTMLDetailsElement>(null)
+  useEffect(() => {
+    if (opened === 0 || !fold.current) return
+    fold.current.open = true
+    fold.current.scrollIntoView({ block: 'start' })
+  }, [opened])
   const set = (list: PastCard[]) =>
     void onChange(historyOp(list.map(pastCardOpInput)))
   const change = (at: number, field: keyof PastCard, value: string | false) =>
@@ -319,7 +329,7 @@ function CardHistory({
       }),
     )
   return (
-    <details class="panel fold-panel">
+    <details class="panel fold-panel" ref={fold}>
       <summary>
         <h3>Cards you've had</h3>
         <span class="muted">
@@ -365,18 +375,16 @@ function CardHistory({
                         const month = p[field]
                         return (
                           <Fragment key={field}>
-                            <label>
+                            <span class="month-field">
                               {MONTH_LABELS[field]}{' '}
-                              <input
-                                type="month"
+                              <MonthPick
+                                label={`${shortName(p.id)}: ${MONTH_LABELS[field]}`}
                                 value={typeof month === 'string' ? month : ''}
-                                max={today.slice(0, 7)}
+                                today={today}
                                 disabled={month === false}
-                                onChange={(e) =>
-                                  change(i, field, e.currentTarget.value)
-                                }
+                                onChange={(m) => change(i, field, m)}
                               />
-                            </label>
+                            </span>
                             {field === 'bonus_received' ? (
                               <label class="check">
                                 <input
@@ -1174,6 +1182,10 @@ export function MyWallet({
     })
   }
 
+  // /bonus-rules' "Add cards you've had" arrives as #wallet&had, which opens
+  // Cards you've had, with or without cards in the wallet.
+  const [historyOpened, setHistoryOpened] = useState(0)
+
   // A card page's "Add it to your wallet" arrives as #wallet&add=<card id>,
   // on load or as a change to the address. The id is read once and cleared.
   // From anywhere but an earnrate.dev page, the cards are asked about first.
@@ -1187,6 +1199,12 @@ export function MyWallet({
   }
   const addFromAddress = () => {
     const params = new URLSearchParams(location.hash.slice(1))
+    if (params.has('wallet') && params.has('had')) {
+      params.delete('had')
+      const rest = params.toString().replace(/=(?=&|$)/g, '')
+      history.replaceState(null, '', `#${rest || 'wallet'}`)
+      setHistoryOpened((n) => n + 1)
+    }
     const param = (['add', 'card'] as const).find((k) => params.has(k))
     if (param === undefined || !params.has('wallet')) return
     const atOnce = addsAtOnce({
@@ -1356,6 +1374,15 @@ export function MyWallet({
         {count === 0 ? (
           <ImportLink synced={synced} locked={locked} onImport={perform} />
         ) : null}
+        {count === 0 &&
+        ((wallet?.past_cards ?? []).length > 0 || historyOpened > 0) ? (
+          <CardHistory
+            wallet={wallet ?? EMPTY_WALLET}
+            onChange={apply}
+            locked={locked}
+            opened={historyOpened}
+          />
+        ) : null}
       </div>
     )
   }
@@ -1466,7 +1493,12 @@ export function MyWallet({
         </section>
         <Memberships wallet={wallet} onChange={apply} locked={locked} />
         <PointValues wallet={wallet} onChange={apply} locked={locked} />
-        <CardHistory wallet={wallet} onChange={apply} locked={locked} />
+        <CardHistory
+          wallet={wallet}
+          onChange={apply}
+          locked={locked}
+          opened={historyOpened}
+        />
         {connect}
         <Transfer
           wallet={wallet}

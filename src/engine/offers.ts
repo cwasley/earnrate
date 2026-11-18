@@ -101,11 +101,14 @@ export type OfferEligibility = {
 
 // A card held now is the wallet's own business; only the cards it rules out
 // (`not_with`) and the issuer's repeat rule speak to someone getting it new.
+// `asNew` asks about a held card too, as if applying for it again (the best
+// cards from scratch).
 export function offerEligibility(
   catalog: Catalog,
   wallet: Wallet,
   cardId: string,
   today: string,
+  asNew = false,
 ): OfferEligibility {
   const offer = catalog.cards.find((c) => c.id === cardId)?.welcome_offer
   const notWith = offer?.not_with ?? []
@@ -118,7 +121,7 @@ export function offerEligibility(
       ...none,
       ineligible: `Likely not eligible: you hold ${listed(held)}, and the issuer's terms rule out its cardholders.`,
     }
-  if (wallet.cards.some((c) => c.id === cardId))
+  if (!asNew && wallet.cards.some((c) => c.id === cardId))
     return { ...none, ineligible: null }
   const repeat = bonusEligibility(catalog, wallet, cardId, today)
   if (
@@ -140,6 +143,32 @@ export function offerEligibility(
     eligibleFrom: repeat.from,
     eligibilityNote: null,
     monthAsk: null,
+  }
+}
+
+// What of a wallet decides who can get a welcome bonus: the cards held and
+// their opening and bonus dates, and the card history. Null with neither.
+export function historyOf(wallet: Wallet | null): Wallet | null {
+  if (!wallet) return null
+  const past = wallet.past_cards ?? []
+  if (wallet.cards.length === 0 && past.length === 0) return null
+  return {
+    valuations: {},
+    memberships: [],
+    cards: wallet.cards.map((c) => ({
+      id: c.id,
+      cap_usage: {},
+      activated: [],
+      ...(c.checkout_label === undefined
+        ? {}
+        : { checkout_label: c.checkout_label }),
+      ...(c.opened === undefined ? {} : { opened: c.opened }),
+      ...(c.bonus === undefined ? {} : { bonus: c.bonus }),
+      ...(c.bonus_received === undefined
+        ? {}
+        : { bonus_received: c.bonus_received }),
+    })),
+    ...(past.length > 0 ? { past_cards: past } : {}),
   }
 }
 
@@ -197,12 +226,16 @@ function minimumSpend(
   }
 }
 
+// `history`, for offers ranked from no cards (`wallet` holds none): the
+// cards the person holds and has had, which decide only who can get each
+// bonus (historyOf).
 export function compareOffers(
   catalog: Catalog,
   wallet: Wallet,
   filters: OfferFilters,
   today: string,
   spending: Spending = { lines: typicalSpendLines(catalog), typical: true },
+  history: Wallet | null = null,
 ): OfferComparison {
   const held = new Set(wallet.cards.map((c) => c.id))
   const skipped = new Set(wallet.skipped_issuers ?? [])
@@ -319,7 +352,9 @@ export function compareOffers(
       annualFee: card.annual_fee ?? null,
       firstYearFee,
       bonusValue: roundCents(value),
-      ...offerEligibility(catalog, wallet, card.id, today),
+      ...(history === null
+        ? offerEligibility(catalog, wallet, card.id, today)
+        : offerEligibility(catalog, history, card.id, today, true)),
       firstYearValue,
       credits,
       firstYearValueIfCreditsUsed: roundCents(firstYearValue + credits),

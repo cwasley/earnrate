@@ -249,6 +249,7 @@ test("the privacy page says everything a saved wallet's card can hold", async ()
   // A new wallet field needs a phrase here and on the privacy page.
   const phrases: Record<string, string> = {
     id: 'by product',
+    added: 'the day you added each',
     checkout_label: 'checkout name',
     anniversary: 'anniversary',
     opened: 'opening date',

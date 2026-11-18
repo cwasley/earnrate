@@ -60,6 +60,8 @@ import {
 } from '../scripts/pages/site.ts'
 import { quoteText } from '../scripts/pages/rules.ts'
 import { ROOT } from './helpers.ts'
+import { PAGES_CSS_LINK } from '../scripts/pages/site.ts'
+import { landingPage } from '../site/vite.config.ts'
 
 const catalog = await loadCatalog()
 const today = localToday()
@@ -100,6 +102,31 @@ describe('the built static pages', () => {
   afterAll(() => {
     rmSync(out, { recursive: true, force: true })
   })
+
+  test('every page that links pages.css opts in to page fades inline first', async () => {
+    const plugin = landingPage()
+    const transform = plugin.transformIndexHtml as unknown as (
+      html: string,
+      ctx: { filename: string },
+    ) => Promise<string>
+    const missing: string[] = []
+    let checked = 0
+    for (const { file, html } of pages) {
+      // The statement check carries all of pages.css inside the page.
+      if (!html.includes(PAGES_CSS_LINK) || file.endsWith('statement.html'))
+        continue
+      const built = file.startsWith(out)
+        ? html
+        : await transform(html, { filename: file })
+      const head = built.slice(0, built.indexOf('</head>'))
+      const optIn = head.indexOf('@view-transition { navigation: auto; }')
+      if (optIn === -1 || optIn > head.indexOf(PAGES_CSS_LINK))
+        missing.push(path.relative(ROOT, file))
+      checked++
+    }
+    expect(checked).toBeGreaterThan(100)
+    expect(missing).toEqual([])
+  }, 30_000)
 
   test('every title and description fits in a search result', () => {
     const over: string[] = []

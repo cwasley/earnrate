@@ -6,6 +6,7 @@ import {
 } from '../../src/engine/repeat-bonus.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { shortName } from './format.ts'
+import { MonthPick } from './MonthPick.tsx'
 import { monthAskOp, type LocalOp } from './sync.ts'
 
 export const MONTH_LABELS: Record<MonthAsk['field'], string> = {
@@ -31,19 +32,19 @@ export function MonthAskField({
   ask: MonthAsk
   onChange: (op: LocalOp) => unknown
 }) {
+  const label = `${shortName(ask.cardId)}: ${MONTH_LABELS[ask.field].toLowerCase()}`
   return (
-    <label class="month-ask">
-      {shortName(ask.cardId)}: {MONTH_LABELS[ask.field].toLowerCase()}{' '}
-      <input
-        type="month"
+    <span class="month-ask">
+      {label}{' '}
+      <MonthPick
+        label={label}
         value=""
-        max={localToday().slice(0, 7)}
-        onChange={(e) => {
-          const month = e.currentTarget.value
+        today={localToday()}
+        onChange={(month) => {
           const op = month === '' ? null : monthAskOp(wallet, ask, month)
           if (op) void onChange(op)
         }}
       />
-    </label>
+    </span>
   )
 }

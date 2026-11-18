@@ -8,7 +8,9 @@ import { FileWalletStore } from '../src/data/file-store.ts'
 import { loadCatalog, loadWallet } from '../src/data/load.ts'
 import { setPastCardsText } from '../src/data/wallet-edit.ts'
 import { checklistRows } from '../src/engine/checklist.ts'
-import { compareOffers } from '../src/engine/offers.ts'
+import { compareOffers, historyOf } from '../src/engine/offers.ts'
+import { ALL_PERSONAL_CARDS } from '../src/engine/explore.ts'
+import { steps, type Job } from '../site/app/find/steps.ts'
 import {
   bonusEligibility,
   repeatMonthFields,
@@ -16,13 +18,24 @@ import {
 } from '../src/engine/repeat-bonus.ts'
 import { formatOffers } from '../src/format/offers.ts'
 import {
+  heldInHistoryLine,
   removeFromWallet,
   updateInWallet,
   withPastCards,
 } from '../src/engine/wallet-change.ts'
 import { resolveMerchant } from '../src/merchants/resolve.ts'
-import { WalletSchema } from '../src/schema/wallet.ts'
+import { WalletSchema, type Wallet } from '../src/schema/wallet.ts'
 import { pastCardNote } from '../site/app/card-history.ts'
+import {
+  futureMonth,
+  monthOf,
+  partsOf,
+  yearsFor,
+  YEARS_BACK,
+} from '../site/app/month-pick.ts'
+import { tabFor } from '../site/tabs.ts'
+import { bonusRulesPage } from '../scripts/pages/bonus-rules.ts'
+import { pageContext } from '../scripts/pages/context.ts'
 import {
   applyLocally,
   combineOps,
@@ -400,6 +413,118 @@ past_cards:
         bonus_met: '2022-03',
       },
     ])
+  })
+
+  test('the CLI keeps a card held now in the history and says offers treat it as held', async () => {
+    const file = await walletFile(`cards:
+  - id: amex-gold
+`)
+    let stdout = ''
+    const code = await run(['history', 'amex-gold', '--opened', '2019-04'], {
+      env: { EARNRATE_MISSED_MERCHANTS: 'off', [WALLET_ENV_VAR]: file },
+      today: TODAY,
+      stdout: (t) => (stdout += t),
+      stderr: () => undefined,
+    })
+    expect(code, stdout).toBe(0)
+    expect((await loadWallet(file)).past_cards).toEqual([
+      { id: 'amex-gold', opened: '2019-04' },
+    ])
+    expect(stdout.split('\n')[1]).toBe(
+      'American Express Gold Card is in your wallet now, so offer answers treat it as held.',
+    )
+    expect(
+      heldInHistoryLine(catalog, await loadWallet(file), ['amex-gold']),
+    ).toBe(stdout.split('\n')[1])
+  })
+
+  test('the best cards from scratch rule out bonuses by card history, not earnings', () => {
+    const saved = WalletSchema.parse({
+      cards: [{ id: 'amex-gold' }],
+      past_cards: [
+        { id: 'amex-blue-cash-preferred' },
+        { id: 'citi-double-cash', bonus_received: '2024-05' },
+      ],
+    })
+    const job = (history?: Wallet): Job => ({
+      rows: [{ what: 'Groceries', monthly: 800 }],
+      typical: false,
+      options: {
+        filters: ALL_PERSONAL_CARDS,
+        memberships: [],
+        valuations: {},
+      },
+      offerFilters: {
+        kind: 'any',
+        business: false,
+        noAnnualFee: false,
+        includeHeld: true,
+      },
+      today: TODAY,
+      ...(history ? { history } : {}),
+    })
+    const offers = (history?: Wallet) => {
+      const [first] = steps(catalog, job(history))
+      const part = first?.()
+      if (part?.part !== 'answer') throw new Error('no answer')
+      return {
+        result: part.result,
+        of: (id: string) => part.offers.find((o) => o.cardId === id),
+      }
+    }
+    const before = offers()
+    const after = offers(historyOf(saved) ?? undefined)
+    for (const id of ['amex-blue-cash-preferred', 'citi-double-cash'])
+      expect(before.of(id)?.ineligible, id).toBeNull()
+    expect(after.of('amex-blue-cash-preferred')?.ineligible).toBe(
+      "American Express says you may not get this bonus again, since you've had this card before.",
+    )
+    expect(after.of('citi-double-cash')?.ineligible).toMatch(
+      /^Not before May 2028: Citi counts 48 months/,
+    )
+    // The same words compare_welcome_offers gives for this history.
+    const named = compareOffers(
+      catalog,
+      { ...saved, cards: [] },
+      { kind: 'any', business: false, noAnnualFee: false, includeHeld: true },
+      TODAY,
+    )
+    expect(
+      named.offers.find((o) => o.cardId === 'citi-double-cash')?.ineligible,
+    ).toBe(after.of('citi-double-cash')?.ineligible)
+    // A held card counts as had: its bonus isn't offered again.
+    expect(after.of('amex-gold')?.ineligible).not.toBeNull()
+    // Earnings still start from no cards.
+    expect(after.result).toEqual(before.result)
+    expect(after.of('citi-double-cash')?.plan).toEqual(
+      before.of('citi-double-cash')?.plan,
+    )
+    expect(historyOf(WalletSchema.parse({}))).toBeNull()
+  })
+
+  test('a month is picked as a month and a year, never in the future', () => {
+    expect(monthOf({ month: 3, year: 2025 }, TODAY)).toBe('2025-03')
+    expect(monthOf({ month: 3, year: 0 }, TODAY)).toBe('')
+    expect(monthOf({ month: 0, year: 2025 }, TODAY)).toBe('')
+    expect(monthOf({ month: 11, year: 2026 }, TODAY)).toBe('2026-11')
+    expect(monthOf({ month: 12, year: 2026 }, TODAY)).toBe('')
+    expect(futureMonth(12, 2026, TODAY)).toBe(true)
+    expect(futureMonth(12, 0, TODAY)).toBe(false)
+    expect(partsOf('2019-04')).toEqual({ month: 4, year: 2019 })
+    expect(partsOf('')).toEqual({ month: 0, year: 0 })
+    const years = yearsFor('', TODAY)
+    expect(years[0]).toBe(2026)
+    expect(years.at(-1)).toBe(2026 - YEARS_BACK)
+    expect(yearsFor('1990-01', TODAY).at(-1)).toBe(1990)
+  })
+
+  test("/bonus-rules links to My wallet's Cards you've had, opened", () => {
+    const page = bonusRulesPage(
+      pageContext(catalog, { today: TODAY, dataVersion: 'test' }),
+      TODAY,
+    )
+    expect(page.html).toContain('<a href="/#wallet&amp;had">')
+    expect(tabFor('#wallet&had', false)).toBe('wallet')
   })
 
   test('rule labels state the restriction, keep "may not", and name the family', () => {

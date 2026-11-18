@@ -476,7 +476,7 @@ cards: []
     const again = await store(file).addCard({ id: 'amex-gold' }, TODAY)
     if (!again.ok) throw new Error(again.error)
     expect(await readFile(file, 'utf8')).toMatch(
-      /memberships: \[amazon-prime\]\n\ncards:\n {2}- id: amex-gold\n$/,
+      /memberships: \[amazon-prime\]\n\ncards:\n {2}- id: amex-gold\n {4}added: 2026-10-30\n$/,
     )
   })
 
@@ -547,7 +547,7 @@ describe('opening dates', () => {
     )
     expect(updated.ok).toBe(true)
     expect(await readFile(file, 'utf8')).toBe(
-      `${COMMENTED}  - id: discover-it-cash-back\n    opened: 2026-02-01\n`,
+      `${COMMENTED}  - id: discover-it-cash-back\n    added: 2026-10-30\n    opened: 2026-02-01\n`,
     )
     const removed = await store(file).updateCard(
       { id: 'discover-it-cash-back', opened: null },
@@ -555,7 +555,7 @@ describe('opening dates', () => {
     )
     expect(removed.ok).toBe(true)
     expect(await readFile(file, 'utf8')).toBe(
-      `${COMMENTED}  - id: discover-it-cash-back\n`,
+      `${COMMENTED}  - id: discover-it-cash-back\n    added: 2026-10-30\n`,
     )
   })
 
@@ -616,7 +616,7 @@ describe('merchant credits', () => {
     )
     if (!updated.ok) throw new Error(updated.error)
     expect(await readFile(file, 'utf8')).toBe(
-      `${COMMENTED}  - id: amex-platinum\n    enrolled: [lululemon]\n    credit_usage:\n      lululemon: { period: 2026-Q4, used: 40 }\n`,
+      `${COMMENTED}  - id: amex-platinum\n    added: 2026-10-30\n    enrolled: [lululemon]\n    credit_usage:\n      lululemon: { period: 2026-Q4, used: 40 }\n`,
     )
 
     const recorded = await store(file).record(
@@ -632,7 +632,7 @@ describe('merchant credits', () => {
     if (!recorded.ok) throw new Error(recorded.error)
     expect(recorded.credit).toMatchObject({ before: 40, after: 60 })
     expect(await readFile(file, 'utf8')).toBe(
-      `${COMMENTED}  - id: amex-platinum\n    enrolled: [lululemon]\n    credit_usage:\n      lululemon: { period: 2026-Q4, used: 60 }\n    milestone_usage:\n      spend-75k: { period: "2026", spent: 20 }\n`,
+      `${COMMENTED}  - id: amex-platinum\n    added: 2026-10-30\n    enrolled: [lululemon]\n    credit_usage:\n      lululemon: { period: 2026-Q4, used: 60 }\n    milestone_usage:\n      spend-75k: { period: "2026", spent: 20 }\n`,
     )
 
     const unenrolled = await store(file).updateCard(

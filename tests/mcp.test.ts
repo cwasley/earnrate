@@ -1441,7 +1441,7 @@ describe('wallet setup', () => {
       'chase-prime-visa',
     )
     expect(await readFile(file, 'utf8')).toContain(
-      'memberships: [amazon-prime]\ncards:\n  - id: amex-blue-cash-preferred\n    checkout_label: BCP\n  - id: chase-prime-visa\n',
+      'memberships: [amazon-prime]\ncards:\n  - id: amex-blue-cash-preferred\n    added: 2026-10-24\n    checkout_label: BCP\n  - id: chase-prime-visa\n    added: 2026-10-24\n',
     )
   })
 
@@ -1517,7 +1517,7 @@ describe('wallet setup', () => {
     })
     expect(text(set)).toMatch(/opened 2026-03-04/)
     expect(await readFile(file, 'utf8')).toContain(
-      '  - id: amex-gold # mine\n  - id: bank-of-america-customized-cash-rewards\n    opened: 2026-03-04\n',
+      '  - id: amex-gold # mine\n  - id: bank-of-america-customized-cash-rewards\n    added: 2026-10-24\n    opened: 2026-03-04\n',
     )
     const wallet = await client.callTool({ name: 'list_wallet', arguments: {} })
     expect(
@@ -2535,6 +2535,32 @@ describe('card history on a hosted wallet', () => {
       arguments: { ...over, replace: true },
     })
     expect(text(replaced)).toMatch(/^Replaced what was saved/)
+  })
+
+  test('set_card_history keeps a card held now and says offers treat it as held', async () => {
+    const client = await serve({
+      savedWallets: 'account',
+      store: new JsonWalletStore(catalog, memoryBackend(), 'your saved wallet'),
+    })
+    await client.callTool({
+      name: 'add_card',
+      arguments: { cardId: 'amex-gold' },
+    })
+    const set = await client.callTool({
+      name: 'set_card_history',
+      arguments: {
+        pastCards: [{ cardId: 'amex-gold' }, { cardId: 'citi-double-cash' }],
+      },
+    })
+    expect(set.isError, text(set)).toBeFalsy()
+    expect(text(set).split('\n')[1]).toBe(
+      'American Express Gold Card is in your wallet now, so offer answers treat it as held.',
+    )
+    const other = await client.callTool({
+      name: 'set_card_history',
+      arguments: { pastCards: [{ cardId: 'citi-double-cash' }] },
+    })
+    expect(text(other)).not.toMatch(/in your wallet now/)
   })
 
   test('set_card_history keeps the month a tracked bonus was met', async () => {

@@ -76,6 +76,13 @@ export const slugify = (s: string) =>
 // else the site does. The home page has the tabs themselves.
 const APP_NAV = `<nav class="app-nav" aria-label="earnrate.dev">${TABS.map((t) => `<a href="${t.href}">${esc(t.name)}</a>`).join('')}</nav>`
 
+// The stylesheet link, after the page-to-page fade's opt-in. Chromium can
+// decide on the fade at a page's first inline script, before /pages.css has
+// applied, and then throws on the new page; inline, the opt-in is always in.
+export const PAGES_CSS_LINK = '<link rel="stylesheet" href="/pages.css" />'
+export const PAGES_CSS = `<style>@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }</style>
+    ${PAGES_CSS_LINK}`
+
 // The wordmark and the tabs, on every static page and the statement check.
 export const PAGE_HEADER = `<header><a class="wordmark" href="/"><svg class="mark" viewBox="0 -20 120 120" aria-hidden="true"><rect x="24" y="8" width="88" height="56" rx="10" fill="none" stroke="currentColor" stroke-width="7" opacity=".35"/><rect x="8" y="22" width="92" height="58" rx="10" fill="currentColor"/><rect x="20" y="38" width="18" height="13" rx="3" fill="var(--surface)"/></svg>earnrate</a>${APP_NAV}</header>`
 
@@ -236,7 +243,7 @@ ${page.noindex ? '    <meta name="robots" content="noindex, follow" />\n' : ''} 
     <meta name="theme-color" content="#9a5020" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
     <link rel="icon" href="${ICON}" />
-    <link rel="stylesheet" href="/pages.css" />
+    ${PAGES_CSS}
     ${ld(page.jsonLd)}${page.crumbs.length > 0 ? `\n    ${ld(crumbsLd(page.crumbs))}` : ''}
   </head>
   <body>

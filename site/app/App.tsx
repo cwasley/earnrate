@@ -791,6 +791,7 @@ export function App() {
           saved,
           localToday(),
           find === 'add' && hasCards ? wallet : null,
+          wallet,
         ),
       )
   }

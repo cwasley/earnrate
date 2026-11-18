@@ -4,6 +4,8 @@ import { checklist, checklistRows } from '../src/engine/checklist.ts'
 import { cardText } from '../src/format/card-text.ts'
 import { ChangesFileSchema } from '../src/schema/changes.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
+import { addToWallet, removeFromWallet } from '../src/engine/wallet-change.ts'
+import { applyLocally, restoreOp } from '../site/app/sync.ts'
 
 const real = await loadCatalog()
 const TODAY = '2026-12-01'
@@ -176,6 +178,49 @@ describe('changes on the to-do list', () => {
       "Corrected for Citi Custom Cash: The bonus categories are marked automatic. earnrate had this wrong before Nov 10, 2026; Citi didn't change anything.",
     )
     expect(fix?.url).toBeUndefined()
+  })
+
+  test('a holder hears only about corrections made after adding the card', () => {
+    const refs = (added?: string) =>
+      todo([{ id: 'chase-prime-visa', ...(added ? { added } : {}) }]).map(
+        (i) => i.ref,
+      )
+    // Saved before earnrate kept the day: every recent correction.
+    expect(refs()).toEqual(['corrections'])
+    expect(refs('2026-11-01')).toEqual(['corrections'])
+    expect(refs('2026-11-15')).toEqual(['2026.11.20:rules.amazon'])
+    expect(refs('2026-11-20')).toEqual([])
+    expect(refs('2026-11-30')).toEqual([])
+    // An issuer's change is news to a new holder too.
+    expect(
+      todo([{ id: 'chase-sapphire-preferred', added: '2026-11-30' }]).map(
+        (i) => i.ref,
+      ),
+    ).toEqual(['2026.11.20:rules.dining'])
+  })
+
+  test('adding a card saves the day, and putting a removed card back keeps it', () => {
+    const added = addToWallet(catalog, null, { id: 'chase-prime-visa' }, TODAY)
+    if (!added.ok) throw new Error(added.error)
+    const held = added.wallet.cards[0]
+    expect(held?.added).toBe(TODAY)
+    if (!held) throw new Error('no card')
+    const later = '2027-01-05'
+    const gone = removeFromWallet(added.wallet, 'chase-prime-visa')
+    if (!gone.ok) throw new Error(gone.error)
+    const back = applyLocally(
+      catalog,
+      gone.wallet,
+      restoreOp(catalog, held, later),
+      later,
+    )
+    expect(back.ok && back.wallet.cards[0]?.added).toBe(TODAY)
+    expect(
+      addToWallet(catalog, null, { id: 'amex-gold', added: later }, TODAY),
+    ).toEqual({
+      ok: false,
+      error: 'The day the card was added is in the future.',
+    })
   })
 
   test("a card's corrections are one item, linking to its page's recent changes", () => {

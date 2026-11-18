@@ -38,6 +38,10 @@ const CreditUsage = z.strictObject({
 
 export const WalletCardSchema = z.strictObject({
   id: KebabId,
+  // The day the card was saved to this wallet: the to-do list's notes about
+  // earnrate's corrections to a card skip those made before it. Wallets
+  // saved before earnrate kept it have none, and hear about every one.
+  added: IsoDate.optional(),
   checkout_label: z
     .string()
     .min(1)

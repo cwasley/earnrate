@@ -245,6 +245,16 @@ describe('the first connection', () => {
     expect(
       firstConnection(walletWith('amex-gold'), walletWith('amex-gold')),
     ).toBe('same')
+    const earlier = walletWith('amex-gold')
+    expect(
+      firstConnection(
+        {
+          ...earlier,
+          cards: earlier.cards.map((c) => ({ ...c, added: '2026-01-02' })),
+        },
+        walletWith('amex-gold'),
+      ),
+    ).toBe('same')
     expect(firstConnection(walletWith('amex-gold'), null)).toBe('claude')
     expect(firstConnection(walletWith('amex-gold'), empty)).toBe('claude')
     expect(firstConnection(empty, walletWith('amex-gold'))).toBe('browser')
@@ -467,6 +477,7 @@ describe('issuers left out of next-card answers, across the sync', () => {
 
 test('the privacy page names everything a synced change can send', async () => {
   const card: Record<keyof Omit<CardInput, 'id'>, string> = {
+    added: 'the day you added each',
     checkoutLabel: 'names you gave them for checkout',
     picks: 'picks',
     anniversary: 'anniversary',

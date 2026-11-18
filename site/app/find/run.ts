@@ -2,6 +2,7 @@
 // stays responsive while it runs. Without workers it runs on the page, one
 // part per task.
 import type { Catalog } from '../../../src/schema/catalog.ts'
+import { historyOf } from '../../../src/engine/offers.ts'
 import type { Wallet } from '../../../src/schema/wallet.ts'
 import { engineOptions, type Saved, type Settings } from '../settings.ts'
 import { isTypicalRows, type Row } from '../spending-rows.ts'
@@ -64,8 +65,10 @@ export function jobFor(
   settings: Settings,
   saved: Saved,
   today: string,
-  wallet: Wallet | null = null,
+  wallet: Wallet | null = null, // a new card for it
+  held: Wallet | null = null, // from scratch, its cards held and had
 ): Job {
+  const history = wallet ? null : historyOf(held)
   return {
     rows,
     typical: isTypicalRows(rows),
@@ -78,6 +81,7 @@ export function jobFor(
     },
     today,
     ...(wallet ? { wallet } : {}),
+    ...(history ? { history } : {}),
   }
 }
 

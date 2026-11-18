@@ -38,6 +38,7 @@ import { CreditPicks } from './CreditPicks.tsx'
 import { usedSoFarShown } from './credit-enroll.ts'
 import { openedChange, spentChange, trackingChange } from './bonus-change.ts'
 import { draftShown, type Draft } from './draft.ts'
+import { MONTH_NAMES } from './month-pick.ts'
 import { cards, issuerName, words } from './format.ts'
 import { KeepOrReplace } from './KeepOrReplace.tsx'
 import { offerTerms } from '../../src/engine/offers.ts'
@@ -82,20 +83,6 @@ function useDraft<T>(saved: T, key: unknown = saved): [T, (next: T) => void] {
 export const hasFee = (held: WalletCard) =>
   (cards.get(held.id)?.annual_fee ?? 0) > 0
 
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-]
 // Days in each month; February keeps the 29th, which falls on the 28th in
 // other years.
 const DAYS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -133,7 +120,7 @@ function Anniversary({
           onChange={(e) => set(Number(e.currentTarget.value), day)}
         >
           <option value="0">Month</option>
-          {MONTHS.map((name, i) => (
+          {MONTH_NAMES.map((name, i) => (
             <option value={String(i + 1)} key={name}>
               {name}
             </option>

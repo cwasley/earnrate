@@ -56,6 +56,7 @@ import {
   type Row as SpendingRow,
 } from './spending-rows.ts'
 import type { Saved, Settings } from './settings.ts'
+import { MonthAskField } from './MonthAsk.tsx'
 import { NewCard } from './NewCard.tsx'
 import type { Outcome, WalletOp } from './sync.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
@@ -119,7 +120,9 @@ function Split({ sim }: { sim: Simulation }) {
 // yearly figure shown beside it.
 function firstYear(offer: OfferSummary | undefined, net: number) {
   const yearOne = offer?.plan?.yearOne
-  return yearOne === undefined || Math.round(yearOne) === Math.round(net)
+  return yearOne === undefined ||
+    offer?.ineligible != null ||
+    Math.round(yearOne) === Math.round(net)
     ? null
     : yearOne
 }
@@ -353,7 +356,7 @@ export function Spending({
   const [answer, setAnswer] = useState<Shown | null>(() =>
     shownAnswer(
       rows,
-      readyAnswer(jobFor(rows, settings, saved, today, forWallet)),
+      readyAnswer(jobFor(rows, settings, saved, today, forWallet, wallet)),
     ),
   )
   // The rows the answer is for. Null until the tab has painted, so it shows
@@ -402,7 +405,7 @@ export function Spending({
     // A newer answer stops this one; the one on screen stays until it's in.
     return answerFor(
       catalog,
-      jobFor(settled, settings, saved, today, forWallet),
+      jobFor(settled, settings, saved, today, forWallet, wallet),
       (a) =>
         setAnswer((was) =>
           was?.found === a && was.rows === settled
@@ -410,7 +413,7 @@ export function Spending({
             : shownAnswer(settled, a),
         ),
     )
-  }, [settled, settings, saved, today, forWallet])
+  }, [settled, settings, saved, today, forWallet, wallet])
   const working = settled !== rows || answer?.rows !== settled
   const result = answer?.result ?? null
   const offers = answer?.offers ?? new Map<string, OfferSummary>()
@@ -530,6 +533,8 @@ export function Spending({
             <small>/yr</small>
             {first !== null ? (
               <small class="first-year">{wholeDollars(first)} first year</small>
+            ) : offer?.ineligible ? (
+              <small class="first-year">bonus unlikely</small>
             ) : minimum && !minimum.reachable ? (
               <small class="first-year">bonus out of reach</small>
             ) : null}
@@ -552,6 +557,24 @@ export function Spending({
         {isOpen && offer && minimum && !minimum.reachable ? (
           <p class="warn">
             {minimumSpendText(offer.spend, offer.months, minimum, typical)}
+          </p>
+        ) : null}
+        {isOpen && offer?.ineligible ? (
+          <p class="warn">{offer.ineligible}</p>
+        ) : null}
+        {isOpen && offer?.eligibilityNote ? (
+          <p class="muted">
+            {offer.eligibilityNote}
+            {offer.monthAsk && wallet && !locked ? (
+              <>
+                {' '}
+                <MonthAskField
+                  wallet={wallet}
+                  ask={offer.monthAsk}
+                  onChange={perform}
+                />
+              </>
+            ) : null}
           </p>
         ) : null}
         {isOpen && picks ? <p class="muted">{picks}</p> : null}

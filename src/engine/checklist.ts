@@ -506,10 +506,17 @@ function changeItems(
     note: true,
   })
   const fixes = new Map<string, DatedChange[]>()
+  // A correction made before the card was saved was in its answers from
+  // the start.
+  const addedOn = new Map(wallet.cards.map((c) => [c.id, c.added]))
   for (const d of news) {
     const ids = (d.change.cards ?? []).filter((id) => names.has(id))
     if (d.change.cause === 'correction') {
-      for (const id of ids) fixes.set(id, [...(fixes.get(id) ?? []), d])
+      for (const id of ids) {
+        const added = addedOn.get(id)
+        if (added === undefined || changeSeen(d) > added)
+          fixes.set(id, [...(fixes.get(id) ?? []), d])
+      }
       continue
     }
     const [cardId] = ids

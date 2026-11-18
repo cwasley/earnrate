@@ -222,6 +222,7 @@ export function heldToInput(
   today: string,
 ): CardInput {
   const input: CardInput = { id: held.id }
+  if (held.added) input.added = held.added
   if (held.checkout_label) input.checkoutLabel = held.checkout_label
   if (held.anniversary) input.anniversary = held.anniversary
   if (held.opened) input.opened = held.opened
@@ -355,21 +356,19 @@ const isEmpty = (w: Wallet | null) =>
     (w.skipped_issuers ?? []).length === 0 &&
     (w.past_cards ?? []).length === 0)
 
-const sameWallet = (a: Wallet, b: Wallet) =>
-  JSON.stringify([
-    a.cards,
-    a.memberships,
-    a.valuations,
-    a.skipped_issuers,
-    a.past_cards,
-  ]) ===
-  JSON.stringify([
-    b.cards,
-    b.memberships,
-    b.valuations,
-    b.skipped_issuers,
-    b.past_cards,
-  ])
+// The day each card was added differs between two wallets that were each
+// given the same cards, and says nothing worth choosing between.
+const sameWallet = (a: Wallet, b: Wallet) => {
+  const parts = (w: Wallet) =>
+    JSON.stringify([
+      w.cards.map(({ added: _, ...card }) => card),
+      w.memberships,
+      w.valuations,
+      w.skipped_issuers,
+      w.past_cards,
+    ])
+  return parts(a) === parts(b)
+}
 
 // Order-free and blind to empty values, so a field one side leaves out and
 // the other holds empty doesn't count as a difference.

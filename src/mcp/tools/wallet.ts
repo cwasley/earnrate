@@ -15,7 +15,10 @@ import { counts, creditAt, tracksUse } from '../../engine/credits.ts'
 import { membershipName } from '../../engine/memberships.ts'
 import { profileText, VALUATION_PROFILES } from '../../engine/profiles.ts'
 import { optionName } from '../../engine/rule-text.ts'
-import { currencyChanges } from '../../engine/wallet-change.ts'
+import {
+  currencyChanges,
+  heldInHistoryLine,
+} from '../../engine/wallet-change.ts'
 import { walletSummary } from '../../engine/wallet-summary.ts'
 import { checklist } from '../../engine/checklist.ts'
 import { pickedCategories } from '../../engine/evaluate.ts'
@@ -391,11 +394,18 @@ export function walletHandlers(
         pastCards.map(pastCardInput),
         deps.today(),
       )
+      const held = result.ok
+        ? heldInHistoryLine(
+            catalog,
+            result.wallet,
+            pastCards.map((p) => p.cardId),
+          )
+        : null
       return ctx.changed(
         result,
         pastCards.length === 0
           ? 'Card history cleared.'
-          : `Card history set to ${listed(pastCards.map((p) => ctx.cardName(p.cardId)))}. compare_welcome_offers now checks each issuer's repeat-bonus rule against it.`,
+          : `Card history set to ${listed(pastCards.map((p) => ctx.cardName(p.cardId)))}. compare_welcome_offers now checks each issuer's repeat-bonus rule against it.${held === null ? '' : `\n${held}`}`,
         { notes: false },
       )
     },

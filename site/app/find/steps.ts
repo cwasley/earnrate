@@ -37,6 +37,8 @@ export type Job = {
   today: string
   // A new card for this wallet, in place of the best cards from scratch.
   wallet?: Wallet
+  // From scratch: the cards held and had, for who can get each bonus only.
+  history?: Wallet
 }
 
 // A new card for the wallet: every personal card it doesn't hold, by what
@@ -62,7 +64,7 @@ export type Part =
 export type WorkerRequest = { catalog: Catalog; job: Job }
 
 export function steps(catalog: Catalog, job: Job): (() => Part)[] {
-  const { rows, typical, options, offerFilters, today, wallet } = job
+  const { rows, typical, options, offerFilters, today, wallet, history } = job
   return [
     () => {
       const known = resolveSpendLines(
@@ -103,6 +105,7 @@ export function steps(catalog: Catalog, job: Job): (() => Part)[] {
         offerFilters,
         today,
         { lines: known, typical },
+        history ?? null,
       )
       return {
         part: 'answer',
