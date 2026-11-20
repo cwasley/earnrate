@@ -31,7 +31,7 @@ You never have to enter your cards: with none, every answer covers every card ea
 earnrate cards sapphire            # find your cards' IDs
 earnrate add chase-sapphire-preferred
 earnrate add amex-gold
-earnrate whole foods 80
+earnrate whole foods
 ```
 
 Adding a card tells you anything else it needs to earn correctly, such as the categories you picked on Cash+, Amazon Prime for Prime Visa's 5%, or which rotating categories you've activated. `earnrate update` and `earnrate memberships` set those. Memberships and point values (`earnrate values`) can be saved without any cards, and every answer uses them. Using an AI assistant instead? [Add earnrate to it](#use-it-in-an-ai-assistant-mcp) and ask; name your cards or save them there.
@@ -39,23 +39,24 @@ Adding a card tells you anything else it needs to earn correctly, such as the ca
 With the [example wallet](wallet.example.yaml), it prints:
 
 ```
-Whole Foods Market · $80
+Whole Foods Market
 
-Use Blue Cash Preferred: 6% back, about $4.80. High confidence.
+Use Blue Cash Preferred: 6% back. High confidence.
 
-  1. Blue Cash Preferred  6%  $4.80
+  1. Blue Cash Preferred  6%
      6% cash back on supermarkets. ...
-  2. Prime Visa           5%  $4.00
+  2. Prime Visa           5%
      5% cash back on Whole Foods Market, with Amazon Prime. ...
-  3. Amex Gold            4%  $3.20
+  3. Amex Gold            4%
      4x Amex Membership Rewards on supermarkets. ...
      Valued at 1¢ per point: 4% back.
   + 6 more cards (--all lists them)
 
-Amex Gold beats Blue Cash Preferred here if Amex Membership Rewards (MR) points are worth more than 1.5¢ (you value them at 1¢).
+Amex Gold beats Blue Cash Preferred here if Amex Membership Rewards (MR) points are worth more than 1.5¢ (valued here at 1¢).
 
-Assumes Whole Foods Market counts as a supermarket (MCC 5411).
+Assumes Whole Foods Market counts as a supermarket; for Blue Cash Preferred and Amex Gold, American Express names it as one.
 Point values: Amex Membership Rewards (MR) at 1¢, SoFi Member Rewards at 1¢ and Chase Ultimate Rewards (UR) at 1¢.
+Usual merchant code: MCC 5411.
 ```
 
 Options: `--online` or `--in-store`, `--paying card|apple-pay|google-pay|paypal`, `--valuation flat|points-heavy`, `--cards`, `--member`, `--category`, `--all`, `--json`, `--date`, `--country`. Run `earnrate --help` for details. To keep the wallet somewhere else, set `EARNRATE_WALLET` to its path.

@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "earnrate",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Which credit card earns the most for a purchase, from each issuer's own terms.",
   "author": {
     "name": "Collin Wasley",
@@ -16,11 +16,11 @@
       "interface": {
         "displayName": "earnrate",
         "shortDescription": "Which credit card to use",
-        "longDescription": "earnrate tells you which credit card earns the most for a purchase, from each issuer's own terms. Ask about a store, a kind of place or an amount, like \"which card at Whole Foods for $80?\", and it names the card, the rate and the reason, with the rule it used and what it assumed.\n\nIt works with no setup. Without your cards, it answers from all 101 U.S. credit cards it knows, from 18 issuers. Name your cards for an answer from just those, or save them to an anonymous wallet so earnrate can track spending caps, quarterly bonus categories and activations, welcome bonuses and yearly spend bonuses. It can also make a cheat sheet of which card to use for everyday spending, list what to do with your cards this quarter, compare welcome offers (leaving out bonuses the issuer says you can't get again, from cards you used to have), and run a year of spending through every card and pair of cards.\n\nThe saved wallet has no email or name: you get a recovery code, which you type only on earnrate's own page. earnrate never asks for card numbers. It doesn't apply for cards, make payments, or show ads or affiliate links, and nothing but the issuer's terms and your own cards and settings decides a ranking.\n\nLimitations: U.S. personal and small-business credit cards only. Card terms are checked against the issuers' pages every week, but issuers can change them at any time, so check the issuer's page before relying on an answer for a large purchase.",
+        "longDescription": "earnrate tells you which credit card earns the most for a purchase, from each issuer's own terms. Ask about a store or a kind of place, like \"which card at Whole Foods?\", and it names the card, the rate and the reason, with the rule it used and what it assumed.\n\nIt works with no setup. Without your cards, it answers from all 101 U.S. credit cards it knows, from 18 issuers. Name your cards for an answer from just those, or save them to an anonymous wallet so earnrate can track spending caps, quarterly bonus categories and activations, welcome bonuses and yearly spend bonuses. It can also make a cheat sheet of which card to use for everyday spending, list what to do with your cards this quarter, compare welcome offers (leaving out bonuses the issuer says you can't get again, from cards you used to have), and run a year of spending through every card and pair of cards.\n\nThe saved wallet has no email or name: you get a recovery code, which you type only on earnrate's own page. earnrate never asks for card numbers. It doesn't apply for cards, make payments, or show ads or affiliate links, and nothing but the issuer's terms and your own cards and settings decides a ranking.\n\nLimitations: U.S. personal and small-business credit cards only. Card terms are checked against the issuers' pages every week, but issuers can change them at any time, so check the issuer's page before relying on an answer for a large purchase.",
         "developerName": "Collin Wasley",
         "category": "Finance",
         "capabilities": [
-          "Best card for a store, a kind of place or an amount",
+          "Best card for a store or a kind of place",
           "Cheat sheet of which card to use for everyday spending",
           "Track caps, quarterly bonuses and welcome bonuses in a saved wallet"
         ],
@@ -43,9 +43,9 @@
           "positive": [
             {
               "description": "Best of the user's saved cards for a purchase",
-              "prompt": "Which of my credit cards should I use at Whole Foods for $80?",
+              "prompt": "Which of my credit cards should I use at Whole Foods?",
               "tools_triggered": "best_card_for_purchase",
-              "expected_behavior": "Answers from the test wallet's four cards: use the American Express Gold Card, 4x Membership Rewards on U.S. supermarkets, about $3.20 back, with the matched rule, its assumptions and the next-best card."
+              "expected_behavior": "Answers from the test wallet's four cards: use the American Express Gold Card, 4x Membership Rewards on U.S. supermarkets, with the matched rule, its assumptions and the next-best card."
             },
             {
               "description": "A store that takes only some card networks",
@@ -92,7 +92,7 @@
       },
       "publication": {
         "countries": ["US"],
-        "release_notes": "101 cards from 18 issuers (was 69 from 11). Cards you used to have (set_card_history): welcome-offer answers now leave out bonuses the issuer says you can't get again and say when you can."
+        "release_notes": "Listing text only: the examples ask which card to use at a store, without a purchase amount. No tool changes."
       }
     }
   }
