@@ -2,7 +2,6 @@ import { Fragment, type ComponentChildren } from 'preact'
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import { HALF_CENT } from '../../src/engine/compare.ts'
-import { pickName } from '../../src/engine/rule-text.ts'
 import type { Picks } from '../../src/engine/explore.ts'
 import { followingOwnLink } from './add-from-link.ts'
 import { CardArt } from './CardArt.tsx'
@@ -20,11 +19,7 @@ import {
   membershipName,
   placedAmong,
 } from '../../src/engine/memberships.ts'
-import {
-  OFFERS_MAY_DIFFER,
-  offerTerms,
-  type OfferSummary,
-} from '../../src/engine/offers.ts'
+import { offerTerms, type OfferSummary } from '../../src/engine/offers.ts'
 import {
   byNet,
   countedLines,
@@ -37,17 +32,35 @@ import {
   type Simulation,
 } from '../../src/engine/simulate.ts'
 import {
-  categoryPhrase,
-  CREDITS_APART,
   currencyName,
   ifCreditsUsedText,
   listed,
   minimumSpendText,
   pairCreditsUsedText,
-  shortDate,
   withArticle,
 } from '../../src/engine/text.ts'
-import { cards, feeLabel, shortName, wholeDollars, words } from './format.ts'
+import {
+  BONUS_OUT_OF_REACH,
+  BONUS_UNLIKELY,
+  backBeforeFeesText,
+  backBeforeFeeText,
+  feesText,
+  firstYearText,
+  HOW_CALCULATED,
+  HOW_SETUPS,
+  noPairBeatsText,
+  offerAsOfText,
+  pairParts as sharedPairParts,
+  picksText as sharedPicksText,
+  sameResultText,
+  SINGLE_CARD,
+  spendingBasisText,
+  splitParts,
+  tiesText,
+  TWO_CARDS,
+  welcomeOfferText,
+} from '../../src/engine/next-card-text.ts'
+import { feeLabel, shortName, wholeDollars } from './format.ts'
 import {
   isTypicalRows,
   loadSpendingRows,
@@ -74,42 +87,17 @@ const SETTLE_MS = 250
 const SHOWN = 3
 const MORE = 10
 
-function picksText(cardId: string, picks: Picks): string | null {
-  const card = cards.get(cardId)
-  const all = Object.entries(picks).flatMap(([choice, options]) =>
-    options.map((o) => (card ? pickName(catalog, card, choice, o) : words(o))),
-  )
-  return all.length === 0 ? null : `Picks: ${listed(all)}`
-}
+const picksText = (cardId: string, picks: Picks) =>
+  sharedPicksText(catalog, cardId, picks)
 
 const pairKey = (sim: Simulation) => sim.cards.map((c) => c.cardId).join('+')
 
-// "Everything else" reads last in a card's list.
-const OTHER = catalog.categories.find((c) => c.id === 'other')?.name
-
-// Category names read mid-sentence in lower case; store names keep theirs.
-function phrase(label: string): string {
-  const category = catalog.categories.find((c) => c.name === label)
-  return category ? categoryPhrase(catalog, category.id) : label
-}
-
 function Split({ sim }: { sim: Simulation }) {
-  const byCard = new Map<string, string[]>()
-  for (const line of sim.lines) {
-    const first = line.cards[0]
-    if (first !== undefined)
-      byCard.set(first, [...(byCard.get(first) ?? []), line.label])
-  }
   return (
     <ul class="split">
-      {[...byCard].map(([id, labels]) => (
+      {splitParts(catalog, sim).map(({ id, covers }) => (
         <li key={id}>
-          <strong>{shortName(id)}</strong> for{' '}
-          {listed(
-            [...labels]
-              .sort((a, b) => Number(a === OTHER) - Number(b === OTHER))
-              .map(phrase),
-          )}
+          <strong>{shortName(id)}</strong> for {covers}
         </li>
       ))}
     </ul>
@@ -127,28 +115,7 @@ function firstYear(offer: OfferSummary | undefined, net: number) {
     : yearOne
 }
 
-// The pair's cards with what each covers; the one that takes "Everything
-// else" covers the rest.
-function pairParts(sim: Simulation): { id: string; covers: string }[] {
-  const byCard = new Map<string, string[]>()
-  for (const line of sim.lines) {
-    const first = line.cards[0]
-    if (first !== undefined)
-      byCard.set(first, [...(byCard.get(first) ?? []), line.label])
-  }
-  return [...byCard]
-    .map(([id, labels]) => ({
-      id,
-      covers:
-        OTHER !== undefined && labels.includes(OTHER)
-          ? 'the rest'
-          : listed(labels.map(phrase)),
-    }))
-    .sort(
-      (a, b) =>
-        Number(a.covers === 'the rest') - Number(b.covers === 'the rest'),
-    )
-}
+const pairParts = (sim: Simulation) => sharedPairParts(catalog, sim)
 
 // Stand-ins for text still being worked out, a line each, so the answer
 // takes about the room they held.
@@ -523,32 +490,27 @@ export function Spending({
             </strong>
             <span class="muted">
               {feeLabel(card.cardId)}
-              {rank === 1 && ties > 0
-                ? ` · ${String(ties)} more ${ties === 1 ? 'ties' : 'tie'}`
-                : ''}
+              {rank === 1 && ties > 0 ? ` · ${tiesText(ties)}` : ''}
             </span>
           </span>
           <span class="rate">
             {wholeDollars(s.net)}
             <small>/yr</small>
             {first !== null ? (
-              <small class="first-year">{wholeDollars(first)} first year</small>
+              <small class="first-year">{firstYearText(first)}</small>
             ) : offer?.ineligible ? (
-              <small class="first-year">bonus unlikely</small>
+              <small class="first-year">{BONUS_UNLIKELY}</small>
             ) : minimum && !minimum.reachable ? (
-              <small class="first-year">bonus out of reach</small>
+              <small class="first-year">{BONUS_OUT_OF_REACH}</small>
             ) : null}
           </span>
         </button>
-        {isOpen ? (
-          <p class="muted">
-            {wholeDollars(s.rewards)} back a year before the fee.
-          </p>
-        ) : null}
+        {isOpen ? <p class="muted">{backBeforeFeeText(s.rewards)}</p> : null}
         {isOpen && offer ? (
           <p class="muted">
-            Welcome offer:{' '}
-            {offerTerms(offer, currencyName(catalog, offer.currency))}.
+            {welcomeOfferText(
+              offerTerms(offer, currencyName(catalog, offer.currency)),
+            )}
             {minimum && minimum.reachable
               ? ` ${minimumSpendText(offer.spend, offer.months, minimum, typical)}`
               : ''}
@@ -589,8 +551,7 @@ export function Spending({
           : null}
         {isOpen && offer ? (
           <p class="muted">
-            {offer.validTo ? `Offer ends ${shortDate(offer.validTo)}. ` : ''}
-            Public offer as of {shortDate(offer.lastVerified)}.
+            {offerAsOfText(offer)}
             {offer.note ? ` ${offer.note}` : ''}
           </p>
         ) : null}
@@ -641,7 +602,7 @@ export function Spending({
                 </Fragment>
               ))}
             </strong>
-            <span class="muted">{wholeDollars(p.annualFees)} in fees</span>
+            <span class="muted">{feesText(p.annualFees)}</span>
           </span>
           <span class="rate">
             {wholeDollars(p.net)}
@@ -659,11 +620,7 @@ export function Spending({
             ))}
           </p>
         ) : null}
-        {isOpen ? (
-          <p class="muted">
-            {wholeDollars(p.rewards)} back a year before fees.
-          </p>
-        ) : null}
+        {isOpen ? <p class="muted">{backBeforeFeesText(p.rewards)}</p> : null}
         {isOpen && rank !== 1 ? <Split sim={p} /> : null}
         {isOpen && p.otherCredits > 0 ? (
           <p class="muted">
@@ -676,10 +633,7 @@ export function Spending({
           </p>
         ) : null}
         {isOpen && p.alternatives.length > 0 ? (
-          <p class="muted">
-            Same result with {listed(p.alternatives.map(shortName), 'or')}{' '}
-            instead.
-          </p>
+          <p class="muted">{sameResultText(p.alternatives.map(shortName))}</p>
         ) : null}
         {isOpen ? (
           <div class="row-buttons">
@@ -736,12 +690,8 @@ export function Spending({
       onToggle={(e) => setEditing(e.currentTarget.open)}
     >
       <summary>
-        <span class="basis">
-          {typical
-            ? `On typical U.S. spending, about ${wholeDollars(monthly)} a month.`
-            : `On your spending, ${wholeDollars(monthly)} a month.`}
-        </span>{' '}
-        Change it
+        <span class="basis">{spendingBasisText(typical, monthly)}</span> Change
+        it
       </summary>
       <div class="panel">
         <p class="muted">
@@ -877,7 +827,7 @@ export function Spending({
         )
       ) : ranked ? (
         <section class="results" aria-busy={working}>
-          <h3>Single card</h3>
+          <h3>{SINGLE_CARD}</h3>
           <ol class="result-list">
             {result?.singles
               .slice(0, shownSingles)
@@ -968,11 +918,10 @@ export function Spending({
         <section class="results" aria-busy={working}>
           {pending || pair ? (
             <>
-              <h3>Two cards</h3>
+              <h3>{TWO_CARDS}</h3>
               {!pending && !pairBetter && single ? (
                 <p class="muted">
-                  No pair beats the {shortName(single.cards[0]?.cardId ?? '')}{' '}
-                  alone.
+                  {noPairBeatsText(shortName(single.cards[0]?.cardId ?? ''))}
                 </p>
               ) : null}
               <ol class="result-list">
@@ -996,20 +945,11 @@ export function Spending({
             </>
           ) : null}
           <details class="how">
-            <summary>How this is calculated</summary>
+            <summary>{HOW_CALCULATED}</summary>
             <ul class="assumptions">
-              <li>
-                Rewards minus annual fees over the next 12 months, with caps
-                filling and resetting as they would. Each card uses its best
-                category picks, with any bonus activations done.
-              </li>
-              <li>
-                Welcome offers pay once, so they don't change the order. A
-                card's first-year figure adds its public offer if this spending,
-                all on that card, reaches the minimum in time, and uses the
-                first year's fee. Pairs leave offers out. {OFFERS_MAY_DIFFER}
-              </li>
-              <li>{CREDITS_APART}</li>
+              {HOW_SETUPS.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
               {notes.map((n) => (
                 <li key={n}>{n}</li>
               ))}

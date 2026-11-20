@@ -2,9 +2,12 @@ import SwiftUI
 
 // earnrate's drawing of a card, as src/format/card-art.ts draws it on the
 // site: a plain card in the card's color with a chip. Never the issuer's art.
+// A large card can catch the light (`shine`), and the pick wears a sparkle.
 struct CardArtView: View {
     let art: CardArt
     var width: CGFloat = 48
+    var shine = false
+    var sparkle = false
 
     @ScaledMetric private var scale: CGFloat = 1
 
@@ -44,6 +47,12 @@ struct CardArtView: View {
             context.fill(stripe, with: .color((art.light ? Color.black : Color.white).opacity(0.28)))
         }
         .frame(width: w, height: (w * 54 / 86).rounded())
+        .overlay {
+            if shine { CardShine(corner: w * 5 / 86) }
+        }
+        .overlay(alignment: .topTrailing) {
+            if sparkle { PickSparkle().offset(x: 7, y: -8) }
+        }
         .accessibilityHidden(true)
     }
 }

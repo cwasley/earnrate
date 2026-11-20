@@ -1,6 +1,7 @@
 // The search box the list pages share (/best/, /cards/, /bonus-rules): the
 // box itself, what each row can be found by, and the one script that
 // narrows the list.
+import { cardSearchWords, searchWords } from '../../src/engine/card-search.ts'
 import type { Card } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import { esc } from './site.ts'
@@ -15,37 +16,16 @@ export const filterBox = (label: string, placeholder: string) =>
 
 // A row's words for the box, lowercased: the script lowercases the query
 // and looks for each of its words in here.
-export const searchText = (words: string[]) =>
-  esc([...new Set(words.map((w) => w.toLowerCase()))].join(' '))
+export const searchText = (words: string[]) => esc(searchWords(words).join(' '))
 
-// The names people search for a card by: its full name and the short name
-// earnrate uses (a store card's is its full name), plus the issuer's own
-// abbreviation ("NFCU cashRewards") when it's neither.
-export function cardNames(card: Card, shortName: (id: string) => string) {
-  const name = card.only_at ? card.name : shortName(card.id)
-  const spoken = [...new Set([card.name, name])]
-  const abbreviated =
-    card.short_name !== undefined && !spoken.includes(card.short_name)
-      ? [card.short_name]
-      : []
-  return { name, spoken, abbreviated }
-}
+export { cardNames } from '../../src/engine/card-search.ts'
 
 // A card's row is found by its names and its issuer's ("amex", "bofa").
-export function cardSearchText(
+export const cardSearchText = (
   catalog: Catalog,
   card: Card,
   shortName: (id: string) => string,
-): string {
-  const { spoken, abbreviated } = cardNames(card, shortName)
-  const issuer = catalog.issuers.find((i) => i.id === card.issuer)
-  return searchText([
-    ...spoken,
-    ...abbreviated,
-    issuer?.name ?? card.issuer,
-    ...(issuer?.search ?? []),
-  ])
-}
+): string => esc(cardSearchWords(catalog, card, shortName).join(' '))
 
 // Shows the rows ([data-q]) holding every word typed and the groups
 // ([data-section]) with one. It runs only in the page: nothing typed is sent

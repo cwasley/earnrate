@@ -13,6 +13,22 @@ import { enrollLine, usedSoFarShown } from '../../site/app/credit-enroll.ts'
 import { placeKinds } from '../../site/app/place-kinds.ts'
 import { QUICK_CARDS } from '../../site/app/quick-cards.ts'
 import { walletProblems } from '../../src/data/integrity.ts'
+import {
+  BONUS_RULES_COLUMN,
+  BONUS_RULES_HAD,
+  BONUS_RULES_SHORT,
+  BONUS_RULES_TITLE,
+  BONUS_RULES_UNPUBLISHED,
+  bonusRules,
+  bonusRulesLead,
+} from '../../src/engine/bonus-rules.ts'
+import {
+  CARDS_INDEX,
+  cardIndexName,
+  cardSearchWords,
+  cardsIndexLead,
+  matchesTyped,
+} from '../../src/engine/card-search.ts'
 import { cardDetails } from '../../src/engine/card-details.ts'
 import {
   cheatSheet,
@@ -20,6 +36,7 @@ import {
   quickPickText,
 } from '../../src/engine/cheat-sheet.ts'
 import { checklistRows } from '../../src/engine/checklist.ts'
+import { HALF_CENT } from '../../src/engine/compare.ts'
 import {
   changedMarks,
   heldMarks,
@@ -37,6 +54,7 @@ import { activationGroup } from '../../src/engine/evaluate.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,
+  type CardFilters,
   membersOnlyLines,
   topOf,
   type ExploreEntry,
@@ -49,6 +67,7 @@ import {
   creditDetailText,
   creditWorth,
   milestoneLine,
+  monthAskLabel,
   nightDetailText,
   offerLine,
   opensOn,
@@ -63,28 +82,83 @@ import {
 import {
   askText,
   effectiveMemberships,
+  ifMemberLines,
   membershipName,
+  placedAmong,
   sameGroup,
   tierGroups,
 } from '../../src/engine/memberships.ts'
 import { milestoneSummaries } from '../../src/engine/milestones.ts'
 import { offerHistoryText } from '../../src/engine/offer-history.ts'
 import {
+  backBeforeFeesText,
+  backBeforeFeeText,
+  BEST_SETUPS,
+  BEST_SETUPS_LEAD,
+  BEST_SETUPS_WORKING,
+  BONUS_OUT_OF_REACH,
+  BONUS_UNLIKELY,
+  BUSINESS_FILTER,
+  feesText,
+  firstYearText,
+  HOW_CALCULATED,
+  HOW_RANKED,
+  HOW_SETUPS,
+  NEXT_CARD_LEAD,
+  NO_FEE_FILTER,
+  NO_OFFER_AHEAD,
+  noPairBeatsText,
+  offerAsOfText,
+  pairParts,
+  pairSplitText,
+  PER_YEAR,
+  picksText,
+  REWARD_KINDS,
+  sameResultText,
+  showMoreText,
+  signedDollars,
+  SINGLE_CARD,
+  spendingBasisText,
+  splitParts,
+  tiesText,
+  TWO_CARDS,
+  TWO_YEARS_LEAD,
+  TWO_YEARS_PER,
+  welcomeOfferText,
+  withMembershipText,
+  yearOneText,
+  yearTwoText,
+} from '../../src/engine/next-card-text.ts'
+import {
+  compareOffers,
+  historyOf,
   OFFERS_MAY_DIFFER,
   offerCheckedOn,
+  offerOrder,
   offerTerms,
+  type OfferSummary,
 } from '../../src/engine/offers.ts'
 import { inEffect, localToday } from '../../src/engine/periods.ts'
 import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
 import { noteOnly, recommend } from '../../src/engine/recommend.ts'
 import { anniversaryOf } from '../../src/engine/renewal.ts'
 import {
+  bonusEligibility,
   countsForRepeat,
   repeatMonthFields,
   repeatRuleText,
   type MonthAsk,
 } from '../../src/engine/repeat-bonus.ts'
 import { optionName, pickName } from '../../src/engine/rule-text.ts'
+import {
+  byNet,
+  countedLines,
+  nothingCounted,
+  simulateCatalog,
+  typicalSpendLines,
+  type PairSimulation,
+  type Simulation,
+} from '../../src/engine/simulate.ts'
 import {
   cardInfo,
   membershipsUsed,
@@ -110,22 +184,27 @@ import {
   FOR_WELCOME_BONUS,
   foreignFeeText,
   FREE_NIGHT_NAME,
+  ifCreditsUsedText,
   leftOutLines,
+  minimumSpendText,
   money,
   MONTH_NAMES,
   NETWORK_NAMES,
   NONE_OF_YOURS,
   onlineAssumption,
+  pairCreditsUsedText,
   pct,
   placeKindAsk,
   shopperAssumptions,
   shortDate,
   SOMETHING_ELSE,
+  twoYearText,
   unknownStoreExploreWarning,
   unknownStoreTapText,
   unknownStoreWarning,
   USE_CARD,
   verdictDetail,
+  wholeDollars,
 } from '../../src/engine/text.ts'
 import type { MerchantResolution, RankedCard } from '../../src/engine/types.ts'
 import { cardValuation, currencyValuation } from '../../src/engine/valuation.ts'
@@ -256,6 +335,8 @@ export type Home = {
   }
   nudge: { text: string; button: string }
   startNote: { yours: string; every: string }
+  working: { setups: string } // while the slow answers are worked out
+  held: string // a card in My wallet, marked in lists of every card
 }
 
 // What the store tab shows before anything is typed: the everyday purchases
@@ -285,6 +366,8 @@ export function home(): Home {
       every:
         'Answers cover every card earnrate knows until you add yours in My wallet.',
     },
+    working: { setups: BEST_SETUPS_WORKING },
+    held: ANSWER_LABELS.held,
   }
 }
 
@@ -1112,13 +1195,13 @@ const focusOf = (kind: string): TodoRow['focus'] => {
   }
 }
 
-// Rows past these wait behind "N more", as on the site; the list is
+// Rows past these wait behind "N more"; the list is
 // soonest first.
-const TODO_SHOWN = 3
+const TODO_SHOWN = 2
 
 const cardCount = (n: number) => `${String(n)} card${n === 1 ? '' : 's'}`
 
-// My wallet, top to bottom: the to-do, the cheat sheet, the cards and what
+// My wallet, top to bottom: the cheat sheet, the to-do, the cards and what
 // each needs, and how many cards the person used to have.
 export function walletHome(request: {
   wallet?: unknown
@@ -1411,8 +1494,10 @@ export type CardEdit =
   | { creditUsed: { id: string; dollars: number } }
   | { nightValue: { id: string; dollars: number | null } }
   | { anniversary: { month: number; day: number } }
-  | { tracking: { on: boolean; opened: string | null } }
-  | { opened: { date: string | null; tracking: boolean } }
+  // `unsaved` is spending typed before there was a date to save the bonus
+  // with: nothing is saved until the person gives the account's date.
+  | { tracking: { on: boolean; opened: string | null; unsaved?: number } }
+  | { opened: { date: string | null; tracking: boolean; unsaved?: number } }
   | { spent: { dollars: number; opened: string | null } }
   | { milestoneSpent: number }
 
@@ -1492,12 +1577,17 @@ function cardInputFor(
       : null
   }
   if ('tracking' in edit)
-    return trackingChange(h, edit.tracking.on, edit.tracking.opened ?? '', '')
+    return trackingChange(
+      h,
+      edit.tracking.on,
+      edit.tracking.opened ?? '',
+      String(edit.tracking.unsaved ?? ''),
+    )
   if ('opened' in edit)
     return openedChange(h, edit.opened.date ?? '', {
       tracking: edit.opened.tracking,
       introRates: cardInfo(c, card, null, today).introRates.length > 0,
-      unsaved: '',
+      unsaved: String(edit.opened.unsaved ?? ''),
     })
   if ('spent' in edit)
     return spentChange(h, edit.spent.opened ?? '', String(edit.spent.dollars))
@@ -1929,6 +2019,539 @@ export function cardPage(request: {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Next card: the welcome-offer ranking for the saved cards (or none), and
+// Best setups.
+
+export type NextFilters = {
+  kind: CardFilters['kind']
+  noAnnualFee: boolean
+  business: boolean
+}
+
+const NO_FILTERS: NextFilters = {
+  kind: 'any',
+  noAnnualFee: false,
+  business: false,
+}
+
+export type FilterMenu = {
+  title: string
+  kindLabel: string
+  kinds: { id: CardFilters['kind']; label: string }[]
+  kind: CardFilters['kind']
+  noFee: Toggle
+  business: Toggle
+  active: number // how many are on, for the menu's badge
+}
+
+function filterMenu(f: NextFilters): FilterMenu {
+  return {
+    title: 'Filters',
+    kindLabel: 'Rewards',
+    kinds: REWARD_KINDS,
+    kind: f.kind,
+    noFee: { id: 'noAnnualFee', label: NO_FEE_FILTER, on: f.noAnnualFee },
+    business: { id: 'business', label: BUSINESS_FILTER, on: f.business },
+    active:
+      Number(f.kind !== 'any') + Number(f.noAnnualFee) + Number(f.business),
+  }
+}
+
+// The month a repeat-bonus note asks for, as the site's field beside it.
+type Ask = { label: string; ask: MonthAsk } | null
+
+const askOf = (ask: MonthAsk | null): Ask =>
+  ask === null
+    ? null
+    : { label: monthAskLabel(names().shortName(ask.cardId), ask.field), ask }
+
+export type OfferRow = {
+  rank: number
+  card: CardRow
+  total: string // "+$1,050"
+  per: string // "/2 yrs"
+  totalLabel: string // the same, for VoiceOver
+  years: string[] // "$850 year one", "$200 year two"
+  offer: string // its terms, when it ends, and the day it was read
+  history: string | null // the highest public offer earnrate has recorded
+  minimum: { text: string; reachable: boolean } | null
+  ineligible: string | null // likely not eligible, and until when
+  eligibility: string | null // a month it needs, or an approximate date
+  ask: Ask
+}
+
+export type NextCard = {
+  lead: string
+  basis: string
+  rows: OfferRow[]
+  shown: number // rows before "Show N more"
+  moreLabel: string | null
+  empty: string | null
+  members: string[]
+  howTitle: string
+  how: string[]
+  mayDiffer: string
+  filters: FilterMenu
+  best: { title: string; text: string }
+  rules: { title: string; text: string }
+}
+
+const OFFERS_SHOWN = 10
+
+const typicalLines = (c: Catalog) =>
+  typicalSpendLines(c).filter((l) => l.merchant.source !== 'none')
+
+const monthlyOf = (c: Catalog, lines: ReturnType<typeof typicalLines>) =>
+  countedLines(c, lines).reduce((sum, l) => sum + l.monthly, 0)
+
+// The saved wallet when it's sound, for answers that rank around it.
+function usableWallet(raw: unknown): Wallet | null {
+  const wallet = walletOf(raw)
+  return wallet && walletProblems(wallet, loaded()).length === 0 ? wallet : null
+}
+
+function offerRow(o: OfferSummary, rank: number, held: Set<string>): OfferRow {
+  const c = loaded()
+  const plan = o.plan
+  const twoYears = plan?.twoYears ?? o.firstYearValue
+  return {
+    rank,
+    card: cardRow(o.cardId, held),
+    total: signedDollars(twoYears),
+    per: plan ? TWO_YEARS_PER : '',
+    totalLabel: plan ? capitalize(twoYearText(plan)) : signedDollars(twoYears),
+    years: plan ? [yearOneText(plan.yearOne), yearTwoText(plan.yearTwo)] : [],
+    offer: `${offerTerms(o, currencyName(c, o.currency))}. ${offerAsOfText(o)}`,
+    history: o.offerHigh?.text ?? null,
+    minimum: plan?.minimumSpend
+      ? {
+          text: minimumSpendText(o.spend, o.months, plan.minimumSpend, true),
+          reachable: plan.minimumSpend.reachable,
+        }
+      : null,
+    ineligible: o.ineligible,
+    eligibility: o.eligibilityNote,
+    ask: askOf(o.monthAsk),
+  }
+}
+
+// Every card the saved wallet doesn't hold (or every card, with none), by
+// what it adds over its first two years with its welcome offer, on typical
+// spending. The same ranking as compare_welcome_offers and the site's "A new
+// card" view.
+export function nextCard(request: {
+  wallet?: unknown
+  filters?: NextFilters
+  all?: boolean
+  today?: string
+}): NextCard {
+  const c = loaded()
+  const today = request.today ?? localToday()
+  const filters = request.filters ?? NO_FILTERS
+  const saved = usableWallet(request.wallet)
+  const wallet = saved ?? EMPTY
+  const held = heldIds(saved)
+  const hasCards = held.size > 0
+  const lines = typicalLines(c)
+  const comparison = compareOffers(
+    c,
+    wallet,
+    { ...filters, includeHeld: false },
+    today,
+    { lines, typical: true },
+  )
+  const ahead = comparison.offers.filter((o) => (o.plan?.twoYears ?? 0) > 0)
+  const shown = request.all === true ? ahead : ahead.slice(0, OFFERS_SHOWN)
+  const { shortName } = names()
+  const members = placedAmong(
+    comparison.membersOnly.filter(
+      (o) => (o.plan?.twoYears ?? 0) > 0 && o.ineligible === null,
+    ),
+    ahead,
+    shown.length,
+    offerOrder,
+  ).map((o) => `${shortName(o.cardId)} ${signedDollars(o.plan?.twoYears ?? 0)}`)
+  const left = ahead.length - shown.length
+  return {
+    lead: hasCards ? NEXT_CARD_LEAD.yours : NEXT_CARD_LEAD.every,
+    basis: `${spendingBasisText(true, monthlyOf(c, lines))} ${TWO_YEARS_LEAD}`,
+    rows: shown.map((o, i) => offerRow(o, i + 1, held)),
+    shown: shown.length,
+    moreLabel: left > 0 ? showMoreText(left) : null,
+    empty: ahead.length === 0 ? NO_OFFER_AHEAD : null,
+    members:
+      members.length === 0
+        ? []
+        : [withMembershipText(members, 'over two years')],
+    howTitle: HOW_RANKED,
+    how: comparison.notes,
+    mayDiffer: OFFERS_MAY_DIFFER,
+    filters: filterMenu(filters),
+    best: { title: BEST_SETUPS, text: BEST_SETUPS_LEAD },
+    rules: { title: BONUS_RULES_SHORT, text: BONUS_RULES_TITLE },
+  }
+}
+
+export type SetupRow = {
+  rank: number
+  key: string
+  cards: CardRow[]
+  name: string // "Amex Gold + Double Cash"
+  fee: string
+  net: string
+  per: string
+  first: string | null // "$1,200 first year", or why the bonus isn't in it
+  split: string | null // the best pair: which card takes what
+  lines: string[]
+  warnings: string[]
+  eligibility: string | null
+  ask: Ask
+}
+
+export type BestSetups = {
+  title: string
+  basis: string
+  singlesTitle: string
+  singles: SetupRow[]
+  pairsTitle: string
+  pairsNote: string | null
+  pairs: SetupRow[]
+  members: string[]
+  howTitle: string
+  how: string[]
+  filters: FilterMenu
+  callout: string | null // nothing in the spending earns on these cards
+  held: string // "Yours"
+}
+
+const SETUPS_SHOWN = 5
+
+// Every card alone and in pairs on typical spending, as the site's Best
+// setups works it out from scratch: the slowest answer the app asks for, so
+// the app calls it off the main thread and shows progress.
+export function bestSetups(request: {
+  wallet?: unknown
+  filters?: NextFilters
+  today?: string
+}): BestSetups {
+  const c = loaded()
+  const today = request.today ?? localToday()
+  const f = request.filters ?? NO_FILTERS
+  const saved = usableWallet(request.wallet)
+  const held = heldIds(saved)
+  const { shortName, feeLabel } = names()
+  const lines = typicalLines(c)
+  const memberships = effectiveMemberships(c, saved?.memberships ?? [], [
+    ...held,
+  ])
+  const valuations = saved?.valuations ?? {}
+  const base = {
+    title: BEST_SETUPS,
+    basis: spendingBasisText(true, monthlyOf(c, lines)),
+    singlesTitle: SINGLE_CARD,
+    pairsTitle: TWO_CARDS,
+    howTitle: HOW_CALCULATED,
+    filters: filterMenu(f),
+    held: ANSWER_LABELS.held,
+  }
+  const nothing = nothingCounted(c, lines)
+  if (nothing !== null)
+    return {
+      ...base,
+      singles: [],
+      pairs: [],
+      pairsNote: null,
+      members: [],
+      how: HOW_SETUPS,
+      callout: nothing,
+    }
+  const result = simulateCatalog(c, lines, {
+    filters: { ...ALL_PERSONAL_CARDS, ...f, issuer: null },
+    memberships,
+    valuations,
+    start: today,
+  })
+  const comparison = compareOffers(
+    c,
+    { ...EMPTY, valuations, memberships },
+    { ...f, includeHeld: true },
+    today,
+    { lines, typical: true },
+    historyOf(saved),
+  )
+  const offers = new Map(
+    [...comparison.offers, ...comparison.membersOnly].map((o) => [o.cardId, o]),
+  )
+  const [single] = result.singles
+  const [pair] = result.pairs
+  const pairBetter =
+    pair !== undefined && single !== undefined && pair.net - single.net >= 0.5
+  const ties = single
+    ? result.singles.filter(
+        (s) => s !== single && Math.abs(s.net - single.net) < HALF_CENT,
+      ).length
+    : 0
+
+  const singleRow = (s: Simulation, rank: number): SetupRow | null => {
+    const card = s.cards[0]
+    if (!card) return null
+    const id = card.cardId
+    const offer = offers.get(id)
+    const minimum = offer?.plan?.minimumSpend
+    const yearOne = offer?.plan?.yearOne
+    const first =
+      yearOne !== undefined &&
+      offer?.ineligible == null &&
+      Math.round(yearOne) !== Math.round(s.net)
+        ? firstYearText(yearOne)
+        : offer?.ineligible
+          ? BONUS_UNLIKELY
+          : minimum && !minimum.reachable
+            ? BONUS_OUT_OF_REACH
+            : null
+    const picks = picksText(c, id, card.picks)
+    return {
+      rank,
+      key: id,
+      cards: [cardRow(id, held)],
+      name: shortName(id),
+      fee:
+        rank === 1 && ties > 0
+          ? `${feeLabel(id)} · ${tiesText(ties)}`
+          : feeLabel(id),
+      net: wholeDollars(s.net),
+      per: PER_YEAR,
+      first,
+      split: null,
+      lines: [
+        backBeforeFeeText(s.rewards),
+        ...(offer
+          ? [
+              `${welcomeOfferText(offerTerms(offer, currencyName(c, offer.currency)))}${minimum && minimum.reachable ? ` ${minimumSpendText(offer.spend, offer.months, minimum, true)}` : ''}`,
+            ]
+          : []),
+        ...(picks ? [picks] : []),
+        ...s.credits
+          .filter((x) => !x.held)
+          .map((x) => ifCreditsUsedText(x, s.netIfCreditsUsed)),
+        ...(offer
+          ? [`${offerAsOfText(offer)}${offer.note ? ` ${offer.note}` : ''}`]
+          : []),
+      ],
+      warnings: [
+        ...(offer && minimum && !minimum.reachable
+          ? [minimumSpendText(offer.spend, offer.months, minimum, true)]
+          : []),
+        ...(offer?.ineligible ? [offer.ineligible] : []),
+      ],
+      eligibility: offer?.eligibilityNote ?? null,
+      ask: saved ? askOf(offer?.monthAsk ?? null) : null,
+    }
+  }
+
+  const pairRow = (p: PairSimulation, rank: number): SetupRow => {
+    const parts = pairParts(c, p)
+    return {
+      rank,
+      key: p.cards.map((x) => x.cardId).join('+'),
+      cards: p.cards.map((x) => cardRow(x.cardId, held)),
+      name: p.cards.map((x) => shortName(x.cardId)).join(' + '),
+      fee: feesText(p.annualFees),
+      net: wholeDollars(p.net),
+      per: PER_YEAR,
+      first: null,
+      split:
+        rank === 1 && parts.length === 2
+          ? pairSplitText(parts, shortName)
+          : null,
+      lines: [
+        backBeforeFeesText(p.rewards),
+        ...(rank === 1 ? [] : [pairSplitText(splitParts(c, p), shortName)]),
+        ...(p.otherCredits > 0
+          ? [
+              pairCreditsUsedText(
+                p.credits
+                  .filter((x) => !x.held)
+                  .map((x) => shortName(x.cardId)),
+                p.otherCredits,
+                p.netIfCreditsUsed,
+                p.credits.some((x) => !x.held && x.nights > 0),
+              ),
+            ]
+          : []),
+        ...(p.alternatives.length > 0
+          ? [sameResultText(p.alternatives.map(shortName))]
+          : []),
+      ],
+      warnings: [],
+      eligibility: null,
+      ask: null,
+    }
+  }
+
+  const singles = result.singles
+    .slice(0, SETUPS_SHOWN)
+    .flatMap((s, i) => singleRow(s, i + 1) ?? [])
+  const notes = [
+    ...new Set([
+      ...result.singles.slice(0, 3).flatMap((s) => s.notes),
+      ...result.pairs.slice(0, 3).flatMap((s) => s.notes),
+    ]),
+  ]
+  return {
+    ...base,
+    singles,
+    pairsNote:
+      !pairBetter && single
+        ? noPairBeatsText(shortName(single.cards[0]?.cardId ?? ''))
+        : null,
+    pairs: pairBetter
+      ? result.pairs.slice(0, SETUPS_SHOWN).map((p, i) => pairRow(p, i + 1))
+      : [],
+    members: ifMemberLines(
+      c,
+      placedAmong(
+        result.membersOnly,
+        result.singles,
+        singles.length,
+        byNet,
+      ).map((s) => ({
+        membership: s.membership,
+        text: `${shortName(s.cards[0]?.cardId ?? '')}, ${wholeDollars(s.net)} a year`,
+      })),
+    ),
+    how: [...HOW_SETUPS, ...notes],
+    callout: null,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cards: every card earnrate knows, and whether each bonus comes again.
+
+export type CardIndex = {
+  title: string
+  searchPrompt: string
+  lead: string
+  art: string
+  none: string
+  rules: { title: string; text: string }
+  groups: { id: string; title: string; index: string; cards: CardRow[] }[]
+}
+
+// The site's /cards/ list: every card by issuer, narrowed the way its box
+// narrows it, every typed word in a card's names or its issuer's.
+export function cardIndex(request: {
+  wallet?: unknown
+  query?: string
+}): CardIndex {
+  const c = loaded()
+  const held = heldIds(walletOf(request.wallet))
+  const { shortName, issuerName } = names()
+  const query = request.query ?? ''
+  const byIssuer = new Map<string, CardRow[]>()
+  for (const card of c.cards) {
+    if (!matchesTyped(cardSearchWords(c, card, shortName), query)) continue
+    const row = {
+      ...cardRow(card.id, held),
+      shortName: cardIndexName(card, shortName),
+    }
+    byIssuer.set(card.issuer, [...(byIssuer.get(card.issuer) ?? []), row])
+  }
+  const groups = [...byIssuer]
+    .sort(([a], [b]) => issuerName(a).localeCompare(issuerName(b)))
+    .map(([issuer, list]) => ({
+      id: issuer,
+      title: issuerName(issuer),
+      index: issuerName(issuer).slice(0, 1).toUpperCase(),
+      cards: list,
+    }))
+  const seen = new Set<string>()
+  for (const g of groups) {
+    if (seen.has(g.index)) g.index = ''
+    else seen.add(g.index)
+  }
+  return {
+    title: 'Cards',
+    searchPrompt: CARDS_INDEX.filterLabel,
+    lead: `${cardsIndexLead(c.cards.length)}.`,
+    art: CARDS_INDEX.art,
+    none: CARDS_INDEX.none,
+    rules: { title: BONUS_RULES_SHORT, text: BONUS_RULES_TITLE },
+    groups,
+  }
+}
+
+export type BonusRulesScreen = {
+  title: string
+  lead: string[]
+  had: { link: string; rest: string }
+  column: string
+  searchPrompt: string
+  none: string
+  groups: {
+    id: string
+    title: string
+    rows: {
+      card: CardRow
+      label: string
+      detail: string
+      quote: string | null
+      yours: string | null // for a card held or had: when it can come again
+      ask: Ask
+    }[]
+  }[]
+}
+
+// /bonus-rules: each card's rule for earning its welcome bonus again, quoted.
+// For a card the person holds or has had, what the rule means for them.
+export function bonusRulesScreen(request: {
+  wallet?: unknown
+  query?: string
+  today?: string
+}): BonusRulesScreen {
+  const c = loaded()
+  const today = request.today ?? localToday()
+  const wallet = walletOf(request.wallet)
+  const held = heldIds(wallet)
+  const { shortName, issuerName } = names()
+  const query = request.query ?? ''
+  const rules = bonusRules(c, issuerName, shortName)
+  return {
+    title: BONUS_RULES_SHORT,
+    lead: [
+      bonusRulesLead(rules.offered, rules.stated, rules.once),
+      BONUS_RULES_UNPUBLISHED,
+    ],
+    had: BONUS_RULES_HAD,
+    column: BONUS_RULES_COLUMN,
+    searchPrompt: 'Find a card or bank',
+    none: CARDS_INDEX.none,
+    groups: rules.groups.flatMap(({ issuer, rules: list }) => {
+      const rows = list
+        .filter((r) =>
+          matchesTyped(cardSearchWords(c, r.card, shortName), query),
+        )
+        .map((r) => {
+          const yours = wallet
+            ? bonusEligibility(c, wallet, r.card.id, today)
+            : null
+          return {
+            card: cardRow(r.card.id, held),
+            label: r.label,
+            detail: r.detail,
+            quote: r.quote,
+            yours: yours?.text ?? null,
+            ask: askOf(yours?.ask ?? null),
+          }
+        })
+      return rows.length === 0
+        ? []
+        : [{ id: issuer, title: issuerName(issuer), rows }]
+    }),
+  }
+}
+
 // Tests hand the catalog over directly; the app parses it from the bundle.
 export function useCatalog(next: Catalog): number {
   catalog = next
@@ -1961,6 +2584,10 @@ const engine = {
   pastCards: call(pastCards),
   editPastCards: call(editPastCards),
   cardPage: call(cardPage),
+  nextCard: call(nextCard),
+  bestSetups: call(bestSetups),
+  cardIndex: call(cardIndex),
+  bonusRules: call(bonusRulesScreen),
 }
 
 ;(globalThis as { earnrate?: typeof engine }).earnrate = engine

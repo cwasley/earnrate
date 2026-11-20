@@ -176,3 +176,7 @@ export const PAST_MONTH_LABELS: Record<MonthAsk['field'], string> = {
   opened: 'Opened',
   closed: 'Closed',
 }
+
+// "Amex Gold: bonus posted", beside a note that asks for that month.
+export const monthAskLabel = (name: string, field: MonthAsk['field']) =>
+  `${name}: ${PAST_MONTH_LABELS[field].toLowerCase()}`

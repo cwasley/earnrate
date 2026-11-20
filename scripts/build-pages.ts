@@ -95,6 +95,11 @@ import {
   rulePreposition,
   ruleWhat as shortRuleWhat,
 } from '../src/engine/rule-text.ts'
+import {
+  CARDS_INDEX,
+  cardIndexName,
+  cardsIndexLead,
+} from '../src/engine/card-search.ts'
 import { changeDates, latest } from './lastmod.ts'
 import { pageContext, type GeneratedPage } from './pages/context.ts'
 import { bonusRulesPage } from './pages/bonus-rules.ts'
@@ -1725,7 +1730,7 @@ function renderCardIndex(): string {
         `<section data-section><h2>${esc(issuerName(issuer))}</h2><ul class="card-grid">${list
           .map(
             (c) =>
-              `<li data-q="${cardSearchText(catalog, c, shortName)}"><a href="/cards/${c.id}">${art(c.id, 44)}<span>${esc(c.short_name ?? shortName(c.id))}</span></a></li>`,
+              `<li data-q="${cardSearchText(catalog, c, shortName)}"><a href="/cards/${c.id}">${art(c.id, 44)}<span>${esc(cardIndexName(c, shortName))}</span></a></li>`,
           )
           .join('')}</ul></section>`,
     )
@@ -1736,13 +1741,13 @@ function renderCardIndex(): string {
     path: '/cards/',
     crumbs: [{ name: 'Cards', path: '/cards/' }],
     body: `
-      <h1>Credit cards earnrate tracks</h1>
+      <h1>${esc(CARDS_INDEX.title)}</h1>
       <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
-      <p>Every earning rule for ${String(catalog.cards.length)} U.S. cards, quoted from the issuer's own terms, and where each card beats the others.</p>
-      ${filterBox('Find a card', 'Sapphire, Amex Gold, Southwest…')}
-      <p id="no-match" hidden>No cards match.</p>
+      <p>${esc(cardsIndexLead(catalog.cards.length))}, and where each card beats the others.</p>
+      ${filterBox(CARDS_INDEX.filterLabel, CARDS_INDEX.placeholder)}
+      <p id="no-match" hidden>${esc(CARDS_INDEX.none)}</p>
       <div data-filtered>${sections}</div>
-      <p class="muted">The card pictures are earnrate's drawings in each card's color, not the issuers' designs.</p>
+      <p class="muted">${esc(CARDS_INDEX.art)}</p>
       ${filterScript()}`,
     jsonLd: {
       '@context': 'https://schema.org',

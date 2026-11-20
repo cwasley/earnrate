@@ -21,9 +21,20 @@ import {
   minimumSpendText,
   offerPerksText,
   onlyIfText,
-  shortDate,
   withArticle,
 } from '../../src/engine/text.ts'
+import {
+  HOW_RANKED,
+  NO_OFFER_AHEAD,
+  offerAsOfText,
+  showMoreText,
+  signedDollars,
+  TWO_YEARS_LEAD,
+  TWO_YEARS_PER,
+  withMembershipText,
+  yearOneText,
+  yearTwoText,
+} from '../../src/engine/next-card-text.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { followingOwnLink } from './add-from-link.ts'
 import { CardArt } from './CardArt.tsx'
@@ -188,18 +199,13 @@ function OfferRow({
         <span class="result-name">
           <strong>{shortName(o.cardId)}</strong>
           <span class="muted">
-            <span class="year-split">
-              {wholeDollars(plan.yearOne)} year one ·
-            </span>{' '}
-            <span class="year-split">
-              {wholeDollars(plan.yearTwo)} year two
-            </span>
+            <span class="year-split">{yearOneText(plan.yearOne)} ·</span>{' '}
+            <span class="year-split">{yearTwoText(plan.yearTwo)}</span>
           </span>
         </span>
         <span class="rate">
-          {plan.twoYears > 0 ? '+' : ''}
-          {wholeDollars(plan.twoYears)}
-          <small>/2 yrs</small>
+          {signedDollars(plan.twoYears)}
+          <small>{TWO_YEARS_PER}</small>
         </span>
       </button>
       {plan.minimumSpend ? (
@@ -224,9 +230,7 @@ function OfferRow({
         </p>
       ) : null}
       <p class="muted">
-        {offerTerms(o, currencyName(catalog, o.currency))}.
-        {o.validTo ? ` Offer ends ${shortDate(o.validTo)}.` : ''} Public offer
-        as of {shortDate(o.lastVerified)}.
+        {offerTerms(o, currencyName(catalog, o.currency))}. {offerAsOfText(o)}
       </p>
       {open ? (
         <p class="muted">
@@ -247,11 +251,7 @@ function OfferRow({
 // a year": cards that need one the wallet doesn't have, in one line.
 function MemberLine({ items, per }: { items: string[]; per: string }) {
   if (items.length === 0) return null
-  return (
-    <p class="muted small">
-      With a membership: {items.join(', ')} {per}.
-    </p>
-  )
+  return <p class="muted small">{withMembershipText(items, per)}</p>
 }
 
 // A new card for the saved wallet: what each would add to it a year after
@@ -430,7 +430,7 @@ export function NewCard({
   const moreButton =
     !more && left > 0 ? (
       <button type="button" class="more" onClick={() => setMore(true)}>
-        Show {Math.min(left, MORE - SHOWN)} more
+        {showMoreText(Math.min(left, MORE - SHOWN))}
       </button>
     ) : null
 
@@ -467,12 +467,9 @@ export function NewCard({
         </>
       ) : (
         <>
-          <p class="muted">
-            With each card's welcome bonus, if the minimum spend fits, less its
-            fees.
-          </p>
+          <p class="muted">{TWO_YEARS_LEAD}</p>
           {topOffers.length === 0 ? (
-            <p>No card's first two years would add more than its fees cost.</p>
+            <p>{NO_OFFER_AHEAD}</p>
           ) : (
             <ol class="result-list" key="two-years">
               {topOffers.map((p, i) => offerRow(p, i + 1))}
@@ -494,7 +491,7 @@ export function NewCard({
           ))}
           <p class="muted small">{OFFERS_MAY_DIFFER}</p>
           <details class="filters whatif-more">
-            <summary>How this is ranked</summary>
+            <summary>{HOW_RANKED}</summary>
             {offers.notes.map((n) => (
               <p class="muted small" key={n}>
                 {n}

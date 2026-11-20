@@ -39,11 +39,17 @@ struct Home: Decodable {
         let every: String
     }
 
+    struct Working: Decodable {
+        let setups: String
+    }
+
     let quick: [String]
     let months: [String]
     let welcome: Welcome
     let nudge: Nudge
     let startNote: StartNote
+    let working: Working
+    let held: String
 }
 
 struct Suggestion: Decodable, Hashable {
@@ -519,4 +525,153 @@ struct CardPage: Decodable {
     let changes: [String]
     let checked: String
     let sources: [String]
+}
+
+// Next card, Best setups, the card list and bonus rules.
+
+struct NextFilters: Codable, Hashable {
+    var kind = "any"
+    var noAnnualFee = false
+    var business = false
+
+    var json: [String: Any] {
+        ["kind": kind, "noAnnualFee": noAnnualFee, "business": business]
+    }
+}
+
+struct FilterMenu: Decodable {
+    struct Kind: Decodable, Identifiable, Hashable {
+        let id: String
+        let label: String
+    }
+
+    let title: String
+    let kindLabel: String
+    let kinds: [Kind]
+    let kind: String
+    let noFee: OnOff
+    let business: OnOff
+    let active: Int
+}
+
+// The month a repeat-bonus note asks for, beside the note.
+struct AskRow: Decodable, Hashable {
+    let label: String
+    let ask: MonthAsk
+}
+
+struct NextCard: Decodable {
+    struct Row: Decodable, Identifiable {
+        struct Minimum: Decodable {
+            let text: String
+            let reachable: Bool
+        }
+
+        let rank: Int
+        let card: CardRow
+        let total: String
+        let per: String
+        let totalLabel: String
+        let years: [String]
+        let offer: String
+        let history: String?
+        let minimum: Minimum?
+        let ineligible: String?
+        let eligibility: String?
+        let ask: AskRow?
+        var id: String { card.id }
+    }
+
+    struct Link: Decodable {
+        let title: String
+        let text: String
+    }
+
+    let lead: String
+    let basis: String
+    let rows: [Row]
+    let shown: Int
+    let moreLabel: String?
+    let empty: String?
+    let members: [String]
+    let howTitle: String
+    let how: [String]
+    let mayDiffer: String
+    let filters: FilterMenu
+    let best: Link
+    let rules: Link
+}
+
+struct BestSetups: Decodable {
+    struct Row: Decodable, Identifiable {
+        let rank: Int
+        let key: String
+        let cards: [CardRow]
+        let name: String
+        let fee: String
+        let net: String
+        let per: String
+        let first: String?
+        let split: String?
+        let lines: [String]
+        let warnings: [String]
+        let eligibility: String?
+        let ask: AskRow?
+        var id: String { key }
+    }
+
+    let title: String
+    let basis: String
+    let singlesTitle: String
+    let singles: [Row]
+    let pairsTitle: String
+    let pairsNote: String?
+    let pairs: [Row]
+    let members: [String]
+    let howTitle: String
+    let how: [String]
+    let filters: FilterMenu
+    let callout: String?
+    let held: String
+}
+
+struct CardIndex: Decodable {
+    let title: String
+    let searchPrompt: String
+    let lead: String
+    let art: String
+    let none: String
+    let rules: NextCard.Link
+    let groups: [CardGroups.Group]
+}
+
+struct BonusRules: Decodable {
+    struct Row: Decodable, Identifiable {
+        let card: CardRow
+        let label: String
+        let detail: String
+        let quote: String?
+        let yours: String?
+        let ask: AskRow?
+        var id: String { card.id }
+    }
+
+    struct Group: Decodable, Identifiable {
+        let id: String
+        let title: String
+        let rows: [Row]
+    }
+
+    struct Had: Decodable {
+        let link: String
+        let rest: String
+    }
+
+    let title: String
+    let lead: [String]
+    let had: Had
+    let column: String
+    let searchPrompt: String
+    let none: String
+    let groups: [Group]
 }

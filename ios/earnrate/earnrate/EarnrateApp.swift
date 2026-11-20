@@ -17,10 +17,13 @@ enum Route: Hashable {
     case card(String)
     case settings(String, SettingsFocus?)
     case pastCards
+    case bestSetups
+    case bonusRules
 }
 
 struct RootView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         @Bindable var model = model
@@ -32,11 +35,14 @@ struct RootView: View {
                 WalletTab()
             }
             Tab("Next card", systemImage: "sparkles", value: AppTab.next) {
-                ComingSoon(title: "Next card", symbol: "sparkles", text: "Welcome offers, and which card to get next.")
+                NextCardTab()
             }
             Tab("Cards", systemImage: "rectangle.stack", value: AppTab.cards) {
-                ComingSoon(title: "Cards", symbol: "rectangle.stack", text: "Every card earnrate knows, to browse and search.")
+                CardsTab()
             }
+        }
+        .onChange(of: scenePhase) {
+            CardLight.shared.setActive(scenePhase == .active)
         }
         .sheet(isPresented: $model.showingWelcome) {
             if let welcome = model.home?.welcome {
@@ -59,6 +65,8 @@ extension View {
             case .card(let id): CardPageView(id: id)
             case .settings(let id, let focus): CardSettingsView(id: id, focus: focus)
             case .pastCards: PastCardsView()
+            case .bestSetups: BestSetupsView()
+            case .bonusRules: BonusRulesView()
             }
         }
     }
@@ -83,23 +91,6 @@ struct EngineGate<Content: View>: View {
     }
 }
 
-struct ComingSoon: View {
-    let title: String
-    let symbol: String
-    let text: String
-
-    var body: some View {
-        NavigationStack {
-            ContentUnavailableView {
-                Label("Coming soon", systemImage: symbol)
-            } description: {
-                Text(text)
-            }
-            .navigationTitle(title)
-        }
-    }
-}
-
 // The first launch: what earnrate does, that it stays on the phone, and
 // the two ways in.
 struct WelcomeView: View {
@@ -112,7 +103,7 @@ struct WelcomeView: View {
                 VStack(spacing: 20) {
                     HStack(spacing: -28) {
                         ForEach(Array(welcome.art.enumerated()), id: \.offset) { i, art in
-                            CardArtView(art: art, width: 110)
+                            CardArtView(art: art, width: 110, shine: true)
                                 .rotationEffect(.degrees(i == 0 ? -8 : 6))
                                 .offset(y: i == 0 ? 0 : 10)
                         }

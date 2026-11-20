@@ -15,6 +15,10 @@ struct CardSettingsView: View {
     @State private var refusal: String?
     @State private var removal: Removal?
     @State private var scrolled = false
+    // Tracking turned on before there's an account date to save it with,
+    // and spending typed meanwhile: nothing is saved until the date is.
+    @State private var trackingDraft = false
+    @State private var unsaved: Double?
 
     var body: some View {
         Group {
@@ -139,13 +143,17 @@ struct CardSettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                     OpenedPicker(label: intro.label, opened: intro.opened) { date in
-                        save(["opened": ["date": orNull(date), "tracking": s.bonus?.tracking ?? false]])
+                        save(["opened": [
+                            "date": date,
+                            "tracking": (s.bonus?.tracking ?? false) || trackingDraft,
+                            "unsaved": orNull(unsaved),
+                        ]])
                     }
                 }
             }
 
             if let bonus = s.bonus {
-                BonusSection(bonus: bonus, hasIntro: s.intro != nil, save: save)
+                BonusSection(bonus: bonus, hasIntro: s.intro != nil, draft: $trackingDraft, unsaved: $unsaved, save: save)
                     .id(SettingsFocus.bonus)
             }
 
@@ -346,28 +354,71 @@ private struct AnniversaryPicker: View {
     }
 }
 
-// An opening date, or none.
+// An opening date, or none. With none, Add asks for the day; nothing is
+// saved until one is picked.
 private struct OpenedPicker: View {
     let label: String
     let opened: String?
-    let save: (String?) -> Void
+    let save: (String) -> Void
+    @State private var asking = false
 
     var body: some View {
         if let date = Day.date(opened) {
             DatePicker(label, selection: Binding(get: { date }, set: { save(Day.text($0)) }), in: ...Date.now, displayedComponents: .date)
         } else {
             LabeledContent(label) {
-                Button("Add") { save(Day.text(.now)) }
+                Button("Add") { asking = true }
+            }
+            .sheet(isPresented: $asking) {
+                DaySheet(label: label) { date in
+                    asking = false
+                    save(Day.text(date))
+                }
+                .presentationDetents([.medium, .large])
             }
         }
     }
 }
 
+// A calendar for one day, saved only with Save.
+private struct DaySheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let label: String
+    let save: (Date) -> Void
+    @State private var date = Date.now
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                DatePicker(label, selection: $date, in: ...Date.now, displayedComponents: .date)
+                    .datePickerStyle(.graphical)
+                    .padding(.horizontal)
+            }
+            .navigationTitle(label)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", systemImage: "xmark") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save", systemImage: "checkmark") { save(date) }
+                }
+            }
+        }
+    }
+}
+
+// Turning tracking on saves it only with the account's date: the one saved
+// already, or the one the person picks next. Spending typed before then
+// waits for that date, as on the site.
 private struct BonusSection: View {
     let bonus: CardSettings.Bonus
     let hasIntro: Bool
+    @Binding var draft: Bool
+    @Binding var unsaved: Double?
     let save: ([String: Any]) -> Void
-    @State private var opened = Date.now
+
+    private var tracking: Bool { bonus.tracking || draft }
 
     var body: some View {
         Section {
@@ -376,22 +427,41 @@ private struct BonusSection: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
-            SwiftUI.Toggle(bonus.label, isOn: Binding(get: { bonus.tracking }, set: { on in
-                save(["tracking": ["on": on, "opened": Day.text(Day.date(bonus.opened) ?? opened)]])
-            }))
-            if bonus.tracking {
+            SwiftUI.Toggle(bonus.label, isOn: Binding(get: { tracking }, set: turn))
+            if tracking {
                 if !hasIntro {
-                    DatePicker(bonus.openedLabel, selection: Binding(get: { Day.date(bonus.opened) ?? opened }, set: { date in
-                        opened = date
-                        save(["opened": ["date": Day.text(date), "tracking": true]])
-                    }), in: ...Date.now, displayedComponents: .date)
+                    OpenedPicker(label: bonus.openedLabel, opened: bonus.opened) { date in
+                        save(["opened": ["date": date, "tracking": true, "unsaved": orNull(unsaved)]])
+                    }
                 }
-                DollarField(label: bonus.spentLabel, value: bonus.spent) { dollars in
-                    save(["spent": ["dollars": dollars ?? 0, "opened": orNull(bonus.opened)]])
+                DollarField(label: bonus.spentLabel, value: bonus.tracking ? bonus.spent : unsaved) { dollars in
+                    if bonus.tracking {
+                        save(["spent": ["dollars": dollars ?? 0, "opened": orNull(bonus.opened)]])
+                    } else {
+                        unsaved = dollars
+                    }
                 }
             }
         } header: {
             Text(bonus.title)
+        }
+        .onChange(of: bonus.tracking) {
+            if bonus.tracking {
+                draft = false
+                unsaved = nil
+            }
+        }
+    }
+
+    private func turn(_ on: Bool) {
+        if on, let opened = bonus.opened {
+            save(["tracking": ["on": true, "opened": opened, "unsaved": orNull(unsaved)]])
+        } else if on {
+            draft = true
+        } else {
+            draft = false
+            unsaved = nil
+            if bonus.tracking { save(["tracking": ["on": false, "opened": NSNull()]]) }
         }
     }
 }

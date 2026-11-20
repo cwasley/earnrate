@@ -1,5 +1,5 @@
 import { catalog } from 'virtual:catalog'
-import { PAST_MONTH_LABELS } from '../../src/engine/held-text.ts'
+import { monthAskLabel, PAST_MONTH_LABELS } from '../../src/engine/held-text.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import {
   repeatMonthFields,
@@ -29,7 +29,7 @@ export function MonthAskField({
   ask: MonthAsk
   onChange: (op: LocalOp) => unknown
 }) {
-  const label = `${shortName(ask.cardId)}: ${MONTH_LABELS[ask.field].toLowerCase()}`
+  const label = monthAskLabel(shortName(ask.cardId), ask.field)
   return (
     <span class="month-ask">
       {label}{' '}

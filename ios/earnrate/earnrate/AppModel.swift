@@ -30,6 +30,12 @@ enum AppTab: Hashable {
     var tab: AppTab = .store
     var storePath: [Route] = []
     var walletPath: [Route] = []
+    var nextPath: [Route] = []
+    var cardsPath: [Route] = []
+    // Next card's and Best setups' filters, kept on this phone.
+    var filters: NextFilters {
+        didSet { Self.save(filters, Self.filtersKey) }
+    }
     var showingWelcome = false
     var addingCards = false
     private(set) var nudgeDismissed: Bool
@@ -38,6 +44,7 @@ enum AppTab: Hashable {
     private static let recentsKey = "recentSearches"
     private static let welcomedKey = "welcomed"
     private static let nudgeKey = "addCardsNudgeDismissed"
+    private static let filtersKey = "nextCardFilters"
     private static let recentsKept = 8
 
     var isReady: Bool {
@@ -51,6 +58,12 @@ enum AppTab: Hashable {
     init() {
         recents = UserDefaults.standard.stringArray(forKey: Self.recentsKey) ?? []
         nudgeDismissed = UserDefaults.standard.bool(forKey: Self.nudgeKey)
+        filters = UserDefaults.standard.data(forKey: Self.filtersKey)
+            .flatMap { try? JSONDecoder().decode(NextFilters.self, from: $0) } ?? NextFilters()
+    }
+
+    private static func save(_ value: some Encodable, _ key: String) {
+        UserDefaults.standard.set(try? JSONEncoder().encode(value), forKey: key)
     }
 
     // Loading the engine takes a few hundred milliseconds, so it happens off
@@ -83,14 +96,6 @@ enum AppTab: Hashable {
         UserDefaults.standard.set(true, forKey: Self.nudgeKey)
     }
 
-    // From My wallet's search or cheat sheet: At a store's answer.
-    func openAnswer(_ query: String) {
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        remember(trimmed)
-        storePath = [.answer(trimmed)]
-        tab = .store
-    }
 
     // MARK: Engine calls
 
@@ -135,6 +140,38 @@ enum AppTab: Hashable {
 
     func removal(_ id: String) async throws -> Removal {
         try await request("removal", ["id": id])
+    }
+
+    func nextCard(all: Bool) async throws -> NextCard {
+        try await request("nextCard", ["filters": filters.json, "all": all], wallet: true)
+    }
+
+    // The slowest answer the app asks for (every card alone and in pairs),
+    // so it's kept for the filters and wallet it was worked out for.
+    @ObservationIgnored private var setups: (key: String, value: BestSetups)?
+
+    func cachedSetups() -> BestSetups? {
+        setups?.key == setupsKey ? setups?.value : nil
+    }
+
+    func bestSetups() async throws -> BestSetups {
+        let key = setupsKey
+        if let setups, setups.key == key { return setups.value }
+        let found: BestSetups = try await request("bestSetups", ["filters": filters.json], wallet: true)
+        if key == setupsKey { setups = (key, found) }
+        return found
+    }
+
+    private var setupsKey: String {
+        "\(revision)|\(filters.kind)|\(filters.noAnnualFee)|\(filters.business)"
+    }
+
+    func cardIndex(matching query: String) async throws -> CardIndex {
+        try await request("cardIndex", ["query": query], wallet: true)
+    }
+
+    func bonusRules(matching query: String) async throws -> BonusRules {
+        try await request("bonusRules", ["query": query], wallet: true)
     }
 
     // MARK: Wallet changes

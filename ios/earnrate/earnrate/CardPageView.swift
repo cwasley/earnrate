@@ -57,7 +57,7 @@ struct CardPageView: View {
                 }
             } header: {
                 VStack(spacing: 12) {
-                    CardArtView(art: page.art, width: 172)
+                    CardArtView(art: page.art, width: 172, shine: true)
                     VStack(spacing: 4) {
                         Text(page.name)
                             .font(.title2.bold())

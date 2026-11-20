@@ -1,7 +1,7 @@
 import SwiftUI
 
-// My wallet, the home for someone with cards: a store search, the to-do,
-// the cheat sheet, the cards, and the cards they've had.
+// My wallet, the home for someone with cards: a store search, the cheat
+// sheet, the to-do, the cards, and the cards they've had.
 struct WalletTab: View {
     @Environment(AppModel.self) private var model
     @State private var settings = false
@@ -67,6 +67,8 @@ private struct WalletList: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openURL) private var openURL
     @State private var query = ""
+    @State private var searching = false
+    @State private var pending: String?
     @State private var suggestions: [Suggestion] = []
     @State private var removing: CardRow?
     @State private var removal: Removal?
@@ -81,6 +83,27 @@ private struct WalletList: View {
             if !model.walletProblems.isEmpty {
                 Section {
                     ForEach(model.walletProblems, id: \.self) { Text($0) }
+                }
+            }
+
+            if let sheet = home.sheet {
+                Section {
+                    ForEach(sheet.rows) { row in
+                        if let query = row.query {
+                            NavigationLink(value: Route.answer(query)) {
+                                SheetRow(row: row)
+                            }
+                        } else {
+                            SheetRow(row: row)
+                        }
+                    }
+                } header: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(sheet.title)
+                        Text(sheet.subtitle)
+                            .font(.footnote)
+                            .textCase(nil)
+                    }
                 }
             }
 
@@ -102,30 +125,6 @@ private struct WalletList: View {
                     }
                 } header: {
                     Text(home.todoTitle)
-                }
-            }
-
-            if let sheet = home.sheet {
-                Section {
-                    ForEach(sheet.rows) { row in
-                        if let query = row.query {
-                            Button {
-                                model.openAnswer(query)
-                            } label: {
-                                SheetRow(row: row)
-                            }
-                            .foregroundStyle(.primary)
-                        } else {
-                            SheetRow(row: row)
-                        }
-                    }
-                } header: {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(sheet.title)
-                        Text(sheet.subtitle)
-                            .font(.footnote)
-                            .textCase(nil)
-                    }
                 }
             }
 
@@ -159,7 +158,7 @@ private struct WalletList: View {
                 }
             }
         }
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: home.searchPrompt)
+        .searchable(text: $query, isPresented: $searching, placement: .navigationBarDrawer(displayMode: .always), prompt: home.searchPrompt)
         .searchSuggestions {
             SuggestionRows(suggestions: suggestions, open: openAnswer)
         }
@@ -167,6 +166,15 @@ private struct WalletList: View {
         .onSubmit(of: .search) { openAnswer(query) }
         .task(id: query) {
             suggestions = await model.suggest(query)
+        }
+        .onChange(of: searching) {
+            guard !searching, let asked = pending else { return }
+            pending = nil
+            query = ""
+            Task {
+                try? await Task.sleep(for: .milliseconds(600))
+                model.walletPath.append(.answer(asked))
+            }
         }
         .confirmationDialog(removal?.title ?? "", isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } }), titleVisibility: .visible) {
             if let removal, let card = removing {
@@ -184,9 +192,19 @@ private struct WalletList: View {
         .sensoryFeedback(.success, trigger: removed)
     }
 
+    // The answer opens here, in My wallet; the search closes first, since an
+    // answer pushed from an open search kept a blank title.
     private func openAnswer(_ asked: String) {
-        query = ""
-        model.openAnswer(asked)
+        let trimmed = asked.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        model.remember(trimmed)
+        if searching {
+            pending = trimmed
+            searching = false
+        } else {
+            query = ""
+            model.walletPath.append(.answer(trimmed))
+        }
     }
 
     private func open(_ item: WalletHome.Todo) {

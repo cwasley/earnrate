@@ -3,9 +3,17 @@ import { loadCatalog } from '../src/data/load.ts'
 import { recommend } from '../src/engine/recommend.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
+import { bonusRules } from '../src/engine/bonus-rules.ts'
+import { compareOffers } from '../src/engine/offers.ts'
+import { simulateCatalog, typicalSpendLines } from '../src/engine/simulate.ts'
+import { ALL_PERSONAL_CARDS } from '../src/engine/explore.ts'
+import { cardText } from '../src/format/card-text.ts'
 import {
   addCard,
   answer,
+  bestSetups,
+  bonusRulesScreen,
+  cardIndex,
   cardPage,
   cards,
   cardSettings,
@@ -13,6 +21,7 @@ import {
   editPastCards,
   editSettings,
   home,
+  nextCard,
   pastCards,
   removal,
   removeCard,
@@ -286,6 +295,7 @@ describe('the iPhone app bridge', () => {
     expect(
       w.sheet?.rows.find((r) => r.label === 'Streaming (Netflix)')?.query,
     ).toBe('Netflix')
+    expect(w.todoShown).toBe(2)
     expect(w.cards).toHaveLength(4)
     expect(w.cards.find((c) => c.card.id === 'amex-gold')?.note).toBe(
       'Add its renewal date',
@@ -388,6 +398,36 @@ describe('the iPhone app bridge', () => {
     )
   })
 
+  test('tracking a welcome bonus waits for the account date', () => {
+    const wallet = walletWith(['chase-sapphire-preferred'])
+    const id = 'chase-sapphire-preferred'
+    const waiting = ok(
+      editCard({
+        wallet,
+        id,
+        edit: { tracking: { on: true, opened: null, unsaved: 500 } },
+        today,
+      }),
+    )
+    expect(cardSettings({ wallet: waiting, id, today }).bonus).toMatchObject({
+      tracking: false,
+      opened: null,
+    })
+    const dated = ok(
+      editCard({
+        wallet: waiting,
+        id,
+        edit: { opened: { date: '2026-09-15', tracking: true, unsaved: 500 } },
+        today,
+      }),
+    )
+    expect(cardSettings({ wallet: dated, id, today }).bonus).toMatchObject({
+      tracking: true,
+      opened: '2026-09-15',
+      spent: 500,
+    })
+  })
+
   test('memberships and point values are set in Settings', () => {
     let wallet = walletWith(['chase-sapphire-preferred'])
     const s = walletSettings({ wallet })
@@ -471,6 +511,157 @@ describe('the iPhone app bridge', () => {
     expect(pastCards({ wallet, today }).rows.map((r) => r.card.id)).toEqual([
       'capital-one-savor',
     ])
+  })
+})
+
+describe('Next card and Cards in the app', () => {
+  test('next cards rank as compare_welcome_offers does, two years together', () => {
+    const wallet = walletWith(['amex-gold', 'citi-double-cash'])
+    const n = nextCard({ wallet, today })
+    const parsed = WalletSchema.parse(wallet)
+    const offers = compareOffers(
+      catalog,
+      parsed,
+      { kind: 'any', business: false, noAnnualFee: false, includeHeld: false },
+      today,
+    ).offers.filter((o) => (o.plan?.twoYears ?? 0) > 0)
+    expect(n.rows.map((r) => r.card.id)).toEqual(
+      offers.slice(0, 10).map((o) => o.cardId),
+    )
+    expect(n.rows.map((r) => r.card.id)).not.toContain('amex-gold')
+    expect(n.lead).toMatch(/add to your cards/)
+    expect(n.basis).toMatch(
+      /^On typical U\.S\. spending, about \$[\d,]+ a month\./,
+    )
+    const first = n.rows[0]
+    expect(first?.total).toMatch(/^\+\$/)
+    expect(first?.per).toBe('/2 yrs')
+    expect(first?.years).toHaveLength(2)
+    expect(first?.offer).toMatch(/Public offer as of \w{3} \d+, \d{4}\.$/)
+    expect(n.moreLabel).toMatch(/^Show \d+ more$/)
+    expect(nextCard({ wallet, today, all: true }).rows.length).toBe(
+      offers.length,
+    )
+    expect(nextCard({ today }).lead).toMatch(/would earn/)
+  })
+
+  test('next cards follow the filters and ask for a month when a rule needs one', () => {
+    const cash = nextCard({
+      today,
+      filters: { kind: 'cash', noAnnualFee: true, business: false },
+    })
+    expect(cash.filters.active).toBe(2)
+    for (const row of cash.rows) {
+      const card = catalog.cards.find((c) => c.id === row.card.id)
+      expect(card?.annual_fee ?? 0).toBe(0)
+      expect(card?.currency).toBe('cash')
+    }
+    const business = nextCard({
+      today,
+      filters: { kind: 'any', noAnnualFee: false, business: true },
+    })
+    expect(
+      business.rows.every(
+        (r) => catalog.cards.find((c) => c.id === r.card.id)?.business,
+      ),
+    ).toBe(true)
+    let had = ok(
+      editPastCards({
+        wallet: walletWith(['amex-gold']),
+        edit: { add: 'chase-freedom-unlimited' },
+        today,
+      }),
+    )
+    had = ok(
+      editPastCards({
+        wallet: had,
+        edit: { add: 'chase-sapphire-preferred' },
+        today,
+      }),
+    )
+    const all = nextCard({ wallet: had, today, all: true })
+    const cfu = all.rows.find((r) => r.card.id === 'chase-freedom-unlimited')
+    expect(cfu?.eligibility).toMatch(/Tell earnrate when yours posted/)
+    expect(cfu?.ask?.label).toBe('Chase Freedom Unlimited: bonus posted')
+    expect(
+      all.rows.find((r) => r.card.id === 'chase-sapphire-preferred')
+        ?.ineligible,
+    ).toMatch(/you've had this card before/)
+  })
+
+  test("best setups are the site's single cards and pairs on typical spending", () => {
+    const b = bestSetups({ today })
+    const result = simulateCatalog(
+      catalog,
+      typicalSpendLines(catalog).filter((l) => l.merchant.source !== 'none'),
+      {
+        filters: ALL_PERSONAL_CARDS,
+        memberships: [],
+        valuations: {},
+        start: today,
+      },
+    )
+    expect(b.singles.map((s) => s.key)).toEqual(
+      result.singles.slice(0, 5).map((s) => s.cards[0]?.cardId),
+    )
+    expect(b.singles[0]?.per).toBe('/yr')
+    expect(b.singles[0]?.lines[0]).toMatch(/back a year before the fee\.$/)
+    if (b.pairs.length > 0) {
+      expect(b.pairs[0]?.cards).toHaveLength(2)
+      expect(b.pairs[0]?.split).toMatch(/ for /)
+    } else expect(b.pairsNote).toMatch(/^No pair beats the /)
+    expect(b.how[0]).toMatch(/^Rewards minus annual fees/)
+    const held = bestSetups({ wallet: walletWith(['amex-gold']), today })
+    expect(
+      held.singles.flatMap((s) => s.cards).find((c) => c.id === 'amex-gold')
+        ?.held ?? true,
+    ).toBe(true)
+  })
+
+  test("the card list narrows on every typed word, as the site's box does", () => {
+    const all = cardIndex({})
+    expect(all.groups.flatMap((g) => g.cards)).toHaveLength(
+      catalog.cards.length,
+    )
+    expect(all.groups[0]?.title).toBe('American Express')
+    const plat = cardIndex({ query: 'amex plat' })
+    const ids = plat.groups.flatMap((g) => g.cards.map((c) => c.id))
+    expect(ids).toContain('amex-platinum')
+    expect(ids.every((id) => id.startsWith('amex-'))).toBe(true)
+    expect(cardIndex({ query: 'bofa' }).groups.map((g) => g.id)).toEqual([
+      'bank-of-america',
+    ])
+    expect(cardIndex({ query: 'zzzz' }).groups).toEqual([])
+  })
+
+  test('bonus rules match the site, with what they mean for cards held or had', () => {
+    const { shortName, issuerName } = cardText(catalog)
+    const rules = bonusRules(catalog, issuerName, shortName)
+    const screen = bonusRulesScreen({ today })
+    expect(screen.groups.map((g) => g.id)).toEqual(
+      rules.groups.map((g) => g.issuer),
+    )
+    expect(screen.lead[0]).toMatch(
+      new RegExp(`Of the ${String(rules.offered)} cards here`),
+    )
+    const had = ok(
+      editPastCards({
+        wallet: null,
+        edit: { add: 'chase-freedom-unlimited' },
+        today,
+      }),
+    )
+    const chase = bonusRulesScreen({ wallet: had, today }).groups.find(
+      (g) => g.id === 'chase',
+    )
+    const cfu = chase?.rows.find((r) => r.card.id === 'chase-freedom-unlimited')
+    expect(cfu?.yours).toMatch(/^Chase counts 24 months/)
+    expect(cfu?.ask?.ask.field).toBe('bonus_received')
+    expect(
+      bonusRulesScreen({ query: 'sapphire', today }).groups.flatMap((g) =>
+        g.rows.map((r) => r.card.id),
+      ),
+    ).toContain('chase-sapphire-preferred')
   })
 })
 

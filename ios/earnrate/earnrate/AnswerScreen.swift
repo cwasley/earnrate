@@ -208,7 +208,8 @@ private struct PickRow: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
             : AnyLayout(HStackLayout(spacing: 16))
         layout {
-            CardArtView(art: pick.art, width: 86)
+            CardArtView(art: pick.art, width: 86, shine: true, sparkle: true)
+                .id(pick.cardId)
             VStack(alignment: .leading, spacing: 2) {
                 Text(pick.label)
                     .font(.subheadline)
