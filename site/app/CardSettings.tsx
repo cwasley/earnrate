@@ -6,67 +6,45 @@ import {
   nightStates,
 } from '../../src/engine/credits.ts'
 import { activationGroup } from '../../src/engine/evaluate.ts'
+import {
+  activationLabel,
+  anniversaryLabel,
+  creditDetailText,
+  nightDetailText,
+  offerLine,
+  opensOn,
+  pickedCount,
+  pickLegend,
+} from '../../src/engine/held-text.ts'
 import { milestoneSummaries } from '../../src/engine/milestones.ts'
-import { inEffect, localToday } from '../../src/engine/periods.ts'
+import { localToday } from '../../src/engine/periods.ts'
 import { anniversaryOf, type Spending } from '../../src/engine/renewal.ts'
-import { optionName, pickName, ruleWhat } from '../../src/engine/rule-text.ts'
+import { optionName, pickName } from '../../src/engine/rule-text.ts'
 import { cardInfo } from '../../src/engine/setup.ts'
 import {
   capitalize,
   choiceName,
-  creditBack,
-  creditTerms,
   CREDIT_THIS_PERIOD,
-  currencyLabel,
-  currencyName,
   FREE_NIGHT_NAME,
-  freeNightText,
-  freeNightValueText,
-  LISTED_CREDIT_USED,
-  listed,
-  shortDate,
 } from '../../src/engine/text.ts'
 import { currencyValuation } from '../../src/engine/valuation.ts'
 import {
   MAX_NIGHT_VALUE,
   type CardInput,
 } from '../../src/engine/wallet-change.ts'
-import type { Card } from '../../src/schema/card.ts'
 import type { Wallet, WalletCard } from '../../src/schema/wallet.ts'
-import { changedMarks, heldMarks, settledMarks } from '../rate/answers.ts'
+import {
+  changedMarks,
+  heldMarks,
+  settledMarks,
+} from '../../src/engine/credit-marks.ts'
 import { CreditPicks } from './CreditPicks.tsx'
 import { usedSoFarShown } from './credit-enroll.ts'
 import { openedChange, spentChange, trackingChange } from './bonus-change.ts'
 import { draftShown, type Draft } from './draft.ts'
 import { MONTH_NAMES } from './month-pick.ts'
-import { cards, issuerName, words } from './format.ts'
+import { cards, issuerName } from './format.ts'
 import { KeepOrReplace } from './KeepOrReplace.tsx'
-import { offerTerms } from '../../src/engine/offers.ts'
-
-// "Grocery stores and American Red Cross, Oct 1 to Dec 31": an activation
-// in the engine's words, with its dates. One activation can turn on several
-// rules (a Freedom Flex quarter), so the label names every rule in its group.
-function activationLabel(card: Card, ruleId: string): string {
-  const rule = card.rules.find((r) => r.id === ruleId)
-  if (!rule) return words(ruleId)
-  const what = capitalize(
-    listed(
-      activationGroup(card, ruleId).flatMap((id) => {
-        const r = card.rules.find((x) => x.id === id)
-        return r ? [ruleWhat(catalog, r, card)] : []
-      }),
-    ),
-  )
-  return rule.valid_from !== undefined && rule.valid_to !== undefined
-    ? `${what}, ${shortDate(rule.valid_from).replace(/, \d{4}$/, '')} to ${shortDate(rule.valid_to)}`
-    : what
-}
-
-function offerText(card: Card): string {
-  const o = card.welcome_offer
-  if (!o || !inEffect(o, localToday())) return ''
-  return `Published offer: ${offerTerms(o, currencyName(catalog, card.currency))}.`
-}
 
 // A field's local value, which gives way to the saved one whenever that
 // changes. `key` stands for the saved value when it isn't a primitive.
@@ -257,12 +235,7 @@ export function CardSettings({
   }
 
   const fee = hasFee(held)
-  const anniversaryLabel =
-    info.needsAnniversary && fee
-      ? 'Account anniversary, when its fee posts and its yearly cap resets'
-      : info.needsAnniversary
-        ? 'Account anniversary, when its yearly cap resets'
-        : 'When its annual fee posts, so earnrate can check it still pays for itself first'
+  const anniversaryText = anniversaryLabel(info.needsAnniversary, fee)
 
   return (
     <div class="editor">
@@ -287,14 +260,10 @@ export function CardSettings({
         return (
           <fieldset class="picks" key={choice.id}>
             <legend>
-              {choiceName(choice.id)} {one ? 'category' : 'categories'}
-              {choice.automatic
-                ? `: the ${one ? 'one' : String(choice.pick)} you expect to spend the most in`
-                : ''}
-              {choice.period === 'quarter' ? ', this quarter' : ''}
+              {pickLegend(choice)}
               <span class="muted">
                 {' '}
-                · {String(chosen.length)} of {String(choice.pick)} picked
+                · {pickedCount(chosen.length, choice.pick)}
               </span>
             </legend>
             <div
@@ -369,12 +338,9 @@ export function CardSettings({
                     }}
                   />
                   <span>
-                    {activationLabel(card, rule)}
+                    {activationLabel(catalog, card, rule)}
                     {opens === undefined ? null : (
-                      <span class="muted">
-                        {' '}
-                        · opens {shortDate(opens).replace(/, \d{4}$/, '')}
-                      </span>
+                      <span class="muted"> · opens {opensOn(opens)}</span>
                     )}
                   </span>
                 </label>
@@ -408,23 +374,7 @@ export function CardSettings({
                 <p>
                   <strong>{capitalize(c.name)}</strong>
                 </p>
-                <p class="muted small">
-                  {capitalize(creditBack(c))}
-                  {creditTerms(
-                    c.credit.min_amount === undefined
-                      ? {}
-                      : { min_amount: c.credit.min_amount },
-                  )}
-                  {c.until === null
-                    ? ''
-                    : `; this one runs through ${shortDate(c.until)}`}
-                  .
-                  {c.credit.valid_to === undefined
-                    ? ''
-                    : ` It ends after ${shortDate(c.credit.valid_to)}.`}
-                  {c.credit.note ? ` ${c.credit.note}` : ''}
-                  {c.credit.listed ? ` ${LISTED_CREDIT_USED}.` : ''}
-                </p>
+                <p class="muted small">{creditDetailText(c)}</p>
                 {usedSoFarShown(c) ? (
                   <SavedNumber
                     label={`Used so far ${CREDIT_THIS_PERIOD[c.period]}`}
@@ -453,19 +403,13 @@ export function CardSettings({
                   <strong>{capitalize(FREE_NIGHT_NAME)}</strong>
                 </p>
                 <p class="muted small">
-                  {capitalize(
-                    freeNightText(
-                      n.points,
-                      currencyLabel(catalog, card.currency),
-                    ),
+                  {nightDetailText(
+                    catalog,
+                    card,
+                    n,
+                    currencyValuation(catalog, wallet, card.currency)
+                      .centsPerUnit,
                   )}
-                  {n.value === null
-                    ? ". It counts against the annual fee once you say what it's worth to you."
-                    : `: ${freeNightValueText(
-                        n.value,
-                        currencyValuation(catalog, wallet, card.currency)
-                          .centsPerUnit,
-                      )}.`}
                 </p>
                 <SavedNumber
                   label={`Worth to you${n.value === null ? '' : ' (optional)'}, in dollars`}
@@ -492,7 +436,7 @@ export function CardSettings({
       ) : null}
       {info.needsAnniversary || fee ? (
         <Anniversary
-          label={anniversaryLabel}
+          label={anniversaryText}
           value={anniversaryOf(held)}
           onSave={(anniversary) => change({ anniversary })}
         />
@@ -547,7 +491,7 @@ export function CardSettings({
             <fieldset>
               <legend>Welcome bonus</legend>
               {card.welcome_offer ? (
-                <p class="muted small">{offerText(card)}</p>
+                <p class="muted small">{offerLine(catalog, card, today)}</p>
               ) : null}
               <label class="check">
                 <input

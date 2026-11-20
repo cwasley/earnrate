@@ -52,7 +52,7 @@ import {
   type Choice,
   type SyncView,
 } from './Sync.tsx'
-import { askText } from '../../src/engine/memberships.ts'
+import { askText, tierGroups } from '../../src/engine/memberships.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
 import { listed } from '../../src/engine/text.ts'
@@ -128,27 +128,7 @@ const ASKED = catalog.memberships.flatMap((m) => {
   const ask = askText(catalog, m)
   return ask === null ? [] : [{ id: m.id, ask }]
 })
-const TIER_GROUPS = [
-  ...new Set(catalog.memberships.flatMap((m) => m.group ?? [])),
-].map((group) => {
-  const tiers = catalog.memberships.filter((m) => m.group === group)
-  const names = tiers.map((m) => m.name)
-  const words = names[0]?.split(' ') ?? []
-  let shared = 0
-  while (
-    shared < words.length - 1 &&
-    names.every((n) => n.split(' ')[shared] === words[shared])
-  )
-    shared++
-  const prefix = words.slice(0, shared).join(' ').replace(/,$/, '')
-  return {
-    label: `${prefix} tier`,
-    tiers: tiers.map((m) => ({
-      id: m.id,
-      name: m.name.slice(prefix.length).replace(/^,/, '').trim(),
-    })),
-  }
-})
+const TIER_GROUPS = tierGroups(catalog)
 
 // "Values Amex Membership Rewards and Chase Ultimate Rewards points at 1.7¢
 // instead of 1¢": the profiles' own numbers, with the programs' names.

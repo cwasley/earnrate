@@ -176,3 +176,33 @@ export function askText(catalog: Catalog, m: Membership): string | null {
     ? `I have ${withArticle(m.name)}`
     : null
 }
+
+// Tiers of one membership as one menu, named for what the tiers share:
+// "BofA Rewards tier" with Member, Preferred Plus, Preferred Honors and
+// Premier.
+export function tierGroups(
+  catalog: Catalog,
+): { group: string; label: string; tiers: { id: string; name: string }[] }[] {
+  return [...new Set(catalog.memberships.flatMap((m) => m.group ?? []))].map(
+    (group) => {
+      const tiers = catalog.memberships.filter((m) => m.group === group)
+      const names = tiers.map((m) => m.name)
+      const words = names[0]?.split(' ') ?? []
+      let shared = 0
+      while (
+        shared < words.length - 1 &&
+        names.every((n) => n.split(' ')[shared] === words[shared])
+      )
+        shared++
+      const prefix = words.slice(0, shared).join(' ').replace(/,$/, '')
+      return {
+        group,
+        label: `${prefix} tier`,
+        tiers: tiers.map((m) => ({
+          id: m.id,
+          name: m.name.slice(prefix.length).replace(/^,/, '').trim(),
+        })),
+      }
+    },
+  )
+}

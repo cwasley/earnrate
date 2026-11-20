@@ -20,7 +20,30 @@ struct CardRow: Decodable, Hashable, Identifiable {
 }
 
 struct Home: Decodable {
+    struct Welcome: Decodable {
+        let title: String
+        let lead: String
+        let privacy: String
+        let add: String
+        let skip: String
+        let art: [CardArt]
+    }
+
+    struct Nudge: Decodable {
+        let text: String
+        let button: String
+    }
+
+    struct StartNote: Decodable {
+        let yours: String
+        let every: String
+    }
+
     let quick: [String]
+    let months: [String]
+    let welcome: Welcome
+    let nudge: Nudge
+    let startNote: StartNote
 }
 
 struct Suggestion: Decodable, Hashable {
@@ -54,6 +77,8 @@ struct Answer: Decodable {
         let label: String
         let name: String
         let detail: String
+        let reason: String
+        let warnings: [String]
         let art: CardArt
     }
 
@@ -76,9 +101,20 @@ struct Answer: Decodable {
     }
 
     struct Kinds: Decodable {
+        let lead: String?
         let prompt: String
         let quick: [PlaceKind]
+        let moreLabel: String
         let more: [PlaceKind]
+        let clear: String
+    }
+
+    struct Labels: Decodable {
+        let yours: String
+        let every: String
+        let why: String
+        let cardPage: String
+        let held: String
     }
 
     let title: String
@@ -97,21 +133,362 @@ struct Answer: Decodable {
     let footer: [String]
     let kinds: Kinds?
     let kind: String?
+    let labels: Labels
 }
 
 struct CardGroups: Decodable {
+    struct Group: Decodable, Identifiable {
+        let id: String
+        let title: String
+        let index: String
+        let cards: [CardRow]
+    }
+
+    let quickTitle: String
+    let quick: [CardRow]
+    let groups: [Group]
+    let searchPrompt: String
+}
+
+struct WalletCards: Decodable {
+    let cards: [CardRow]
+    let problems: [String]
+}
+
+struct Removal: Decodable {
+    let title: String
+    let remove: String
+    let keep: String?
+}
+
+// Setup after adding cards, and a card's settings, share these.
+
+struct OnOff: Decodable, Identifiable, Hashable {
+    let id: String
+    let label: String
+    let on: Bool
+}
+
+struct TierMenu: Decodable, Identifiable {
+    struct Option: Decodable, Identifiable, Hashable {
+        let id: String
+        let label: String
+    }
+
+    let id: String
+    let label: String
+    let none: String
+    let options: [Option]
+    let selected: String?
+}
+
+struct PickGroup: Decodable, Identifiable {
+    struct Option: Decodable, Identifiable, Hashable {
+        let id: String
+        let label: String
+        let on: Bool
+        let enabled: Bool
+    }
+
+    struct Info: Decodable, Hashable {
+        let question: String
+        let answer: String
+    }
+
+    let choice: String
+    let legend: String
+    let count: String
+    let single: Bool
+    let options: [Option]
+    let info: [Info]
+    var id: String { choice }
+}
+
+struct ActivationRow: Decodable, Identifiable {
+    let rule: String
+    let label: String
+    let on: Bool
+    let opens: String?
+    var id: String { rule }
+}
+
+struct Setup: Decodable {
+    struct Card: Decodable, Identifiable {
+        let card: CardRow
+        let picks: [PickGroup]
+        let activations: [ActivationRow]
+        let activationsTitle: String
+        let notes: [String]
+        var id: String { card.id }
+    }
+
+    struct Memberships: Decodable {
+        let title: String
+        let toggles: [OnOff]
+        let menus: [TierMenu]
+    }
+
+    let title: String
+    let lead: String
+    let cards: [Card]
+    let memberships: Memberships?
+    struct Asked: Codable {
+        let picks: [String]
+        let activations: [String]
+        let memberships: [String]
+
+        var json: [String: Any] {
+            ["picks": picks, "activations": activations, "memberships": memberships]
+        }
+    }
+
+    let skip: String
+    let done: String
+    let asked: Asked
+
+    var asksAnything: Bool { !cards.isEmpty || memberships != nil }
+}
+
+enum SettingsFocus: String, Decodable, Hashable {
+    case picks
+    case activations
+    case credits
+    case bonus
+    case anniversary
+}
+
+struct WalletHome: Decodable {
+    struct Todo: Decodable, Identifiable {
+        let id: String
+        let cardId: String
+        let art: CardArt
+        let title: String
+        let detail: String
+        let when: String?
+        let button: String?
+        let url: String?
+        let focus: SettingsFocus?
+    }
+
+    struct Note: Decodable, Hashable {
+        let text: String
+        let button: String?
+        let url: String?
+    }
+
+    struct Sheet: Decodable {
+        struct Row: Decodable, Identifiable {
+            let label: String
+            let query: String?
+            let cardId: String?
+            let name: String
+            let rate: String
+            let note: String?
+            let art: CardArt?
+            var id: String { label }
+        }
+
+        let title: String
+        let subtitle: String
+        let rows: [Row]
+    }
+
+    struct Held: Decodable, Identifiable {
+        let card: CardRow
+        let note: String?
+        let ask: Bool
+        let action: String
+        var id: String { card.id }
+    }
+
+    struct Past: Decodable {
+        let title: String
+        let count: String
+    }
+
+    let searchPrompt: String
+    let todoTitle: String
+    let todoShown: Int
+    let todoMore: String?
+    let todoFewer: String
+    let todo: [Todo]
+    let notes: [Note]
+    let sheet: Sheet?
+    let cardsTitle: String
+    let cards: [Held]
+    let addCards: String
+    let past: Past
+    let settings: String
+    let problems: [String]
+
+    static let empty = WalletHome(
+        searchPrompt: "", todoTitle: "", todoShown: 3, todoMore: nil, todoFewer: "", todo: [], notes: [], sheet: nil, cardsTitle: "",
+        cards: [], addCards: "", past: Past(title: "", count: ""), settings: "", problems: []
+    )
+}
+
+struct CardSettings: Decodable {
+    struct Credits: Decodable {
+        struct Tile: Decodable, Identifiable {
+            let id: String
+            let name: String
+            let worth: String?
+            let answer: String?
+            let state: String
+        }
+
+        struct Detail: Decodable, Identifiable {
+            struct Used: Decodable {
+                let label: String
+                let value: Double
+                let max: Double
+            }
+
+            struct Night: Decodable {
+                let label: String
+                let value: Double?
+                let placeholder: String
+            }
+
+            let id: String
+            let name: String
+            let text: String
+            let used: Used?
+            let night: Night?
+        }
+
+        let title: String
+        let all: String
+        let none: String
+        let tiles: [Tile]
+        let enroll: String?
+        let detailsTitle: String
+        let details: [Detail]
+    }
+
+    struct Anniversary: Decodable {
+        let label: String
+        let month: Int
+        let day: Int
+    }
+
+    struct Intro: Decodable {
+        let title: String
+        let lines: [String]
+        let label: String
+        let opened: String?
+    }
+
+    struct Bonus: Decodable {
+        let title: String
+        let offer: String
+        let label: String
+        let tracking: Bool
+        let openedLabel: String
+        let opened: String?
+        let spentLabel: String
+        let spent: Double
+    }
+
+    struct Milestone: Decodable {
+        let title: String
+        let lines: [String]
+        let label: String
+        let spent: Double?
+    }
+
+    let card: CardRow
+    let note: String?
+    let picks: [PickGroup]
+    let activationsTitle: String
+    let activations: [ActivationRow]
+    let credits: Credits?
+    let anniversary: Anniversary?
+    let intro: Intro?
+    let bonus: Bonus?
+    let milestone: Milestone?
+    let remove: String
+    let cardPage: String
+}
+
+struct WalletSettings: Decodable {
+    struct Points: Decodable {
+        struct Value: Decodable, Identifiable {
+            let id: String
+            let name: String
+            let cents: Double
+            let text: String
+            let own: Bool
+            let reset: String
+        }
+
+        let title: String
+        let transfer: OnOff?
+        let values: [Value]
+        let range: String
+        let min: Double
+        let max: Double
+        let step: Double
+    }
+
+    let membershipsTitle: String
+    let membershipsLead: String
+    let toggles: [OnOff]
+    let menus: [TierMenu]
+    let othersTitle: String
+    let otherToggles: [OnOff]
+    let otherMenus: [TierMenu]
+    let points: Points?
+}
+
+// Which month a repeat-bonus note asks for, sent back as it came.
+struct MonthAsk: Codable, Hashable {
+    let cardId: String
+    let held: Bool
+    let pastIndex: Int?
+    let field: String
+
+    var json: [String: Any] {
+        ["cardId": cardId, "held": held, "pastIndex": orNull(pastIndex), "field": field]
+    }
+}
+
+struct PastCards: Decodable {
+    struct Row: Decodable, Identifiable {
+        struct Month: Decodable, Identifiable {
+            let field: String
+            let label: String
+            let month: String?
+            let never: Bool
+            let neverLabel: String?
+            var id: String { field }
+        }
+
+        struct Ask: Decodable {
+            let label: String
+            let ask: MonthAsk
+        }
+
+        let index: Int
+        let card: CardRow
+        let months: [Month]
+        let text: String?
+        let ask: Ask?
+        var id: String { "\(index)-\(card.id)" }
+    }
+
     struct Group: Decodable, Identifiable {
         let issuer: String
         let cards: [CardRow]
         var id: String { issuer }
     }
 
-    let groups: [Group]
-}
-
-struct WalletCards: Decodable {
-    let cards: [CardRow]
-    let problems: [String]
+    let title: String
+    let lead: String
+    let rows: [Row]
+    let addTitle: String
+    let add: [Group]
+    let remove: String
 }
 
 struct CardPage: Decodable {

@@ -1,4 +1,5 @@
 import { catalog } from 'virtual:catalog'
+import { placeKindAsk, SOMETHING_ELSE } from '../../src/engine/text.ts'
 import type { MerchantResolution } from '../../src/engine/types.ts'
 import { placeKinds } from './place-kinds.ts'
 import { track } from './track.ts'
@@ -25,9 +26,7 @@ export function PlaceKinds({
   const inMore = KINDS.more.some((k) => k.key === kind)
   return (
     <div class="place-kinds" role="group" aria-labelledby="place-kinds-ask">
-      <p id="place-kinds-ask">
-        What kind of place is “{merchant.resolvedName}”?
-      </p>
+      <p id="place-kinds-ask">{placeKindAsk(merchant.resolvedName)}</p>
       <div class="chips">
         {KINDS.quick.map((k) => (
           <button
@@ -42,11 +41,11 @@ export function PlaceKinds({
         ))}
         <select
           class={inMore ? 'chip on' : 'chip'}
-          aria-label="Something else"
+          aria-label={SOMETHING_ELSE}
           value={inMore ? (kind ?? '') : ''}
           onChange={(e) => pick(e.currentTarget.value || null)}
         >
-          <option value="">Something else</option>
+          <option value="">{SOMETHING_ELSE}</option>
           {KINDS.more.map((k) => (
             <option value={k.key} key={k.key}>
               {k.label}

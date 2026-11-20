@@ -2,20 +2,18 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 import { catalog } from 'virtual:catalog'
 import type { CreditChoice } from '../../src/engine/credits.ts'
 import { possessive } from '../../src/engine/text.ts'
-import { noneChange, tapChange, type MarksChange } from '../rate/answers.ts'
+import {
+  noneChange,
+  tapChange,
+  type MarksChange,
+} from '../../src/engine/credit-marks.ts'
+import { creditWorth } from '../../src/engine/held-text.ts'
 import { enrollLine } from './credit-enroll.ts'
-import { shortestName, wholeDollars } from './format.ts'
+import { shortestName } from './format.ts'
 import { Check } from './QuickCards.tsx'
 
 // Shown before "N more": the card's credits worth the most.
 const SHOWN = 4
-
-const worth = (c: CreditChoice) =>
-  c.yearly === null
-    ? null
-    : c.night
-      ? `up to ${wholeDollars(c.yearly)}`
-      : `${wholeDollars(c.yearly)}/yr`
 
 const idsWith = (choices: CreditChoice[], answer: CreditChoice['answer']) =>
   choices.filter((c) => c.answer === answer).map((c) => c.id)
@@ -161,7 +159,7 @@ function CardCredits({
       <ul class="credit-tiles" aria-label={`${name} credits`}>
         {shown.map((c, i) => {
           const on = c.answer === 'used'
-          const value = worth(c)
+          const value = creditWorth(c)
           return (
             <li key={c.id} class="credit-tile" data-credit={c.id}>
               <button

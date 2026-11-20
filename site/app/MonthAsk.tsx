@@ -1,4 +1,5 @@
 import { catalog } from 'virtual:catalog'
+import { PAST_MONTH_LABELS } from '../../src/engine/held-text.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import {
   repeatMonthFields,
@@ -9,11 +10,7 @@ import { shortName } from './format.ts'
 import { MonthPick } from './MonthPick.tsx'
 import { monthAskOp, type LocalOp } from './sync.ts'
 
-export const MONTH_LABELS: Record<MonthAsk['field'], string> = {
-  bonus_received: 'Bonus posted',
-  opened: 'Opened',
-  closed: 'Closed',
-}
+export const MONTH_LABELS = PAST_MONTH_LABELS
 
 const FIELDS = new Map(
   catalog.cards.map((c) => [c.id, repeatMonthFields(catalog, c.id)]),

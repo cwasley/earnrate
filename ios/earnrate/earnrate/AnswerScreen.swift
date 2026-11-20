@@ -1,6 +1,6 @@
 import SwiftUI
 
-// One store or category's answer: the pick, then the ranking.
+// One store or category's answer: the pick, then the rest of the ranking.
 struct AnswerScreen: View {
     @Environment(AppModel.self) private var model
     let query: String
@@ -15,7 +15,7 @@ struct AnswerScreen: View {
         let scope: Scope?
         let kind: String?
         let all: Bool
-        let cards: [String]
+        let revision: Int
     }
 
     var body: some View {
@@ -29,9 +29,9 @@ struct AnswerScreen: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .navigationTitle(query)
-        .navigationBarTitleDisplayMode(.inline)
-        .task(id: Key(scope: scope, kind: kind, all: all, cards: model.walletCards.map(\.id))) {
+        .navigationTitle(answer?.title ?? query)
+        .navigationBarTitleDisplayMode(.large)
+        .task(id: Key(scope: scope, kind: kind, all: all, revision: model.revision)) {
             do {
                 answer = try await model.answer(query, scope: scope, kind: kind, all: all)
                 failure = nil
@@ -39,6 +39,8 @@ struct AnswerScreen: View {
                 failure = error.localizedDescription
             }
         }
+        .sensoryFeedback(.selection, trigger: kind)
+        .sensoryFeedback(.selection, trigger: scope)
     }
 
     private func scopeBinding(_ answer: Answer) -> Binding<Scope> {
@@ -51,6 +53,7 @@ private struct AnswerList: View {
     @Binding var scope: Scope
     @Binding var kind: String?
     @Binding var all: Bool
+    @State private var open: Set<String> = []
 
     var body: some View {
         List {
@@ -62,21 +65,15 @@ private struct AnswerList: View {
                 }
             } header: {
                 VStack(alignment: .leading, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(answer.title)
-                            .font(.title2.bold())
-                            .foregroundStyle(Color.primary)
-                            .accessibilityAddTraits(.isHeader)
-                        if let subtitle = answer.subtitle {
-                            Text(subtitle)
-                                .font(.subheadline)
-                                .foregroundStyle(Color.secondary)
-                        }
+                    if let subtitle = answer.subtitle {
+                        Text(subtitle)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.secondary)
                     }
                     if answer.canChooseScope {
                         Picker("Which cards", selection: $scope) {
-                            Text("Your cards").tag(Scope.yours)
-                            Text("Every card").tag(Scope.every)
+                            Text(answer.labels.yours).tag(Scope.yours)
+                            Text(answer.labels.every).tag(Scope.every)
                         }
                         .pickerStyle(.segmented)
                     }
@@ -85,6 +82,19 @@ private struct AnswerList: View {
                 .padding(.bottom, 4)
             } footer: {
                 if let note = answer.scopeNote { Text(note) }
+            }
+
+            if let kinds = answer.kinds {
+                Section {
+                    KindChips(kinds: kinds, kind: $kind)
+                } header: {
+                    Text(kinds.prompt)
+                        .font(.headline)
+                        .foregroundStyle(Color.primary)
+                        .textCase(nil)
+                } footer: {
+                    if let lead = kinds.lead { Text(lead) }
+                }
             }
 
             if !answer.callouts.isEmpty {
@@ -97,23 +107,6 @@ private struct AnswerList: View {
                         }
                         .font(.subheadline)
                     }
-                }
-            }
-
-            if let kinds = answer.kinds {
-                Section(kinds.prompt) {
-                    Picker("Kind of place", selection: $kind) {
-                        Text("Not sure").tag(String?.none)
-                        ForEach(kinds.quick) { k in
-                            Text(k.label).tag(String?.some(k.key))
-                        }
-                        Section("Something else") {
-                            ForEach(kinds.more) { k in
-                                Text(k.label).tag(String?.some(k.key))
-                            }
-                        }
-                    }
-                    .pickerStyle(.menu)
                 }
             }
 
@@ -130,9 +123,13 @@ private struct AnswerList: View {
             if !answer.rows.isEmpty {
                 Section {
                     ForEach(answer.rows) { row in
-                        NavigationLink(value: Route.card(row.card.id)) {
-                            RankRow(row: row, markHeld: answer.scope == .every)
-                        }
+                        RankRow(
+                            row: row,
+                            markHeld: answer.scope == .every,
+                            labels: answer.labels,
+                            expanded: open.contains(row.id),
+                            toggle: { toggle(row.id) }
+                        )
                     }
                     if let more = answer.moreLabel {
                         Button(more) { all = true }
@@ -150,6 +147,44 @@ private struct AnswerList: View {
             }
         }
         .listSectionSpacing(.compact)
+        .sensoryFeedback(.selection, trigger: open)
+    }
+
+    private func toggle(_ id: String) {
+        withAnimation(.snappy) {
+            if open.contains(id) { open.remove(id) } else { open.insert(id) }
+        }
+    }
+}
+
+// The kinds of places to tap for a store earnrate doesn't know: the common
+// ones as chips, the rest in a menu.
+private struct KindChips: View {
+    let kinds: Answer.Kinds
+    @Binding var kind: String?
+
+    var body: some View {
+        let inMore = kinds.more.first { $0.key == kind }
+        FlowLayout(spacing: 8) {
+            ForEach(kinds.quick) { k in
+                Chip(label: k.label, on: kind == k.key) {
+                    kind = kind == k.key ? nil : k.key
+                }
+            }
+            SwiftUI.Menu {
+                Picker(kinds.moreLabel, selection: $kind) {
+                    Text(kinds.clear).tag(String?.none)
+                    ForEach(kinds.more) { k in
+                        Text(k.label).tag(String?.some(k.key))
+                    }
+                }
+            } label: {
+                ChipLabel(label: inMore?.label ?? kinds.moreLabel, on: inMore != nil, menu: true)
+            }
+            .accessibilityLabel(kinds.moreLabel)
+            .accessibilityValue(inMore?.label ?? "")
+        }
+        .padding(.vertical, 4)
     }
 }
 
@@ -183,6 +218,14 @@ private struct PickRow: View {
                 Text(pick.detail)
                     .font(.headline)
                     .foregroundStyle(.tint)
+                Text(pick.reason)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                ForEach(pick.warnings, id: \.self) { warning in
+                    Label(warning, systemImage: "exclamationmark.triangle.fill")
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                }
             }
         }
         .padding(.vertical, 6)
@@ -190,59 +233,104 @@ private struct PickRow: View {
     }
 }
 
+// A ranked card in a line: name, rule and rate. A tap shows what earning it
+// takes and the engine's reasoning; the card's page is a link from there and
+// in the context menu.
 private struct RankRow: View {
     let row: Answer.Row
     let markHeld: Bool
+    let labels: Answer.Labels
+    let expanded: Bool
+    let toggle: () -> Void
     @Environment(\.dynamicTypeSize) private var size
 
     var body: some View {
-        if size.isAccessibilitySize {
+        Button(action: toggle) {
+            VStack(alignment: .leading, spacing: 8) {
+                line
+                if expanded { details }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(expanded ? "Hides the details" : "Shows the details")
+        .contextMenu {
+            NavigationLink(value: Route.card(row.card.id)) {
+                Label(labels.cardPage, systemImage: "creditcard")
+            }
+        } preview: {
             VStack(alignment: .leading, spacing: 6) {
-                CardArtView(art: row.card.art, width: 44)
-                Text(row.rate)
-                    .font(.title3.weight(.semibold).monospacedDigit())
-                details
+                ForEach(row.why, id: \.self) { Text($0) }
             }
-            .accessibilityElement(children: .combine)
-        } else {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
-                CardArtView(art: row.card.art, width: 44)
-                    .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 8 }
-                details
-                Spacer(minLength: 8)
-                Text(row.rate)
-                    .font(.title3.weight(.semibold).monospacedDigit())
-            }
-            .padding(.vertical, 2)
-            .accessibilityElement(children: .combine)
+            .font(.subheadline)
+            .padding()
+            .frame(width: 320, alignment: .leading)
         }
     }
 
-    private var details: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(row.card.shortName)
-                    .font(.body.weight(.semibold))
-                if markHeld && row.card.held {
-                    Text("Yours")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.tint)
+    @ViewBuilder private var line: some View {
+        let layout = size.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+        layout {
+            CardArtView(art: row.card.art, width: 44)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(row.card.shortName)
+                        .font(.body.weight(.semibold))
+                    if markHeld && row.card.held {
+                        Text(labels.held)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tint)
+                    }
                 }
-            }
-            Text(row.reason)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            ForEach(row.lines, id: \.self) { line in
-                Text(line)
-                    .font(.footnote)
+                Text(row.reason)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
+            if !size.isAccessibilitySize { Spacer(minLength: 8) }
+            HStack(spacing: 6) {
+                if !row.warnings.isEmpty && !expanded {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .foregroundStyle(.orange)
+                        .accessibilityLabel("Has a note")
+                }
+                Text(row.rate)
+                    .font(.title3.weight(.semibold).monospacedDigit())
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 6) {
             ForEach(row.warnings, id: \.self) { warning in
                 Label(warning, systemImage: "exclamationmark.triangle.fill")
                     .font(.footnote)
                     .foregroundStyle(.orange)
             }
+            ForEach(row.lines, id: \.self) { line in
+                Text(line)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            Text(labels.why)
+                .font(.footnote.weight(.semibold))
+                .padding(.top, 2)
+            ForEach(row.why, id: \.self) { line in
+                Text(line)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            NavigationLink(value: Route.card(row.card.id)) {
+                Label(labels.cardPage, systemImage: "creditcard")
+                    .font(.footnote.weight(.semibold))
+            }
+            .buttonStyle(.borderless)
+            .padding(.top, 2)
         }
+        .padding(.leading, size.isAccessibilitySize ? 0 : 56)
+        .transition(.opacity)
     }
 }
 

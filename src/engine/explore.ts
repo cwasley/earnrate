@@ -51,6 +51,7 @@ import {
   pct,
   pickCondition,
   pointValuesText,
+  unknownStoreExploreWarning,
 } from './text.ts'
 import type {
   Channel,
@@ -727,9 +728,7 @@ function exploreWarnings(
 ): string[] {
   const warnings: string[] = []
   if (merchant.source === 'none') {
-    warnings.push(
-      `earnrate doesn't know "${merchant.input}" yet, so only base rates apply. Try a category, or the name of a larger chain.`,
-    )
+    warnings.push(unknownStoreExploreWarning(merchant.input))
   }
   if (merchant.ambiguity) {
     const alternatives = merchant.ambiguity.mayCodeAs.map((c) =>

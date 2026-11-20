@@ -62,6 +62,7 @@ import {
   shortCardName,
   shortDate,
   wholeDollars,
+  unknownStoreWarning,
 } from './text.ts'
 import type {
   Confidence,
@@ -889,9 +890,7 @@ export function recommend(
     )
 
   if (merchant.source === 'none') {
-    warnings.push(
-      `Couldn't identify "${merchant.input}", so only base rates apply. If you know what kind of business it is, give its category (like dining or grocery) to find bonus rates.`,
-    )
+    warnings.push(unknownStoreWarning(merchant.input))
   }
   if (merchant.source === 'caller') {
     warnings.push(

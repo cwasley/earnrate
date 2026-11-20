@@ -30,6 +30,7 @@ import {
   CREDIT_PERIODS,
   ENROLL_FIRST,
   hostname,
+  leftOutLines,
   money,
   onlineAssumption,
 } from '../../src/engine/text.ts'
@@ -232,15 +233,11 @@ function CreditRow({ pick }: { pick: CreditPick }) {
 }
 
 function Excluded({ r }: { r: Exploration }) {
-  const byReason = new Map<string, number>()
-  for (const e of r.excluded)
-    byReason.set(e.reason, (byReason.get(e.reason) ?? 0) + 1)
   return (
     <>
-      {[...byReason].map(([reason, count]) => (
-        <p class="callout" key={reason}>
-          {reason} {count === 1 ? 'One card' : `${String(count)} cards`} left
-          out.
+      {leftOutLines(r.excluded).map((line) => (
+        <p class="callout" key={line}>
+          {line}
         </p>
       ))}
     </>

@@ -3,11 +3,13 @@ import { catalog } from 'virtual:catalog'
 import { localToday } from '../../src/engine/periods.ts'
 import { ABROAD, noteOnly, recommend } from '../../src/engine/recommend.ts'
 import {
+  cantUseLines,
   creditShort,
-  dollarsAndCents,
-  listed,
-  MERCHANT_CODE_LEAD,
-  money,
+  FOR_WELCOME_BONUS,
+  NONE_OF_YOURS,
+  shopperAssumptions,
+  USE_CARD,
+  verdictDetail,
 } from '../../src/engine/text.ts'
 import type { RankedCard, Recommendation } from '../../src/engine/types.ts'
 import {
@@ -57,7 +59,7 @@ export function askWallet(
 // What an answer assumed, one tap away. The merchant code is for Claude
 // and the command line; it says nothing to a shopper.
 export function Assumes({ lines: all }: { lines: string[] }) {
-  const lines = all.filter((l) => !l.startsWith(MERCHANT_CODE_LEAD))
+  const lines = shopperAssumptions(all)
   if (lines.length === 0) return null
   return (
     <details class="how assumes">
@@ -68,19 +70,6 @@ export function Assumes({ lines: all }: { lines: string[] }) {
         ))}
       </ul>
     </details>
-  )
-}
-
-// "Can't use here: Amex Gold. Costco takes only Visa in-store."
-function cantUseHere(excluded: Recommendation['excluded']): string[] {
-  const byReason = new Map<string, string[]>()
-  for (const e of excluded)
-    byReason.set(e.reason, [
-      ...(byReason.get(e.reason) ?? []),
-      shortName(e.cardId),
-    ])
-  return [...byReason].map(
-    ([reason, names]) => `${reason} Can't use: ${listed(names)}.`,
   )
 }
 
@@ -110,21 +99,19 @@ export function WalletAnswer({
       {rec.categoryNote ? <p class="callout">{rec.categoryNote}</p> : null}
       {decided && held ? (
         <p class="verdict">
-          Use <strong>{shortName(held.id)}</strong>
-          {rec.bonus ? ' for its welcome bonus' : ''}:{' '}
-          {pct(decided.effectiveReturnPct)} back
-          {top?.earned !== null && top?.earned !== undefined
-            ? `, about ${dollarsAndCents(top.earned)}`
-            : ''}
-          {top?.credit?.dollars
-            ? `, plus ${money(top.credit.dollars)} back from its ${top.credit.name} credit`
-            : ''}
+          {USE_CARD} <strong>{shortName(held.id)}</strong>
+          {rec.bonus ? ` ${FOR_WELCOME_BONUS}` : ''}:{' '}
+          {verdictDetail(
+            decided.effectiveReturnPct,
+            top?.earned ?? null,
+            top?.credit ?? null,
+          )}
           .
         </p>
       ) : (
-        <p class="verdict">None of your cards work here.</p>
+        <p class="verdict">{NONE_OF_YOURS}</p>
       )}
-      {cantUseHere(rec.excluded).map((line) => (
+      {cantUseLines(rec.excluded, shortName).map((line) => (
         <p class="callout" key={line}>
           {line}
         </p>

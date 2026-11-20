@@ -270,6 +270,76 @@ export function codesAs(
 
 export const MERCHANT_CODE_LEAD = 'Usual merchant code:'
 
+// Assumptions minus the merchant code, which says nothing to a shopper:
+// what earnrate.dev and the iPhone app show under an answer.
+export const shopperAssumptions = (lines: string[]) =>
+  lines.filter((l) => !l.startsWith(MERCHANT_CODE_LEAD))
+
+// An answer's verdict on earnrate.dev and the iPhone app: "Use Amex Gold:
+// 4% back, about $3.20, plus $5 back from its Dunkin' credit."
+export const USE_CARD = 'Use'
+export const FOR_WELCOME_BONUS = 'for its welcome bonus'
+export const BEST_CARD = 'Best card'
+export const NONE_OF_YOURS = 'None of your cards work here.'
+
+export function verdictDetail(
+  effectiveReturnPct: number,
+  earned: number | null,
+  credit: { dollars: number | null; name: string } | null,
+): string {
+  return [
+    `${pct(effectiveReturnPct)} back`,
+    ...(earned === null ? [] : [`about ${dollarsAndCents(earned)}`]),
+    ...(credit?.dollars
+      ? [`plus ${money(credit.dollars)} back from its ${credit.name} credit`]
+      : []),
+  ].join(', ')
+}
+
+// "Costco takes only Visa in-store. Can't use: Amex Gold.", one line per
+// reason, for the cards in a wallet an answer leaves out.
+export function cantUseLines(
+  excluded: { cardId: string; reason: string }[],
+  name: (cardId: string) => string,
+): string[] {
+  const byReason = new Map<string, string[]>()
+  for (const e of excluded)
+    byReason.set(e.reason, [...(byReason.get(e.reason) ?? []), name(e.cardId)])
+  return [...byReason].map(
+    ([reason, cards]) => `${reason} Can't use: ${listed(cards)}.`,
+  )
+}
+
+// The same for an answer from every card, which counts them instead.
+export function leftOutLines(excluded: { reason: string }[]): string[] {
+  const byReason = new Map<string, number>()
+  for (const e of excluded)
+    byReason.set(e.reason, (byReason.get(e.reason) ?? 0) + 1)
+  return [...byReason].map(
+    ([reason, count]) =>
+      `${reason} ${count === 1 ? 'One card' : `${String(count)} cards`} left out.`,
+  )
+}
+
+// The iPhone app's note over an answer from every card.
+export const EVERY_CARD_NOTE =
+  'From every personal card earnrate knows. Add yours in My wallet to rank only those.'
+export const EVERY_CARD_TOO =
+  'From every personal card earnrate knows. Yours are marked.'
+
+// A store earnrate can't place, as the engine's answers say it, and as a
+// screen with kinds of places to tap says it instead.
+export const unknownStoreWarning = (input: string) =>
+  `Couldn't identify "${input}", so only base rates apply. If you know what kind of business it is, give its category (like dining or grocery) to find bonus rates.`
+export const unknownStoreExploreWarning = (input: string) =>
+  `earnrate doesn't know "${input}" yet, so only base rates apply. Try a category, or the name of a larger chain.`
+export const unknownStoreTapText = (name: string) =>
+  `earnrate doesn't know “${name}” yet, so only base rates apply. Tap the kind of place it is to see bonus rates.`
+
+// The question under that notice, with kinds of places to pick from.
+export const placeKindAsk = (name: string) => `What kind of place is “${name}”?`
+export const SOMETHING_ELSE = 'Something else'
+
 // The code behind "counts as a supermarket", for whoever wants it: "Usual
 // merchant code: MCC 5411." Said after the plain-words assumptions, and
 // left off the site, where it says nothing to a shopper.

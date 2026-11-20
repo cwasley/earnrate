@@ -2,9 +2,16 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { Fragment, type ComponentChildren } from 'preact'
 import { catalog } from 'virtual:catalog'
 import { walletProblems } from '../../src/data/integrity.ts'
-import { bonusStatus } from '../../src/engine/bonus.ts'
 import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
-import { milestoneSummaries } from '../../src/engine/milestones.ts'
+import {
+  bonusLine,
+  cents,
+  milestoneLine,
+  PAST_CARDS_LEAD,
+  POINT_VALUE_RANGE,
+  RENEWAL_ASK,
+  TRANSFER_POINTS_ASK,
+} from '../../src/engine/held-text.ts'
 import { localToday } from '../../src/engine/periods.ts'
 import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
 import {
@@ -45,7 +52,6 @@ import {
   membershipName,
   pct,
   shortName,
-  wholeDollars,
 } from './format.ts'
 import { load, save } from './settings.ts'
 import {
@@ -130,30 +136,6 @@ function CheatSheet({ wallet }: { wallet: Wallet }) {
   )
 }
 
-function bonusLine(wallet: Wallet, held: WalletCard): string | null {
-  const status = bonusStatus(catalog, wallet, held, localToday())
-  if (!status) return null
-  if (status.state === 'met') return 'Welcome bonus: met'
-  if (status.state === 'expired') return 'Welcome bonus: deadline passed'
-  if (status.spend === null) return 'Welcome bonus: tracking'
-  const days =
-    status.daysLeft === null ? '' : ` · ${String(status.daysLeft)} days left`
-  return `Welcome bonus: ${wholeDollars(status.spent)} of ${wholeDollars(status.spend)}${days}`
-}
-
-// The next spend milestone still ahead this period, or the last one reached.
-function milestoneLine(held: WalletCard): string | null {
-  const card = cards.get(held.id)
-  if (!card) return null
-  const all = milestoneSummaries(card, held, localToday())
-  const tracked = all.filter((m) => m.tracked)
-  const next = tracked.find((m) => m.spent < m.spend) ?? tracked.at(-1)
-  if (!next) return null
-  return next.spent >= next.spend
-    ? `Spend bonus: ${wholeDollars(next.spend)} reached`
-    : `Spend bonus: ${wholeDollars(next.spent)} of ${wholeDollars(next.spend)}`
-}
-
 // A fee card with no date to tell when it renews: asked on its row, where
 // the date goes.
 const renewalAsks = (held: WalletCard) =>
@@ -190,7 +172,9 @@ function CardList({
         const needsPick = info?.choices.some(
           (c) => c.default === null && !held.chosen?.picks[c.id],
         )
-        const note = bonusLine(wallet, held) ?? milestoneLine(held)
+        const note =
+          bonusLine(catalog, wallet, held, localToday()) ??
+          (card ? milestoneLine(card, held, localToday()) : null)
         return (
           <li key={held.id} data-held={held.id}>
             <button
@@ -208,7 +192,7 @@ function CardList({
                     <span class="row-note">{note}</span>
                   ) : renewalAsks(held) ? (
                     <span class="row-note" data-ask="">
-                      Add its renewal date
+                      {RENEWAL_ASK}
                     </span>
                   ) : null}
                 </span>
@@ -336,10 +320,7 @@ function CardHistory({
           {past.length === 0 ? 'None' : cardCount(past.length)}
         </span>
       </summary>
-      <p class="muted">
-        Issuers limit who can earn a card's sign-up bonus again. Add cards
-        you've closed, and next-card answers say when you can.
-      </p>
+      <p class="muted">{PAST_CARDS_LEAD}</p>
       <fieldset class="lock" disabled={locked}>
         {past.length > 0 ? (
           <ul class="past-cards">
@@ -461,8 +442,6 @@ const valuesOp = (values: Record<string, number | null>): LocalOp => ({
   input: { values },
 })
 
-const cents = (n: number) => `${String(n)}¢`
-
 // What the wallet's points are worth to the person, per program, folded
 // behind its values: most people never change them.
 function PointValues({
@@ -524,7 +503,7 @@ function PointValues({
                 )
               }
             />
-            I transfer points to airlines and hotels
+            {TRANSFER_POINTS_ASK}
           </label>
         ) : null}
         {ids.map((id) => {
@@ -584,7 +563,7 @@ function PointValues({
             </div>
           )
         })}
-        <p class="muted small">From 0.1¢ to 5¢ a point.</p>
+        <p class="muted small">{POINT_VALUE_RANGE}</p>
       </fieldset>
     </details>
   )

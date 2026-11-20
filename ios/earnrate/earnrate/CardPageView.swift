@@ -43,6 +43,9 @@ struct CardPageView: View {
         List {
             Section {
                 if held {
+                    NavigationLink(value: Route.settings(id, nil)) {
+                        Label("Settings", systemImage: "slider.horizontal.3")
+                    }
                     Button("Remove from My wallet", systemImage: "minus.circle", role: .destructive) {
                         Task { refusal = await model.remove(id) }
                     }
