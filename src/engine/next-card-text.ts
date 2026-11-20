@@ -55,6 +55,19 @@ export const offerAsOfText = (o: {
 }) =>
   `${o.validTo ? `Offer ends ${shortDate(o.validTo)}. ` : ''}Public offer as of ${shortDate(o.lastVerified)}.`
 
+// The same, short, under a row's offer: "Offer as of Nov 18, 2026, ends
+// Dec 31".
+export const offerAsOfShortText = (o: {
+  validTo: string | null
+  lastVerified: string
+}) =>
+  `Offer as of ${shortDate(o.lastVerified)}${o.validTo ? `, ends ${shortDate(o.validTo)}` : ''}`
+
+// Cards an issuer counts together for its repeat-bonus rule share one note,
+// under the first of them; the others point to it.
+export const sameRuleText = (name: string) =>
+  `Same bonus rule as the ${name}, above.`
+
 // "With a membership: Sam's Club Mastercard +$36, Costco Anywhere Visa +$29
 // a year": cards that need one the wallet doesn't have, in one line.
 export const withMembershipText = (items: string[], per: string) =>
@@ -75,6 +88,7 @@ export const PER_YEAR = '/yr'
 export const HOW_CALCULATED = 'How this is calculated'
 export const BONUS_UNLIKELY = 'bonus unlikely'
 export const BONUS_OUT_OF_REACH = 'bonus out of reach'
+export const BONUS_UNSURE = 'bonus may not apply'
 export const SEE_CARD_DETAILS = 'See card details'
 export const ADD_TO_MY_WALLET = 'Add to my wallet'
 

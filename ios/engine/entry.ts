@@ -12,6 +12,11 @@ import { pastCardNote } from '../../site/app/card-history.ts'
 import { enrollLine, usedSoFarShown } from '../../site/app/credit-enroll.ts'
 import { placeKinds } from '../../site/app/place-kinds.ts'
 import { QUICK_CARDS } from '../../site/app/quick-cards.ts'
+import {
+  CATALOG_FILE_FORMAT,
+  compareDataVersions,
+  parseCatalogFile,
+} from '../../src/data/catalog-file.ts'
 import { walletProblems } from '../../src/data/integrity.ts'
 import {
   BONUS_RULES_COLUMN,
@@ -98,6 +103,7 @@ import {
   BEST_SETUPS_WORKING,
   BONUS_OUT_OF_REACH,
   BONUS_UNLIKELY,
+  BONUS_UNSURE,
   BUSINESS_FILTER,
   feesText,
   firstYearText,
@@ -108,6 +114,7 @@ import {
   NO_FEE_FILTER,
   NO_OFFER_AHEAD,
   noPairBeatsText,
+  offerAsOfShortText,
   offerAsOfText,
   pairParts,
   pairSplitText,
@@ -115,6 +122,7 @@ import {
   picksText,
   REWARD_KINDS,
   sameResultText,
+  sameRuleText,
   showMoreText,
   signedDollars,
   SINGLE_CARD,
@@ -135,6 +143,7 @@ import {
   OFFERS_MAY_DIFFER,
   offerCheckedOn,
   offerOrder,
+  offerShortTerms,
   offerTerms,
   type OfferSummary,
 } from '../../src/engine/offers.ts'
@@ -240,8 +249,12 @@ import {
   type Wallet,
   type WalletCard,
 } from '../../src/schema/wallet.ts'
+import { installURL } from './url.ts'
+
+installURL()
 
 let catalog: Catalog | null = null
+let dataVersion = ''
 let text: ReturnType<typeof cardText> | null = null
 
 function loaded(): Catalog {
@@ -1962,16 +1975,22 @@ export type CardPage = {
   credits: string[]
   perks: string[] // free nights, yearly points, spend bonuses, intro rates
   feeWorth: string | null
+  // Left out with `feeWorth: false` for a card that may have one, which
+  // the app then asks cardFeeWorth for.
+  feeWorthLater: boolean
   changes: string[]
   checked: string
   sources: string[]
 }
 
 // A card's page: what the site's card page and search_cards say about it.
+// Whether its fee is worth it takes seconds without a JIT, so the app asks
+// for the page without it and fills it in from cardFeeWorth.
 export function cardPage(request: {
   id: string
   wallet?: unknown
   today?: string
+  feeWorth?: boolean
 }): CardPage {
   const c = loaded()
   const today = request.today ?? localToday()
@@ -1979,7 +1998,9 @@ export function cardPage(request: {
   const card = cardOf(request.id)
   const row = cardRow(card.id, heldIds(wallet))
   const info = cardInfo(c, card, wallet, today)
-  const [details] = cardDetails(c, [card.id], wallet, today) ?? []
+  const later = request.feeWorth === false
+  const [details] =
+    cardDetails(c, [card.id], wallet, today, { feeWorth: !later }) ?? []
   const o = card.welcome_offer
   const offer =
     o && inEffect(o, today)
@@ -2013,6 +2034,10 @@ export function cardPage(request: {
       ...info.introRates.map((i) => `New accounts: ${i.text}`),
     ],
     feeWorth: details?.feeWorth?.text ?? null,
+    feeWorthLater:
+      later &&
+      (card.annual_fee ?? 0) > 0 &&
+      card.applications_closed === undefined,
     changes: details?.changes ?? [],
     checked: `Checked against the issuer's terms ${shortDate(card.last_verified)}.`,
     sources: card.source_urls,
@@ -2022,6 +2047,74 @@ export function cardPage(request: {
 // ---------------------------------------------------------------------------
 // Next card: the welcome-offer ranking for the saved cards (or none), and
 // Best setups.
+
+// Whether a card's annual fee is worth it, the slow part of its page.
+export function cardFeeWorth(request: {
+  id: string
+  wallet?: unknown
+  today?: string
+}): { text: string | null } {
+  const c = loaded()
+  const today = request.today ?? localToday()
+  const [details] =
+    cardDetails(c, [cardOf(request.id).id], walletOf(request.wallet), today) ??
+    []
+  return { text: details?.feeWorth?.text ?? null }
+}
+
+// ---------------------------------------------------------------------------
+// About, and the card data the app runs on.
+
+export type About = {
+  title: string
+  lead: string
+  data: { label: string; detail: string }
+  app: string
+  privacy: string
+  links: { id: string; title: string; detail: string | null; url: string }[]
+  notes: string[]
+}
+
+const SITE = 'https://earnrate.dev'
+
+// The data version's day: "2026.11.17.2" is Nov 17, 2026.
+const versionDay = (version: string) =>
+  version.slice(0, 10).replaceAll('.', '-')
+
+export function about(request: {
+  appVersion: string
+  downloaded: boolean
+}): About {
+  return {
+    title: 'About earnrate',
+    lead: "earnrate picks the card that earns the most at a store, from each issuer's own terms, and says why.",
+    data: {
+      label: `Card data ${dataVersion}`,
+      detail: `${shortDate(versionDay(dataVersion))} · ${request.downloaded ? 'Updated from earnrate.dev' : 'Came with the app'}`,
+    },
+    app: `Version ${request.appVersion}`,
+    privacy:
+      'Your cards and searches stay on this phone. The app downloads card data from earnrate.dev and sends nothing else.',
+    links: [
+      {
+        id: 'wrong-rate',
+        title: 'Wrong rate?',
+        detail: "Tell us the card, the store and the issuer's page.",
+        url: `${SITE}/support#wrong-rate`,
+      },
+      { id: 'support', title: 'Support', detail: null, url: `${SITE}/support` },
+      { id: 'privacy', title: 'Privacy', detail: null, url: `${SITE}/privacy` },
+      { id: 'terms', title: 'Terms', detail: null, url: `${SITE}/terms` },
+      {
+        id: 'source',
+        title: 'Source code',
+        detail: 'On GitHub. Code MIT; card data CC BY-NC 4.0.',
+        url: 'https://github.com/cwasley/earnrate',
+      },
+    ],
+    notes: ['No affiliate links, apply links or sponsored placements.'],
+  }
+}
 
 export type NextFilters = {
   kind: CardFilters['kind']
@@ -2074,6 +2167,9 @@ export type OfferRow = {
   totalLabel: string // the same, for VoiceOver
   years: string[] // "$850 year one", "$200 year two"
   offer: string // its terms, when it ends, and the day it was read
+  offerShort: string // the terms in a row's one line
+  asOf: string // "Offer as of Nov 1, 2026"
+  flag: string | null // why the bonus may not count, in two or three words
   history: string | null // the highest public offer earnrate has recorded
   minimum: { text: string; reachable: boolean } | null
   ineligible: string | null // likely not eligible, and until when
@@ -2123,6 +2219,16 @@ function offerRow(o: OfferSummary, rank: number, held: Set<string>): OfferRow {
     totalLabel: plan ? capitalize(twoYearText(plan)) : signedDollars(twoYears),
     years: plan ? [yearOneText(plan.yearOne), yearTwoText(plan.yearTwo)] : [],
     offer: `${offerTerms(o, currencyName(c, o.currency))}. ${offerAsOfText(o)}`,
+    offerShort: offerShortTerms(o, currencyName(c, o.currency)),
+    asOf: offerAsOfShortText(o),
+    flag:
+      o.ineligible !== null
+        ? capitalize(BONUS_UNLIKELY)
+        : plan?.minimumSpend && !plan.minimumSpend.reachable
+          ? capitalize(BONUS_OUT_OF_REACH)
+          : o.eligibilityNote !== null
+            ? capitalize(BONUS_UNSURE)
+            : null,
     history: o.offerHigh?.text ?? null,
     minimum: plan?.minimumSpend
       ? {
@@ -2134,6 +2240,41 @@ function offerRow(o: OfferSummary, rank: number, held: Set<string>): OfferRow {
     eligibility: o.eligibilityNote,
     ask: askOf(o.monthAsk),
   }
+}
+
+// Cards an issuer counts together for its repeat-bonus rule (Southwest's
+// three) would each repeat the same note: the first says it once, naming
+// every card, and asks for the month; the others point to it.
+function sharedRules(
+  c: Catalog,
+  wallet: Wallet,
+  offers: OfferSummary[],
+  rows: OfferRow[],
+  today: string,
+): OfferRow[] {
+  const shared = rows.map((row, i) => {
+    const o = offers[i]
+    const family = cardOf(row.card.id).welcome_offer?.repeat?.also ?? []
+    const own = o && bonusEligibility(c, wallet, o.cardId, today)
+    const note = row.ineligible ?? row.eligibility
+    if (family.length === 0 || !own?.text || note !== own.text) return null
+    const named = bonusEligibility(c, wallet, row.card.id, today, true)?.text
+    return named
+      ? { named, key: `${[row.card.id, ...family].sort().join()}|${named}` }
+      : null
+  })
+  const lead = new Map<string, OfferRow>()
+  return rows.map((row, i) => {
+    const s = shared[i]
+    if (!s || shared.filter((x) => x?.key === s.key).length < 2) return row
+    const field = row.ineligible !== null ? 'ineligible' : 'eligibility'
+    const first = lead.get(s.key)
+    if (!first) {
+      lead.set(s.key, row)
+      return { ...row, [field]: s.named }
+    }
+    return { ...row, [field]: sameRuleText(first.card.shortName), ask: null }
+  })
 }
 
 // Every card the saved wallet doesn't hold (or every card, with none), by
@@ -2176,7 +2317,13 @@ export function nextCard(request: {
   return {
     lead: hasCards ? NEXT_CARD_LEAD.yours : NEXT_CARD_LEAD.every,
     basis: `${spendingBasisText(true, monthlyOf(c, lines))} ${TWO_YEARS_LEAD}`,
-    rows: shown.map((o, i) => offerRow(o, i + 1, held)),
+    rows: sharedRules(
+      c,
+      wallet,
+      shown,
+      shown.map((o, i) => offerRow(o, i + 1, held)),
+      today,
+    ),
     shown: shown.length,
     moreLabel: left > 0 ? showMoreText(left) : null,
     empty: ahead.length === 0 ? NO_OFFER_AHEAD : null,
@@ -2553,10 +2700,31 @@ export function bonusRulesScreen(request: {
 }
 
 // Tests hand the catalog over directly; the app parses it from the bundle.
-export function useCatalog(next: Catalog): number {
+export function useCatalog(next: Catalog, version = ''): number {
   catalog = next
+  dataVersion = version
   text = null
   return next.cards.length
+}
+
+// The app's stored card data: the catalog as parsed, with its version.
+export type StoredCatalog = { version: string; catalog: Catalog }
+
+export function catalogInfo(): { version: string; format: number } {
+  return { version: dataVersion, format: CATALOG_FILE_FORMAT }
+}
+
+// A catalog file downloaded from earnrate.dev, checked by this engine's own
+// schemas and integrity rules. One it can't read, or no newer than the data
+// it runs on, throws; one it can is used from then on, and comes back in
+// the form the app stores.
+export function checkCatalog(json: string): string {
+  const { version, catalog: next } = parseCatalogFile(JSON.parse(json))
+  if (dataVersion !== '' && compareDataVersions(version, dataVersion) <= 0) {
+    throw new Error(`Card data ${version} is not newer than ${dataVersion}.`)
+  }
+  useCatalog(next, version)
+  return JSON.stringify({ version, catalog: next } satisfies StoredCatalog)
 }
 
 // Each call takes one JSON request and answers with JSON.
@@ -2566,7 +2734,14 @@ const call =
     JSON.stringify(f(JSON.parse(request) as never))
 
 const engine = {
-  load: (json: string): number => useCatalog(JSON.parse(json) as Catalog),
+  load: (json: string): number => {
+    const stored = JSON.parse(json) as StoredCatalog
+    return useCatalog(stored.catalog, stored.version)
+  },
+  checkCatalog,
+  catalogInfo: () => JSON.stringify(catalogInfo()),
+  about: call(about),
+  cardFeeWorth: call(cardFeeWorth),
   home: call(home),
   suggest: call(suggest),
   answer: call(answer),

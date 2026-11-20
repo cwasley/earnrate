@@ -43,6 +43,9 @@ struct WalletSettingsSheet: View {
                         }
                     }
                 }
+                Section {
+                    NavigationLink("About earnrate") { AboutView() }
+                }
             }
             .navigationTitle(model.walletHome.settings)
             .navigationBarTitleDisplayMode(.inline)

@@ -67,12 +67,14 @@ function recentChanges(catalog: Catalog, id: string, today: string) {
 // fee math counts the saved point values and what the person says a held
 // card's free night is worth to them, and is run again at transfer value
 // for points that transfer, as the card page does, unless the wallet sets
-// their value.
+// their value. The fee math is the slow part: `feeWorth: false` leaves it
+// out, for a page that shows it once it's worked out.
 export function cardDetails(
   catalog: Catalog,
   ids: string[],
   saved: Wallet | null,
   today: string,
+  options: { feeWorth?: boolean } = {},
 ): CardDetails[] | null {
   if (ids.length > DETAILED_UP_TO) return null
   const valuations = saved?.valuations ?? {}
@@ -89,7 +91,7 @@ export function cardDetails(
       memberships: saved?.memberships ?? [],
       cards: [held],
     }
-    const worth = feeWorth(card)
+    const worth = options.feeWorth === false ? null : feeWorth(card)
     const cents = TRANSFER_VALUES[card.currency]
     const transfer =
       worth === null ||

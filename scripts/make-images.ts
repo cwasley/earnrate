@@ -7,16 +7,29 @@ import { chromium } from 'playwright'
 
 const ROOT = path.join(import.meta.dirname, '..')
 const ACCENT = '#9a5020'
+// The site's accent in dark mode (site/public/pages.css).
+const ACCENT_DARK = '#e8a877'
 const PAPER = '#fbf9f6'
 
-// The three-card mark: a white card in front, outlines behind.
-const mark = (outlines: number) => `
+// The three-card mark: a white card in front, outlines behind. `card` and
+// `chip` recolor it for the app's dark and tinted icons.
+const mark = (outlines: number, card = '#fff', chip = ACCENT) => `
 <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg">
-  ${outlines > 1 ? '<rect x="30" y="4" width="82" height="54" rx="9" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="4"/>' : ''}
-  <rect x="22" y="12" width="82" height="54" rx="9" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="4"/>
-  <rect x="8" y="24" width="84" height="56" rx="9" fill="#fff"/>
-  <rect x="19" y="38" width="16" height="12" rx="3" fill="${ACCENT}"/>
+  ${outlines > 1 ? `<rect x="30" y="4" width="82" height="54" rx="9" fill="none" stroke="${card}" stroke-opacity=".35" stroke-width="4"/>` : ''}
+  <rect x="22" y="12" width="82" height="54" rx="9" fill="none" stroke="${card}" stroke-opacity=".45" stroke-width="4"/>
+  <rect x="8" y="24" width="84" height="56" rx="9" fill="${card}"/>
+  <rect x="19" y="38" width="16" height="12" rx="3" fill="${chip}"/>
 </svg>`
+
+// The iPhone app's icon: the site's icon, square (iOS rounds it). Its dark
+// and tinted versions are the mark alone on a clear background, which iOS
+// fills: in the dark accent, and in white for iOS to tint.
+const APP_ICON = 'ios/earnrate/earnrate/Assets.xcassets/AppIcon.appiconset'
+const appIcon = (background: string, card?: string, chip?: string) => `
+<html><body style="margin:0;background:transparent">
+<div style="width:100vw;height:100vh;background:${background};display:grid;place-items:center">
+  <div style="width:64%">${mark(1, card, chip)}</div>
+</div></body></html>`
 
 const icon = (opts: { inset: number; radius: number; outlines: number }) => `
 <html><body style="margin:0">
@@ -82,6 +95,23 @@ const outputs: {
     transparent: true,
   },
   { file: 'site/public/og.png', size: [1200, 630], html: og },
+  {
+    file: `${APP_ICON}/AppIcon.png`,
+    size: [1024, 1024],
+    html: appIcon(ACCENT),
+  },
+  {
+    file: `${APP_ICON}/AppIcon-dark.png`,
+    size: [1024, 1024],
+    html: appIcon('transparent', ACCENT_DARK, '#1c1714'),
+    transparent: true,
+  },
+  {
+    file: `${APP_ICON}/AppIcon-tinted.png`,
+    size: [1024, 1024],
+    html: appIcon('transparent', '#fff', '#000'),
+    transparent: true,
+  },
   // Apple Wallet: icon 29pt and logo up to 160x50pt, at 1x, 2x and 3x.
   ...[1, 2, 3].flatMap((scale) => {
     const suffix = scale === 1 ? '' : `@${String(scale)}x`

@@ -522,6 +522,7 @@ struct CardPage: Decodable {
     let credits: [String]
     let perks: [String]
     let feeWorth: String?
+    let feeWorthLater: Bool
     let changes: [String]
     let checked: String
     let sources: [String]
@@ -574,6 +575,9 @@ struct NextCard: Decodable {
         let totalLabel: String
         let years: [String]
         let offer: String
+        let offerShort: String
+        let asOf: String
+        let flag: String?
         let history: String?
         let minimum: Minimum?
         let ineligible: String?
@@ -674,4 +678,30 @@ struct BonusRules: Decodable {
     let searchPrompt: String
     let none: String
     let groups: [Group]
+}
+
+struct FeeWorth: Decodable {
+    let text: String?
+}
+
+struct About: Decodable {
+    struct Data: Decodable {
+        let label: String
+        let detail: String
+    }
+
+    struct Link: Decodable, Identifiable {
+        let id: String
+        let title: String
+        let detail: String?
+        let url: String
+    }
+
+    let title: String
+    let lead: String
+    let data: Data
+    let app: String
+    let privacy: String
+    let links: [Link]
+    let notes: [String]
 }

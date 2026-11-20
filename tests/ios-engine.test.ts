@@ -8,14 +8,19 @@ import { compareOffers } from '../src/engine/offers.ts'
 import { simulateCatalog, typicalSpendLines } from '../src/engine/simulate.ts'
 import { ALL_PERSONAL_CARDS } from '../src/engine/explore.ts'
 import { cardText } from '../src/format/card-text.ts'
+import { catalogFile } from '../src/data/load.ts'
 import {
+  about,
   addCard,
   answer,
   bestSetups,
   bonusRulesScreen,
+  cardFeeWorth,
   cardIndex,
   cardPage,
   cards,
+  catalogInfo,
+  checkCatalog,
   cardSettings,
   editCard,
   editPastCards,
@@ -662,6 +667,106 @@ describe('Next card and Cards in the app', () => {
         g.rows.map((r) => r.card.id),
       ),
     ).toContain('chase-sapphire-preferred')
+  })
+})
+
+describe('phase 1d: lighter next cards, card pages, card data updates', () => {
+  test('a next card is one line of offer with its date; the rest is a tap away', () => {
+    const n = nextCard({ today })
+    const first = n.rows[0]
+    expect(first?.offerShort).toMatch(/ after \$[\d,]+ in \d+ months?$/)
+    expect(first?.offerShort.length).toBeLessThan(first?.offer.length ?? 0)
+    expect(first?.asOf).toMatch(/^Offer as of \w{3} \d+, \d{4}/)
+    expect(first?.flag).toBeNull()
+    const had = ok(
+      editPastCards({
+        wallet: walletWith(['amex-gold']),
+        edit: { add: 'chase-sapphire-preferred' },
+        today,
+      }),
+    )
+    const csp = nextCard({ wallet: had, today, all: true }).rows.find(
+      (r) => r.card.id === 'chase-sapphire-preferred',
+    )
+    expect(csp?.flag).toBe('Bonus unlikely')
+    expect(csp?.ineligible).toMatch(/you've had this card before/)
+  })
+
+  test('cards an issuer counts together share one repeat-bonus note', () => {
+    const had = ok(
+      editPastCards({
+        wallet: walletWith(['amex-gold']),
+        edit: { add: 'chase-southwest-plus' },
+        today,
+      }),
+    )
+    const rows = nextCard({ wallet: had, today, all: true }).rows.filter((r) =>
+      r.card.id.startsWith('chase-southwest-'),
+    )
+    expect(rows).toHaveLength(3)
+    const [lead, ...rest] = rows
+    expect(lead?.eligibility).toMatch(/^Chase counts 24 months/)
+    for (const name of ['Plus', 'Premier', 'Priority'])
+      expect(lead?.eligibility).toContain(`Southwest Rapid Rewards ${name}`)
+    expect(lead?.ask?.label).toBe('Southwest Rapid Rewards Plus: bonus posted')
+    expect(lead?.flag).toBe('Bonus may not apply')
+    for (const row of rest) {
+      expect(row.eligibility).toBe(
+        `Same bonus rule as the ${lead?.card.shortName ?? ''}, above.`,
+      )
+      expect(row.ask).toBeNull()
+      expect(row.flag).toBe('Bonus may not apply')
+    }
+  })
+
+  test("a card's page comes first; whether its fee is worth it comes after", () => {
+    const quick = cardPage({ id: 'amex-gold', today, feeWorth: false })
+    expect(quick.feeWorth).toBeNull()
+    expect(quick.feeWorthLater).toBe(true)
+    expect(quick.earning).toEqual(cardPage({ id: 'amex-gold', today }).earning)
+    expect(cardFeeWorth({ id: 'amex-gold', today }).text).toBe(
+      cardPage({ id: 'amex-gold', today }).feeWorth,
+    )
+    expect(
+      cardPage({ id: 'citi-double-cash', today, feeWorth: false })
+        .feeWorthLater,
+    ).toBe(false)
+    expect(cardPage({ id: 'amex-gold', today }).feeWorthLater).toBe(false)
+  })
+
+  test('a downloaded catalog is used only when it reads and is newer', async () => {
+    const file = await catalogFile()
+    try {
+      useCatalog(catalog, '2026.01.01')
+      expect(catalogInfo()).toEqual({ version: '2026.01.01', format: 1 })
+      expect(() =>
+        checkCatalog(JSON.stringify({ ...file, format: 9 })),
+      ).toThrow()
+      expect(catalogInfo().version).toBe('2026.01.01')
+      const stored = JSON.parse(checkCatalog(JSON.stringify(file))) as {
+        version: string
+        catalog: Catalog
+      }
+      expect(stored.version).toBe(file.version)
+      expect(stored.catalog).toEqual(catalog)
+      expect(catalogInfo().version).toBe(file.version)
+      expect(() => checkCatalog(JSON.stringify(file))).toThrow(/not newer/)
+      const a = about({ appVersion: '1.0 (1)', downloaded: true })
+      expect(a.data.label).toBe(`Card data ${file.version}`)
+      expect(a.data.detail).toMatch(
+        /^\w{3} \d+, \d{4} · Updated from earnrate\.dev$/,
+      )
+      expect(a.links.map((l) => l.url)).toEqual([
+        'https://earnrate.dev/support#wrong-rate',
+        'https://earnrate.dev/support',
+        'https://earnrate.dev/privacy',
+        'https://earnrate.dev/terms',
+        'https://github.com/cwasley/earnrate',
+      ])
+      expect(a.privacy).toMatch(/sends nothing else/)
+    } finally {
+      useCatalog(catalog)
+    }
   })
 })
 

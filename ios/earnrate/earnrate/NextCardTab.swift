@@ -6,6 +6,7 @@ import SwiftUI
 // the bonus rules are a tap away.
 struct NextCardTab: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var size
 
     var body: some View {
         @Bindable var model = model
@@ -14,6 +15,7 @@ struct NextCardTab: View {
                 NextCardList()
             }
             .navigationTitle("Next card")
+            .navigationBarTitleDisplayMode(size.isAccessibilitySize ? .inline : .automatic)
             .earnrateDestinations()
         }
     }
@@ -26,6 +28,8 @@ private struct NextCardList: View {
     @State private var all = false
     @State private var working = false
     @State private var refusal: String?
+    @State private var open: Set<String> = []
+    @Environment(\.dynamicTypeSize) private var size
 
     private struct Key: Equatable {
         let filters: NextFilters
@@ -52,6 +56,11 @@ private struct NextCardList: View {
             }
         }
         .task(id: Key(filters: model.filters, revision: model.revision, all: all)) {
+            if let ready = model.cachedNextCard(all: all) {
+                next = ready
+                failure = nil
+                return
+            }
             working = true
             defer { working = false }
             do {
@@ -62,26 +71,29 @@ private struct NextCardList: View {
             }
         }
         .onChange(of: model.filters) { all = false }
+        .sensoryFeedback(.selection, trigger: open)
         .refusalAlert($refusal)
     }
 
     private func list(_ next: NextCard) -> some View {
         List {
-            Section {
-                NavigationLink(value: Route.bestSetups) {
-                    LinkRow(title: next.best.title, text: next.best.text, symbol: "square.stack.3d.up")
+            // At the largest text sizes the lead, the basis and Best setups
+            // wait at the bottom, so the first card shows on the first screen.
+            if !size.isAccessibilitySize {
+                Section {
+                    bestSetupsLink(next)
+                } header: {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(next.lead)
+                            .font(.headline)
+                            .foregroundStyle(Color.primary)
+                        Text(next.basis)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.secondary)
+                    }
+                    .textCase(nil)
+                    .padding(.bottom, 8)
                 }
-            } header: {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(next.lead)
-                        .font(.headline)
-                        .foregroundStyle(Color.primary)
-                    Text(next.basis)
-                        .font(.subheadline)
-                        .foregroundStyle(Color.secondary)
-                }
-                .textCase(nil)
-                .padding(.bottom, 8)
             }
 
             Section {
@@ -89,14 +101,7 @@ private struct NextCardList: View {
                     Text(empty)
                 }
                 ForEach(next.rows) { row in
-                    NavigationLink(value: Route.card(row.card.id)) {
-                        OfferRowView(row: row)
-                    }
-                    // Cards an issuer counts together ask for the same month;
-                    // it's asked once, under the first of them.
-                    if let ask = row.ask, next.rows.first(where: { $0.ask == ask })?.id == row.id {
-                        AskField(ask: ask, refusal: $refusal)
-                    }
+                    OfferRowView(row: row, expanded: open.contains(row.id), toggle: { toggle(row.id) }, refusal: $refusal)
                 }
                 if let more = next.moreLabel {
                     Button(more) { all = true }
@@ -113,18 +118,31 @@ private struct NextCardList: View {
 
             Section {
                 DisclosureGroup(next.howTitle) {
-                    ForEach(next.how, id: \.self) {
+                    ForEach(size.isAccessibilitySize ? [next.lead, next.basis] + next.how : next.how, id: \.self) {
                         Text($0)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
                 }
+                if size.isAccessibilitySize { bestSetupsLink(next) }
                 NavigationLink(value: Route.bonusRules) {
                     LinkRow(title: next.rules.title, text: next.rules.text, symbol: "arrow.trianglehead.2.clockwise")
                 }
             }
         }
         .listSectionSpacing(.compact)
+    }
+
+    private func bestSetupsLink(_ next: NextCard) -> some View {
+        NavigationLink(value: Route.bestSetups) {
+            LinkRow(title: next.best.title, text: next.best.text, symbol: "square.stack.3d.up")
+        }
+    }
+
+    private func toggle(_ id: String) {
+        withAnimation(.snappy) {
+            if open.contains(id) { open.remove(id) } else { open.insert(id) }
+        }
     }
 }
 
@@ -150,39 +168,53 @@ struct LinkRow: View {
     }
 }
 
-// One next card: what it adds over two years, its offer, and whether the
-// person can get its bonus.
+// One next card: what it adds over two years and its offer, in a line or
+// two; a tap shows the years, the minimum spend, the offer's history and
+// whether the person can get the bonus, with the card's page a tap further.
 private struct OfferRowView: View {
     let row: NextCard.Row
+    let expanded: Bool
+    let toggle: () -> Void
+    @Binding var refusal: String?
     @Environment(\.dynamicTypeSize) private var size
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button(action: toggle) {
+                line
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(expanded ? "Hides the details" : "Shows the details")
+            if expanded { details }
+        }
+        .padding(.vertical, 2)
+        .contextMenu {
+            NavigationLink(value: Route.card(row.card.id)) {
+                Label(row.card.shortName, systemImage: "creditcard")
+            }
+        }
+    }
+
+    private var line: some View {
         let layout = size.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
             : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
-        layout {
-            CardArtView(art: row.card.art, width: 48)
+        return layout {
+            CardArtView(art: row.card.art, width: 44)
                 .padding(.top, 2)
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 let head = size.isAccessibilitySize
-                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
                     : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 8))
                 head {
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(row.card.shortName)
-                            .font(.body.weight(.semibold))
-                        Text(row.card.fee)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                    .fixedSize(horizontal: false, vertical: true)
+                    Text(row.card.shortName)
+                        .font(.body.weight(.semibold))
+                        .fixedSize(horizontal: false, vertical: true)
                     if !size.isAccessibilitySize { Spacer(minLength: 4) }
-                    let total = size.isAccessibilitySize
-                        ? AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 2))
-                        : AnyLayout(VStackLayout(alignment: .trailing, spacing: 0))
-                    total {
+                    HStack(alignment: .firstTextBaseline, spacing: 1) {
                         Text(row.total)
-                            .font(.title3.weight(.semibold).monospacedDigit())
+                            .font(.body.weight(.semibold).monospacedDigit())
                             .foregroundStyle(row.ineligible == nil ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
                         Text(row.per)
                             .font(.caption)
@@ -190,39 +222,65 @@ private struct OfferRowView: View {
                     }
                     .fixedSize()
                 }
-                if !row.years.isEmpty {
-                    Text(row.years.joined(separator: " · "))
-                        .font(.subheadline.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                }
-                Text(row.offer)
-                    .font(.footnote)
-                if let ineligible = row.ineligible {
-                    Warning(text: ineligible)
-                }
-                if let minimum = row.minimum, !minimum.reachable {
-                    Warning(text: minimum.text)
-                }
-                if let note = row.eligibility {
-                    Text(note)
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
-                }
-                if let history = row.history {
-                    Text(history)
+                Text(row.offerShort)
+                    .font(.subheadline)
+                    .lineLimit(size.isAccessibilitySize ? nil : 2)
+                if let flag = row.flag {
+                    Text("\(Text(row.asOf).foregroundStyle(.secondary)) · \(Text("\(Image(systemName: "exclamationmark.triangle.fill")) \(flag)").foregroundStyle(.orange))")
+                        .font(.caption)
+                } else {
+                    Text(row.asOf)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
         }
-        .padding(.vertical, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(row.card.shortName)
-        .accessibilityValue(
-            [row.totalLabel, row.ineligible, row.minimum.flatMap { $0.reachable ? nil : $0.text }, row.eligibility, row.offer, row.history]
-                .compactMap { $0 }
-                .joined(separator: " ")
-        )
+        .accessibilityValue([row.totalLabel, row.flag, row.offerShort, row.asOf].compactMap { $0 }.joined(separator: ". "))
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let ineligible = row.ineligible {
+                Warning(text: ineligible)
+            }
+            if let minimum = row.minimum, !minimum.reachable {
+                Warning(text: minimum.text)
+            }
+            if let note = row.eligibility {
+                Text(note)
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
+            if let ask = row.ask {
+                AskField(ask: ask, refusal: $refusal)
+            }
+            if !row.years.isEmpty {
+                Text(row.years.joined(separator: " · "))
+                    .font(.footnote.monospacedDigit())
+            }
+            Text(row.offer)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            if let minimum = row.minimum, minimum.reachable {
+                Text(minimum.text)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            if let history = row.history {
+                Text(history)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            NavigationLink(value: Route.card(row.card.id)) {
+                Label(row.card.shortName, systemImage: "creditcard")
+                    .font(.footnote.weight(.semibold))
+            }
+            .buttonStyle(.borderless)
+        }
+        .padding(.leading, size.isAccessibilitySize ? 0 : 56)
+        .transition(.opacity)
     }
 }
 

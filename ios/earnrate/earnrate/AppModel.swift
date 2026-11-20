@@ -8,8 +8,9 @@ enum AppTab: Hashable {
     case cards
 }
 
-// The app's one engine and the wallet saved on this phone. Nothing here
-// leaves the phone: no network, no analytics.
+// The app's engine and the wallet saved on this phone. The wallet never
+// leaves the phone, and there are no analytics: the only request the app
+// makes is for newer card data from earnrate.dev (CardData.swift).
 @Observable final class AppModel {
     enum Phase {
         case loading
@@ -26,6 +27,9 @@ enum AppTab: Hashable {
     // Goes up with every saved change, so open screens reload.
     private(set) var revision = 0
     private(set) var recents: [String] = []
+    // The card data the engine runs on, and whether it was downloaded.
+    private(set) var dataVersion = ""
+    private(set) var dataDownloaded = false
 
     var tab: AppTab = .store
     var storePath: [Route] = []
@@ -34,17 +38,31 @@ enum AppTab: Hashable {
     var cardsPath: [Route] = []
     // Next card's and Best setups' filters, kept on this phone.
     var filters: NextFilters {
-        didSet { Self.save(filters, Self.filtersKey) }
+        didSet {
+            Self.save(filters, Self.filtersKey)
+            warmUp()
+        }
     }
     var showingWelcome = false
     var addingCards = false
     private(set) var nudgeDismissed: Bool
 
     private let wallet = WalletFile()
+    // The card data the engines were loaded from, for the second engine.
+    @ObservationIgnored private var source: CardData.Source?
+    // A second engine for the slow answers (Next card, Best setups, whether
+    // a fee is worth it), so they never hold up a store answer.
+    @ObservationIgnored private var worker: Task<Engine, Error>?
+    // Answers worked out for this revision, and those being worked out.
+    @ObservationIgnored private var done: [String: Data] = [:]
+    @ObservationIgnored private var working: [String: Task<Data, Error>] = [:]
+    @ObservationIgnored private var warming: Task<Void, Never>?
+    @ObservationIgnored private var checkingData = false
     private static let recentsKey = "recentSearches"
     private static let welcomedKey = "welcomed"
     private static let nudgeKey = "addCardsNudgeDismissed"
     private static let filtersKey = "nextCardFilters"
+    private static let dataCheckedKey = "cardDataChecked"
     private static let recentsKept = 8
 
     var isReady: Bool {
@@ -66,13 +84,28 @@ enum AppTab: Hashable {
         UserDefaults.standard.set(try? JSONEncoder().encode(value), forKey: key)
     }
 
-    // Loading the engine takes a few hundred milliseconds, so it happens off
-    // the main thread while the tabs show a spinner. Someone with cards
-    // starts on My wallet; the welcome shows once, on the first launch.
+    // Loading the engine takes a moment, so it happens off the main thread
+    // while the tabs show a spinner. Someone with cards starts on My wallet;
+    // the welcome shows once, on the first launch. Then the slow answers are
+    // worked out in the background, and earnrate.dev is asked for newer
+    // card data.
     func start() async {
         guard case .loading = phase else { return }
         do {
-            let engine = try await Task.detached(priority: .userInitiated) { try Engine() }.value
+            let clock = ContinuousClock()
+            let began = clock.now
+            let (engine, source) = try await Task.detached(priority: .userInitiated) {
+                try await Self.open()
+            }.value
+            #if DEBUG
+            if UserDefaults.standard.bool(forKey: "EarnrateBenchmark") {
+                print("bench load \(began.duration(to: clock.now))")
+                await Self.benchmark(engine)
+            }
+            #endif
+            self.source = source
+            dataVersion = try await engine.info().version
+            dataDownloaded = source.downloaded
             phase = .ready(engine)
             home = try await request("home", [:])
             try await refreshWallet()
@@ -82,8 +115,150 @@ enum AppTab: Hashable {
             }
         } catch {
             phase = .failed(error.localizedDescription)
+            return
+        }
+        await checkForData()
+    }
+
+    // The newest card data on the phone; a download the engine can't load
+    // is deleted, and the app's own data used.
+    private nonisolated static func open() async throws -> (Engine, CardData.Source) {
+        if let downloaded = CardData.downloaded() {
+            if let engine = try? Engine(catalog: downloaded.catalog) { return (engine, downloaded) }
+            CardData.discard()
+        }
+        let bundled = try CardData.bundled()
+        return (try Engine(catalog: bundled.catalog), bundled)
+    }
+
+    // MARK: Card data updates
+
+    // At most once a day (on launch, or back in the foreground): asks
+    // earnrate.dev for its card data's version and, only when that's newer
+    // than the data here, downloads it, checks it with a fresh engine and
+    // stores it. Offline, or with data the engine can't read, nothing
+    // changes.
+    func checkForData() async {
+        guard case .ready(let engine) = phase, !checkingData else { return }
+        let base = Self.dataBase
+        let defaults = UserDefaults.standard
+        if base == CardDataFetcher.site,
+           let last = defaults.object(forKey: Self.dataCheckedKey) as? Date,
+           Date.now.timeIntervalSince(last) < 24 * 60 * 60 {
+            return
+        }
+        checkingData = true
+        defer { checkingData = false }
+        do {
+            let current = try await engine.info()
+            let fetcher = CardDataFetcher(base: base)
+            let latest = try await fetcher.latest(etag: defaults.string(forKey: CardData.etagKey))
+            defaults.set(Date.now, forKey: Self.dataCheckedKey)
+            guard case .version(let release, let etag) = latest else { return }
+            // The ETag is kept once this release is dealt with, so a check
+            // that fails partway is tried again. A release this engine
+            // refused once isn't downloaded again.
+            guard release.format == current.format,
+                  release.isNewer(than: current.version),
+                  defaults.string(forKey: CardData.refusedKey) != release.version
+            else {
+                defaults.set(etag, forKey: CardData.etagKey)
+                return
+            }
+            let file = try await fetcher.catalog(release.version)
+            #if DEBUG
+            let clock = ContinuousClock()
+            let began = clock.now
+            #endif
+            let checked = await Task.detached(priority: .utility) { () async throws -> (Engine, String, CatalogVersion) in
+                let fresh = try Engine()
+                let stored = try await fresh.adopt(file)
+                let version = try await fresh.info()
+                guard version.isNewer(than: current.version) else {
+                    throw Engine.Failure.script("Card data \(version.version) isn't newer.")
+                }
+                try CardData.save(stored, version)
+                return (fresh, stored, version)
+            }.result
+            #if DEBUG
+            print("card data: \(release.version) checked in \(began.duration(to: clock.now)): \(checked.map { _ in "used" })")
+            #endif
+            let fresh: Engine, stored: String, version: CatalogVersion
+            switch checked {
+            case .success(let result):
+                (fresh, stored, version) = result
+            case .failure(let error as Engine.Failure):
+                defaults.set(etag, forKey: CardData.etagKey)
+                defaults.set(release.version, forKey: CardData.refusedKey)
+                throw error
+            case .failure(let error):
+                throw error
+            }
+            defaults.set(etag, forKey: CardData.etagKey)
+            guard case .ready = phase else { return }
+            source = CardData.Source(catalog: stored, downloaded: true)
+            worker = nil
+            phase = .ready(fresh)
+            dataVersion = version.version
+            dataDownloaded = true
+            home = try? await request("home", [:])
+            try? await refreshWallet()
+        } catch {
+            #if DEBUG
+            print("card data: \(error.localizedDescription)")
+            #endif
         }
     }
+
+    // Debug builds can point at another copy of the site, such as
+    // site-dist served on this Mac: launch with -EarnrateCardData <url>.
+    // That also checks on every launch.
+    private static var dataBase: URL {
+        #if DEBUG
+        if let given = UserDefaults.standard.string(forKey: "EarnrateCardData"),
+           let url = URL(string: given) {
+            return url
+        }
+        #endif
+        return CardDataFetcher.site
+    }
+
+    func about() async throws -> About {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? ""
+        let build = info?["CFBundleVersion"] as? String ?? ""
+        return try await request("about", ["appVersion": "\(version) (\(build))", "downloaded": dataDownloaded])
+    }
+
+    #if DEBUG
+    // Times the engine's calls on a three-card wallet, for checking speed
+    // with JavaScriptCore's JIT off (launch with -EarnrateBenchmark YES).
+    private static func benchmark(_ engine: Engine) async {
+        let wallet: [String: Any] = [
+            "version": 1, "valuations": [:], "memberships": [],
+            "cards": [["id": "amex-gold"], ["id": "chase-sapphire-preferred"], ["id": "citi-double-cash"]],
+        ]
+        let filters: [String: Any] = ["kind": "any", "noAnnualFee": false, "business": false]
+        let calls: [(String, String, [String: Any])] = [
+            ("store (yours)", "answer", ["query": "Whole Foods", "all": false, "wallet": wallet]),
+            ("store (every)", "answer", ["query": "Costco", "all": false]),
+            ("cheat sheet", "walletHome", ["wallet": wallet]),
+            ("next card", "nextCard", ["filters": filters, "all": false, "wallet": wallet]),
+            ("best setups", "bestSetups", ["filters": filters, "wallet": wallet]),
+            ("card page", "cardPage", ["id": "amex-gold", "feeWorth": false, "wallet": wallet]),
+            ("fee worth", "cardFeeWorth", ["id": "amex-gold", "wallet": wallet]),
+        ]
+        let clock = ContinuousClock()
+        for round in 1...2 {
+            for (label, name, fields) in calls {
+                guard let data = try? JSONSerialization.data(withJSONObject: fields) else { continue }
+                let began = clock.now
+                _ = try? await engine.call(name, String(decoding: data, as: UTF8.self))
+                print("bench \(round) \(label) \(began.duration(to: clock.now))")
+            }
+        }
+    }
+    #endif
 
     func finishWelcome(addCards: Bool) {
         UserDefaults.standard.set(true, forKey: Self.welcomedKey)
@@ -115,8 +290,17 @@ enum AppTab: Hashable {
         try await request("cards", ["query": query], wallet: true)
     }
 
+    // Without whether the fee is worth it, which feeWorth works out.
     func cardPage(_ id: String) async throws -> CardPage {
-        try await request("cardPage", ["id": id], wallet: true)
+        try await request("cardPage", ["id": id, "feeWorth": false], wallet: true)
+    }
+
+    func cachedFeeWorth(_ id: String) -> FeeWorth? {
+        done["fee|\(id)"].flatMap { try? JSONDecoder().decode(FeeWorth.self, from: $0) }
+    }
+
+    func feeWorth(_ id: String) async throws -> FeeWorth {
+        try JSONDecoder().decode(FeeWorth.self, from: try await slow("fee|\(id)", "cardFeeWorth", ["id": id]))
     }
 
     // `asked` keeps the questions first asked on screen once answered.
@@ -142,28 +326,69 @@ enum AppTab: Hashable {
         try await request("removal", ["id": id])
     }
 
-    func nextCard(all: Bool) async throws -> NextCard {
-        try await request("nextCard", ["filters": filters.json, "all": all], wallet: true)
+    func cachedNextCard(all: Bool) -> NextCard? {
+        done[nextKey(all)].flatMap { try? JSONDecoder().decode(NextCard.self, from: $0) }
     }
 
-    // The slowest answer the app asks for (every card alone and in pairs),
-    // so it's kept for the filters and wallet it was worked out for.
-    @ObservationIgnored private var setups: (key: String, value: BestSetups)?
+    func nextCard(all: Bool) async throws -> NextCard {
+        try JSONDecoder().decode(NextCard.self, from: try await slow(nextKey(all), "nextCard", ["filters": filters.json, "all": all]))
+    }
 
+    // The slowest answer the app asks for (every card alone and in pairs).
     func cachedSetups() -> BestSetups? {
-        setups?.key == setupsKey ? setups?.value : nil
+        done[setupsKey].flatMap { try? JSONDecoder().decode(BestSetups.self, from: $0) }
     }
 
     func bestSetups() async throws -> BestSetups {
-        let key = setupsKey
-        if let setups, setups.key == key { return setups.value }
-        let found: BestSetups = try await request("bestSetups", ["filters": filters.json], wallet: true)
-        if key == setupsKey { setups = (key, found) }
-        return found
+        try JSONDecoder().decode(BestSetups.self, from: try await slow(setupsKey, "bestSetups", ["filters": filters.json]))
     }
 
-    private var setupsKey: String {
-        "\(revision)|\(filters.kind)|\(filters.noAnnualFee)|\(filters.business)"
+    private var filtersKey: String {
+        "\(filters.kind)|\(filters.noAnnualFee)|\(filters.business)"
+    }
+
+    private var setupsKey: String { "setups|\(filtersKey)" }
+
+    private func nextKey(_ all: Bool) -> String { "next|\(filtersKey)|\(all)" }
+
+    // A slow answer, from the second engine, kept until the wallet or the
+    // card data changes; asked twice at once, it's worked out once.
+    private func slow(_ key: String, _ name: String, _ fields: [String: Any]) async throws -> Data {
+        if let ready = done[key] { return ready }
+        if let pending = working[key] { return try await pending.value }
+        let at = revision
+        let task = Task { try await raw(name, fields, wallet: true, worker: true) }
+        working[key] = task
+        defer { if revision == at { working[key] = nil } }
+        let data = try await task.value
+        if revision == at { done[key] = data }
+        return data
+    }
+
+    // Works out Next card and Best setups ahead of time, a moment after
+    // the wallet, the filters or the card data change.
+    private func warmUp() {
+        warming?.cancel()
+        warming = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard let self, !Task.isCancelled else { return }
+            #if DEBUG
+            let clock = ContinuousClock()
+            let began = clock.now
+            defer { print("warm-up done in \(began.duration(to: clock.now))") }
+            #endif
+            _ = try? await self.nextCard(all: false)
+            guard !Task.isCancelled else { return }
+            _ = try? await self.bestSetups()
+        }
+    }
+
+    private func workerEngine() async throws -> Engine {
+        if let worker { return try await worker.value }
+        guard let catalog = source?.catalog else { throw Engine.Failure.script("The engine isn't loaded yet.") }
+        let task = Task.detached(priority: .utility) { try Engine(catalog: catalog) }
+        worker = task
+        return try await task.value
     }
 
     func cardIndex(matching query: String) async throws -> CardIndex {
@@ -230,6 +455,9 @@ enum AppTab: Hashable {
         walletProblems = listed.problems
         walletHome = try await request("walletHome", [:], wallet: true)
         revision += 1
+        done = [:]
+        working = [:]
+        warmUp()
     }
 
     // MARK: Recent searches
@@ -260,8 +488,9 @@ enum AppTab: Hashable {
         return try JSONDecoder().decode(T.self, from: data)
     }
 
-    private func raw(_ name: String, _ fields: [String: Any], wallet withWallet: Bool) async throws -> Data {
-        guard case .ready(let engine) = phase else { throw Engine.Failure.script("The engine isn't loaded yet.") }
+    private func raw(_ name: String, _ fields: [String: Any], wallet withWallet: Bool, worker onWorker: Bool = false) async throws -> Data {
+        guard case .ready(let main) = phase else { throw Engine.Failure.script("The engine isn't loaded yet.") }
+        let engine = onWorker ? try await workerEngine() : main
         var fields = fields
         if withWallet, let saved = wallet.load(), let object = try? JSONSerialization.jsonObject(with: saved) {
             fields["wallet"] = object

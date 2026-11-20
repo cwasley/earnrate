@@ -4,7 +4,8 @@ import JavaScriptCore
 // The one earnrate engine (src/), bundled by scripts/build-ios-engine.ts from
 // ios/engine/entry.ts and run in JavaScriptCore. Requests and answers cross
 // as JSON strings. A JSContext isn't safe to share across threads, so the
-// actor keeps every call on one executor, off the main thread.
+// actor keeps every call on one executor, off the main thread. Each Engine
+// has its own JavaScript virtual machine, so two can work at once.
 actor Engine {
     enum Failure: LocalizedError {
         case missing(String)
@@ -20,9 +21,11 @@ actor Engine {
 
     private let context: JSContext
     private let earnrate: JSValue
-    let cardCount: Int
+    private(set) var cardCount = 0
 
-    init() throws {
+    // An engine on the card data in `catalog` (the stored form: the parsed
+    // catalog with its version), or with none yet, to check a download.
+    init(catalog: String? = nil) throws {
         guard let context = JSContext() else { throw Failure.script("No JavaScript context.") }
         context.name = "earnrate"
         context.evaluateScript(try Self.resource("engine", "js"))
@@ -30,11 +33,13 @@ actor Engine {
         guard let earnrate = context.objectForKeyedSubscript("earnrate"), earnrate.isObject else {
             throw Failure.script("The engine didn't start.")
         }
-        let count = earnrate.invokeMethod("load", withArguments: [try Self.resource("catalog", "json")])
-        try Self.check(context)
         self.context = context
         self.earnrate = earnrate
-        cardCount = Int(count?.toInt32() ?? 0)
+        if let catalog {
+            let count = earnrate.invokeMethod("load", withArguments: [catalog])
+            try Self.check(context)
+            cardCount = Int(count?.toInt32() ?? 0)
+        }
     }
 
     // One engine function: a JSON request in, its JSON answer out.
@@ -45,6 +50,24 @@ actor Engine {
         return Data(text.utf8)
     }
 
+    // The card data this engine runs on.
+    func info() throws -> CatalogVersion {
+        let result = earnrate.invokeMethod("catalogInfo", withArguments: [])
+        try Self.check(context)
+        return try JSONDecoder().decode(CatalogVersion.self, from: Data((result?.toString() ?? "").utf8))
+    }
+
+    // Checks a catalog file downloaded from earnrate.dev with this engine's
+    // own schemas and integrity rules, and runs on it from then on. Throws
+    // if the file can't be read or isn't newer than the data loaded; returns
+    // the catalog in the form the app stores.
+    func adopt(_ downloaded: String) throws -> String {
+        let result = earnrate.invokeMethod("checkCatalog", withArguments: [downloaded])
+        try Self.check(context)
+        guard let stored = result?.toString() else { throw Failure.script("The card data didn't check out.") }
+        return stored
+    }
+
     // JavaScriptCore keeps an uncaught exception on the context until cleared.
     private static func check(_ context: JSContext) throws {
         guard let exception = context.exception else { return }
@@ -52,7 +75,7 @@ actor Engine {
         throw Failure.script(exception.toString() ?? "The engine failed.")
     }
 
-    private static func resource(_ name: String, _ ext: String) throws -> String {
+    static func resource(_ name: String, _ ext: String) throws -> String {
         guard let url = Bundle.main.url(forResource: name, withExtension: ext) else {
             throw Failure.missing("\(name).\(ext)")
         }

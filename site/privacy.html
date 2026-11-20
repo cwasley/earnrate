@@ -82,14 +82,14 @@
         <h1>Privacy</h1>
         <p class="lede">
           earnrate needs no account, no email and no card numbers. On
-          earnrate.dev and on your computer it runs on your own device. In
-          Claude it runs on earnrate's server, which answers without keeping
-          your questions, and keeps an anonymous wallet, started when you
-          connect it and holding cards only if you save some, encrypted so that
-          only your recovery code or the apps you connect can open it. Here's
-          where your data goes, and where it doesn't.
+          earnrate.dev, on your computer and in the iPhone app it runs on your
+          own device. In Claude it runs on earnrate's server, which answers
+          without keeping your questions, and keeps an anonymous wallet, started
+          when you connect it and holding cards only if you save some, encrypted
+          so that only your recovery code or the apps you connect can open it.
+          Here's where your data goes, and where it doesn't.
         </p>
-        <p class="updated">Updated November 12, 2026.</p>
+        <p class="updated">Updated November 20, 2026.</p>
       </header>
 
       <section aria-labelledby="leaves">
@@ -520,6 +520,27 @@
       </section>
 
       <section>
+        <h2 id="iphone">In the iPhone app</h2>
+        <p>
+          The iPhone app works out every answer on your phone. Your wallet,
+          searches and settings are saved only there, in the app's own storage,
+          and deleting the app deletes them. There's no account and no
+          analytics.
+        </p>
+        <p>
+          To keep its card data current between app updates, the app checks
+          earnrate.dev when you open it, at most once a day. It downloads a
+          small file with the card data's version, and, when there's a newer
+          release, the card data itself (under <code>earnrate.dev/app/</code>),
+          once per release, which it checks before using. Those requests carry
+          nothing about you, your cards or your searches, and no cookies.
+          Cloudflare handles your IP address to serve them, as for any download,
+          and earnrate.dev keeps no log of them. The app sends nothing else. Its
+          links to earnrate.dev and issuers' pages open in Safari.
+        </p>
+      </section>
+
+      <section>
         <h2>The AI assistant you ask</h2>
         <p>
           Whether earnrate runs on your computer or on earnrate's server, the
@@ -608,7 +629,8 @@
           for the wallet saved in your browser stays the same, and your browser
           updates it when your wallet changes; an update also pushes back its
           deletion. Rate my wallet no longer makes the longer link, though those
-          already made still open.
+          already made still open. November 20, 2026: added the iPhone app,
+          which downloads card data from earnrate.dev and sends nothing else.
         </p>
       </section>
 

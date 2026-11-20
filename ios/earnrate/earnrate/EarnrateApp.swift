@@ -43,6 +43,9 @@ struct RootView: View {
         }
         .onChange(of: scenePhase) {
             CardLight.shared.setActive(scenePhase == .active)
+            if scenePhase == .active {
+                Task { await model.checkForData() }
+            }
         }
         .sheet(isPresented: $model.showingWelcome) {
             if let welcome = model.home?.welcome {

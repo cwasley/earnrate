@@ -95,11 +95,14 @@ const plain = (
   text: string | null,
 ): BonusEligibility => ({ state, from: null, earliest: false, text, ask: null })
 
+// `named` names every card, this one too, for a note that covers a family
+// of cards at once.
 export function bonusEligibility(
   catalog: Catalog,
   wallet: Wallet,
   cardId: string,
   today: string,
+  named = false,
 ): BonusEligibility | null {
   const card = catalog.cards.find((c) => c.id === cardId)
   const offer = card?.welcome_offer
@@ -112,7 +115,7 @@ export function bonusEligibility(
   const issuer =
     catalog.issuers.find((i) => i.id === card.issuer)?.name ?? card.issuer
   const name = (id: string) =>
-    id === cardId ? 'this card' : cardName(catalog, id)
+    id === cardId && !named ? 'this card' : cardName(catalog, id)
   if (!repeat)
     return plain(
       'unstated',
@@ -133,7 +136,10 @@ export function bonusEligibility(
   }
 
   const wait = repeat.after_months
-  const scope = listed([...family].map(name), 'or')
+  const scope = listed(
+    (named ? [...family].sort() : [...family]).map(name),
+    'or',
+  )
   const thisMonth = today.slice(0, 7)
   // The wait runs to the day, so it's over only once its last month has
   // passed; during that month it ends on a day earnrate doesn't know.

@@ -197,16 +197,34 @@ type OfferTerms = {
 // "Up to 60,000 Chase Ultimate Rewards after $4,000 in purchases within 3
 // months": one wording for the site, the search pages and the CLI.
 export function offerTerms(o: OfferTerms, currencyName: string): string {
-  const amount =
+  const spend =
+    o.spend > 0
+      ? `after ${money(o.spend)} in purchases within ${monthsText(o.months)}`
+      : 'with no spending required'
+  return `${offerAmount(o, currencyName)} ${spend}`
+}
+
+// The same, short enough for a row beside the card's name: "75,000 miles
+// after $4,000 in 3 months" (a program named by its points or miles says
+// just that).
+export function offerShortTerms(o: OfferTerms, currencyName: string): string {
+  const spend =
+    o.spend > 0
+      ? `after ${money(o.spend)} in ${monthsText(o.months)}`
+      : 'with no spending required'
+  const unit = /\b(points|miles)$/.exec(currencyName)?.[1] ?? currencyName
+  return `${offerAmount(o, unit)} ${spend}`
+}
+
+const offerAmount = (o: OfferTerms, currencyName: string) =>
+  `${o.varies ? 'Up to ' : ''}${
     o.points !== null && o.points !== undefined
       ? `${o.points.toLocaleString('en-US')} ${currencyName}`
       : money(o.dollars ?? 0)
-  const spend =
-    o.spend > 0
-      ? `after ${money(o.spend)} in purchases within ${String(o.months)} month${o.months === 1 ? '' : 's'}`
-      : 'with no spending required'
-  return `${o.varies ? 'Up to ' : ''}${amount} ${spend}`
-}
+  }`
+
+const monthsText = (months: number) =>
+  `${String(months)} month${months === 1 ? '' : 's'}`
 
 export const offerOrder = (a: OfferSummary, b: OfferSummary) =>
   Number(a.ineligible !== null) - Number(b.ineligible !== null) ||

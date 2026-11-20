@@ -7,6 +7,7 @@ struct CardPageView: View {
     let id: String
 
     @State private var page: CardPage?
+    @State private var worth: FeeWorth?
     @State private var failure: String?
     @State private var refusal: String?
 
@@ -25,12 +26,16 @@ struct CardPageView: View {
         }
         .navigationTitle(page?.shortName ?? "")
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: model.walletCards.map(\.id)) {
+        .task(id: model.revision) {
             do {
                 page = try await model.cardPage(id)
             } catch {
                 failure = error.localizedDescription
+                return
             }
+            guard page?.feeWorthLater == true else { return }
+            worth = model.cachedFeeWorth(id)
+            if worth == nil { worth = try? await model.feeWorth(id) }
         }
         .alert("Couldn't change My wallet", isPresented: Binding(get: { refusal != nil }, set: { if !$0 { refusal = nil } })) {
             Button("OK", role: .cancel) {}
@@ -134,12 +139,18 @@ struct CardPageView: View {
                 }
             }
 
-            if let worth = page.feeWorth {
+            // Worked out after the page shows; gone if the card has none.
+            if page.feeWorthLater && (worth == nil || worth?.text != nil) {
                 Section {
                     DisclosureGroup("Is the fee worth it?") {
-                        Text(worth)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        if let text = worth?.text {
+                            Text(text)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        }
                     }
                 }
             }

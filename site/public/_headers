@@ -10,5 +10,18 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+# The iPhone app's card data (scripts/build-app-catalog.ts). The version
+# file keeps its address, so it's cached briefly (Cloudflare adds an ETag,
+# and the app's If-None-Match gets a 304); each release's catalog has its
+# own address, so it's cached for good.
+/app/*
+  X-Robots-Tag: noindex
+
+/app/catalog-version.json
+  Cache-Control: public, max-age=300
+
+/app/catalog/*
+  Cache-Control: public, max-age=31536000, immutable
+
 # The statement check's policy names the hashes of its script and styles, so
 # the build adds its block to site-dist/_headers (site/statement.config.ts).
