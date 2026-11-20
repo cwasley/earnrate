@@ -364,6 +364,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 - **Code** (everything outside `data/`) is [MIT](LICENSE).
 - **Data** (card rules, merchants, categories and currencies under `data/`) is [CC BY-NC 4.0](data/LICENSE). It's free for personal and non-commercial use, with attribution.
+- **The earnrate name and icon** aren't covered by the MIT license: forks are welcome under their own name.
 - **Commercial use of the data needs a license.** That includes serving it through your own API or MCP server, or using it in a paid product. Contact licensing@earnrate.dev.
 
 Not legal advice; this is a good-faith structure.

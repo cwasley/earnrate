@@ -49,3 +49,8 @@ monitor/dist/
 
 # Parallel sessions' git worktrees (EnterWorktree)
 .claude/worktrees/
+
+# Xcode per-user state and build output
+xcuserdata/
+ios/**/DerivedData/
+*.xcuserstate
