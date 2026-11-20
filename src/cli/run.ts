@@ -58,7 +58,7 @@ export type Io = {
 
 const HELP = `Usage: ${CLI_NAME} <merchant> [amount] [options]
 
-Picks the card that earns the most at a merchant, and says why: from your
+Picks the card that earns the most at a store, and says why: from your
 wallet if you've saved one, from cards you name with --cards, or else from
 every card earnrate knows.
 
