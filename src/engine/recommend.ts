@@ -39,7 +39,7 @@ import {
   codesAs,
   creditAnswerText,
   categoryAs,
-  categoryPurchases,
+  categoryScope,
   creditFirstText,
   currencyLabel,
   currencyName,
@@ -700,7 +700,7 @@ function assumptionsFor(
       `Treats "${merchant.input}" as an everyday purchase with no bonus category.`,
     )
   } else if (merchant.source === 'category') {
-    assumptions.push(`Ranks ${categoryPurchases(catalog, merchant.category)}.`)
+    assumptions.push(categoryScope(catalog, merchant.category))
   } else if (merchant.category === 'other') {
     // A card whose rule names this store by name (Audible on Amex's
     // streaming list) earns its bonus there anyway.

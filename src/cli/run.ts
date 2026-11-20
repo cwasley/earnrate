@@ -387,7 +387,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
     for (const n of notices) io.stderr(`${n}\n`)
   } else {
     io.stdout(
-      formatRecommendation(rec, purchase, {
+      formatRecommendation(rec, purchase, catalog, {
         all: options.all,
         style: io.style ?? plain,
         notices,

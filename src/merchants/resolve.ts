@@ -307,7 +307,7 @@ export function resolvePlace(
     const category = findCategory(catalog, t)
     return category === null
       ? known
-      : categoryResolution(catalog, category, channel)
+      : { ...categoryResolution(catalog, category, channel), input: t.trim() }
   }
   const asGiven = attempt(text)
   if (asGiven.source !== 'none') return asGiven

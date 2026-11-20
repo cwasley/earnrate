@@ -33,7 +33,7 @@ test('a welcome-bonus pick is marked in the ranking, with no tie note', () => {
   const merchant = resolveMerchant(catalog, 'Home Depot', null)
   const rec = recommend(catalog, wallet, purchase, merchant)
   expect(rec.decision?.cardId).toBe('capital-one-savor')
-  const text = formatRecommendation(rec, purchase)
+  const text = formatRecommendation(rec, purchase, catalog)
   expect(text).toMatch(/Use .*Savor.* for its welcome bonus/)
   expect(text).toMatch(/3\. .*Savor.*← the pick, for its welcome bonus/)
   expect(text).not.toMatch(/wins the tie/)

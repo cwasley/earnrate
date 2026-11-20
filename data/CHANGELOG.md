@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.20
+
+No rates changed. Supermarkets now record the kinds of store people take for supermarkets that issuers leave out of them (`excludes: [superstore, warehouse_club]` on `grocery.supermarket`; earnrate already kept them in categories of their own). An answer about supermarkets says so: "Ranks purchases at supermarkets; superstores and warehouse clubs don't count." When it was asked as "groceries", that line sits under the title "Groceries".
+
 ## 2026.11.17.2
 
 No rates or offers changed. Each card's rule for getting its welcome bonus again, from the issuer's own pages, is now data (`welcome_offer.repeat`, with a `rule: repeat` quote), so answers can check it against cards someone has had. Until now it was only in the offer's note. 68 cards:

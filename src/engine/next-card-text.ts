@@ -93,6 +93,22 @@ export const SEE_CARD_DETAILS = 'See card details'
 export const ADD_TO_MY_WALLET = 'Add to my wallet'
 
 export const firstYearText = (n: number) => `${wholeDollars(n)} first year`
+
+// A card's annual fee on a row: "$95/yr", "$0, then $95/yr" when the first
+// year's is different, "No annual fee".
+export function shortFeeText(card: {
+  annual_fee?: number | undefined
+  first_year_fee?: number | undefined
+}): string {
+  const fee = card.annual_fee
+  if (fee === undefined) return 'Fee not on file'
+  if (fee === 0) return NO_FEE_FILTER
+  const first = card.first_year_fee
+  const year = `${wholeDollars(fee)}${PER_YEAR}`
+  return first === undefined || first === fee
+    ? year
+    : `${wholeDollars(first)}, then ${year}`
+}
 export const tiesText = (n: number) =>
   `${String(n)} more ${n === 1 ? 'ties' : 'tie'}`
 export const feesText = (n: number) => `${wholeDollars(n)} in fees`

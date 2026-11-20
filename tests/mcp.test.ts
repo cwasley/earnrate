@@ -165,6 +165,31 @@ describe('tools', () => {
     expect(bad.isError).toBe(true)
   })
 
+  test('an everyday word titles the answer text, with the category it ranks under it', async () => {
+    const client = await connect(await walletCopy())
+    const scope =
+      "Ranks purchases at supermarkets; superstores and warehouse clubs don't count."
+    const own = await client.callTool({
+      name: 'best_card_for_purchase',
+      arguments: { merchant: 'groceries' },
+    })
+    expect(text(own)).toMatch(new RegExp(`^Groceries\\n${scope}\\n\\n`, 'm'))
+    expect(text(own).split(scope)).toHaveLength(2)
+    const every = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { merchant: 'groceries' },
+    })
+    expect(text(every)).toMatch(
+      new RegExp(`^Best cards for groceries\\n${scope}\\n\\n`),
+    )
+    const named = await client.callTool({
+      name: 'best_cards_for',
+      arguments: { category: 'grocery.supermarket' },
+    })
+    expect(text(named)).toMatch(/^Best cards for supermarkets:\n/)
+    expect(text(named)).toContain(`\n${scope}\n`)
+  })
+
   test("a purchase in a quarter that isn't open for activation yet says when it opens", async () => {
     const client = await connect(await walletCopy())
     const result = await client.callTool({

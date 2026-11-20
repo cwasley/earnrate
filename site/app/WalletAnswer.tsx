@@ -3,6 +3,7 @@ import { catalog } from 'virtual:catalog'
 import { localToday } from '../../src/engine/periods.ts'
 import { ABROAD, noteOnly, recommend } from '../../src/engine/recommend.ts'
 import {
+  askedScope,
   cantUseLines,
   creditShort,
   FOR_WELCOME_BONUS,
@@ -174,7 +175,11 @@ export function WalletAnswer({
           ))}
       </ol>
       {rec.sensitivity ? <p class="muted">{rec.sensitivity}</p> : null}
-      <Assumes lines={rec.assumptions} />
+      <Assumes
+        lines={rec.assumptions.filter(
+          (a) => a !== askedScope(catalog, rec.merchant),
+        )}
+      />
     </div>
   )
 }

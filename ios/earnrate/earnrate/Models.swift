@@ -576,6 +576,7 @@ struct NextCard: Decodable {
         let years: [String]
         let offer: String
         let offerShort: String
+        let fee: String
         let asOf: String
         let flag: String?
         let history: String?
@@ -688,6 +689,7 @@ struct About: Decodable {
     struct Data: Decodable {
         let label: String
         let detail: String
+        let refused: String?
     }
 
     struct Link: Decodable, Identifiable {

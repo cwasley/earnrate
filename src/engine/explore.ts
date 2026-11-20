@@ -34,7 +34,7 @@ import {
   capSentence,
   categoryNote,
   categoryAs,
-  categoryPurchases,
+  categoryScope,
   categoryUnranked,
   choiceName,
   codesAs,
@@ -653,7 +653,7 @@ function exploreAssumptions(
 ): string[] {
   const assumptions: string[] = []
   if (merchant.source === 'category') {
-    assumptions.push(`Ranks ${categoryPurchases(catalog, merchant.category)}.`)
+    assumptions.push(categoryScope(catalog, merchant.category))
   } else if (merchant.source !== 'none') {
     assumptions.push(
       codesAs(

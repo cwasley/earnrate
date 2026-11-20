@@ -405,7 +405,10 @@ describe('comparing every card', () => {
   test('best needs no wallet and reads plain words as a category', async () => {
     const { code, stdout } = await cli(['best', 'groceries'], noWallet)
     expect(code).toBe(0)
-    expect(stdout).toMatch(/^Best cards for supermarkets:/)
+    expect(stdout).toMatch(
+      /^Best cards for groceries\nRanks purchases at supermarkets; superstores and warehouse clubs don't count\.\n\n/,
+    )
+    expect(stdout.match(/Ranks purchases/g)).toHaveLength(1)
     expect(stdout).toMatch(
       /^ 1\. American Express Blue Cash Preferred Card +6% +\$95 annual fee \(waived the first year\)$/m,
     )
@@ -551,8 +554,21 @@ describe('no wallet needed', () => {
 
   test('a category word with a wallet reads as a category, not an unknown store', async () => {
     const { stdout } = await cli(['dining'])
-    expect(stdout).toMatch(/^Restaurants/)
+    expect(stdout).toMatch(/^Dining\nRanks purchases at restaurants\.\n/)
     expect(stdout).not.toMatch(/merchant list/)
+  })
+
+  test("a category's own name titles its answer, with its scope at the end", async () => {
+    const { stdout } = await cli(['supermarkets'])
+    expect(stdout).toMatch(/^Supermarkets\n\n/)
+    expect(stdout).toMatch(
+      /\nRanks purchases at supermarkets; superstores and warehouse clubs don't count\.\n/,
+    )
+  })
+
+  test('a store keeps its name and what it counts as', async () => {
+    const { stdout } = await cli(['whole foods'])
+    expect(stdout).toMatch(/^Whole Foods Market\n\n/)
   })
 
   test('todo lists what the cards need and can write a calendar file', async () => {

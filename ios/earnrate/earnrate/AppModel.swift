@@ -227,7 +227,9 @@ enum AppTab: Hashable {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? ""
         let build = info?["CFBundleVersion"] as? String ?? ""
-        return try await request("about", ["appVersion": "\(version) (\(build))", "downloaded": dataDownloaded])
+        var fields: [String: Any] = ["appVersion": "\(version) (\(build))", "downloaded": dataDownloaded]
+        if let refused = UserDefaults.standard.string(forKey: CardData.refusedKey) { fields["refused"] = refused }
+        return try await request("about", fields)
     }
 
     #if DEBUG

@@ -226,10 +226,10 @@ private struct OfferRowView: View {
                     .font(.subheadline)
                     .lineLimit(size.isAccessibilitySize ? nil : 2)
                 if let flag = row.flag {
-                    Text("\(Text(row.asOf).foregroundStyle(.secondary)) · \(Text("\(Image(systemName: "exclamationmark.triangle.fill")) \(flag)").foregroundStyle(.orange))")
+                    Text("\(Text("\(row.fee) · \(row.asOf)").foregroundStyle(.secondary)) · \(Text("\(Image(systemName: "exclamationmark.triangle.fill")) \(flag)").foregroundStyle(.orange))")
                         .font(.caption)
                 } else {
-                    Text(row.asOf)
+                    Text("\(row.fee) · \(row.asOf)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -237,7 +237,7 @@ private struct OfferRowView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(row.card.shortName)
-        .accessibilityValue([row.totalLabel, row.flag, row.offerShort, row.asOf].compactMap { $0 }.joined(separator: ". "))
+        .accessibilityValue([row.totalLabel, row.flag, row.offerShort, row.fee, row.asOf].compactMap { $0 }.joined(separator: ". "))
     }
 
     private var details: some View {

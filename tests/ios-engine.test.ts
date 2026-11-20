@@ -168,6 +168,46 @@ describe('the iPhone app bridge', () => {
     expect(answer({ query: 'Whole Foods', today }).kinds).toBeNull()
   })
 
+  test('an everyday word titles its answer, with the category it ranks under it', () => {
+    const groceries =
+      "Ranks purchases at supermarkets; superstores and warehouse clubs don't count."
+    for (const wallet of [undefined, held]) {
+      const tapped = answer({ query: 'Groceries', wallet, today })
+      expect(tapped.title).toBe('Groceries')
+      expect(tapped.subtitle).toBe(groceries)
+      expect(tapped.footer).not.toContain(groceries)
+      expect(answer({ query: 'groceries', wallet, today }).title).toBe(
+        'Groceries',
+      )
+    }
+    expect(answer({ query: 'groceries $80', today }).subtitle).toBe(
+      `$80 · ${groceries}`,
+    )
+    expect(
+      home().quick.map((q) => {
+        const a = answer({ query: q, today })
+        return [a.title, a.subtitle]
+      }),
+    ).toEqual([
+      ['Groceries', groceries],
+      ['Dining', 'Ranks purchases at restaurants.'],
+      ['Gas', 'Ranks purchases at gas stations.'],
+      ['Amazon', 'Counts as online retail'],
+      ['Costco', 'Counts as a warehouse club'],
+      ['Travel', null],
+      ['Netflix', 'Counts as a streaming service, bought online'],
+      ['Drugstores', 'Ranks purchases at drugstores and pharmacies.'],
+      ['Everything else', null],
+    ])
+    const own = answer({ query: 'Supermarkets', today })
+    expect(own.title).toBe('Supermarkets')
+    expect(own.subtitle).toBeNull()
+    expect(own.footer).toContain(groceries)
+    const store = answer({ query: 'Whole Foods', today })
+    expect(store.title).toBe('Whole Foods Market')
+    expect(store.subtitle).toBe('Counts as a supermarket')
+  })
+
   test('cards come common first, then by issuer with business cards apart', () => {
     const all = cards({ wallet: held })
     expect(all.quick.map((c) => c.id)).toContain('chase-sapphire-preferred')
@@ -548,6 +588,12 @@ describe('Next card and Cards in the app', () => {
       offers.length,
     )
     expect(nextCard({ today }).lead).toMatch(/would earn/)
+    const fees = new Map(
+      nextCard({ today, all: true }).rows.map((r) => [r.card.id, r.fee]),
+    )
+    expect(fees.get('chase-sapphire-preferred')).toBe('$95/yr')
+    expect(fees.get('citi-double-cash')).toBe('No annual fee')
+    expect(fees.get('amex-blue-cash-preferred')).toBe('$0, then $95/yr')
   })
 
   test('next cards follow the filters and ask for a month when a rule needs one', () => {
@@ -764,6 +810,15 @@ describe('phase 1d: lighter next cards, card pages, card data updates', () => {
         'https://github.com/cwasley/earnrate',
       ])
       expect(a.privacy).toMatch(/sends nothing else/)
+      expect(a.data.refused).toBeNull()
+      expect(
+        about({ appVersion: '1.0 (1)', downloaded: true, refused: '2099.1.1' })
+          .data.refused,
+      ).toBe('Newer card data needs the latest app.')
+      expect(
+        about({ appVersion: '1.0 (1)', downloaded: true, refused: '2020.1.1' })
+          .data.refused,
+      ).toBeNull()
     } finally {
       useCatalog(catalog)
     }

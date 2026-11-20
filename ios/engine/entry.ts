@@ -107,6 +107,7 @@ import {
   BUSINESS_FILTER,
   feesText,
   firstYearText,
+  shortFeeText,
   HOW_CALCULATED,
   HOW_RANKED,
   HOW_SETUPS,
@@ -178,8 +179,9 @@ import {
   BEST_CARD,
   cantUseLines,
   capitalize,
+  askedScope,
   categoryAs,
-  categoryPhrase,
+  categoryTitle,
   CREDIT_GROUP,
   CREDIT_PERIODS,
   CREDIT_THIS_PERIOD,
@@ -199,6 +201,7 @@ import {
   money,
   MONTH_NAMES,
   NETWORK_NAMES,
+  NEWER_DATA_NEEDS_APP,
   NONE_OF_YOURS,
   onlineAssumption,
   pairCreditsUsedText,
@@ -360,7 +363,7 @@ export function home(): Home {
     months: MONTH_NAMES,
     welcome: {
       title: 'earnrate',
-      lead: 'Which of your cards earns the most at a store, and why.',
+      lead: 'Know which card to use at every store, and why.',
       privacy:
         'Your cards stay on this phone. No account, and never a card number.',
       add: 'Add my cards',
@@ -523,7 +526,7 @@ function countsAs(c: Catalog, m: MerchantResolution): string {
 }
 
 function titleOf(c: Catalog, m: MerchantResolution): string {
-  if (m.source === 'category') return capitalize(categoryPhrase(c, m.category))
+  if (m.source === 'category') return categoryTitle(c, m)
   return m.source === 'none' ? `“${m.input}”` : m.resolvedName
 }
 
@@ -615,13 +618,20 @@ export function answer(request: {
     payment: null,
   }
   const subtitleOf = (m: MerchantResolution) => {
+    const scope = askedScope(c, m)
     const parts = [
       ...(m.source !== 'category' && m.source !== 'none'
         ? [capitalize(`counts ${countsAs(c, m)}`)]
         : []),
       ...(asked.amount === null ? [] : [money(asked.amount)]),
     ]
+    if (scope !== null)
+      return parts.length === 0 ? scope : `${parts.join(' · ')} · ${scope}`
     return parts.length === 0 ? null : parts.join(' · ')
+  }
+  const footerOf = (m: MerchantResolution, assumptions: string[]) => {
+    const scope = askedScope(c, m)
+    return shopperAssumptions(assumptions).filter((a) => a !== scope)
   }
   // On a phone the kinds of places are right there to tap, so the engine's
   // "give its category" warning gives way to one that says to tap.
@@ -691,7 +701,7 @@ export function answer(request: {
       moreLabel: null,
       footer: [
         ...(rec.sensitivity ? [rec.sensitivity] : []),
-        ...shopperAssumptions(rec.assumptions),
+        ...footerOf(rec.merchant, rec.assumptions),
       ],
       kinds: only ? null : kindsFor(rec.merchant),
       kind: kindKey,
@@ -758,7 +768,7 @@ export function answer(request: {
     moreLabel: more > 0 ? `Show all ${String(r.ranked.length)} cards` : null,
     footer: [
       ...membersOnlyLines(c, shown.membersOnly, (e) => shortName(e.cardId)),
-      ...shopperAssumptions(r.assumptions),
+      ...footerOf(r.merchant, r.assumptions),
     ],
     kinds: only ? null : kindsFor(r.merchant),
     kind: kindKey,
@@ -2068,7 +2078,7 @@ export function cardFeeWorth(request: {
 export type About = {
   title: string
   lead: string
-  data: { label: string; detail: string }
+  data: { label: string; detail: string; refused: string | null }
   app: string
   privacy: string
   links: { id: string; title: string; detail: string | null; url: string }[]
@@ -2084,13 +2094,19 @@ const versionDay = (version: string) =>
 export function about(request: {
   appVersion: string
   downloaded: boolean
+  refused?: string | null // a release this engine couldn't read
 }): About {
+  const refused = request.refused ?? null
   return {
     title: 'About earnrate',
     lead: "earnrate picks the card that earns the most at a store, from each issuer's own terms, and says why.",
     data: {
       label: `Card data ${dataVersion}`,
       detail: `${shortDate(versionDay(dataVersion))} · ${request.downloaded ? 'Updated from earnrate.dev' : 'Came with the app'}`,
+      refused:
+        refused !== null && compareDataVersions(refused, dataVersion) > 0
+          ? NEWER_DATA_NEEDS_APP
+          : null,
     },
     app: `Version ${request.appVersion}`,
     privacy:
@@ -2168,6 +2184,7 @@ export type OfferRow = {
   years: string[] // "$850 year one", "$200 year two"
   offer: string // its terms, when it ends, and the day it was read
   offerShort: string // the terms in a row's one line
+  fee: string // "$95/yr", "No annual fee"
   asOf: string // "Offer as of Nov 1, 2026"
   flag: string | null // why the bonus may not count, in two or three words
   history: string | null // the highest public offer earnrate has recorded
@@ -2220,6 +2237,7 @@ function offerRow(o: OfferSummary, rank: number, held: Set<string>): OfferRow {
     years: plan ? [yearOneText(plan.yearOne), yearTwoText(plan.yearTwo)] : [],
     offer: `${offerTerms(o, currencyName(c, o.currency))}. ${offerAsOfText(o)}`,
     offerShort: offerShortTerms(o, currencyName(c, o.currency)),
+    fee: shortFeeText(cardOf(o.cardId)),
     asOf: offerAsOfShortText(o),
     flag:
       o.ineligible !== null

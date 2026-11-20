@@ -149,7 +149,7 @@ describe('rent and mortgage', () => {
     expect(rec.warnings).toEqual([])
     expect(rec.sensitivity).toBeNull()
     expect(rec.bonus).toBeNull()
-    const out = formatRecommendation(rec, purchase('mortgage'))
+    const out = formatRecommendation(rec, purchase('mortgage'), catalog)
     expect(out).toBe(`Rent and mortgage\n\n${NOTE}\n`)
     const elsewhere = recommend(
       catalog,

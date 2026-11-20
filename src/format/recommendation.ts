@@ -1,4 +1,12 @@
-import { capitalize, dollarsAndCents, money, pct } from '../engine/text.ts'
+import {
+  askedScope,
+  capitalize,
+  categoryTitle,
+  dollarsAndCents,
+  money,
+  pct,
+} from '../engine/text.ts'
+import type { Catalog } from '../schema/catalog.ts'
 import type {
   ExcludedCard,
   Purchase,
@@ -15,7 +23,11 @@ const TOP = 3
 
 const label = (c: RankedCard | ExcludedCard) => c.checkoutLabel ?? c.cardName
 
-function header(rec: Recommendation, purchase: Purchase): string {
+function header(
+  catalog: Catalog,
+  rec: Recommendation,
+  purchase: Purchase,
+): string {
   const m = rec.merchant
   const parts = [
     m.source === 'none'
@@ -23,7 +35,7 @@ function header(rec: Recommendation, purchase: Purchase): string {
       : m.source === 'caller'
         ? `${m.resolvedName} (category given)`
         : m.source === 'category'
-          ? m.resolvedName
+          ? categoryTitle(catalog, m)
           : m.source === 'llm'
             ? m.category === 'other'
               ? `"${m.resolvedName}" (Claude couldn't place it)`
@@ -77,13 +89,16 @@ function excludedLines(excluded: ExcludedCard[]): string[] {
 export function formatRecommendation(
   rec: Recommendation,
   purchase: Purchase,
+  catalog: Catalog,
   {
     all = false,
     style = plain,
     notices = [],
   }: { all?: boolean; style?: Style; notices?: string[] } = {},
 ): string {
-  const lines = [header(rec, purchase), '']
+  const scope = askedScope(catalog, rec.merchant)
+  const lines = [header(catalog, rec, purchase), ...(scope ? [scope] : []), '']
+  const assumptions = rec.assumptions.filter((a) => a !== scope)
   if (rec.categoryNote !== null) lines.push(rec.categoryNote, '')
   const top =
     rec.ranked.find((r) => r.cardId === rec.decision?.cardId) ?? rec.ranked[0]
@@ -93,7 +108,7 @@ export function formatRecommendation(
     const said = [...rec.warnings, ...notices].map((w) =>
       style('yellow', `! ${w}`),
     )
-    const after = [...said, ...rec.assumptions.map((a) => style('dim', a))]
+    const after = [...said, ...assumptions.map((a) => style('dim', a))]
     return `${[...lines, ...after].join('\n').trimEnd()}\n`
   }
   if (rec.decision && top) {
@@ -141,8 +156,8 @@ export function formatRecommendation(
     lines.push('', ...warnings.map((w) => style('yellow', `! ${w}`)))
   }
   if (rec.sensitivity) lines.push('', rec.sensitivity)
-  if (rec.assumptions.length > 0) {
-    lines.push('', ...rec.assumptions.map((a) => style('dim', a)))
+  if (assumptions.length > 0) {
+    lines.push('', ...assumptions.map((a) => style('dim', a)))
   }
   return `${lines.join('\n')}\n`
 }

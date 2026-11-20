@@ -33,6 +33,10 @@ export const CategorySchema = z
     // Answered by that category's search page instead of one of its own; its
     // own address redirects there.
     page: CategoryId.optional(),
+    // Kinds of place people take for this one that it doesn't cover, by
+    // category id: superstores and warehouse clubs for supermarkets. An
+    // answer about the category says they don't count.
+    excludes: z.array(CategoryId).min(1).optional(),
   })
   .refine((c) => !c.unranked || c.note !== undefined, {
     message: 'an unranked category needs a note to answer with',

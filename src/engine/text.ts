@@ -170,6 +170,81 @@ export const categoryPurchases = (catalog: Catalog, id: string) =>
     ? 'everyday purchases'
     : `purchases ${categoryReadsOn(catalog, id) ? 'on' : 'at'} ${categoryPhrase(catalog, id)}`
 
+// The iPhone app's About, under the date of the card data in use, when its
+// engine couldn't read a newer release.
+export const NEWER_DATA_NEEDS_APP = 'Newer card data needs the latest app.'
+
+// What an answer about a kind of purchase ranks: "Ranks purchases at
+// supermarkets; superstores and warehouse clubs don't count."
+export function categoryScope(catalog: Catalog, id: string): string {
+  const excludes = catalog.categories.find((c) => c.id === id)?.excludes ?? []
+  const ranks = `Ranks ${categoryPurchases(catalog, id)}`
+  return excludes.length === 0
+    ? `${ranks}.`
+    : `${ranks}; ${listed(excludes.map((x) => categoryPhrase(catalog, x)))} don't count.`
+}
+
+// The everyday words someone asked about a kind of purchase in ("groceries",
+// "eating out"), which title its answer, with categoryScope underneath. Null
+// for the category's own name ("supermarket" included), for a store, which
+// title themselves, and for a category answered by its note alone (rent),
+// which ranks nothing.
+export function askedWords(
+  catalog: Catalog,
+  merchant: MerchantResolution,
+): string | null {
+  if (
+    merchant.source !== 'category' ||
+    categoryUnranked(catalog, merchant.category)
+  )
+    return null
+  const name = catalog.categories.find((c) => c.id === merchant.category)?.name
+  const plain = (t: string) =>
+    t
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .replace(/s$/, '')
+  const asked = merchant.input.trim().replace(/\s+/g, ' ')
+  return asked === '' || name === undefined || plain(asked) === plain(name)
+    ? null
+    : asked
+}
+
+// Asked words as a title: "Groceries", "EV" for "ev".
+export const askedTitle = (asked: string) =>
+  /^[a-z]{1,2}$/.test(asked) ? asked.toUpperCase() : capitalize(asked)
+
+// An answer's title for a kind of purchase: the asked words, else the
+// category's name. "Groceries", "Supermarkets".
+export const categoryTitle = (
+  catalog: Catalog,
+  merchant: MerchantResolution,
+) => {
+  const asked = askedWords(catalog, merchant)
+  return asked === null
+    ? capitalize(categoryPhrase(catalog, merchant.category))
+    : askedTitle(asked)
+}
+
+// The same mid-sentence: "Best cards for groceries".
+export const categoryTitleMid = (
+  catalog: Catalog,
+  merchant: MerchantResolution,
+) => {
+  const asked = askedWords(catalog, merchant)
+  return asked === null
+    ? categoryPhrase(catalog, merchant.category)
+    : midSentence(askedTitle(asked))
+}
+
+// The line under an answer titled by asked words, which its list of
+// assumptions then leaves out. Null for any other answer.
+export const askedScope = (catalog: Catalog, merchant: MerchantResolution) =>
+  askedWords(catalog, merchant) === null
+    ? null
+    : categoryScope(catalog, merchant.category)
+
 // The same for several stores: "stores that count as supermarkets".
 export const categoryAsMany = (catalog: Catalog, id: string) =>
   id === 'other' ? 'as everyday purchases' : `as ${categoryPhrase(catalog, id)}`

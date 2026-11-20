@@ -560,6 +560,14 @@ export function catalogProblems(catalog: Catalog): string[] {
     for (const card of cards)
       if (!cardIds.has(card))
         problems.push(`category ${id}: card '${card}' is not in the catalog`)
+  const related = (a: string, b: string) =>
+    a === b || a.startsWith(`${b}.`) || b.startsWith(`${a}.`)
+  for (const { id, excludes = [] } of catalog.categories)
+    for (const other of excludes)
+      if (!categories.has(other) || related(id, other))
+        problems.push(
+          `category ${id}: excludes '${other}', which isn't a separate category`,
+        )
   for (const { id, page } of catalog.categories) {
     if (page === undefined) continue
     const target = catalog.categories.find((c) => c.id === page)

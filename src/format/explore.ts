@@ -22,6 +22,8 @@ import {
   capitalize,
   choiceName,
   CREDIT_GROUP,
+  askedScope,
+  categoryTitleMid,
   CREDITS_APART,
   ENROLL_FIRST,
   HELD_CREDITS_COUNTED,
@@ -55,10 +57,11 @@ export function formatExploration(
   const m = r.merchant
   const title =
     m.source === 'category'
-      ? m.resolvedName.toLowerCase()
+      ? categoryTitleMid(catalog, m)
       : m.source === 'none'
         ? `"${m.input}" (not recognized)`
         : m.resolvedName
+  const scope = askedScope(catalog, m)
   const lead = r.categoryNote === null ? [] : [r.categoryNote, '']
   if (noteOnly(r) && r.membersOnly.length === 0)
     return `${[...lead, ...r.assumptions].join('\n').trimEnd()}\n`
@@ -81,7 +84,9 @@ export function formatExploration(
           ]),
           '',
         ]),
-    `Best cards for ${title}${r.credits.length === 0 ? '' : ' by rate'}:`,
+    ...(scope === null
+      ? [`Best cards for ${title}${r.credits.length === 0 ? '' : ' by rate'}:`]
+      : [`Best cards for ${title}`, scope]),
     '',
   ]
   shown.forEach((e: ExploreEntry, i) => {
@@ -104,7 +109,7 @@ export function formatExploration(
   )
   if (members.length > 0) lines.push('', ...members)
   for (const w of r.warnings) lines.push('', `! ${w}`)
-  lines.push('', ...r.assumptions)
+  lines.push('', ...r.assumptions.filter((a) => a !== scope))
   return `${lines.join('\n')}\n`
 }
 

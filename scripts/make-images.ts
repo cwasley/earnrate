@@ -13,22 +13,30 @@ const PAPER = '#fbf9f6'
 
 // The three-card mark: a white card in front, outlines behind. `card` and
 // `chip` recolor it for the app's dark and tinted icons.
-const mark = (outlines: number, card = '#fff', chip = ACCENT) => `
-<svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg">
+const mark = (
+  outlines: number,
+  card = '#fff',
+  chip = ACCENT,
+  viewBox = '0 0 120 84',
+) => `
+<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">
   ${outlines > 1 ? `<rect x="30" y="4" width="82" height="54" rx="9" fill="none" stroke="${card}" stroke-opacity=".35" stroke-width="4"/>` : ''}
   <rect x="22" y="12" width="82" height="54" rx="9" fill="none" stroke="${card}" stroke-opacity=".45" stroke-width="4"/>
   <rect x="8" y="24" width="84" height="56" rx="9" fill="${card}"/>
   <rect x="19" y="38" width="16" height="12" rx="3" fill="${chip}"/>
 </svg>`
 
-// The iPhone app's icon: the site's icon, square (iOS rounds it). Its dark
-// and tinted versions are the mark alone on a clear background, which iOS
-// fills: in the dark accent, and in white for iOS to tint.
+// The iPhone app's icon: the site's icon, square (iOS rounds it), with the
+// mark larger. Its viewBox crops to the drawn cards, which then move a
+// little up and right: centered exactly, the solid front card looks low-left.
+// Its dark and tinted versions are the mark alone on a clear background,
+// which iOS fills: in the dark accent, and in white for iOS to tint.
 const APP_ICON = 'ios/earnrate/earnrate/Assets.xcassets/AppIcon.appiconset'
+const APP_MARK = '8 9 98 72'
 const appIcon = (background: string, card?: string, chip?: string) => `
 <html><body style="margin:0;background:transparent">
 <div style="width:100vw;height:100vh;background:${background};display:grid;place-items:center">
-  <div style="width:64%">${mark(1, card, chip)}</div>
+  <div style="width:64%;line-height:0;transform:translate(2.4%,-2.5%)">${mark(1, card, chip, APP_MARK)}</div>
 </div></body></html>`
 
 const icon = (opts: { inset: number; radius: number; outlines: number }) => `

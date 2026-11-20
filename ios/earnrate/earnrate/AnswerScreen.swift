@@ -29,7 +29,9 @@ struct AnswerScreen: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .navigationTitle(answer?.title ?? query)
+        // Blank until the answer names it: the typed text ("whole foods",
+        // "groceries") isn't always the title, and a title that changes flashes.
+        .navigationTitle(answer?.title ?? (failure == nil ? "" : query))
         .navigationBarTitleDisplayMode(.large)
         .task(id: Key(scope: scope, kind: kind, all: all, revision: model.revision)) {
             do {

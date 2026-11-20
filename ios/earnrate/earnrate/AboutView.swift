@@ -20,6 +20,12 @@ struct AboutView: View {
                         Text(about.data.detail)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
+                        if let refused = about.data.refused {
+                            Text(refused)
+                                .font(.subheadline)
+                                .foregroundStyle(.orange)
+                                .padding(.top, 2)
+                        }
                     }
                     .accessibilityElement(children: .combine)
                     Text(about.app)

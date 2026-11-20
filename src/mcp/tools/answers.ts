@@ -217,7 +217,7 @@ export function registerAnswerTools(
         content: [
           {
             type: 'text',
-            text: `${retry}${noteOnly(rec) ? '' : ctx.fromCards(cards)}${formatRecommendation(output, purchase, { all: true })}`,
+            text: `${retry}${noteOnly(rec) ? '' : ctx.fromCards(cards)}${formatRecommendation(output, purchase, catalog, { all: true })}`,
           },
         ],
         structuredContent: output,

@@ -36,6 +36,7 @@
 - id: grocery.supermarket
   name: Supermarkets
   aliases: [groceries, grocery, grocery stores, supermarket]
+  excludes: [superstore, warehouse_club]
   mccs: [5411]
 - id: grocery.online
   name: Online grocery and delivery

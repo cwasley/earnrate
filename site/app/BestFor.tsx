@@ -21,11 +21,12 @@ import {
 } from '../../src/merchants/resolve.ts'
 import { ABROAD, noteOnly } from '../../src/engine/recommend.ts'
 import {
+  askedScope,
   capitalize,
   CATEGORY_CARDS_LEAD,
   categoryCards,
   categoryAs,
-  categoryPhrase,
+  categoryTitleMid,
   CREDIT_GROUP,
   CREDIT_PERIODS,
   ENROLL_FIRST,
@@ -116,7 +117,7 @@ function countsAs(m: MerchantResolution): string {
 }
 
 function title(m: MerchantResolution): string {
-  if (m.source === 'category') return categoryPhrase(catalog, m.category)
+  if (m.source === 'category') return categoryTitleMid(catalog, m)
   return m.source === 'none' ? `“${m.input}”` : m.resolvedName
 }
 
@@ -489,6 +490,7 @@ export function BestFor({
       ? result.ranked
       : result.ranked.slice(0, TOP)
     : []
+  const ranks = answer ? askedScope(catalog, answer.merchant) : null
   const headingText = answer
     ? noteOnly(answer)
       ? capitalize(title(answer.merchant))
@@ -608,6 +610,9 @@ export function BestFor({
                 <span class="muted"> · counts {countsAs(answer.merchant)}</span>
               ) : null}
             </h3>
+            {ranks !== null && !noteOnly(answer) ? (
+              <p class="muted small">{ranks}</p>
+            ) : null}
             {rec && wallet ? (
               <WalletAnswer
                 wallet={wallet}
@@ -681,7 +686,11 @@ export function BestFor({
                     {m}
                   </p>
                 ))}
-                <Assumes lines={result.assumptions} />
+                <Assumes
+                  lines={result.assumptions.filter(
+                    (a) => noteOnly(result) || a !== ranks,
+                  )}
+                />
               </>
             ) : null}
             {noteOnly(answer) ? null : (
