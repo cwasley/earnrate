@@ -8,11 +8,13 @@ struct CardArtView: View {
     var width: CGFloat = 48
     var shine = false
     var sparkle = false
+    // Off for a card sized to the screen, which mustn't grow past it.
+    var scales = true
 
     @ScaledMetric private var scale: CGFloat = 1
 
     var body: some View {
-        let w = width * min(scale, 2)
+        let w = scales ? width * min(scale, 2) : width
         Canvas { context, size in
             let s = size.width / 86
             func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * s, y: y * s) }

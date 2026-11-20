@@ -23,7 +23,7 @@ struct AboutView: View {
                         if let refused = about.data.refused {
                             Text(refused)
                                 .font(.subheadline)
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(Color.caution)
                                 .padding(.top, 2)
                         }
                     }

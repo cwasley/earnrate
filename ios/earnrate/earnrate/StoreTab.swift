@@ -89,6 +89,7 @@ private struct StartList: View {
                 Section {
                     NudgeCard(nudge: nudge)
                 }
+                .surfaceRows()
             }
             if !model.recents.isEmpty {
                 Section {
@@ -108,12 +109,15 @@ private struct StartList: View {
                 } header: {
                     HStack {
                         Text("Recent")
+                            .foregroundStyle(Color.inkSecondary)
                         Spacer()
                         Button("Clear") { model.forgetRecents() }
                             .font(.subheadline)
                             .textCase(nil)
+                            .buttonStyle(PlateButtonStyle())
                     }
                 }
+                .surfaceRows()
             }
             Section {
                 ForEach(model.home?.quick ?? [], id: \.self) { item in
@@ -126,12 +130,16 @@ private struct StartList: View {
                 }
             } header: {
                 Text("Everyday")
+                    .foregroundStyle(Color.inkSecondary)
             } footer: {
                 if let note = model.home?.startNote {
                     Text(model.hasCards ? note.yours : note.every)
+                        .foregroundStyle(Color.inkSecondary)
                 }
             }
+            .surfaceRows()
         }
+        .cardBackdrop([])
         .animation(.default, value: model.showsNudge)
     }
 }

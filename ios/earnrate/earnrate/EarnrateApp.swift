@@ -41,6 +41,7 @@ struct RootView: View {
                 CardsTab()
             }
         }
+        .tint(Color("AccentColor"))
         .onChange(of: scenePhase) {
             CardLight.shared.setActive(scenePhase == .active)
             if scenePhase == .active {
@@ -51,10 +52,12 @@ struct RootView: View {
             if let welcome = model.home?.welcome {
                 WelcomeView(welcome: welcome)
                     .interactiveDismissDisabled()
+                    .tint(Color("AccentColor"))
             }
         }
         .sheet(isPresented: $model.addingCards) {
             AddCardsFlow()
+                .tint(Color("AccentColor"))
         }
     }
 }
@@ -104,29 +107,24 @@ struct WelcomeView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 20) {
-                    HStack(spacing: -28) {
-                        ForEach(Array(welcome.art.enumerated()), id: \.offset) { i, art in
-                            CardArtView(art: art, width: 110, shine: true)
-                                .rotationEffect(.degrees(i == 0 ? -8 : 6))
-                                .offset(y: i == 0 ? 0 : 10)
-                        }
-                    }
-                    .padding(.top, 24)
-                    .padding(.bottom, 12)
-                    .accessibilityHidden(true)
+                    CardFan(arts: welcome.art)
+                        .padding(.top, 40)
+                        .padding(.bottom, 20)
+                        .accessibilityHidden(true)
                     Text(welcome.title)
                         .font(.largeTitle.bold())
                         .accessibilityAddTraits(.isHeader)
                     Text(welcome.lead)
                         .font(.title3)
                         .multilineTextAlignment(.center)
+                        .foregroundStyle(Color.primary)
                     Label {
                         Text(welcome.privacy)
                     } icon: {
                         Image(systemName: "lock.iphone")
                     }
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.inkSecondary)
                     .multilineTextAlignment(.leading)
                 }
                 .padding(.horizontal, 32)
@@ -140,6 +138,7 @@ struct WelcomeView: View {
                 } label: {
                     Text(welcome.add)
                         .font(.headline)
+                        .foregroundStyle(Color.onAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 6)
                 }
@@ -156,6 +155,7 @@ struct WelcomeView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 16)
         }
+        .background { CardBackdrop(arts: welcome.art) }
         .sensoryFeedback(.selection, trigger: model.showingWelcome)
     }
 }

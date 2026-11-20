@@ -44,14 +44,23 @@ private struct EmptyWallet: View {
     var body: some View {
         List {
             Section {
-                ContentUnavailableView {
-                    Label("No cards yet", systemImage: "wallet.pass")
-                } description: {
+                VStack(spacing: 18) {
+                    if let art = model.home?.welcome.art {
+                        CardFan(arts: art, width: 150)
+                            .padding(.top, 28)
+                            .padding(.bottom, 12)
+                    }
+                    Text("No cards yet")
+                        .font(.title2.bold())
                     Text(model.home?.startNote.every ?? "")
-                } actions: {
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkSecondary)
+                        .multilineTextAlignment(.center)
+                        .plate()
                     Button(model.home?.nudge.button ?? "") { model.addingCards = true }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(AccentButtonStyle())
                 }
+                .frame(maxWidth: .infinity)
             }
             .listRowBackground(Color.clear)
             Section {
@@ -59,7 +68,9 @@ private struct EmptyWallet: View {
                     LabeledContent(model.walletHome.past.title, value: model.walletHome.past.count)
                 }
             }
+            .surfaceRows()
         }
+        .cardBackdrop(model.home?.welcome.art ?? [])
     }
 }
 
@@ -75,88 +86,20 @@ private struct WalletList: View {
     @State private var refusal: String?
     @State private var removed = 0
     @State private var allTodo = false
+    @State private var front: String?
+
+    private var frontCard: WalletHome.Held? {
+        home.cards.first { $0.id == front } ?? home.cards.first
+    }
 
     private var home: WalletHome { model.walletHome }
 
     var body: some View {
-        List {
-            if !model.walletProblems.isEmpty {
-                Section {
-                    ForEach(model.walletProblems, id: \.self) { Text($0) }
-                }
-            }
-
-            if let sheet = home.sheet {
-                Section {
-                    ForEach(sheet.rows) { row in
-                        if let query = row.query {
-                            NavigationLink(value: Route.answer(query)) {
-                                SheetRow(row: row)
-                            }
-                        } else {
-                            SheetRow(row: row)
-                        }
-                    }
-                } header: {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(sheet.title)
-                        Text(sheet.subtitle)
-                            .font(.footnote)
-                            .textCase(nil)
-                    }
-                }
-            }
-
-            if !home.todo.isEmpty || !home.notes.isEmpty {
-                Section {
-                    ForEach(allTodo ? home.todo : Array(home.todo.prefix(home.todoShown))) { item in
-                        TodoRow(item: item, open: open)
-                    }
-                    if let more = home.todoMore {
-                        Button(allTodo ? home.todoFewer : more) {
-                            withAnimation { allTodo.toggle() }
-                        }
-                        .font(.subheadline)
-                    }
-                    ForEach(home.notes, id: \.self) { note in
-                        Text(note.text)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                } header: {
-                    Text(home.todoTitle)
-                }
-            }
-
-            Section {
-                ForEach(home.cards) { held in
-                    NavigationLink(value: Route.settings(held.card.id, nil)) {
-                        HeldRow(held: held)
-                    }
-                    .swipeActions {
-                        Button("Remove", systemImage: "minus.circle", role: .destructive) {
-                            Task { await askRemove(held.card) }
-                        }
-                    }
-                    .contextMenu {
-                        NavigationLink(value: Route.card(held.card.id)) {
-                            Label("Card page", systemImage: "creditcard")
-                        }
-                        Button("Remove", systemImage: "minus.circle", role: .destructive) {
-                            Task { await askRemove(held.card) }
-                        }
-                    }
-                }
-                Button(home.addCards, systemImage: "plus.circle") { model.addingCards = true }
-            } header: {
-                Text(home.cardsTitle)
-            }
-
-            Section {
-                NavigationLink(value: Route.pastCards) {
-                    LabeledContent(home.past.title, value: home.past.count)
-                }
-            }
+        ScrollViewReader { proxy in
+            list
+            #if DEBUG
+                .task { await screenshotDemo(proxy) }
+            #endif
         }
         .searchable(text: $query, isPresented: $searching, placement: .navigationBarDrawer(displayMode: .always), prompt: home.searchPrompt)
         .searchSuggestions {
@@ -192,6 +135,106 @@ private struct WalletList: View {
         .sensoryFeedback(.success, trigger: removed)
     }
 
+    private var list: some View {
+        List {
+            if !model.walletProblems.isEmpty {
+                Section {
+                    ForEach(model.walletProblems, id: \.self) { Text($0) }
+                }
+                .surfaceRows()
+            }
+
+            if !home.cards.isEmpty {
+                Section {
+                    if let held = frontCard {
+                        FrontControls(held: held, open: { model.walletPath.append(.settings(held.card.id, nil)) }, page: { model.walletPath.append(.card(held.card.id)) })
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 20))
+                    }
+                } header: {
+                    WalletDeck(
+                        cards: home.cards,
+                        open: { model.walletPath.append(.settings($0.card.id, nil)) },
+                        page: { model.walletPath.append(.card($0.id)) },
+                        remove: { card in Task { await askRemove(card) } },
+                        front: $front
+                    )
+                    .padding(.top, 4)
+                    .padding(.bottom, 6)
+                    .textCase(nil)
+                }
+            }
+
+            if let sheet = home.sheet {
+                Section {
+                    PocketCard(sheet: sheet) { model.walletPath.append(.answer($0)) }
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .id(Self.sheetId)
+                }
+            }
+
+            if !home.todo.isEmpty || !home.notes.isEmpty {
+                Section {
+                    ForEach(allTodo ? home.todo : Array(home.todo.prefix(home.todoShown))) { item in
+                        TodoRow(item: item, open: open)
+                    }
+                    if let more = home.todoMore {
+                        Button(allTodo ? home.todoFewer : more) {
+                            withAnimation { allTodo.toggle() }
+                        }
+                        .font(.subheadline)
+                    }
+                    ForEach(home.notes, id: \.self) { note in
+                        Text(note.text)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text(home.todoTitle)
+                        .font(.title2.bold())
+                        .foregroundStyle(Color.primary)
+                        .textCase(nil)
+                }
+                .surfaceRows()
+            }
+
+            Section {
+                Button(home.addCards, systemImage: "plus.circle") { model.addingCards = true }
+                NavigationLink(value: Route.pastCards) {
+                    LabeledContent(home.past.title, value: home.past.count)
+                }
+            }
+            .surfaceRows()
+        }
+        .listSectionSpacing(.compact)
+        .cardBackdrop(frontCard.map { [$0.card.art] } ?? [])
+    }
+
+    private static let sheetId = "sheet"
+
+    #if DEBUG
+    private func screenshotDemo(_ proxy: ScrollViewProxy) async {
+        switch model.screenshotDetail {
+        case "sheet":
+            try? await Task.sleep(for: .milliseconds(400))
+            proxy.scrollTo(Self.sheetId, anchor: .top)
+        case "deck":
+            for step in 1...8 {
+                try? await Task.sleep(for: .milliseconds(1100))
+                let cards = home.cards
+                guard !cards.isEmpty else { continue }
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.78)) {
+                    front = cards[step % cards.count].id
+                }
+            }
+            model.walletPath.append(.answer("Whole Foods"))
+        default:
+            break
+        }
+    }
+    #endif
+
     // The answer opens here, in My wallet; the search closes first, since an
     // answer pushed from an open search kept a blank title.
     private func openAnswer(_ asked: String) {
@@ -225,6 +268,34 @@ private struct WalletList: View {
         if refusal == nil { removed += 1 }
         removal = nil
         removing = nil
+    }
+}
+
+// Under the deck: what the front card is waiting for, and its page. (A
+// tap on the card itself opens its settings.)
+private struct FrontControls: View {
+    let held: WalletHome.Held
+    let open: () -> Void
+    let page: () -> Void
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { buttons }
+            VStack(spacing: 8) { buttons }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder private var buttons: some View {
+        if let note = held.note {
+            Button(note, action: open)
+                .buttonStyle(AccentButtonStyle())
+        } else if held.ask {
+            Button(held.action, action: open)
+                .buttonStyle(AccentButtonStyle())
+        }
+        Button("Card page", action: page)
+            .buttonStyle(PlateButtonStyle())
     }
 }
 
@@ -268,80 +339,12 @@ private struct TodoRow: View {
 }
 
 extension TodoRow {
-    // "Amex Gold · $10 left · by Nov 30", the date in orange.
+    // "Amex Gold · $10 left · by Nov 30", the date in amber.
     fileprivate var meta: Text {
         let detail = Text(item.detail).foregroundStyle(.secondary)
         guard let when = item.when else { return detail }
-        let date = Text(when.replacingOccurrences(of: " ", with: "\u{00A0}")).foregroundStyle(.orange)
+        let date = Text(when.replacingOccurrences(of: " ", with: "\u{00A0}")).foregroundStyle(Color.caution)
         return Text("\(detail) · \(date)")
-    }
-}
-
-private struct SheetRow: View {
-    let row: WalletHome.Sheet.Row
-    @Environment(\.dynamicTypeSize) private var size
-
-    var body: some View {
-        let layout = size.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
-            : AnyLayout(HStackLayout(alignment: .center, spacing: 10))
-        layout {
-            Text(row.label)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .frame(minWidth: size.isAccessibilitySize ? nil : 92, alignment: .leading)
-            HStack(spacing: 8) {
-                if let art = row.art {
-                    CardArtView(art: art, width: 28)
-                }
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(row.name)
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(size.isAccessibilitySize ? nil : 2)
-                    if let note = row.note {
-                        Text(note)
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                    }
-                }
-            }
-            if !size.isAccessibilitySize { Spacer(minLength: 4) }
-            Text(row.rate)
-                .font(.subheadline.weight(.semibold).monospacedDigit())
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
-
-private struct HeldRow: View {
-    let held: WalletHome.Held
-    @Environment(\.dynamicTypeSize) private var size
-
-    var body: some View {
-        let layout = size.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
-            : AnyLayout(HStackLayout(spacing: 12))
-        layout {
-            CardArtView(art: held.card.art, width: 48)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(held.card.shortName)
-                Text(held.card.fee)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                if let note = held.note {
-                    Text(note)
-                        .font(.footnote)
-                        .foregroundStyle(held.ask ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
-                }
-            }
-            if !size.isAccessibilitySize { Spacer(minLength: 4) }
-            if held.ask && held.note == nil {
-                Text(held.action)
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(.tint)
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 }
 

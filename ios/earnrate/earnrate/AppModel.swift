@@ -110,6 +110,9 @@ enum AppTab: Hashable {
             home = try await request("home", [:])
             try await refreshWallet()
             if hasCards { tab = .wallet }
+            #if DEBUG
+            if let screen = UserDefaults.standard.string(forKey: "EarnrateOpen") { openForScreenshot(screen) }
+            #endif
             if !UserDefaults.standard.bool(forKey: Self.welcomedKey) && !hasCards {
                 showingWelcome = true
             }
@@ -119,6 +122,30 @@ enum AppTab: Hashable {
         }
         await checkForData()
     }
+
+    #if DEBUG
+    // `-EarnrateOpen next`, `answer:Whole Foods`, `card:amex-gold`,
+    // `wallet:sheet` (scrolled to the cheat sheet) or `wallet:deck` (each
+    // card brought forward in turn), for screenshots and recordings from the
+    // command line.
+    var screenshotDetail: String?
+
+    private func openForScreenshot(_ screen: String) {
+        let parts = screen.split(separator: ":", maxSplits: 1).map(String.init)
+        screenshotDetail = parts.count == 2 ? parts[1] : nil
+        switch parts.first {
+        case "next": tab = .next
+        case "cards": tab = .cards
+        case "answer" where parts.count == 2:
+            tab = .wallet
+            walletPath = [.answer(parts[1])]
+        case "card" where parts.count == 2:
+            tab = .wallet
+            walletPath = [.card(parts[1])]
+        default: tab = .wallet
+        }
+    }
+    #endif
 
     // The newest card data on the phone; a download the engine can't load
     // is deleted, and the app's own data used.

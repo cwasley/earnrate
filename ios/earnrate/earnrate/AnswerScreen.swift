@@ -60,42 +60,45 @@ private struct AnswerList: View {
     var body: some View {
         List {
             Section {
-                if let pick = answer.pick {
-                    NavigationLink(value: Route.card(pick.cardId)) {
-                        PickRow(pick: pick)
+                if answer.canChooseScope {
+                    Picker("Which cards", selection: $scope) {
+                        Text(answer.labels.yours).tag(Scope.yours)
+                        Text(answer.labels.every).tag(Scope.every)
                     }
+                    .pickerStyle(.segmented)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
                 }
             } header: {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .center, spacing: 16) {
                     if let subtitle = answer.subtitle {
                         Text(subtitle)
                             .font(.subheadline)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.inkSecondary)
+                            .plate(cornerRadius: 14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    if answer.canChooseScope {
-                        Picker("Which cards", selection: $scope) {
-                            Text(answer.labels.yours).tag(Scope.yours)
-                            Text(answer.labels.every).tag(Scope.every)
-                        }
-                        .pickerStyle(.segmented)
+                    if let pick = answer.pick {
+                        AnswerHero(pick: pick, behind: Array(answer.rows.prefix(3)))
+                        PickText(pick: pick)
                     }
                 }
                 .textCase(nil)
-                .padding(.bottom, 4)
+                .padding(.bottom, 8)
             } footer: {
-                if let note = answer.scopeNote { Text(note) }
+                if let note = answer.scopeNote {
+                    Text(note).foregroundStyle(Color.inkSecondary)
+                }
             }
 
             if let kinds = answer.kinds {
                 Section {
                     KindChips(kinds: kinds, kind: $kind)
+                        .surfaceRows()
                 } header: {
-                    Text(kinds.prompt)
-                        .font(.headline)
-                        .foregroundStyle(Color.primary)
-                        .textCase(nil)
+                    SectionTitle(kinds.prompt)
                 } footer: {
-                    if let lead = kinds.lead { Text(lead) }
+                    if let lead = kinds.lead { Text(lead).foregroundStyle(Color.inkSecondary) }
                 }
             }
 
@@ -105,21 +108,25 @@ private struct AnswerList: View {
                         Label {
                             Text(line)
                         } icon: {
-                            Image(systemName: "info.circle").foregroundStyle(.orange)
+                            Image(systemName: "info.circle").foregroundStyle(Color.caution)
                         }
                         .font(.subheadline)
                     }
                 }
+                .surfaceRows()
             }
 
             if !answer.credits.isEmpty {
-                Section(answer.creditsTitle) {
+                Section {
                     ForEach(answer.credits) { credit in
                         NavigationLink(value: Route.card(credit.card.id)) {
                             CreditRowView(credit: credit)
                         }
                     }
+                } header: {
+                    SectionTitle(answer.creditsTitle)
                 }
+                .surfaceRows()
             }
 
             if !answer.rows.isEmpty {
@@ -137,10 +144,11 @@ private struct AnswerList: View {
                         Button(more) { all = true }
                     }
                 } header: {
-                    if let title = answer.rankingTitle { Text(title) }
+                    if let title = answer.rankingTitle { SectionTitle(title) }
                 } footer: {
                     Footer(lines: answer.footer)
                 }
+                .surfaceRows()
             } else if !answer.footer.isEmpty {
                 Section {
                 } footer: {
@@ -149,6 +157,7 @@ private struct AnswerList: View {
             }
         }
         .listSectionSpacing(.compact)
+        .cardBackdrop([answer.pick?.art, answer.rows.first?.card.art].compactMap { $0 })
         .sensoryFeedback(.selection, trigger: open)
     }
 
@@ -194,44 +203,46 @@ private struct Footer: View {
     let lines: [String]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             ForEach(lines, id: \.self) { Text($0) }
         }
-        .padding(.top, 8)
+        .font(.caption)
+        .foregroundStyle(Color.inkSecondary)
+        .padding(.top, 6)
     }
 }
 
-private struct PickRow: View {
+// The words under the pick: what to use, the rate big, and why.
+private struct PickText: View {
     let pick: Answer.Pick
-    @Environment(\.dynamicTypeSize) private var size
 
     var body: some View {
-        let layout = size.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
-            : AnyLayout(HStackLayout(spacing: 16))
-        layout {
-            CardArtView(art: pick.art, width: 86, shine: true, sparkle: true)
-                .id(pick.cardId)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(pick.label)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Text(pick.name)
-                    .font(.title3.bold())
-                Text(pick.detail)
-                    .font(.headline)
-                    .foregroundStyle(.tint)
-                Text(pick.reason)
+        VStack(spacing: 4) {
+            Text(pick.label)
+                .font(.footnote.weight(.bold))
+                .textCase(.uppercase)
+                .tracking(1.2)
+                .foregroundStyle(.tint)
+            Text(pick.name)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Color.primary)
+            Text(pick.detail)
+                .font(.figure(.largeTitle))
+                .foregroundStyle(Color.primary)
+            Text(pick.reason)
+                .font(.subheadline)
+                .foregroundStyle(Color.inkSecondary)
+            ForEach(pick.warnings, id: \.self) { warning in
+                Label(warning, systemImage: "exclamationmark.triangle.fill")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
-                ForEach(pick.warnings, id: \.self) { warning in
-                    Label(warning, systemImage: "exclamationmark.triangle.fill")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
-                }
+                    .foregroundStyle(Color.caution)
             }
         }
-        .padding(.vertical, 6)
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity)
+        .background(Color.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 }
@@ -271,37 +282,41 @@ private struct RankRow: View {
         }
     }
 
-    @ViewBuilder private var line: some View {
-        let layout = size.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
-            : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
-        layout {
-            CardArtView(art: row.card.art, width: 44)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(row.card.shortName)
-                        .font(.body.weight(.semibold))
-                    if markHeld && row.card.held {
-                        Text(labels.held)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tint)
+    private var line: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            if !size.isAccessibilitySize {
+                CardArtView(art: row.card.art, width: 28)
+                    .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 3 }
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                LedgerLine {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(row.card.shortName)
+                            .font(.body.weight(.semibold))
+                        if markHeld && row.card.held {
+                            Text(labels.held)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tint)
+                        }
+                    }
+                } figure: {
+                    HStack(alignment: .lastTextBaseline, spacing: 5) {
+                        if !row.warnings.isEmpty && !expanded {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.subheadline)
+                                .foregroundStyle(Color.caution)
+                                .accessibilityLabel("Has a note")
+                        }
+                        Text(row.rate)
+                            .font(.figure(.title3, weight: .semibold))
                     }
                 }
                 Text(row.reason)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            if !size.isAccessibilitySize { Spacer(minLength: 8) }
-            HStack(spacing: 6) {
-                if !row.warnings.isEmpty && !expanded {
-                    Image(systemName: "exclamationmark.circle.fill")
-                        .foregroundStyle(.orange)
-                        .accessibilityLabel("Has a note")
-                }
-                Text(row.rate)
-                    .font(.title3.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(Color.inkSecondary)
             }
         }
+        .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
     }
 
@@ -310,7 +325,7 @@ private struct RankRow: View {
             ForEach(row.warnings, id: \.self) { warning in
                 Label(warning, systemImage: "exclamationmark.triangle.fill")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Color.caution)
             }
             ForEach(row.lines, id: \.self) { line in
                 Text(line)
@@ -332,7 +347,7 @@ private struct RankRow: View {
             .buttonStyle(.borderless)
             .padding(.top, 2)
         }
-        .padding(.leading, size.isAccessibilitySize ? 0 : 56)
+        .padding(.leading, size.isAccessibilitySize ? 0 : 38)
         .transition(.opacity)
     }
 }

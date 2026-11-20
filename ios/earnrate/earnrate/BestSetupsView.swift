@@ -67,29 +67,36 @@ struct BestSetupsView: View {
                 Section {
                     Label(callout, systemImage: "info.circle")
                 }
+                .surfaceRows()
             }
             Section {
                 ForEach(s.singles) { row in
                     SetupRowView(row: row, held: s.held, expanded: open.contains(row.key), toggle: { toggle(row.key) }, refusal: $refusal)
                 }
             } header: {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text(s.basis)
                         .font(.subheadline)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.inkSecondary)
                         .textCase(nil)
-                    Text(s.singlesTitle)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .plate()
+                        .padding(.horizontal, -14)
+                    SectionTitle(s.singlesTitle)
                 }
             } footer: {
                 if !s.members.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(s.members, id: \.self) { Text($0) }
                     }
+                    .font(.caption)
+                    .foregroundStyle(Color.inkSecondary)
                 }
             }
+            .surfaceRows()
 
             if s.pairsNote != nil || !s.pairs.isEmpty {
-                Section(s.pairsTitle) {
+                Section {
                     if let note = s.pairsNote {
                         Text(note)
                             .font(.subheadline)
@@ -98,7 +105,10 @@ struct BestSetupsView: View {
                     ForEach(s.pairs) { row in
                         SetupRowView(row: row, held: s.held, expanded: open.contains(row.key), toggle: { toggle(row.key) }, refusal: $refusal)
                     }
+                } header: {
+                    SectionTitle(s.pairsTitle)
                 }
+                .surfaceRows()
             }
 
             Section {
@@ -110,8 +120,10 @@ struct BestSetupsView: View {
                     }
                 }
             }
+            .surfaceRows()
         }
         .listSectionSpacing(.compact)
+        .cardBackdrop([])
         .opacity(working ? 0.5 : 1)
         .overlay {
             if working {
@@ -216,7 +228,7 @@ private struct SetupRowView: View {
             if let note = row.eligibility {
                 Text(note)
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Color.caution)
             }
             if let ask = row.ask {
                 AskField(ask: ask, refusal: $refusal)

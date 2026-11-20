@@ -89,7 +89,7 @@ struct ChipLabel: View {
         .font(.subheadline.weight(.medium))
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
-        .foregroundStyle(on ? Color.white : Color.primary)
+        .foregroundStyle(on ? Color.onAccent : Color.primary)
         .background(on ? AnyShapeStyle(.tint) : AnyShapeStyle(.fill.tertiary), in: Capsule())
         .contentShape(Capsule())
     }

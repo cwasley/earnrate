@@ -29,6 +29,8 @@ private struct NextCardList: View {
     @State private var working = false
     @State private var refusal: String?
     @State private var open: Set<String> = []
+    @State private var focused: String?
+    @State private var carouselWidth: CGFloat = 400
     @Environment(\.dynamicTypeSize) private var size
 
     private struct Key: Equatable {
@@ -76,49 +78,86 @@ private struct NextCardList: View {
     }
 
     private func list(_ next: NextCard) -> some View {
-        List {
-            // At the largest text sizes the lead, the basis and Best setups
-            // wait at the bottom, so the first card shows on the first screen.
-            if !size.isAccessibilitySize {
+        let top = Array(next.rows.prefix(Self.carousel))
+        let rest = Array(next.rows.dropFirst(Self.carousel))
+        let shown = next.rows.first { $0.id == focused } ?? next.rows.first
+        return List {
+            if !top.isEmpty {
                 Section {
-                    bestSetupsLink(next)
+                    ScrollView(.horizontal) {
+                        HStack(alignment: .top, spacing: 12) {
+                            ForEach(top) { row in
+                                OfferTile(row: row, width: tileWidth, focused: row.id == shown?.id) {
+                                    model.nextPath.append(.card(row.card.id))
+                                }
+                                .frame(maxHeight: .infinity, alignment: .top)
+                                .id(row.id)
+                            }
+                        }
+                        .scrollTargetLayout()
+                    }
+                    .contentMargins(.horizontal, 4, for: .scrollContent)
+                    .scrollClipDisabled()
+                    .scrollTargetBehavior(.viewAligned)
+                    .scrollIndicators(.hidden)
+                    .scrollPosition(id: $focused, anchor: .leading)
+                    .measuredWidth($carouselWidth)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 12, trailing: 0))
+                    .listRowBackground(Color.clear)
                 } header: {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(next.lead)
                             .font(.headline)
                             .foregroundStyle(Color.primary)
-                        Text(next.basis)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.secondary)
+                        if !size.isAccessibilitySize {
+                            Text(next.basis)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.inkSecondary)
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .plate()
                     .textCase(nil)
-                    .padding(.bottom, 8)
+                    .padding(.horizontal, -16)
+                    .padding(.bottom, 4)
                 }
+            }
+
+            // At the largest text sizes the basis and Best setups wait at
+            // the bottom, so the first card shows on the first screen.
+            if !size.isAccessibilitySize {
+                Section {
+                    bestSetupsLink(next)
+                }
+                .surfaceRows()
             }
 
             Section {
                 if let empty = next.empty {
                     Text(empty)
                 }
-                ForEach(next.rows) { row in
+                ForEach(rest) { row in
                     OfferRowView(row: row, expanded: open.contains(row.id), toggle: { toggle(row.id) }, refusal: $refusal)
                 }
                 if let more = next.moreLabel {
                     Button(more) { all = true }
                 }
             } footer: {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 6) {
                     ForEach(next.members, id: \.self) { Text($0) }
                     Text(next.mayDiffer)
                 }
+                .font(.caption)
+                .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 4)
             }
+            .surfaceRows()
             .opacity(working ? 0.5 : 1)
             .animation(.default, value: working)
 
             Section {
                 DisclosureGroup(next.howTitle) {
-                    ForEach(size.isAccessibilitySize ? [next.lead, next.basis] + next.how : next.how, id: \.self) {
+                    ForEach(size.isAccessibilitySize ? [next.basis] + next.how : next.how, id: \.self) {
                         Text($0)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
@@ -129,9 +168,15 @@ private struct NextCardList: View {
                     LinkRow(title: next.rules.title, text: next.rules.text, symbol: "arrow.trianglehead.2.clockwise")
                 }
             }
+            .surfaceRows()
         }
         .listSectionSpacing(.compact)
+        .cardBackdrop(shown.map { [$0.card.art] } ?? [])
     }
+
+    private static let carousel = 5
+
+    private var tileWidth: CGFloat { max(240, min(carouselWidth - 40, 360)) }
 
     private func bestSetupsLink(_ next: NextCard) -> some View {
         NavigationLink(value: Route.bestSetups) {
@@ -143,6 +188,54 @@ private struct NextCardList: View {
         withAnimation(.snappy) {
             if open.contains(id) { open.remove(id) } else { open.insert(id) }
         }
+    }
+}
+
+// One of the top next cards, big: the card, what it adds, its offer. A tap
+// opens the card's page, with the offer's details and history.
+private struct OfferTile: View {
+    let row: NextCard.Row
+    let width: CGFloat
+    let focused: Bool
+    let open: () -> Void
+
+    var body: some View {
+        Button(action: open) {
+            VStack(alignment: .leading, spacing: 8) {
+                CardFace(art: row.card.art, name: row.card.shortName, width: width - 28, shine: focused, lifted: focused)
+                    .padding(.bottom, 4)
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text(row.total)
+                        .font(.figure(.title))
+                        .foregroundStyle(row.ineligible == nil ? AnyShapeStyle(.tint) : AnyShapeStyle(Color.inkSecondary))
+                    Text(row.per)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkSecondary)
+                }
+                Text(row.offerShort)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let flag = row.flag {
+                    Label(flag, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(Color.caution)
+                }
+                Text("\(row.fee) · \(row.asOf)")
+                    .font(.caption)
+                    .foregroundStyle(Color.inkSecondary)
+            }
+            .padding(14)
+            .frame(width: width, alignment: .topLeading)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .background(Color.surface, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(row.card.shortName)
+        .accessibilityValue([row.totalLabel, row.flag, row.offerShort, row.fee, row.asOf].compactMap { $0 }.joined(separator: ". "))
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -226,7 +319,7 @@ private struct OfferRowView: View {
                     .font(.subheadline)
                     .lineLimit(size.isAccessibilitySize ? nil : 2)
                 if let flag = row.flag {
-                    Text("\(Text("\(row.fee) · \(row.asOf)").foregroundStyle(.secondary)) · \(Text("\(Image(systemName: "exclamationmark.triangle.fill")) \(flag)").foregroundStyle(.orange))")
+                    Text("\(Text("\(row.fee) · \(row.asOf)").foregroundStyle(.secondary)) · \(Text("\(Image(systemName: "exclamationmark.triangle.fill")) \(flag)").foregroundStyle(Color.caution))")
                         .font(.caption)
                 } else {
                     Text("\(row.fee) · \(row.asOf)")
@@ -251,7 +344,7 @@ private struct OfferRowView: View {
             if let note = row.eligibility {
                 Text(note)
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Color.caution)
             }
             if let ask = row.ask {
                 AskField(ask: ask, refusal: $refusal)
@@ -294,7 +387,7 @@ struct Warning: View {
             Image(systemName: "exclamationmark.triangle.fill")
         }
         .font(.footnote)
-        .foregroundStyle(.orange)
+        .foregroundStyle(Color.caution)
     }
 }
 

@@ -36,15 +36,19 @@ private struct CardsList: View {
                             LinkRow(title: index.rules.title, text: index.rules.text, symbol: "arrow.trianglehead.2.clockwise")
                         }
                     }
+                    .surfaceRows()
                 }
                 ForEach(index.groups) { group in
-                    Section(group.title) {
+                    Section {
                         ForEach(group.cards) { card in
                             NavigationLink(value: Route.card(card.id)) {
                                 IndexRow(card: card, held: model.home?.held ?? "")
                             }
                         }
+                    } header: {
+                        Text(group.title).foregroundStyle(Color.inkSecondary)
                     }
+                    .surfaceRows()
                     .sectionIndexLabel(query.isEmpty && !group.index.isEmpty ? group.index : nil)
                 }
                 if query.isEmpty {
@@ -54,10 +58,13 @@ private struct CardsList: View {
                             Text(index.lead)
                             Text(index.art)
                         }
+                        .font(.caption)
+                        .foregroundStyle(Color.inkSecondary)
                     }
                 }
             }
         }
+        .cardBackdrop([])
         .listSectionIndexVisibility(query.isEmpty ? .visible : .hidden)
         .overlay {
             if let index, index.groups.isEmpty {
@@ -117,10 +124,12 @@ struct BonusRulesView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             ForEach(rules.lead, id: \.self) { Text($0) }
                         }
+                        .foregroundStyle(Color.inkSecondary)
                     }
+                    .surfaceRows()
                 }
                 ForEach(rules.groups) { group in
-                    Section(group.title) {
+                    Section {
                         ForEach(group.rows) { row in
                             NavigationLink(value: Route.card(row.card.id)) {
                                 RuleRow(row: row)
@@ -129,10 +138,14 @@ struct BonusRulesView: View {
                                 AskField(ask: ask, refusal: $refusal)
                             }
                         }
+                    } header: {
+                        Text(group.title).foregroundStyle(Color.inkSecondary)
                     }
+                    .surfaceRows()
                 }
             }
         }
+        .cardBackdrop([])
         .overlay {
             if let rules, rules.groups.isEmpty {
                 ContentUnavailableView(rules.none, systemImage: "magnifyingglass")
@@ -171,7 +184,7 @@ private struct RuleRow: View {
             if let yours = row.yours {
                 Text(yours)
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Color.caution)
             }
         }
         .padding(.vertical, 2)
