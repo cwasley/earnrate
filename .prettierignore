@@ -2,4 +2,4 @@ yarn.lock
 data/sources.lock.json
 
 # Xcode writes these files itself
-ios/
+ios/earnrate/

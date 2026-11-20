@@ -41,6 +41,7 @@
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "prepack": "yarn build",
     "smoke:pack": "node scripts/smoke-pack.ts",
+    "ios:engine": "node scripts/build-ios-engine.ts",
     "mcpb:pack": "node scripts/build-mcpb.ts",
     "chatgpt:pack": "node scripts/pack-chatgpt.ts",
     "smoke:mcpb": "node scripts/smoke-mcpb.ts",

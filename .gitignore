@@ -54,3 +54,5 @@ monitor/dist/
 xcuserdata/
 ios/**/DerivedData/
 *.xcuserstate
+# Built by `yarn ios:engine`
+ios/earnrate/earnrate/Engine/

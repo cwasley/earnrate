@@ -12,6 +12,7 @@ export default defineConfig([
     'monitor/dist/**',
     'pass/dist/**',
     'site-dist/**',
+    'ios/earnrate/**',
     '.wrangler/**',
     '.mcpb-build/**',
     'private/**',
