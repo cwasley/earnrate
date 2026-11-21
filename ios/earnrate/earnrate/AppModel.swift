@@ -1,5 +1,7 @@
+import AppIntents
 import Foundation
 import Observation
+import WidgetKit
 
 enum AppTab: Hashable {
     case store
@@ -10,12 +12,23 @@ enum AppTab: Hashable {
 
 // The app's engine and the wallet saved on this phone. The wallet never
 // leaves the phone, and there are no analytics: the only request the app
-// makes is for newer card data from earnrate.dev (CardData.swift).
+// makes is for newer card data from earnrate.dev (CardData.swift). One
+// model a process, so Siri, Spotlight and notifications reach the same one
+// the screens use.
 @Observable final class AppModel {
+    static let shared = AppModel()
+
     enum Phase {
         case loading
         case ready(Engine)
         case failed(String)
+    }
+
+    // Where a widget, Spotlight, Siri or a notification asked to go.
+    enum Destination: Equatable {
+        case link(AppLink)
+        case card(String)
+        case settings(String, SettingsFocus?)
     }
 
     private(set) var phase: Phase = .loading
@@ -45,7 +58,12 @@ enum AppTab: Hashable {
     }
     var showingWelcome = false
     var addingCards = false
+    var showingSettings = false
     private(set) var nudgeDismissed: Bool
+    private(set) var remindersOn: Bool
+    private(set) var reminderOfferAnswered: Bool
+    // The phone has notifications off for earnrate, so reminders can't be.
+    private(set) var notificationsDenied = false
 
     private let wallet = WalletFile()
     // The card data the engines were loaded from, for the second engine.
@@ -58,11 +76,17 @@ enum AppTab: Hashable {
     @ObservationIgnored private var working: [String: Task<Data, Error>] = [:]
     @ObservationIgnored private var warming: Task<Void, Never>?
     @ObservationIgnored private var checkingData = false
+    @ObservationIgnored private var pending: Destination?
+    @ObservationIgnored private var elsewhere: Task<Void, Never>?
+    @ObservationIgnored private var elsewhereDay = ""
     private static let recentsKey = "recentSearches"
     private static let welcomedKey = "welcomed"
     private static let nudgeKey = "addCardsNudgeDismissed"
     private static let filtersKey = "nextCardFilters"
     private static let dataCheckedKey = "cardDataChecked"
+    private static let remindersKey = "remindersOn"
+    private static let reminderOfferKey = "reminderOfferAnswered"
+    private static let indexedKey = "spotlightIndexedData"
     private static let recentsKept = 8
 
     var isReady: Bool {
@@ -73,9 +97,13 @@ enum AppTab: Hashable {
 
     var showsNudge: Bool { isReady && !hasCards && !nudgeDismissed }
 
-    init() {
+    var showsReminderOffer: Bool { walletHome.reminderOffer != nil && !remindersOn && !reminderOfferAnswered }
+
+    private init() {
         recents = UserDefaults.standard.stringArray(forKey: Self.recentsKey) ?? []
         nudgeDismissed = UserDefaults.standard.bool(forKey: Self.nudgeKey)
+        remindersOn = UserDefaults.standard.bool(forKey: Self.remindersKey)
+        reminderOfferAnswered = UserDefaults.standard.bool(forKey: Self.reminderOfferKey)
         filters = UserDefaults.standard.data(forKey: Self.filtersKey)
             .flatMap { try? JSONDecoder().decode(NextFilters.self, from: $0) } ?? NextFilters()
     }
@@ -94,9 +122,7 @@ enum AppTab: Hashable {
         do {
             let clock = ContinuousClock()
             let began = clock.now
-            let (engine, source) = try await Task.detached(priority: .userInitiated) {
-                try await Self.open()
-            }.value
+            let (engine, source) = try await EngineLoader.open()
             #if DEBUG
             if UserDefaults.standard.bool(forKey: "EarnrateBenchmark") {
                 print("bench load \(began.duration(to: clock.now))")
@@ -109,7 +135,12 @@ enum AppTab: Hashable {
             phase = .ready(engine)
             home = try await request("home", [:])
             try await refreshWallet()
-            if hasCards { tab = .wallet }
+            if let pending {
+                self.pending = nil
+                go(pending)
+            } else if hasCards {
+                tab = .wallet
+            }
             #if DEBUG
             if let screen = UserDefaults.standard.string(forKey: "EarnrateOpen") { openForScreenshot(screen) }
             #endif
@@ -120,15 +151,18 @@ enum AppTab: Hashable {
             phase = .failed(error.localizedDescription)
             return
         }
+        EarnrateShortcuts.updateAppShortcutParameters()
         await checkForData()
     }
 
     #if DEBUG
     // `-EarnrateOpen next`, `answer:Whole Foods`, `card:amex-gold`,
     // `wallet:sheet` (scrolled to the cheat sheet) or `wallet:deck` (each
-    // card brought forward in turn), for screenshots and recordings from the
-    // command line.
+    // card brought forward in turn), `settings` (the wallet's settings) or
+    // `brief:Whole Foods` (Siri's snippet for it), for screenshots and
+    // recordings from the command line.
     var screenshotDetail: String?
+    var screenshotBrief: Brief?
 
     private func openForScreenshot(_ screen: String) {
         let parts = screen.split(separator: ":", maxSplits: 1).map(String.init)
@@ -136,6 +170,12 @@ enum AppTab: Hashable {
         switch parts.first {
         case "next": tab = .next
         case "cards": tab = .cards
+        case "settings":
+            tab = .wallet
+            showingSettings = true
+        case "brief" where parts.count == 2:
+            tab = .wallet
+            Task { screenshotBrief = try? await brief(parts[1]) }
         case "answer" where parts.count == 2:
             tab = .wallet
             walletPath = [.answer(parts[1])]
@@ -149,7 +189,7 @@ enum AppTab: Hashable {
 
     // The newest card data on the phone; a download the engine can't load
     // is deleted, and the app's own data used.
-    private nonisolated static func open() async throws -> (Engine, CardData.Source) {
+    nonisolated static func open() async throws -> (Engine, CardData.Source) {
         if let downloaded = CardData.downloaded() {
             if let engine = try? Engine(catalog: downloaded.catalog) { return (engine, downloaded) }
             CardData.discard()
@@ -486,6 +526,7 @@ enum AppTab: Hashable {
         revision += 1
         done = [:]
         working = [:]
+        updateElsewhere()
         warmUp()
     }
 
@@ -517,8 +558,15 @@ enum AppTab: Hashable {
         return try JSONDecoder().decode(T.self, from: data)
     }
 
+    // Siri and Shortcuts can ask before the screens have loaded the engine,
+    // or with no screen at all; they wait for the same one.
     private func raw(_ name: String, _ fields: [String: Any], wallet withWallet: Bool, worker onWorker: Bool = false) async throws -> Data {
-        guard case .ready(let main) = phase else { throw Engine.Failure.script("The engine isn't loaded yet.") }
+        let main: Engine
+        if case .ready(let ready) = phase {
+            main = ready
+        } else {
+            main = try await EngineLoader.open().0
+        }
         let engine = onWorker ? try await workerEngine() : main
         var fields = fields
         if withWallet, let saved = wallet.load(), let object = try? JSONSerialization.jsonObject(with: saved) {
@@ -526,6 +574,158 @@ enum AppTab: Hashable {
         }
         let request = String(decoding: try JSONSerialization.data(withJSONObject: fields), as: UTF8.self)
         return try await engine.call(name, request)
+    }
+
+    // MARK: Outside the app
+
+    // A tap on a widget, a Spotlight result, Siri's answer or a reminder. One
+    // that comes while the engine is still loading waits for it, and then
+    // takes the place of the usual first tab.
+    func go(_ destination: Destination) {
+        guard isReady else {
+            pending = destination
+            return
+        }
+        switch destination {
+        case .link(.answer(let query)):
+            if hasCards {
+                tab = .wallet
+                walletPath = [.answer(query)]
+            } else {
+                tab = .store
+                storePath = [.answer(query)]
+            }
+        case .link(.sheet):
+            if hasCards {
+                tab = .wallet
+                walletPath = []
+            } else {
+                tab = .store
+                storePath = []
+            }
+        case .card(let id):
+            if hasCards {
+                tab = .wallet
+                walletPath = [.card(id)]
+            } else {
+                tab = .cards
+                cardsPath = [.card(id)]
+            }
+        case .settings(let id, let focus):
+            tab = .wallet
+            walletPath = walletCards.contains { $0.id == id } ? [.settings(id, focus)] : []
+        }
+    }
+
+    // One store's answer in a few words, for Siri and Shortcuts.
+    func brief(_ query: String) async throws -> Brief {
+        try await request("brief", ["query": query], wallet: true)
+    }
+
+    // The everyday purchases and recent searches, for Siri to offer.
+    func suggestedStores() async -> [String] {
+        let everyday: [String]
+        if let home {
+            everyday = home.quick
+        } else {
+            let fetched: Home? = try? await request("home", [:])
+            everyday = fetched?.quick ?? []
+        }
+        var seen = Set<String>()
+        return (everyday + recents).filter { seen.insert($0.lowercased()).inserted }
+    }
+
+    // Reminders on or off. Turning them on is when the phone asks to allow
+    // notifications; refused, they stay off.
+    func setReminders(_ on: Bool) async {
+        answerReminderOffer()
+        guard on else {
+            remindersOn = false
+            UserDefaults.standard.set(false, forKey: Self.remindersKey)
+            await ReminderSchedule.clear()
+            return
+        }
+        let allowed = await ReminderSchedule.allow()
+        notificationsDenied = !allowed
+        remindersOn = allowed
+        UserDefaults.standard.set(allowed, forKey: Self.remindersKey)
+        if allowed { await scheduleReminders() }
+    }
+
+    func answerReminderOffer() {
+        reminderOfferAnswered = true
+        UserDefaults.standard.set(true, forKey: Self.reminderOfferKey)
+    }
+
+    // Whether notifications were turned off in the Settings app since.
+    func checkNotifications() async {
+        notificationsDenied = await ReminderSchedule.denied()
+    }
+
+    // Once a day, the widgets' sheet and the reminders move forward even
+    // when nothing in the wallet changed.
+    func refreshElsewhereIfNewDay() {
+        guard isReady, elsewhereDay != Day.text(.now) else { return }
+        updateElsewhere()
+    }
+
+    // The widgets' cheat sheet, reminders and Spotlight, worked out on the
+    // second engine after every change to the wallet or the card data.
+    private func updateElsewhere() {
+        elsewhereDay = Day.text(.now)
+        elsewhere?.cancel()
+        elsewhere = Task { [weak self] in
+            guard let self else { return }
+            await self.writeWidgets()
+            guard !Task.isCancelled else { return }
+            await self.scheduleReminders()
+            guard !Task.isCancelled else { return }
+            await self.indexSpotlight()
+        }
+    }
+
+    private func writeWidgets() async {
+        guard let data = try? await raw("widgets", [:], wallet: true, worker: true) else { return }
+        guard !Task.isCancelled, (try? SharedSheet.write(data)) != nil else { return }
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    private func scheduleReminders() async {
+        guard remindersOn,
+              let data = try? await raw("reminders", [:], wallet: true, worker: true),
+              let list = try? JSONDecoder().decode(Reminders.self, from: data),
+              !Task.isCancelled
+        else { return }
+        await ReminderSchedule.replace(with: list.reminders)
+    }
+
+    // Every store once per card data release; the saved cards each time.
+    private func indexSpotlight() async {
+        await Spotlight.index(cards: walletCards)
+        guard UserDefaults.standard.string(forKey: Self.indexedKey) != dataVersion,
+              let data = try? await raw("places", [:], wallet: false, worker: true),
+              let list = try? JSONDecoder().decode(Places.self, from: data),
+              await Spotlight.index(places: list.places)
+        else { return }
+        UserDefaults.standard.set(dataVersion, forKey: Self.indexedKey)
+    }
+}
+
+// The process's first engine, opened once whether the screens or Siri asked
+// for it first.
+enum EngineLoader {
+    private static var opening: Task<(Engine, CardData.Source), Error>?
+
+    static func open() async throws -> (Engine, CardData.Source) {
+        if let opening { return try await opening.value }
+        let task = Task.detached(priority: .userInitiated) { try await AppModel.open() }
+        opening = task
+        do {
+            return try await task.value
+        } catch {
+            opening = nil
+            throw error
+        }
     }
 }
 

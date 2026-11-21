@@ -1,10 +1,12 @@
 import SwiftUI
+import UIKit
 
-// Memberships and point values: most people never change them, so they
-// live behind the gear.
+// Reminders, memberships and point values: most people never change them,
+// so they live behind the gear.
 struct WalletSettingsSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @State private var settings: WalletSettings?
     @State private var refusal: String?
 
@@ -12,6 +14,22 @@ struct WalletSettingsSheet: View {
         NavigationStack {
             Form {
                 if let settings {
+                    Section {
+                        SwiftUI.Toggle(settings.reminders.label, isOn: Binding(get: { model.remindersOn }, set: { on in
+                            Task { await model.setReminders(on) }
+                        }))
+                        if model.notificationsDenied {
+                            Text(settings.reminders.denied)
+                                .foregroundStyle(Color.caution)
+                            Button(settings.reminders.openSettings) {
+                                if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
+                            }
+                        }
+                    } header: {
+                        Text(settings.reminders.title)
+                    } footer: {
+                        Text(settings.reminders.footer)
+                    }
                     Section {
                         MembershipControls(toggles: settings.toggles, menus: settings.menus, refusal: $refusal)
                         if !settings.otherToggles.isEmpty || !settings.otherMenus.isEmpty {
@@ -56,6 +74,7 @@ struct WalletSettingsSheet: View {
             }
             .task(id: model.revision) {
                 settings = try? await model.walletSettings()
+                await model.checkNotifications()
             }
             .refusalAlert($refusal)
         }

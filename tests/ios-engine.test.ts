@@ -15,6 +15,7 @@ import {
   answer,
   bestSetups,
   bonusRulesScreen,
+  brief,
   cardFeeWorth,
   cardIndex,
   cardPage,
@@ -28,6 +29,8 @@ import {
   home,
   nextCard,
   pastCards,
+  places,
+  reminders,
   removal,
   removeCard,
   setup,
@@ -36,6 +39,7 @@ import {
   walletCards,
   walletHome,
   walletSettings,
+  widgets,
   type Change,
 } from '../ios/engine/entry.ts'
 
@@ -822,6 +826,125 @@ describe('phase 1d: lighter next cards, card pages, card data updates', () => {
     } finally {
       useCatalog(catalog)
     }
+  })
+})
+
+describe('phase 2: widgets, Siri, Spotlight and reminders', () => {
+  test("the widget's cheat sheet covers this quarter and the next", () => {
+    const wallet = walletWith(['amex-gold', 'citi-double-cash'])
+    const { sheets } = widgets({ wallet, today })
+    expect(sheets.map((s) => [s.from, s.until, s.quarter, s.scope])).toEqual([
+      ['2026-11-19', '2026-12-31', 'Q4 2026', 'Your cards'],
+      ['2027-01-01', '2027-03-31', 'Q1 2027', 'Your cards'],
+    ])
+    const groceries = sheets[0]?.rows.find((r) => r.label === 'Groceries')
+    expect(groceries).toMatchObject({
+      query: 'Groceries',
+      name: 'Amex Gold',
+      rate: '4%',
+      line: 'Groceries · Amex Gold 4%',
+    })
+    expect(sheets[0]?.rows.find((r) => r.label === 'Abroad')?.query).toBeNull()
+  })
+
+  test('with no cards saved, the widget shows every card', () => {
+    const { sheets } = widgets({ wallet: null, today })
+    expect(sheets[0]?.scope).toBe('Every card')
+    expect(sheets[0]?.rows[0]?.line).toMatch(/^Groceries · .+ \d+(\.\d+)?%$/)
+    expect(sheets[0]?.rows.every((r) => r.art !== null)).toBe(true)
+  })
+
+  test("Siri's answer is the pick, its rate and the rule behind it", () => {
+    const wallet = walletWith(['amex-gold', 'citi-double-cash'])
+    const yours = brief({ query: 'Whole Foods', wallet, today })
+    expect(yours).toMatchObject({
+      title: 'Whole Foods Market',
+      name: 'Amex Gold',
+      detail: '4% back',
+      note: null,
+    })
+    expect(yours.spoken).toBe(
+      'Use Amex Gold at Whole Foods Market: 4% back, 4x Amex Membership Rewards at supermarkets.',
+    )
+    const every = brief({ query: 'groceries', today })
+    expect(every.spoken).toMatch(
+      /^The best card for groceries is .+: \d+% back, /,
+    )
+    expect(every.note).toMatch(/every personal card/)
+    const unknown = brief({ query: 'Joes Bait Shop', today })
+    expect(unknown.spoken).toMatch(/only base rates apply/)
+    expect(unknown.note).toMatch(/Tap the kind of place/)
+  })
+
+  test('Spotlight gets every store and kind of place, everyday ones first', () => {
+    const { places: found } = places()
+    expect(found.slice(0, 3).map((p) => p.text)).toEqual([
+      'Groceries',
+      'Dining',
+      'Gas',
+    ])
+    expect(found.find((p) => p.text === 'Whole Foods Market')).toMatchObject({
+      kind: 'store',
+      detail: 'Counts as a supermarket',
+    })
+    expect(found.some((p) => p.text === 'Everything else')).toBe(false)
+    expect(new Set(found.map((p) => p.text.toLowerCase())).size).toBe(
+      found.length,
+    )
+  })
+
+  test('reminders come from dated to-do items, before each deadline', () => {
+    const wallet = {
+      version: 1,
+      valuations: {},
+      memberships: [],
+      cards: [
+        { id: 'amex-gold', bonus: { opened: '2026-10-01', spent: 1200 } },
+        { id: 'chase-freedom-flex' },
+        {
+          id: 'amex-platinum',
+          enrolled: ['uber-cash'],
+          credit_usage: { 'uber-cash': { period: '2026-11', used: 5 } },
+        },
+      ],
+    }
+    const day = '2026-11-20'
+    const { reminders: list } = reminders({ wallet, today: day })
+    const uber = list.filter((r) => r.id.startsWith('credit-amex-platinum'))
+    expect(uber.map((r) => [r.due, r.remindOn])).toEqual([
+      ['2026-11-30', '2026-11-27'],
+      ['2026-12-31', '2026-12-28'],
+      ['2027-01-31', '2027-01-28'],
+    ])
+    expect(uber[0]).toMatchObject({
+      title: 'Use Uber and Uber Eats credit',
+      card: 'Amex Platinum',
+      focus: 'credits',
+    })
+    expect(uber[0]?.body).toMatch(/\$10 left/)
+    const bonus = list.find((r) => r.cardId === 'amex-gold')
+    expect(bonus).toMatchObject({ due: '2027-04-01', remindOn: '2027-03-18' })
+    expect(list.some((r) => r.cardId === 'chase-freedom-flex')).toBe(true)
+    expect(list.every((r) => r.remindOn >= day && r.remindOn <= r.due)).toBe(
+      true,
+    )
+    expect(list.map((r) => r.remindOn)).toEqual(
+      [...list.map((r) => r.remindOn)].sort(),
+    )
+    expect(new Set(list.map((r) => r.id)).size).toBe(list.length)
+    expect(reminders({ wallet: null, today: day }).reminders).toEqual([])
+  })
+
+  test('the offer to remind shows only with a deadline in the to-do', () => {
+    const dated = walletWith(['chase-freedom-flex'])
+    expect(walletHome({ wallet: dated, today }).reminderOffer?.yes).toBe(
+      'Remind me',
+    )
+    const none = walletWith(['citi-double-cash'])
+    expect(walletHome({ wallet: none, today }).reminderOffer).toBeNull()
+    expect(walletSettings({ wallet: none }).reminders.label).toBe(
+      'Remind me before deadlines',
+    )
   })
 })
 

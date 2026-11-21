@@ -3,12 +3,6 @@ import Foundation
 // What ios/engine/entry.ts returns. Swift only lays these out: every rate,
 // rule and sentence in them comes from the engine.
 
-struct CardArt: Decodable, Hashable {
-    let color: String
-    let chip: String
-    let light: Bool
-}
-
 struct CardRow: Decodable, Hashable, Identifiable {
     let id: String
     let name: String
@@ -52,7 +46,7 @@ struct Home: Decodable {
     let held: String
 }
 
-struct Suggestion: Decodable, Hashable {
+nonisolated struct Suggestion: Decodable, Hashable {
     enum Kind: String, Decodable {
         case store
         case place
@@ -255,7 +249,7 @@ struct Setup: Decodable {
     var asksAnything: Bool { !cards.isEmpty || memberships != nil }
 }
 
-enum SettingsFocus: String, Decodable, Hashable {
+nonisolated enum SettingsFocus: String, Decodable, Hashable {
     case picks
     case activations
     case credits
@@ -326,10 +320,17 @@ struct WalletHome: Decodable {
     let past: Past
     let settings: String
     let problems: [String]
+    let reminderOffer: ReminderOffer?
+
+    struct ReminderOffer: Decodable, Hashable {
+        let text: String
+        let yes: String
+        let no: String
+    }
 
     static let empty = WalletHome(
         searchPrompt: "", todoTitle: "", todoShown: 3, todoMore: nil, todoFewer: "", todo: [], notes: [], sheet: nil, cardsTitle: "",
-        cards: [], addCards: "", past: Past(title: "", count: ""), settings: "", problems: []
+        cards: [], addCards: "", past: Past(title: "", count: ""), settings: "", problems: [], reminderOffer: nil
     )
 }
 
@@ -444,7 +445,16 @@ struct WalletSettings: Decodable {
     let othersTitle: String
     let otherToggles: [OnOff]
     let otherMenus: [TierMenu]
+    let reminders: ReminderSetting
     let points: Points?
+
+    struct ReminderSetting: Decodable {
+        let title: String
+        let label: String
+        let footer: String
+        let denied: String
+        let openSettings: String
+    }
 }
 
 // Which month a repeat-bonus note asks for, sent back as it came.
@@ -706,4 +716,46 @@ struct About: Decodable {
     let privacy: String
     let links: [Link]
     let notes: [String]
+}
+
+// Outside the app: Siri's answer, the stores Spotlight knows, and reminders.
+// Decoded off the main actor, in App Intents and the scheduler.
+
+nonisolated struct Brief: Decodable {
+    let query: String
+    let title: String
+    let subtitle: String?
+    let label: String?
+    let name: String?
+    let detail: String?
+    let reason: String?
+    let art: CardArt?
+    let note: String?
+    let spoken: String
+}
+
+nonisolated struct Places: Decodable {
+    struct Place: Decodable {
+        let text: String
+        let kind: Suggestion.Kind
+        let detail: String?
+        let keywords: [String]
+    }
+
+    let places: [Place]
+}
+
+nonisolated struct Reminders: Decodable {
+    struct Item: Decodable {
+        let id: String
+        let cardId: String
+        let focus: SettingsFocus?
+        let title: String
+        let card: String
+        let body: String
+        let due: String
+        let remindOn: String
+    }
+
+    let reminders: [Item]
 }

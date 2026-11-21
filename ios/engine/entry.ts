@@ -36,11 +36,15 @@ import {
 } from '../../src/engine/card-search.ts'
 import { cardDetails } from '../../src/engine/card-details.ts'
 import {
+  catalogCheatSheet,
   cheatSheet,
   EVERYDAY_PURCHASES,
   quickPickText,
 } from '../../src/engine/cheat-sheet.ts'
-import { checklistRows } from '../../src/engine/checklist.ts'
+import {
+  checklistRows,
+  type ChecklistRowItem,
+} from '../../src/engine/checklist.ts'
 import { HALF_CENT } from '../../src/engine/compare.ts'
 import {
   changedMarks,
@@ -148,7 +152,12 @@ import {
   offerTerms,
   type OfferSummary,
 } from '../../src/engine/offers.ts'
-import { inEffect, localToday } from '../../src/engine/periods.ts'
+import {
+  addDays,
+  currentPeriodEnd,
+  inEffect,
+  localToday,
+} from '../../src/engine/periods.ts'
 import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
 import { noteOnly, recommend } from '../../src/engine/recommend.ts'
 import { anniversaryOf } from '../../src/engine/renewal.ts'
@@ -240,6 +249,7 @@ import {
 } from '../../src/format/card-art.ts'
 import { cardText } from '../../src/format/card-text.ts'
 import {
+  resolveMerchantById,
   resolvePlace,
   splitPurchaseText,
   withCallerCategory,
@@ -1195,6 +1205,9 @@ export type WalletHome = {
   past: { title: string; count: string }
   settings: string
   problems: string[]
+  // Asked once, beside the to-do, when something in it has a deadline a
+  // reminder could fall before.
+  reminderOffer: { text: string; yes: string; no: string } | null
 }
 
 const focusOf = (kind: string): TodoRow['focus'] => {
@@ -1247,8 +1260,9 @@ export function walletHome(request: {
       title: "Cards you've had",
       count: past.length === 0 ? 'None' : cardCount(past.length),
     },
-    settings: 'Memberships and point values',
+    settings: 'Settings',
     problems,
+    reminderOffer: null,
   }
   if (!wallet || wallet.cards.length === 0 || problems.length > 0)
     return {
@@ -1285,6 +1299,9 @@ export function walletHome(request: {
   const sheet = cheatSheet(c, wallet, today)
   return {
     ...base,
+    reminderOffer: items.some((i) => reminderLead(i) !== null)
+      ? REMINDER_OFFER
+      : null,
     todo,
     todoShown: TODO_SHOWN,
     todoMore:
@@ -1640,7 +1657,7 @@ export function editCard(request: {
 }
 
 // ---------------------------------------------------------------------------
-// Memberships and point values
+// Reminders, memberships and point values
 
 export type WalletSettings = {
   membershipsTitle: string
@@ -1651,6 +1668,13 @@ export type WalletSettings = {
   othersTitle: string
   otherToggles: Toggle[]
   otherMenus: Menu[]
+  reminders: {
+    title: string
+    label: string
+    footer: string
+    denied: string // when the phone has notifications off for earnrate
+    openSettings: string
+  }
   points: {
     title: string
     transfer: Toggle | null
@@ -1708,6 +1732,7 @@ export function walletSettings(request: { wallet?: unknown }): WalletSettings {
     othersTitle: 'Other memberships',
     otherToggles: toggles.filter((t) => !relevant(t.id)),
     otherMenus: menus.filter((m) => !tiersUsed(m)),
+    reminders: REMINDER_SETTING,
     points:
       ids.length === 0
         ? null
@@ -2717,6 +2742,284 @@ export function bonusRulesScreen(request: {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Outside the app's screens: widgets, Siri and Shortcuts, Spotlight and
+// reminders. Each is worked out here, in the app, and handed over as words
+// and dates; the widget only reads what the app last wrote.
+
+export type WidgetRow = {
+  label: string // "Groceries"
+  query: string | null // the answer a tap opens; null for Abroad
+  name: string // "Amex Gold"
+  rate: string // "4%"
+  line: string // "Groceries · Amex Gold 4%", for one line on the Lock Screen
+  art: CardArt | null
+}
+
+export type WidgetSheet = {
+  from: string // YYYY-MM-DD: shown from this day…
+  until: string // …through this one, the quarter's last day
+  title: string
+  quarter: string // "Q4 2026"
+  scope: string // whose cards: "Your cards" or "Every card"
+  rows: WidgetRow[]
+}
+
+// The cheat sheet for this quarter and, ready for when it turns over, the
+// next one: from the saved cards, or from every card with none saved.
+export function widgets(request: { wallet?: unknown; today?: string }): {
+  sheets: WidgetSheet[]
+} {
+  const c = loaded()
+  const today = request.today ?? localToday()
+  const raw = walletOf(request.wallet)
+  const wallet =
+    raw !== null && raw.cards.length > 0 && walletProblems(raw, c).length === 0
+      ? raw
+      : null
+  const { shortName } = names()
+  const sheetFor = (from: string): WidgetSheet => {
+    const sheet = wallet
+      ? cheatSheet(c, wallet, from)
+      : catalogCheatSheet(c, from, {
+          filters: ALL_PERSONAL_CARDS,
+          memberships: effectiveMemberships(c, raw?.memberships ?? [], []),
+          valuations: raw?.valuations ?? {},
+        })
+    return {
+      from,
+      until: currentPeriodEnd('quarter', from, null) ?? from,
+      title: 'Cheat sheet',
+      quarter: sheet.quarter,
+      scope: wallet ? ANSWER_LABELS.yours : ANSWER_LABELS.every,
+      rows: sheet.rows.map((row, i) => {
+        const item = EVERYDAY_PURCHASES[i]
+        const name =
+          row.cardId === null ? 'None of your cards' : shortName(row.cardId)
+        const rate =
+          row.effectiveReturnPct === null ? '' : pct(row.effectiveReturnPct)
+        return {
+          label: row.label,
+          query: item ? quickPickText(item) : null,
+          name,
+          rate,
+          line: `${row.label} · ${rate === '' ? name : `${name} ${rate}`}`,
+          art: row.cardId === null ? null : artOf(row.cardId),
+        }
+      }),
+    }
+  }
+  const now = sheetFor(today)
+  return { sheets: [now, sheetFor(addDays(now.until, 1))] }
+}
+
+export type Brief = {
+  query: string // what was asked, to open its answer in the app
+  title: string // the store or kind of place
+  subtitle: string | null
+  label: string | null // "Use", "Best card"
+  name: string | null
+  detail: string | null // "4% back"
+  reason: string | null
+  art: CardArt | null
+  note: string | null // whose cards, or what's missing
+  spoken: string // the answer in a sentence or two, for Siri to say
+}
+
+// One store's answer, short enough for Siri to say and a snippet to show:
+// the pick, its rate and the rule behind it.
+export function brief(request: {
+  query: string
+  wallet?: unknown
+  today?: string
+}): Brief {
+  const c = loaded()
+  const a = answer({ ...request, all: false })
+  const m = resolvePlace(c, splitPurchaseText(request.query).merchant, null)
+  const place =
+    m.source === 'category'
+      ? `for ${a.title.charAt(0).toLowerCase()}${a.title.slice(1)}`
+      : `at ${a.title}`
+  const pick = a.pick
+  const spoken = (): string => {
+    if (pick === null) return a.callouts[0] ?? NONE_OF_YOURS
+    if (m.source === 'none')
+      return `earnrate doesn't know “${m.input}” yet, so only base rates apply. ${pick.name} earns the most on those: ${pick.detail}.`
+    if (a.scope === 'every')
+      return `The best card ${place} is ${pick.name}: ${pick.detail}, ${pick.reason}.`
+    return pick.label === USE_CARD
+      ? `Use ${pick.name} ${place}: ${pick.detail}, ${pick.reason}.`
+      : `Use ${pick.name} ${place}, ${FOR_WELCOME_BONUS}: ${pick.detail}, ${pick.reason}.`
+  }
+  return {
+    query: request.query.trim(),
+    title: a.title,
+    subtitle: a.subtitle,
+    label: pick?.label ?? null,
+    name: pick?.name ?? null,
+    detail: pick?.detail ?? null,
+    reason: pick?.reason ?? null,
+    art: pick?.art ?? null,
+    note:
+      m.source === 'none'
+        ? unknownStoreTapText(m.input)
+        : a.scope === 'every'
+          ? a.canChooseScope
+            ? EVERY_CARD_TOO
+            : EVERY_CARD_NOTE
+          : null,
+    spoken: spoken(),
+  }
+}
+
+export type Place = {
+  text: string // what a search for it says: "Whole Foods Market", "Groceries"
+  kind: 'store' | 'place'
+  detail: string | null // "Counts as a supermarket"
+  keywords: string[]
+}
+
+// Every store and kind of place earnrate knows, the everyday ones first,
+// for Spotlight and Siri.
+export function places(): { places: Place[] } {
+  const c = loaded()
+  const seen = new Set<string>()
+  const out: Place[] = []
+  const add = (p: Place) => {
+    const key = p.text.toLowerCase()
+    if (seen.has(key)) return
+    seen.add(key)
+    out.push(p)
+  }
+  for (const item of EVERYDAY_PURCHASES)
+    if (!('category' in item && item.category === 'other'))
+      add({
+        text: quickPickText(item),
+        kind: 'merchant' in item ? 'store' : 'place',
+        detail: null,
+        keywords: [],
+      })
+  for (const cat of c.categories)
+    if (cat.id !== 'other')
+      add({
+        text: cat.name,
+        kind: 'place',
+        detail: null,
+        keywords: cat.aliases,
+      })
+  for (const merchant of [...c.merchants.overrides, ...c.merchants.seed]) {
+    const m = resolveMerchantById(c, merchant.id, null)
+    add({
+      text: merchant.name,
+      kind: 'store',
+      detail: m === null ? null : capitalize(`counts ${countsAs(c, m)}`),
+      keywords: merchant.aliases,
+    })
+  }
+  return { places: out }
+}
+
+export type Reminder = {
+  id: string // the same item keeps its id, so a reschedule replaces it
+  cardId: string
+  focus: TodoRow['focus']
+  title: string // "Use Resy credit"
+  card: string // "Amex Platinum"
+  body: string // the to-do's own sentence
+  due: string // YYYY-MM-DD
+  remindOn: string // YYYY-MM-DD: the morning to remind
+}
+
+const REMINDER_SETTING = {
+  title: 'Reminders',
+  label: 'Remind me before deadlines',
+  footer:
+    "A notification a few days before an activation deadline, before a credit you use runs out, and two weeks before a welcome bonus's spending deadline. They're set on this phone; nothing is sent anywhere.",
+  denied: 'Notifications for earnrate are off in the Settings app.',
+  openSettings: 'Open Settings',
+}
+
+const REMINDER_OFFER = {
+  text: 'Get a reminder a few days before deadlines like these.',
+  yes: 'Remind me',
+  no: 'No thanks',
+}
+
+// How many days ahead of its date each kind of item is reminded, or null
+// for kinds with no deadline to miss. An activation that hasn't opened yet
+// is reminded the day it opens.
+function reminderLead(item: ChecklistRowItem): number | null {
+  if (item.due === null) return null
+  switch (item.kind) {
+    case 'activate':
+      return item.row.when?.startsWith('from ') === true ? 0 : 3
+    case 'credit':
+      return 3
+    case 'bonus':
+      return 14
+    default:
+      return null
+  }
+}
+
+// How many months ahead reminders are worked out, and the most kept: iOS
+// keeps 64 pending notifications an app, and the app works these out again
+// whenever the wallet changes or it's opened on a new day.
+const REMINDER_MONTHS = 2
+const REMINDERS_KEPT = 24
+
+// The dated to-do items worth a reminder: this month's, and those the next
+// months bring (next month's credits, next quarter's activation), soonest
+// reminder first.
+export function reminders(request: { wallet?: unknown; today?: string }): {
+  reminders: Reminder[]
+} {
+  const c = loaded()
+  const today = request.today ?? localToday()
+  const wallet = walletOf(request.wallet)
+  if (
+    !wallet ||
+    wallet.cards.length === 0 ||
+    walletProblems(wallet, c).length > 0
+  )
+    return { reminders: [] }
+  const { shortName } = names()
+  const [year = 0, month = 1] = today.split('-').map(Number)
+  const days = [
+    today,
+    ...Array.from({ length: REMINDER_MONTHS }, (_, i) =>
+      new Date(Date.UTC(year, month + i, 1)).toISOString().slice(0, 10),
+    ),
+  ]
+  const found = new Map<string, Reminder>()
+  for (const day of days)
+    for (const item of checklistRows(c, wallet, day, undefined, shortName)) {
+      const lead = reminderLead(item)
+      if (lead === null || item.due === null || item.due < today) continue
+      const id = `${item.kind}-${item.cardId}-${item.ref ?? item.row.title}-${item.due}`
+      if (found.has(id)) continue
+      const on = addDays(item.due, -lead)
+      found.set(id, {
+        id,
+        cardId: item.cardId,
+        focus: focusOf(item.kind),
+        title: item.row.title,
+        card: item.row.card,
+        body: item.text,
+        due: item.due,
+        remindOn: on < today ? today : on,
+      })
+    }
+  return {
+    reminders: [...found.values()]
+      .sort(
+        (a, b) =>
+          a.remindOn.localeCompare(b.remindOn) || a.id.localeCompare(b.id),
+      )
+      .slice(0, REMINDERS_KEPT),
+  }
+}
+
 // Tests hand the catalog over directly; the app parses it from the bundle.
 export function useCatalog(next: Catalog, version = ''): number {
   catalog = next
@@ -2781,6 +3084,10 @@ const engine = {
   bestSetups: call(bestSetups),
   cardIndex: call(cardIndex),
   bonusRules: call(bonusRulesScreen),
+  widgets: call(widgets),
+  brief: call(brief),
+  places: () => JSON.stringify(places()),
+  reminders: call(reminders),
 }
 
 ;(globalThis as { earnrate?: typeof engine }).earnrate = engine

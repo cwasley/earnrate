@@ -1,13 +1,18 @@
 import SwiftUI
+import WidgetKit
 
 @main struct EarnrateApp: App {
-    @State private var model = AppModel()
+    @UIApplicationDelegateAdaptor private var delegate: AppDelegate
+    @State private var model = AppModel.shared
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(model)
                 .task { await model.start() }
+                .onOpenURL { url in
+                    if let link = AppLink(url) { model.go(.link(link)) }
+                }
         }
     }
 }
@@ -45,6 +50,7 @@ struct RootView: View {
         .onChange(of: scenePhase) {
             CardLight.shared.setActive(scenePhase == .active)
             if scenePhase == .active {
+                model.refreshElsewhereIfNewDay()
                 Task { await model.checkForData() }
             }
         }
@@ -59,6 +65,23 @@ struct RootView: View {
             AddCardsFlow()
                 .tint(Color("AccentColor"))
         }
+        #if DEBUG
+        .overlay {
+            if model.screenshotDetail == "lock", let sheet = SharedSheet.read()?.sheet(on: Day.text(.now)) {
+                LockScreenMock(sheet: sheet)
+            }
+        }
+        .overlay(alignment: .top) {
+            if let brief = model.screenshotBrief {
+                ZStack(alignment: .top) {
+                    Rectangle().fill(.ultraThinMaterial).ignoresSafeArea()
+                    BriefSnippet(brief: brief)
+                        .padding(.horizontal, 12)
+                        .padding(.top, 60)
+                }
+            }
+        }
+        #endif
     }
 }
 
@@ -159,3 +182,36 @@ struct WelcomeView: View {
         .sensoryFeedback(.selection, trigger: model.showingWelcome)
     }
 }
+
+#if DEBUG
+// `-EarnrateOpen widgets:lock`: the Lock Screen widgets drawn by their own
+// views at their sizes, in white as the Lock Screen tints them, since the
+// Simulator can't edit its Lock Screen.
+private struct LockScreenMock: View {
+    let sheet: WidgetSnapshot.Sheet
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [Color(hex: "#1c1a33"), Color(hex: "#3a3f6b")], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+            VStack(spacing: 10) {
+                if let first = sheet.rows.first {
+                    PurchaseView(row: first, family: .accessoryInline)
+                        .font(.subheadline.weight(.semibold))
+                }
+                Text(Date.now, format: .dateTime.hour().minute())
+                    .font(.system(size: 92, weight: .semibold, design: .rounded))
+                HStack(spacing: 12) {
+                    ForEach(sheet.rows.prefix(2)) { row in
+                        PurchaseView(row: row, family: .accessoryRectangular)
+                            .frame(width: 160, height: 72)
+                    }
+                }
+                Spacer()
+            }
+            .foregroundStyle(.white.opacity(0.92))
+            .padding(.top, 70)
+        }
+    }
+}
+#endif

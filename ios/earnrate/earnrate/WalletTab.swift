@@ -4,7 +4,6 @@ import SwiftUI
 // sheet, the to-do, the cards, and the cards they've had.
 struct WalletTab: View {
     @Environment(AppModel.self) private var model
-    @State private var settings = false
 
     var body: some View {
         @Bindable var model = model
@@ -20,7 +19,7 @@ struct WalletTab: View {
             .toolbar {
                 if model.isReady {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button("Settings", systemImage: "gearshape") { settings = true }
+                        Button("Settings", systemImage: "gearshape") { model.showingSettings = true }
                             .accessibilityLabel(model.walletHome.settings)
                     }
                     if model.hasCards {
@@ -31,7 +30,7 @@ struct WalletTab: View {
                 }
             }
             .earnrateDestinations()
-            .sheet(isPresented: $settings) {
+            .sheet(isPresented: $model.showingSettings) {
                 WalletSettingsSheet()
             }
         }
@@ -190,6 +189,9 @@ private struct WalletList: View {
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
+                    if model.showsReminderOffer, let offer = home.reminderOffer {
+                        ReminderOfferRow(offer: offer)
+                    }
                 } header: {
                     Text(home.todoTitle)
                         .font(.title2.bold())
@@ -342,6 +344,37 @@ private struct TodoRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
+    }
+}
+
+// Asked once, the first time the to-do has a deadline: either answer puts
+// it away for good, and the switch stays in Settings.
+private struct ReminderOfferRow: View {
+    @Environment(AppModel.self) private var model
+    let offer: WalletHome.ReminderOffer
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label {
+                Text(offer.text)
+                    .font(.subheadline)
+            } icon: {
+                Image(systemName: "bell")
+                    .foregroundStyle(.tint)
+            }
+            HStack(spacing: 8) {
+                Button(offer.yes) {
+                    Task { await model.setReminders(true) }
+                }
+                .buttonStyle(AccentButtonStyle())
+                Button(offer.no) {
+                    withAnimation { model.answerReminderOffer() }
+                }
+                .font(.subheadline.weight(.semibold))
+                .buttonStyle(.borderless)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 

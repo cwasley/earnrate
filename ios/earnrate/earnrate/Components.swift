@@ -203,25 +203,6 @@ struct DollarField: View {
     }
 }
 
-// "2026-10-01" both ways, in the phone's own calendar day.
-enum Day {
-    private static let formatter: DateFormatter = {
-        let f = DateFormatter()
-        f.calendar = Calendar(identifier: .gregorian)
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
-
-    static func date(_ text: String?) -> Date? {
-        text.flatMap { formatter.date(from: String($0.prefix(10))) }
-    }
-
-    static func text(_ date: Date) -> String {
-        formatter.string(from: date)
-    }
-}
-
 // The alert for a change the engine refused, with its reason.
 extension View {
     func refusalAlert(_ refusal: Binding<String?>) -> some View {
