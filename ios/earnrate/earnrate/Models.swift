@@ -78,6 +78,7 @@ struct Answer: Decodable {
         let name: String
         let detail: String
         let reason: String
+        let because: String?
         let warnings: [String]
         let art: CardArt
     }
@@ -123,6 +124,7 @@ struct Answer: Decodable {
     let canChooseScope: Bool
     let scopeNote: String?
     let pick: Pick?
+    let verdict: String?
     let callouts: [String]
     let creditsTitle: String
     let credits: [Credit]
@@ -363,6 +365,7 @@ struct WalletHome: Decodable {
         let card: CardRow
         let note: String?
         let ask: Bool
+        let quiet: Bool
         let action: String
         var id: String { card.id }
     }

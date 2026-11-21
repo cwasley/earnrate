@@ -109,6 +109,11 @@ private struct AnswerList: View {
                         PurchaseMenu(options: answer.purchase, payment: $payment, abroad: $abroad)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    // What kind of place it is comes before a pick that
+                    // only knows base rates, and stays there once tapped.
+                    if let kinds = answer.kinds {
+                        KindsAsk(kinds: kinds, kind: $kind)
+                    }
                     if let pick = answer.pick {
                         AnswerHero(pick: pick, behind: Array(answer.rows.prefix(3)))
                         PickText(pick: pick)
@@ -117,6 +122,8 @@ private struct AnswerList: View {
                                 used(RecordTarget(cardId: pick.cardId, name: pick.name, art: pick.art))
                             }
                         }
+                    } else if let verdict = answer.verdict {
+                        VerdictText(verdict: verdict)
                     }
                 }
                 .textCase(nil)
@@ -124,17 +131,6 @@ private struct AnswerList: View {
             } footer: {
                 if let note = answer.scopeNote {
                     Text(note).foregroundStyle(Color.inkSecondary)
-                }
-            }
-
-            if let kinds = answer.kinds {
-                Section {
-                    KindChips(kinds: kinds, kind: $kind)
-                        .surfaceRows()
-                } header: {
-                    SectionTitle(kinds.prompt)
-                } footer: {
-                    if let lead = kinds.lead { Text(lead).foregroundStyle(Color.inkSecondary) }
                 }
             }
 
@@ -220,6 +216,32 @@ private struct AnswerList: View {
     }
 }
 
+// A store earnrate doesn't know: why only base rates apply, then the kinds
+// of places to tap.
+private struct KindsAsk: View {
+    let kinds: Answer.Kinds
+    @Binding var kind: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let lead = kinds.lead {
+                Text(lead)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkSecondary)
+            }
+            Text(kinds.prompt)
+                .font(.headline)
+                .foregroundStyle(Color.primary)
+                .accessibilityAddTraits(.isHeader)
+            KindChips(kinds: kinds, kind: $kind)
+        }
+        .multilineTextAlignment(.leading)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+}
+
 // The kinds of places to tap for a store earnrate doesn't know: the common
 // ones as chips, the rest in a menu.
 private struct KindChips: View {
@@ -285,6 +307,16 @@ private struct PickText: View {
             Text(pick.reason)
                 .font(.subheadline)
                 .foregroundStyle(Color.inkSecondary)
+            if let because = pick.because {
+                Text(because)
+                    .font(.footnote)
+                    .foregroundStyle(Color.primary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .padding(.top, 6)
+            }
             ForEach(pick.warnings, id: \.self) { warning in
                 Label(warning, systemImage: "exclamationmark.triangle.fill")
                     .font(.footnote)
@@ -297,6 +329,27 @@ private struct PickText: View {
         .frame(maxWidth: .infinity)
         .background(Color.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .accessibilityElement(children: .combine)
+    }
+}
+
+// "None of your cards work here.", where the pick would be; the reason is
+// the first line under it.
+private struct VerdictText: View {
+    let verdict: String
+
+    var body: some View {
+        Label {
+            Text(verdict)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Color.primary)
+        } icon: {
+            Image(systemName: "creditcard.trianglebadge.exclamationmark")
+                .foregroundStyle(Color.caution)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 18)
+        .frame(maxWidth: .infinity)
+        .background(Color.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
 

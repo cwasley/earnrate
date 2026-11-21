@@ -51,14 +51,6 @@ struct CardSettingsView: View {
                 failure = error.localizedDescription
             }
         }
-        .confirmationDialog(removal?.title ?? "", isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } }), titleVisibility: .visible) {
-            if let removal {
-                Button(removal.remove, role: .destructive) { remove(keep: false) }
-                if let keep = removal.keep {
-                    Button(keep) { remove(keep: true) }
-                }
-            }
-        }
         .refusalAlert($refusal)
     }
 
@@ -173,6 +165,15 @@ struct CardSettingsView: View {
             Section {
                 Button(s.remove, role: .destructive) {
                     Task { removal = try? await model.removal(id) }
+                }
+                // On the button, so the question points at it.
+                .confirmationDialog(removal?.title ?? "", isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } }), titleVisibility: .visible) {
+                    if let removal {
+                        Button(removal.remove, role: .destructive) { remove(keep: false) }
+                        if let keep = removal.keep {
+                            Button(keep) { remove(keep: true) }
+                        }
+                    }
                 }
             }
         }

@@ -1191,6 +1191,53 @@ describe('the answer options and the wallet extras', () => {
   })
 })
 
+describe('answers say why where the pick is', () => {
+  test('a welcome bonus pick carries its reason, not the notes', () => {
+    const id = 'chase-sapphire-preferred'
+    const wallet = ok(
+      editCard({
+        wallet: walletWith([id, 'citi-double-cash']),
+        id,
+        edit: { opened: { date: '2026-11-01', tracking: true } },
+        today,
+      }),
+    )
+    const a = answer({ query: 'Walgreens', wallet, today })
+    expect(a.pick?.cardId).toBe(id)
+    expect(a.pick?.because).toMatch(/welcome bonus/)
+    expect(a.callouts).not.toContain(a.pick?.because)
+    const plain = answer({
+      query: 'Walgreens',
+      wallet: walletWith([id]),
+      today,
+    })
+    expect(plain.pick?.because).toBeNull()
+  })
+
+  test('no card that works is said once, in the pick’s place', () => {
+    const wallet = walletWith(['amex-gold', 'citi-double-cash'])
+    const a = answer({ query: 'Costco', wallet, today })
+    expect(a.pick).toBeNull()
+    expect(a.verdict).toBe('None of your cards work here.')
+    expect(a.callouts.join(' ')).not.toMatch(/None of your cards/)
+    expect(a.callouts[0]).toMatch(/only Visa/)
+    expect(brief({ query: 'Costco', wallet, today }).spoken).toMatch(
+      /^None of your cards work here\. Costco takes only Visa/,
+    )
+    expect(answer({ query: 'Whole Foods', wallet, today }).verdict).toBeNull()
+  })
+
+  test('a renewal date is asked quietly under the front card', () => {
+    const home = walletHome({ wallet: walletWith(['amex-gold']), today })
+    expect(home.cards[0]).toMatchObject({
+      note: 'Add its renewal date',
+      quiet: true,
+    })
+    const none = walletHome({ wallet: walletWith(['citi-double-cash']), today })
+    expect(none.cards[0]).toMatchObject({ note: null, quiet: false })
+  })
+})
+
 function walletWith(ids: string[]): unknown {
   let wallet: unknown = null
   for (const id of ids) wallet = ok(addCard({ wallet, id, today }))

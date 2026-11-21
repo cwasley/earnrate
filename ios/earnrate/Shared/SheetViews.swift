@@ -21,11 +21,17 @@ struct CheatSheetView: View {
         }
     }
 
+    // A purchase none of the cards earn on ("Costco: None of your cards")
+    // would take one of a few places; the app's sheet still shows it.
+    private func earning(_ sheet: WidgetSnapshot.Sheet) -> [WidgetSnapshot.Row] {
+        sheet.rows.filter { !$0.rate.isEmpty }
+    }
+
     // The quarter and the first few purchases; a tap opens the cheat sheet.
     private func small(_ sheet: WidgetSnapshot.Sheet) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             SheetHeading(sheet: sheet, compact: true)
-            ForEach(sheet.rows.prefix(size.isAccessibilitySize ? 1 : size >= .xLarge ? 2 : 3)) { row in
+            ForEach(earning(sheet).prefix(size.isAccessibilitySize ? 1 : size >= .xLarge ? 2 : 3)) { row in
                 SheetRow(row: row, compact: true)
             }
             Spacer(minLength: 0)
@@ -38,7 +44,7 @@ struct CheatSheetView: View {
     private func medium(_ sheet: WidgetSnapshot.Sheet) -> some View {
         let columns = size.isAccessibilitySize ? 1 : 2
         let perColumn = size >= .xLarge ? 2 : 3
-        let rows = Array(sheet.rows.prefix(columns * perColumn))
+        let rows = Array(earning(sheet).prefix(columns * perColumn))
         return VStack(alignment: .leading, spacing: 6) {
             SheetHeading(sheet: sheet, compact: false)
             HStack(alignment: .top, spacing: 16) {

@@ -201,7 +201,12 @@ import {
   samePointsText,
   transferText,
 } from '../../src/engine/keep-or-replace.ts'
-import { ABROAD, noteOnly, recommend } from '../../src/engine/recommend.ts'
+import {
+  ABROAD,
+  noCardText,
+  noteOnly,
+  recommend,
+} from '../../src/engine/recommend.ts'
 import { bookPurchase } from '../../src/engine/record.ts'
 import { anniversaryOf } from '../../src/engine/renewal.ts'
 import {
@@ -543,9 +548,14 @@ export type Answer = {
     name: string
     detail: string
     reason: string
+    // Why a welcome bonus puts this card over a better earner, shown with
+    // the rate it explains rather than among the notes.
+    because: string | null
     warnings: string[]
     art: CardArt
   } | null
+  // "None of your cards work here.", in the pick's place.
+  verdict: string | null
   callouts: string[]
   creditsTitle: string
   credits: CreditRow[]
@@ -809,6 +819,8 @@ export function answer(request: {
     const top = rec.ranked.find((r) => r.cardId === decided?.cardId)
     const only = noteOnly(rec)
     const rows = rec.ranked.map((r, i) => yourRow(r, i + 1, held))
+    const because = rec.bonus ? (rec.notes[0] ?? null) : null
+    const none = !only && !decided
     return {
       title: titleOf(c, rec.merchant),
       subtitle: subtitleOf(rec.merchant),
@@ -827,16 +839,21 @@ export function answer(request: {
                 top.credit ?? null,
               ),
               reason: shortReason(top),
+              because,
               warnings: top.warnings,
               art: artOf(decided.cardId),
             }
           : null,
+      verdict: none ? NONE_OF_YOURS : null,
+      // The engine's own "None of your cards work at…" says the verdict
+      // again, so it goes.
       callouts: [
         ...(rec.categoryNote ? [rec.categoryNote] : []),
-        ...(!only && !decided ? [NONE_OF_YOURS] : []),
         ...cantUseLines(rec.excluded, shortName),
-        ...tapInstead(rec.merchant, rec.warnings),
-        ...rec.notes,
+        ...tapInstead(rec.merchant, rec.warnings).filter(
+          (w) => !none || w !== noCardText(rec.merchant.resolvedName),
+        ),
+        ...rec.notes.filter((n) => n !== because),
       ],
       creditsTitle: CREDIT_GROUP,
       credits: [],
@@ -889,9 +906,11 @@ export function answer(request: {
             name: shortName(first.cardId),
             detail: `${pct(first.effectiveReturnPct)} back`,
             reason: shortReason(first),
+            because: null,
             warnings: first.warnings,
             art: artOf(first.cardId),
           },
+    verdict: null,
     callouts: [
       ...problems.map(
         (p) => `The wallet saved on this phone has a problem: ${p}`,
@@ -1442,7 +1461,15 @@ export type WalletHome = {
     pass: { label: string; note: string }
   } | null
   cardsTitle: string
-  cards: { card: CardRow; note: string | null; ask: boolean; action: string }[]
+  // Under the front card: what it's waiting for. `quiet` is a detail
+  // that can wait (its renewal date), so it isn't the screen's main button.
+  cards: {
+    card: CardRow
+    note: string | null
+    ask: boolean
+    quiet: boolean
+    action: string
+  }[]
   addCards: string
   past: { title: string; count: string }
   settings: string
@@ -1595,10 +1622,14 @@ export function walletHome(request: {
           note === null &&
           (card.annual_fee ?? 0) > 0 &&
           anniversaryOf(h) === null
+        // Unset picks change answers; a renewal date only times a
+        // reminder, so picks are asked first.
+        const renewal = note === null && ask && !needsPick
         return {
           card: cardRow(h.id, held),
-          note: note ?? (ask ? RENEWAL_ASK : null),
+          note: note ?? (renewal ? RENEWAL_ASK : null),
           ask: note === null && (ask || needsPick),
+          quiet: renewal,
           action: needsPick ? 'Set picks' : 'Settings',
         }
       }),
@@ -3184,7 +3215,8 @@ export function brief(request: {
       : `at ${a.title}`
   const pick = a.pick
   const spoken = (): string => {
-    if (pick === null) return a.callouts[0] ?? NONE_OF_YOURS
+    if (pick === null)
+      return [a.verdict ?? NONE_OF_YOURS, ...a.callouts.slice(0, 1)].join(' ')
     if (m.source === 'none')
       return `earnrate doesn't know “${m.input}” yet, so only base rates apply. ${pick.name} earns the most on those: ${pick.detail}.`
     if (a.scope === 'every')

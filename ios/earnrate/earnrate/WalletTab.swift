@@ -301,7 +301,10 @@ private struct FrontControls: View {
     }
 
     @ViewBuilder private var buttons: some View {
-        if let note = held.note {
+        if let note = held.note, held.quiet {
+            Button(note, action: open)
+                .buttonStyle(PlateButtonStyle())
+        } else if let note = held.note {
             Button(note, action: open)
                 .buttonStyle(AccentButtonStyle())
         } else if held.ask {
@@ -384,12 +387,13 @@ private struct ReminderOfferRow: View {
 }
 
 extension TodoRow {
-    // "Amex Gold · $10 left · by Nov 30", the date in amber.
+    // "Amex Gold · $10 left · by Nov 30", the date in amber, kept on one
+    // line with its dot so a wrap never leaves the dot hanging.
     fileprivate var meta: Text {
         let detail = Text(item.detail).foregroundStyle(.secondary)
         guard let when = item.when else { return detail }
         let date = Text(when.replacingOccurrences(of: " ", with: "\u{00A0}")).foregroundStyle(Color.caution)
-        return Text("\(detail) · \(date)")
+        return Text("\(detail)\u{00A0}·\u{00A0}\(date)")
     }
 }
 

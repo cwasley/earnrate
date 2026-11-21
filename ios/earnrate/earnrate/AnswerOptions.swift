@@ -20,13 +20,12 @@ struct PurchaseMenu: View {
 
     var body: some View {
         SwiftUI.Menu {
+            // Checkmark items, not an inline picker: in a menu the picker
+            // takes the section's place and its "Paying with" heading goes.
             Section(options.payingTitle) {
-                Picker(options.payingTitle, selection: $payment) {
-                    ForEach(options.paying) { p in
-                        Text(p.label).tag(p.id)
-                    }
+                ForEach(options.paying) { p in
+                    Toggle(p.label, isOn: Binding(get: { p.id == payment }, set: { if $0 { payment = p.id } }))
                 }
-                .pickerStyle(.inline)
             }
             Section {
                 Toggle(options.abroadLabel, isOn: $abroad)
@@ -150,6 +149,7 @@ struct RecordSheet: View {
                     }
                     ToolbarItem(placement: .confirmationAction) {
                         Button(ask.button) { Task { await record() } }
+                            .buttonStyle(.glassProminent)
                             .disabled(amount == nil || working)
                     }
                 }

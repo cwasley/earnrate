@@ -176,29 +176,27 @@ struct SheetActions: View {
     @State private var failure: (title: String, message: String)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(spacing: 10) {
             let layout = size.isAccessibilitySize
-                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+                ? AnyLayout(VStackLayout(spacing: 12))
                 : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
             layout {
                 if PKAddPassesViewController.canAddPasses() {
                     ZStack {
                         AddPassButton(dark: scheme == .dark) { Task { await addPass() } }
-                            .frame(width: 140, height: 44)
+                            .frame(width: 150, height: 44)
                             .opacity(making ? 0.4 : 1)
                             .disabled(making)
                             .accessibilityLabel(sheet.pass.label)
                         if making { ProgressView() }
                     }
                 }
-                if !size.isAccessibilitySize { Spacer(minLength: 0) }
                 if let picture {
                     ShareLink(item: picture, preview: SharePreview(sheet.share.title, image: picture.preview)) {
                         Label(sheet.share.label, systemImage: "square.and.arrow.up")
-                            .font(.subheadline.weight(.semibold))
+                            .frame(minHeight: 26)
                     }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.capsule)
+                    .buttonStyle(PlateButtonStyle())
                     .accessibilityLabel(sheet.share.accessibility)
                 }
             }
@@ -206,9 +204,12 @@ struct SheetActions: View {
                 Text(sheet.pass.note)
                     .font(.caption)
                     .foregroundStyle(Color.inkSecondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 340)
             }
         }
-        .padding(.horizontal, 4)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 16)
         .task(id: "\(sheet.subtitle)|\(sheet.rows.map { $0.name + $0.rate }.joined())|\(scheme == .dark)") {
             if let png = SheetPicture.png(sheet, dark: scheme == .dark) {
                 picture = SheetPictureFile(png: png, filename: sheet.share.filename)

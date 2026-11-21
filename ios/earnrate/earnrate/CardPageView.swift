@@ -10,6 +10,7 @@ struct CardPageView: View {
     @State private var worth: FeeWorth?
     @State private var failure: String?
     @State private var refusal: String?
+    @State private var removal: Removal?
     @State private var width: CGFloat = 400
 
     private var held: Bool { model.walletCards.contains { $0.id == id } }
@@ -98,80 +99,14 @@ struct CardPageView: View {
                     }
                 }
 
-                if let offer = page.offer {
-                    Section {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(offer.terms)
-                            Text(offer.asOf)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                        LabeledContent {
-                            EmptyView()
-                        } label: {
-                            Text("Can you get it again?").font(.subheadline.weight(.semibold))
-                            Text(offer.again)
-                        }
-                        if let note = offer.note {
-                            DisclosureGroup("Who can get it") {
-                                Text(note).font(.subheadline)
-                            }
-                        }
-                        if let history = page.offerHistory {
-                            LabeledContent {
-                                EmptyView()
-                            } label: {
-                                Text("Offer history").font(.subheadline.weight(.semibold))
-                                Text(history)
-                            }
-                        }
-                    } header: {
-                        SectionTitle("Public welcome offer")
-                    } footer: {
-                        Text(offer.mayDiffer).foregroundStyle(Color.inkSecondary)
-                    }
-                } else if let history = page.offerHistory {
-                    Section {
-                        Text(history)
-                    } header: {
-                        SectionTitle("Offer history")
-                    }
-                }
-
-                if !page.credits.isEmpty {
-                    Section {
-                        ForEach(page.credits, id: \.self) { Text($0) }
-                    } header: {
-                        SectionTitle("Statement credits")
-                    }
-                }
-
-                if !page.perks.isEmpty {
-                    Section {
-                        ForEach(page.perks, id: \.self) { Text($0) }
-                    } header: {
-                        SectionTitle("Also")
-                    }
-                }
-
-                // Worked out after the page shows; gone if the card has none.
-                if page.feeWorthLater && (worth == nil || worth?.text != nil) {
-                    Section {
-                        DisclosureGroup("Is the fee worth it?") {
-                            if let text = worth?.text {
-                                Text(text)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            } else {
-                                ProgressView()
-                                    .frame(maxWidth: .infinity)
-                            }
-                        }
-                    }
-                }
-
-                if let keep = page.keep {
-                    KeepOrReplaceSection(id: id, keep: keep)
+                // Someone who has the card wants its credits and whether
+                // it's worth keeping before an offer for new cardholders.
+                if held {
+                    whatItGives(page)
+                    welcomeOffer(page)
+                } else {
+                    welcomeOffer(page)
+                    whatItGives(page)
                 }
 
                 Section {
@@ -198,7 +133,7 @@ struct CardPageView: View {
                     ForEach(page.sources, id: \.self) { source in
                         if let url = URL(string: source) {
                             Link(destination: url) {
-                                Label(url.host() ?? source, systemImage: "safari")
+                                SourceLabel(url: url)
                             }
                         }
                     }
@@ -213,9 +148,18 @@ struct CardPageView: View {
                 if held {
                     Section {
                         Button("Remove from My wallet", systemImage: "minus.circle", role: .destructive) {
-                            Task { refusal = await model.remove(id) }
+                            Task { removal = try? await model.removal(id) }
                         }
                         .tint(.red)
+                        // On the button, so the question points at it.
+                        .confirmationDialog(removal?.title ?? "", isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } }), titleVisibility: .visible) {
+                            if let removal {
+                                Button(removal.remove, role: .destructive) { remove(keep: false) }
+                                if let keep = removal.keep {
+                                    Button(keep) { remove(keep: true) }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -226,6 +170,94 @@ struct CardPageView: View {
     }
 
     private var heroWidth: CGFloat { min(width - 72, 320) }
+
+    private func remove(keep: Bool) {
+        Task {
+            refusal = await model.remove(id, keep: keep)
+            removal = nil
+        }
+    }
+
+    @ViewBuilder private func welcomeOffer(_ page: CardPage) -> some View {
+        if let offer = page.offer {
+            Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(offer.terms)
+                    Text(offer.asOf)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                LabeledContent {
+                    EmptyView()
+                } label: {
+                    Text("Can you get it again?").font(.subheadline.weight(.semibold))
+                    Text(offer.again)
+                }
+                if let note = offer.note {
+                    DisclosureGroup("Who can get it") {
+                        Text(note).font(.subheadline)
+                    }
+                }
+                if let history = page.offerHistory {
+                    LabeledContent {
+                        EmptyView()
+                    } label: {
+                        Text("Offer history").font(.subheadline.weight(.semibold))
+                        Text(history)
+                    }
+                }
+            } header: {
+                SectionTitle("Public welcome offer")
+            } footer: {
+                Text(offer.mayDiffer).foregroundStyle(Color.inkSecondary)
+            }
+        } else if let history = page.offerHistory {
+            Section {
+                Text(history)
+            } header: {
+                SectionTitle("Offer history")
+            }
+        }
+    }
+
+    @ViewBuilder private func whatItGives(_ page: CardPage) -> some View {
+        if !page.credits.isEmpty {
+            Section {
+                ForEach(page.credits, id: \.self) { Text($0) }
+            } header: {
+                SectionTitle("Statement credits")
+            }
+        }
+
+        if !page.perks.isEmpty {
+            Section {
+                ForEach(page.perks, id: \.self) { Text($0) }
+            } header: {
+                SectionTitle("Also")
+            }
+        }
+
+        // Worked out after the page shows; gone if the card has none.
+        if page.feeWorthLater && (worth == nil || worth?.text != nil) {
+            Section {
+                DisclosureGroup("Is the fee worth it?") {
+                    if let text = worth?.text {
+                        Text(text)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+            }
+        }
+
+        if let keep = page.keep {
+            KeepOrReplaceSection(id: id, keep: keep)
+        }
+    }
+
 }
 
 // An earning line with its rate pulled out front, when it starts with one
@@ -260,5 +292,34 @@ private struct EarnLine: View {
         let rate = String(line[..<space])
         guard rate.range(of: #"^\d+(\.\d+)?(x|%)$"#, options: .regularExpression) != nil else { return nil }
         return (rate, String(line[line.index(after: space)...]))
+    }
+}
+
+// An issuer's page: its site, and under it the page's path, since one
+// issuer's pages share a host ("americanexpress.com" three times).
+private struct SourceLabel: View {
+    let url: URL
+
+    var body: some View {
+        Label {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(host)
+                Text(url.path())
+                    .font(.caption)
+                    .foregroundStyle(Color.inkSecondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+        } icon: {
+            Image(systemName: "safari")
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(host)
+        .accessibilityHint(url.path())
+    }
+
+    private var host: String {
+        let host = url.host() ?? url.absoluteString
+        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
     }
 }
