@@ -5,25 +5,16 @@ import { localToday } from '../../src/engine/periods.ts'
 import type { Wallet } from '../../src/schema/wallet.ts'
 import { encodeSheet, sendable } from '../sheet/link.ts'
 import { pct, shortName } from './format.ts'
+import { passForm, PASS_NOTE, PASS_URL } from './pass-request.ts'
 import { download, prefersDark } from './picture.ts'
 import { cheatSheetImage } from './sheet-image.ts'
+import { sheetPictureFile } from './sheet-picture-text.ts'
 import { track } from './track.ts'
 
-const PASS_URL = 'https://pass.earnrate.dev/'
-
-// The one thing earnrate.dev sends anywhere: what the pass needs (card ids,
-// picks, activations, checkout labels, memberships), never amounts or
-// searches. The signer keeps nothing.
+// The one thing earnrate.dev sends anywhere: what the pass needs
+// (pass-request.ts), never amounts or searches.
 export function WalletPass({ wallet }: { wallet: Wallet }) {
-  const sent = JSON.stringify({
-    memberships: wallet.memberships,
-    cards: wallet.cards.map((c) => ({
-      id: c.id,
-      checkout_label: c.checkout_label,
-      chosen: c.chosen,
-      activated: c.activated,
-    })),
-  })
+  const sent = passForm(wallet, localToday())
   return (
     <form
       class="wallet-pass"
@@ -33,16 +24,12 @@ export function WalletPass({ wallet }: { wallet: Wallet }) {
         track('apple-wallet')
       }}
     >
-      <input type="hidden" name="wallet" value={sent} />
-      <input type="hidden" name="date" value={localToday()} />
+      <input type="hidden" name="wallet" value={sent.wallet} />
+      <input type="hidden" name="date" value={sent.date} />
       <button type="submit" aria-label="Add to Apple Wallet">
         <img src="/add-to-apple-wallet.svg" alt="" width="126" height="40" />
       </button>
-      <p class="muted">
-        For iPhone: this cheat sheet in Apple Wallet, good until the quarter
-        ends. This sends the card names and picks (no amounts) to earnrate's
-        server, which makes the pass and keeps nothing.
-      </p>
+      <p class="muted">{PASS_NOTE}</p>
     </form>
   )
 }
@@ -50,10 +37,7 @@ export function WalletPass({ wallet }: { wallet: Wallet }) {
 async function saveSheet(sheet: CheatSheet) {
   const blob = await cheatSheetImage(sheet, shortName, pct, prefersDark())
   if (!blob) return
-  download(
-    blob,
-    `earnrate-cheat-sheet-${sheet.quarter.toLowerCase().replace(/\s+/g, '-')}.png`,
-  )
+  download(blob, sheetPictureFile(sheet.quarter))
 }
 
 const ICON = {

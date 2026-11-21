@@ -27,9 +27,11 @@ import {
   editPastCards,
   editSettings,
   home,
+  keepOrReplace,
   nextCard,
   pastCards,
   places,
+  recordPurchase,
   reminders,
   removal,
   removeCard,
@@ -38,10 +40,14 @@ import {
   useCatalog,
   walletCards,
   walletHome,
+  walletPass,
   walletSettings,
   widgets,
   type Change,
 } from '../ios/engine/entry.ts'
+import { passForm } from '../site/app/pass-request.ts'
+import { keepOrReplace as weigh } from '../src/engine/keep-or-replace.ts'
+import { ABROAD } from '../src/engine/recommend.ts'
 
 const today = '2026-11-19'
 const held = {
@@ -945,6 +951,243 @@ describe('phase 2: widgets, Siri, Spotlight and reminders', () => {
     expect(walletSettings({ wallet: none }).reminders.label).toBe(
       'Remind me before deadlines',
     )
+  })
+})
+
+describe('the answer options and the wallet extras', () => {
+  test('how you pay re-ranks as the site does, and a hint sets it', () => {
+    const wallet = walletWith(['citi-double-cash', 'apple-card'])
+    const unsure = answer({ query: 'Walgreens', wallet, today })
+    expect(unsure.purchase.payment).toBeNull()
+    expect(unsure.purchase.summary).toBe('This purchase')
+    expect(unsure.purchase.paying.map((p) => p.label)).toEqual([
+      'Not sure',
+      'Card',
+      'Apple Pay',
+      'PayPal',
+    ])
+    expect(unsure.pick?.cardId).toBe('citi-double-cash')
+    expect(unsure.purchase.hints).toEqual([
+      {
+        payment: 'apple-pay',
+        text: 'With Apple Pay? Apple Card earns 3% cash back here.',
+      },
+    ])
+    const paid = answer({
+      query: 'Walgreens',
+      wallet,
+      today,
+      payment: 'apple-pay',
+    })
+    const rec = recommend(
+      catalog,
+      WalletSchema.parse(wallet),
+      {
+        merchant: 'Walgreens',
+        amount: null,
+        channel: null,
+        date: today,
+        country: 'US',
+        payment: 'apple-pay',
+      },
+      undefined,
+      { today },
+    )
+    expect(paid.pick?.cardId).toBe(rec.decision?.cardId)
+    expect(paid.pick?.cardId).toBe('apple-card')
+    expect(paid.subtitle).toBe('Counts as a drugstore')
+    expect(paid.purchase).toMatchObject({
+      payment: 'apple-pay',
+      summary: 'Apple Pay',
+      active: true,
+      hints: [],
+    })
+  })
+
+  test('abroad ranks net of foreign transaction fees and never prints the code', () => {
+    const wallet = walletWith(['amex-gold', 'citi-double-cash'])
+    const home = answer({ query: 'Dining', wallet, today })
+    const away = answer({ query: 'Dining', wallet, today, abroad: true })
+    const rec = recommend(
+      catalog,
+      WalletSchema.parse(wallet),
+      {
+        merchant: 'Dining',
+        amount: null,
+        channel: null,
+        date: today,
+        country: ABROAD,
+        payment: null,
+      },
+      undefined,
+      { today },
+    )
+    expect(away.pick?.cardId).toBe(rec.decision?.cardId)
+    expect(away.purchase.summary).toBe('Outside the U.S.')
+    expect(away.footer.join(' ')).toMatch(/foreign transaction fee/)
+    expect(home.footer.join(' ')).not.toMatch(/foreign transaction fee/)
+    expect(JSON.stringify(away)).not.toContain(ABROAD)
+    const every = answer({ query: 'Dining', today, abroad: true })
+    expect(every.footer.join(' ')).toMatch(/foreign transaction fee/)
+    expect(JSON.stringify(every)).not.toContain(ABROAD)
+  })
+
+  test('"I used it" is offered only on saved cards at a store it can tell', () => {
+    expect(answer({ query: 'Whole Foods', today }).record).toBeNull()
+    const wallet = walletWith(['amex-gold', 'citi-double-cash'])
+    const a = answer({ query: 'Whole Foods $80', wallet, today })
+    expect(a.record).toMatchObject({
+      label: 'I used it',
+      cards: ['amex-gold', 'citi-double-cash'],
+      amount: 80,
+    })
+    expect(
+      answer({ query: 'Whole Foods', wallet, today, scope: 'every' }).record
+        ?.cards,
+    ).toEqual(['amex-gold', 'citi-double-cash'])
+    expect(
+      answer({ query: 'Zorblax Emporium', wallet, today }).record,
+    ).toBeNull()
+  })
+
+  test('"I used it" records through the record rules, in their words', () => {
+    const wallet = walletWith(['amex-gold', 'citi-double-cash'])
+    const used = recordPurchase({
+      wallet,
+      cardId: 'amex-gold',
+      query: 'Whole Foods',
+      amount: 80,
+      today,
+    })
+    expect(used).toMatchObject({
+      ok: true,
+      recorded: true,
+      message:
+        'Recorded $80 on Amex Gold toward its supermarkets cap: $0 → $80 of $25,000 for 2026, $24,920 left. Saved in My wallet.',
+    })
+    if (!used.ok || !used.wallet) throw new Error('not recorded')
+    expect(
+      used.wallet.cards.find((c) => c.id === 'amex-gold')?.cap_usage,
+    ).toEqual({ 'us-supermarkets': { period: '2026', spent: 80 } })
+    const nothing = recordPurchase({
+      wallet,
+      cardId: 'citi-double-cash',
+      query: 'Whole Foods',
+      amount: 80,
+      today,
+    })
+    expect(nothing).toMatchObject({ ok: true, recorded: false })
+    if (nothing.ok)
+      expect(nothing.message).toMatch(/^Nothing to track: Citi Double Cash/)
+    expect(
+      recordPurchase({
+        wallet,
+        cardId: 'chase-sapphire-preferred',
+        query: 'Whole Foods',
+        amount: 80,
+        today,
+      }).ok,
+    ).toBe(false)
+    expect(
+      recordPurchase({
+        wallet,
+        cardId: 'amex-gold',
+        query: 'Whole Foods',
+        amount: 0,
+        today,
+      }).ok,
+    ).toBe(false)
+  })
+
+  test('a welcome bonus being tracked moves with "I used it"', () => {
+    const wallet = WalletSchema.parse({
+      version: 1,
+      valuations: {},
+      memberships: [],
+      cards: [
+        {
+          id: 'chase-sapphire-preferred',
+          bonus: { opened: '2026-11-01', spent: 1000 },
+        },
+      ],
+    })
+    const used = recordPurchase({
+      wallet,
+      cardId: 'chase-sapphire-preferred',
+      query: 'Dining',
+      amount: 200,
+      today,
+    })
+    if (!used.ok) throw new Error(used.error)
+    expect(used.message).toMatch(
+      /Welcome bonus on Chase Sapphire Preferred: \$1,200 of/,
+    )
+    expect(used.message).not.toContain('milestoneSpent')
+  })
+
+  test('keep or replace is offered on a saved fee card and worked out on request', () => {
+    const wallet = walletWith(['amex-gold', 'citi-double-cash'])
+    expect(cardPage({ id: 'amex-gold', wallet, today }).keep).toEqual({
+      title: 'Keep or replace?',
+      lead: 'What it adds to your wallet after its fee, and which cards with a lower fee would keep the most of that.',
+      button: 'Compare with cheaper cards',
+    })
+    expect(cardPage({ id: 'amex-gold', today }).keep).toBeNull()
+    expect(cardPage({ id: 'citi-double-cash', wallet, today }).keep).toBeNull()
+    const { answer: k } = keepOrReplace({ id: 'amex-gold', wallet, today })
+    const site = weigh(catalog, WalletSchema.parse(wallet), 'amex-gold', today)
+    expect(site).not.toBeNull()
+    expect(k?.replacements.map((r) => r.card.id)).toEqual(
+      site?.replacements.map((r) => r.cardId),
+    )
+    expect(k?.math).toMatch(/at typical U\.S\. spending/)
+    expect(k?.assumes[0]).toBe(
+      'Uses rough typical U.S. monthly spending; your own amounts give a closer answer.',
+    )
+    expect(keepOrReplace({ id: 'amex-gold', today }).answer).toBeNull()
+  })
+
+  test("the cheat sheet's picture says only what the site's does", () => {
+    const wallet = walletWith(['amex-gold', 'citi-double-cash'])
+    const sheet = walletHome({ wallet, today }).sheet
+    expect(sheet?.share).toEqual({
+      label: 'Share',
+      accessibility: 'Share as an image',
+      title: 'My card cheat sheet',
+      subtitle: sheet?.subtitle,
+      footer: [
+        "Rates from each issuer's own terms, as of November 19, 2026.",
+        'No affiliate links.',
+      ],
+      site: 'earnrate.dev',
+      filename: 'earnrate-cheat-sheet-q4-2026.png',
+    })
+    const costco = sheet?.rows.find((r) => r.label === 'Costco')
+    expect(costco).toMatchObject({ name: 'None of your cards', rate: '' })
+    expect(sheet?.pass.label).toBe('Add to Apple Wallet')
+    expect(sheet?.pass.note).toMatch(/no amounts/)
+  })
+
+  test("Add to Apple Wallet sends exactly the site form's fields", () => {
+    const wallet = walletWith(['amex-gold', 'chase-freedom-flex'])
+    const pass = walletPass({ wallet, today })
+    const site = passForm(WalletSchema.parse(wallet), today)
+    expect(pass?.url).toBe('https://pass.earnrate.dev/')
+    expect(pass?.fields).toEqual([
+      { name: 'wallet', value: site.wallet },
+      { name: 'date', value: today },
+    ])
+    const sent = JSON.parse(pass?.fields[0]?.value ?? '{}') as {
+      cards: Record<string, unknown>[]
+    }
+    expect(Object.keys(sent).sort()).toEqual(['cards', 'memberships'])
+    for (const card of sent.cards)
+      expect(
+        Object.keys(card).every((k) =>
+          ['id', 'checkout_label', 'chosen', 'activated'].includes(k),
+        ),
+      ).toBe(true)
+    expect(walletPass({ today })).toBeNull()
   })
 })
 

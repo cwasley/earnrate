@@ -66,6 +66,12 @@ export const OTHER_PERKS =
 
 export const PERKS_NOT_COUNTED = `This counts only earning, statement credits, free nights and fees: ${OTHER_PERKS}.`
 
+// Asked before it's worked out, since the answer weighs many cards.
+export const KEEP_OR_REPLACE = 'Keep or replace?'
+export const KEEP_OR_REPLACE_ASK =
+  'What it adds to your wallet after its fee, and which cards with a lower fee would keep the most of that.'
+export const COMPARE_CHEAPER = 'Compare with cheaper cards'
+
 export type ReplacementOffer = {
   terms: string // "60,000 Chase Ultimate Rewards after $4,000 in purchases within 3 months"
   value: number | null // dollars at the wallet's point values; null for cash

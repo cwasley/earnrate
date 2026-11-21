@@ -10,18 +10,32 @@ struct AnswerScreen: View {
     @State private var scope: Scope?
     @State private var kind: String?
     @State private var all = false
+    // How this purchase is paid, for this answer only: never saved.
+    @State private var payment: String?
+    @State private var abroad = false
+    @State private var recording: RecordTarget?
 
     private struct Key: Equatable {
         let scope: Scope?
         let kind: String?
         let all: Bool
+        let payment: String?
+        let abroad: Bool
         let revision: Int
     }
 
     var body: some View {
         Group {
             if let answer {
-                AnswerList(answer: answer, scope: scopeBinding(answer), kind: $kind, all: $all)
+                AnswerList(
+                    answer: answer,
+                    scope: scopeBinding(answer),
+                    kind: $kind,
+                    all: $all,
+                    payment: $payment,
+                    abroad: $abroad,
+                    used: { recording = $0 }
+                )
             } else if let failure {
                 ContentUnavailableView("No answer", systemImage: "exclamationmark.triangle", description: Text(failure))
             } else {
@@ -33,9 +47,9 @@ struct AnswerScreen: View {
         // "groceries") isn't always the title, and a title that changes flashes.
         .navigationTitle(answer?.title ?? (failure == nil ? "" : query))
         .navigationBarTitleDisplayMode(.large)
-        .task(id: Key(scope: scope, kind: kind, all: all, revision: model.revision)) {
+        .task(id: Key(scope: scope, kind: kind, all: all, payment: payment, abroad: abroad, revision: model.revision)) {
             do {
-                answer = try await model.answer(query, scope: scope, kind: kind, all: all)
+                answer = try await model.answer(query, scope: scope, kind: kind, all: all, payment: payment, abroad: abroad)
                 failure = nil
             } catch {
                 failure = error.localizedDescription
@@ -43,6 +57,13 @@ struct AnswerScreen: View {
         }
         .sensoryFeedback(.selection, trigger: kind)
         .sensoryFeedback(.selection, trigger: scope)
+        .sensoryFeedback(.selection, trigger: payment)
+        .sensoryFeedback(.selection, trigger: abroad)
+        .sheet(item: $recording) { target in
+            if let ask = answer?.record {
+                RecordSheet(target: target, ask: ask, store: answer?.title ?? query, query: query, kind: kind)
+            }
+        }
     }
 
     private func scopeBinding(_ answer: Answer) -> Binding<Scope> {
@@ -55,7 +76,14 @@ private struct AnswerList: View {
     @Binding var scope: Scope
     @Binding var kind: String?
     @Binding var all: Bool
+    @Binding var payment: String?
+    @Binding var abroad: Bool
+    let used: (RecordTarget) -> Void
     @State private var open: Set<String> = []
+
+    private func canRecord(_ id: String) -> Bool {
+        answer.record?.cards.contains(id) == true
+    }
 
     var body: some View {
         List {
@@ -71,16 +99,24 @@ private struct AnswerList: View {
                 }
             } header: {
                 VStack(alignment: .center, spacing: 16) {
-                    if let subtitle = answer.subtitle {
-                        Text(subtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.inkSecondary)
-                            .plate(cornerRadius: 14)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                    FlowLayout(spacing: 8) {
+                        if let subtitle = answer.subtitle {
+                            Text(subtitle)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.inkSecondary)
+                                .plate(cornerRadius: 14)
+                        }
+                        PurchaseMenu(options: answer.purchase, payment: $payment, abroad: $abroad)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     if let pick = answer.pick {
                         AnswerHero(pick: pick, behind: Array(answer.rows.prefix(3)))
                         PickText(pick: pick)
+                        if let ask = answer.record, canRecord(pick.cardId) {
+                            UsedButton(label: ask.label, name: pick.name) {
+                                used(RecordTarget(cardId: pick.cardId, name: pick.name, art: pick.art))
+                            }
+                        }
                     }
                 }
                 .textCase(nil)
@@ -100,6 +136,20 @@ private struct AnswerList: View {
                 } footer: {
                     if let lead = kinds.lead { Text(lead).foregroundStyle(Color.inkSecondary) }
                 }
+            }
+
+            if !answer.purchase.hints.isEmpty {
+                Section {
+                    ForEach(answer.purchase.hints) { hint in
+                        Button {
+                            payment = hint.payment
+                        } label: {
+                            Label(hint.text, systemImage: "wave.3.right")
+                                .font(.subheadline)
+                        }
+                    }
+                }
+                .surfaceRows()
             }
 
             if !answer.callouts.isEmpty {
@@ -136,8 +186,10 @@ private struct AnswerList: View {
                             row: row,
                             markHeld: answer.scope == .every,
                             labels: answer.labels,
+                            usedLabel: canRecord(row.card.id) ? answer.record?.label : nil,
                             expanded: open.contains(row.id),
-                            toggle: { toggle(row.id) }
+                            toggle: { toggle(row.id) },
+                            used: { used(RecordTarget(cardId: row.card.id, name: row.card.shortName, art: row.card.art)) }
                         )
                     }
                     if let more = answer.moreLabel {
@@ -255,8 +307,10 @@ private struct RankRow: View {
     let row: Answer.Row
     let markHeld: Bool
     let labels: Answer.Labels
+    let usedLabel: String?
     let expanded: Bool
     let toggle: () -> Void
+    let used: () -> Void
     @Environment(\.dynamicTypeSize) private var size
 
     // The details sit beside the toggle, not inside it: inside, the toggle
@@ -342,6 +396,15 @@ private struct RankRow: View {
                 Text(line)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            }
+            if let usedLabel {
+                Button(action: used) {
+                    Label(usedLabel, systemImage: "checkmark.circle")
+                        .font(.footnote.weight(.semibold))
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("\(usedLabel): \(row.card.shortName)")
+                .padding(.top, 2)
             }
             NavigationLink(value: Route.card(row.card.id)) {
                 Label(labels.cardPage, systemImage: "creditcard")

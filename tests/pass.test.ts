@@ -19,6 +19,7 @@ import { cheatSheet } from '../src/engine/cheat-sheet.ts'
 import { pct } from '../src/engine/text.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import { WalletSchema } from '../src/schema/wallet.ts'
+import { useCatalog, walletPass } from '../ios/engine/entry.ts'
 
 const ROOT = path.join(import.meta.dirname, '..')
 const IDENTITY = {
@@ -317,6 +318,53 @@ describe('the cheat-sheet pass', () => {
     )
     expect(res.status).toBe(429)
     expect(keys).toEqual(['160.79.105.20'])
+  })
+
+  test("the iPhone app's request makes a pass, counted as an iPhone's", async () => {
+    useCatalog(catalog)
+    const wallet = WalletSchema.parse({
+      version: 1,
+      valuations: {},
+      memberships: ['amazon-prime'],
+      cards: [
+        { id: 'amex-gold', checkout_label: 'Gold' },
+        { id: 'chase-freedom-flex' },
+        { id: 'citi-double-cash' },
+      ],
+    })
+    const pass = walletPass({ wallet, today: '2026-11-03' })
+    if (!pass) throw new Error('no pass request')
+    // As PassRequest.swift encodes it: every byte but A-Z a-z 0-9 - . _ ~
+    // percent-encoded, fields joined with &.
+    const encode = (v: string) =>
+      [...new TextEncoder().encode(v)]
+        .map((b) => {
+          const c = String.fromCharCode(b)
+          return /[A-Za-z0-9\-._~]/.test(c)
+            ? c
+            : `%${b.toString(16).toUpperCase().padStart(2, '0')}`
+        })
+        .join('')
+    const body = pass.fields
+      .map((f) => `${encode(f.name)}=${encode(f.value)}`)
+      .join('&')
+    const points: { blobs?: string[] }[] = []
+    const res = await worker().fetch(
+      new Request(pass.url, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          accept: 'application/vnd.apple.pkpass',
+          'accept-language': 'en',
+          'user-agent': 'earnrate (iPhone)',
+        },
+        body,
+      }),
+      { ...env, USAGE: { writeDataPoint: (p) => points.push(p) } },
+    )
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('application/vnd.apple.pkpass')
+    expect(points.map((p) => p.blobs)).toEqual([['pass-made', 'iphone']])
   })
 
   test('the Worker refuses what it can’t make a pass from', async () => {

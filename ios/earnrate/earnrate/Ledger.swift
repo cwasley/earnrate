@@ -53,13 +53,17 @@ private struct PocketRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            LedgerLine {
-                Text(row.label)
-                    .font(.body.weight(.medium))
-            } figure: {
-                Text(row.rate)
-                    .font(.figure(.title3, weight: .semibold))
-                    .foregroundStyle(.tint)
+            // A purchase none of the cards earn on has no figure, so no dots.
+            if row.rate.isEmpty {
+                label
+            } else {
+                LedgerLine {
+                    label
+                } figure: {
+                    Text(row.rate)
+                        .font(.figure(.title3, weight: .semibold))
+                        .foregroundStyle(.tint)
+                }
             }
             HStack(alignment: .firstTextBaseline, spacing: 7) {
                 if let art = row.art {
@@ -82,5 +86,10 @@ private struct PocketRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+    }
+
+    private var label: some View {
+        Text(row.label)
+            .font(.body.weight(.medium))
     }
 }

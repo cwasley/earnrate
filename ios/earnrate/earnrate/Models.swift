@@ -133,7 +133,55 @@ struct Answer: Decodable {
     let footer: [String]
     let kinds: Kinds?
     let kind: String?
+    let purchase: PurchaseOptions
+    let record: RecordAsk?
     let labels: Labels
+}
+
+// How one purchase is paid: the site's This purchase, as one menu.
+struct PurchaseOptions: Decodable {
+    struct Paying: Decodable, Identifiable, Hashable {
+        let id: String?
+        let label: String
+    }
+
+    struct Hint: Decodable, Identifiable, Hashable {
+        let payment: String
+        let text: String
+        var id: String { payment }
+    }
+
+    let title: String
+    let summary: String
+    let active: Bool
+    let payingTitle: String
+    let paying: [Paying]
+    let payment: String?
+    let abroadLabel: String
+    let abroad: Bool
+    let hints: [Hint]
+}
+
+// "I used it", on the saved cards an answer ranks.
+struct RecordAsk: Decodable {
+    let label: String
+    let cards: [String]
+    let title: String
+    let lead: String
+    let amountLabel: String
+    let amount: Double?
+    let button: String
+    let undo: String
+    let undone: String
+    let done: String
+}
+
+// What recording a purchase did, in the record rules' own sentence.
+struct Recorded {
+    let message: String
+    let changed: Bool
+    // The wallet as it was, to put back with Undo.
+    let before: Data?
 }
 
 struct CardGroups: Decodable {
@@ -288,9 +336,27 @@ struct WalletHome: Decodable {
             var id: String { label }
         }
 
+        // The sheet as a picture to share, in the site's words.
+        struct Share: Decodable {
+            let label: String
+            let accessibility: String
+            let title: String
+            let subtitle: String
+            let footer: [String]
+            let site: String
+            let filename: String
+        }
+
+        struct Pass: Decodable {
+            let label: String
+            let note: String
+        }
+
         let title: String
         let subtitle: String
         let rows: [Row]
+        let share: Share
+        let pass: Pass
     }
 
     struct Held: Decodable, Identifiable {
@@ -536,6 +602,57 @@ struct CardPage: Decodable {
     let changes: [String]
     let checked: String
     let sources: [String]
+    let keep: Keep?
+
+    struct Keep: Decodable {
+        let title: String
+        let lead: String
+        let button: String
+    }
+}
+
+// Keep or replace a saved fee card, worked out when asked.
+struct KeepAnswer: Decodable {
+    struct Replacement: Decodable, Identifiable {
+        let card: CardRow
+        let short: String
+        let samePoints: String?
+        let net: String
+        let per: String
+        let detail: String
+        let extras: [String]
+        var id: String { card.id }
+    }
+
+    let lead: String
+    let saved: String?
+    let unsaid: String?
+    let unsaidButton: String
+    let replacements: [Replacement]
+    let notes: [String]
+    let members: [String]
+    let math: String
+    let perks: String
+    let assumesTitle: String
+    let assumes: [String]
+    let cardPage: String
+}
+
+struct KeepResult: Decodable {
+    let answer: KeepAnswer?
+}
+
+// Add to Apple Wallet: the form the site's button posts, made when tapped.
+struct WalletPassRequest: Decodable {
+    struct Field: Decodable {
+        let name: String
+        let value: String
+    }
+
+    let url: String
+    let fields: [Field]
+    let failed: String
+    let offline: String
 }
 
 // Next card, Best setups, the card list and bonus rules.

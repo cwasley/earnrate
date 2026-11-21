@@ -1,6 +1,7 @@
 import type { PaymentMethod } from '../../src/schema/card.ts'
 import { AbroadToggle } from './AbroadToggle.tsx'
 import { PayingWith } from './PayingWith.tsx'
+import { THIS_PURCHASE } from './purchase-options.ts'
 
 // How one purchase is made. At a store and My wallet share it for the visit;
 // it isn't saved, so the next visit starts at "Not sure" in the U.S.
@@ -22,7 +23,7 @@ export function ThisPurchase({
 }) {
   return (
     <fieldset class="filter-group">
-      <legend>This purchase</legend>
+      <legend>{THIS_PURCHASE}</legend>
       <AbroadToggle
         abroad={purchase.abroad}
         onChange={(abroad) => onChange({ ...purchase, abroad })}

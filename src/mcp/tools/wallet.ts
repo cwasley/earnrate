@@ -8,10 +8,9 @@ import {
   listed,
   money,
   shortDate,
-  subscriptionPaidText,
   words,
 } from '../../engine/text.ts'
-import { counts, creditAt, tracksUse } from '../../engine/credits.ts'
+import { tracksUse } from '../../engine/credits.ts'
 import { membershipName } from '../../engine/memberships.ts'
 import { profileText, VALUATION_PROFILES } from '../../engine/profiles.ts'
 import { optionName } from '../../engine/rule-text.ts'
@@ -21,14 +20,13 @@ import {
 } from '../../engine/wallet-change.ts'
 import { walletSummary } from '../../engine/wallet-summary.ts'
 import { checklist } from '../../engine/checklist.ts'
-import { pickedCategories } from '../../engine/evaluate.ts'
-import { choicePeriod, periodKey } from '../../engine/periods.ts'
-import { periodPhrase, possessive } from '../../engine/text.ts'
 import { cardText, issuerName } from '../../format/card-text.ts'
 import {
-  formatBooking,
   formatChecklist,
   formatWalletSummary,
+  recordedText,
+  subscriptionCredit,
+  subscriptionText,
 } from '../../format/wallet.ts'
 import { fail, type Context } from '../context.ts'
 import {
@@ -243,79 +241,44 @@ export function walletHandlers(
       const result = await store.record(purchase, resolved.merchant)
       if (!result.ok) return fail(`Couldn't record it: ${result.error}`)
       const { cap: booking, bonus, milestones, credit } = result
-      // A purchase from an earlier period than the picks on file can't be
-      // matched to that period's categories.
-      const stalePicks = (date: string): string | null => {
-        const card = catalog.cards.find((c) => c.id === cardId)
-        const held = w.cards.find((c) => c.id === cardId)
-        if (!card || !held) return null
-        const { staleChoice } = pickedCategories(card, held, date)
-        const period = choicePeriod(card)
-        if (staleChoice === null || period === null) return null
-        const key = periodKey(period, date, null) ?? ''
-        return `Nothing was recorded: ${cardText(catalog).shortName(cardId)}'s category picks on file are ${periodPhrase(period, staleChoice)}, and this purchase is from ${periodPhrase(period, key).replace(/^for /, '')}, so it can't be matched to that period's picks or cap.`
-      }
-      const capSummary = booking
-        ? walletSummary(catalog, w, purchase.date)
-            .cards.find((c) => c.cardId === cardId)
-            ?.caps.find((c) => c.key === booking.capKey)
-        : undefined
-      const capLabel = capSummary?.label ?? null
       const shortName = cardText(catalog).shortName(cardId)
-      // A subscription credit here pays in full each period: nothing is
-      // booked against it, and the reply says so.
-      const held = w.cards.find((c) => c.id === cardId)
-      const heldCard = catalog.cards.find((c) => c.id === cardId)
-      const paying =
-        held && heldCard
-          ? creditAt(catalog, heldCard, held, resolved.merchant, purchase.date)
-          : null
-      // Paying a subscription that needs no enrolling on the card says the
-      // cardholder uses its credit, unless they said they don't.
+      const { paying, mark } = subscriptionCredit(
+        catalog,
+        w,
+        cardId,
+        resolved.merchant,
+        purchase.date,
+      )
       let marked = false
-      if (
-        paying &&
-        held &&
-        !tracksUse(paying.credit) &&
-        paying.credit.enroll !== true &&
-        !paying.confirmed &&
-        !(held.skipped_credits ?? []).includes(paying.credit.id)
-      ) {
+      if (paying && mark) {
+        const held = w.cards.find((c) => c.id === cardId)
         const done = await store.updateCard(
           {
             id: cardId,
-            enrolled: [...(held.enrolled ?? []), paying.credit.id],
+            enrolled: [...(held?.enrolled ?? []), paying.credit.id],
           },
           purchase.date,
         )
         marked = done.ok
       }
-      const subscription =
-        paying && !tracksUse(paying.credit) && (marked || counts(paying))
-          ? `${marked ? `Marked ${possessive(shortName)} ${paying.name} credit as one you use. ` : ''}${subscriptionPaidText(shortName, paying)}`
-          : null
-      const output =
-        booking || bonus || milestones.length > 0 || credit
-          ? {
-              recorded: true,
-              booking,
-              bonus,
-              milestones,
-              credit,
-              message: `${formatBooking(amount, shortName, booking, bonus, milestones, credit, capLabel, capSummary?.afterCap ?? null)}${subscription === null ? '' : ` ${subscription}`} Saved in ${ctx.walletName}.`,
-            }
-          : {
-              recorded: false,
-              booking: null,
-              bonus: null,
-              milestones: [],
-              credit: null,
-              message:
-                stalePicks(purchase.date) ??
-                (subscription === null
-                  ? `Nothing to track: ${shortName} has no spending cap, open welcome bonus, spend bonus or enrolled statement credit for this purchase, so the wallet wasn't changed.`
-                  : `${subscription} The wallet wasn't changed.`),
-            }
+      const { recorded, text } = recordedText(
+        catalog,
+        w,
+        purchase,
+        result,
+        subscriptionText(shortName, paying, marked),
+        `Saved in ${ctx.walletName}.`,
+      )
+      const output = recorded
+        ? { recorded: true, booking, bonus, milestones, credit, message: text }
+        : {
+            recorded: false,
+            booking: null,
+            bonus: null,
+            milestones: [],
+            credit: null,
+            message: text,
+          }
       return {
         content: [
           {

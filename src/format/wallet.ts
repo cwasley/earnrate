@@ -1,10 +1,23 @@
 import type { ChecklistItem } from '../engine/checklist.ts'
 import type {
   BonusBooking,
+  BookedPurchase,
   CapBooking,
   CreditBooking,
   MilestoneBooking,
 } from '../engine/record.ts'
+import {
+  counts,
+  creditAt,
+  tracksUse,
+  type CreditState,
+} from '../engine/credits.ts'
+import { pickedCategories } from '../engine/evaluate.ts'
+import { choicePeriod, periodKey } from '../engine/periods.ts'
+import type { MerchantResolution } from '../engine/types.ts'
+import type { Catalog } from '../schema/catalog.ts'
+import type { Wallet } from '../schema/wallet.ts'
+import { cardText } from './card-text.ts'
 import {
   CAP_PERIODS,
   introAdjective,
@@ -16,10 +29,12 @@ import {
   roundCents,
   shortDate,
   possessive,
+  subscriptionPaidText,
 } from '../engine/text.ts'
-import type {
-  PastCardSummary,
-  WalletSummary,
+import {
+  walletSummary,
+  type PastCardSummary,
+  type WalletSummary,
 } from '../engine/wallet-summary.ts'
 
 // "To do now", above the card details; nothing when all's done.
@@ -153,6 +168,8 @@ export function formatBooking(
   credit: CreditBooking | null = null,
   capLabel: string | null = null, // what the cap covers, in words
   afterCap: string | null = null, // what spending past it earns: "1% cash back"
+  // How to count spending from before tracking began.
+  addTotal = 'give the total so far (milestoneSpent)',
 ): string {
   const messages: string[] = []
   if (credit)
@@ -185,7 +202,7 @@ export function formatBooking(
     messages.push(
       [
         first.started
-          ? `Started tracking spend on ${name} this ${period} with this purchase: ${money(first.after)}. Spending on it earlier this ${period} isn't counted; give the total so far (milestoneSpent) to include it.`
+          ? `Started tracking spend on ${name} this ${period} with this purchase: ${money(first.after)}. Spending on it earlier this ${period} isn't counted; ${addTotal} to include it.`
           : `Spend on ${name} this ${period}: ${money(first.after)}.`,
         ...reached.map(
           (m) => `That reaches its ${money(m.spend)} spend bonus.`,
@@ -199,4 +216,92 @@ export function formatBooking(
     )
   }
   return messages.join(' ')
+}
+
+// A purchase from an earlier period than the picks on file can't be matched
+// to that period's categories, so nothing is recorded.
+export function stalePicksText(
+  catalog: Catalog,
+  wallet: Wallet,
+  cardId: string,
+  date: string,
+): string | null {
+  const card = catalog.cards.find((c) => c.id === cardId)
+  const held = wallet.cards.find((c) => c.id === cardId)
+  if (!card || !held) return null
+  const { staleChoice } = pickedCategories(card, held, date)
+  const period = choicePeriod(card)
+  if (staleChoice === null || period === null) return null
+  const key = periodKey(period, date, null) ?? ''
+  return `Nothing was recorded: ${cardText(catalog).shortName(cardId)}'s category picks on file are ${periodPhrase(period, staleChoice)}, and this purchase is from ${periodPhrase(period, key).replace(/^for /, '')}, so it can't be matched to that period's picks or cap.`
+}
+
+// A subscription credit pays in full each period, so nothing is booked
+// against it. Paying for one that needs no enrolling says the cardholder
+// uses its credit, unless they said they don't (`mark`).
+export function subscriptionCredit(
+  catalog: Catalog,
+  wallet: Wallet,
+  cardId: string,
+  merchant: MerchantResolution,
+  date: string,
+): { paying: CreditState | null; mark: boolean } {
+  const held = wallet.cards.find((c) => c.id === cardId)
+  const card = catalog.cards.find((c) => c.id === cardId)
+  const paying =
+    held && card ? creditAt(catalog, card, held, merchant, date) : null
+  return {
+    paying,
+    mark:
+      paying !== null &&
+      held !== undefined &&
+      !tracksUse(paying.credit) &&
+      paying.credit.enroll !== true &&
+      !paying.confirmed &&
+      !(held.skipped_credits ?? []).includes(paying.credit.id),
+  }
+}
+
+export function subscriptionText(
+  name: string, // the card's short name
+  paying: CreditState | null,
+  marked: boolean,
+): string | null {
+  return paying && !tracksUse(paying.credit) && (marked || counts(paying))
+    ? `${marked ? `Marked ${possessive(name)} ${paying.name} credit as one you use. ` : ''}${subscriptionPaidText(name, paying)}`
+    : null
+}
+
+// What recording a purchase did, from the wallet as it was before; `saved`
+// says where it went ("Saved in your saved wallet.") when something was.
+export function recordedText(
+  catalog: Catalog,
+  wallet: Wallet,
+  purchase: { cardId: string; amount: number; date: string },
+  booked: Pick<BookedPurchase, 'cap' | 'bonus' | 'milestones' | 'credit'>,
+  subscription: string | null,
+  saved: string,
+  addTotal?: string,
+): { recorded: boolean; text: string } {
+  const { cap, bonus, milestones, credit } = booked
+  const shortName = cardText(catalog).shortName(purchase.cardId)
+  if (cap || bonus || milestones.length > 0 || credit) {
+    const capSummary = cap
+      ? walletSummary(catalog, wallet, purchase.date)
+          .cards.find((c) => c.cardId === purchase.cardId)
+          ?.caps.find((c) => c.key === cap.capKey)
+      : undefined
+    return {
+      recorded: true,
+      text: `${formatBooking(purchase.amount, shortName, cap, bonus, milestones, credit, capSummary?.label ?? null, capSummary?.afterCap ?? null, addTotal)}${subscription === null ? '' : ` ${subscription}`} ${saved}`,
+    }
+  }
+  return {
+    recorded: false,
+    text:
+      stalePicksText(catalog, wallet, purchase.cardId, purchase.date) ??
+      (subscription === null
+        ? `Nothing to track: ${shortName} has no spending cap, open welcome bonus, spend bonus or enrolled statement credit for this purchase, so the wallet wasn't changed.`
+        : `${subscription} The wallet wasn't changed.`),
+  }
 }

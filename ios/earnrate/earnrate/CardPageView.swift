@@ -170,6 +170,10 @@ struct CardPageView: View {
                     }
                 }
 
+                if let keep = page.keep {
+                    KeepOrReplaceSection(id: id, keep: keep)
+                }
+
                 Section {
                     Text(page.fee)
                     Text(page.foreignFee)

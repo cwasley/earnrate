@@ -159,6 +159,14 @@ test("the outlines' words are the app's, or a typical figure's line", () => {
           .filter((f) => f.endsWith('.tsx'))
           .map((f) => read(`${dir}/${f}`)),
       )
+      .concat(
+        // Words the site's components share with the iPhone app.
+        [
+          'site/app/pass-request.ts',
+          'site/app/purchase-options.ts',
+          'site/app/sheet-picture-text.ts',
+        ].map(read),
+      )
       .join(' '),
   )
   const worded = (['you', 'neutral'] as const).map((voice) =>

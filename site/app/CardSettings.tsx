@@ -45,6 +45,11 @@ import { draftShown, type Draft } from './draft.ts'
 import { MONTH_NAMES } from './month-pick.ts'
 import { cards, issuerName } from './format.ts'
 import { KeepOrReplace } from './KeepOrReplace.tsx'
+import {
+  COMPARE_CHEAPER,
+  KEEP_OR_REPLACE,
+  KEEP_OR_REPLACE_ASK,
+} from '../../src/engine/keep-or-replace.ts'
 
 // A field's local value, which gives way to the saved one whenever that
 // changes. `key` stands for the saved value when it isn't a primitive.
@@ -462,7 +467,7 @@ export function CardSettings({
       ) : null}
       {fee ? (
         <fieldset class="keep" data-keep={held.id}>
-          <legend>Keep or replace?</legend>
+          <legend>{KEEP_OR_REPLACE}</legend>
           {asked ? (
             <KeepOrReplace
               wallet={wallet}
@@ -471,13 +476,10 @@ export function CardSettings({
             />
           ) : (
             <>
-              <p class="muted small">
-                What it adds to your wallet after its fee, and which cards with
-                a lower fee would keep the most of that.
-              </p>
+              <p class="muted small">{KEEP_OR_REPLACE_ASK}</p>
               <div class="row-buttons">
                 <button type="button" onClick={onAsk}>
-                  Compare with cheaper cards
+                  {COMPARE_CHEAPER}
                 </button>
               </div>
             </>

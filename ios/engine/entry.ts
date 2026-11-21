@@ -10,8 +10,30 @@ import {
 } from '../../site/app/bonus-change.ts'
 import { pastCardNote } from '../../site/app/card-history.ts'
 import { enrollLine, usedSoFarShown } from '../../site/app/credit-enroll.ts'
+import {
+  passForm,
+  PASS_NOTE_IN_APP,
+  PASS_URL,
+} from '../../site/app/pass-request.ts'
 import { placeKinds } from '../../site/app/place-kinds.ts'
+import {
+  ABROAD_LABEL,
+  ABROAD_WORDS,
+  PAYING_CHOICES,
+  PAYING_WITH,
+  payingHints,
+  payingHintText,
+  THIS_PURCHASE,
+} from '../../site/app/purchase-options.ts'
 import { QUICK_CARDS } from '../../site/app/quick-cards.ts'
+import {
+  NO_CARD_OF_YOURS,
+  SHEET_PICTURE_SITE,
+  SHEET_PICTURE_TITLE,
+  sheetPictureFile,
+  sheetPictureFooter,
+  sheetPictureSubtitle,
+} from '../../site/app/sheet-picture-text.ts'
 import {
   CATALOG_FILE_FORMAT,
   compareDataVersions,
@@ -159,7 +181,28 @@ import {
   localToday,
 } from '../../src/engine/periods.ts'
 import { VALUATION_PROFILES } from '../../src/engine/profiles.ts'
-import { noteOnly, recommend } from '../../src/engine/recommend.ts'
+import {
+  alternativesText,
+  COMPARE_CHEAPER,
+  feeSavedText,
+  hiddenRatesText,
+  KEEP_OR_REPLACE,
+  KEEP_OR_REPLACE_ASK,
+  keepOrReplace as weighKeepOrReplace,
+  keepOrReplaceAssumes,
+  keepOrReplaceLead,
+  keepOrReplaceMath,
+  keepOrReplaceUnsaid,
+  PERKS_NOT_COUNTED,
+  replacementExtras,
+  replacementKept,
+  replacementShort,
+  samePointsTag,
+  samePointsText,
+  transferText,
+} from '../../src/engine/keep-or-replace.ts'
+import { ABROAD, noteOnly, recommend } from '../../src/engine/recommend.ts'
+import { bookPurchase } from '../../src/engine/record.ts'
 import { anniversaryOf } from '../../src/engine/renewal.ts'
 import {
   bonusEligibility,
@@ -249,12 +292,17 @@ import {
 } from '../../src/format/card-art.ts'
 import { cardText } from '../../src/format/card-text.ts'
 import {
+  recordedText,
+  subscriptionCredit,
+  subscriptionText,
+} from '../../src/format/wallet.ts'
+import {
   resolveMerchantById,
   resolvePlace,
   splitPurchaseText,
   withCallerCategory,
 } from '../../src/merchants/resolve.ts'
-import type { Card } from '../../src/schema/card.ts'
+import type { Card, PaymentMethod } from '../../src/schema/card.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import {
   WalletSchema,
@@ -516,12 +564,93 @@ export type Answer = {
     clear: string
   } | null
   kind: string | null
+  // How the purchase is paid, one quiet menu: the site's This purchase.
+  purchase: PurchaseOptions
+  // "I used it" on the saved cards ranked here, with a saved wallet and a
+  // store earnrate can tell the caps of.
+  record: RecordAsk | null
   labels: {
     yours: string
     every: string
     why: string
     cardPage: string
     held: string
+  }
+}
+
+export type PurchaseOptions = {
+  title: string
+  summary: string // what the menu shows: "This purchase", or what's set
+  active: boolean
+  payingTitle: string
+  paying: { id: PaymentMethod | null; label: string }[]
+  payment: PaymentMethod | null
+  abroadLabel: string
+  abroad: boolean
+  // "With Apple Pay? Amex Gold earns 4x here.": one tap sets it.
+  hints: { payment: PaymentMethod; text: string }[]
+}
+
+export type RecordAsk = {
+  label: string
+  cards: string[] // card ids it's offered on
+  title: string
+  lead: string
+  amountLabel: string
+  amount: number | null // from the search ("Whole Foods $80")
+  button: string
+  undo: string
+  undone: string
+  done: string
+}
+
+function purchaseOptions(
+  payment: PaymentMethod | null,
+  abroad: boolean,
+  hints: { cardId: string; payment: PaymentMethod; earn: string }[],
+): PurchaseOptions {
+  const { shortName } = names()
+  const set = [
+    ...(payment === null
+      ? []
+      : PAYING_CHOICES.filter((p) => p.value === payment).map((p) => p.label)),
+    ...(abroad ? [capitalize(ABROAD_WORDS)] : []),
+  ]
+  return {
+    title: THIS_PURCHASE,
+    summary: set.length === 0 ? THIS_PURCHASE : set.join(' · '),
+    active: set.length > 0,
+    payingTitle: PAYING_WITH,
+    paying: PAYING_CHOICES.map((p) => ({ id: p.value, label: p.label })),
+    payment,
+    abroadLabel: ABROAD_LABEL,
+    abroad,
+    hints: hints.map((h) => ({
+      payment: h.payment,
+      text: payingHintText(h.payment, shortName(h.cardId), h.earn),
+    })),
+  }
+}
+
+function recordAsk(
+  wallet: Wallet | null,
+  m: MerchantResolution,
+  amount: number | null,
+  problems: string[],
+): RecordAsk | null {
+  if (!wallet || wallet.cards.length === 0 || problems.length > 0) return null
+  if (m.source === 'none') return null
+  return {
+    label: 'I used it',
+    cards: wallet.cards.map((h) => h.id),
+    title: 'I used it',
+    lead: "Counts it toward the card's caps, welcome bonus, spend bonuses and credits in My wallet.",
+    amountLabel: 'Amount',
+    amount,
+    button: 'Record it',
+    undo: 'Undo',
+    undone: 'Taken back out of My wallet.',
+    done: 'Done',
   }
 }
 
@@ -595,6 +724,8 @@ export function answer(request: {
   scope?: 'yours' | 'every'
   kind?: string | null
   all?: boolean
+  payment?: PaymentMethod | null
+  abroad?: boolean
   today?: string
 }): Answer {
   const c = loaded()
@@ -619,13 +750,17 @@ export function answer(request: {
     resolvePlace(c, asked.merchant, null),
     kindCategory,
   )
+  const payment = request.payment ?? null
+  const abroad = request.abroad === true
   const purchase = {
     merchant: asked.merchant,
     amount: asked.amount,
     channel: null,
     date: today,
-    country: 'US',
-    payment: null,
+    // The engine tells the U.S. from everywhere else; ABROAD is never
+    // shown. How it's paid shows on the menu that sets it.
+    country: abroad ? ABROAD : 'US',
+    payment,
   }
   const subtitleOf = (m: MerchantResolution) => {
     const scope = askedScope(c, m)
@@ -715,6 +850,10 @@ export function answer(request: {
       ],
       kinds: only ? null : kindsFor(rec.merchant),
       kind: kindKey,
+      purchase: purchaseOptions(payment, abroad, payingHints(rec)),
+      record: only
+        ? null
+        : recordAsk(wallet, rec.merchant, asked.amount, problems),
       labels: ANSWER_LABELS,
     }
   }
@@ -782,7 +921,97 @@ export function answer(request: {
     ],
     kinds: only ? null : kindsFor(r.merchant),
     kind: kindKey,
+    purchase: purchaseOptions(payment, abroad, payingHints(r)),
+    record: only ? null : recordAsk(wallet, r.merchant, asked.amount, problems),
     labels: ANSWER_LABELS,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// "I used it": one purchase recorded into the saved wallet through the
+// engine's record rules (caps, welcome bonus, spend bonuses, credits), as
+// Claude's record_purchase does, with the same sentences.
+
+export type Recorded =
+  | { ok: true; recorded: boolean; wallet: Wallet | null; message: string }
+  | { ok: false; error: string }
+
+export function recordPurchase(request: {
+  wallet?: unknown
+  cardId: string
+  query: string // the store as asked, so it resolves as its answer did
+  kind?: string | null
+  amount: number
+  today?: string
+}): Recorded {
+  const c = loaded()
+  const today = request.today ?? localToday()
+  const wallet = walletOf(request.wallet)
+  if (!wallet || !wallet.cards.some((h) => h.id === request.cardId))
+    return { ok: false, error: 'That card is no longer in My wallet.' }
+  if (!(request.amount > 0) || !Number.isFinite(request.amount))
+    return { ok: false, error: 'Enter the amount you paid.' }
+  const amount = Math.round(request.amount * 100) / 100
+  const asked = splitPurchaseText(request.query)
+  const kinds = placeKinds(c)
+  const kindCategory =
+    request.kind === undefined || request.kind === null
+      ? null
+      : ([...kinds.quick, ...kinds.more].find((k) => k.key === request.kind)
+          ?.category ?? null)
+  const merchant = withCallerCategory(
+    resolvePlace(c, asked.merchant, null),
+    kindCategory,
+  )
+  if (merchant.source === 'none')
+    return { ok: false, error: placeKindAsk(merchant.resolvedName) }
+  const purchase = {
+    cardId: request.cardId,
+    merchant: asked.merchant,
+    amount,
+    channel: null,
+    date: today,
+  }
+  const booked = bookPurchase(c, wallet, purchase, merchant)
+  const { paying, mark } = subscriptionCredit(
+    c,
+    wallet,
+    request.cardId,
+    merchant,
+    today,
+  )
+  let next = booked.wallet
+  let marked = false
+  if (paying && mark) {
+    const held = next.cards.find((h) => h.id === request.cardId)
+    const change = updateInWallet(
+      c,
+      next,
+      {
+        id: request.cardId,
+        enrolled: [...(held?.enrolled ?? []), paying.credit.id],
+      },
+      today,
+    )
+    if (change.ok) {
+      next = change.wallet
+      marked = true
+    }
+  }
+  const { recorded, text } = recordedText(
+    c,
+    wallet,
+    purchase,
+    booked,
+    subscriptionText(names().shortName(request.cardId), paying, marked),
+    'Saved in My wallet.',
+    "add the total so far in the card's settings",
+  )
+  return {
+    ok: true,
+    recorded: recorded || marked,
+    wallet: recorded || marked ? next : wallet,
+    message: text,
   }
 }
 
@@ -1198,6 +1427,19 @@ export type WalletHome = {
       note: string | null
       art: CardArt | null
     }[]
+    // The sheet as a picture to share: what the site's image says, and
+    // nothing else about the person (no notes, amounts or stores asked).
+    share: {
+      label: string
+      accessibility: string
+      title: string
+      subtitle: string
+      footer: string[]
+      site: string
+      filename: string
+    }
+    // The site's cheat-sheet pass (walletPass says what's sent).
+    pass: { label: string; note: string }
   } | null
   cardsTitle: string
   cards: { card: CardRow; note: string | null; ask: boolean; action: string }[]
@@ -1311,15 +1553,27 @@ export function walletHome(request: {
     notes,
     sheet: {
       title: 'Cheat sheet',
-      subtitle: `${sheet.quarter} · the card to use for each purchase`,
+      subtitle: sheetPictureSubtitle(sheet.quarter),
+      share: {
+        label: 'Share',
+        accessibility: 'Share as an image',
+        title: SHEET_PICTURE_TITLE,
+        subtitle: sheetPictureSubtitle(sheet.quarter),
+        footer: sheetPictureFooter(sheet.date),
+        site: SHEET_PICTURE_SITE,
+        filename: sheetPictureFile(sheet.quarter),
+      },
+      pass: {
+        label: 'Add to Apple Wallet',
+        note: PASS_NOTE_IN_APP,
+      },
       rows: sheet.rows.map((row, i) => {
         const item = EVERYDAY_PURCHASES[i]
         return {
           label: row.label,
           query: item ? quickPickText(item) : null,
           cardId: row.cardId,
-          name:
-            row.cardId === null ? 'None of your cards' : shortName(row.cardId),
+          name: row.cardId === null ? NO_CARD_OF_YOURS : shortName(row.cardId),
           rate:
             row.effectiveReturnPct === null ? '' : pct(row.effectiveReturnPct),
           note: row.note,
@@ -2016,6 +2270,9 @@ export type CardPage = {
   changes: string[]
   checked: string
   sources: string[]
+  // A saved fee card's Keep or replace, asked for before it's worked out
+  // (keepOrReplace), as the site's card settings do.
+  keep: { title: string; lead: string; button: string } | null
 }
 
 // A card's page: what the site's card page and search_cards say about it.
@@ -2076,6 +2333,91 @@ export function cardPage(request: {
     changes: details?.changes ?? [],
     checked: `Checked against the issuer's terms ${shortDate(card.last_verified)}.`,
     sources: card.source_urls,
+    keep:
+      row.held &&
+      (card.annual_fee ?? 0) > 0 &&
+      wallet !== null &&
+      walletProblems(wallet, c).length === 0
+        ? {
+            title: KEEP_OR_REPLACE,
+            lead: KEEP_OR_REPLACE_ASK,
+            button: COMPARE_CHEAPER,
+          }
+        : null,
+  }
+}
+
+export type KeepAnswer = {
+  lead: string // "The Sapphire Reserve adds about $120 a year after its fee"
+  saved: string | null // what the best cheaper card keeps, after the lead
+  unsaid: string | null // credits the person hasn't said they use
+  unsaidButton: string
+  replacements: {
+    card: CardRow
+    short: string // "Keeps 20%, $795 less in fees"
+    samePoints: string | null
+    net: string // "+$120"
+    per: string
+    detail: string
+    extras: string[]
+  }[]
+  notes: string[]
+  members: string[]
+  math: string
+  perks: string
+  assumesTitle: string
+  assumes: string[]
+  cardPage: string
+}
+
+// Keep or replace a saved fee card, on the typical month (the app has no
+// spending of its own to give) and saying so. A read of the wallet: nothing
+// changes. Slow, like whether a fee is worth it.
+export function keepOrReplace(request: {
+  id: string
+  wallet?: unknown
+  today?: string
+}): { answer: KeepAnswer | null } {
+  const c = loaded()
+  const today = request.today ?? localToday()
+  const wallet = walletOf(request.wallet)
+  if (!wallet) return { answer: null }
+  const k = weighKeepOrReplace(c, wallet, request.id, today)
+  if (!k) return { answer: null }
+  const { feeLabel } = names()
+  const held = heldIds(wallet)
+  const [best] = k.replacements
+  const unsaid = keepOrReplaceUnsaid(k)
+  return {
+    answer: {
+      lead: keepOrReplaceLead(c, k),
+      saved: best ? feeSavedText(k, best) : null,
+      unsaid: unsaid === '' ? null : unsaid,
+      unsaidButton: 'Say which you use',
+      replacements: k.replacements.map((r) => {
+        const others = alternativesText(c, r)
+        return {
+          card: cardRow(r.cardId, held),
+          short: replacementShort(k, r),
+          samePoints: r.samePoints ? samePointsTag(c, k) : null,
+          net: `+${wholeDollars(r.net)}`,
+          per: '/yr',
+          detail: `${capitalize(replacementKept(k, r))}. ${feeLabel(r.cardId)}.${others === '' ? '' : ` Or ${others}, the same.`}`,
+          extras: replacementExtras(c, r),
+        }
+      }),
+      notes: [
+        samePointsText(c, k),
+        transferText(c, k),
+        hiddenRatesText(k),
+      ].filter((t) => t !== ''),
+      members: k.members,
+      math: keepOrReplaceMath(k),
+      perks: PERKS_NOT_COUNTED,
+      assumesTitle: 'What this assumes',
+      assumes: keepOrReplaceAssumes(c, k),
+      cardPage: ANSWER_LABELS.cardPage,
+    },
   }
 }
 
@@ -2135,7 +2477,7 @@ export function about(request: {
     },
     app: `Version ${request.appVersion}`,
     privacy:
-      'Your cards and searches stay on this phone. The app downloads card data from earnrate.dev and sends nothing else.',
+      'Your cards and searches stay on this phone. The app downloads card data from earnrate.dev and sends nothing else, except what Add to Apple Wallet needs when you tap it.',
     links: [
       {
         id: 'wrong-rate',
@@ -3020,6 +3362,37 @@ export function reminders(request: { wallet?: unknown; today?: string }): {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Add to Apple Wallet: exactly the form the site's button posts to
+// pass.earnrate.dev (site/app/pass-request.ts), made only when tapped. The
+// app sends these two fields and nothing else; the signer keeps nothing.
+
+export type WalletPass = {
+  url: string
+  fields: { name: string; value: string }[] // in order, form-encoded
+  failed: string // the alert's title when no pass comes back
+  offline: string
+}
+
+export function walletPass(request: {
+  wallet?: unknown
+  today?: string
+}): WalletPass | null {
+  const wallet = walletOf(request.wallet)
+  if (!wallet || wallet.cards.length === 0) return null
+  const form = passForm(wallet, request.today ?? localToday())
+  return {
+    url: PASS_URL,
+    fields: [
+      { name: 'wallet', value: form.wallet },
+      { name: 'date', value: form.date },
+    ],
+    failed: "Couldn't make the pass",
+    offline:
+      "earnrate's server didn't answer. Check the connection and try again.",
+  }
+}
+
 // Tests hand the catalog over directly; the app parses it from the bundle.
 export function useCatalog(next: Catalog, version = ''): number {
   catalog = next
@@ -3066,6 +3439,9 @@ const engine = {
   home: call(home),
   suggest: call(suggest),
   answer: call(answer),
+  recordPurchase: call(recordPurchase),
+  keepOrReplace: call(keepOrReplace),
+  walletPass: call(walletPass),
   cards: call(cards),
   walletCards: call(walletCards),
   addCard: call(addCard),

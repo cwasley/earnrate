@@ -169,7 +169,12 @@ private struct WalletList: View {
                     PocketCard(sheet: sheet) { model.walletPath.append(.answer($0)) }
                         .listRowBackground(Color.clear)
                         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                        .listRowSeparator(.hidden)
                         .id(Self.sheetId)
+                    SheetActions(sheet: sheet)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
+                        .listRowSeparator(.hidden)
                 }
             }
 

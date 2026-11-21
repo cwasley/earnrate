@@ -1,5 +1,7 @@
-// The engine tells only the U.S. from everywhere else, so the page asks just
-// that and never names a country.
+import { ABROAD_LABEL } from './purchase-options.ts'
+
+export { ABROAD_NOTE } from './purchase-options.ts'
+
 export function AbroadToggle({
   abroad,
   onChange,
@@ -14,9 +16,7 @@ export function AbroadToggle({
         checked={abroad}
         onChange={(e) => onChange(e.currentTarget.checked)}
       />
-      Paying outside the U.S.
+      {ABROAD_LABEL}
     </label>
   )
 }
-
-export const ABROAD_NOTE = ' · outside the U.S.'

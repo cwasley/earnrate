@@ -1,5 +1,4 @@
 import type { CheatSheet } from '../../src/engine/cheat-sheet.ts'
-import { longDate } from '../../src/engine/text.ts'
 import {
   drawFooter,
   drawHeader,
@@ -9,6 +8,13 @@ import {
   PAD,
   pngBlob,
 } from './picture.ts'
+import {
+  NO_CARD_OF_YOURS,
+  SHEET_PICTURE_SITE,
+  SHEET_PICTURE_TITLE,
+  sheetPictureFooter,
+  sheetPictureSubtitle,
+} from './sheet-picture-text.ts'
 
 const W = 1080
 const H = 1350
@@ -26,11 +32,7 @@ export function cheatSheetImage(
   const { ctx } = picture
   const { ink, muted, line, accent } = picture.colors
 
-  drawHeader(
-    picture,
-    'My card cheat sheet',
-    `${sheet.quarter} · the card to use for each purchase`,
-  )
+  drawHeader(picture, SHEET_PICTURE_TITLE, sheetPictureSubtitle(sheet.quarter))
 
   const top = 330
   const bottom = H - 190
@@ -44,8 +46,7 @@ export function cheatSheetImage(
     ctx.fillText(fit(ctx, row.label, 280), PAD, mid)
     ctx.fillStyle = ink
     ctx.font = `650 34px ${FONT}`
-    const name =
-      row.cardId === null ? 'None of your cards' : cardName(row.cardId)
+    const name = row.cardId === null ? NO_CARD_OF_YOURS : cardName(row.cardId)
     ctx.fillText(fit(ctx, name, 470), PAD + 300, mid)
     if (row.effectiveReturnPct !== null) {
       ctx.fillStyle = accent
@@ -60,13 +61,6 @@ export function cheatSheetImage(
     }
   })
 
-  drawFooter(
-    picture,
-    [
-      `Rates from each issuer's own terms, as of ${longDate(sheet.date)}.`,
-      'No affiliate links.',
-    ],
-    'earnrate.dev',
-  )
+  drawFooter(picture, sheetPictureFooter(sheet.date), SHEET_PICTURE_SITE)
   return pngBlob(picture.canvas)
 }

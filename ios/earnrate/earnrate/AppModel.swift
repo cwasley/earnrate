@@ -11,8 +11,9 @@ enum AppTab: Hashable {
 }
 
 // The app's engine and the wallet saved on this phone. The wallet never
-// leaves the phone, and there are no analytics: the only request the app
-// makes is for newer card data from earnrate.dev (CardData.swift). One
+// leaves the phone, and there are no analytics: the app asks earnrate.dev
+// for newer card data (CardData.swift), and only when Add to Apple Wallet
+// is tapped sends the pass server what the pass needs (PassRequest.swift). One
 // model a process, so Siri, Spotlight and notifications reach the same one
 // the screens use.
 @Observable final class AppModel {
@@ -348,11 +349,56 @@ enum AppTab: Hashable {
         return found?.suggestions ?? []
     }
 
-    func answer(_ query: String, scope: Scope?, kind: String?, all: Bool) async throws -> Answer {
-        var fields: [String: Any] = ["query": query, "all": all]
+    // `payment` and `abroad` are how this one purchase is paid, as the
+    // site's This purchase asks; neither is saved.
+    func answer(_ query: String, scope: Scope?, kind: String?, all: Bool, payment: String? = nil, abroad: Bool = false) async throws -> Answer {
+        var fields: [String: Any] = ["query": query, "all": all, "abroad": abroad]
         if let scope { fields["scope"] = scope.rawValue }
         if let kind { fields["kind"] = kind }
+        if let payment { fields["payment"] = payment }
         return try await request("answer", fields, wallet: true)
+    }
+
+    // "I used it": the purchase goes through the engine's record rules into
+    // the saved wallet. The wallet as it was comes back for Undo.
+    func record(_ cardId: String, query: String, kind: String?, amount: Double) async throws -> Recorded {
+        var fields: [String: Any] = ["cardId": cardId, "query": query, "amount": amount]
+        if let kind { fields["kind"] = kind }
+        let before = wallet.load()
+        let data = try await raw("recordPurchase", fields, wallet: true)
+        guard let result = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw Engine.Failure.script("The engine's answer didn't make sense.")
+        }
+        guard result["ok"] as? Bool == true else {
+            throw Engine.Failure.script(result["error"] as? String ?? "That didn't work.")
+        }
+        let message = result["message"] as? String ?? ""
+        guard result["recorded"] as? Bool == true, let next = result["wallet"], !(next is NSNull) else {
+            return Recorded(message: message, changed: false, before: nil)
+        }
+        try wallet.save(JSONSerialization.data(withJSONObject: next, options: [.sortedKeys]))
+        try await refreshWallet()
+        return Recorded(message: message, changed: true, before: before)
+    }
+
+    // Puts the wallet back as it was before a purchase was recorded.
+    func undo(_ recorded: Recorded) async throws {
+        guard recorded.changed, let before = recorded.before else { return }
+        try wallet.save(before)
+        try await refreshWallet()
+    }
+
+    // Keep or replace a saved fee card: slow, so on the second engine.
+    func keepOrReplace(_ id: String) async throws -> KeepAnswer? {
+        let data = try await slow("keep|\(id)", "keepOrReplace", ["id": id])
+        return try JSONDecoder().decode(KeepResult.self, from: data).answer
+    }
+
+    // The form the site's Add to Apple Wallet button posts, for the saved
+    // cards; nil with none.
+    func walletPass() async throws -> WalletPassRequest? {
+        let data = try await raw("walletPass", [:], wallet: true)
+        return try? JSONDecoder().decode(WalletPassRequest.self, from: data)
     }
 
     func cards(matching query: String) async throws -> CardGroups {
