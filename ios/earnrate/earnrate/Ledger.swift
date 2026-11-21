@@ -107,13 +107,6 @@ struct PocketCard: View {
         .padding(.top, 18)
         .padding(.bottom, 10)
         .background(Color.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(alignment: .topLeading) {
-            UnevenRoundedRectangle(bottomLeadingRadius: 2, bottomTrailingRadius: 2)
-                .fill(.tint)
-                .frame(width: 36, height: 4)
-                .padding(.leading, 18)
-                .accessibilityHidden(true)
-        }
         .shadow(color: .black.opacity(scheme == .dark ? 0.4 : 0.08), radius: 14, y: 6)
     }
 }

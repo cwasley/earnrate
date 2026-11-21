@@ -60,6 +60,7 @@ private struct CardsList: View {
                         }
                         .font(.caption)
                         .foregroundStyle(Color.inkSecondary)
+                        .endsList()
                     }
                 }
             }

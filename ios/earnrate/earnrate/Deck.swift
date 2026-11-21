@@ -63,6 +63,13 @@ extension View {
             .background { CardBackdrop(arts: arts) }
     }
 
+    // For a footer that ends a screen: a list leaves room under its last
+    // section but none under a footer's last line, which then sat against
+    // the floating tab bar.
+    func endsList(_ last: Bool = true) -> some View {
+        padding(.bottom, last ? 20 : 0)
+    }
+
     // Rows on the backdrop sit on earnrate's warm surface.
     func surfaceRows() -> some View {
         listRowBackground(Color.surface)

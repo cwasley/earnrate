@@ -209,6 +209,7 @@ private struct Footer: View {
         .font(.caption)
         .foregroundStyle(Color.inkSecondary)
         .padding(.top, 6)
+        .endsList()
     }
 }
 
@@ -258,16 +259,18 @@ private struct RankRow: View {
     let toggle: () -> Void
     @Environment(\.dynamicTypeSize) private var size
 
+    // The details sit beside the toggle, not inside it: inside, the toggle
+    // took the Card page tap and only folded the row.
     var body: some View {
-        Button(action: toggle) {
-            VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
+            Button(action: toggle) {
                 line
-                if expanded { details }
+                    .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .accessibilityHint(expanded ? "Hides the details" : "Shows the details")
+            if expanded { details }
         }
-        .buttonStyle(.plain)
-        .accessibilityHint(expanded ? "Hides the details" : "Shows the details")
         .contextMenu {
             NavigationLink(value: Route.card(row.card.id)) {
                 Label(labels.cardPage, systemImage: "creditcard")

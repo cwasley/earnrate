@@ -30,7 +30,7 @@ private struct StoreSearch: View {
                 SuggestionRows(suggestions: suggestions, open: open)
             }
             .autocorrectionDisabled()
-            .onSubmit(of: .search) { open(query) }
+            .onSubmit(of: .search) { submit() }
             .task(id: query) {
                 suggestions = await model.suggest(query)
             }
@@ -43,6 +43,13 @@ private struct StoreSearch: View {
                     model.storePath.append(.answer(asked))
                 }
             }
+    }
+
+    // Closing the search after a suggestion's tap also submits the typed
+    // text, so a submit counts only while the search is still open.
+    private func submit() {
+        guard searching, pending == nil else { return }
+        open(query)
     }
 
     // The search closes before the answer is pushed: pushed from an open
@@ -135,6 +142,7 @@ private struct StartList: View {
                 if let note = model.home?.startNote {
                     Text(model.hasCards ? note.yours : note.every)
                         .foregroundStyle(Color.inkSecondary)
+                        .endsList()
                 }
             }
             .surfaceRows()

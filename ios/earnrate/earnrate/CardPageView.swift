@@ -201,7 +201,9 @@ struct CardPageView: View {
                 } header: {
                     SectionTitle("Issuer's pages")
                 } footer: {
-                    Text(page.checked).foregroundStyle(Color.inkSecondary)
+                    Text(page.checked)
+                        .foregroundStyle(Color.inkSecondary)
+                        .endsList(!held)
                 }
 
                 if held {

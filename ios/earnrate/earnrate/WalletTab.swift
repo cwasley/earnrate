@@ -106,7 +106,7 @@ private struct WalletList: View {
             SuggestionRows(suggestions: suggestions, open: openAnswer)
         }
         .autocorrectionDisabled()
-        .onSubmit(of: .search) { openAnswer(query) }
+        .onSubmit(of: .search) { submit() }
         .task(id: query) {
             suggestions = await model.suggest(query)
         }
@@ -169,7 +169,7 @@ private struct WalletList: View {
                 Section {
                     PocketCard(sheet: sheet) { model.walletPath.append(.answer($0)) }
                         .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                         .id(Self.sheetId)
                 }
             }
@@ -234,6 +234,13 @@ private struct WalletList: View {
         }
     }
     #endif
+
+    // Closing the search after a suggestion's tap also submits the typed
+    // text, so a submit counts only while the search is still open.
+    private func submit() {
+        guard searching, pending == nil else { return }
+        openAnswer(query)
+    }
 
     // The answer opens here, in My wallet; the search closes first, since an
     // answer pushed from an open search kept a blank title.
