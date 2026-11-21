@@ -62,12 +62,14 @@ private struct EmptyWallet: View {
                 .frame(maxWidth: .infinity)
             }
             .listRowBackground(Color.clear)
-            Section {
-                NavigationLink(value: Route.pastCards) {
-                    LabeledContent(model.walletHome.past.title, value: model.walletHome.past.count)
+            if model.walletHome.past.shown {
+                Section {
+                    NavigationLink(value: Route.pastCards) {
+                        LabeledContent(model.walletHome.past.title, value: model.walletHome.past.count)
+                    }
                 }
+                .surfaceRows()
             }
-            .surfaceRows()
         }
         .cardBackdrop(model.home?.welcome.art ?? [])
     }
@@ -208,8 +210,10 @@ private struct WalletList: View {
 
             Section {
                 Button(home.addCards, systemImage: "plus.circle") { model.addingCards = true }
-                NavigationLink(value: Route.pastCards) {
-                    LabeledContent(home.past.title, value: home.past.count)
+                if home.past.shown {
+                    NavigationLink(value: Route.pastCards) {
+                        LabeledContent(home.past.title, value: home.past.count)
+                    }
                 }
             }
             .surfaceRows()

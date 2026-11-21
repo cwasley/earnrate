@@ -8,26 +8,14 @@ import SwiftUI
 
 // A store or a kind of purchase, as the store search knows it: its id is
 // the words searched for ("Whole Foods Market", "Groceries").
-struct StoreEntity: AppEntity, IndexedEntity {
+struct StoreEntity: AppEntity {
     static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Store")
     static let defaultQuery = StoreQuery()
 
     let id: String
-    var detail: String?
-    var keywords: [String] = []
 
     var displayRepresentation: DisplayRepresentation {
-        if let detail {
-            DisplayRepresentation(title: "\(id)", subtitle: "\(detail)")
-        } else {
-            DisplayRepresentation(title: "\(id)")
-        }
-    }
-
-    var attributeSet: CSSearchableItemAttributeSet {
-        let set = defaultAttributeSet
-        set.keywords = keywords
-        return set
+        DisplayRepresentation(title: "\(id)")
     }
 }
 
@@ -220,10 +208,29 @@ struct BriefSnippet: View {
 // searching one opens its answer, and the cards in My wallet. Indexed on
 // the phone.
 enum Spotlight {
+    // Stores go in as plain items whose id is the answer's link, opened by
+    // the app's Spotlight handler. As StoreEntity, the Siri shortcut's
+    // parameter, a tapped store didn't open its answer.
     @discardableResult
     static func index(places: [Places.Place]) async -> Bool {
-        let entities = places.map { StoreEntity(id: $0.text, detail: $0.detail, keywords: $0.keywords) }
-        return (try? await CSSearchableIndex.default().indexAppEntities(entities)) != nil
+        let index = CSSearchableIndex.default()
+        // Clears stores dropped from the data, and the cards (indexed next).
+        try? await index.deleteAllSearchableItems()
+        let items = places.map { place in
+            let set = CSSearchableItemAttributeSet(contentType: .content)
+            set.title = place.text
+            set.contentDescription = place.detail
+            set.keywords = place.keywords
+            return CSSearchableItem(uniqueIdentifier: AppLink.answer(place.text).url.absoluteString, domainIdentifier: "places", attributeSet: set)
+        }
+        return (try? await index.indexSearchableItems(items)) != nil
+    }
+
+    static func link(_ activity: NSUserActivity) -> AppLink? {
+        guard let id = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+              let url = URL(string: id)
+        else { return nil }
+        return AppLink(url)
     }
 
     static func index(cards: [CardRow]) async {

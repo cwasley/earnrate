@@ -31,12 +31,12 @@ struct PocketCard: View {
                     Button {
                         open(query)
                     } label: {
-                        PocketRow(row: row)
+                        PocketRow(row: row, opens: true)
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(.isButton)
                 } else {
-                    PocketRow(row: row)
+                    PocketRow(row: row, opens: false)
                 }
             }
         }
@@ -50,8 +50,27 @@ struct PocketCard: View {
 
 private struct PocketRow: View {
     let row: WalletHome.Sheet.Row
+    let opens: Bool
 
     var body: some View {
+        HStack(spacing: 8) {
+            lines
+            // Kept, invisible, on a row that opens nothing, so the rates
+            // stay in one column.
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.inkSecondary)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                .opacity(opens ? 1 : 0)
+                .accessibilityHidden(true)
+        }
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+
+    private var lines: some View {
         VStack(alignment: .leading, spacing: 3) {
             // A purchase none of the cards earn on has no figure, so no dots.
             if row.rate.isEmpty {
@@ -82,10 +101,7 @@ private struct PocketRow: View {
                 }
             }
         }
-        .padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
     }
 
     private var label: some View {

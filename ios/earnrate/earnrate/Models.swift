@@ -373,6 +373,7 @@ struct WalletHome: Decodable {
     struct Past: Decodable {
         let title: String
         let count: String
+        let shown: Bool
     }
 
     let searchPrompt: String
@@ -399,7 +400,7 @@ struct WalletHome: Decodable {
 
     static let empty = WalletHome(
         searchPrompt: "", todoTitle: "", todoShown: 3, todoMore: nil, todoFewer: "", todo: [], notes: [], sheet: nil, cardsTitle: "",
-        cards: [], addCards: "", past: Past(title: "", count: ""), settings: "", problems: [], reminderOffer: nil
+        cards: [], addCards: "", past: Past(title: "", count: "", shown: false), settings: "", problems: [], reminderOffer: nil
     )
 }
 

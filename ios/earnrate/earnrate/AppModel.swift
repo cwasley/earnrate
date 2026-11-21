@@ -87,7 +87,7 @@ enum AppTab: Hashable {
     private static let dataCheckedKey = "cardDataChecked"
     private static let remindersKey = "remindersOn"
     private static let reminderOfferKey = "reminderOfferAnswered"
-    private static let indexedKey = "spotlightIndexedData"
+    private static let indexedKey = "spotlightIndexedPlaces"
     private static let recentsKept = 8
 
     var isReady: Bool {
@@ -745,15 +745,16 @@ enum AppTab: Hashable {
         await ReminderSchedule.replace(with: list.reminders)
     }
 
-    // Every store once per card data release; the saved cards each time.
+    // Every store once per card data release; the saved cards each time,
+    // after the stores, since indexing those clears the index.
     private func indexSpotlight() async {
+        if UserDefaults.standard.string(forKey: Self.indexedKey) != dataVersion,
+           let data = try? await raw("places", [:], wallet: false, worker: true),
+           let list = try? JSONDecoder().decode(Places.self, from: data),
+           await Spotlight.index(places: list.places) {
+            UserDefaults.standard.set(dataVersion, forKey: Self.indexedKey)
+        }
         await Spotlight.index(cards: walletCards)
-        guard UserDefaults.standard.string(forKey: Self.indexedKey) != dataVersion,
-              let data = try? await raw("places", [:], wallet: false, worker: true),
-              let list = try? JSONDecoder().decode(Places.self, from: data),
-              await Spotlight.index(places: list.places)
-        else { return }
-        UserDefaults.standard.set(dataVersion, forKey: Self.indexedKey)
     }
 }
 

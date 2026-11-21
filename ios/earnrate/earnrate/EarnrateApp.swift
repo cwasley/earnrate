@@ -1,3 +1,4 @@
+import CoreSpotlight
 import SwiftUI
 import WidgetKit
 
@@ -12,6 +13,9 @@ import WidgetKit
                 .task { await model.start() }
                 .onOpenURL { url in
                     if let link = AppLink(url) { model.go(.link(link)) }
+                }
+                .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                    if let link = Spotlight.link(activity) { model.go(.link(link)) }
                 }
         }
     }

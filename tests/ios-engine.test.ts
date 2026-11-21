@@ -941,6 +941,45 @@ describe('phase 2: widgets, Siri, Spotlight and reminders', () => {
     expect(reminders({ wallet: null, today: day }).reminders).toEqual([])
   })
 
+  test('an activation not open yet joins the to-do the day it opens', () => {
+    const wallet = walletWith(['chase-freedom-flex'])
+    const rows = (day: string) =>
+      walletHome({ wallet, today: day })
+        .todo.filter((t) => t.focus === 'activations')
+        .map((t) => [t.title, t.when])
+    expect(rows('2026-11-19')).toEqual([
+      ['Activate bonus: grocery stores, restaurants and 1 more', 'by Dec 14'],
+    ])
+    expect(rows('2026-12-14')).toEqual([
+      ['Activate bonus: grocery stores, restaurants and 1 more', 'by Dec 14'],
+    ])
+    expect(rows('2026-12-15')).toEqual([
+      ['Activate bonus: grocery stores and 1 more', null],
+    ])
+    const opens = reminders({ wallet, today: '2026-11-19' }).reminders.find(
+      (r) => r.title.startsWith('Activate Q1'),
+    )
+    expect(opens).toMatchObject({ due: '2026-12-15', remindOn: '2026-12-15' })
+    expect(
+      cardSettings({ wallet, id: 'chase-freedom-flex', today }).activations,
+    ).toContainEqual(expect.objectContaining({ opens: 'Opens Dec 15' }))
+  })
+
+  test("Cards you've had waits for a card or a past card", () => {
+    const empty = { version: 1, cards: [] }
+    expect(walletHome({ wallet: empty, today }).past.shown).toBe(false)
+    expect(walletHome({ wallet: null, today }).past.shown).toBe(false)
+    expect(
+      walletHome({
+        wallet: { ...empty, past_cards: [{ id: 'amex-gold' }] },
+        today,
+      }).past,
+    ).toMatchObject({ shown: true, count: '1 card' })
+    expect(
+      walletHome({ wallet: walletWith(['amex-gold']), today }).past.shown,
+    ).toBe(true)
+  })
+
   test('the offer to remind shows only with a deadline in the to-do', () => {
     const dated = walletWith(['chase-freedom-flex'])
     expect(walletHome({ wallet: dated, today }).reminderOffer?.yes).toBe(

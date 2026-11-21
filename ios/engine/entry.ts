@@ -1471,7 +1471,9 @@ export type WalletHome = {
     action: string
   }[]
   addCards: string
-  past: { title: string; count: string }
+  // Hidden while there are no cards and no past cards: Bonus rules links
+  // to the list for someone who wants to add those first.
+  past: { title: string; count: string; shown: boolean }
   settings: string
   problems: string[]
   // Asked once, beside the to-do, when something in it has a deadline a
@@ -1499,6 +1501,14 @@ const focusOf = (kind: string): TodoRow['focus'] => {
       return null
   }
 }
+
+// An activation the issuer hasn't opened yet waits off the to-do until the
+// day it opens; its reminder is set for that morning.
+const notOpenYet = (item: ChecklistRowItem, today: string) =>
+  item.kind === 'activate' &&
+  item.row.when?.startsWith('from ') === true &&
+  item.due !== null &&
+  item.due > today
 
 // Rows past these wait behind "N more"; the list is
 // soonest first.
@@ -1528,6 +1538,7 @@ export function walletHome(request: {
     past: {
       title: "Cards you've had",
       count: past.length === 0 ? 'None' : cardCount(past.length),
+      shown: past.length > 0 || (wallet?.cards.length ?? 0) > 0,
     },
     settings: 'Settings',
     problems,
@@ -1543,7 +1554,9 @@ export function walletHome(request: {
       sheet: null,
       cards: [],
     }
-  const items = checklistRows(c, wallet, today, undefined, shortName)
+  const items = checklistRows(c, wallet, today, undefined, shortName).filter(
+    (i) => !notOpenYet(i, today),
+  )
   const todo = items
     .filter((i) => i.row.note !== true)
     .map((i): TodoRow => ({
