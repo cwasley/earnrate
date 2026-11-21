@@ -166,7 +166,8 @@
           accepts it, and sends it back. It doesn't keep what you sent or the
           pass, request logging is turned off, and Cloudflare limits how many
           passes one IP address can make per minute. It counts passes made and
-          refused, with the kind of device, and nothing about the pass.
+          refused, with the kind of device, and nothing about the pass; passes
+          made from the iPhone app aren't counted.
         </p>
         <p>
           The pass then lives in Apple Wallet on your device, under Apple's
@@ -547,8 +548,8 @@
           names you gave them, your memberships and today's date. No spending
           amounts, searches, card numbers or purchases you recorded. The request
           carries no cookies or account, and says only that it comes from the
-          iPhone app, so the server can count passes by kind of device. The
-          server makes the pass and keeps nothing, as
+          iPhone app, so the server leaves it out of its counts. The server
+          makes the pass and keeps nothing, as
           <a href="#pass">The Apple Wallet pass</a> describes, and the app hands
           the pass to Apple Wallet. Sharing the cheat sheet as a picture draws
           it on the phone, with only what the sheet shows, and it goes only

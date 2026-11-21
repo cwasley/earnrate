@@ -320,7 +320,7 @@ describe('the cheat-sheet pass', () => {
     expect(keys).toEqual(['160.79.105.20'])
   })
 
-  test("the iPhone app's request makes a pass, counted as an iPhone's", async () => {
+  test("the iPhone app's request makes a pass and isn't counted", async () => {
     useCatalog(catalog)
     const wallet = WalletSchema.parse({
       version: 1,
@@ -364,7 +364,7 @@ describe('the cheat-sheet pass', () => {
     )
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('application/vnd.apple.pkpass')
-    expect(points.map((p) => p.blobs)).toEqual([['pass-made', 'iphone']])
+    expect(points).toEqual([])
   })
 
   test('the Worker refuses what it can’t make a pass from', async () => {

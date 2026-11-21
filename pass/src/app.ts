@@ -27,13 +27,16 @@ export type PassEnv = {
   PASS_KEY_PEM?: string
   WWDR_PEM?: string
   LIMITER?: RateLimit // per IP
-  // Counts 'pass-made' and refusals by status, with the kind of device.
+  // Counts 'pass-made' and refusals by status, with the kind of device,
+  // except for the iPhone app's requests.
   USAGE?: {
     writeDataPoint(point: { blobs?: string[]; indexes?: string[] }): void
   }
 }
 
 const MAX_FORM = 16 * 1024
+// Sent by PassRequest.swift; keep the two in step.
+export const APP_AGENT = 'earnrate (iPhone)'
 const WALLET_PAGE = 'https://earnrate.dev/#wallet'
 
 const text = (status: number, body: string) =>
@@ -65,12 +68,18 @@ export function makePassWorker(deps: {
   return {
     async fetch(request: Request, env: PassEnv): Promise<Response> {
       const response = await make(request, env)
-      if (request.method === 'POST' && new URL(request.url).pathname === '/') {
+      const agent = request.headers.get('user-agent') ?? ''
+      // The iPhone app promises no analytics, so its passes go uncounted.
+      if (
+        request.method === 'POST' &&
+        new URL(request.url).pathname === '/' &&
+        agent !== APP_AGENT
+      ) {
         const label =
           response.status === 200
             ? 'pass-made'
             : `pass-refused:${String(response.status)}`
-        const device = deviceOf(request.headers.get('user-agent') ?? '')
+        const device = deviceOf(agent)
         env.USAGE?.writeDataPoint({ blobs: [label, device], indexes: [label] })
       }
       return response
