@@ -162,9 +162,11 @@
 
 - id: department_store
   name: Department stores
+  aliases: [department store, dept store, dept stores]
   mccs: [5311]
 - id: clothing
   name: Clothing stores
+  aliases: [clothes, clothing, apparel, clothes store, apparel store]
   mccs: [5621, 5651, 5691]
 - id: electronics
   name: Electronics stores

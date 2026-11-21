@@ -2,6 +2,16 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.20.1
+
+No rates changed. More clothing, off-price and shoe stores, so the stores people shop at most are found by name:
+
+- Off-price stores: T.J. Maxx, Marshalls, Sierra, Ross Dress for Less and Burlington count as clothing stores, and HomeGoods as a store with no bonus category. Each may post as a department store instead (Sierra also as a sporting goods store), and the answer says so. U.S. Bank's Cash+ list of department stores (https://cashplus.usbank.com/cash-plus/samplemerchants) names none of them, and company filings put TJX and Ross under family clothing stores and Burlington under department stores, so earnrate doesn't promise a department store bonus there.
+- Clothing stores: Tillys, Aerie, Victoria's Secret, Primark and Adidas.
+- Shoe stores: Foot Locker and Famous Footwear, with no bonus category in store; their websites count as online retail, as DSW's does.
+- More names for stores earnrate already knew: "t.j. maxx" style spellings, "bloomies", "neimans", "j. crew", "h & m", "super target", "5 below", "bath and body", and the websites of Macy's, Gap, Old Navy, Uniqlo, Zara and H&M.
+- "Clothes", "apparel" and "clothes store" find clothing stores, and "dept store" finds department stores.
+
 ## 2026.11.20
 
 No rates changed. Supermarkets now record the kinds of store people take for supermarkets that issuers leave out of them (`excludes: [superstore, warehouse_club]` on `grocery.supermarket`; earnrate already kept them in categories of their own). An answer about supermarkets says so: "Ranks purchases at supermarkets; superstores and warehouse clubs don't count." When it was asked as "groceries", that line sits under the title "Groceries".

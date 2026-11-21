@@ -3,6 +3,48 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.20.1'
+  date: 2026-11-20
+  changes:
+    - cause: addition
+      merchants: [burlington, homegoods, marshalls, ross, sierra, tj-maxx]
+      summary: Off-price stores. Each may post as a department store, though U.S. Bank's Cash+ list of department stores doesn't name it.
+      source: https://cashplus.usbank.com/cash-plus/samplemerchants
+    - cause: addition
+      merchants:
+        [
+          adidas,
+          aerie,
+          famous-footwear,
+          foot-locker,
+          primark,
+          tillys,
+          victorias-secret,
+        ]
+      summary: Clothing and shoe stores people shop at most.
+    - cause: addition
+      merchants:
+        [
+          bath-and-body-works,
+          bloomingdales,
+          five-below,
+          h-and-m,
+          j-crew,
+          lululemon,
+          neiman-marcus,
+          target,
+        ]
+      field: aliases
+      summary: More of the names people type for stores earnrate already knew ("bloomies", "j. crew", "super target").
+    - cause: addition
+      merchants: [gap, h-and-m, macys, old-navy, uniqlo, zara]
+      field: domains
+      summary: Their websites find them.
+    - cause: addition
+      categories: [clothing, department_store]
+      field: aliases
+      summary: '"Clothes" and "apparel" find clothing stores; "dept store" finds department stores.'
+
 - version: '2026.11.20'
   date: 2026-11-20
   changes:

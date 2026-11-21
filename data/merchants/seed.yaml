@@ -1248,7 +1248,11 @@
   category: entertainment
 
 # Shopping
-- { id: macys, name: "Macy's", aliases: [macys], category: department_store }
+- id: macys
+  name: "Macy's"
+  aliases: [macys]
+  domains: [macys.com]
+  category: department_store
 - {
     id: nordstrom,
     name: Nordstrom,
@@ -1268,11 +1272,15 @@
     domains: [kohls.com],
     category: department_store,
   }
-- { id: uniqlo, name: Uniqlo, category: clothing }
-- { id: gap, name: Gap, category: clothing }
-- { id: old-navy, name: Old Navy, category: clothing }
-- { id: h-and-m, name: H&M, aliases: [h and m], category: clothing }
-- { id: zara, name: Zara, category: clothing }
+- { id: uniqlo, name: Uniqlo, domains: [uniqlo.com], category: clothing }
+- { id: gap, name: Gap, domains: [gap.com], category: clothing }
+- { id: old-navy, name: Old Navy, domains: [oldnavy.com], category: clothing }
+- id: h-and-m
+  name: H&M
+  aliases: [h and m, h & m, hm]
+  domains: [hm.com]
+  category: clothing
+- { id: zara, name: Zara, domains: [zara.com], category: clothing }
 - {
     id: aeropostale,
     name: Aeropostale,
@@ -1314,7 +1322,7 @@
 - {
     id: j-crew,
     name: J.Crew,
-    aliases: [jcrew, j crew],
+    aliases: [jcrew, j crew, j. crew],
     domains: [jcrew.com],
     category: clothing,
   }
@@ -1381,7 +1389,7 @@
 - {
     id: bloomingdales,
     name: "Bloomingdale's",
-    aliases: [bloomingdales],
+    aliases: [bloomingdales, bloomies],
     domains: [bloomingdales.com],
     category: department_store,
   }
@@ -1402,7 +1410,7 @@
 - {
     id: lululemon,
     name: Lululemon,
-    aliases: [lululemon athletica],
+    aliases: [lululemon athletica, lulu lemon],
     domains: [lululemon.com],
     category: clothing,
   }
@@ -1555,6 +1563,7 @@
 - {
     id: five-below,
     name: Five Below,
+    aliases: [5 below],
     domains: [fivebelow.com],
     category: other,
   }
@@ -1567,6 +1576,7 @@
   }
 - id: neiman-marcus
   name: Neiman Marcus
+  aliases: [neimans, neiman]
   domains: [neimanmarcus.com]
   category: department_store
 - id: von-maur
@@ -1622,6 +1632,26 @@
 - id: hot-topic
   name: Hot Topic
   domains: [hottopic.com]
+  category: clothing
+- id: tillys
+  name: Tillys
+  domains: [tillys.com]
+  category: clothing
+- id: aerie
+  name: Aerie
+  aliases: [aerie by american eagle]
+  category: clothing
+- id: victorias-secret
+  name: "Victoria's Secret"
+  aliases: [victorias secret, victoria secret]
+  domains: [victoriassecret.com]
+  category: clothing
+- id: primark
+  name: Primark
+  category: clothing
+- id: adidas
+  name: Adidas
+  domains: [adidas.com]
   category: clothing
 - id: monoprice
   name: Monoprice

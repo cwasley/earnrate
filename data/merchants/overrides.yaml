@@ -180,6 +180,7 @@
   note: Supercenters can carry a supermarket MCC, but Amex and Chase exclude Walmart from grocery bonuses by name.
 - id: target
   name: Target
+  aliases: [super target, supertarget]
   domains: [target.com]
   category: superstore
 
@@ -1040,7 +1041,7 @@
   note: A tire store, with no bonus category in store. Its website counts as online retail.
 - id: bath-and-body-works
   name: Bath & Body Works
-  aliases: [bath and body works]
+  aliases: [bath and body works, bath and body, bath & body]
   domains: [bathandbodyworks.com]
   category: other
   online:
@@ -1065,6 +1066,21 @@
   name: DSW
   aliases: [designer shoe warehouse]
   domains: [dsw.com]
+  category: other
+  online:
+    category: online_retail
+  note: A shoe store, with no bonus category in store. Its website counts as online retail.
+- id: foot-locker
+  name: Foot Locker
+  aliases: [footlocker]
+  domains: [footlocker.com]
+  category: other
+  online:
+    category: online_retail
+  note: A shoe store, with no bonus category in store. Its website counts as online retail.
+- id: famous-footwear
+  name: Famous Footwear
+  domains: [famousfootwear.com]
   category: other
   online:
     category: online_retail
@@ -1427,6 +1443,56 @@
   domains: [daisous.com]
   category: other
   note: 'Codes as a discount store, which issuers leave out of grocery bonuses.'
+
+# Off-price stores. TJX and Ross file as family clothing stores (SIC 5651),
+# Burlington as a department store (5311), but filings don't set a store's
+# MCC (Nordstrom files as 5651 and U.S. Bank lists it as a department store).
+# None is on U.S. Bank's Cash+ department store list, so none is taken to be one.
+- id: tj-maxx
+  name: T.J. Maxx
+  aliases: [tj maxx, tjmaxx, t.j.maxx, t j maxx, tj max, t.j. max]
+  domains: [tjmaxx.com, tjmaxx.tjx.com]
+  category: clothing
+  ambiguity:
+    may_code_as: [department_store]
+    note: "T.J. Maxx is an off-price store that sells mostly clothing. U.S. Bank doesn't name it among Cash+'s department stores, so check your statement before counting on a department store bonus there."
+- id: marshalls
+  name: Marshalls
+  aliases: [marshals]
+  domains: [marshalls.com]
+  category: clothing
+  ambiguity:
+    may_code_as: [department_store]
+    note: "Marshalls is an off-price store that sells mostly clothing. U.S. Bank doesn't name it among Cash+'s department stores, so check your statement before counting on a department store bonus there."
+- id: homegoods
+  name: HomeGoods
+  aliases: [home goods]
+  category: other
+  ambiguity:
+    may_code_as: [department_store]
+    note: "HomeGoods is T.J. Maxx's off-price home decor store. U.S. Bank doesn't name it among Cash+'s department stores, so check your statement before counting on a department store bonus there."
+- id: sierra
+  name: Sierra
+  aliases: [sierra trading post]
+  domains: [sierra.com]
+  category: clothing
+  ambiguity:
+    may_code_as: [department_store, sporting_goods]
+    note: "Sierra is T.J. Maxx's off-price outdoor clothing and gear store. Check your statement before counting on a department store or sporting goods bonus there."
+- id: ross
+  name: Ross Dress for Less
+  aliases: [ross, ross stores, ross dress 4 less]
+  category: clothing
+  ambiguity:
+    may_code_as: [department_store]
+    note: "Ross is an off-price store that sells mostly clothing. U.S. Bank doesn't name it among Cash+'s department stores, so check your statement before counting on a department store bonus there."
+- id: burlington
+  name: Burlington
+  aliases: [burlington coat factory, burlington stores]
+  category: clothing
+  ambiguity:
+    may_code_as: [department_store]
+    note: "Burlington is an off-price store that sells mostly clothing. U.S. Bank doesn't name it among Cash+'s department stores, so check your statement before counting on a department store bonus there."
 
 # Auto service
 - id: jiffy-lube
