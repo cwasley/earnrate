@@ -251,8 +251,7 @@ export function reportWallet(
   }
 }
 
-// A no-fee card anyone can get that pays one rate on everything: any higher
-// rate is for a membership tier, a way of paying, or a booking site.
+// A no-fee card anyone can get that pays one rate on everything.
 export function flatRateCard(
   catalog: Catalog,
   card: Card,
@@ -262,10 +261,16 @@ export function flatRateCard(
     card.annual_fee !== 0 ||
     card.requires_membership !== undefined ||
     card.network === 'store' ||
-    card.applications_closed !== undefined ||
-    card.choices.length > 0
+    card.applications_closed !== undefined
   )
     return false
+  return oneRate(catalog, card, today)
+}
+
+// One rate on everything, fee or not: any higher rate is for a membership
+// tier, a way of paying, or a booking site.
+export function oneRate(catalog: Catalog, card: Card, today: string): boolean {
+  if (card.choices.length > 0) return false
   return card.rules.every((rule) => {
     if (!inEffect(rule, today) || rule.rate <= card.base_rate) return true
     const { any, categories, mccs, choice, merchants } = rule.match

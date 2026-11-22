@@ -69,7 +69,7 @@ struct CardQuery: EntityQuery {
 
 struct WhichCardIntent: AppIntent {
     static let title: LocalizedStringResource = "Which Card at a Store"
-    static let description = IntentDescription("The card that earns the most at a store or on a kind of purchase: from your cards, or from every card until you add yours.")
+    static let description = IntentDescription("Finds the card that earns the most at a store or on a kind of purchase. It picks from your cards, or from every card until you add yours.")
     static let supportedModes: IntentModes = .background
     // The wallet is saved with complete file protection, readable only
     // while the phone is unlocked.
@@ -252,7 +252,7 @@ enum Spotlight {
         reason: "4x Amex Membership Rewards at supermarkets",
         art: CardArt(color: "#d4af6a", chip: "#d9c08a", light: true),
         note: nil,
-        spoken: "Use Amex Gold at Whole Foods Market: 4% back, 4x Amex Membership Rewards at supermarkets."
+        spoken: "Use Amex Gold at Whole Foods Market. It earns 4% back, 4x Amex Membership Rewards at supermarkets."
     ))
     .padding()
 }

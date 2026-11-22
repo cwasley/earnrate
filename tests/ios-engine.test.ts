@@ -131,7 +131,12 @@ describe('the iPhone app bridge', () => {
     expect(a.rows.map((r) => r.card.id)).toEqual(
       rec.ranked.slice(1).map((r) => r.cardId),
     )
-    expect(a.rows[0]?.reason).toBe('2% cash back, its base rate')
+    expect(a.rows[0]?.reason).toBe('2% cash back on everything')
+    const plain = answer({ query: 'Walgreens', wallet: held, today })
+    expect(
+      plain.rows.find((r) => r.card.id === 'amex-gold')?.reason ??
+        plain.pick?.reason,
+    ).toBe('1x Amex Membership Rewards on everything else')
     expect(a.rows[0]?.why).toEqual(rec.ranked[1]?.reasoning)
   })
 
@@ -487,6 +492,7 @@ describe('the iPhone app bridge', () => {
     let wallet = walletWith(['chase-sapphire-preferred'])
     const s = walletSettings({ wallet })
     expect(s.toggles).toEqual([])
+    expect(s.othersTitle).toBe('Memberships')
     expect(s.otherToggles.map((t) => t.id)).toContain('amazon-prime')
     expect(s.points?.values.map((v) => v.id)).toEqual(['UR'])
     wallet = ok(
@@ -506,6 +512,7 @@ describe('the iPhone app bridge', () => {
     wallet = ok(editSettings({ wallet, edit: { transfer: true } }))
     const after = walletSettings({ wallet })
     expect(after.toggles.find((t) => t.id === 'amazon-prime')?.on).toBe(true)
+    expect(after.othersTitle).toBe('Other memberships')
     expect(after.menus[0]?.selected).toBe('bofa-rewards-premier')
     expect(after.points?.transfer?.on).toBe(true)
     expect(after.points?.values[0]?.own).toBe(true)
@@ -870,11 +877,11 @@ describe('phase 2: widgets, Siri, Spotlight and reminders', () => {
       note: null,
     })
     expect(yours.spoken).toBe(
-      'Use Amex Gold at Whole Foods Market: 4% back, 4x Amex Membership Rewards at supermarkets.',
+      'Use Amex Gold at Whole Foods Market. It earns 4% back, 4x Amex Membership Rewards at supermarkets.',
     )
     const every = brief({ query: 'groceries', today })
     expect(every.spoken).toMatch(
-      /^The best card for groceries is .+: \d+% back, /,
+      /^The best card for groceries is .+\. It earns \d+% back, /,
     )
     expect(every.note).toMatch(/every personal card/)
     const unknown = brief({ query: 'Joes Bait Shop', today })
@@ -1001,7 +1008,7 @@ describe('the answer options and the wallet extras', () => {
     expect(unsure.purchase.summary).toBe('This purchase')
     expect(unsure.purchase.paying.map((p) => p.label)).toEqual([
       'Not sure',
-      'Card',
+      'Card (tap or swipe)',
       'Apple Pay',
       'PayPal',
     ])
@@ -1012,6 +1019,9 @@ describe('the answer options and the wallet extras', () => {
         text: 'With Apple Pay? Apple Card earns 3% cash back here.',
       },
     ])
+    const paying = unsure.footer.find((l) => l.startsWith('With Apple Pay'))
+    expect(paying).toMatch(/ Pick it under This purchase to count it\.$/)
+    expect(unsure.footer.join(' ')).not.toMatch(/Say how you're paying/)
     const paid = answer({
       query: 'Walgreens',
       wallet,
@@ -1245,6 +1255,12 @@ describe('answers say why where the pick is', () => {
     expect(a.pick?.cardId).toBe(id)
     expect(a.pick?.because).toMatch(/welcome bonus/)
     expect(a.callouts).not.toContain(a.pick?.because)
+    expect(brief({ query: 'Walgreens', wallet, today })).toMatchObject({
+      label: 'Use, for its welcome bonus',
+      spoken: expect.stringMatching(
+        /^Use Chase Sapphire Preferred at Walgreens for its welcome bonus\. It earns /,
+      ) as unknown,
+    })
     const plain = answer({
       query: 'Walgreens',
       wallet: walletWith([id]),

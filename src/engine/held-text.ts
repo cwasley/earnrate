@@ -164,7 +164,7 @@ export const creditWorth = (c: CreditChoice) =>
       : `${wholeDollars(c.yearly)}/yr`
 
 export const PAST_CARDS_LEAD =
-  "Issuers limit who can earn a card's sign-up bonus again. Add cards you've closed, and next-card answers say when you can."
+  "Issuers limit who can earn a card's welcome bonus again. Add cards you've closed, and next-card answers say when you can."
 
 export const TRANSFER_POINTS_ASK = 'I transfer points to airlines and hotels'
 export const POINT_VALUE_RANGE = 'From 0.1¢ to 5¢ a point.'

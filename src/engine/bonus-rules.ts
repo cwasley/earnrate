@@ -5,7 +5,7 @@ import type { Card } from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import { repeatRuleParts } from './repeat-bonus.ts'
 
-export const BONUS_RULES_TITLE = "Can you get a card's sign-up bonus again?"
+export const BONUS_RULES_TITLE = "Can you get a card's welcome bonus again?"
 export const BONUS_RULES_SHORT = 'Bonus rules'
 export const BONUS_RULES_COLUMN = 'Can you get it again?'
 export const BONUS_RULE_NOT_STATED = 'Not stated'

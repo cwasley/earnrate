@@ -1455,7 +1455,7 @@
   category: clothing
   ambiguity:
     may_code_as: [department_store]
-    note: "T.J. Maxx is an off-price store that sells mostly clothing. U.S. Bank doesn't name it among Cash+'s department stores, so check your statement before counting on a department store bonus there."
+    note: 'T.J. Maxx is an off-price store that sells mostly clothing. It may not count as a department store, so check your statement before counting on a department store bonus there.'
 - id: marshalls
   name: Marshalls
   aliases: [marshals]
@@ -1463,14 +1463,14 @@
   category: clothing
   ambiguity:
     may_code_as: [department_store]
-    note: "Marshalls is an off-price store that sells mostly clothing. U.S. Bank doesn't name it among Cash+'s department stores, so check your statement before counting on a department store bonus there."
+    note: 'Marshalls is an off-price store that sells mostly clothing. It may not count as a department store, so check your statement before counting on a department store bonus there.'
 - id: homegoods
   name: HomeGoods
   aliases: [home goods]
   category: other
   ambiguity:
     may_code_as: [department_store]
-    note: "HomeGoods is T.J. Maxx's off-price home decor store. U.S. Bank doesn't name it among Cash+'s department stores, so check your statement before counting on a department store bonus there."
+    note: "HomeGoods is T.J. Maxx's off-price home decor store. It may not count as a department store, so check your statement before counting on a department store bonus there."
 - id: sierra
   name: Sierra
   aliases: [sierra trading post]
@@ -1485,14 +1485,14 @@
   category: clothing
   ambiguity:
     may_code_as: [department_store]
-    note: "Ross is an off-price store that sells mostly clothing. U.S. Bank doesn't name it among Cash+'s department stores, so check your statement before counting on a department store bonus there."
+    note: 'Ross is an off-price store that sells mostly clothing. It may not count as a department store, so check your statement before counting on a department store bonus there.'
 - id: burlington
   name: Burlington
   aliases: [burlington coat factory, burlington stores]
   category: clothing
   ambiguity:
     may_code_as: [department_store]
-    note: "Burlington is an off-price store that sells mostly clothing. U.S. Bank doesn't name it among Cash+'s department stores, so check your statement before counting on a department store bonus there."
+    note: 'Burlington is an off-price store that sells mostly clothing. It may not count as a department store, so check your statement before counting on a department store bonus there.'
 
 # Auto service
 - id: jiffy-lube

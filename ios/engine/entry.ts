@@ -262,6 +262,7 @@ import {
   NONE_OF_YOURS,
   onlineAssumption,
   pairCreditsUsedText,
+  paymentUnknownText,
   pct,
   placeKindAsk,
   shopperAssumptions,
@@ -277,6 +278,7 @@ import {
 } from '../../src/engine/text.ts'
 import type { MerchantResolution, RankedCard } from '../../src/engine/types.ts'
 import { cardValuation, currencyValuation } from '../../src/engine/valuation.ts'
+import { oneRate } from '../../src/engine/wallet-report.ts'
 import { wherePhrase } from '../../src/engine/wallet-summary.ts'
 import {
   addToWallet,
@@ -428,9 +430,9 @@ export function home(): Home {
       title: 'earnrate',
       lead: 'Know which card to use at every store, and why.',
       privacy:
-        'Your cards stay on this phone. No account, and never a card number.',
+        "Your cards stay on this phone. You don't need an account, and earnrate never asks for a card number.",
       add: 'Add my cards',
-      skip: 'Just check a store',
+      skip: 'Check a store',
       art: ['chase-sapphire-preferred', 'amex-gold']
         .filter((id) => names().cards.has(id))
         .map(artOf),
@@ -442,8 +444,7 @@ export function home(): Home {
     startNote: {
       yours:
         'Answers rank the cards in My wallet. You can switch to every card on any answer.',
-      every:
-        'Answers cover every card earnrate knows until you add yours in My wallet.',
+      every: 'Answers cover every card earnrate knows until you add yours.',
     },
     working: { setups: BEST_SETUPS_WORKING },
     held: ANSWER_LABELS.held,
@@ -614,6 +615,10 @@ export type RecordAsk = {
   done: string
 }
 
+// The menu's own word for paying with the card itself. The site keeps
+// "Card": its segmented control has no room for more at phone width.
+const CARD_ITSELF = 'Card (tap or swipe)'
+
 function purchaseOptions(
   payment: PaymentMethod | null,
   abroad: boolean,
@@ -631,7 +636,10 @@ function purchaseOptions(
     summary: set.length === 0 ? THIS_PURCHASE : set.join(' · '),
     active: set.length > 0,
     payingTitle: PAYING_WITH,
-    paying: PAYING_CHOICES.map((p) => ({ id: p.value, label: p.label })),
+    paying: PAYING_CHOICES.map((p) => ({
+      id: p.value,
+      label: p.value === 'card' ? CARD_ITSELF : p.label,
+    })),
     payment,
     abroadLabel: ABROAD_LABEL,
     abroad,
@@ -654,7 +662,7 @@ function recordAsk(
     label: 'I used it',
     cards: wallet.cards.map((h) => h.id),
     title: 'I used it',
-    lead: "Counts it toward the card's caps, welcome bonus, spend bonuses and credits in My wallet.",
+    lead: "Adds it to what you've spent on this card, so earnrate can keep track of its bonus limits, welcome bonus and credits.",
     amountLabel: 'Amount',
     amount,
     button: 'Record it',
@@ -665,6 +673,14 @@ function recordAsk(
 }
 
 const TOP = 8
+
+// The engine's way-of-paying note ends by asking Claude's user to say how
+// they're paying; in the app it's a pick.
+const PAYING_ASK = (() => {
+  const line = paymentUnknownText('', 'card', '', '')
+  return line.slice(line.lastIndexOf('. ') + 2)
+})()
+const PAYING_PICK = `Pick it under ${THIS_PURCHASE} to count it.`
 
 // "as a streaming service, bought online", as the site's answer heading says.
 function countsAs(c: Catalog, m: MerchantResolution): string {
@@ -680,23 +696,31 @@ function titleOf(c: Catalog, m: MerchantResolution): string {
 }
 
 // The rule that earned the rate, in a few words: "4x Amex Membership Rewards
-// at supermarkets", or "2% cash back, its base rate".
-function shortReason(r: RankedCard): string {
+// at supermarkets", or "2% cash back on everything".
+function shortReason(r: RankedCard, today: string): string {
   const c = loaded()
   const card = cardOf(r.cardId)
   const rule = card.rules.find((x) => x.id === r.matchedRule)
-  return rule === undefined
-    ? `${earnText(c, card.base_rate, r.currency)}, its base rate`
-    : `${earnText(c, rule.rate, r.currency)} ${wherePhrase(c, card, [rule])}`
+  if (rule !== undefined)
+    return `${earnText(c, rule.rate, r.currency)} ${wherePhrase(c, card, [rule])}`
+  const base = earnText(c, card.base_rate, r.currency)
+  return oneRate(c, card, today)
+    ? `${base} on everything`
+    : `${base} on everything else`
 }
 
-function everyRow(e: ExploreEntry, rank: number, held: Set<string>): AnswerRow {
+function everyRow(
+  e: ExploreEntry,
+  rank: number,
+  held: Set<string>,
+  today: string,
+): AnswerRow {
   const { requirementLines, issuerName, feeLabel } = names()
   return {
     rank,
     card: cardRow(e.cardId, held),
     rate: pct(e.effectiveReturnPct),
-    reason: shortReason(e),
+    reason: shortReason(e, today),
     lines: [
       ...requirementLines(e.cardId, e.requirements),
       `${issuerName(e.issuer)} · ${feeLabel(e.cardId, { membership: e.needsMembership !== null })}`,
@@ -706,12 +730,17 @@ function everyRow(e: ExploreEntry, rank: number, held: Set<string>): AnswerRow {
   }
 }
 
-function yourRow(r: RankedCard, rank: number, held: Set<string>): AnswerRow {
+function yourRow(
+  r: RankedCard,
+  rank: number,
+  held: Set<string>,
+  today: string,
+): AnswerRow {
   return {
     rank,
     card: cardRow(r.cardId, held),
     rate: pct(r.effectiveReturnPct),
-    reason: shortReason(r),
+    reason: shortReason(r, today),
     lines: r.credit ? [creditShort(r.credit, r.credit.dollars)] : [],
     warnings: r.warnings,
     why: r.reasoning,
@@ -786,7 +815,13 @@ export function answer(request: {
   }
   const footerOf = (m: MerchantResolution, assumptions: string[]) => {
     const scope = askedScope(c, m)
-    return shopperAssumptions(assumptions).filter((a) => a !== scope)
+    return shopperAssumptions(assumptions)
+      .filter((a) => a !== scope)
+      .map((a) =>
+        a.endsWith(PAYING_ASK)
+          ? `${a.slice(0, -PAYING_ASK.length)}${PAYING_PICK}`
+          : a,
+      )
   }
   // On a phone the kinds of places are right there to tap, so the engine's
   // "give its category" warning gives way to one that says to tap.
@@ -818,7 +853,7 @@ export function answer(request: {
     const decided = rec.decision
     const top = rec.ranked.find((r) => r.cardId === decided?.cardId)
     const only = noteOnly(rec)
-    const rows = rec.ranked.map((r, i) => yourRow(r, i + 1, held))
+    const rows = rec.ranked.map((r, i) => yourRow(r, i + 1, held, today))
     const because = rec.bonus ? (rec.notes[0] ?? null) : null
     const none = !only && !decided
     return {
@@ -838,7 +873,7 @@ export function answer(request: {
                 top.earned,
                 top.credit ?? null,
               ),
-              reason: shortReason(top),
+              reason: shortReason(top, today),
               because,
               warnings: top.warnings,
               art: artOf(decided.cardId),
@@ -905,7 +940,7 @@ export function answer(request: {
             label: BEST_CARD,
             name: shortName(first.cardId),
             detail: `${pct(first.effectiveReturnPct)} back`,
-            reason: shortReason(first),
+            reason: shortReason(first, today),
             because: null,
             warnings: first.warnings,
             art: artOf(first.cardId),
@@ -931,7 +966,7 @@ export function answer(request: {
           ? 'Next, by rate'
           : 'Next best'
         : null,
-    rows: shown.ranked.slice(1).map((e, i) => everyRow(e, i + 2, held)),
+    rows: shown.ranked.slice(1).map((e, i) => everyRow(e, i + 2, held, today)),
     more,
     moreLabel: more > 0 ? `Show all ${String(r.ranked.length)} cards` : null,
     footer: [
@@ -2022,12 +2057,18 @@ export function walletSettings(request: { wallet?: unknown }): WalletSettings {
       : (c.currencies.find((x) => x.id === id)?.value_cents ?? 1)
   }
   const transferable = ids.filter((id) => HEAVY[id] !== undefined)
+  const shown = {
+    toggles: toggles.filter((t) => relevant(t.id)),
+    menus: menus.filter(tiersUsed),
+  }
   return {
     membershipsTitle: 'Memberships',
     membershipsLead: 'Some cards earn more with these.',
-    toggles: toggles.filter((t) => relevant(t.id)),
-    menus: menus.filter(tiersUsed),
-    othersTitle: 'Other memberships',
+    ...shown,
+    othersTitle:
+      shown.toggles.length + shown.menus.length === 0
+        ? 'Memberships'
+        : 'Other memberships',
     otherToggles: toggles.filter((t) => !relevant(t.id)),
     otherMenus: menus.filter((m) => !tiersUsed(m)),
     reminders: REMINDER_SETTING,
@@ -3231,12 +3272,13 @@ export function brief(request: {
     if (pick === null)
       return [a.verdict ?? NONE_OF_YOURS, ...a.callouts.slice(0, 1)].join(' ')
     if (m.source === 'none')
-      return `earnrate doesn't know “${m.input}” yet, so only base rates apply. ${pick.name} earns the most on those: ${pick.detail}.`
+      return `earnrate doesn't know “${m.input}” yet, so only base rates apply. ${pick.name} earns the most on those, ${pick.detail}.`
+    const earns = `It earns ${pick.detail}, ${pick.reason}.`
     if (a.scope === 'every')
-      return `The best card ${place} is ${pick.name}: ${pick.detail}, ${pick.reason}.`
+      return `The best card ${place} is ${pick.name}. ${earns}`
     return pick.label === USE_CARD
-      ? `Use ${pick.name} ${place}: ${pick.detail}, ${pick.reason}.`
-      : `Use ${pick.name} ${place}, ${FOR_WELCOME_BONUS}: ${pick.detail}, ${pick.reason}.`
+      ? `Use ${pick.name} ${place}. ${earns}`
+      : `Use ${pick.name} ${place} ${FOR_WELCOME_BONUS}. ${earns}`
   }
   return {
     query: request.query.trim(),
@@ -3321,7 +3363,7 @@ const REMINDER_SETTING = {
   title: 'Reminders',
   label: 'Remind me before deadlines',
   footer:
-    "A notification a few days before an activation deadline, before a credit you use runs out, and two weeks before a welcome bonus's spending deadline. They're set on this phone; nothing is sent anywhere.",
+    "earnrate reminds you a few days before an activation deadline or a credit you use runs out, and two weeks before a welcome bonus's spending deadline. Reminders are set on this phone, and nothing is sent anywhere.",
   denied: 'Notifications for earnrate are off in the Settings app.',
   openSettings: 'Open Settings',
 }

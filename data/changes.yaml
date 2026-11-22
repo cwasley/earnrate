@@ -3,6 +3,14 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.21'
+  date: 2026-11-21
+  changes:
+    - cause: wording
+      merchants: [burlington, homegoods, marshalls, ross, tj-maxx]
+      field: ambiguity.note
+      summary: The notes say the store may not count as a department store, without naming U.S. Bank's Cash+.
+
 - version: '2026.11.20.1'
   date: 2026-11-20
   changes:

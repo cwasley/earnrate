@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.21
+
+No rates changed. The notes on T.J. Maxx, Marshalls, HomeGoods, Ross Dress for Less and Burlington no longer name U.S. Bank's Cash+, a card most people don't have. Each now says the store may not count as a department store, so check your statement before counting on a department store bonus there.
+
 ## 2026.11.20.1
 
 No rates changed. More clothing, off-price and shoe stores, so the stores people shop at most are found by name:
