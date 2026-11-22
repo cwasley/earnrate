@@ -101,10 +101,13 @@ private struct AnswerList: View {
                 VStack(alignment: .center, spacing: 16) {
                     FlowLayout(spacing: 8) {
                         if let subtitle = answer.subtitle {
+                            // Sized like ChipLabel so it lines up with the menu beside it.
                             Text(subtitle)
-                                .font(.subheadline)
+                                .font(.subheadline.weight(.medium))
                                 .foregroundStyle(Color.inkSecondary)
-                                .plate(cornerRadius: 14)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 7)
+                                .background(Color.surface.opacity(0.9), in: Capsule())
                         }
                         PurchaseMenu(options: answer.purchase, payment: $payment, abroad: $abroad)
                     }
