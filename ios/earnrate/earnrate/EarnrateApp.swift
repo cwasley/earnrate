@@ -71,8 +71,8 @@ struct RootView: View {
         }
         #if DEBUG
         .overlay {
-            if model.screenshotDetail == "lock", let sheet = SharedSheet.read()?.sheet(on: Day.text(.now)) {
-                LockScreenMock(sheet: sheet)
+            if model.screenshotDetail == "lock" || model.screenshotDetail == "home", let snapshot = SharedSheet.read() {
+                WidgetsMock(snapshot: snapshot, lock: model.screenshotDetail == "lock")
             }
         }
         .overlay(alignment: .top) {
@@ -190,31 +190,52 @@ struct WelcomeView: View {
 #if DEBUG
 // `-EarnrateOpen widgets:lock`: the Lock Screen widgets drawn by their own
 // views at their sizes, in white as the Lock Screen tints them, since the
-// Simulator can't edit its Lock Screen.
-private struct LockScreenMock: View {
-    let sheet: WidgetSnapshot.Sheet
+// Simulator can't edit its Lock Screen. `widgets:home` draws the Home Screen
+// ones the same way.
+private struct WidgetsMock: View {
+    let snapshot: WidgetSnapshot
+    let lock: Bool
+
+    private var sheet: WidgetSnapshot.Sheet? { snapshot.sheet(on: Day.text(.now)) }
+    private var rows: [WidgetSnapshot.Row?] {
+        guard let sheet else { return [nil, nil] }
+        return sheet.rows.prefix(2).map { Optional($0) }
+    }
 
     var body: some View {
         ZStack {
             LinearGradient(colors: [Color(hex: "#1c1a33"), Color(hex: "#3a3f6b")], startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
-            VStack(spacing: 10) {
-                if let first = sheet.rows.first {
-                    PurchaseView(row: first, family: .accessoryInline)
+            if lock {
+                VStack(spacing: 10) {
+                    PurchaseView(row: rows.first ?? nil, empty: snapshot.empty, family: .accessoryInline)
                         .font(.subheadline.weight(.semibold))
-                }
-                Text(Date.now, format: .dateTime.hour().minute())
-                    .font(.system(size: 92, weight: .semibold, design: .rounded))
-                HStack(spacing: 12) {
-                    ForEach(sheet.rows.prefix(2)) { row in
-                        PurchaseView(row: row, family: .accessoryRectangular)
-                            .frame(width: 160, height: 72)
+                    Text(Date.now, format: .dateTime.hour().minute())
+                        .font(.system(size: 92, weight: .semibold, design: .rounded))
+                    HStack(spacing: 12) {
+                        ForEach(rows.indices, id: \.self) { i in
+                            PurchaseView(row: rows[i], empty: snapshot.empty, family: .accessoryRectangular)
+                                .frame(width: 160, height: 72)
+                        }
                     }
+                    Spacer()
                 }
-                Spacer()
+                .foregroundStyle(.white.opacity(0.92))
+                .padding(.top, 70)
+            } else {
+                VStack(spacing: 20) {
+                    CheatSheetView(sheet: sheet, empty: snapshot.empty, family: .systemSmall)
+                        .padding(16)
+                        .frame(width: 170, height: 170)
+                        .background(Color.surface, in: RoundedRectangle(cornerRadius: 22))
+                    CheatSheetView(sheet: sheet, empty: snapshot.empty, family: .systemMedium)
+                        .padding(16)
+                        .frame(width: 364, height: 170)
+                        .background(Color.surface, in: RoundedRectangle(cornerRadius: 22))
+                    Spacer()
+                }
+                .padding(.top, 90)
             }
-            .foregroundStyle(.white.opacity(0.92))
-            .padding(.top, 70)
         }
     }
 }

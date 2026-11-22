@@ -109,9 +109,8 @@ struct PlateButtonStyle: ButtonStyle {
             .foregroundStyle(.tint)
             .padding(.horizontal, 16)
             .padding(.vertical, 9)
-            .background(Color.surface, in: Capsule())
+            .pill(Color.surface, padding: 9)
             .opacity(configuration.isPressed ? 0.75 : 1)
-            .contentShape(Capsule())
     }
 }
 
@@ -123,9 +122,8 @@ struct AccentButtonStyle: ButtonStyle {
             .foregroundStyle(Color.onAccent)
             .padding(.horizontal, 16)
             .padding(.vertical, 9)
-            .background(Color.accentColor, in: Capsule())
+            .pill(Color.accentColor, padding: 9)
             .opacity(configuration.isPressed ? 0.8 : 1)
-            .contentShape(Capsule())
     }
 }
 

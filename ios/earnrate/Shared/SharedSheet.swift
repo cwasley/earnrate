@@ -22,11 +22,25 @@ nonisolated struct WidgetSnapshot: Codable {
         let rows: [Row]
     }
 
+    // What to say instead of a sheet when no cards are saved.
+    struct Empty: Codable, Hashable {
+        let text: String
+        let short: String
+    }
+
     let sheets: [Sheet]
+    // Optional so a file written by an earlier build still reads.
+    let empty: Empty?
+    let purchases: [String]?
 
     // The sheet for a day: the last one that has started.
     func sheet(on day: String) -> Sheet? {
         sheets.last { $0.from <= day } ?? sheets.first
+    }
+
+    // The purchases a Lock Screen widget can be set to.
+    var purchaseLabels: [String] {
+        purchases ?? sheets.first?.rows.map(\.label) ?? []
     }
 }
 

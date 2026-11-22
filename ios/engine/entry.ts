@@ -52,9 +52,11 @@ import {
 import {
   CARDS_INDEX,
   cardIndexName,
+  cardNames,
   cardSearchWords,
   cardsIndexLead,
   matchesTyped,
+  typedCloseness,
 } from '../../src/engine/card-search.ts'
 import { cardDetails } from '../../src/engine/card-details.ts'
 import {
@@ -64,6 +66,7 @@ import {
   quickPickText,
 } from '../../src/engine/cheat-sheet.ts'
 import {
+  activationNotOpen,
   checklistRows,
   type ChecklistRowItem,
 } from '../../src/engine/checklist.ts'
@@ -1539,11 +1542,7 @@ const focusOf = (kind: string): TodoRow['focus'] => {
 
 // An activation the issuer hasn't opened yet waits off the to-do until the
 // day it opens; its reminder is set for that morning.
-const notOpenYet = (item: ChecklistRowItem, today: string) =>
-  item.kind === 'activate' &&
-  item.row.when?.startsWith('from ') === true &&
-  item.due !== null &&
-  item.due > today
+const notOpenYet = activationNotOpen
 
 // Rows past these wait behind "N more"; the list is
 // soonest first.
@@ -1599,8 +1598,11 @@ export function walletHome(request: {
       cardId: i.cardId,
       art: artOf(i.cardId),
       title: i.row.title,
+      // The amount and its words stay on one line with their dot: "$7 left".
       detail:
-        i.row.amount === null ? i.row.card : `${i.row.card} · ${i.row.amount}`,
+        i.row.amount === null
+          ? i.row.card
+          : `${i.row.card}\u00a0·\u00a0${i.row.amount.replace(/ /g, '\u00a0')}`,
       when: i.row.when,
       button: i.row.button,
       url: i.row.url ?? null,
@@ -3057,7 +3059,9 @@ export type CardIndex = {
 }
 
 // The site's /cards/ list: every card by issuer, narrowed the way its box
-// narrows it, every typed word in a card's names or its issuer's.
+// narrows it, every typed word in a card's names or its issuer's. Business
+// cards follow in their own issuer groups, as in Add cards; with a search,
+// the closest names come first.
 export function cardIndex(request: {
   wallet?: unknown
   query?: string
@@ -3065,24 +3069,51 @@ export function cardIndex(request: {
   const c = loaded()
   const held = heldIds(walletOf(request.wallet))
   const { shortName, issuerName } = names()
-  const query = request.query ?? ''
-  const byIssuer = new Map<string, CardRow[]>()
+  const query = request.query?.trim() ?? ''
+  type Ranked = { row: CardRow; closeness: number }
+  const byIssuer = new Map<string, Ranked[]>()
   for (const card of c.cards) {
     if (!matchesTyped(cardSearchWords(c, card, shortName), query)) continue
     const row = {
       ...cardRow(card.id, held),
       shortName: cardIndexName(card, shortName),
     }
-    byIssuer.set(card.issuer, [...(byIssuer.get(card.issuer) ?? []), row])
+    const { spoken, abbreviated } = cardNames(card, shortName)
+    const closeness =
+      query === ''
+        ? 0
+        : typedCloseness([...spoken, ...abbreviated, row.shortName], query)
+    const key = `${card.business ? 'business:' : ''}${card.issuer}`
+    byIssuer.set(key, [...(byIssuer.get(key) ?? []), { row, closeness }])
   }
+  const closest = (list: Ranked[]) => Math.min(...list.map((r) => r.closeness))
   const groups = [...byIssuer]
-    .sort(([a], [b]) => issuerName(a).localeCompare(issuerName(b)))
-    .map(([issuer, list]) => ({
-      id: issuer,
-      title: issuerName(issuer),
-      index: issuerName(issuer).slice(0, 1).toUpperCase(),
-      cards: list,
+    .map(([id, list]) => ({
+      id,
+      business: id.startsWith('business:'),
+      issuer: issuerName(id.replace(/^business:/, '')),
+      list,
     }))
+    .sort(
+      (a, b) =>
+        Number(a.business) - Number(b.business) ||
+        closest(a.list) - closest(b.list) ||
+        a.issuer.localeCompare(b.issuer),
+    )
+    .map((g) => ({
+      id: g.id,
+      title: g.business ? `${g.issuer} business` : g.issuer,
+      index: g.business ? 'Biz' : g.issuer.slice(0, 1).toUpperCase(),
+      cards: g.list
+        .sort(
+          (a, b) =>
+            a.closeness - b.closeness ||
+            a.row.shortName.localeCompare(b.row.shortName),
+        )
+        .map((r) => r.row),
+    }))
+  // One index letter per letter, on its first issuer; business cards share
+  // one entry at the end.
   const seen = new Set<string>()
   for (const g of groups) {
     if (seen.has(g.index)) g.index = ''
@@ -3192,26 +3223,44 @@ export type WidgetSheet = {
   rows: WidgetRow[]
 }
 
+// What the widgets say with no cards saved, in full and for the Lock Screen.
+export type WidgetEmpty = { text: string; short: string }
+const WIDGET_EMPTY: WidgetEmpty = {
+  text: 'Add your cards in earnrate to see your cheat sheet here.',
+  short: 'Add your cards in earnrate',
+}
+
 // The cheat sheet for this quarter and, ready for when it turns over, the
-// next one: from the saved cards, or from every card with none saved.
+// next one, from the saved cards. With none saved there's no sheet, so the
+// widgets don't pass every card off as the person's own; `purchases` still
+// names the rows a Lock Screen widget can be set to.
 export function widgets(request: { wallet?: unknown; today?: string }): {
   sheets: WidgetSheet[]
+  empty: WidgetEmpty | null
+  purchases: string[]
 } {
   const c = loaded()
   const today = request.today ?? localToday()
   const raw = walletOf(request.wallet)
-  const wallet =
-    raw !== null && raw.cards.length > 0 && walletProblems(raw, c).length === 0
-      ? raw
-      : null
+  if (raw === null || raw.cards.length === 0)
+    return {
+      sheets: [],
+      empty: WIDGET_EMPTY,
+      purchases: catalogCheatSheet(c, today, {
+        filters: ALL_PERSONAL_CARDS,
+        memberships: [],
+        valuations: {},
+      }).rows.map((r) => r.label),
+    }
+  const wallet = walletProblems(raw, c).length === 0 ? raw : null
   const { shortName } = names()
   const sheetFor = (from: string): WidgetSheet => {
     const sheet = wallet
       ? cheatSheet(c, wallet, from)
       : catalogCheatSheet(c, from, {
           filters: ALL_PERSONAL_CARDS,
-          memberships: effectiveMemberships(c, raw?.memberships ?? [], []),
-          valuations: raw?.valuations ?? {},
+          memberships: effectiveMemberships(c, raw.memberships, []),
+          valuations: raw.valuations,
         })
     return {
       from,
@@ -3237,7 +3286,11 @@ export function widgets(request: { wallet?: unknown; today?: string }): {
     }
   }
   const now = sheetFor(today)
-  return { sheets: [now, sheetFor(addDays(now.until, 1))] }
+  return {
+    sheets: [now, sheetFor(addDays(now.until, 1))],
+    empty: null,
+    purchases: now.rows.map((r) => r.label),
+  }
 }
 
 export type Brief = {

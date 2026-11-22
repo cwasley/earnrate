@@ -107,7 +107,7 @@ private struct AnswerList: View {
                                 .foregroundStyle(Color.inkSecondary)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 7)
-                                .background(Color.surface.opacity(0.9), in: Capsule())
+                                .pill(Color.surface.opacity(0.9), padding: 7)
                         }
                         PurchaseMenu(options: answer.purchase, payment: $payment, abroad: $abroad)
                     }

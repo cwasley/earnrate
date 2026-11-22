@@ -90,8 +90,41 @@ struct ChipLabel: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
         .foregroundStyle(on ? Color.onAccent : Color.primary)
-        .background(on ? AnyShapeStyle(.tint) : AnyShapeStyle(.fill.tertiary), in: Capsule())
-        .contentShape(Capsule())
+        .pill(on ? AnyShapeStyle(.tint) : AnyShapeStyle(.fill.tertiary), padding: 7)
+    }
+}
+
+// A capsule while its text fits on one line. Text that wraps (at the largest
+// text sizes) keeps the one-line ends on the taller box, since a capsule's
+// round ends would cut through the wrapped lines.
+struct Pill: Shape {
+    let line: CGFloat // one line's height with its padding, or a bit more
+
+    func path(in rect: CGRect) -> Path {
+        RoundedRectangle(cornerRadius: min(line, rect.height) / 2).path(in: rect)
+    }
+}
+
+private struct PillBackground<S: ShapeStyle>: ViewModifier {
+    let style: S
+    let padding: CGFloat // above and below the text
+    // A subheadline line, generously: under it, one line must read as a
+    // capsule; two lines must be well over it.
+    @ScaledMetric(relativeTo: .subheadline) private var line: CGFloat = 24
+
+    func body(content: Content) -> some View {
+        let shape = Pill(line: line + padding * 2)
+        content
+            .background(style, in: shape)
+            .contentShape(shape)
+    }
+}
+
+extension View {
+    // A pill of `style` behind subheadline text padded by `padding` above
+    // and below.
+    func pill<S: ShapeStyle>(_ style: S, padding: CGFloat) -> some View {
+        modifier(PillBackground(style: style, padding: padding))
     }
 }
 
@@ -164,8 +197,9 @@ struct MonthYearPicker: View {
     }
 }
 
-// A dollar amount typed into a settings row, saved when the field is left or
-// Return is pressed.
+// A dollar amount typed into a settings row. The decimal pad has no Return
+// key, so it saves from the keyboard bar's Done, when the field loses focus,
+// and when the screen goes away (Back), whichever comes first.
 struct DollarField: View {
     let label: String
     let value: Double?
@@ -173,6 +207,7 @@ struct DollarField: View {
     let onSave: (Double?) -> Void
 
     @State private var text = ""
+    @State private var edited = false
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -186,14 +221,34 @@ struct DollarField: View {
         } label: {
             Text(label)
         }
+        .toolbar {
+            // Every field on a screen adds to the one keyboard bar, so only
+            // the focused one shows its button.
+            if focused {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        save()
+                        focused = false
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
         .onAppear { text = Self.format(value) }
+        .onDisappear(perform: save)
+        .onChange(of: text) { if focused { edited = true } }
         .onChange(of: value) { if !focused { text = Self.format(value) } }
         .onChange(of: focused) { if !focused { save() } }
     }
 
     private func save() {
+        guard edited else { return }
+        edited = false
         let cleaned = text.replacingOccurrences(of: "$", with: "").replacingOccurrences(of: ",", with: "")
-        let next = cleaned.trimmingCharacters(in: .whitespaces).isEmpty ? nil : Double(cleaned)
+            .trimmingCharacters(in: .whitespaces)
+        let next = cleaned.isEmpty ? nil : Double(cleaned)
+        if !cleaned.isEmpty && next == nil { return }
         if next != value { onSave(next) }
     }
 

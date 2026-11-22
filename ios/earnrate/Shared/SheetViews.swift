@@ -7,6 +7,7 @@ import WidgetKit
 
 struct CheatSheetView: View {
     let sheet: WidgetSnapshot.Sheet?
+    var empty: WidgetSnapshot.Empty? = nil
     let family: WidgetFamily
     @Environment(\.dynamicTypeSize) private var size
 
@@ -17,7 +18,7 @@ struct CheatSheetView: View {
             default: small(sheet)
             }
         } else {
-            WaitingView()
+            WaitingView(text: empty?.text)
         }
     }
 
@@ -138,18 +139,22 @@ private struct SheetRow: View {
     }
 }
 
-// Before the app has written a sheet: it does on its first launch.
+// Before the app has written a sheet (it does on its first launch), or with
+// no cards saved, when the engine says what to do instead.
 private struct WaitingView: View {
+    var text: String?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("earnrate")
                 .font(.system(.headline, design: .rounded, weight: .bold))
                 .foregroundStyle(Color("AccentColor"))
-            Text("Open earnrate to see your cheat sheet here.")
+            Text(text ?? "Open earnrate to see your cheat sheet here.")
                 .font(.caption)
                 .foregroundStyle(Color.inkSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .widgetURL(AppLink.sheet.url)
     }
 }
 
@@ -157,6 +162,7 @@ private struct WaitingView: View {
 // line beside the clock.
 struct PurchaseView: View {
     let row: WidgetSnapshot.Row?
+    var empty: WidgetSnapshot.Empty? = nil
     let family: WidgetFamily
 
     var body: some View {
@@ -178,6 +184,23 @@ struct PurchaseView: View {
                                 .widgetAccentable()
                         }
                         Text(row.name)
+                            .font(.body)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityElement(children: .combine)
+                }
+            } else if let empty {
+                switch family {
+                case .accessoryInline:
+                    Text(empty.short)
+                default:
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("earnrate")
+                            .font(.headline)
+                            .widgetAccentable()
+                        Text(empty.short)
                             .font(.body)
                             .lineLimit(2)
                             .minimumScaleFactor(0.8)

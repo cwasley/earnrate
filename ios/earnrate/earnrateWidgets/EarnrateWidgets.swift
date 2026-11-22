@@ -17,14 +17,17 @@ import WidgetKit
 struct SheetEntry: TimelineEntry {
     let date: Date
     let sheet: WidgetSnapshot.Sheet?
+    var empty: WidgetSnapshot.Empty? = nil
 }
 
 enum SheetTimeline {
     // An entry now, and one at the start of each sheet still to come; read
     // again the day after the last one ends, in case the app hasn't been
-    // opened since.
+    // opened since. With no cards saved there's no sheet, only what to say;
+    // the app reloads the widgets once cards are added.
     static func entries(now: Date = .now) -> ([SheetEntry], TimelineReloadPolicy) {
         guard let snapshot = SharedSheet.read() else { return ([SheetEntry(date: now, sheet: nil)], .never) }
+        if snapshot.sheets.isEmpty { return ([SheetEntry(date: now, sheet: nil, empty: snapshot.empty)], .never) }
         let today = Day.text(now)
         var entries = [SheetEntry(date: now, sheet: snapshot.sheet(on: today))]
         for sheet in snapshot.sheets where sheet.from > today {
@@ -56,7 +59,7 @@ struct SheetProvider: TimelineProvider {
 struct CheatSheetWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "CheatSheet", provider: SheetProvider()) { entry in
-            FamilyReader { CheatSheetView(sheet: entry.sheet, family: $0) }
+            FamilyReader { CheatSheetView(sheet: entry.sheet, empty: entry.empty, family: $0) }
                 .containerBackground(Color.surface, for: .widget)
         }
         .configurationDisplayName("Cheat sheet")
@@ -85,7 +88,7 @@ struct PurchaseQuery: EntityQuery {
     }
 
     func suggestedEntities() async throws -> [PurchaseEntity] {
-        (SharedSheet.read()?.sheets.first?.rows ?? []).map { PurchaseEntity(id: $0.label) }
+        (SharedSheet.read()?.purchaseLabels ?? []).map(PurchaseEntity.init)
     }
 
     func defaultResult() async -> PurchaseEntity? {
@@ -104,6 +107,7 @@ struct PurchaseChoice: WidgetConfigurationIntent {
 struct PurchaseEntry: TimelineEntry {
     let date: Date
     let row: WidgetSnapshot.Row?
+    var empty: WidgetSnapshot.Empty? = nil
 }
 
 struct PurchaseProvider: AppIntentTimelineProvider {
@@ -120,7 +124,7 @@ struct PurchaseProvider: AppIntentTimelineProvider {
         let label = configuration.purchase?.id
         return Timeline(entries: entries.map { entry in
             let rows = entry.sheet?.rows ?? []
-            return PurchaseEntry(date: entry.date, row: rows.first { $0.label == label } ?? rows.first)
+            return PurchaseEntry(date: entry.date, row: rows.first { $0.label == label } ?? rows.first, empty: entry.empty)
         }, policy: policy)
     }
 }
@@ -128,7 +132,7 @@ struct PurchaseProvider: AppIntentTimelineProvider {
 struct PurchaseWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "Purchase", intent: PurchaseChoice.self, provider: PurchaseProvider()) { entry in
-            FamilyReader { PurchaseView(row: entry.row, family: $0) }
+            FamilyReader { PurchaseView(row: entry.row, empty: entry.empty, family: $0) }
                 .containerBackground(.clear, for: .widget)
         }
         .configurationDisplayName("Card for a purchase")

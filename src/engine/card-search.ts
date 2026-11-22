@@ -51,6 +51,24 @@ export function matchesTyped(words: string[], typed: string): boolean {
     .every((w) => text.includes(w))
 }
 
+// How closely one of a card's names fits what was typed, for putting the
+// closest first in a narrowed list: the fewest words a name has that no
+// typed word starts. "amex gold": Amex Gold 0, Amex Business Gold 1.
+export function typedCloseness(names: string[], typed: string): number {
+  const words = (text: string) =>
+    text
+      .toLowerCase()
+      .split(/[^a-z0-9+]+/)
+      .filter((w) => w !== '')
+  const asked = words(typed)
+  return Math.min(
+    ...names.map(
+      (name) =>
+        words(name).filter((w) => !asked.some((a) => w.startsWith(a))).length,
+    ),
+  )
+}
+
 // The list of every card: earnrate.dev's /cards/ and the app's Cards tab.
 export const CARDS_INDEX = {
   title: 'Credit cards earnrate tracks',

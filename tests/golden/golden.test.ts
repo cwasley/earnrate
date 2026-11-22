@@ -3128,12 +3128,12 @@ describe('#40 keep or replace a fee card', () => {
       expect(k.outcome).toBe('not-needed')
       expect(k.replacements).toEqual([])
       expect(keepOrReplaceVerdict(catalog, k)).toMatch(
-        /^Your other cards already cover what the Chase Sapphire Reserve earns: it adds (nothing beyond them, against its \$795 fee|about \$[\d,]+ a year beyond them, less than its \$795 fee), so no card needs to take its place\.$/,
+        /^Your other cards already cover what the Chase Sapphire Reserve earns: it adds (nothing beyond them, against its \$795 fee|about \$[\d,]+ a year beyond them before fees, less than its \$795 fee), so earnrate has no card to suggest in its place\.$/,
       )
       const marked = ask(reserve({ enrolled: RESERVE_CREDITS }))
       expect(k.unsaid.yearly).toBe(marked.renewal.credits)
       expect(keepOrReplaceUnsaid(k)).toBe(
-        `The Chase Sapphire Reserve's credits you haven't marked as used (${wholeDollars(k.unsaid.yearly)} a year: travel, StubHub, Lyft, Peloton membership and dining) aren't counted; with them all, it would add about ${wholeDollars(marked.added)} a year.`,
+        `The Chase Sapphire Reserve's credits you haven't marked as used (${wholeDollars(k.unsaid.yearly)} a year: travel, StubHub, Lyft, Peloton membership and dining) aren't counted; with them all, it would add about ${wholeDollars(marked.added)} a year after its fee.`,
       )
     },
   )
@@ -3159,7 +3159,7 @@ describe('#40 keep or replace a fee card', () => {
         )
       }
       expect(keepOrReplaceUnsaid(k)).toMatch(
-        /^The Amex Platinum's credits you haven't marked as used \(\$[\d,]+ a year: .+\) aren't counted; with them all, it would add about \$[\d,]+ a year\.$/,
+        /^The Amex Platinum's credits you haven't marked as used \(\$[\d,]+ a year: .+\) aren't counted; with them all, it would add about \$[\d,]+ a year after its fee\.$/,
       )
     },
   )
@@ -3183,7 +3183,7 @@ describe('#40 keep or replace a fee card', () => {
       expect(k.members).toEqual([])
       expect(keepOrReplaceUnsaid(k)).toBe('')
       expect(keepOrReplaceText(catalog, k)).toMatch(
-        /^Your other cards already cover what the Amex Gold earns: .+, so no card needs to take its place\. (.+ )?Over the next 12 months at typical U\.S\. spending, the Amex Gold earns about .+ against its \$325 fee\. This counts only earning/,
+        /^Your other cards already cover what the Amex Gold earns: .+, so earnrate has no card to suggest in its place\. (.+ )?Over the next 12 months at typical U\.S\. spending, the Amex Gold earns about .+ against its \$325 fee\. This counts only earning/,
       )
     },
   )
@@ -3204,7 +3204,7 @@ describe('#40 keep or replace a fee card', () => {
       expect(k.outcome).toBe('none-close')
       expect(k.replacements).toEqual([])
       expect(keepOrReplaceVerdict(catalog, k)).toBe(
-        `Nothing with a lower fee comes close: in its place, no such card would add anything to your wallet after its fee, while the Amex Platinum adds about ${wholeDollars(k.added)} a year.`,
+        `Nothing with a lower fee comes close: in its place, no such card would add anything to your wallet after its fee, while the Amex Platinum adds about ${wholeDollars(k.added)} a year after its fee.`,
       )
       expect(keepOrReplaceMath(k)).toMatch(
         /^Over the next 12 months on your spending, /,
@@ -3352,7 +3352,7 @@ describe('#40 keep or replace a fee card', () => {
       expect(same?.share).toBe(Math.round(((same?.net ?? 0) / k.added) * 100))
       const text = samePointsText(catalog, k)
       expect(text).toBe(
-        `The Chase Sapphire Preferred earns Chase Ultimate Rewards too: in its place, it would add about ${wholeDollars((same?.net ?? 0) + 95)} a year, less than its $95 fee, which is $700 less than the Chase Sapphire Reserve's.`,
+        `The Chase Sapphire Preferred earns Chase Ultimate Rewards too: in its place, it would add about ${wholeDollars((same?.net ?? 0) + 95)} a year before fees, less than its $95 fee, which is $700 less than the Chase Sapphire Reserve's.`,
       )
       expect(keepOrReplaceText(catalog, k)).toContain(text)
       expect(keepOrReplaceText(catalog, k)).not.toMatch(
@@ -3442,7 +3442,7 @@ describe('#40 keep or replace a fee card', () => {
       const below = unmarked.transfer?.result
       expect(below?.outcome).toBe('not-needed')
       expect(transferText(catalog, unmarked)).toBe(
-        `If you transfer Chase Ultimate Rewards to airlines and hotels and count them at 1.7¢ each, the Chase Sapphire Reserve adds about ${wholeDollars((below?.added ?? 0) + 795)} a year, less than its $795 fee.`,
+        `If you transfer Chase Ultimate Rewards to airlines and hotels and count them at 1.7¢ each, the Chase Sapphire Reserve adds about ${wholeDollars((below?.added ?? 0) + 795)} a year before fees, less than its $795 fee.`,
       )
       expect(
         ask(

@@ -283,6 +283,63 @@ describe('the cheat-sheet pass', () => {
     expect(JSON.stringify(pass)).not.toMatch(/see pass details|[Ee]nroll/)
   })
 
+  test("an activation that hasn't opened yet says the day it opens", () => {
+    const front = (date: string) => {
+      const { pass } = passContents(
+        catalog,
+        {
+          memberships: [],
+          cards: [
+            {
+              id: 'chase-freedom-flex',
+              activated: [
+                'q4-2026-grocery',
+                'q4-2026-dining',
+                'q4-2026-american-red-cross',
+              ],
+            },
+          ],
+        },
+        date,
+        IDENTITY,
+        'serial-3',
+      )
+      const card = pass.storeCard as {
+        secondaryFields: { value: string }[]
+      }
+      return card.secondaryFields[0]?.value
+    }
+    expect(front('2026-12-01')).toBe(
+      "Activate Chase Freedom Flex's Q1 2027 bonus on or after Dec 15",
+    )
+    expect(front('2026-12-15')).not.toMatch(/on or after/)
+  })
+
+  test('the pass says who asked for it', () => {
+    const back = (maker?: 'app' | 'site') => {
+      const { pass } = passContents(
+        catalog,
+        WALLET,
+        '2026-11-03',
+        IDENTITY,
+        'serial-4',
+        maker,
+      )
+      const card = pass.storeCard as {
+        backFields: { key: string; value: string }[]
+      }
+      return (key: string) =>
+        card.backFields.find((f) => f.key === key)?.value ?? ''
+    }
+    const site = back()
+    expect(site('privacy')).toContain('your browser sent')
+    expect(site('refresh')).toContain('https://earnrate.dev/#wallet')
+    const app = back('app')
+    expect(app('privacy')).toContain('the app sent')
+    expect(app('refresh')).toContain('Open earnrate')
+    expect(app('refresh')).not.toContain('earnrate.dev')
+  })
+
   test('a checkout label shows only when it reads as a card name', () => {
     for (const label of ['Amex Gold', 'BCP 1007', 'Costco card'])
       expect(plainLabel(label), label).toBe(true)
@@ -365,6 +422,12 @@ describe('the cheat-sheet pass', () => {
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('application/vnd.apple.pkpass')
     expect(points).toEqual([])
+    const files = unzipSync(new Uint8Array(await res.arrayBuffer()))
+    const made = JSON.parse(new TextDecoder().decode(files['pass.json'])) as {
+      storeCard: { backFields: { key: string; value: string }[] }
+    }
+    const privacy = made.storeCard.backFields.find((f) => f.key === 'privacy')
+    expect(privacy?.value).toContain('the app sent')
   })
 
   test('the Worker refuses what it can’t make a pass from', async () => {

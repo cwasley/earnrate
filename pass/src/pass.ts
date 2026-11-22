@@ -4,8 +4,12 @@
 import { z } from 'zod'
 import { cheatSheet } from '../../src/engine/cheat-sheet.ts'
 import { currentPeriodEnd } from '../../src/engine/periods.ts'
-import { checklist, type ChecklistItem } from '../../src/engine/checklist.ts'
-import { longDate, pct, shortDate } from '../../src/engine/text.ts'
+import {
+  activationNotOpen,
+  checklistRows,
+  type ChecklistRowItem,
+} from '../../src/engine/checklist.ts'
+import { longDate, pct, possessive, shortDate } from '../../src/engine/text.ts'
 import { cardText } from '../../src/format/card-text.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import {
@@ -36,6 +40,9 @@ export type PassIdentity = {
   passTypeIdentifier: string
   teamIdentifier: string
 }
+
+// Who asked for the pass: earnrate.dev's form or the iPhone app.
+export type PassMaker = 'site' | 'app'
 
 // The rows drawn on the strip; the back has them all.
 const FRONT = [
@@ -80,6 +87,7 @@ export function passContents(
   date: string,
   identity: PassIdentity,
   serialNumber: string,
+  maker: PassMaker = 'site',
 ): PassContents {
   const parsed = PassWalletSchema.parse(input)
   const wallet: Wallet = WalletSchema.parse({
@@ -124,18 +132,25 @@ export function passContents(
   // One line on the front; the back has every item in full.
   // The pass knows only picks and activations, so its to-dos are those (and
   // rotating categories not out yet); credits and caps need the wallet.
-  const todo = checklist(catalog, wallet, date).filter(
+  // An activation that hasn't opened yet stays on, with the day it opens:
+  // the pass lasts the quarter, so it's still there once activation opens.
+  const todo = checklistRows(catalog, wallet, date).filter(
     (i) => i.kind === 'activate' || i.kind === 'pick' || i.kind === 'rotation',
   )
+  const monthDay = (day: string) => shortDate(day).replace(/, \d{4}$/, '')
   const first = todo[0]
-  const todoText = (item: ChecklistItem) => {
+  const todoText = (item: ChecklistRowItem) => {
     const card = passName(item.cardId)
-    const by =
-      item.due === null
-        ? ''
-        : ` by ${shortDate(item.due).replace(/, \d{4}$/, '')}`
+    const day = item.due === null ? null : monthDay(item.due)
+    const by = day === null ? '' : ` by ${day}`
     switch (item.kind) {
       case 'activate':
+        if (activationNotOpen(item, date)) {
+          const quarter = /^Activate (Q[1-4] \d{4}) bonus/.exec(
+            item.row.title,
+          )?.[1]
+          return `Activate ${possessive(card)}${quarter === undefined ? '' : ` ${quarter}`} bonus on or after ${day ?? ''}`
+        }
         return `Activate ${card}${by}`
       case 'pick':
         return `Pick ${card} categories${by}`
@@ -171,13 +186,15 @@ export function passContents(
     {
       key: 'refresh',
       label: 'New quarter',
-      value: `This pass expires when ${sheet.quarter} ends. Get the next one from your wallet at ${REFRESH_URL}`,
+      value:
+        maker === 'app'
+          ? `This pass expires when ${sheet.quarter} ends. Open earnrate to make the next one from your cheat sheet.`
+          : `This pass expires when ${sheet.quarter} ends. Get the next one from your wallet at ${REFRESH_URL}`,
     },
     {
       key: 'privacy',
       label: 'Privacy',
-      value:
-        'earnrate made this pass from the card names and picks your browser sent, and kept nothing.',
+      value: `earnrate made this pass from the card names and picks ${maker === 'app' ? 'the app' : 'your browser'} sent, and kept nothing.`,
     },
   ]
 

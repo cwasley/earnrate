@@ -141,6 +141,7 @@ export function makePassWorker(deps: {
       date,
       identity,
       crypto.randomUUID(),
+      request.headers.get('user-agent') === APP_AGENT ? 'app' : 'site',
     )
     const svg = stripSvg(strip)
     const strips: Record<string, Uint8Array> = {}

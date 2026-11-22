@@ -698,8 +698,32 @@ describe('Next card and Cards in the app', () => {
     expect(ids.every((id) => id.startsWith('amex-'))).toBe(true)
     expect(cardIndex({ query: 'bofa' }).groups.map((g) => g.id)).toEqual([
       'bank-of-america',
+      'business:bank-of-america',
     ])
     expect(cardIndex({ query: 'zzzz' }).groups).toEqual([])
+  })
+
+  test('the card list puts business cards apart, by name, closest first', () => {
+    const all = cardIndex({})
+    const business = all.groups.filter((g) => g.id.startsWith('business:'))
+    expect(business.length).toBeGreaterThan(0)
+    expect(all.groups.slice(-business.length)).toEqual(business)
+    expect(business.map((g) => g.index)).toEqual([
+      'Biz',
+      ...business.slice(1).map(() => ''),
+    ])
+    for (const g of business)
+      for (const card of g.cards)
+        expect(catalog.cards.find((k) => k.id === card.id)?.business).toBe(true)
+    for (const g of all.groups) {
+      const shown = g.cards.map((card) => card.shortName)
+      expect(shown).toEqual([...shown].sort((a, b) => a.localeCompare(b)))
+    }
+    const gold = cardIndex({ query: 'amex gold' })
+    expect(gold.groups[0]?.cards[0]?.id).toBe('amex-gold')
+    expect(
+      gold.groups.find((g) => g.id === 'business:amex')?.cards.map((c) => c.id),
+    ).toContain('amex-business-gold')
   })
 
   test('bonus rules match the site, with what they mean for cards held or had', () => {
@@ -860,11 +884,20 @@ describe('phase 2: widgets, Siri, Spotlight and reminders', () => {
     expect(sheets[0]?.rows.find((r) => r.label === 'Abroad')?.query).toBeNull()
   })
 
-  test('with no cards saved, the widget shows every card', () => {
-    const { sheets } = widgets({ wallet: null, today })
-    expect(sheets[0]?.scope).toBe('Every card')
-    expect(sheets[0]?.rows[0]?.line).toMatch(/^Groceries · .+ \d+(\.\d+)?%$/)
-    expect(sheets[0]?.rows.every((r) => r.art !== null)).toBe(true)
+  test('with no cards saved, the widget asks for them instead of a sheet', () => {
+    const emptied = ok(
+      removeCard({ wallet: walletWith(['amex-gold']), id: 'amex-gold' }),
+    )
+    for (const wallet of [null, emptied]) {
+      const shown = widgets({ wallet, today })
+      expect(shown.sheets).toEqual([])
+      expect(shown.empty?.text).toMatch(/^Add your cards in earnrate/)
+      expect(shown.empty?.short).toBe('Add your cards in earnrate')
+      expect(shown.purchases[0]).toBe('Groceries')
+    }
+    const saved = widgets({ wallet: walletWith(['amex-gold']), today })
+    expect(saved.empty).toBeNull()
+    expect(saved.purchases).toEqual(saved.sheets[0]?.rows.map((r) => r.label))
   })
 
   test("Siri's answer is the pick, its rate and the rule behind it", () => {

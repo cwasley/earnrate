@@ -353,9 +353,11 @@ struct MembershipControls: View {
 
     var body: some View {
         ForEach(toggles) { toggle in
-            SwiftUI.Toggle(toggle.label, isOn: Binding(get: { toggle.on }, set: { on in
+            // Non-breaking hyphens, so "REI Co-op" never wraps at its hyphen.
+            SwiftUI.Toggle(toggle.label.replacingOccurrences(of: "-", with: "\u{2011}"), isOn: Binding(get: { toggle.on }, set: { on in
                 Task { refusal = await model.editSettings(["membership": ["id": toggle.id, "on": on]]) }
             }))
+            .accessibilityLabel(toggle.label)
         }
         ForEach(menus) { menu in
             Picker(menu.label, selection: Binding(get: { menu.selected }, set: { id in

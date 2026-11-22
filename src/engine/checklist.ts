@@ -87,6 +87,14 @@ export type ChecklistRow = {
 
 export type ChecklistRowItem = ChecklistItem & { row: ChecklistRow }
 
+// An activation the issuer hasn't opened yet: the iPhone app's to-do and the
+// Apple Wallet pass leave it off until the day it opens.
+export const activationNotOpen = (item: ChecklistRowItem, today: string) =>
+  item.kind === 'activate' &&
+  item.row.when?.startsWith('from ') === true &&
+  item.due !== null &&
+  item.due > today
+
 const issuerOf = (catalog: Catalog, id: string) =>
   catalog.issuers.find((i) => i.id === id)?.name ?? id
 

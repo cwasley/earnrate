@@ -444,8 +444,9 @@ function offerOf(
 }
 
 // A card that adds no more than its fee, by the two figures a person can
-// check: "adds about $18 a year, less than its $95 fee", "adds nothing
-// beyond your other cards, against its $95 fee". `net` is after the fee.
+// check: "adds about $18 a year before fees, less than its $95 fee", "adds
+// nothing beyond your other cards, against its $95 fee". `net` is after the
+// fee; the figure said is before it.
 function belowFee(
   verb: string,
   net: number,
@@ -457,14 +458,14 @@ function belowFee(
   const gross = net + fee
   if (whole(gross) <= 0)
     return `${verb} nothing${beyond}, against its ${money(fee)} fee`
-  const adds = `${verb} about ${wholeDollars(gross)} a year${amountBeyond}`
+  const adds = `${verb} about ${wholeDollars(gross)} a year${amountBeyond} before fees`
   return whole(net) === 0
     ? `${adds}, about what its ${money(fee)} fee costs`
     : `${adds}, less than its ${money(fee)} fee`
 }
 
-// "the Chase Sapphire Reserve adds about $35 a year", or what it adds
-// against its fee when that's no more.
+// "the Chase Sapphire Reserve adds about $35 a year after its fee", or what
+// it adds against its fee when that's no more.
 function heldAdds(k: KeepOrReplace, voice: Voice = 'you'): string {
   const beyond = k.alone
     ? ''
@@ -472,7 +473,7 @@ function heldAdds(k: KeepOrReplace, voice: Voice = 'you'): string {
       ? undefined
       : ' beyond the other cards'
   return whole(k.added) > 0
-    ? `the ${k.name} adds about ${wholeDollars(k.added)} a year`
+    ? `the ${k.name} adds about ${wholeDollars(k.added)} a year after its fee`
     : `the ${k.name} ${belowFee('adds', k.added, k.fee, beyond)}`
 }
 
@@ -517,7 +518,7 @@ export function keepOrReplaceLead(
       ' beyond them',
       ' beyond them',
     )
-    return `${others} already cover what the ${k.name} earns: ${adds}, so no card needs to take its place.`
+    return `${others} already cover what the ${k.name} earns: ${adds}, so earnrate has no card to suggest in its place.`
   }
   if (best === undefined)
     return `Nothing with a lower fee comes close: in its place, no such card would add anything to ${wallet} after its fee, while ${held}.`
@@ -565,7 +566,7 @@ export function keepOrReplaceUnsaid(
     const withAll = roundCents(k.added + u.yearly)
     const upTo = u.nights > 0 ? 'up to ' : ''
     parts.push(
-      `${capitalize(possessive(`the ${k.name}`))} ${perksNoun(u, false, true)} ${voice === 'you' ? "you haven't marked" : 'not marked'} as used (${creditsYearText(u)}) ${one ? "isn't" : "aren't"} counted; with ${one ? 'it' : 'them all'}, it would ${whole(withAll) > 0 ? `add ${upTo}about ${wholeDollars(withAll)} a year` : belowFee('add', withAll, k.fee).replace(/^add about/, `add ${upTo}about`)}.`,
+      `${capitalize(possessive(`the ${k.name}`))} ${perksNoun(u, false, true)} ${voice === 'you' ? "you haven't marked" : 'not marked'} as used (${creditsYearText(u)}) ${one ? "isn't" : "aren't"} counted; with ${one ? 'it' : 'them all'}, it would ${whole(withAll) > 0 ? `add ${upTo}about ${wholeDollars(withAll)} a year after its fee` : belowFee('add', withAll, k.fee).replace(/^add about/, `add ${upTo}about`)}.`,
     )
   }
   if (k.renewal.nightsUnvalued > 0 && u.unvaluedNightIds.length > 0)
@@ -634,10 +635,7 @@ export function samePointsText(catalog: Catalog, k: KeepOrReplace): string {
 export function transferText(catalog: Catalog, k: KeepOrReplace): string {
   if (k.transfer === null) return ''
   const t = k.transfer.result
-  const held =
-    whole(t.added) > 0
-      ? `the ${t.name} adds about ${wholeDollars(t.added)} a year after its fee`
-      : heldAdds(t)
+  const held = heldAdds(t)
   const [best] = t.replacements
   const rest =
     t.outcome === 'not-needed'
