@@ -299,14 +299,12 @@ struct WalletDeck: View {
                     ForEach(Array(stack.enumerated()), id: \.element.id) { position, held in
                         let isFront = held.id == frontId
                         let depth = stack.count - 1 - position
-                        Button {
-                            if isFront {
-                                open(held)
-                            } else {
-                                withAnimation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.78)) {
-                                    front = held.id
-                                }
-                            }
+                        // A Menu, not .contextMenu: here a context menu
+                        // never opened, and letting go fired the tap, so a
+                        // long press opened the card's settings.
+                        Menu {
+                            Button("Card page", systemImage: "creditcard") { page(held.card) }
+                            Button("Remove", systemImage: "minus.circle", role: .destructive) { remove(held.card) }
                         } label: {
                             CardFace(
                                 art: held.card.art,
@@ -316,15 +314,20 @@ struct WalletDeck: View {
                                 shine: isFront,
                                 lifted: isFront
                             )
+                        } primaryAction: {
+                            if isFront {
+                                open(held)
+                            } else {
+                                withAnimation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.78)) {
+                                    front = held.id
+                                }
+                            }
                         }
+                        .menuStyle(.button)
                         .buttonStyle(DeckPress())
                         .scaleEffect(1 - CGFloat(depth) * 0.025, anchor: .top)
                         .offset(y: CGFloat(position) * band)
                         .zIndex(Double(position))
-                        .contextMenu {
-                            Button("Card page", systemImage: "creditcard") { page(held.card) }
-                            Button("Remove", systemImage: "minus.circle", role: .destructive) { remove(held.card) }
-                        }
                         .accessibilityLabel(held.card.shortName)
                         .accessibilityValue([held.card.fee, held.note].compactMap { $0 }.joined(separator: ". "))
                         .accessibilityHint(isFront ? "Opens its settings" : "Brings it to the front")

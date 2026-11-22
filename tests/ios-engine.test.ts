@@ -833,11 +833,15 @@ describe('phase 1d: lighter next cards, card pages, card data updates', () => {
 
   test('whether the fee is worth it comes in parts, every sentence kept', () => {
     const worth = cardFeeWorth({ id: 'amex-gold', today })
-    expect(worth.lead).toMatch(/^On earning alone, the Amex Gold /)
+    expect(worth.lead).toMatch(
+      /^It earns more than the best no-fee card, after its \$325 fee, at this much a month of spending on .+:$/,
+    )
+    expect(worth.lead).not.toMatch(/\$[\d,]+ a month/)
     expect(worth.facts[0]?.label).toBe('On earning alone')
     expect(worth.facts[0]?.value).toMatch(/a month$/)
+    expect(worth.more[0]).toMatch(/^On earning alone, the Amex Gold /)
     expect(worth.more.at(-1)).toMatch(/^Assumes typical U\.S\. spending/)
-    for (const part of [worth.lead, worth.why, ...worth.more])
+    for (const part of [worth.why, ...worth.more])
       if (part !== null) expect(worth.text).toContain(part)
     expect(cardFeeWorth({ id: 'citi-double-cash', today })).toMatchObject({
       text: null,
@@ -1366,17 +1370,27 @@ describe('answers say why where the pick is', () => {
     ).toBeNull()
   })
 
-  test('a narrow widget gets a shorter name only for a long one', () => {
-    const wallet = walletWith([
+  test('widget names drop the issuer unless one word would be left', () => {
+    const ids = [
       'chase-sapphire-preferred',
+      'chase-freedom-flex',
+      'citi-double-cash',
       'capital-one-venture-x',
       'amex-gold',
-    ])
-    const rows = widgets({ wallet, today }).sheets[0]?.rows ?? []
-    const named = new Map(rows.map((r) => [r.name, r.short]))
+      'discover-it-cash-back',
+    ]
+    const rowsOf = (cards: string[]) =>
+      widgets({ wallet: walletWith(cards), today }).sheets[0]?.rows ?? []
+    const named = new Map(
+      ids.flatMap((id) => rowsOf([id])).map((r) => [r.name, r.short]),
+    )
+    expect(named.get('Discover it Cash Back')).toBe('Discover it Cash Back')
     expect(named.get('Chase Sapphire Preferred')).toBe('Sapphire Preferred')
+    expect(named.get('Chase Freedom Flex')).toBe('Freedom Flex')
+    expect(named.get('Citi Double Cash')).toBe('Double Cash')
     expect(named.get('Capital One Venture X Rewards')).toBe('Venture X')
     expect(named.get('Amex Gold')).toBe('Amex Gold')
+    const rows = rowsOf(ids.slice(0, 1).concat(ids.slice(3, 5)))
     const gas = rows.find((r) => r.name === 'Chase Sapphire Preferred')
     expect(gas?.shortLine).toBe(
       `${gas?.label ?? ''} · Sapphire Preferred ${gas?.rate ?? ''}`,

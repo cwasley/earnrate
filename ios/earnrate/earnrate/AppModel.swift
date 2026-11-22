@@ -36,6 +36,7 @@ enum AppTab: Hashable {
     private(set) var home: Home?
     // The saved cards, as the engine lists them.
     private(set) var walletCards: [CardRow] = []
+    private(set) var walletLoaded = false
     private(set) var walletProblems: [String] = []
     private(set) var walletHome = WalletHome.empty
     // Goes up with every saved change, so open screens reload.
@@ -96,7 +97,8 @@ enum AppTab: Hashable {
 
     var hasCards: Bool { !walletCards.isEmpty }
 
-    var showsNudge: Bool { isReady && !hasCards && !nudgeDismissed }
+    // Not until the saved wallet has loaded, or it flashes for people with cards.
+    var showsNudge: Bool { walletLoaded && !hasCards && !nudgeDismissed }
 
     var showsReminderOffer: Bool { walletHome.reminderOffer != nil && !remindersOn && !reminderOfferAnswered }
 
@@ -136,6 +138,7 @@ enum AppTab: Hashable {
             phase = .ready(engine)
             home = try await request("home", [:])
             try await refreshWallet()
+            walletLoaded = true
             if let pending {
                 self.pending = nil
                 go(pending)

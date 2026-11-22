@@ -68,6 +68,7 @@ import {
   feeWorthVerdict,
   fromAmount,
   highText,
+  lineWords,
   TRANSFER_VALUES,
   withCreditsAmount,
 } from '../../src/engine/fee-worth.ts'
@@ -268,6 +269,7 @@ import {
   foreignFeeText,
   FREE_NIGHT_NAME,
   ifCreditsUsedText,
+  inOrder,
   leftOutLines,
   minimumSpendText,
   money,
@@ -2593,8 +2595,9 @@ export function keepOrReplace(request: {
 
 export type FeeWorthParts = {
   text: string | null // the engine's sentences, as search_cards says them
-  // The same, laid out as the site's card page does: the verdict, the
-  // amounts it comes out ahead at, and the rest one tap away.
+  // The same, laid out as the site's card page does: what the amounts
+  // are, the amounts it comes out ahead at, and the engine's sentences,
+  // verdict first, one tap away.
   lead: string | null
   facts: { label: string; value: string }[]
   why: string | null
@@ -2642,9 +2645,13 @@ export function cardFeeWorth(request: {
   const { text } = feeWorthAnswer(c, w, valuations, transfer)
   const why = highText(w)
   const credits = feeWorthCredits(c, w)
+  const where = w.everywhere
+    ? 'spending'
+    : `spending on ${inOrder(w.lines.map(lineWords))}`
   return {
     text,
-    lead: feeWorthVerdict(w, shortCardName(card.name), undefined, false),
+    // The site card page's line over the same amounts (scripts/pages/fee-worth.ts).
+    lead: `It earns more than the best no-fee card, after its ${wholeDollars(card.annual_fee ?? 0)} fee, at this much a month of ${where}:`,
     facts: [
       { label: 'On earning alone', value: fromAmount(w.breakEven, w.stopsAt) },
       ...(transfer === null
@@ -2668,9 +2675,9 @@ export function cardFeeWorth(request: {
           ]),
     ],
     why: why === '' ? null : why,
-    // What follows the verdict in the engine's text, a sentence group to a
-    // paragraph.
+    // The engine's text without its why, a sentence group to a paragraph.
     more: [
+      feeWorthVerdict(w, shortCardName(card.name), undefined, false),
       transfer === null ? '' : feeWorthTransfer(c, card, transfer),
       credits,
       EARNING_ONLY,
@@ -3368,8 +3375,8 @@ export type WidgetRow = {
   name: string // "Amex Gold"
   rate: string // "4%"
   line: string // "Groceries · Amex Gold 4%", for one line on the Lock Screen
-  // The same with the name a narrow widget has room for: "Sapphire
-  // Preferred" for Chase Sapphire Preferred.
+  // The same with the name the cheat sheet widgets use (narrowName):
+  // "Sapphire Preferred" for Chase Sapphire Preferred.
   short: string
   shortLine: string
   art: CardArt | null
@@ -3384,19 +3391,20 @@ export type WidgetSheet = {
   rows: WidgetRow[]
 }
 
-// A card's name for a widget too narrow for its own: the data's short name,
-// and a long one without its issuer ("Sapphire Preferred", "Venture X").
-const NARROW_NAME = 16
-
+// A card's name in the cheat sheet widgets, one rule for every row: the
+// short name without its issuer ("Sapphire Preferred", "Double Cash",
+// "Venture X"), unless that leaves one word ("Amex Gold") or a lowercase
+// one ("Discover it Cash Back").
 function narrowName(c: Catalog, cardId: string): string {
   const card = cardOf(cardId)
   const name = card.short_name ?? names().shortName(cardId)
-  if (name.length <= NARROW_NAME) return name
   const issuer = c.issuers.find((i) => i.id === card.issuer)
   const lower = name.toLowerCase()
   for (const word of [issuer?.name ?? '', ...(issuer?.search ?? [])]) {
-    if (word !== '' && lower.startsWith(`${word.toLowerCase()} `))
-      return name.slice(word.length + 1)
+    if (word === '' || !lower.startsWith(`${word.toLowerCase()} `)) continue
+    const rest = name.slice(word.length + 1)
+    const first = rest.split(' ')[0] ?? ''
+    return rest.includes(' ') && first !== first.toLowerCase() ? rest : name
   }
   return name
 }

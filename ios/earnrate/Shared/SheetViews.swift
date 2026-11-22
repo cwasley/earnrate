@@ -123,9 +123,13 @@ private struct SheetRow: View {
                     CardDrawing(art: art)
                         .frame(width: 16)
                 }
-                CardName(row: row)
+                // One name rule and one size for every row: no
+                // ViewThatFits or scaling here.
+                Text(row.short ?? row.name)
+                    .lineLimit(1)
                     .font(.caption2)
                     .foregroundStyle(Color.inkSecondary)
+                    .accessibilityLabel(row.name)
             }
         }
         .accessibilityElement(children: .combine)
@@ -138,9 +142,9 @@ private struct SheetRow: View {
     }
 }
 
-// The card's name on one line, or its shorter name where that doesn't fit:
-// "Sapphire Preferred" for Chase Sapphire Preferred. VoiceOver says the
-// whole name.
+// The Lock Screen's one card name on one line, or its narrow name where
+// that doesn't fit: "Sapphire Preferred" for Chase Sapphire Preferred.
+// VoiceOver says the whole name.
 private struct CardName: View {
     let row: WidgetSnapshot.Row
 
@@ -151,7 +155,6 @@ private struct CardName: View {
                 .fixedSize(horizontal: true, vertical: false)
             Text(row.short ?? row.name)
                 .lineLimit(1)
-                .minimumScaleFactor(0.8)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(row.name)
