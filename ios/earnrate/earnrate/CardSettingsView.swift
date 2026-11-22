@@ -25,6 +25,9 @@ struct CardSettingsView: View {
             if let settings {
                 ScrollViewReader { proxy in
                     form(settings)
+                        .environment(\.revealField, RevealField { id in
+                            withAnimation { proxy.scrollTo(id, anchor: UnitPoint(x: 0.5, y: 0.25)) }
+                        })
                         .onAppear {
                             guard let focus, !scrolled else { return }
                             scrolled = true

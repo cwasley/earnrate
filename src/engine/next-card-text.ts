@@ -36,7 +36,7 @@ export const signedDollars = (n: number) =>
 // A new card: what each would add over its first two years.
 
 export const NEXT_CARD_LEAD = {
-  yours: 'What each card would add to your cards over its first two years.',
+  yours: 'What each card would add to yours over its first two years.',
   every: 'What each card would earn over its first two years.',
 }
 export const TWO_YEARS_LEAD =

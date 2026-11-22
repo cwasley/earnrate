@@ -2394,7 +2394,7 @@ a.chip {
   font-weight: 600;
 }
 
-/* "Add its renewal date": asked on the row, in data-*, never a class. */
+/* "Add renewal date": asked on the row, in data-*, never a class. */
 .row-note[data-ask] {
   color: var(--accent);
 }

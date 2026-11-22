@@ -81,6 +81,10 @@ private struct AnswerList: View {
     let used: (RecordTarget) -> Void
     @State private var open: Set<String> = []
 
+    private var arts: [CardArt] {
+        [answer.pick?.art, answer.rows.first?.card.art].compactMap { $0 }
+    }
+
     private func canRecord(_ id: String) -> Bool {
         answer.record?.cards.contains(id) == true
     }
@@ -208,7 +212,8 @@ private struct AnswerList: View {
             }
         }
         .listSectionSpacing(.compact)
-        .cardBackdrop([answer.pick?.art, answer.rows.first?.card.art].compactMap { $0 })
+        .cardBackdrop(arts)
+        .washedBar(arts)
         .sensoryFeedback(.selection, trigger: open)
     }
 

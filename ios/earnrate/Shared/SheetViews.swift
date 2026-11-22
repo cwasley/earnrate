@@ -123,10 +123,9 @@ private struct SheetRow: View {
                     CardDrawing(art: art)
                         .frame(width: 16)
                 }
-                Text(row.name)
+                CardName(row: row)
                     .font(.caption2)
                     .foregroundStyle(Color.inkSecondary)
-                    .lineLimit(1)
             }
         }
         .accessibilityElement(children: .combine)
@@ -136,6 +135,26 @@ private struct SheetRow: View {
         Text(row.label)
             .font(.caption.weight(.semibold))
             .lineLimit(1)
+    }
+}
+
+// The card's name on one line, or its shorter name where that doesn't fit:
+// "Sapphire Preferred" for Chase Sapphire Preferred. VoiceOver says the
+// whole name.
+private struct CardName: View {
+    let row: WidgetSnapshot.Row
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            Text(row.name)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+            Text(row.short ?? row.name)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(row.name)
     }
 }
 
@@ -170,7 +189,11 @@ struct PurchaseView: View {
             if let row {
                 switch family {
                 case .accessoryInline:
-                    Text(row.line)
+                    ViewThatFits(in: .horizontal) {
+                        Text(row.line)
+                            .fixedSize(horizontal: true, vertical: false)
+                        Text(row.shortLine ?? row.line)
+                    }
                 default:
                     VStack(alignment: .leading, spacing: 0) {
                         HStack(alignment: .firstTextBaseline) {
@@ -183,10 +206,8 @@ struct PurchaseView: View {
                                 .font(.figure(.headline))
                                 .widgetAccentable()
                         }
-                        Text(row.name)
+                        CardName(row: row)
                             .font(.body)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.8)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityElement(children: .combine)

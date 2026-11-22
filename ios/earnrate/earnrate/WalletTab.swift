@@ -146,20 +146,24 @@ private struct WalletList: View {
             }
 
             if !home.cards.isEmpty {
+                // The front card's buttons stay out of a list row: a tap
+                // beside a row's buttons fires its first one, so a near miss
+                // on Card page would open the card's settings.
                 Section {
-                    if let held = frontCard {
-                        FrontControls(held: held, open: { model.walletPath.append(.settings(held.card.id, nil)) }, page: { model.walletPath.append(.card(held.card.id)) })
-                            .listRowBackground(Color.clear)
-                            .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 20))
-                    }
                 } header: {
-                    WalletDeck(
-                        cards: home.cards,
-                        open: { model.walletPath.append(.settings($0.card.id, nil)) },
-                        page: { model.walletPath.append(.card($0.id)) },
-                        remove: { card in Task { await askRemove(card) } },
-                        front: $front
-                    )
+                    VStack(spacing: 6) {
+                        WalletDeck(
+                            cards: home.cards,
+                            open: { model.walletPath.append(.settings($0.card.id, nil)) },
+                            page: { model.walletPath.append(.card($0.id)) },
+                            remove: { card in Task { await askRemove(card) } },
+                            front: $front
+                        )
+                        if let held = frontCard {
+                            FrontControls(held: held, open: { model.walletPath.append(.settings(held.card.id, nil)) }, page: { model.walletPath.append(.card(held.card.id)) })
+                                .padding(.vertical, 2)
+                        }
+                    }
                     .padding(.top, 4)
                     .padding(.bottom, 6)
                     .textCase(nil)

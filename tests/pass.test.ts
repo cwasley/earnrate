@@ -315,6 +315,54 @@ describe('the cheat-sheet pass', () => {
     expect(front('2026-12-15')).not.toMatch(/on or after/)
   })
 
+  test("an open activation with no issuer deadline isn't given one", () => {
+    const front = (date: string) => {
+      const { pass } = passContents(
+        catalog,
+        {
+          memberships: [],
+          cards: [
+            {
+              id: 'chase-freedom-flex',
+              activated: [
+                'q4-2026-grocery',
+                'q4-2026-dining',
+                'q4-2026-american-red-cross',
+              ],
+            },
+          ],
+        },
+        date,
+        IDENTITY,
+        'serial-3',
+      )
+      const card = pass.storeCard as {
+        secondaryFields: { value: string }[]
+      }
+      return card.secondaryFields[0]?.value
+    }
+    expect(front('2026-12-16')).toBe(
+      "Activate Chase Freedom Flex's Q1 2027 bonus",
+    )
+    expect(front('2026-12-31')).toBe(
+      "Activate Chase Freedom Flex's Q1 2027 bonus",
+    )
+  })
+
+  test('an activation with an issuer deadline says it', () => {
+    const { pass } = passContents(
+      catalog,
+      { memberships: [], cards: [{ id: 'chase-freedom-flex' }] },
+      '2026-11-03',
+      IDENTITY,
+      'serial-3',
+    )
+    const card = pass.storeCard as { secondaryFields: { value: string }[] }
+    expect(card.secondaryFields[0]?.value).toBe(
+      'Activate Chase Freedom Flex by Dec 14',
+    )
+  })
+
   test('the pass says who asked for it', () => {
     const back = (maker?: 'app' | 'site') => {
       const { pass } = passContents(

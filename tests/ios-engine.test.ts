@@ -358,7 +358,7 @@ describe('the iPhone app bridge', () => {
     expect(w.todoShown).toBe(2)
     expect(w.cards).toHaveLength(4)
     expect(w.cards.find((c) => c.card.id === 'amex-gold')?.note).toBe(
-      'Add its renewal date',
+      'Add renewal date',
     )
     expect(walletHome({ wallet: null, today })).toMatchObject({
       todo: [],
@@ -591,7 +591,7 @@ describe('Next card and Cards in the app', () => {
       offers.slice(0, 10).map((o) => o.cardId),
     )
     expect(n.rows.map((r) => r.card.id)).not.toContain('amex-gold')
-    expect(n.lead).toMatch(/add to your cards/)
+    expect(n.lead).toMatch(/add to yours/)
     expect(n.basis).toMatch(
       /^On typical U\.S\. spending, about \$[\d,]+ a month\./,
     )
@@ -819,6 +819,30 @@ describe('phase 1d: lighter next cards, card pages, card data updates', () => {
         .feeWorthLater,
     ).toBe(false)
     expect(cardPage({ id: 'amex-gold', today }).feeWorthLater).toBe(false)
+  })
+
+  test("a card's rates name its points once, over the lines", () => {
+    const page = cardPage({ id: 'amex-gold', today, feeWorth: false })
+    expect(page.earningCurrency).toBe('Amex Membership Rewards')
+    expect(page.earningShort).toContain('1x on everything else')
+    expect(page.earningShort).toHaveLength(page.earning.length)
+    const cash = cardPage({ id: 'citi-double-cash', today, feeWorth: false })
+    expect(cash.earningCurrency).toBe('cash back')
+    expect(cash.earningShort).toContain('2% on everything else')
+  })
+
+  test('whether the fee is worth it comes in parts, every sentence kept', () => {
+    const worth = cardFeeWorth({ id: 'amex-gold', today })
+    expect(worth.lead).toMatch(/^On earning alone, the Amex Gold /)
+    expect(worth.facts[0]?.label).toBe('On earning alone')
+    expect(worth.facts[0]?.value).toMatch(/a month$/)
+    expect(worth.more.at(-1)).toMatch(/^Assumes typical U\.S\. spending/)
+    for (const part of [worth.lead, worth.why, ...worth.more])
+      if (part !== null) expect(worth.text).toContain(part)
+    expect(cardFeeWorth({ id: 'citi-double-cash', today })).toMatchObject({
+      text: null,
+      facts: [],
+    })
   })
 
   test('a downloaded catalog is used only when it reads and is newer', async () => {
@@ -1315,10 +1339,54 @@ describe('answers say why where the pick is', () => {
     expect(answer({ query: 'Whole Foods', wallet, today }).verdict).toBeNull()
   })
 
+  test('a store that turns a card away says why, out loud and on the sheet', () => {
+    const wallet = walletWith([
+      'chase-sapphire-preferred',
+      'citi-double-cash',
+      'amex-gold',
+    ])
+    const said = brief({ query: 'Costco', wallet, today })
+    expect(said.name).toBe('Chase Sapphire Preferred')
+    expect(said.accepts).toBe('Costco takes only Visa in-store.')
+    expect(said.spoken).toMatch(
+      /\. Costco takes only Visa in-store\. Can't use: Citi Double Cash and Amex Gold\.$/,
+    )
+    expect(brief({ query: 'Whole Foods', wallet, today }).accepts).toBeNull()
+    const rows = walletHome({ wallet, today }).sheet?.rows ?? []
+    expect(rows.find((r) => r.label === 'Costco')?.accepts).toBe(
+      'Visa only in-store',
+    )
+    expect(rows.find((r) => r.label === 'Groceries')?.accepts).toBeNull()
+    const visa = walletHome({
+      wallet: walletWith(['chase-sapphire-preferred']),
+      today,
+    })
+    expect(
+      visa.sheet?.rows.find((r) => r.label === 'Costco')?.accepts,
+    ).toBeNull()
+  })
+
+  test('a narrow widget gets a shorter name only for a long one', () => {
+    const wallet = walletWith([
+      'chase-sapphire-preferred',
+      'capital-one-venture-x',
+      'amex-gold',
+    ])
+    const rows = widgets({ wallet, today }).sheets[0]?.rows ?? []
+    const named = new Map(rows.map((r) => [r.name, r.short]))
+    expect(named.get('Chase Sapphire Preferred')).toBe('Sapphire Preferred')
+    expect(named.get('Capital One Venture X Rewards')).toBe('Venture X')
+    expect(named.get('Amex Gold')).toBe('Amex Gold')
+    const gas = rows.find((r) => r.name === 'Chase Sapphire Preferred')
+    expect(gas?.shortLine).toBe(
+      `${gas?.label ?? ''} · Sapphire Preferred ${gas?.rate ?? ''}`,
+    )
+  })
+
   test('a renewal date is asked quietly under the front card', () => {
     const home = walletHome({ wallet: walletWith(['amex-gold']), today })
     expect(home.cards[0]).toMatchObject({
-      note: 'Add its renewal date',
+      note: 'Add renewal date',
       quiet: true,
     })
     const none = walletHome({ wallet: walletWith(['citi-double-cash']), today })

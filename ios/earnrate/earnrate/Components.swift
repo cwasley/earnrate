@@ -197,6 +197,18 @@ struct MonthYearPicker: View {
     }
 }
 
+// Scrolls a field into the top part of the screen, clear of the keyboard
+// and the Done button over it. A screen with a ScrollViewReader sets it.
+struct RevealField {
+    var scroll: (String) -> Void = { _ in }
+
+    func callAsFunction(_ id: String) { scroll(id) }
+}
+
+extension EnvironmentValues {
+    @Entry var revealField = RevealField()
+}
+
 // A dollar amount typed into a settings row. The decimal pad has no Return
 // key, so it saves from the keyboard bar's Done, when the field loses focus,
 // and when the screen goes away (Back), whichever comes first.
@@ -209,6 +221,9 @@ struct DollarField: View {
     @State private var text = ""
     @State private var edited = false
     @FocusState private var focused: Bool
+    @Environment(\.revealField) private var reveal
+
+    private var fieldId: String { "dollars-\(label)" }
 
     var body: some View {
         LabeledContent {
@@ -239,7 +254,17 @@ struct DollarField: View {
         .onDisappear(perform: save)
         .onChange(of: text) { if focused { edited = true } }
         .onChange(of: value) { if !focused { text = Self.format(value) } }
-        .onChange(of: focused) { if !focused { save() } }
+        .id(fieldId)
+        .onChange(of: focused) {
+            if focused {
+                Task {
+                    try? await Task.sleep(for: .milliseconds(350))
+                    reveal(fieldId)
+                }
+            } else {
+                save()
+            }
+        }
     }
 
     private func save() {

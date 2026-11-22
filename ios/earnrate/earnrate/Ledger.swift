@@ -93,6 +93,11 @@ private struct PocketRow: View {
                     Text(row.name)
                         .font(.footnote)
                         .foregroundStyle(Color.inkSecondary)
+                    if let accepts = row.accepts {
+                        Text(accepts)
+                            .font(.caption)
+                            .foregroundStyle(Color.inkSecondary)
+                    }
                     if let note = row.note {
                         Text(note)
                             .font(.caption)

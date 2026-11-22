@@ -60,6 +60,18 @@ import {
 } from '../../src/engine/card-search.ts'
 import { cardDetails } from '../../src/engine/card-details.ts'
 import {
+  EARNING_ONLY,
+  feeWorthAnswer,
+  feeWorthCredits,
+  feeWorthKit,
+  feeWorthTransfer,
+  feeWorthVerdict,
+  fromAmount,
+  highText,
+  TRANSFER_VALUES,
+  withCreditsAmount,
+} from '../../src/engine/fee-worth.ts'
+import {
   catalogCheatSheet,
   cheatSheet,
   EVERYDAY_PURCHASES,
@@ -84,7 +96,7 @@ import {
   creditStates,
   nightStates,
 } from '../../src/engine/credits.ts'
-import { activationGroup } from '../../src/engine/evaluate.ts'
+import { activationGroup, usableAt } from '../../src/engine/evaluate.ts'
 import {
   ALL_PERSONAL_CARDS,
   exploreCards,
@@ -263,12 +275,15 @@ import {
   NETWORK_NAMES,
   NEWER_DATA_NEEDS_APP,
   NONE_OF_YOURS,
+  num,
   onlineAssumption,
   pairCreditsUsedText,
   paymentUnknownText,
   pct,
+  perksNoun,
   placeKindAsk,
   shopperAssumptions,
+  shortCardName,
   shortDate,
   SOMETHING_ELSE,
   twoYearText,
@@ -561,6 +576,11 @@ export type Answer = {
   // "None of your cards work here.", in the pick's place.
   verdict: string | null
   callouts: string[]
+  // The callouts on cards a store doesn't take ("Costco takes only Visa
+  // in-store. Can't use: Amex Gold."), for Siri's shorter answer, and
+  // their reasons alone ("Costco takes only Visa in-store.").
+  accepts: string[]
+  acceptsWhy: string[]
   creditsTitle: string
   credits: CreditRow[]
   rankingTitle: string | null
@@ -591,6 +611,10 @@ export type Answer = {
     held: string
   }
 }
+
+const reasonsOf = (excluded: { reason: string }[]) => [
+  ...new Set(excluded.map((e) => e.reason)),
+]
 
 export type PurchaseOptions = {
   title: string
@@ -859,6 +883,7 @@ export function answer(request: {
     const rows = rec.ranked.map((r, i) => yourRow(r, i + 1, held, today))
     const because = rec.bonus ? (rec.notes[0] ?? null) : null
     const none = !only && !decided
+    const cantUse = cantUseLines(rec.excluded, shortName)
     return {
       title: titleOf(c, rec.merchant),
       subtitle: subtitleOf(rec.merchant),
@@ -887,12 +912,14 @@ export function answer(request: {
       // again, so it goes.
       callouts: [
         ...(rec.categoryNote ? [rec.categoryNote] : []),
-        ...cantUseLines(rec.excluded, shortName),
+        ...cantUse,
         ...tapInstead(rec.merchant, rec.warnings).filter(
           (w) => !none || w !== noCardText(rec.merchant.resolvedName),
         ),
         ...rec.notes.filter((n) => n !== because),
       ],
+      accepts: cantUse,
+      acceptsWhy: reasonsOf(rec.excluded),
       creditsTitle: CREDIT_GROUP,
       credits: [],
       rankingTitle: rows.length > 1 ? 'Your other cards' : null,
@@ -926,6 +953,7 @@ export function answer(request: {
     resolved,
   )
   const only = noteOnly(r)
+  const leftOut = leftOutLines(r.excluded)
   const shown = request.all === true ? r : topOf(r, TOP)
   const first = r.ranked[0]
   const more = r.ranked.length - shown.ranked.length
@@ -953,10 +981,12 @@ export function answer(request: {
       ...problems.map(
         (p) => `The wallet saved on this phone has a problem: ${p}`,
       ),
-      ...leftOutLines(r.excluded),
+      ...leftOut,
       ...(r.categoryNote ? [r.categoryNote] : []),
       ...tapInstead(r.merchant, r.warnings),
     ],
+    accepts: leftOut,
+    acceptsWhy: reasonsOf(r.excluded),
     creditsTitle: CREDIT_GROUP,
     credits: r.credits.map((p) => ({
       card: cardRow(p.cardId, held),
@@ -1482,6 +1512,8 @@ export type WalletHome = {
       name: string
       rate: string
       note: string | null
+      // "Visa only in-store", when the store turns away a saved card.
+      accepts: string | null
       art: CardArt | null
     }[]
     // The sheet as a picture to share: what the site's image says, and
@@ -1616,6 +1648,23 @@ export function walletHome(request: {
       url: i.row.url ?? null,
     }))
   const sheet = cheatSheet(c, wallet, today)
+  const onlyTakes = (merchantId: string): string | null => {
+    const m = resolveMerchantById(c, merchantId, null)
+    const takes = m?.accepts
+    if (!m || !takes) return null
+    const turnedAway = wallet.cards.some((h) => {
+      const card = c.cards.find((k) => k.id === h.id)
+      return card !== undefined && !card.only_at && !usableAt(card, m)
+    })
+    if (!turnedAway) return null
+    const where =
+      m.channel === 'in_store'
+        ? ' in-store'
+        : m.channel === 'online'
+          ? ' online'
+          : ''
+    return `${takes.map((n) => NETWORK_NAMES[n] ?? n).join(' or ')} only${where}`
+  }
   return {
     ...base,
     reminderOffer: items.some((i) => reminderLead(i) !== null)
@@ -1654,6 +1703,7 @@ export function walletHome(request: {
           rate:
             row.effectiveReturnPct === null ? '' : pct(row.effectiveReturnPct),
           note: row.note,
+          accepts: item && 'merchant' in item ? onlyTakes(item.merchant) : null,
           art: row.cardId === null ? null : artOf(row.cardId),
         }
       }),
@@ -2339,6 +2389,10 @@ export type CardPage = {
   art: CardArt
   held: boolean
   earning: string[]
+  // The same lines with the points named once, in earningCurrency ("5x on
+  // hotels through Amex Travel"), when every line names the same ones.
+  earningCurrency: string | null
+  earningShort: string[]
   ratesNote: string | null
   offer: {
     terms: string
@@ -2362,6 +2416,29 @@ export type CardPage = {
   keep: { title: string; lead: string; button: string } | null
 }
 
+// "4x Amex Membership Rewards at restaurants" as "4x at restaurants", with
+// the points said once over the lines; left as they are unless every line
+// names the same points after its rate.
+function earningShort(
+  lines: string[],
+  currency: string,
+): { earningCurrency: string | null; earningShort: string[] } {
+  const short = lines.map((line) => {
+    const space = line.indexOf(' ')
+    return space > 0 && line.startsWith(`${currency} `, space + 1)
+      ? `${line.slice(0, space)} ${line.slice(space + currency.length + 2)}`
+      : null
+  })
+  return lines.length > 0 && short.every((l) => l !== null)
+    ? { earningCurrency: currency, earningShort: short }
+    : { earningCurrency: null, earningShort: lines }
+}
+
+// What a rate is paid in, as the rates say it: "cash back", "Amex
+// Membership Rewards".
+const earnUnit = (c: Catalog, currency: string) =>
+  earnText(c, 1, currency).replace(/^\S+ /, '')
+
 // A card's page: what the site's card page and search_cards say about it.
 // Whether its fee is worth it takes seconds without a JIT, so the app asks
 // for the page without it and fills it in from cardFeeWorth.
@@ -2380,6 +2457,7 @@ export function cardPage(request: {
   const later = request.feeWorth === false
   const [details] =
     cardDetails(c, [card.id], wallet, today, { feeWorth: !later }) ?? []
+  const earning = details?.earning ?? []
   const o = card.welcome_offer
   const offer =
     o && inEffect(o, today)
@@ -2401,7 +2479,8 @@ export function cardPage(request: {
     foreignFee: foreignFeeText(card.foreign_transaction_fee),
     art: row.art,
     held: row.held,
-    earning: details?.earning ?? [],
+    earning,
+    ...earningShort(earning, earnUnit(c, card.currency)),
     ratesNote: info.ratesNote,
     offer,
     offerHistory: offerHistoryText(c, card, today)?.lead ?? null,
@@ -2512,19 +2591,97 @@ export function keepOrReplace(request: {
 // Next card: the welcome-offer ranking for the saved cards (or none), and
 // Best setups.
 
-// Whether a card's annual fee is worth it, the slow part of its page.
+export type FeeWorthParts = {
+  text: string | null // the engine's sentences, as search_cards says them
+  // The same, laid out as the site's card page does: the verdict, the
+  // amounts it comes out ahead at, and the rest one tap away.
+  lead: string | null
+  facts: { label: string; value: string }[]
+  why: string | null
+  more: string[]
+  moreTitle: string
+}
+
+// Whether a card's annual fee is worth it, the slow part of its page. The
+// math is cardDetails' (with the same transfer-value rerun), kept here so
+// the parts the sentences are made of can be laid out.
 export function cardFeeWorth(request: {
   id: string
   wallet?: unknown
   today?: string
-}): { text: string | null } {
+}): FeeWorthParts {
   const c = loaded()
   const today = request.today ?? localToday()
-  const [details] =
-    cardDetails(c, [cardOf(request.id).id], walletOf(request.wallet), today) ??
-    []
-  return { text: details?.feeWorth?.text ?? null }
+  const card = cardOf(request.id)
+  const saved = walletOf(request.wallet)
+  const valuations = saved?.valuations ?? {}
+  const heldCards = saved?.cards ?? []
+  const w = feeWorthKit(c, today, valuations, heldCards).feeWorth(card)
+  if (w === null)
+    return {
+      text: null,
+      lead: null,
+      facts: [],
+      why: null,
+      more: [],
+      moreTitle: HOW_WORKED_OUT,
+    }
+  const cents = TRANSFER_VALUES[card.currency]
+  const transfer =
+    cents === undefined || valuations[card.currency] !== undefined
+      ? null
+      : {
+          worth: feeWorthKit(
+            c,
+            today,
+            { ...valuations, ...TRANSFER_VALUES },
+            heldCards,
+          ).feeWorth(card),
+          cents,
+        }
+  const { text } = feeWorthAnswer(c, w, valuations, transfer)
+  const why = highText(w)
+  const credits = feeWorthCredits(c, w)
+  return {
+    text,
+    lead: feeWorthVerdict(w, shortCardName(card.name), undefined, false),
+    facts: [
+      { label: 'On earning alone', value: fromAmount(w.breakEven, w.stopsAt) },
+      ...(transfer === null
+        ? []
+        : [
+            {
+              label: `If you transfer points (${num(transfer.cents)}¢)`,
+              value: fromAmount(
+                transfer.worth?.breakEven ?? null,
+                transfer.worth?.stopsAt ?? null,
+              ),
+            },
+          ]),
+      ...(w.credits === null
+        ? []
+        : [
+            {
+              label: `If you use its ${perksNoun(w.credits, true, true)} (${wholeDollars(w.credits.yearly)} a year)`,
+              value: withCreditsAmount(w.creditsBreakEven, w.creditsStopAt),
+            },
+          ]),
+    ],
+    why: why === '' ? null : why,
+    // What follows the verdict in the engine's text, a sentence group to a
+    // paragraph.
+    more: [
+      transfer === null ? '' : feeWorthTransfer(c, card, transfer),
+      credits,
+      EARNING_ONLY,
+      text.slice(text.indexOf(ASSUMES)),
+    ].filter((t) => t !== ''),
+    moreTitle: HOW_WORKED_OUT,
+  }
 }
+
+const HOW_WORKED_OUT = 'How this is worked out'
+const ASSUMES = 'Assumes typical'
 
 // ---------------------------------------------------------------------------
 // About, and the card data the app runs on.
@@ -3211,6 +3368,10 @@ export type WidgetRow = {
   name: string // "Amex Gold"
   rate: string // "4%"
   line: string // "Groceries · Amex Gold 4%", for one line on the Lock Screen
+  // The same with the name a narrow widget has room for: "Sapphire
+  // Preferred" for Chase Sapphire Preferred.
+  short: string
+  shortLine: string
   art: CardArt | null
 }
 
@@ -3221,6 +3382,23 @@ export type WidgetSheet = {
   quarter: string // "Q4 2026"
   scope: string // whose cards: "Your cards" or "Every card"
   rows: WidgetRow[]
+}
+
+// A card's name for a widget too narrow for its own: the data's short name,
+// and a long one without its issuer ("Sapphire Preferred", "Venture X").
+const NARROW_NAME = 16
+
+function narrowName(c: Catalog, cardId: string): string {
+  const card = cardOf(cardId)
+  const name = card.short_name ?? names().shortName(cardId)
+  if (name.length <= NARROW_NAME) return name
+  const issuer = c.issuers.find((i) => i.id === card.issuer)
+  const lower = name.toLowerCase()
+  for (const word of [issuer?.name ?? '', ...(issuer?.search ?? [])]) {
+    if (word !== '' && lower.startsWith(`${word.toLowerCase()} `))
+      return name.slice(word.length + 1)
+  }
+  return name
 }
 
 // What the widgets say with no cards saved, in full and for the Lock Screen.
@@ -3272,6 +3450,7 @@ export function widgets(request: { wallet?: unknown; today?: string }): {
         const item = EVERYDAY_PURCHASES[i]
         const name =
           row.cardId === null ? 'None of your cards' : shortName(row.cardId)
+        const short = row.cardId === null ? name : narrowName(c, row.cardId)
         const rate =
           row.effectiveReturnPct === null ? '' : pct(row.effectiveReturnPct)
         return {
@@ -3280,6 +3459,8 @@ export function widgets(request: { wallet?: unknown; today?: string }): {
           name,
           rate,
           line: `${row.label} · ${rate === '' ? name : `${name} ${rate}`}`,
+          short,
+          shortLine: `${row.label} · ${rate === '' ? short : `${short} ${rate}`}`,
           art: row.cardId === null ? null : artOf(row.cardId),
         }
       }),
@@ -3302,6 +3483,8 @@ export type Brief = {
   detail: string | null // "4% back"
   reason: string | null
   art: CardArt | null
+  // Why a better card isn't the pick: a store that takes only some networks.
+  accepts: string | null
   note: string | null // whose cards, or what's missing
   spoken: string // the answer in a sentence or two, for Siri to say
 }
@@ -3326,7 +3509,10 @@ export function brief(request: {
       return [a.verdict ?? NONE_OF_YOURS, ...a.callouts.slice(0, 1)].join(' ')
     if (m.source === 'none')
       return `earnrate doesn't know “${m.input}” yet, so only base rates apply. ${pick.name} earns the most on those, ${pick.detail}.`
-    const earns = `It earns ${pick.detail}, ${pick.reason}.`
+    const earns = [
+      `It earns ${pick.detail}, ${pick.reason}.`,
+      ...a.accepts,
+    ].join(' ')
     if (a.scope === 'every')
       return `The best card ${place} is ${pick.name}. ${earns}`
     return pick.label === USE_CARD
@@ -3342,6 +3528,10 @@ export function brief(request: {
     detail: pick?.detail ?? null,
     reason: pick?.reason ?? null,
     art: pick?.art ?? null,
+    accepts:
+      pick === null || a.acceptsWhy.length === 0
+        ? null
+        : a.acceptsWhy.join(' '),
     note:
       m.source === 'none'
         ? unknownStoreTapText(m.input)

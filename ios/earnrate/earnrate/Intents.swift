@@ -174,6 +174,11 @@ struct BriefSnippet: View {
                         .foregroundStyle(Color.inkSecondary)
                 }
             }
+            if let accepts = brief.accepts {
+                Text(accepts)
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkSecondary)
+            }
             if let note = brief.note {
                 Text(note)
                     .font(.caption)
@@ -251,6 +256,7 @@ enum Spotlight {
         detail: "4% back",
         reason: "4x Amex Membership Rewards at supermarkets",
         art: CardArt(color: "#d4af6a", chip: "#d9c08a", light: true),
+        accepts: nil,
         note: nil,
         spoken: "Use Amex Gold at Whole Foods Market. It earns 4% back, 4x Amex Membership Rewards at supermarkets."
     ))

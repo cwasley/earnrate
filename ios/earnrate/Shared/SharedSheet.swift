@@ -9,6 +9,9 @@ nonisolated struct WidgetSnapshot: Codable {
         let name: String
         let rate: String
         let line: String
+        // Optional so a file written by an earlier build still reads.
+        let short: String?
+        let shortLine: String?
         let art: CardArt?
         var id: String { label }
     }

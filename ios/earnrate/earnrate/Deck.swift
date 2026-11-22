@@ -30,9 +30,12 @@ struct CardBackdrop: View {
     let arts: [CardArt]
     @Environment(\.colorScheme) private var scheme
 
+    static func strength(_ scheme: ColorScheme) -> Double { scheme == .dark ? 0.36 : 0.28 }
+    static func first(_ arts: [CardArt]) -> Color { arts.first?.tone ?? Color.ember }
+
     var body: some View {
-        let strength = scheme == .dark ? 0.36 : 0.28
-        let first = arts.first?.tone ?? Color.ember
+        let strength = Self.strength(scheme)
+        let first = Self.first(arts)
         let second = arts.dropFirst().first?.tone ?? (arts.isEmpty ? Color.accentColor : first)
         ZStack {
             Color.canvas
@@ -57,10 +60,29 @@ struct CardBackdrop: View {
     }
 }
 
+// The navigation bar in the wash's top color, for a screen whose big
+// header scrolls under it, so what's under the bar is hidden rather than
+// blurred and cut in half.
+private struct WashedBar: ViewModifier {
+    let arts: [CardArt]
+    @Environment(\.colorScheme) private var scheme
+
+    func body(content: Content) -> some View {
+        content.toolbarBackground(
+            Color.canvas.mix(with: CardBackdrop.first(arts), by: CardBackdrop.strength(scheme)),
+            for: .navigationBar
+        )
+    }
+}
+
 extension View {
     func cardBackdrop(_ arts: [CardArt]) -> some View {
         scrollContentBackground(.hidden)
             .background { CardBackdrop(arts: arts) }
+    }
+
+    func washedBar(_ arts: [CardArt]) -> some View {
+        modifier(WashedBar(arts: arts))
     }
 
     // For a footer that ends a screen: a list leaves room under its last

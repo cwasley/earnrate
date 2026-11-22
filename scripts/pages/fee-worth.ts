@@ -7,10 +7,10 @@ import {
   feeWorthMix,
   feeWorthTransfer,
   feeWorthVerdict,
+  fromAmount,
   highText,
   lineWords,
-  MAX_MONTHLY,
-  STEP,
+  withCreditsAmount,
   type FeeWorth,
   type Markup,
 } from '../../src/engine/fee-worth.ts'
@@ -30,24 +30,6 @@ import { esc } from './site.ts'
 const SHOWN_AMOUNTS = [500, 1000, 2000, 4000]
 
 const HTML: Markup = { esc, strong: (s) => `<strong>${s}</strong>` }
-
-// The monthly spending from which it comes out ahead, as an answer cell.
-function fromAmount(breakEven: number | null, stopsAt: number | null): string {
-  if (breakEven === null)
-    return `At no amount up to ${wholeDollars(MAX_MONTHLY)} a month`
-  return stopsAt === null
-    ? `From ${wholeDollars(breakEven)} a month`
-    : `${wholeDollars(breakEven)} to ${wholeDollars(stopsAt)} a month`
-}
-
-function withCredits(w: FeeWorth): string {
-  if (w.creditsBreakEven !== 0)
-    return fromAmount(w.creditsBreakEven, w.creditsStopAt)
-  if (w.creditsStopAt === null) return 'At any amount'
-  return w.creditsStopAt === 0
-    ? `Under ${wholeDollars(STEP)} a month`
-    : `Up to ${wholeDollars(w.creditsStopAt)} a month`
-}
 
 export function feeWorthSection(
   ctx: PageContext,
@@ -87,7 +69,7 @@ export function feeWorthSection(
       : [
           [
             `If you use its ${perksNoun(w.credits, true, true)} (${wholeDollars(w.credits.yearly)} a year)`,
-            withCredits(w),
+            withCreditsAmount(w.creditsBreakEven, w.creditsStopAt),
           ] as [string, string],
         ]),
   ]

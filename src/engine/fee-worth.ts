@@ -337,6 +337,31 @@ export function feeWorthMix(w: FeeWorth): string {
 export const EARNING_ONLY =
   'This counts only what the card earns, not lounge access or other benefits.'
 
+// The card page's answer cells on earnrate.dev and in the iPhone app: the
+// monthly spending from which the card comes out ahead.
+export function fromAmount(
+  breakEven: number | null,
+  stopsAt: number | null,
+): string {
+  if (breakEven === null)
+    return `At no amount up to ${wholeDollars(MAX_MONTHLY)} a month`
+  return stopsAt === null
+    ? `From ${wholeDollars(breakEven)} a month`
+    : `${wholeDollars(breakEven)} to ${wholeDollars(stopsAt)} a month`
+}
+
+// The same with its credits used.
+export function withCreditsAmount(
+  creditsBreakEven: number | null,
+  creditsStopAt: number | null,
+): string {
+  if (creditsBreakEven !== 0) return fromAmount(creditsBreakEven, creditsStopAt)
+  if (creditsStopAt === null) return 'At any amount'
+  return creditsStopAt === 0
+    ? `Under ${wholeDollars(STEP)} a month`
+    : `Up to ${wholeDollars(creditsStopAt)} a month`
+}
+
 export function feeWorthVerdict(
   w: FeeWorth,
   name: string,

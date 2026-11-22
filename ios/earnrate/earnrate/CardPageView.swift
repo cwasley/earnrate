@@ -91,9 +91,11 @@ struct CardPageView: View {
 
                 if !page.earning.isEmpty {
                     Section {
-                        ForEach(page.earning, id: \.self) { EarnLine(line: $0) }
+                        ForEach(Array(zip(page.earningShort, page.earning)), id: \.1) { short, line in
+                            EarnLine(line: short, spoken: line)
+                        }
                     } header: {
-                        SectionTitle("Earns")
+                        SectionTitle(page.earningCurrency.map { "Earns \($0)" } ?? "Earns")
                     } footer: {
                         if let note = page.ratesNote { Text(note).foregroundStyle(Color.inkSecondary) }
                     }
@@ -167,6 +169,7 @@ struct CardPageView: View {
         }
         .listSectionSpacing(.compact)
         .cardBackdrop([page.art])
+        .washedBar([page.art])
     }
 
     private var heroWidth: CGFloat { min(width - 72, 320) }
@@ -240,16 +243,14 @@ struct CardPageView: View {
         // Worked out after the page shows; gone if the card has none.
         if page.feeWorthLater && (worth == nil || worth?.text != nil) {
             Section {
-                DisclosureGroup("Is the fee worth it?") {
-                    if let text = worth?.text {
-                        Text(text)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                    }
+                if let worth, let lead = worth.lead {
+                    FeeWorthRows(worth: worth, lead: lead)
+                } else {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
                 }
+            } header: {
+                SectionTitle("Is the fee worth it?")
             }
         }
 
@@ -260,10 +261,53 @@ struct CardPageView: View {
 
 }
 
+// Whether the fee is worth it, as the site's card page lays it out: the
+// verdict, the monthly spending it comes out ahead from, and the rest of the
+// engine's sentences one tap away.
+private struct FeeWorthRows: View {
+    let worth: FeeWorth
+    let lead: String
+    @State private var more = false
+
+    var body: some View {
+        Text(lead)
+            .font(.subheadline)
+        ForEach(worth.facts, id: \.self) { fact in
+            LabeledContent {
+                EmptyView()
+            } label: {
+                Text(fact.label)
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkSecondary)
+                Text(fact.value)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.primary)
+            }
+            .accessibilityElement(children: .combine)
+        }
+        if let why = worth.why {
+            Text(why)
+                .font(.footnote)
+                .foregroundStyle(Color.inkSecondary)
+        }
+        if !worth.more.isEmpty {
+            DisclosureGroup(worth.moreTitle, isExpanded: $more) {
+                ForEach(worth.more, id: \.self) {
+                    Text($0)
+                        .font(.footnote)
+                        .foregroundStyle(Color.inkSecondary)
+                }
+            }
+            .font(.subheadline)
+        }
+    }
+}
+
 // An earning line with its rate pulled out front, when it starts with one
-// ("4x Amex Membership Rewards at restaurants").
+// ("4x at restaurants"); VoiceOver says the whole line, points and all.
 private struct EarnLine: View {
     let line: String
+    let spoken: String
     @Environment(\.dynamicTypeSize) private var size
     @ScaledMetric(relativeTo: .title3) private var rateWidth: CGFloat = 44
 
@@ -281,9 +325,10 @@ private struct EarnLine: View {
                     .font(.subheadline)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(line)
+            .accessibilityLabel(spoken)
         } else {
             Text(line)
+                .accessibilityLabel(spoken)
         }
     }
 

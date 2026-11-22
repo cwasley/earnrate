@@ -334,6 +334,7 @@ struct WalletHome: Decodable {
             let name: String
             let rate: String
             let note: String?
+            let accepts: String?
             let art: CardArt?
             var id: String { label }
         }
@@ -596,6 +597,8 @@ struct CardPage: Decodable {
     let art: CardArt
     let held: Bool
     let earning: [String]
+    let earningCurrency: String?
+    let earningShort: [String]
     let ratesNote: String?
     let offer: Offer?
     let offerHistory: String?
@@ -813,7 +816,17 @@ struct BonusRules: Decodable {
 }
 
 struct FeeWorth: Decodable {
+    struct Fact: Decodable, Hashable {
+        let label: String
+        let value: String
+    }
+
     let text: String?
+    let lead: String?
+    let facts: [Fact]
+    let why: String?
+    let more: [String]
+    let moreTitle: String
 }
 
 struct About: Decodable {
@@ -851,6 +864,7 @@ nonisolated struct Brief: Decodable {
     let detail: String?
     let reason: String?
     let art: CardArt?
+    let accepts: String?
     let note: String?
     let spoken: String
 }

@@ -9,7 +9,13 @@ import {
   checklistRows,
   type ChecklistRowItem,
 } from '../../src/engine/checklist.ts'
-import { longDate, pct, possessive, shortDate } from '../../src/engine/text.ts'
+import {
+  longDate,
+  pct,
+  possessive,
+  quarterName,
+  shortDate,
+} from '../../src/engine/text.ts'
 import { cardText } from '../../src/format/card-text.ts'
 import type { Catalog } from '../../src/schema/catalog.ts'
 import {
@@ -150,6 +156,18 @@ export function passContents(
             item.row.title,
           )?.[1]
           return `Activate ${possessive(card)}${quarter === undefined ? '' : ` ${quarter}`} bonus on or after ${day ?? ''}`
+        }
+        // Without the issuer's deadline, `due` is only when the quarter
+        // starts or ends, so it isn't said as one.
+        if (item.row.when === null) {
+          const quarter =
+            item.due === null
+              ? null
+              : quarterName(
+                  item.due,
+                  currentPeriodEnd('quarter', item.due, null) ?? item.due,
+                )
+          return `Activate ${possessive(card)}${quarter === null ? '' : ` ${quarter}`} bonus`
         }
         return `Activate ${card}${by}`
       case 'pick':

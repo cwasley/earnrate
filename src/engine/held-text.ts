@@ -119,7 +119,7 @@ export function milestoneLine(
     : `Spend bonus: ${wholeDollars(next.spent)} of ${wholeDollars(next.spend)}`
 }
 
-export const RENEWAL_ASK = 'Add its renewal date'
+export const RENEWAL_ASK = 'Add renewal date'
 
 // A credit under Credit details: "$10 back each month at Dunkin'; this one
 // runs through Nov 30."
