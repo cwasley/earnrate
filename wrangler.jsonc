@@ -43,7 +43,9 @@
   "routes": [
     { "pattern": "earnrate.dev", "custom_domain": true },
     // Kept attached for its DNS record and certificate. The zone's redirect
-    // rule sends www to earnrate.dev with a 308 before the Worker runs.
+    // rule sends www to earnrate.dev with a 308 before the Worker runs, except
+    // /.well-known/apple-app-site-association: Safari opens the app only for
+    // a link to another host, so My wallet's move link uses www.
     { "pattern": "www.earnrate.dev", "custom_domain": true },
   ],
 }
