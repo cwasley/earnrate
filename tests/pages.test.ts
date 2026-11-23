@@ -13,7 +13,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { loadCatalog } from '../src/data/load.ts'
 import { localToday } from '../src/engine/periods.ts'
 import { rotationGapText } from '../src/engine/rotation.ts'
-import { simulateSingles } from '../src/engine/simulate.ts'
+import { simulateSingles, type ResolvedLine } from '../src/engine/simulate.ts'
 import {
   dateRange,
   earnText,
@@ -48,7 +48,11 @@ import {
   offerRecords,
 } from '../src/engine/offer-history.ts'
 import { offerHistorySection } from '../scripts/pages/offer-history.ts'
-import { CardSchema } from '../src/schema/card.ts'
+import {
+  cheaperCards,
+  cheaperCardsTable,
+} from '../scripts/pages/cheaper-cards.ts'
+import { CardSchema, type Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
 import {
   addDays,
@@ -403,6 +407,31 @@ describe('the built static pages', () => {
     expect(
       readFileSync(path.join(out, 'cards', 'citi-double-cash.html'), 'utf8'),
     ).toContain('<li><a href="/year-end/">')
+  })
+
+  test("a fee card's annual-fee section ends with cheaper cards, this card first", () => {
+    const head = '<th>Card</th><th>Annual fee</th><th>Nets a year</th>'
+    const section = (id: string) => {
+      const html = readFileSync(path.join(out, 'cards', `${id}.html`), 'utf8')
+      const start = html.indexOf('<h2 id="annual-fee">')
+      return start === -1
+        ? ''
+        : html.slice(start, html.indexOf('<h2', start + 4))
+    }
+    let shown = 0
+    for (const card of catalog.cards) {
+      const fee = section(card.id)
+      if (!fee.includes(head)) continue
+      shown++
+      const table = fee.slice(fee.indexOf(head))
+      expect(table, card.id).toMatch(
+        new RegExp(`^${head}</tr></thead><tbody><tr><td><strong>`),
+      )
+    }
+    expect(shown).toBeGreaterThan(0)
+    expect(section('amex-gold')).toContain(head)
+    expect(section('amex-platinum')).toContain(head)
+    expect(section('citi-double-cash')).toBe('')
   })
 
   test("a card page dates its offer from the offer's last reading", () => {
@@ -1365,6 +1394,78 @@ describe('is the annual fee worth it', () => {
     if (!worth) return
     for (const m of [STEP, 1000, MAX_MONTHLY])
       expect(lead(worth, m), worth.card.id).toBeLessThanOrEqual(0)
+  }, 60_000)
+})
+
+describe('cheaper cards in the annual-fee section', () => {
+  const kit = feeWorthKit(catalog, today)
+  const byId = (id: string) => {
+    const card = catalog.cards.find((c) => c.id === id)
+    if (!card) throw new Error(`no card ${id}`)
+    return card
+  }
+  const answer = (id: string) => {
+    const worth = kit.feeWorth(byId(id))
+    if (!worth) throw new Error(`no fee section for ${id}`)
+    const cheaper = cheaperCards(catalog, worth, today)
+    if (!cheaper) throw new Error(`no cheaper cards for ${id}`)
+    return cheaper
+  }
+  const nets = (card: Card, lines: ResolvedLine[]) => {
+    const [sim] = simulateSingles(catalog, [card], lines, {
+      filters: { ...ALL_PERSONAL_CARDS, business: card.business },
+      memberships: [],
+      valuations: {},
+      start: today,
+    })
+    return (sim?.rewards ?? 0) - (card.annual_fee ?? 0)
+  }
+
+  test("the Amex Gold's table is the engine's, on the section's typical spending", () => {
+    const gold = byId('amex-gold')
+    const c = answer('amex-gold')
+    expect(c.lines.length).toBeGreaterThan(0)
+    expect(c.own.net).toBeCloseTo(nets(gold, c.lines), 0)
+    expect(c.rows.length).toBeGreaterThan(0)
+    expect(c.rows.length).toBeLessThanOrEqual(3)
+    expect(c.cents).not.toBeNull()
+    expect(c.own.transferNet).not.toBeNull()
+    const html = unescape(cheaperCardsTable(ctx, c))
+    expect(html).toContain(
+      `<tr><td><strong>${ctx.shortName('amex-gold')}</strong></td><td>${wholeDollars(gold.annual_fee ?? 0)}</td><td>${wholeDollars(c.own.net)}, or ${wholeDollars(c.own.transferNet ?? 0)} at ${String(c.cents)}¢</td></tr>`,
+    )
+    let last = Infinity
+    for (const r of c.rows) {
+      const card = byId(r.cardId)
+      expect(r.fee).toBeLessThan(gold.annual_fee ?? 0)
+      expect(card.business).toBe(false)
+      expect(card.requires_membership).toBeUndefined()
+      expect(r.net).toBeCloseTo(nets(card, c.lines), 0)
+      expect(r.net).toBeLessThanOrEqual(last)
+      last = r.net
+      expect(html).toContain(`<a href="/cards/${r.cardId}">`)
+    }
+    expect(html).toMatch(
+      /Use all \$[\d,]+ of its statement credits and it nets about/,
+    )
+  }, 60_000)
+
+  test('a premium card that nets below zero still gets the table, with its credits', () => {
+    const c = answer('amex-platinum')
+    expect(c.own.net).toBeLessThan(0)
+    const html = unescape(cheaperCardsTable(ctx, c))
+    expect(html).toContain(
+      `<td>${wholeDollars(c.own.net).replace('−', '−⁠')}, or `,
+    )
+    expect(html).toContain('a cheaper card nets more')
+    expect(html).toContain(
+      `it nets about ${wholeDollars(c.own.net + c.k.unsaid.yearly)}.`,
+    )
+  }, 60_000)
+
+  test("a business card's cheaper cards are business cards", () => {
+    for (const r of answer('amex-business-gold').rows)
+      expect(byId(r.cardId).business, r.cardId).toBe(true)
   }, 60_000)
 })
 

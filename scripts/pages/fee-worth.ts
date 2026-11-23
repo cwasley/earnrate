@@ -24,6 +24,11 @@ import {
   perksNoun,
   wholeDollars,
 } from '../../src/engine/text.ts'
+import {
+  cheaperCardsNote,
+  cheaperCardsTable,
+  type CheaperCards,
+} from './cheaper-cards.ts'
 import type { PageContext } from './context.ts'
 import { esc } from './site.ts'
 
@@ -35,6 +40,7 @@ export function feeWorthSection(
   ctx: PageContext,
   w: FeeWorth,
   transfer?: { worth: FeeWorth | null; cents: number | undefined },
+  cheaper: CheaperCards | null = null,
 ): string {
   const { card } = w
   const name = ctx.shortName(card.id)
@@ -97,9 +103,11 @@ export function feeWorthSection(
       <p>${esc(why)}</p>`
       }
       <p class="muted">${esc(EARNING_ONLY)}</p>
-      <table class="numbers"><thead><tr><th>A month</th><th>${esc(name)}, a year after fees</th><th>Best no-fee card</th></tr></thead><tbody>${rows}</tbody></table>
+      ${cheaper === null ? '' : cheaperCardsTable(ctx, cheaper)}
       <details class="fine"><summary>How this is calculated</summary>
       <p>${feeWorthVerdict(w, name, HTML, false)}${transferLine}${creditsLine}</p>
+      <table class="numbers"><thead><tr><th>A month</th><th>${esc(name)}, a year after fees</th><th>Best no-fee card</th></tr></thead><tbody>${rows}</tbody></table>
       <p class="muted">Assumes ${esc(value)}; ${esc(w.everywhere ? `no typical category earns it a bonus, so the whole typical mix: ${mix}` : `the typical mix of its bonus categories: ${mix}`)} (from earnrate's typical household: ${esc(TYPICAL_MONTHLY_SPEND.map((t) => `${t.what} ${money(t.monthly)}`).join(', '))}); the same spending every month for a year; the regular annual fee${extras.length > 0 ? `, ${esc(listed(extras))}` : ''}${yearly === null ? '' : `; ${esc(yearly)}`}; no welcome bonus, first-year rate or credits. The no-fee side is the best of ${String(w.rivals)} no-fee ${card.business ? 'business' : 'personal'} cards that need no membership, on the same spending, each with its best picks. Other spending, earned at each card's other rates, isn't included.</p>
+      ${cheaper === null ? '' : `<p class="muted">${esc(cheaperCardsNote(card))}</p>`}
       </details>`
 }

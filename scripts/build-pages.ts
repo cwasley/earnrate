@@ -123,6 +123,7 @@ import {
 } from './pages/coding.ts'
 import { feeWorthKit, TRANSFER_VALUES } from '../src/engine/fee-worth.ts'
 import { feeWorthSection } from './pages/fee-worth.ts'
+import { cheaperCards } from './pages/cheaper-cards.ts'
 import { offerHistorySection } from './pages/offer-history.ts'
 import { button, pageActions, textLink, type Visitor } from './pages/actions.ts'
 import { storeHref, storeIndexReasons } from './pages/indexing.ts'
@@ -1674,6 +1675,7 @@ function renderCard(
                     worth: feeWorthTransferred(card),
                     cents: TRANSFER_VALUES[card.currency],
                   },
+              cheaperCards(catalog, worth, today),
             )
           : ''
       }
