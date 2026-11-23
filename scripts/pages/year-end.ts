@@ -628,7 +628,7 @@ export function yearEndLinks(
       return [
         card.id,
         {
-          html: `<p>${esc(`What on this card ends or starts over when ${String(y.year)} does:`)} <a href="${cardPath(y, card.id)}">${esc(lead)}</a>.</p>`,
+          html: `<p>${esc(`What on this card ends or starts over when ${String(y.year)} does:`)} <a href="${cardPageIndexed(one) ? cardPath(y, card.id) : `/year-end/#${esc(anchors(y).get(card.id) ?? '')}`}">${esc(lead)}</a>.</p>`,
           credits: creditList(one).length > 0,
         },
       ]
@@ -1141,11 +1141,15 @@ function jumpList(y: YearEnd, ctx: PageContext): string {
   return `<details class="ye-jump"><summary>${esc(`Jump to a card (${String(items.length)})`)}</summary><ul class="chip-links" data-ye-jump>${items.join('')}</ul></details>`
 }
 
-// Every card's own page, to send to someone who has that card.
+// The cards with a page of their own worth searching for, to send to
+// someone who has the card. Every card's block has its own Send button.
 function cardPagesList(v: View): string {
-  const cards = listedCards(v.ctx, v.y)
+  const cards = listedCards(v.ctx, v.y).filter((c) =>
+    cardPageIndexed(only(v.y, c.id)),
+  )
+  if (cards.length === 0) return ''
   return `<h2 id="by-card">A page for each card</h2>
-      <p class="muted">${esc(`Each of these ${String(cards.length)} cards has its own page with only its part of this list, to send to someone who has the card.`)}</p>
+      <p class="muted">${esc(`Cards with ${String(CREDITS_FOR_PAGE)} or more credits ending have a page with only their part of this list, to send to someone who has the card.`)}</p>
       <ul class="chip-links" data-ye-pages>${cards
         .map(
           (c) =>
@@ -1286,7 +1290,7 @@ function cardPage(
       ${allSections(v)}
       <h2>${esc(`More on ${theCard(ctx, card)}`)}</h2>
       <p><a href="/cards/${card.id}">${esc(`Everything on ${theCard(ctx, card)}`)}</a>${esc(card.credits.length > 0 ? ': its rates, fees and all of its credits, not only the ones that end with the year.' : ': its rates, fees and the rest of its terms.')}</p>
-      <p><a href="/year-end/${year}#${esc(anchor)}">${esc(`Every card's credits and deadlines for ${shortDate(y.end)}`)}</a>, with this one among them.</p>
+      <p><a href="/year-end/#${esc(anchor)}">${esc(`Every card's credits and deadlines for ${shortDate(y.end)}`)}</a>, with this one among them.</p>
       ${pageActions(
         [
           {
@@ -1348,13 +1352,12 @@ function cardPage(
   }
 }
 
-// Search engines get a card's page when something on it ends with the year:
-// a yearly, half-year or quarterly credit, a dated rate or offer, a
-// calendar-year spend bonus. December's monthly credits, caps that start
-// over and rotating categories come back every period, and the card's page
-// and the quarterly pages already say them.
+// Search engines get a card's page when several of its credits end with the
+// year, as its title counts them: with fewer, the page is mostly the year's
+// page again, and links go to the card's block there.
+const CREDITS_FOR_PAGE = 3
 export const cardPageIndexed = (one: YearEnd) =>
-  one.credits.length > 0 || one.ending.length > 0 || one.milestones.length > 0
+  creditList(one).length >= CREDITS_FOR_PAGE
 
 // A past year's address, kept so links to it still lead somewhere.
 function pastYear(ctx: PageContext, year: number): GeneratedPage {
@@ -1419,15 +1422,20 @@ export function yearEndPages(
   const page = (hub: boolean): GeneratedPage => {
     const { title, description, body } = renderYear(ctx, y, hub, earlier, date)
     const path = hub ? '/year-end/' : `/year-end/${String(year)}`
+    // This year's own address says what the hub does; the hub, which keeps
+    // its links year after year, is the one indexed.
+    const canonical = hub ? undefined : '/year-end/'
     return {
       file: hub ? 'year-end/index.html' : `year-end/${String(year)}.html`,
       path,
       lastmod: date,
+      ...(canonical ? { canonical } : {}),
       html: ctx.layout({
         title,
         description,
         path,
         body,
+        ...(canonical ? { canonical } : {}),
         crumbs: hub
           ? [{ name: 'Year-end deadlines', path: '/year-end/' }]
           : [

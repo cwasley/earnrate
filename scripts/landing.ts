@@ -156,7 +156,7 @@ export function landingFacts(
   if (!feeCard.annual_fee) throw new Error(`landing: ${feeCard.id} has no fee`)
   const [x, y] = [...EXAMPLES.compare].sort()
   const slug = compareSlug(x ?? '', y ?? '')
-  if (!comparePairs(catalog, today).some((p) => p.slug === slug))
+  if (!comparePairs(catalog).some((p) => p.slug === slug))
     throw new Error(`landing: no comparison page ${slug}`)
 
   return {

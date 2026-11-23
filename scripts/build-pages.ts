@@ -100,7 +100,7 @@ import {
   cardIndexName,
   cardsIndexLead,
 } from '../src/engine/card-search.ts'
-import { changeDates, latest } from './lastmod.ts'
+import { changeDates, entryDates, latest } from './lastmod.ts'
 import { pageContext, type GeneratedPage } from './pages/context.ts'
 import { bonusRulesPage } from './pages/bonus-rules.ts'
 import { categoryPageFor, categoryPages } from './pages/categories.ts'
@@ -126,7 +126,7 @@ import { feeWorthSection } from './pages/fee-worth.ts'
 import { cheaperCards } from './pages/cheaper-cards.ts'
 import { offerHistorySection } from './pages/offer-history.ts'
 import { button, pageActions, textLink, type Visitor } from './pages/actions.ts'
-import { storeHref, storeIndexReasons } from './pages/indexing.ts'
+import { categoryIndexed, storeHref, storeIndexing } from './pages/indexing.ts'
 import { drawImages, type OgImage } from './pages/og.ts'
 import { quarterlyCardIds, quarterlyPages } from './pages/quarterly.ts'
 import {
@@ -148,6 +148,7 @@ import { ownCards } from './pages/store-cards.ts'
 import { EVERYDAY_PURCHASES } from '../src/engine/cheat-sheet.ts'
 import {
   comparePairs,
+  comparisonRedirects,
   comparer,
   type CompareCell,
   type ComparePair,
@@ -569,41 +570,120 @@ const STORE_ROW_SCRIPT = `(() => {
   addEventListener('hashchange', () => show(true))
 })()`
 
-function categoryStores(page: Page, all: Page[]): string {
-  const stores = all
+// The stores a category page lists, and whether each has a link (its own
+// page, or its parent store's) or is answered there, by its row.
+const storesOf = (page: Page) =>
+  all
     .filter(
       (p) => p.merchant !== null && categorySlug(p.categoryId) === page.slug,
     )
     .sort((a, b) => a.label.localeCompare(b.label))
+const linkedStore = (p: Page) =>
+  pageHref(p) !== storeHref(p.slug, false, categorySlug(p.categoryId))
+
+// Stores a category page answers for whose top cards aren't its own (the
+// clothing brands one card names), by their answer.
+function apartOf(page: Page): Map<string, Page[]> {
+  const own = answerKey(page)
+  const apart = new Map<string, Page[]>()
+  for (const p of storesOf(page))
+    if (!linkedStore(p) && answerKey(p) !== own)
+      apart.set(answerKey(p), [...(apart.get(answerKey(p)) ?? []), p])
+  return apart
+}
+const answersApart = (page: Page) => apartOf(page).size > 0
+
+function categoryStores(page: Page): string {
+  const stores = storesOf(page)
   if (stores.length === 0) return ''
   const heading = `${String(stores.length)} ${stores.length === 1 ? `store that usually counts ${esc(categoryAs(catalog, page.categoryId))}` : `stores that usually count ${esc(categoryAsMany(catalog, page.categoryId))}`}`
-  const rows = stores.filter((p) => !isIndexed(p)).length
+  const chip = (p: Page) =>
+    linkedStore(p)
+      ? `<a href="${pageHref(p)}">${esc(p.label)}</a>`
+      : `<span class="store-row" id="${p.slug}">${esc(p.label)}</span>`
+  // Those answered apart are listed under the card that leads there.
+  const apart = apartOf(page)
+  const grouped = new Set([...apart.values()].flat())
+  const main = stores.filter((p) => !grouped.has(p))
+  const rows = main.filter((p) => !linkedStore(p)).length
   const note =
     rows === 0
       ? ''
-      : `<p class="muted">${rows === stores.length ? `At ${stores.length === 1 ? 'this store' : 'each of these'}, cards rank just as they do above.` : 'At stores without a link, cards rank just as they do above. Linked stores have a page of their own.'}</p>`
-  const chips = chipLinks(
-    stores.map((p) =>
-      isIndexed(p)
-        ? `<a href="/best/${p.slug}">${esc(p.label)}</a>`
-        : `<span class="store-row" id="${p.slug}">${esc(p.label)}</span>`,
-    ),
-  )
-  const script = rows === 0 ? '' : `<script>${STORE_ROW_SCRIPT}</script>`
+      : `<p class="muted">${rows === main.length ? `At ${main.length === 1 ? 'this store' : 'each of these'}, the top cards are the ones above.` : 'At stores without a link, the top cards are the ones above. A linked store has its own answer.'}</p>`
+  const groups = [...apart.values()].map((list) => {
+    const [first] = list
+    const r = first && results.get(first.slug)
+    const tied = r ? tiedAtTop(r) : []
+    const [top] = tied
+    const lead = top
+      ? `At ${list.length === 1 ? 'this store' : `these ${String(list.length)}`}, ${esc(listed(tied.map((e) => shortName(e.cardId))))} ${tied.length > 1 ? 'tie for the most' : 'earns the most'}: ${pct(top.effectiveReturnPct)}.`
+      : ''
+    return `<p class="muted">${lead}</p>${chipLinks(list.map(chip))}`
+  })
+  const chips = `${note}${main.length > 0 ? chipLinks(main.map(chip)) : ''}${groups.join('')}`
+  const script =
+    rows === 0 && apart.size === 0 ? '' : `<script>${STORE_ROW_SCRIPT}</script>`
   return stores.length > STORES_OPEN
-    ? `<h2>Stores</h2><details class="group"><summary><span>${heading}</span></summary>${note}${chips}</details>${script}`
-    : `<h2>${capitalize(heading)}</h2><div>${note}${chips}</div>${script}`
+    ? `<h2>Stores</h2><details class="group"><summary><span>${heading}</span></summary>${chips}</details>${script}`
+    : `<h2>${capitalize(heading)}</h2><div>${chips}</div>${script}`
+}
+
+// A page's answer as the store-index rule compares them: its top three
+// cards and their rates.
+const answerKey = (p: Page) => {
+  const r = results.get(p.slug)
+  return r
+    ? ranked(r)
+        .slice(0, 3)
+        .map((e) => `${e.cardId}:${e.effectiveReturnPct.toFixed(4)}`)
+        .join(',')
+    : ''
+}
+
+// "The top cards are the same at its brands: Hampton Inn and DoubleTree."
+// for the parent store whose page answers for its brands.
+function brandsLine(page: Page): string {
+  const brands = all.filter(
+    (p) =>
+      p.merchant !== null &&
+      page.merchant !== null &&
+      storeIndex.get(p.merchant.id)?.parent === page.merchant.id &&
+      !isIndexed(p),
+  )
+  return brands.length === 0
+    ? ''
+    : `<p class="small">The top cards are the same at its ${brands.length === 1 ? 'brand' : 'brands'}: ${esc(listed(brands.map((p) => p.label).sort((a, b) => a.localeCompare(b))))}.</p>`
+}
+
+// One line, under the personal ranking, for the business card that earns
+// more here than any personal card: a single ranking for most readers, and
+// the answer for a business.
+function businessLine(lead: ExploreEntry | null): string {
+  if (!lead) return ''
+  const lines = requirementLines(
+    lead.cardId,
+    lead.requirements,
+    untilShort(lead),
+  )
+  return `<p class="small">For a business: <a href="/cards/${lead.cardId}">${esc(shortName(lead.cardId))}</a>, ${pct(lead.effectiveReturnPct)}${lines.length > 0 ? `. ${esc(lines.join('. '))}` : ''}.</p>`
 }
 
 // Where a link to a search page goes: a store's own page when it's indexed,
-// otherwise its row on its category page.
-const pageHref = (p: Page) =>
-  p.merchant === null
+// otherwise its parent store's page or its row on its category page.
+const pageHref = (p: Page) => {
+  const store = p.merchant && storeIndex.get(p.merchant.id)
+  return p.merchant === null
     ? `/best/${p.slug}`
-    : storeHref(p.slug, isIndexed(p), categorySlug(p.categoryId))
+    : storeHref(
+        p.slug,
+        store?.indexed ?? false,
+        categorySlug(p.categoryId),
+        store?.parent ?? null,
+      )
+}
 
 function related(page: Page, all: Page[]): string {
-  if (page.merchant === null) return categoryStores(page, all)
+  if (page.merchant === null) return categoryStores(page)
   const category = all.find(
     (p) => p.merchant === null && p.slug === categorySlug(page.categoryId),
   )
@@ -669,6 +749,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       : `${best} for ${subject}`
   const where = `${!store && (page.categoryId === 'other' || readsOn(page.categoryId)) ? 'on' : 'at'} ${page.phrase}`
   const tied = tiedAtTop(r)
+  const lead = businessLead(page)
   const own = ownCardLine(page, r, shown)
   const owned = page.merchant ? ownCards(catalog, page.merchant) : null
   const ownIds = new Set((owned?.cards ?? []).map((c) => c.id))
@@ -765,6 +846,11 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
             ],
         [
           until.map((l) => `${l}.`),
+          lead
+            ? [
+                `For a business, ${shortName(lead.cardId)} earns ${pct(lead.effectiveReturnPct)}.`,
+              ]
+            : [],
           own && !(tied.length > 1 && ownTied) ? [own.text] : [],
           credit
             ? [
@@ -796,15 +882,16 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
   const canonical = `${SITE}/best/${page.slug}`
   const definitions = categoryPageFor(page.categoryId)
   const appLink = `/#wallet=${encodeURIComponent(page.merchant?.name ?? catalog.categories.find((c) => c.id === page.categoryId)?.name ?? page.label).replace(/%20/g, '+')}`
+  const updated = pageDates.get(page.slug) ?? dataDate
   const body = only
     ? `
       <h1>${esc(heading)}</h1>
-      <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
+      <p class="updated">Updated ${esc(dayWords(updated))}</p>
       ${answer(page, r, shown)}
       ${related(page, all)}`
     : `
       <h1>${esc(heading)}</h1>
-      <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
+      <p class="updated">Updated ${esc(dayWords(updated))}</p>
       ${answer(page, r, shown)}
       ${pageActions([
         {
@@ -823,12 +910,13 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
       <h2>Top ${String(shown.length)} cards${r.credits.length > 0 ? ' by rate' : ''} ${page.merchant === null ? 'for' : 'at'} ${esc(subject)}</h2>
       ${table(shown)}
       ${membersOnly(r)}
+      ${businessLine(lead)}
+      ${brandsLine(page)}
       ${hidden.length > 0 ? `<p class="muted">Not ranked: ${hidden.map((e) => esc(shortName(e.cardId))).join(', ')}, whose rate here isn't confirmed against the issuer's terms yet.</p>` : ''}
       ${gotchas(r, page.merchant)}
       ${page.merchant ? howItCodes(ctx, page.merchant, categoryPageFor, r.categoryNote === null && r.merchant.source !== 'none' && shown.length > 0) : ''}
       ${sources(shown)}
-      <details class="fine section-fine"><summary>How this is ranked</summary>
-      <p>Every personal card earnrate tracks that's open to new applicants, each set up at its best for this purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted here; to weigh them against your own spending, see <a href="/#spending">Best setups</a>.</p></details>
+      <p class="muted"><a href="/best/#how-ranked">How these are ranked</a></p>
       ${related(page, all)}
       ${definitions ? `<p>What counts as ${esc(definitions)} for each issuer: <a href="/categories/${definitions}">their definitions, side by side</a>.</p>` : ''}`
   const jsonLd = {
@@ -837,7 +925,7 @@ function renderPage(page: Page, all: Page[], r: Exploration): string {
     name: title,
     description,
     url: canonical,
-    dateModified: dataDate,
+    dateModified: updated,
     ...(only
       ? {}
       : {
@@ -938,7 +1026,9 @@ function renderIndex(all: Page[]): string {
         .sort(byLabel)
         .map(category)
         .join('')}</div></details>
-      ${filterScript()}`
+      ${filterScript()}
+      <h2 id="how-ranked">How these are ranked</h2>
+      <p>Each page ranks every personal card earnrate tracks that's open to new applicants, each set up at its best for that purchase: the right bonus-category pick, any activation done, and no spending cap used up yet. Where a business card earns more than all of them, the page names it on a line of its own. Points are counted at what each program's points are worth as cash or travel credit (1¢ for most); transferring them to airlines or hotels can be worth more. Annual fees aren't subtracted; to weigh them against your own spending, see <a href="/#spending">Best setups</a>.</p>`
   return layout({
     title: fitTitle(['Best credit card for every store and category']),
     description: `Which credit card earns the most at ${String(all.filter((p) => p.merchant).length)} stores and ${String(all.filter((p) => !p.merchant).length)} spending categories, from issuer terms. No affiliate links.`,
@@ -1835,7 +1925,18 @@ function transferText(c: Comparison): string {
   const gap = Math.round(t.a.net) - Math.round(t.b.net)
   const [win, lose] = gap >= 0 ? [t.a, t.b] : [t.b, t.a]
   const [winId, loseId] = gap >= 0 ? [c.a.id, c.b.id] : [c.b.id, c.a.id]
-  const counting = `Counting ${esc(listed(programs))} at ${String(t.cents)}¢ a point, what transferring to airlines and hotels can be worth`
+  // The other card's points, which this doesn't revalue (Capital One miles
+  // against Chase's), stay where the verdict counted them, and it says so.
+  const others = (['a', 'b'] as const)
+    .map((s) => c.value[s])
+    .filter(
+      (v) => v.currency !== 'cash' && TRANSFER_VALUES[v.currency] === undefined,
+    )
+    .map(
+      (v) =>
+        `${currencyName(catalog, v.currency)} stay at ${num(v.centsPerUnit)}¢`,
+    )
+  const counting = `Counting ${esc(listed(programs))} at ${String(t.cents)}¢ a point${others.length > 0 ? ` (${esc(listed([...new Set(others)]))})` : ''}, what transferring to airlines and hotels can be worth`
   if (gap === 0)
     return ` ${counting}, they come out even: about ${wholeDollars(t.a.net)} a year each.`
   const flips = Math.sign(gap) !== Math.sign(before)
@@ -1973,6 +2074,17 @@ function compareTable(c: Comparison): string {
 
 function suits(c: Comparison): string {
   const items: string[] = []
+  // A flat rate that beats the other card's everyday rate suits someone who
+  // doesn't want to track categories, though it's no bonus.
+  const rest = c.rows.at(-1)
+  for (const side of ['a', 'b'] as const) {
+    const mine = rest?.[side].entry
+    const theirs = rest?.[side === 'a' ? 'b' : 'a'].entry
+    if (rest?.winner === side && mine && theirs)
+      items.push(
+        `<li>If you'd rather not track categories: the <strong>${esc(shortName(c[side].id))}</strong> earns ${pct(mine.effectiveReturnPct)} ${esc(rest.where)}, against ${pct(theirs.effectiveReturnPct)} on the ${esc(shortName(c[side === 'a' ? 'b' : 'a'].id))}.</li>`,
+      )
+  }
   for (const side of ['a', 'b'] as const) {
     const me = c[side]
     const them = c[side === 'a' ? 'b' : 'a']
@@ -2145,7 +2257,7 @@ function renderCompare(c: Comparison): string {
   const body = `
       <div class="vs-head">${art(c.a.id, 96)}<span class="vs">vs</span>${art(c.b.id, 96)}</div>
       <h1>${esc(na)} vs ${esc(nb)}</h1>
-      <p class="updated">Updated ${esc(dayWords(compareDate(c.pair)))} · ${esc(issuerName(c.a.issuer))} and ${esc(issuerName(c.b.issuer))} · ${c.a.business ? 'Business cards' : 'Personal cards'}</p>
+      <p class="updated">Updated ${esc(dayWords(compareDate(c.pair)))} · ${esc(c.a.issuer === c.b.issuer ? issuerName(c.a.issuer) : `${issuerName(c.a.issuer)} and ${issuerName(c.b.issuer)}`)} · ${c.a.business ? 'Business cards' : 'Personal cards'}</p>
       ${compareAnswer(c)}
       ${pageActions([
         {
@@ -2243,7 +2355,7 @@ function renderCompareIndex(pairs: ComparePair[]): string {
     body: `
       <h1>Credit cards compared</h1>
       <p class="updated">Updated ${esc(dayWords(dataDate))}</p>
-      <p>${String(pairs.length)} side-by-side comparisons, each from the issuers' own terms. Each pairs cards from different issuers that earn bonuses in at least two of the same everyday categories with similar fees, or two of one issuer's cards that earn the same points. Business cards are compared only with business cards.</p>
+      <p>${String(pairs.length)} side-by-side comparisons, each from the issuers' own terms. Each pairs two of one issuer's cards that earn the same rewards, or two cards from different issuers that people often weigh against each other. Business cards are compared only with business cards.</p>
       ${sections}`,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -2254,8 +2366,9 @@ function renderCompareIndex(pairs: ComparePair[]): string {
 }
 
 // lastmod is when a page's facts last changed, not when it was built: a
-// card page follows its card file, the rankings follow all of data/, and
-// the static pages their own source. A dated rule, credit or offer that
+// card page follows its card file, a store or category page the entries it
+// shows (pageDate below), the lists of every page all of data/, and the
+// static pages their own source. A dated rule, credit or offer that
 // started or ended changes the pages on that day though no file did. Pages
 // show it as their "Updated" date too.
 const changed = changeDates(ROOT, ['data', 'site'], today)
@@ -2300,7 +2413,7 @@ const compareDate = (p: ComparePair) =>
     changed('data/currencies.yaml'),
   ])
 
-const comparisons = comparePairs(catalog, today)
+const comparisons = comparePairs(catalog)
 const all = pages(catalog)
 const categorySlug = (id: string): string | null => {
   const page = catalog.categories.find((c) => c.id === id)?.page ?? id
@@ -2319,28 +2432,6 @@ const categoryHref = (id: string) => {
 const results = new Map(
   all.map((p) => [p.slug, exploreCards(catalog, p.query, options)]),
 )
-const categoryPageOf = (p: Page) =>
-  all.find((c) => c.merchant === null && c.categoryId === p.categoryId)
-const indexReasons = new Map(
-  all.map((p) => {
-    const r = results.get(p.slug)
-    const category = categoryPageOf(p)
-    return [
-      p.slug,
-      p.merchant === null || !r
-        ? ['a category']
-        : storeIndexReasons(
-            catalog,
-            p.merchant,
-            r,
-            category && results.get(category.slug),
-            ranked,
-            today,
-          ),
-    ]
-  }),
-)
-const isIndexed = (p: Page) => (indexReasons.get(p.slug)?.length ?? 0) > 0
 const businessResults = new Map(
   all.map((p) => [
     p.slug,
@@ -2350,6 +2441,141 @@ const businessResults = new Map(
     }),
   ]),
 )
+const categoryPageOf = (p: Page) => {
+  const slug = categorySlug(p.categoryId)
+  return all.find((c) => c.merchant === null && c.slug === slug)
+}
+
+// The best business card where it earns more than every personal card, for
+// the one line a page gives it under its personal ranking.
+function businessLead(p: Page): ExploreEntry | null {
+  const r = results.get(p.slug)
+  const b = businessResults.get(p.slug)
+  if (!r || !b || r.categoryNote !== null) return null
+  const [top] = ranked(r)
+  const [lead] = ranked(b)
+  return lead &&
+    (!top || lead.effectiveReturnPct > top.effectiveReturnPct + EPSILON)
+    ? lead
+    : null
+}
+
+const storeIndex = storeIndexing(
+  catalog,
+  all.flatMap((p) => {
+    const store = results.get(p.slug)
+    if (p.merchant === null || !store) return []
+    const category = categoryPageOf(p)
+    return [
+      {
+        merchant: p.merchant,
+        store,
+        category: category && results.get(category.slug),
+      },
+    ]
+  }),
+  ranked,
+)
+const everydayPage = all.find(
+  (p) => p.merchant === null && p.categoryId === 'other',
+)
+const categoryIndex = new Map(
+  all
+    .filter((p) => p.merchant === null)
+    .map((p) => {
+      const r = results.get(p.slug)
+      return [
+        p.slug,
+        r !== undefined &&
+          categoryIndexed(
+            r,
+            everydayPage && results.get(everydayPage.slug),
+            ranked,
+            businessLead(p) !== null || answersApart(p),
+          ),
+      ]
+    }),
+)
+const isIndexed = (p: Page) =>
+  p.merchant === null
+    ? (categoryIndex.get(p.slug) ?? false)
+    : (storeIndex.get(p.merchant.id)?.indexed ?? false)
+
+// A store or category page follows the entries behind what it shows: the
+// cards it ranks or names (their files), its store and category, the stores
+// it lists, and the currencies, issuers and memberships its rows name.
+const entryDate = (() => {
+  const files = [
+    'data/merchants/seed.yaml',
+    'data/merchants/overrides.yaml',
+    'data/categories.yaml',
+    'data/currencies.yaml',
+    'data/issuers.yaml',
+    'data/memberships.yaml',
+  ]
+  const dated = files.map((f) => entryDates(ROOT, f, today))
+  return (id: string) => latest(dated.map((d) => d(id) ?? ''))
+})()
+function pageDate(p: Page): string {
+  const r = results.get(p.slug)
+  if (!r) return dataDate
+  const lead = businessLead(p)
+  const entries = [
+    ...ranked(r),
+    ...r.ranked.filter(isUnverified),
+    ...membersShown(r),
+    ...(lead ? [lead] : []),
+  ]
+  const id = p.merchant?.id
+  const naming = (rule: Card['rules'][number]) =>
+    id !== undefined &&
+    [
+      rule.match.merchants,
+      rule.exclude?.merchants,
+      rule.named?.earning,
+      rule.named?.not_earning,
+    ].some((list) => list?.includes(id))
+  const cardIds = new Set([
+    ...entries.map((e) => e.cardId),
+    ...r.credits.map((c) => c.cardId),
+    ...r.excluded.map((e) => e.cardId),
+    ...(p.merchant ? (ownCards(catalog, p.merchant)?.cards ?? []) : []).map(
+      (c) => c.id,
+    ),
+    ...(r.categoryNote === null
+      ? []
+      : categoryCards(catalog, r.merchant.category)),
+    ...catalog.cards.filter((c) => c.rules.some(naming)).map((c) => c.id),
+  ])
+  const listed =
+    p.merchant === null
+      ? all.filter(
+          (s) => s.merchant !== null && categorySlug(s.categoryId) === p.slug,
+        )
+      : []
+  const ids = [
+    ...(p.merchant
+      ? [p.merchant.id, ...(p.merchant.brand_of ? [p.merchant.brand_of] : [])]
+      : []),
+    ...listed.map((s) => s.slug),
+    p.categoryId,
+    r.merchant.category,
+    ...[...cardIds].flatMap((c) => {
+      const card = cards.get(c)
+      return card ? [card.currency, card.issuer] : []
+    }),
+    ...entries.flatMap((e) => [
+      ...(e.requirements.membership ? [e.requirements.membership] : []),
+      ...(e.needsMembership ? [e.needsMembership] : []),
+      ...e.withMembership.map((m) => m.membership),
+    ]),
+  ]
+  return latest([
+    ...[...cardIds].map((c) => changedOn(`data/cards/${c}.yaml`)),
+    ...ids.map(entryDate),
+  ])
+}
+const pageDates = new Map(all.map((p) => [p.slug, pageDate(p)]))
 // The same rankings with Amex and Chase points at their transfer value, for
 // card pages' "If you transfer" placements.
 const transferOptions = { ...options, valuations: TRANSFER_VALUES }
@@ -2400,15 +2626,29 @@ await writeFile(
   renderCompareIndex(comparisons),
 )
 // Either order of the two cards reaches the one page, and a category
-// answered by another's page sends its own address there.
+// answered by another's page sends its own address there. So does the
+// address of a category's own name ("car-rentals"), which its page had
+// before its address came from an alias.
+const categoryRedirects = catalog.categories.flatMap((cat) => {
+  const to = categorySlug(cat.page ?? cat.id)
+  if (to === null) return []
+  const from = [
+    ...(cat.page === undefined ? [] : [categoryAddress(cat)]),
+    slugify(cat.name),
+  ]
+  return from.filter((f) => f !== to).map((f) => [f, to] as const)
+})
+const taken = new Set(all.map((p) => p.slug))
+const redirected = new Set<string>()
 await writeFile(
   path.join(OUT, '_redirects'),
   [
-    ...catalog.categories.flatMap((cat) => {
-      const to = cat.page === undefined ? null : categorySlug(cat.page)
-      return to === null ? [] : [`/best/${categoryAddress(cat)} /best/${to}`]
+    ...categoryRedirects.flatMap(([from, to]) => {
+      if (taken.has(from) || redirected.has(from)) return []
+      redirected.add(from)
+      return [`/best/${from} /best/${to}`]
     }),
-    ...comparisons.map((p) => `/compare/${p.b}-vs-${p.a} /compare/${p.slug}`),
+    ...comparisonRedirects(catalog, comparisons),
     ...yearEndRedirects(ctx),
   ]
     .map((line) => `${line} 301\n`)
@@ -2465,20 +2705,19 @@ const changesDate = generated.find((g) => g.path === '/changes')?.lastmod ?? ''
 const urls: [string, string][] = [
   [`${SITE}/`, latest([dataDate, changed('site/index.html')])],
   [`${SITE}/best/`, dataDate],
-  ...all.filter(isIndexed).map((p): [string, string] => [
-    `${SITE}/best/${p.slug}`,
-    // A store's "How it codes" follows the merchant files, already in data/.
-    p.merchant && hasCodingNotes(p.merchant)
-      ? latest([dataDate, merchantsDate])
-      : dataDate,
-  ]),
+  ...all
+    .filter(isIndexed)
+    .map((p): [string, string] => [
+      `${SITE}/best/${p.slug}`,
+      pageDates.get(p.slug) ?? dataDate,
+    ]),
   [`${SITE}/cards/`, dataDate],
   ...catalog.cards.map((c): [string, string] => [
     `${SITE}/cards/${c.id}`,
     cardDate(c),
   ]),
   ...generated
-    .filter((g) => !g.noindex)
+    .filter((g) => !g.noindex && g.canonical === undefined)
     .map((g): [string, string] => [`${SITE}${g.path}`, g.lastmod]),
   [`${SITE}/compare/`, dataDate],
   ...comparisons.map((p): [string, string] => [
@@ -2514,5 +2753,5 @@ Sitemap: ${SITE}/sitemap.xml
 const drawn =
   process.env.EARNRATE_OG === 'off' ? null : await drawImages(ROOT, OUT, images)
 console.log(
-  `Wrote ${String(all.length)} search pages (${String(all.filter((p) => !isIndexed(p)).length)} stores noindex), ${String(catalog.cards.length)} card pages, ${String(comparisons.length)} card comparisons, ${String(generated.length)} other pages, sitemap.xml, _redirects and robots.txt.${drawn ? ` ${String(images.length)} preview images (${String(drawn.drawn)} redrawn), ${(drawn.bytes / 1e6).toFixed(1)} MB.` : ''}`,
+  `Wrote ${String(all.length)} search pages (${String(all.filter((p) => !isIndexed(p)).length)} noindex), ${String(catalog.cards.length)} card pages, ${String(comparisons.length)} card comparisons, ${String(generated.length)} other pages, sitemap.xml, _redirects and robots.txt.${drawn ? ` ${String(images.length)} preview images (${String(drawn.drawn)} redrawn), ${(drawn.bytes / 1e6).toFixed(1)} MB.` : ''}`,
 )

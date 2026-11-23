@@ -526,15 +526,20 @@ export function quarterlyPages(
       date,
     )
     const path = hub ? '/quarterly/' : `/quarterly/${q.slug}`
+    // This quarter's own address says what the hub does; the hub, which
+    // keeps its links quarter after quarter, is the one indexed.
+    const canonical = !hub && q.key === current ? '/quarterly/' : undefined
     return {
       file: hub ? 'quarterly/index.html' : `quarterly/${q.slug}.html`,
       path,
       lastmod: date,
+      ...(canonical ? { canonical } : {}),
       html: ctx.layout({
         title,
         description,
         path,
         body,
+        ...(canonical ? { canonical } : {}),
         crumbs: hub
           ? [{ name: 'Quarterly categories', path: '/quarterly/' }]
           : [

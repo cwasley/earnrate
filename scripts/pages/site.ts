@@ -183,6 +183,9 @@ export type PageSpec = {
   crumbs: Crumb[]
   image?: string // a path under the site, 1200 x 630
   noindex?: boolean
+  // Another page that says the same and is the one to index ("/year-end/"
+  // for this year's dated address).
+  canonical?: string
 }
 
 export function pageKit(
@@ -219,7 +222,7 @@ export function pageKit(
     `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`
 
   function layout(page: PageSpec): string {
-    const canonical = `${SITE}${page.path}`
+    const canonical = `${SITE}${page.canonical ?? page.path}`
     const image = `${SITE}${page.image ?? '/og.png'}`
     return `<!doctype html>
 <html lang="en">

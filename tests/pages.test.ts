@@ -199,19 +199,84 @@ describe('the built static pages', () => {
       const rel = path.relative(out, file).split(path.sep).join('/')
       if (rel === '404.html') continue
       const url = `/${rel.replace(/index\.html$/, '').replace(/\.html$/, '')}`
-      const noindex = readFileSync(file, 'utf8').includes(
+      const html = readFileSync(file, 'utf8')
+      const noindex = html.includes(
         '<meta name="robots" content="noindex, follow" />',
       )
-      if (noindex && listed.has(url))
-        missing.push(`${url} is noindex but in the sitemap`)
-      if (!noindex && !listed.has(url))
+      const canonical =
+        /<link rel="canonical" href="https:\/\/earnrate\.dev([^"]*)" \/>/.exec(
+          html,
+        )?.[1]
+      if (canonical === undefined) missing.push(`${url} has no canonical`)
+      // The sitemap is exactly the pages to index: not noindex, and their
+      // own canonical.
+      const indexable = !noindex && canonical === url
+      if (!indexable && listed.has(url))
+        missing.push(`${url} is not to be indexed but is in the sitemap`)
+      if (indexable && !listed.has(url))
         missing.push(`${url} not in the sitemap`)
-      // Links to a store page that isn't indexed go to its category's row.
-      const storeRow = noindex && url.startsWith('/best/')
-      if (!linked.has(url) && !storeRow)
+      if (
+        canonical !== undefined &&
+        canonical !== url &&
+        !listed.has(canonical)
+      )
+        missing.push(`${url}'s canonical ${canonical} is not in the sitemap`)
+      // Links to a page that isn't indexed go to the page that answers for
+      // it, so it may have none.
+      if (!linked.has(url) && !noindex)
         missing.push(`${url} not linked from any page`)
     }
     expect(missing).toEqual([])
+    const indexed = (prefix: string) =>
+      [...listed].filter((u) => u.startsWith(prefix) && u !== prefix).length
+    // Store and category pages, comparisons and year-end pages are each
+    // indexed only where they say something of their own.
+    expect(indexed('/best/')).toBeGreaterThan(130)
+    expect(indexed('/best/')).toBeLessThan(260)
+    expect(indexed('/compare/')).toBeGreaterThan(40)
+    expect(indexed('/compare/')).toBeLessThan(100)
+    expect(indexed('/year-end/')).toBeLessThan(25)
+    expect(indexed('/cards/')).toBe(catalog.cards.length)
+  })
+
+  test('no static page links a page that is not to be indexed, except a category page its stores fall back to', () => {
+    const noindex = new Map<string, string>()
+    for (const file of htmlFiles(out)) {
+      const rel = path.relative(out, file).split(path.sep).join('/')
+      const url = `/${rel.replace(/index\.html$/, '').replace(/\.html$/, '')}`
+      const html = readFileSync(file, 'utf8')
+      if (html.includes('<meta name="robots" content="noindex, follow" />'))
+        noindex.set(url, html)
+    }
+    // A category page that stays out of search (its ranking is everyday
+    // spending's, or it's only a note) is still the page for its kind of
+    // purchase, and holds the rows its stores' links go to.
+    const index = readFileSync(path.join(out, 'best', 'index.html'), 'utf8')
+    const categories = new Set(
+      [
+        ...index.matchAll(
+          /<h2><a href="(\/best\/[^"]+)"|class="cat-all"[^>]*><a href="(\/best\/[^"]+)"/g,
+        ),
+      ].map((m) => m[1] ?? m[2] ?? ''),
+    )
+    expect(categories.size).toBeGreaterThan(30)
+    const fallback = (url: string) => categories.has(url)
+    const bad: string[] = []
+    for (const { file, html } of pages) {
+      if (file.endsWith('404.html')) continue
+      const self = `/${path
+        .relative(out, file)
+        .split(path.sep)
+        .join('/')
+        .replace(/index\.html$/, '')
+        .replace(/\.html$/, '')}`
+      for (const m of html.matchAll(/href="(\/[^"#?]*)/g)) {
+        const to = m[1] ?? ''
+        if (to !== self && noindex.has(to) && !fallback(to))
+          bad.push(`${path.relative(out, file)} → ${to}`)
+      }
+    }
+    expect([...new Set(bad)]).toEqual([])
   })
 
   test('Rate my wallet is in the sitemap, linked from every page, with its own title and one preview image', () => {
@@ -313,7 +378,15 @@ describe('the built static pages', () => {
         (m) => `/best/${m[2] ?? m[1] ?? ''}`,
       ),
     )
-    expect(built.filter((p) => !linked.has(p))).toEqual([])
+    // A brand answered by its parent store's page is listed with that link.
+    const parent = new Map(
+      [...catalog.merchants.seed, ...catalog.merchants.overrides].flatMap(
+        (m) => (m.brand_of ? [[`/best/${m.id}`, `/best/${m.brand_of}`]] : []),
+      ),
+    )
+    expect(
+      built.filter((p) => !linked.has(p) && !linked.has(parent.get(p) ?? '')),
+    ).toEqual([])
     expect(index).not.toMatch(/<details[^>]*\sopen/)
     const groups = [
       ...index.matchAll(/<details class="cat"[^>]*>(.*?)<\/details>/g),
@@ -360,7 +433,7 @@ describe('the built static pages', () => {
     expect(actions).not.toMatch(/fetch|sendBeacon|XMLHttpRequest/)
   })
 
-  test('the year-end page is linked from the footer, and each card it lists has a page of its own, linked from the card', () => {
+  test("the year-end page is linked from the footer, and each card it lists has a page of its own, linked from the card when it's indexed and otherwise to the card's block on the hub", () => {
     const year = Number(today.slice(0, 4))
     const y = yearEnd(ctx, year)
     const listed = new Set(
@@ -381,10 +454,18 @@ describe('the built static pages', () => {
     const sitemap = readFileSync(path.join(out, 'sitemap.xml'), 'utf8')
     for (const id of listed) {
       const address = `/year-end/${String(year)}/${id}`
-      expect(hub, id).toContain(`href="${address}"`)
-      const card = readFileSync(path.join(out, 'cards', `${id}.html`), 'utf8')
-      expect(card, id).toContain(`href="${address}"`)
       const page = readFileSync(path.join(out, `${address}.html`), 'utf8')
+      const indexed = !page.includes('noindex')
+      const card = readFileSync(path.join(out, 'cards', `${id}.html`), 'utf8')
+      expect(hub.includes(`href="${address}"`), id).toBe(indexed)
+      expect(card.includes(`href="${address}"`), id).toBe(indexed)
+      if (!indexed) {
+        const anchor = new RegExp(`href="/year-end/#([a-z-]+-${id})"`).exec(
+          card,
+        )?.[1]
+        expect(anchor, id).toBeDefined()
+        expect(hub, id).toContain(`data-anchor="${anchor ?? ''}"`)
+      }
       expect(page, id).toContain(
         `<link rel="canonical" href="https://earnrate.dev${address}" />`,
       )
@@ -471,7 +552,7 @@ describe('the built static pages', () => {
     const page = (slug: string) =>
       readFileSync(path.join(out, 'best', `${slug}.html`), 'utf8')
     const noindex = (slug: string) => page(slug).includes('content="noindex')
-    // Notes on how it codes, a credit there, a ranking of its own.
+    // Cards it refuses, a credit there, an answer of its own.
     for (const slug of ['costco', 'lululemon', 'amazon', 'groceries'])
       expect(noindex(slug), slug).toBe(false)
     // Ranked exactly like supermarkets, with nothing about Stater Bros. itself.
@@ -479,13 +560,45 @@ describe('the built static pages', () => {
     expect(page('groceries')).toMatch(
       /<span class="store-row" id="stater-bros">Stater Bros\.[^<]*<\/span>/,
     )
-    // American Express names Aldi among its example supermarkets.
-    expect(noindex('aldi')).toBe(false)
-    expect(page('groceries')).toContain('<a href="/best/aldi">Aldi</a>')
+    // American Express names Aldi among its example supermarkets, but its
+    // answer is still the supermarkets'.
+    expect(noindex('aldi')).toBe(true)
+    expect(page('groceries')).toContain('id="aldi"')
   })
 
-  test('links to a store page that is not indexed go to its row on its category page', () => {
+  test('a category page names a business card that earns more than every personal card, once, and is indexed for it', () => {
+    const page = (slug: string) =>
+      readFileSync(path.join(out, 'best', `${slug}.html`), 'utf8')
+    const office = page('office-supply-stores')
+    expect(office).not.toContain('content="noindex')
+    const lines = office.match(/<p class="small">For a business: /g) ?? []
+    expect(lines).toHaveLength(1)
+    expect(office).toMatch(
+      /For a business: <a href="\/cards\/chase-ink-business-cash">Ink Business Cash<\/a>, 5%/,
+    )
+    // The personal ranking above it is unchanged: no business card in it.
+    const list = office.slice(0, office.indexOf('For a business'))
+    expect(list).not.toContain('chase-ink-business-cash')
+    // Where personal cards earn as much, there is no line.
+    expect(page('dining')).not.toContain('For a business')
+  })
+
+  test('a brand ranked like its parent store links to the parent, which names it', () => {
+    const hilton = readFileSync(path.join(out, 'best', 'hilton.html'), 'utf8')
+    expect(hilton).toMatch(
+      /The top cards are the same at its brands: [^<]*Hampton Inn/,
+    )
+    const card = readFileSync(path.join(out, 'best', 'index.html'), 'utf8')
+    expect(card).toMatch(/<a href="\/best\/hilton">Hampton Inn<\/a>/)
+  })
+
+  test("links to a store page that is not indexed go to its row on its category page, or a brand's parent store", () => {
     const best = path.join(out, 'best')
+    const stores = new Set(
+      [...catalog.merchants.seed, ...catalog.merchants.overrides].map(
+        (m) => m.id,
+      ),
+    )
     const noindex = new Set(
       readdirSync(best)
         .filter((f) => f.endsWith('.html') && f !== 'index.html')
@@ -494,9 +607,23 @@ describe('the built static pages', () => {
             '<meta name="robots" content="noindex, follow" />',
           ),
         )
-        .map((f) => f.replace(/\.html$/, '')),
+        .map((f) => f.replace(/\.html$/, ''))
+        .filter((slug) => stores.has(slug)),
     )
     expect(noindex.size).toBeGreaterThan(0)
+    // A brand whose parent store's page names it.
+    const named = (slug: string) => {
+      const parent = [
+        ...catalog.merchants.seed,
+        ...catalog.merchants.overrides,
+      ].find((m) => m.id === slug)?.brand_of
+      if (!parent || noindex.has(parent)) return false
+      const label = [...catalog.merchants.seed, ...catalog.merchants.overrides]
+        .filter((m) => m.id === slug)
+        .at(-1)?.name
+      const html = readFileSync(path.join(best, `${parent}.html`), 'utf8')
+      return label !== undefined && html.includes(esc(label))
+    }
     const ids = new Map<string, string[]>()
     const idsOn = (slug: string) => {
       let list = ids.get(slug)
@@ -526,9 +653,11 @@ describe('the built static pages', () => {
           bad.push(`${file} → ${href}: ${String(found)} rows with that id`)
         rows.add(anchor)
       }
-    // Every such store is linked from somewhere, by its row.
+    // Every such store is linked from somewhere, by its row or its parent's
+    // page.
     for (const slug of noindex)
-      if (!rows.has(slug)) bad.push(`/best/${slug} has no link to its row`)
+      if (!rows.has(slug) && !named(slug))
+        bad.push(`/best/${slug} has no link to its row`)
     expect(bad).toEqual([])
     const sitemap = readFileSync(path.join(out, 'sitemap.xml'), 'utf8')
     for (const slug of noindex) expect(sitemap).not.toContain(`/best/${slug}<`)
@@ -1157,7 +1286,7 @@ describe('year-end pages', () => {
       expect(platinum).not.toContain('data-card="amex-gold"')
       expect(platinum).not.toMatch(/data-anchor="[a-z]+-amex-gold"/)
       expect(platinum).toContain('href="/cards/amex-platinum"')
-      expect(platinum).toContain(`href="/year-end/${String(year)}#`)
+      expect(platinum).toContain('href="/year-end/#')
       expect(platinum).toContain('href="/#wallet&amp;add=amex-platinum"')
       expect(platinum).toContain(
         `"item":"https://earnrate.dev/year-end/${String(year)}"`,
@@ -1286,15 +1415,18 @@ describe('year-end pages', () => {
         }
     })
 
-    test('is indexed only when something on it ends with the year', () => {
+    test('is indexed only when 3 or more of its credits end with the year', () => {
+      let indexed = 0
       for (const page of cardPages) {
         const id = page.path.split('/').at(-1) ?? ''
-        const ends = [...y.credits, ...y.ending, ...y.milestones].some(
-          (c) => c.card.id === id,
-        )
-        expect(page.noindex ?? false, id).toBe(!ends)
-        expect(page.html.includes('noindex'), id).toBe(!ends)
+        const credits = (page.html.match(/<strong>\$[\d,.]+ back /g) ?? [])
+          .length
+        expect(page.noindex ?? false, id).toBe(credits < 3)
+        expect(page.html.includes('noindex'), id).toBe(credits < 3)
+        if (credits >= 3) indexed++
       }
+      expect(indexed).toBeGreaterThan(5)
+      expect(pageOf('amex-platinum')?.noindex ?? false).toBe(false)
     })
 
     test("sends the card's own address and title, counts only that it was used, and nothing about the visitor", () => {

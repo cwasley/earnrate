@@ -13,6 +13,7 @@ export type GeneratedPage = {
   html: string
   lastmod: string
   noindex?: boolean // left out of the sitemap
+  canonical?: string // another page's path, indexed in its place
   image?: OgImage // its preview image, drawn with the card and store pages'
 }
 

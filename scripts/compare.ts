@@ -21,27 +21,56 @@ import {
 import { categoryPhrase, categoryReadsOn } from '../src/engine/text.ts'
 import { cardValuation, type Valuation } from '../src/engine/valuation.ts'
 import { findMerchant } from '../src/merchants/resolve.ts'
-import type { Card, Rule } from '../src/schema/card.ts'
+import type { Card } from '../src/schema/card.ts'
 import type { Catalog } from '../src/schema/catalog.ts'
+import { RETIRED_COMPARISONS } from './compare-retired.ts'
 
-// The everyday categories the pair rule compares. Travel counts a bonus on
-// travel in general, flights or hotels.
-const PAIR_CATEGORIES: { label: string; categories: string[] }[] = [
-  { label: 'groceries', categories: ['grocery.supermarket'] },
-  { label: 'dining', categories: ['dining'] },
-  { label: 'gas', categories: ['gas'] },
-  {
-    label: 'travel',
-    categories: ['travel', 'travel.flights', 'travel.hotels'],
-  },
+// Comparisons people search for that the sibling rule below doesn't make:
+// cards from different issuers that people weigh against each other, and
+// every comparison that had search visits before (Search Console, Nov 1–12
+// 2026). Either order; a pair whose card is closed or gone is skipped.
+export const MATCHUPS: [string, string][] = [
+  ['capital-one-venture-x', 'chase-sapphire-reserve'],
+  ['amex-platinum', 'chase-sapphire-reserve'],
+  ['amex-gold', 'chase-sapphire-preferred'],
+  ['capital-one-venture', 'chase-sapphire-preferred'],
+  ['amex-platinum', 'capital-one-venture-x'],
+  ['citi-double-cash', 'wells-fargo-active-cash'],
+  ['chase-freedom-unlimited', 'citi-double-cash'],
+  ['amex-blue-cash-preferred', 'capital-one-savor'],
+  ['chase-freedom-flex', 'discover-it-cash-back'],
+  ['bank-of-america-customized-cash-rewards', 'citi-custom-cash'],
+  ['amex-gold', 'capital-one-savor'],
+  ['chase-sapphire-preferred', 'citi-strata-premier'],
+  ['capital-one-venture-x', 'citi-strata-elite'],
+  ['amex-business-gold', 'chase-ink-business-preferred'],
+  ['apple-card', 'citi-double-cash'],
+  ['citi-double-cash', 'robinhood-gold-card'],
+  ['capital-one-savor', 'wells-fargo-autograph'],
+  // Searched for.
+  ['bank-of-america-customized-cash-rewards', 'chase-prime-visa'],
+  ['bank-of-america-customized-cash-rewards', 'sams-club-mastercard'],
+  ['bank-of-america-customized-cash-rewards', 'capital-one-savor'],
+  ['amex-blue-cash-everyday', 'bank-of-america-customized-cash-rewards'],
+  ['capital-one-savor', 'usbank-cash-plus'],
+  ['amex-business-gold', 'amex-business-platinum'],
+  ['navy-federal-cash-rewards', 'navy-federal-cash-rewards-plus'],
+  ['capital-one-quicksilver', 'capital-one-savor'],
+  ['chase-freedom-flex', 'chase-freedom-unlimited'],
+  ['chase-ink-business-cash', 'chase-ink-business-unlimited'],
+  [
+    'bank-of-america-customized-cash-rewards',
+    'bank-of-america-unlimited-cash-rewards',
+  ],
+  ['chase-freedom-flex', 'chase-freedom-rise'],
+  ['citi-aadvantage-mileup', 'citi-aadvantage-platinum-select'],
 ]
 
 export type ComparePair = {
   slug: string // "<a>-vs-<b>", ids in alphabetical order
   a: string
   b: string
-  rivals: string[] // the everyday categories both earn a bonus in
-  siblings: boolean
+  siblings: boolean // one issuer's two cards that earn the same rewards
 }
 
 export const compareSlug = (x: string, y: string) =>
@@ -66,66 +95,29 @@ const query = (
   date: today,
 })
 
-function namedCap(card: Card, rule: Rule) {
-  return typeof rule.cap === 'string'
-    ? card.caps.find((c) => c.id === rule.cap)
-    : undefined
-}
-
-// A rule that holds every quarter for everyone with the card: not rotating,
-// not dated, not tied to a membership and confirmed against the terms.
-const lasting = (card: Card, rule: Rule) =>
-  rule.valid_from === undefined &&
-  rule.valid_to === undefined &&
-  rule.unverified === undefined &&
-  rule.requires?.membership === undefined &&
-  namedCap(card, rule)?.rotating !== true
-
 // A comparison names its two cards, so one that needs a membership is
 // compared like any other.
 const named = (r: Exploration) => [...r.ranked, ...r.membersOnly]
 
-// Each card's lasting bonuses among PAIR_CATEGORIES, by label.
-export function lastingBonuses(
-  catalog: Catalog,
-  today: string,
-): Map<string, Set<string>> {
-  const steady: Catalog = {
-    ...catalog,
-    cards: catalog.cards.map((c) => ({
-      ...c,
-      rules: c.rules.filter((r) => lasting(c, r)),
-    })),
-  }
-  const found = new Map<string, Set<string>>()
-  for (const business of [false, true])
-    for (const group of PAIR_CATEGORIES)
-      for (const category of group.categories) {
-        const r = exploreCards(steady, query(today, { category }), {
-          filters: filtersFor(business),
-          memberships: [],
-          valuations: {},
-        })
-        for (const e of named(r)) {
-          const card = steady.cards.find((c) => c.id === e.cardId)
-          if (!card) continue
-          if (e.effectiveReturnPct <= card.base_rate * e.centsPerUnit + EPSILON)
-            continue
-          const set = found.get(e.cardId) ?? new Set<string>()
-          set.add(group.label)
-          found.set(e.cardId, set)
-        }
-      }
-  return found
-}
-
-const FEE_GAP = 250
 const fee = (c: Card) => c.annual_fee ?? 0
-const isCash = (c: Card) => c.currency === 'cash'
+
+// A card named for a partner rather than its issuer ("PayPal Cashback
+// Mastercard", from Synchrony). Two of one issuer's partner cards whose
+// names start differently are for different partners, not siblings.
+function differentPartners(catalog: Catalog, x: Card, y: Card): boolean {
+  const issuer = catalog.issuers.find((i) => i.id === x.issuer)
+  const words = [issuer?.name ?? x.issuer, ...(issuer?.search ?? [])].map((w) =>
+    w.toLowerCase(),
+  )
+  const namesIssuer = (c: Card) =>
+    words.some((w) => c.name.toLowerCase().includes(w))
+  const first = (c: Card) => c.name.split(' ')[0]?.toLowerCase()
+  return !namesIssuer(x) && !namesIssuer(y) && first(x) !== first(y)
+}
 
 // The card from the same issuer, earning the same rewards, whose annual fee
 // is closest; a tie goes to the pricier card, then the first id.
-function sibling(card: Card, open: Card[]): Card | undefined {
+function sibling(catalog: Catalog, card: Card, open: Card[]): Card | undefined {
   return open
     .filter(
       (o) =>
@@ -139,45 +131,60 @@ function sibling(card: Card, open: Card[]): Card | undefined {
         Math.abs(fee(x) - fee(card)) - Math.abs(fee(y) - fee(card)) ||
         fee(y) - fee(x) ||
         x.id.localeCompare(y.id),
-    )[0]
+    )
+    .filter((o) => !differentPartners(catalog, card, o))[0]
 }
 
-export function comparePairs(catalog: Catalog, today: string): ComparePair[] {
+// Each card with its closest sibling, and the matchups above. Cards closed
+// to applicants and store cards aren't compared.
+export function comparePairs(catalog: Catalog): ComparePair[] {
   const open = catalog.cards
     .filter(comparable)
     .sort((x, y) => x.id.localeCompare(y.id))
-  const bonuses = lastingBonuses(catalog, today)
   const pairs = new Map<string, ComparePair>()
   const add = (a: Card, b: Card): ComparePair => {
     const [x, y] = a.id < b.id ? [a, b] : [b, a]
     const slug = compareSlug(x.id, y.id)
-    const pair = pairs.get(slug) ?? {
-      slug,
-      a: x.id,
-      b: y.id,
-      rivals: [],
-      siblings: false,
-    }
+    const pair = pairs.get(slug) ?? { slug, a: x.id, b: y.id, siblings: false }
     pairs.set(slug, pair)
     return pair
   }
-  open.forEach((a, i) => {
-    for (const b of open.slice(i + 1)) {
-      if (a.issuer === b.issuer || a.business !== b.business) continue
-      if (isCash(a) !== isCash(b) || fee(a) > 0 !== fee(b) > 0) continue
-      if (Math.abs(fee(a) - fee(b)) > FEE_GAP) continue
-      const theirs = bonuses.get(b.id) ?? new Set()
-      const shared = PAIR_CATEGORIES.map((g) => g.label).filter(
-        (l) => bonuses.get(a.id)?.has(l) && theirs.has(l),
-      )
-      if (shared.length >= 2) add(a, b).rivals = shared
-    }
-  })
   for (const card of open) {
-    const other = sibling(card, open)
+    const other = sibling(catalog, card, open)
     if (other) add(card, other).siblings = true
   }
+  for (const [x, y] of MATCHUPS) {
+    const a = open.find((c) => c.id === x)
+    const b = open.find((c) => c.id === y)
+    if (a && b && a.business === b.business) add(a, b)
+  }
   return [...pairs.values()].sort((x, y) => x.slug.localeCompare(y.slug))
+}
+
+// `_redirects` lines: either order of a pair's cards reaches its page, and a
+// comparison no longer built goes to its first card's page that still
+// exists (or the list of comparisons).
+export function comparisonRedirects(
+  catalog: Catalog,
+  pairs: ComparePair[],
+): string[] {
+  const built = new Set(pairs.map((p) => p.slug))
+  const ids = new Set(catalog.cards.map((c) => c.id))
+  const retired = RETIRED_COMPARISONS.filter((s) => !built.has(s)).flatMap(
+    (slug) => {
+      const [a = '', b = ''] = slug.split('-vs-')
+      const to = ids.has(a)
+        ? `/cards/${a}`
+        : ids.has(b)
+          ? `/cards/${b}`
+          : '/compare/'
+      return [`/compare/${slug} ${to}`, `/compare/${b}-vs-${a} ${to}`]
+    },
+  )
+  return [
+    ...pairs.map((p) => `/compare/${p.b}-vs-${p.a} /compare/${p.slug}`),
+    ...retired,
+  ]
 }
 
 export type CompareCell = {
