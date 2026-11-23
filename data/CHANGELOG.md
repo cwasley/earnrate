@@ -2,6 +2,20 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.22
+
+Five new cards (106 in all), each from the issuer's own pages, read 2026-11-22:
+
+- **American Express Blue Business Cash** (`amex-blue-business-cash`): 2% back on every eligible purchase on the first $50,000 a calendar year, then 1%; no annual fee; 2.7% foreign transaction fee; as high as a $500 statement credit after $5,000 in 3 months (Amex shows each applicant's amount; may not be available if you have or have had the card). Sources: [the card page](https://www.americanexpress.com/en-us/business/credit-cards/blue-business-cash/) and [its terms](https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinesscash-credit-card/45094-9-0).
+- **Capital One VentureOne Rewards** (`capital-one-ventureone`): 1.25X miles on everything; 5X on hotels, vacation rentals, rental cars and activities booked through Capital One Travel, and on Capital One Entertainment tickets; no annual fee, no foreign transaction fee; 20,000 miles after $500 in 3 months, not for anyone who got a VentureOne, Venture or Venture X bonus in the past 48 months. Sources: [the card page](https://www.capitalone.com/credit-cards/ventureone/) and [its rates and rewards disclosure](https://disclosures.capitalone.com/disclosure.42723.en-US.html).
+- **Capital One Spark Cash** (`capital-one-spark-cash`): 2% back on everything; 5% on hotels, vacation rentals and rental cars booked through Capital One Business Travel, and on Capital One Entertainment tickets; $0 the first year, then $95; $1,000 after $10,000 in 3 months, which existing or previous Capital One business cardholders may not get. Its own pages don't state a foreign transaction fee; the 0 is from [Capital One's business cash back cards page](https://www.capitalone.com/small-business/credit-cards/cash-back/) ("Pay zero foreign transaction fees"). Sources: [the card page](https://www.capitalone.com/small-business/credit-cards/spark-cash/) and [its rates and rewards disclosure](https://disclosures.capitalone.com/disclosure.41743.en-US.html).
+- **Discover it Miles** (`discover-it-miles`): 1.5X miles on everything; 5X on hotels, vacation rentals, rental cars and activities through Capital One Travel, and on Capital One Entertainment tickets; Discover Match doubles every rate for the first 365 days; no annual fee, no foreign transaction fee; no other welcome offer. Sources: [the card page](https://www.discover.com/credit-cards/travel/) and [its application terms](https://disclosures.capitalone.com/disclosure.42614.en-US.html).
+- **Discover it Chrome** (`discover-it-chrome`): 2% back at U.S. gas stations (stand-alone, not at supermarkets, superstores or warehouse clubs) and restaurants on up to $1,000 a quarter combined, then 1%; 5% through Capital One Travel and on Capital One Entertainment tickets; Cashback Match doubles every rate for the first 365 days; no annual fee, no foreign transaction fee. Sources: [the card page](https://www.discover.com/credit-cards/cash-back/chrome/) and [its application terms](https://disclosures.capitalone.com/disclosure.42603.en-US.html).
+
+New currency `discover-miles`: 100 miles are $1 in cash or as a statement credit toward travel, per [Discover's card page](https://www.discover.com/credit-cards/travel/).
+
+The American Express Green Card isn't added: Amex no longer takes applications for it, and its card page now goes to the list of personal cards.
+
 ## 2026.11.21
 
 No rates changed. The notes on T.J. Maxx, Marshalls, HomeGoods, Ross Dress for Less and Burlington no longer name U.S. Bank's Cash+, a card most people don't have. Each now says the store may not count as a department store, so check your statement before counting on a department store bonus there.

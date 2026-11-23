@@ -3,6 +3,34 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.22'
+  date: 2026-11-22
+  changes:
+    - cause: addition
+      card: amex-blue-business-cash
+      summary: American Express Blue Business Cash, 2% back on the first $50,000 a calendar year, then 1%; no annual fee.
+      source: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinesscash-credit-card/45094-9-0
+    - cause: addition
+      card: capital-one-ventureone
+      summary: Capital One VentureOne Rewards, 1.25X miles on everything and 5X on hotels, vacation rentals, rental cars and activities booked through Capital One Travel; no annual fee.
+      source: https://disclosures.capitalone.com/disclosure.42723.en-US.html
+    - cause: addition
+      card: capital-one-spark-cash
+      summary: Capital One Spark Cash, 2% back on everything and 5% on hotels, vacation rentals and rental cars booked through Capital One Business Travel; $0 the first year, then $95.
+      source: https://disclosures.capitalone.com/disclosure.41743.en-US.html
+    - cause: addition
+      card: discover-it-miles
+      summary: Discover it Miles, 1.5X miles on everything, with Discover Match doubling the first year.
+      source: https://disclosures.capitalone.com/disclosure.42614.en-US.html
+    - cause: addition
+      card: discover-it-chrome
+      summary: Discover it Chrome, 2% back at gas stations and restaurants on up to $1,000 a quarter combined, then 1%, with Cashback Match doubling the first year.
+      source: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    - cause: addition
+      currencies: [discover-miles]
+      summary: Discover miles, worth 1¢ each in cash or as a travel statement credit.
+      source: https://www.discover.com/credit-cards/travel/
+
 - version: '2026.11.21'
   date: 2026-11-21
   changes:

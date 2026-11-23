@@ -197,6 +197,7 @@ describe('searchCards', () => {
     expect(ids('capital one venture')).toEqual(['capital-one-venture'])
     expect(ids('venture')).toEqual([
       'capital-one-venture',
+      'capital-one-ventureone',
       'capital-one-venture-x',
       'capital-one-venture-x-business',
     ])

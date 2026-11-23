@@ -1,0 +1,96 @@
+id: capital-one-spark-cash
+name: Capital One Spark Cash
+short_name: Spark Cash
+color: '#4a4d52'
+issuer: capital-one
+network: mastercard # World Elite Mastercard for Business (Spark), per capitalone.com/credit-cards/benefits-guide
+currency: cash
+business: true
+last_verified: 2026-11-22
+verified_by: claude
+source_urls:
+  - https://www.capitalone.com/small-business/credit-cards/spark-cash/
+  # The card page's "View important rates and disclosures" (pricing and
+  # rewards FAQ); the number is the page's offer id and changes with it.
+  - https://disclosures.capitalone.com/disclosure.41743.en-US.html
+  # Capital One's business cash back cards page: its "Benefits for Capital
+  # One business card holders" is the only place that states the foreign
+  # transaction fee.
+  - https://www.capitalone.com/small-business/credit-cards/cash-back/
+base_rate: 2
+annual_fee: 95
+first_year_fee: 0
+foreign_transaction_fee: 0
+welcome_offer:
+  dollars: 1000
+  spend: 10000
+  months: 3
+  repeat:
+    {
+      also: [capital-one-spark-cash-plus, capital-one-venture-x-business],
+      may: true,
+    }
+  note: Only through the card page; existing or previous Capital One Business card holders may not be eligible.
+rules:
+  - id: business-travel
+    match:
+      {
+        merchants:
+          [
+            capital-one-business-travel-hotels,
+            capital-one-business-travel-vacation-rentals,
+            capital-one-business-travel-car-rentals,
+          ],
+      }
+    rate: 5
+    note: Only when booked through Capital One Business Travel. Hotel incidentals, upgrades and other purchases outside Capital One Business Travel earn the base 2%.
+  - id: capital-one-entertainment
+    match: { merchants: [capital-one-entertainment] }
+    rate: 5
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales and tickets bought directly from Capital One Hall or Capital One Arena are excluded.
+todo:
+  - The card page and rates disclosure don't state a foreign transaction fee. The 0 comes from Capital One's business cash back cards page, whose benefits for Capital One business card holders include "Pay zero foreign transaction fees".
+  - The card page's top line says 5% on "hotels and rental cars" through Capital One Business Travel; its FAQ and the rates disclosure add vacation rentals, which are included.
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash/
+    quote: 'Earn unlimited 2% cash back for your business on every purchase, everywhere'
+  - rule: base_rate
+    url: https://disclosures.capitalone.com/disclosure.41743.en-US.html
+    quote: 'and 2% cash back on all other purchases'
+  - rule: business-travel
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash/
+    quote: 'Earn unlimited 5% cash back on hotels, vacation rentals and rental cars booked through Capital One Business Travel'
+  - rule: business-travel
+    url: https://disclosures.capitalone.com/disclosure.41743.en-US.html
+    quote: 'You will earn 5% cash back on hotels, vacation rentals and rental cars'
+  - rule: business-travel
+    url: https://disclosures.capitalone.com/disclosure.41743.en-US.html
+    quote: 'such as hotel incidentals, upgrades or other expenses, will not earn the enhanced earn rate'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.41743.en-US.html
+    quote: 'You will earn 5% cash back on Capital One Entertainment purchases.'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.41743.en-US.html
+    quote: 'Tickets purchased through the Capital One cardholder exclusive pre-sales'
+  - rule: annual_fee
+    url: https://disclosures.capitalone.com/disclosure.41743.en-US.html
+    quote: 'Annual Fee $0 intro for the first year, $95 thereafter.'
+  - rule: annual_fee
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash/
+    quote: '$95 annual fee after your first year'
+  - rule: first_year_fee
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash/
+    quote: 'Enjoy a $0 annual fee for the first year, and then $95 after that.'
+  - rule: welcome_offer
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash/
+    quote: 'Earn a $1,000 cash bonus when you spend $10,000 in the first 3 months.'
+  - rule: welcome_offer
+    url: https://disclosures.capitalone.com/disclosure.41743.en-US.html
+    quote: 'You will earn a $1,000 bonus if you spend at least $10,000 within 3 months'
+  - rule: repeat
+    url: https://www.capitalone.com/small-business/credit-cards/spark-cash/
+    quote: 'The bonus may not be available for existing or previous Capital One Business card holders'
+  - rule: foreign_transaction_fee
+    url: https://www.capitalone.com/small-business/credit-cards/cash-back/
+    quote: 'Pay zero foreign transaction fees on purchases made outside of the United States.'

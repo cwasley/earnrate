@@ -1,0 +1,125 @@
+id: discover-it-chrome
+name: Discover it Chrome Credit Card
+short_name: Discover it Chrome
+color: '#8c9196'
+# Discover merged into Capital One, N.A.; the application terms are headed
+# "Discover by Capital One" and served from disclosures.capitalone.com.
+issuer: discover
+network: discover
+currency: cash
+last_verified: 2026-11-22
+verified_by: claude
+source_urls:
+  # The card page, with its FAQs in a section that opens on click.
+  - https://www.discover.com/credit-cards/cash-back/chrome/
+  # The card page's "See rates, rewards, fees, and other cost information"
+  # (pricing and rewards FAQ); the number is the page's offer id and changes
+  # when Capital One changes it.
+  - https://disclosures.capitalone.com/disclosure.42603.en-US.html
+  # Discover's travel-card article: the only Discover page that states the
+  # foreign transaction fee (the application terms' fee table has no row).
+  - https://www.discover.com/credit-cards/card-smarts/best-international-travel-credit-card/
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 0
+caps:
+  # One $1,000 quarterly cap shared by gas stations and restaurants.
+  - id: gas-restaurants-quarterly
+    amount: 1000
+    period: quarter
+    then_rate: 1
+rules:
+  - id: gas-stations
+    match: { categories: [gas] }
+    exclude: { categories: [gas.grocery_store, gas.superstore] }
+    rate: 2
+    geography: us_only
+    cap: gas-restaurants-quarterly
+    note: Stand-alone gas stations, at the pump or inside. Gas stations at supermarkets, superstores and warehouse clubs may not count. Shares a $1,000 quarterly cap with restaurants.
+  - id: restaurants
+    match: { categories: [dining] }
+    rate: 2
+    geography: us_only
+    cap: gas-restaurants-quarterly
+    note: Full-service restaurants, cafes, cafeterias, fast-food locations and restaurant delivery services. Restaurants inside hotels or retail stores, and bakeries, may not qualify. Shares a $1,000 quarterly cap with gas stations.
+  - id: capital-one-travel
+    match:
+      {
+        merchants:
+          [
+            capital-one-travel-hotels,
+            capital-one-travel-vacation-rentals,
+            capital-one-travel-car-rentals,
+            capital-one-travel-activities,
+          ],
+      }
+    rate: 5
+    note: Hotels, vacation rentals, rental cars and activities booked through Capital One Travel only. Flights booked there, and hotel incidentals or upgrades paid outside Capital One Travel, earn the base 1%.
+  - id: capital-one-entertainment
+    match: { merchants: [capital-one-entertainment] }
+    rate: 5
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales, tickets bought directly from Capital One Hall or Capital One Arena, and Capital One Dining are excluded.
+intro_rates:
+  # Discover matches the cash back a new cardmember earns, paid after the
+  # match period, so every rate counts double for those 365 days.
+  - id: cashback-match
+    days: 365
+    multiply: 2
+    note: Cashback Match, for new cardmembers. Discover matches all the cash back earned from the day the account is approved through the first 365 days, with no limit, and adds it within two billing periods after; cash back processed after the match period isn't matched.
+todo:
+  - Discover's 2% gas category includes "some public electric vehicle charging stations" without saying which. EV charging isn't matched; it earns the base 1% here.
+  - Discover's restaurant list (full-service restaurants, cafes, cafeterias, fast food and restaurant delivery) doesn't name bars or caterers. The rule matches earnrate's restaurant category, bars included, as the Discover it Cash Back restaurant quarters do.
+  - Third-party payment accounts and digital wallet transactions may not earn 2% if they don't carry a qualifying MCC. Not modeled.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.discover.com/credit-cards/cash-back/chrome/
+    quote: 'Plus, earn unlimited 1% cash back on all other purchases.'
+  - rule: base_rate
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'There is no cap to the amount of 1% rewards you can earn on purchases.'
+  - rule: gas-stations
+    url: https://www.discover.com/credit-cards/cash-back/chrome/
+    quote: 'Earn 2% cash back at gas stations and restaurants on up to $1,000 in combined purchases each quarter, automatically.'
+  - rule: gas-stations
+    url: https://www.discover.com/credit-cards/cash-back/chrome/
+    quote: '2% cash back on your first $1,000 in combined purchases at gas stations (stand-alone)'
+  - rule: gas-stations
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'Gas stations affiliated with supermarkets, supercenters, and wholesale clubs may not be eligible.'
+  - rule: gas-stations
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'Purchases must be made with merchants in the U.S.'
+  - rule: restaurants
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'Restaurant purchases include those made at merchants classified as full-service restaurants, cafes, cafeterias, fast-food locations, and restaurant delivery services.'
+  - rule: restaurants
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'Purchases at gas stations and restaurants over the quarterly cap'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'earn 5% cash back on purchases (hotels, vacation rentals, rental cars and activities only) made on Capital One Travel'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'such as hotel incidentals, upgrades or other expenses, will not earn 5% cash back'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'You will earn 5% cash back on Capital One Entertainment purchases.'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'and dining reservations or purchases through Capital One Dining are excluded'
+  - rule: cashback-match
+    url: https://www.discover.com/credit-cards/cash-back/chrome/
+    quote: 'Get an unlimited dollar-for-dollar match of all the cash back you earn at the end of your first year'
+  - rule: cashback-match
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'from the day your new account is approved through your first 365 days'
+  - rule: cashback-match
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'We will not match: rewards that are processed after your match period ends'
+  - rule: annual_fee
+    url: https://disclosures.capitalone.com/disclosure.42603.en-US.html
+    quote: 'Annual Fee None.'
+  - rule: foreign_transaction_fee
+    url: https://www.discover.com/credit-cards/card-smarts/best-international-travel-credit-card/
+    quote: 'Discover® has no foreign transaction fee'

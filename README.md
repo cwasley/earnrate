@@ -228,21 +228,21 @@ On earnrate.dev, the [statement check](https://earnrate.dev/statement) runs the 
 
 ## Supported cards
 
-101 cards, each modeled from the issuer's own terms and checked weekly against them:
+106 cards, each modeled from the issuer's own terms and checked weekly against them:
 
-- **American Express:** Gold, Platinum, Blue Cash Preferred, Blue Cash Everyday, Business Gold, Business Platinum, Blue Business Plus
+- **American Express:** Gold, Platinum, Blue Cash Preferred, Blue Cash Everyday, Business Gold, Business Platinum, Blue Business Plus, Blue Business Cash
 - **American Express airline and hotel:** Delta SkyMiles Blue, Gold, Platinum, Reserve; Hilton Honors, Surpass, Aspire, Business; Marriott Bonvoy Brilliant, Bevy, Business
 - **Chase:** Sapphire Preferred, Sapphire Reserve, Freedom Unlimited, Freedom Flex, Freedom Rise, Ink Business Cash, Ink Business Unlimited, Ink Business Preferred, Prime Visa
 - **Chase airline and hotel:** United Gateway, Explorer, Quest, Club, Business, Club Business; Southwest Plus, Premier, Priority, Premier Business, Performance Business; Aeroplan; IHG One Rewards, Premier, Premier Select, Business; Marriott Bonvoy Boundless, Bold
 - **Citi:** Strata Elite, Strata Premier, Strata, Double Cash, Custom Cash, My Best Buy Visa, Costco Anywhere Visa (personal and business); AAdvantage MileUp, Platinum Select, Globe, Executive, Business
-- **Capital One:** Venture X, Venture, Savor, Quicksilver, Venture X Business, Spark Cash Plus, Kohl's Card, Kohl's Rewards Visa, REI Co-op Mastercard
+- **Capital One:** Venture X, Venture, VentureOne, Savor, Quicksilver, Venture X Business, Spark Cash Plus, Spark Cash, Kohl's Card, Kohl's Rewards Visa, REI Co-op Mastercard
 - **Wells Fargo:** Active Cash, Autograph, Autograph Journey
 - **Bank of America:** Customized Cash Rewards, Unlimited Cash Rewards, Travel Rewards, Premium Rewards; Atmos Rewards Ascent, Summit, Business
 - **TD Bank:** Target Circle Card, Nordstrom card, Nordstrom Visa
 - **U.S. Bank:** Cash+, Altitude Go, Altitude Connect, Smartly Visa Signature
 - **Bilt:** Blue, Obsidian, Palladium
 - **Credit unions:** Navy Federal cashRewards, cashRewards Plus, More Rewards American Express; PenFed Power Cash Rewards; Caltech EFCU Platinum Mastercard
-- **Others:** Apple Card (Goldman Sachs), Discover it Cash Back, SoFi Unlimited 2%, JetBlue Plus (Barclays), PayPal Cashback Mastercard, Sam's Club Mastercard, Venmo Credit Card and Verizon Visa Card (Synchrony), Fidelity Rewards Visa Signature (Elan)
+- **Others:** Apple Card (Goldman Sachs), Discover it Cash Back, Discover it Miles, Discover it Chrome, SoFi Unlimited 2%, JetBlue Plus (Barclays), PayPal Cashback Mastercard, Sam's Club Mastercard, Venmo Credit Card and Verizon Visa Card (Synchrony), Fidelity Rewards Visa Signature (Elan)
 
 Store cards (Target, Kohl's, Nordstrom) only come up at their own stores. Airline and hotel cards count only what the card itself earns, not the points a program gives members however they pay, and their perks (bags, lounges) aren't counted; a yearly free night counts only as described under [Free nights](#free-nights).
 

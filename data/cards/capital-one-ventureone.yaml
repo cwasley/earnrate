@@ -1,0 +1,89 @@
+id: capital-one-ventureone
+name: Capital One VentureOne Rewards Credit Card
+short_name: Capital One VentureOne
+color: '#3b4a6b'
+issuer: capital-one
+# The card page never names the network in visible text. Its embedded product
+# data says Visa.
+network: visa
+currency: C1
+last_verified: 2026-11-22
+verified_by: claude
+source_urls:
+  - https://www.capitalone.com/credit-cards/ventureone/
+  # The card page's "View important rates and disclosures" (pricing and
+  # rewards FAQ); the number is the page's offer id and changes when Capital
+  # One changes it.
+  - https://disclosures.capitalone.com/disclosure.42723.en-US.html
+base_rate: 1.25
+annual_fee: 0
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 20000
+  spend: 500
+  months: 3
+  repeat:
+    {
+      after_months: 48,
+      from: bonus,
+      also: [capital-one-venture, capital-one-venture-x],
+    }
+  note: Available by applying through the card page. Not available to anyone who received a new cardmember bonus for the VentureOne, Venture or Venture X in the past 48 months.
+rules:
+  - id: capital-one-travel
+    match:
+      {
+        merchants:
+          [
+            capital-one-travel-hotels,
+            capital-one-travel-vacation-rentals,
+            capital-one-travel-car-rentals,
+            capital-one-travel-activities,
+          ],
+      }
+    rate: 5
+    note: Hotels, vacation rentals, rental cars and activities booked through Capital One Travel only. Flights booked there, and hotel incidentals or upgrades paid outside Capital One Travel, earn the base 1.25X.
+  - id: capital-one-entertainment
+    match: { merchants: [capital-one-entertainment] }
+    rate: 5
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales and tickets bought directly from Capital One Hall or Capital One Arena are excluded.
+todo:
+  - Network isn't shown in the card page's visible text. Set to visa from the page's embedded product data (cardNetwork Visa); confirm against a current card or Capital One's benefits guide.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.capitalone.com/credit-cards/ventureone/
+    quote: 'Earn unlimited 1.25 miles per dollar on every purchase'
+  - rule: base_rate
+    url: https://disclosures.capitalone.com/disclosure.42723.en-US.html
+    quote: 'You will earn 1.25 miles per dollar on net purchases'
+  - rule: capital-one-travel
+    url: https://www.capitalone.com/credit-cards/ventureone/
+    quote: 'Earn unlimited 5 miles per dollar on hotels, vacation rentals and rental cars booked through Capital One Travel'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42723.en-US.html
+    quote: '(hotels, vacation rentals, rental cars and activities only) made through Capital One Travel'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42723.en-US.html
+    quote: 'such as hotel incidentals, upgrades or other expenses, will not earn 5 miles per dollar'
+  - rule: capital-one-entertainment
+    url: https://www.capitalone.com/credit-cards/ventureone/
+    quote: 'Eligible VentureOne cardholders will earn 5 miles per dollar spent on Capital One Entertainment purchases.'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42723.en-US.html
+    quote: 'Tickets purchased through the Capital One cardholder exclusive pre-sales'
+  - rule: annual_fee
+    url: https://disclosures.capitalone.com/disclosure.42723.en-US.html
+    quote: 'Annual Fee None.'
+  - rule: welcome_offer
+    url: https://www.capitalone.com/credit-cards/ventureone/
+    quote: 'Earn 20,000 bonus miles once you spend $500 on purchases within the first 3 months'
+  - rule: welcome_offer
+    url: https://disclosures.capitalone.com/disclosure.42723.en-US.html
+    quote: 'You will earn 20,000 bonus miles if you spend at least $500 within 3 months'
+  - rule: repeat
+    url: https://www.capitalone.com/credit-cards/ventureone/
+    quote: 'the Capital One Venture card, or the Capital One Venture X card in the past 48 months'
+  - rule: foreign_transaction_fee
+    url: https://www.capitalone.com/credit-cards/ventureone/
+    quote: 'transaction fee when making purchases outside of the United States'

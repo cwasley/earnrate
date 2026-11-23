@@ -1,0 +1,87 @@
+id: discover-it-miles
+name: Discover it Miles Credit Card
+short_name: Discover it Miles
+color: '#2d5f8b'
+# Discover merged into Capital One, N.A.; the application terms are headed
+# "Discover by Capital One" and served from disclosures.capitalone.com.
+issuer: discover
+network: discover
+currency: discover-miles
+last_verified: 2026-11-22
+verified_by: claude
+source_urls:
+  # The card page, with its FAQs in a section that opens on click.
+  - https://www.discover.com/credit-cards/travel/
+  # The card page's "See rates, rewards, fees, and other cost information"
+  # (pricing and rewards FAQ); the number is the page's offer id and changes
+  # when Capital One changes it.
+  - https://disclosures.capitalone.com/disclosure.42614.en-US.html
+  # Discover's travel-card article: the only Discover page that states the
+  # foreign transaction fee (the application terms' fee table has no row).
+  - https://www.discover.com/credit-cards/card-smarts/best-international-travel-credit-card/
+base_rate: 1.5
+annual_fee: 0
+foreign_transaction_fee: 0
+rules:
+  - id: capital-one-travel
+    match:
+      {
+        merchants:
+          [
+            capital-one-travel-hotels,
+            capital-one-travel-vacation-rentals,
+            capital-one-travel-car-rentals,
+            capital-one-travel-activities,
+          ],
+      }
+    rate: 5
+    note: Hotels, vacation rentals, rental cars and activities booked through Capital One Travel only. Flights booked there, and hotel incidentals or upgrades paid outside Capital One Travel, earn the base 1.5X.
+  - id: capital-one-entertainment
+    match: { merchants: [capital-one-entertainment] }
+    rate: 5
+    note: Tickets bought on the Capital One Entertainment ticketing platform only. Cardholder-exclusive pre-sales, tickets bought directly from Capital One Hall or Capital One Arena, and Capital One Dining are excluded.
+intro_rates:
+  # Discover matches the miles a new cardmember earns, paid after the match
+  # period, so every rate counts double for those 365 days.
+  - id: discover-match
+    days: 365
+    multiply: 2
+    note: Discover Match, for new cardmembers. Discover matches all the miles earned from the day the account is approved through the first 365 days, with no limit, and adds them within two billing periods after; miles processed after the match period aren't matched.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.discover.com/credit-cards/travel/
+    quote: 'Earn unlimited 1.5x miles on travel purchases and all your everyday purchases.'
+  - rule: base_rate
+    url: https://disclosures.capitalone.com/disclosure.42614.en-US.html
+    quote: 'You will earn unlimited one and a half (1.5) miles per dollar on net purchases'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42614.en-US.html
+    quote: '(hotels, vacation rentals, rental cars and activities only) made through Capital One Travel'
+  - rule: capital-one-travel
+    url: https://disclosures.capitalone.com/disclosure.42614.en-US.html
+    quote: 'such as hotel incidentals, upgrades or other expenses, will not earn 5 miles per dollar'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42614.en-US.html
+    quote: 'You will earn 5 miles per dollar spent on Capital One Entertainment purchases.'
+  - rule: capital-one-entertainment
+    url: https://disclosures.capitalone.com/disclosure.42614.en-US.html
+    quote: 'and dining reservations or purchases through Capital One Dining are excluded'
+  - rule: discover-match
+    url: https://www.discover.com/credit-cards/travel/
+    quote: 'We’ll automatically match all the miles you’ve earned at the end of your first year.'
+  - rule: discover-match
+    url: https://www.discover.com/credit-cards/travel/
+    quote: 'There is no limit to how much we’ll match.'
+  - rule: discover-match
+    url: https://disclosures.capitalone.com/disclosure.42614.en-US.html
+    quote: 'from the day your new account is approved through your first 365 days'
+  - rule: discover-match
+    url: https://disclosures.capitalone.com/disclosure.42614.en-US.html
+    quote: 'We will not match: rewards that are processed after your match period ends'
+  - rule: annual_fee
+    url: https://disclosures.capitalone.com/disclosure.42614.en-US.html
+    quote: 'Annual Fee None.'
+  - rule: foreign_transaction_fee
+    url: https://www.discover.com/credit-cards/card-smarts/best-international-travel-credit-card/
+    quote: 'Discover® has no foreign transaction fee'

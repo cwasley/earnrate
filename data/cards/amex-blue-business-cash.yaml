@@ -1,0 +1,65 @@
+id: amex-blue-business-cash
+name: American Express Blue Business Cash Card
+short_name: Blue Business Cash
+color: '#1f6fb5'
+issuer: amex
+network: amex
+currency: cash
+last_verified: 2026-11-22
+verified_by: claude
+source_urls:
+  # The card page, with its FAQs in a section that opens on click.
+  - https://www.americanexpress.com/en-us/business/credit-cards/blue-business-cash/
+  - https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinesscash-credit-card/45094-9-0
+base_rate: 1
+business: true
+annual_fee: 0
+foreign_transaction_fee: 2.7
+welcome_offer:
+  dollars: 500
+  spend: 5000
+  months: 3
+  varies: true
+  repeat: { may: true }
+  note: 'The public offer is "as high as" a $500 statement credit; Amex shows the exact amount after you apply and before you accept. May not be available if you have or have had this Card or previous versions of it, and Amex may also decline based on your card history. One offer per Card Account.'
+rules:
+  - id: everyday-purchases
+    match: { any: true }
+    rate: 2
+    cap: { amount: 50000, period: calendar_year, then_rate: 1 }
+    note: Every eligible purchase, with no category restrictions, up to $50,000 a calendar year. Cash back is credited to the statement automatically.
+# Not modeled on purpose: the Venue Collection benefit (10% back on food and
+# drink at select stadiums and arenas, with enrollment) is a statement credit
+# with a yearly limit, not cash back on every purchase there. Nor the intro APR.
+# Issuer text backing each rule; `yarn check-sources` checks it weekly.
+evidence:
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinesscash-credit-card/45094-9-0
+    quote: '2% on your first $50,000 of eligible purchases; then 1% on all other eligible purchases'
+  - rule: base_rate
+    url: https://www.americanexpress.com/en-us/business/credit-cards/blue-business-cash/
+    quote: 'on up to $50,000 per calendar year, then 1% on eligible purchases thereafter'
+  - rule: everyday-purchases
+    url: https://www.americanexpress.com/en-us/business/credit-cards/blue-business-cash/
+    quote: 'on the first $50,000 of eligible purchases per calendar year.'
+  - rule: everyday-purchases
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinesscash-credit-card/45094-9-0
+    quote: 'For each calendar year (starting January 1st and ending December 31st), you will receive a statement credit of:'
+  - rule: annual_fee
+    url: https://www.americanexpress.com/en-us/business/credit-cards/blue-business-cash/
+    quote: 'Annual Fee: $0'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/business/credit-cards/blue-business-cash/
+    quote: 'AS HIGH AS $500 Statement Credit'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/business/credit-cards/blue-business-cash/
+    quote: 'after you spend $5,000 in purchases on your new Card within the first 3 months of Card Membership'
+  - rule: welcome_offer
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinesscash-credit-card/45094-9-0
+    quote: 'Limit one offer per Card Account.'
+  - rule: repeat
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinesscash-credit-card/45094-9-0
+    quote: 'if you have or have had this Card or previous versions of this Card'
+  - rule: foreign_transaction_fee
+    url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinesscash-credit-card/45094-9-0
+    quote: 'Foreign Transaction 2.7% of each transaction after conversion to US dollars'

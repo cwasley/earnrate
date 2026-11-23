@@ -80,6 +80,13 @@
     - https://www.citi.com/credit-cards/citi-best-buy-credit-cards
     - https://www.bestbuy.com/site/misc/financing-rewards/pcmcat102500050032.c
 
+- id: discover-miles
+  name: Discover miles
+  value_cents: 1.0
+  note: 100 miles are $1 redeemed for cash or as a statement credit toward travel purchases, per Discover. They don't transfer to airline or hotel programs.
+  sources:
+    - https://www.discover.com/credit-cards/travel/
+
 - id: C1
   name: Capital One miles
   value_cents: 1.0

@@ -1692,7 +1692,7 @@
       ]
     },
     "https://www.discover.com/credit-cards/card-smarts/best-international-travel-credit-card/": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-22",
       "lines": [
         "852946f210d2ad39"
       ]
@@ -2108,6 +2108,116 @@
       "lines": [
         "9a650adedc36ca88",
         "bd3e1fe145104712"
+      ]
+    },
+    "https://www.americanexpress.com/en-us/business/credit-cards/blue-business-cash/": {
+      "checked": "2026-11-22",
+      "lines": []
+    },
+    "https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/bluebusinesscash-credit-card/45094-9-0": {
+      "checked": "2026-11-22",
+      "lines": [
+        "1ff5fffe712d0678",
+        "4db3311144b50bb6",
+        "55af0161e2f79f68",
+        "56f120e8a90bf874",
+        "75096ddd0d9572c5",
+        "f681a0f37e4009ea"
+      ]
+    },
+    "https://www.capitalone.com/small-business/credit-cards/spark-cash/": {
+      "checked": "2026-11-22",
+      "lines": [
+        "45bea403affd3b9d",
+        "921656c1285bda13",
+        "c9b1c303b22f0c1a",
+        "e5dc3460990ac015"
+      ]
+    },
+    "https://disclosures.capitalone.com/disclosure.41743.en-US.html": {
+      "checked": "2026-11-22",
+      "lines": [
+        "50c2d54fdd6014d6",
+        "6944597d56228dd0",
+        "6974f8e0902f3e32",
+        "bdc2f6993900453a"
+      ]
+    },
+    "https://www.capitalone.com/small-business/credit-cards/cash-back/": {
+      "checked": "2026-11-22",
+      "lines": [
+        "2b1a946f503b7064"
+      ]
+    },
+    "https://www.capitalone.com/credit-cards/ventureone/": {
+      "checked": "2026-11-22",
+      "lines": [
+        "0d445009a39999be",
+        "173cc0744563f575",
+        "27b0edfbcf03255b",
+        "4b0f75ac43076dd7",
+        "7f7b9bbc2aea0c87",
+        "8b9b3f83a495a08c",
+        "a4a6317d59dab69f",
+        "cafebb6131879e13",
+        "cfa3686b87388cc1"
+      ]
+    },
+    "https://disclosures.capitalone.com/disclosure.42723.en-US.html": {
+      "checked": "2026-11-22",
+      "lines": [
+        "4b2ffcd689217804",
+        "7046b01a8155a603",
+        "a76f70c114a65f72",
+        "c1ec9f94e167382b",
+        "c69e5c49f35e5fe6",
+        "ef734273944f45f8"
+      ]
+    },
+    "https://www.discover.com/credit-cards/cash-back/chrome/": {
+      "checked": "2026-11-22",
+      "lines": [
+        "2d8b4f3ccd10395e",
+        "2ef5c1a8add46925",
+        "4fb0f5c1b5de2c87",
+        "56db6540a442d65a",
+        "97967230754d8e39",
+        "c65ed589debab5e0",
+        "de5ef06e824574be",
+        "f2d7a52a827c3240"
+      ]
+    },
+    "https://disclosures.capitalone.com/disclosure.42603.en-US.html": {
+      "checked": "2026-11-22",
+      "lines": [
+        "006710f165e25d96",
+        "0fc353e78464cc6c",
+        "4b2ffcd689217804",
+        "4cb27329e13b1c68",
+        "648c67abc836ddac",
+        "78a969aa45fb4429",
+        "97967230754d8e39",
+        "bdc2f6993900453a",
+        "c46c446c0f2d87cc",
+        "f27008b32497e2ea",
+        "f2d7a52a827c3240"
+      ]
+    },
+    "https://www.discover.com/credit-cards/travel/": {
+      "checked": "2026-11-22",
+      "lines": [
+        "06d419239d9d1327",
+        "f3c098b738ef0320"
+      ]
+    },
+    "https://disclosures.capitalone.com/disclosure.42614.en-US.html": {
+      "checked": "2026-11-22",
+      "lines": [
+        "4b2ffcd689217804",
+        "4cb27329e13b1c68",
+        "a76f70c114a65f72",
+        "c1ec9f94e167382b",
+        "c69e5c49f35e5fe6"
       ]
     }
   }
