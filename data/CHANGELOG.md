@@ -2,6 +2,16 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.22.4
+
+Bank of America changed the **Atmos Rewards Visa Signature Business Card** (`bank-of-america-atmos-rewards-business`), seen on its [card page](https://business.bankofamerica.com/en/credit-cards/atmos-rewards) and new [terms](https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US) on 2026-11-22:
+
+- The annual fee is $195 for the company (was $70, plus $25 a card).
+- 2 points per $1 on dining (restaurants, fast food, caterers and bars) in place of 2 points on gas, EV charging, shipping and local transit; 3 points on Alaska and Hawaiian purchases and 1 point elsewhere stay, and the 10% bonus with a Bank of America small business account still applies to all of it.
+- New: 10 points per $1 on flights booked through Atmos for Business. earnrate has no merchant for that site yet, so they count at the 3x Alaska rate.
+- The welcome offer is 90,000 points after $6,000 in 90 days (was 70,000 points and a $99 Companion Fare after $4,000).
+- The $99 Companion Fare after $6,000 a year is gone. In its place, a 50% Global Discount Code and 10,000 status points after $100,000 in a card year, and again after $200,000.
+
 ## 2026.11.22.3
 
 No rates changed. One more store list an issuer names (`named`, as in 2026.11.13.2), from a page the card already cites, read 2026-11-22:

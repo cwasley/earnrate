@@ -5,38 +5,38 @@ color: '#2a4a6b'
 issuer: bank-of-america
 network: visa
 currency: atmos-points
-last_verified: 2026-11-01
+last_verified: 2026-11-22
 verified_by: claude
 source_urls:
   - https://business.bankofamerica.com/en/credit-cards/atmos-rewards
-  - https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
+  # The card page's "Terms and conditions" link; the campaign id changes with
+  # the offer.
+  - https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
 base_rate: 1
 business: true
-annual_fee: 70
+annual_fee: 195
 foreign_transaction_fee: 0
 welcome_offer:
-  points: 70000
-  spend: 4000
+  points: 90000
+  spend: 6000
   months: 3
-  note: Limited-time online offer, no end date stated. Online only; it may not be available after leaving the page, at a financial center or by phone. The window is 90 days from account opening. The offer also includes a $99 Companion Fare (plus taxes and fees from $23). The spend and window are in the offer's info tooltip, not the visible page text.
+  note: Limited-time online offer, no end date stated. The window is 90 days from account opening, and the offer is limited to one per new company.
 rules:
   - id: alaska-and-hawaiian
     match: { merchants: [alaska-airlines, hawaiian-airlines] }
     rate: 3
-    note: Card points only; points and status from flying aren't card earnings.
-  - id: gas-ev-shipping-transit
-    match: { categories: [gas, ev_charging, shipping, transit] }
-    exclude: { mccs: [7523] }
+    note: Tickets, inflight and lounge purchases, cargo and vacation packages billed by Alaska or Hawaiian and booked directly with them, not through a travel agency or online merchant. Flights booked through Atmos for Business earn 10 points per $1 instead. Card points only; points and status from flying aren't card earnings.
+  - id: dining
+    match: { categories: [dining] }
     rate: 2
-    note: Local transit includes rideshare, trains, buses, ferries and tolls; parking isn't on Bank of America's list. Shipping is motor freight carriers and courier services.
+    note: Restaurants, fast food, caterers, and bars or taverns, by merchant category code.
   - id: alaska-and-hawaiian-with-boa-account
     match: { merchants: [alaska-airlines, hawaiian-airlines] }
     rate: 3.3
     requires: { membership: bank-of-america-small-business-account }
     note: 3x plus the 10% rewards bonus when the company has an eligible Bank of America small business account.
-  - id: gas-ev-shipping-transit-with-boa-account
-    match: { categories: [gas, ev_charging, shipping, transit] }
-    exclude: { mccs: [7523] }
+  - id: dining-with-boa-account
+    match: { categories: [dining] }
     rate: 2.2
     requires: { membership: bank-of-america-small-business-account }
     note: 2x plus the 10% rewards bonus when the company has an eligible Bank of America small business account.
@@ -46,62 +46,74 @@ rules:
     requires: { membership: bank-of-america-small-business-account }
     note: The 1x base rate plus the 10% rewards bonus when the company has an eligible Bank of America small business account.
 milestones:
-  - id: spend-6k
-    spend: 6000
+  - id: spend-100k
+    spend: 100000
     period: cardmember_year
     rewards:
-      - a $99 Companion Fare
-    note: 'Spending by the account anniversary counts; the code arrives within 2 billing cycles after it. $99 plus taxes and fees from $23, for a companion on a Saver or Main Cabin fare within North America on Alaska or Hawaiian. Use it within 12 months.'
+      - a 50% Global Discount Code
+      - 10,000 status points
+    note: Spending in the card anniversary year counts; both arrive within 2 billing cycles after qualifying. Status points count toward elite status only.
+  - id: spend-200k
+    spend: 200000
+    period: cardmember_year
+    rewards:
+      - a second 50% Global Discount Code
+      - 10,000 more status points
+    note: The second award in the same card anniversary year.
+# Not modeled on purpose: the $120 TSA PreCheck or Global Entry credit every
+# four years, four Alaska Lounge passes a year, and the 1 status point per $3.
 evidence:
   - rule: base_rate
     url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
-    quote: 'Earn 1 point for every $1 spent on all other purchases.'
+    quote: 'Earn 1 point per $1 spent on all other purchases'
+  - rule: base_rate
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+    quote: 'Earn 1 point (base point) for every $1 of Net Purchases charged to the card'
   - rule: alaska-and-hawaiian
     url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
-    quote: 'Earn 3 points for every $1 spent on eligible Alaska Airlines and Hawaiian Airlines purchases.'
-  - rule: gas-ev-shipping-transit
+    quote: '3 points per $1 spent on other eligible Alaska Airlines and Hawaiian Airlines purchases'
+  - rule: alaska-and-hawaiian
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+    quote: 'purchases made through a third-party merchant (e.g., travel agency, online merchant) will not earn 3 points per dollar'
+  - rule: dining
     url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
-    quote: 'eligible gas, EV charging station, shipping and local transit purchases, including rideshare'
-  - rule: gas-ev-shipping-transit
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
-    quote: 'Motor Freight Carriers, Courier Services; Local and Suburban Commuter Passenger Transportation, Including Ferries'
-  - rule: gas-ev-shipping-transit
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
-    quote: 'Passenger Railways; Taxicabs and Limousines (including rideshare); Bus Lines; Tolls and Bridge Fees'
+    quote: 'Earn 2 points for every $1 spent on eligible dining purchases.'
+  - rule: dining
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+    quote: 'Eligible Dining includes Restaurants, Fast Food, Caterers, and Drinking Establishments such as Bars or Taverns'
   - rule: alaska-and-hawaiian-with-boa-account
     url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'earn a 10% rewards bonus on all points earned from card purchases'
-  - rule: gas-ev-shipping-transit-with-boa-account
+  - rule: alaska-and-hawaiian-with-boa-account
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+    quote: 'open small business (non-consumer) checking or savings account with Bank of America, N.A.'
+  - rule: dining-with-boa-account
     url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
     quote: 'if your company has an eligible Bank of America® small business account.'
   - rule: everything-else-with-boa-account
-    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
-    quote: 'if your company has an eligible Bank of America® small business account.'
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+    quote: 'bonus points equal to 10% of the points earned on each $1 spent in Net Purchases'
   - rule: annual_fee
     url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
-    quote: 'Plus, a low annual fee of $70 for the company and $25 per card.'
+    quote: '$195 Annual fee'
   - rule: annual_fee
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
-    quote: '$70 for the company and $25 per card.'
-  - rule: welcome_offer
-    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
-    quote: 'Limited-time online offer: 70,000 bonus points + $99 Companion Fare'
-  - rule: welcome_offer
-    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
-    quote: 'after you make $4,000 or more in purchases within the first 90 days of opening your account'
-    in_collapsed: true
-  - rule: alaska-and-hawaiian-with-boa-account
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
-    quote: 'open small business (non-consumer) checking or savings account with Bank of America, N.A.'
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+    quote: 'Annual Fee $195 for the company.'
   - rule: foreign_transaction_fee
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
     quote: 'International Transaction None Penalty Fee'
-  - rule: spend-6k
+  - rule: welcome_offer
     url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
-    quote: 'every year that you spend at least $6,000 on purchases with your card'
-  - rule: spend-6k
-    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4080500&productoffercode=CX&locale=en_US
-    quote: 'after $6,000 or more in Net Purchases post to the account billing statement during the card anniversary year'
+    quote: 'Limited-time online offer: 90,000 bonus points'
+  - rule: welcome_offer
+    url: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
+    quote: 'after you make $6,000 or more in purchases within the first 90 days'
+  - rule: spend-100k
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+    quote: 'The first after spending $100,000 or more, and the second after spending $200,000 or more'
+  - rule: spend-200k
+    url: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+    quote: 'The first after spending $100,000 or more, and the second after spending $200,000 or more'
 todo:
-  - 'annual_fee is the $70 per-company fee. Each card also costs $25 a year, which the schema has no field for.'
+  - 'Flights booked through Atmos for Business (alaskaair.com/content/atmos-for-business) earn 10 points per $1. earnrate has no merchant for that booking site, so they count at the 3x Alaska rate.'
   - "BofA's rewards page lists Atmos Rewards cards as not eligible for the BofA Rewards tier bonus (in a popup the source check can't read), so the 10% account bonus stands alone."

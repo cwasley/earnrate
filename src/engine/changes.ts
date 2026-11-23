@@ -1,7 +1,14 @@
-import type { Card, Credit, Rule, WelcomeOfferSchema } from '../schema/card.ts'
+import type {
+  Card,
+  Credit,
+  Milestone,
+  Rule,
+  WelcomeOfferSchema,
+} from '../schema/card.ts'
 import type { Catalog } from '../schema/catalog.ts'
 import type { Change, ChangeSubject, Release } from '../schema/changes.ts'
 import type { z } from 'zod'
+import { milestonePays } from './milestones.ts'
 import { offerTerms } from './offers.ts'
 import { creditName, rulePreposition, ruleWhat } from './rule-text.ts'
 import {
@@ -9,11 +16,13 @@ import {
   currencyName,
   earnText,
   listed,
+  MILESTONE_PERIODS,
   money,
   pct,
   possessive,
   shortCardName,
   shortDate,
+  wholeDollars,
 } from './text.ts'
 
 export type DatedChange = {
@@ -161,6 +170,14 @@ export function changeWhat(catalog: Catalog, change: Change): string {
               card.currency,
             )
       return `rate ${rulePreposition(catalog, [rule])} ${ruleWhat(catalog, rule, card)}: ${rate(was)} → ${rate(now)}`
+    }
+    case 'milestones': {
+      const m = (card.milestones.find((x) => x.id === item) ??
+        now ??
+        was) as Milestone
+      const pays = (v: unknown) =>
+        v === null ? 'none' : milestonePays(v as Milestone)
+      return `${wholeDollars(m.spend)} ${MILESTONE_PERIODS[m.period]} spend bonus: ${pays(was)} → ${pays(now)}`
     }
     case 'credits': {
       const credit = (card.credits.find((c) => c.id === item) ??

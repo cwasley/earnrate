@@ -3,6 +3,109 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.22.4'
+  date: 2026-11-22
+  changes:
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-business
+      field: annual_fee
+      was: 70
+      now: 195
+      source: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
+      detected: 2026-11-22
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-business
+      field: welcome_offer
+      was: { points: 70000, spend: 4000, months: 3 }
+      now: { points: 90000, spend: 6000, months: 3 }
+      source: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
+      detected: 2026-11-22
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-business
+      field: rules.gas-ev-shipping-transit
+      was:
+        {
+          match: { categories: [gas, ev_charging, shipping, transit] },
+          exclude: { mccs: [7523] },
+          rate: 2,
+        }
+      now: null
+      source: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
+      detected: 2026-11-22
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-business
+      field: rules.gas-ev-shipping-transit-with-boa-account
+      was:
+        {
+          match: { categories: [gas, ev_charging, shipping, transit] },
+          exclude: { mccs: [7523] },
+          rate: 2.2,
+          requires: { membership: bank-of-america-small-business-account },
+        }
+      now: null
+      source: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
+      detected: 2026-11-22
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-business
+      field: rules.dining
+      was: null
+      now: { match: { categories: [dining] }, rate: 2 }
+      source: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
+      detected: 2026-11-22
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-business
+      field: rules.dining-with-boa-account
+      was: null
+      now:
+        {
+          match: { categories: [dining] },
+          rate: 2.2,
+          requires: { membership: bank-of-america-small-business-account },
+        }
+      source: https://business.bankofamerica.com/en/credit-cards/atmos-rewards
+      detected: 2026-11-22
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-business
+      field: milestones.spend-6k
+      was:
+        {
+          spend: 6000,
+          period: cardmember_year,
+          rewards: [a $99 Companion Fare],
+        }
+      now: null
+      source: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+      detected: 2026-11-22
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-business
+      field: milestones.spend-100k
+      was: null
+      now:
+        {
+          spend: 100000,
+          period: cardmember_year,
+          rewards: [a 50% Global Discount Code, '10,000 status points'],
+        }
+      source: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+      detected: 2026-11-22
+    - cause: issuer
+      card: bank-of-america-atmos-rewards-business
+      field: milestones.spend-200k
+      was: null
+      now:
+        {
+          spend: 200000,
+          period: cardmember_year,
+          rewards:
+            [a second 50% Global Discount Code, '10,000 more status points'],
+        }
+      source: https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US
+      detected: 2026-11-22
+    - cause: quote
+      card: bank-of-america-atmos-rewards-business
+      field: evidence
+      summary: Every quote re-read from the new card page and its new terms page (a new campaign id).
+
 - version: '2026.11.22.3'
   date: 2026-11-22
   changes:
