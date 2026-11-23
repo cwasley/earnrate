@@ -25,3 +25,9 @@
 
 # The statement check's policy names the hashes of its script and styles, so
 # the build adds its block to site-dist/_headers (site/statement.config.ts).
+
+# The iPhone app's Universal Links (which earnrate.dev pages open in the
+# app). Apple's servers fetch it, so no visitor's request is involved.
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+  Cache-Control: public, max-age=3600

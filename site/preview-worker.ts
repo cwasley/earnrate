@@ -45,6 +45,8 @@ export default {
       'cache-control',
       cache ? `${cache}, no-transform` : 'no-transform',
     )
+    if (pathname === '/.well-known/apple-app-site-association')
+      headers.set('content-type', 'application/json')
     if (STATEMENT_PATHS.includes(pathname) && response.ok) {
       // The page's own policy, which names its hashes, as earnrate.dev's
       // _headers sends it.

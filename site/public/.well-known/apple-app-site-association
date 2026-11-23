@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["W9CW43H7L6.dev.earnrate.app"],
+        "components": [
+          { "/": "/best/?*", "comment": "a store's or category's answer" },
+          { "/": "/cards/?*", "comment": "a card's page" },
+          { "/": "/sheet", "#": "s=*", "comment": "a cheat sheet someone sent" },
+          { "/": "/move", "comment": "cards moved from earnrate.dev" }
+        ]
+      }
+    ]
+  }
+}
