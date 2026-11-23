@@ -35,6 +35,10 @@ rules:
     note: Grocery stores by merchant category code, not Target or Walmart. Warehouse clubs, drugstores, discount stores and stores with only a few grocery items don't count. Paying with a mobile or digital wallet or a third-party payment account may not earn the bonus.
     named:
       not_earning: [target, walmart]
+  - id: gas-ev
+    match: { categories: [gas, ev_charging] }
+    rate: 3
+    note: Gas stations (automated fuel dispensers and service stations) and EV charging stations, by merchant category code. The card's Reward Rules list this; the card page doesn't mention it.
 milestones:
   - id: anniversary-bonus
     spend: 15000
@@ -72,6 +76,12 @@ evidence:
   - rule: grocery.not_earning
     url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
     quote: 'grocery stores, as identified by the merchant category codes, excluding Target® and Walmart®'
+  - rule: gas-ev
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'made with your Card Account on gas and EV charging'
+  - rule: gas-ev
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'Qualifying gas purchases are defined as automated fuel dispensers and service stations'
   - rule: anniversary-bonus
     url: https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/
     quote: 'Earn 7,500 bonus points each anniversary year if you spend $15,000 on eligible purchases.'
@@ -97,7 +107,6 @@ evidence:
     url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
     quote: 'intended for applicants who are not and have not previously been Wyndham Rewards Earner® cardmembers'
 todo:
-  - "Gas and EV charging: the Reward Rules in the card's Terms and Conditions say 3 points per $1 on gas (automated fuel dispensers and service stations) and EV charging, but the card page lists 3 points only on Vacation Club, dining and grocery, and 1 point on everything else. Left at 1x until Collin decides which page to follow."
   - 'Not modeled: 3 points per $1 at Club Wyndham, WorldMark, Margaritaville Vacation Club and Shell Vacations Club resorts outside the Trademark Collection, on their maintenance fees and on timeshare loan payments to the Wyndham and Shell developers (earnrate has no merchants for them), and timeshare down payments earning nothing.'
   - 'The card page keeps an older offer in hidden markup (2 points on dining, grocery and gas); only the shown text is quoted.'
   - 'Perks that are not points per dollar: automatic Wyndham Rewards Gold status, 10% fewer points for free nights, a cardmember discount on the Wyndham Rewards rate and 15% off buying points.'

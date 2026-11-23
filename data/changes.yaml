@@ -3,6 +3,22 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.22.2'
+  date: 2026-11-22
+  changes:
+    - cause: correction
+      card: barclays-wyndham-rewards-earner
+      field: rules.gas-ev
+      summary: 3 points per $1 at gas stations and EV charging stations, from the card's Reward Rules; the card page doesn't list it.
+      source: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    - cause: addition
+      card: pnc-cash-rewards-visa
+      field: foreign_transaction_fee
+      was: null
+      now: 3
+      summary: A 3% foreign transaction fee, from PNC's rates and fees table.
+      source: https://www.pnc.com/content/dam/pnc-com/pdf/personal/CreditCards/cash-rewards-rates.pdf
+
 - version: '2026.11.22.1'
   date: 2026-11-22
   changes:

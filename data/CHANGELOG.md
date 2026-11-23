@@ -2,6 +2,11 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.22.2
+
+- **Wyndham Rewards Earner Card** (`barclays-wyndham-rewards-earner`): 3 points per $1 at gas stations and EV charging stations, by merchant category code. The card's [Reward Rules](https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156) list it, though the card page doesn't.
+- **PNC Cash Rewards Visa** (`pnc-cash-rewards-visa`): a 3% foreign transaction fee, from PNC's [rates and fees table](https://www.pnc.com/content/dam/pnc-com/pdf/personal/CreditCards/cash-rewards-rates.pdf), read in a browser.
+
 ## 2026.11.22.1
 
 Four cards, each from the issuer's own pages. New issuers: Alliant Credit Union (`alliant-credit-union`), PNC Bank (`pnc`) and Coastal Community Bank, shown as Robinhood (`coastal-community-bank`). New memberships: `robinhood-gold` (the annual Robinhood Gold plan, $50, which the card needs) and `alliant-credit-union` (`annual_fee: 0`; anyone may apply to join). New currencies: Wyndham Rewards points (0.5¢, the conservative hotel default; 0.55¢ is TPG's November 2026 valuation) and Robinhood Gold Card points (1¢ as brokerage cash back or gift cards).
