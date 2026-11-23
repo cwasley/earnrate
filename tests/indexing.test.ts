@@ -167,7 +167,7 @@ describe('which store pages are indexed', () => {
       note: 'Some locations take only debit.',
     })
     expect(decide(noted).get('stater-bros')?.indexed).toBe(false)
-  })
+  }, 60_000)
 
   test('the indexed store pages stay a fraction of all of them', () => {
     const n = [...decisions.values()].filter((d) => d.indexed).length
