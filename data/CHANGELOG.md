@@ -2,6 +2,14 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.22.3
+
+No rates changed. One more store list an issuer names (`named`, as in 2026.11.13.2), from a page the card already cites, read 2026-11-22:
+
+- `verizon-visa-card`: Walmart and Target, where grocery purchases may not count toward 4% at grocery stores ('grocery purchases at Walmart, Target or other "big box" retailers may not qualify', https://www.verizon.com/support/verizon-visa-card-rewards-legal/).
+
+The other issuers' card pages that could be read (Citi, Wells Fargo, Discover, Navy Federal, Bilt, Apple, TD, Caltech EFCU, Bank of America's and Sam's Club's card pages without their terms, and Fidelity's FAQ) name no other store as earning or not earning a bonus rate that a current rule could carry. Discover's calendar names Walmart and Target as left out of its January to March 2026 grocery category, which has ended.
+
 ## 2026.11.22.2
 
 - **Wyndham Rewards Earner Card** (`barclays-wyndham-rewards-earner`): 3 points per $1 at gas stations and EV charging stations, by merchant category code. The card's [Reward Rules](https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156) list it, though the card page doesn't.

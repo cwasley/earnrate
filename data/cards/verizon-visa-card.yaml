@@ -33,6 +33,8 @@ rules:
     match: { categories: [grocery.supermarket] }
     rate: 4
     note: Grocery stores and supermarkets, by merchant category code. Groceries at Walmart, Target and other big-box stores may not count.
+    named:
+      not_earning: [walmart, target]
   - id: restaurants
     match: { categories: [dining] }
     rate: 4
@@ -82,6 +84,9 @@ evidence:
     url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
     quote: 'Grocery purchases include purchases made at grocery stores and supermarkets.'
   - rule: grocery-stores
+    url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
+    quote: 'grocery purchases at Walmart, Target or other "big box" retailers may not qualify'
+  - rule: grocery-stores.not_earning
     url: https://www.verizon.com/support/verizon-visa-card-rewards-legal/
     quote: 'grocery purchases at Walmart, Target or other "big box" retailers may not qualify'
   - rule: restaurants
