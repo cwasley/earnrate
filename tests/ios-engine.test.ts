@@ -691,7 +691,7 @@ describe('Next card and Cards in the app', () => {
     expect(all.groups.flatMap((g) => g.cards)).toHaveLength(
       catalog.cards.length,
     )
-    expect(all.groups[0]?.title).toBe('American Express')
+    expect(all.groups[0]?.title).toBe('Alliant Credit Union')
     const plat = cardIndex({ query: 'amex plat' })
     const ids = plat.groups.flatMap((g) => g.cards.map((c) => c.id))
     expect(ids).toContain('amex-platinum')

@@ -2,6 +2,10 @@
 # search with ("bofa", "amex"), and a color for drawing a card that has none
 # of its own. Every card's `issuer` must be one of these.
 
+- id: alliant-credit-union
+  name: Alliant Credit Union
+  color: '#1f3864'
+  search: [alliant, alliant cu]
 - id: amex
   name: American Express
   color: '#2a6db0'
@@ -29,6 +33,12 @@
   name: Citi
   color: '#3b4f66'
   search: [citibank]
+- id: coastal-community-bank
+  # Coastal Community Bank issues the Robinhood Gold Card; people know it as
+  # Robinhood.
+  name: Robinhood
+  color: '#c9a54a'
+  search: [robinhood, coastal community bank]
 - id: column
   # Column N.A. issues the Bilt card; people know it as Bilt.
   name: Bilt
@@ -56,6 +66,10 @@
   name: PenFed Credit Union
   color: '#1f5c99'
   search: [penfed, pentagon federal]
+- id: pnc
+  name: PNC Bank
+  color: '#e35205'
+  search: [pnc]
 - id: sofi
   name: SoFi
   color: '#2d2f36'

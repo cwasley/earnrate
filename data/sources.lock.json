@@ -2219,6 +2219,88 @@
         "c1ec9f94e167382b",
         "c69e5c49f35e5fe6"
       ]
+    },
+    "https://www.alliantcreditunion.org/bank/visa-signature-card": {
+      "checked": "2026-11-22",
+      "lines": [
+        "57e9ed64d29912b9",
+        "5a46510b5fea362f"
+      ]
+    },
+    "https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/": {
+      "checked": "2026-11-22",
+      "lines": [
+        "2d9edc558449b45c",
+        "3a638d9580150ce9",
+        "749128751b4a132b",
+        "a3373cbd1ba0c44c",
+        "aa069b64d0e4ae3a",
+        "c15e422bd911a1b6",
+        "fc53bf685c7ad2ec"
+      ]
+    },
+    "https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156": {
+      "checked": "2026-11-22",
+      "lines": [
+        "07634113cfe3ca34",
+        "178db1c2e1019edd",
+        "181cd25987d30b34",
+        "48aa8b4c570bde67",
+        "4ab0d8eb85f7b2b0",
+        "511d696cd133b658",
+        "749128751b4a132b",
+        "8d79f78bb36bd615",
+        "9893aa22474d8da5",
+        "ae7a8017a22fda7a",
+        "c0d0944e4341231a",
+        "c83be071e8db28c0",
+        "d28b90c3c708ef7b",
+        "d2bc5e9a600b1df8",
+        "ddac82ea4a96b7b4"
+      ]
+    },
+    "https://robinhood.com/creditcard/": {
+      "checked": "2026-11-22",
+      "lines": [
+        "59704c96d48dc40e"
+      ]
+    },
+    "https://api.robinhood.com/creditcard/legal/interest-fees": {
+      "checked": "2026-11-22",
+      "lines": [
+        "95365c0337d5cac5"
+      ]
+    },
+    "https://robinhood.com/us/en/support/articles/robinhood-gold-card-rewards/": {
+      "checked": "2026-11-22",
+      "lines": [
+        "4f501c9f693b3f84",
+        "5c26fccd9fa1b92a",
+        "7595d4d3c02b5d97",
+        "7931cb69625f32c6",
+        "7dc22d1708251aab",
+        "82ca34414207fbbb",
+        "b4e482637e4ffeac",
+        "ed96ade47c646828",
+        "ee184c06761d1e43"
+      ]
+    },
+    "https://robinhood.com/us/en/support/articles/robinhood-gold-card-waitlist/": {
+      "checked": "2026-11-22",
+      "lines": [
+        "1e9b0686852bb1aa",
+        "4835ddcd8df524f9",
+        "5535b3dfaea92920",
+        "76463490b0e48e2b",
+        "e280a11f15e824de",
+        "f12573c8893d86d0"
+      ]
+    },
+    "https://robinhood.com/us/en/support/articles/robinhood-gold-card-faq/": {
+      "checked": "2026-11-22",
+      "lines": [
+        "0d854f16aeb1f870"
+      ]
     }
   }
 }

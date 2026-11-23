@@ -3276,7 +3276,11 @@ describe('#40 keep or replace a fee card', () => {
       expect(k.replacements.map((r) => r.cardId)).not.toContain(
         'verizon-visa-card',
       )
+      const robinhood: unknown = expect.stringMatching(
+        /^If you have a Robinhood Gold membership: Robinhood Gold, about \$[\d,]+ a year after its fee\.$/,
+      )
       expect(k.members).toEqual([
+        robinhood,
         expect.stringMatching(
           /^If you have a Verizon wireless or Fios account: Verizon Visa, about \$[\d,]+ a year after its fee\.$/,
         ),
@@ -3287,7 +3291,7 @@ describe('#40 keep or replace a fee card', () => {
           { memberships: ['verizon-account'] },
         ),
       )
-      expect(member.members).toEqual([])
+      expect(member.members).toEqual([robinhood])
     },
   )
 

@@ -1,0 +1,52 @@
+id: robinhood-gold-card
+name: Robinhood Gold Card
+color: '#c9a54a'
+# Robinhood Credit offers it and Coastal Community Bank issues it. Only
+# Robinhood Gold members can have it, on the annual plan.
+issuer: coastal-community-bank
+network: visa # Visa Signature
+currency: robinhood-points
+last_verified: 2026-11-22
+verified_by: claude
+source_urls:
+  - https://robinhood.com/creditcard/
+  - https://api.robinhood.com/creditcard/legal/interest-fees
+  - https://robinhood.com/us/en/support/articles/robinhood-gold-card-rewards/
+  - https://robinhood.com/us/en/support/articles/robinhood-gold-card-waitlist/
+  - https://robinhood.com/us/en/support/articles/robinhood-gold-card-faq/
+base_rate: 3
+annual_fee: 0
+foreign_transaction_fee: 3
+requires_membership: robinhood-gold
+evidence:
+  - rule: base_rate
+    url: https://robinhood.com/creditcard/
+    quote: 'earn 3% cash back on all categories'
+  - rule: base_rate
+    url: https://robinhood.com/us/en/support/articles/robinhood-gold-card-rewards/
+    quote: 'By default, cardholders earn 3x points on purchases.'
+  - rule: annual_fee
+    url: https://api.robinhood.com/creditcard/legal/interest-fees
+    quote: 'Annual Fee None with Robinhood Gold membership.'
+  - rule: annual_fee
+    url: https://robinhood.com/us/en/support/articles/robinhood-gold-card-waitlist/
+    quote: 'There’s no annual fee for the Robinhood Gold Card'
+  - rule: requires_membership
+    url: https://robinhood.com/us/en/support/articles/robinhood-gold-card-waitlist/
+    quote: 'the card is only available to Robinhood Gold members which requires an annual subscription ($50)'
+  - rule: requires_membership
+    url: https://robinhood.com/creditcard/
+    quote: 'Robinhood Gold membership is a requirement for the Robinhood Gold Card.'
+  - rule: foreign_transaction_fee
+    url: https://api.robinhood.com/creditcard/legal/interest-fees
+    quote: '3% of the U.S. dollar amount of each transaction made in a foreign currency.'
+  - rule: foreign_transaction_fee
+    url: https://robinhood.com/us/en/support/articles/robinhood-gold-card-faq/
+    quote: 'You will be charged a 3% foreign transaction fee if you opened your account on or after that date.'
+todo:
+  - 'Robinhood''s rewards article says cardholders earn "up to 5x points on select purchases" through the Robinhood Credit Travel Portal, while the waitlist article says 5X on travel booked there. Which bookings earn 5X isn''t clear from either, so travel through the portal is modeled at 3x until the Rewards Program Rules (a PDF, cdn.robinhood.com/assets/robinhood/legal/Robinhood_Gold_Card_Rewards_Program_Rules.pdf) are read.'
+  - 'The Rewards Program Rules are a PDF, so the source check reads only the card page, the rates and fees page and the support articles.'
+  - 'Applications are by invitation from a waitlist, in a gradual rollout. Robinhood also says Gold membership is not required for eligible applicants through certain partner channels; earnrate counts the $50 annual Gold subscription for everyone.'
+  - 'The foreign transaction fee depends on when the account opened: none before July 1, 2026, 3% on or after. Modeled at 3%, what a new cardholder pays.'
+  - 'Points are worth 1¢ as cash back into a Robinhood brokerage account or as gift cards; statement credits, gas discounts and Amazon purchases with points are worth less.'
+  - 'Mystery box rewards (4% to 15% back on purchases for a while) are chance prizes, not modeled.'

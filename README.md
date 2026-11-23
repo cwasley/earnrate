@@ -228,7 +228,7 @@ On earnrate.dev, the [statement check](https://earnrate.dev/statement) runs the 
 
 ## Supported cards
 
-106 cards, each modeled from the issuer's own terms and checked weekly against them:
+110 cards, each modeled from the issuer's own terms and checked weekly against them:
 
 - **American Express:** Gold, Platinum, Blue Cash Preferred, Blue Cash Everyday, Business Gold, Business Platinum, Blue Business Plus, Blue Business Cash
 - **American Express airline and hotel:** Delta SkyMiles Blue, Gold, Platinum, Reserve; Hilton Honors, Surpass, Aspire, Business; Marriott Bonvoy Brilliant, Bevy, Business
@@ -240,9 +240,10 @@ On earnrate.dev, the [statement check](https://earnrate.dev/statement) runs the 
 - **Bank of America:** Customized Cash Rewards, Unlimited Cash Rewards, Travel Rewards, Premium Rewards; Atmos Rewards Ascent, Summit, Business
 - **TD Bank:** Target Circle Card, Nordstrom card, Nordstrom Visa
 - **U.S. Bank:** Cash+, Altitude Go, Altitude Connect, Smartly Visa Signature
+- **PNC:** Cash Rewards Visa
 - **Bilt:** Blue, Obsidian, Palladium
-- **Credit unions:** Navy Federal cashRewards, cashRewards Plus, More Rewards American Express; PenFed Power Cash Rewards; Caltech EFCU Platinum Mastercard
-- **Others:** Apple Card (Goldman Sachs), Discover it Cash Back, Discover it Miles, Discover it Chrome, SoFi Unlimited 2%, JetBlue Plus (Barclays), PayPal Cashback Mastercard, Sam's Club Mastercard, Venmo Credit Card and Verizon Visa Card (Synchrony), Fidelity Rewards Visa Signature (Elan)
+- **Credit unions:** Navy Federal cashRewards, cashRewards Plus, More Rewards American Express; PenFed Power Cash Rewards; Caltech EFCU Platinum Mastercard; Alliant Cashback Visa Signature
+- **Others:** Apple Card (Goldman Sachs), Discover it Cash Back, Discover it Miles, Discover it Chrome, SoFi Unlimited 2%, JetBlue Plus and Wyndham Rewards Earner (Barclays), Robinhood Gold Card, PayPal Cashback Mastercard, Sam's Club Mastercard, Venmo Credit Card and Verizon Visa Card (Synchrony), Fidelity Rewards Visa Signature (Elan)
 
 Store cards (Target, Kohl's, Nordstrom) only come up at their own stores. Airline and hotel cards count only what the card itself earns, not the points a program gives members however they pay, and their perks (bags, lounges) aren't counted; a yearly free night counts only as described under [Free nights](#free-nights).
 

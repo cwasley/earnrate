@@ -1,0 +1,104 @@
+id: barclays-wyndham-rewards-earner
+name: Wyndham Rewards Earner Card
+short_name: Wyndham Earner
+issuer: barclays
+network: visa # Visa Signature
+currency: wyndham-rewards
+last_verified: 2026-11-22
+verified_by: claude
+source_urls:
+  - https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/
+  # The card page's "Terms and Conditions" link (rates, fees and Reward Rules).
+  - https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: 0
+welcome_offer:
+  points: 45000
+  spend: 2000
+  months: 3
+  repeat: { may: true }
+  note: "Within 90 days of account opening. Timeshare down payments to Wyndham Vacation Resorts, Wyndham Resort Development, Shell Vacations and their affiliates don't count toward the spend. Meant for applicants who aren't and haven't been Wyndham Rewards Earner cardmembers."
+rules:
+  - id: hotels-by-wyndham
+    match: { merchants: [wyndham] }
+    rate: 5
+    note: Spending on the folio at participating Hotels by Wyndham, Caesars Rewards hotels in the Trademark Collection by Wyndham, and the Club Wyndham, WorldMark, Margaritaville Vacation Club and Shell Vacations Club resorts in the Trademark Collection. Not Echo Suites, unfurnished suites at WaterWalk Extended Stay, or Hotels by Wyndham outside Wyndham Rewards.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 3
+    note: Restaurants and fast food, by merchant category code. Paying with a mobile or digital wallet, a third-party payment account or a merchant's mobile card reader, or through an online marketplace, may not earn the bonus.
+  - id: grocery
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club] }
+    rate: 3
+    note: Grocery stores by merchant category code, not Target or Walmart. Warehouse clubs, drugstores, discount stores and stores with only a few grocery items don't count. Paying with a mobile or digital wallet or a third-party payment account may not earn the bonus.
+    named:
+      not_earning: [target, walmart]
+milestones:
+  - id: anniversary-bonus
+    spend: 15000
+    period: cardmember_year
+    points: 7500
+    note: 7,500 bonus points after $15,000 in purchases each card anniversary year (timeshare down payments don't count). Barclays counts the year through the billing cycle after the anniversary month; allow 8-12 weeks after the anniversary for the points.
+evidence:
+  - rule: base_rate
+    url: https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/
+    quote: 'Earn 1 point per $1 spent on all other purchases'
+  - rule: base_rate
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'You earn 1 point for every $1 spent on all other Net Purchases'
+  - rule: hotels-by-wyndham
+    url: https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/
+    quote: 'Earn 5 points per $1 spent on Hotels by Wyndham'
+  - rule: hotels-by-wyndham
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'You earn 5 points for every $1 spent on eligible Net Purchases'
+  - rule: hotels-by-wyndham
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'are not 5X Properties and are ineligible for the 5X earnings described in this section.'
+  - rule: dining
+    url: https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/
+    quote: 'Earn 3 points per $1 spent on dining and grocery store purchases'
+  - rule: dining
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'Qualifying dining purchases are defined as: Restaurants and Fast-Food restaurants'
+  - rule: grocery
+    url: https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/
+    quote: 'on eligible Vacation Club, dining and grocery store purchases'
+  - rule: grocery
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'warehouse clubs, drug stores, discount stores and merchants that sell a limited number of grocery items'
+  - rule: grocery.not_earning
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'grocery stores, as identified by the merchant category codes, excluding Target® and Walmart®'
+  - rule: anniversary-bonus
+    url: https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/
+    quote: 'Earn 7,500 bonus points each anniversary year if you spend $15,000 on eligible purchases.'
+  - rule: anniversary-bonus
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'You will earn 7,500 bonus points if you spend $15,000 in Net Purchases'
+  - rule: annual_fee
+    url: https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/
+    quote: 'Annual Fee is $0.'
+  - rule: foreign_transaction_fee
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'Foreign Transaction 0% of each transaction in U.S. dollars.'
+  - rule: foreign_transaction_fee
+    url: https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/
+    quote: 'Foreign transaction fee: 0%.'
+  - rule: welcome_offer
+    url: https://cards.barclaycardus.com/banking/cards/wyndham-rewards-earner-card/
+    quote: 'after spending $2,000 on qualifying purchases in the first 90 days.'
+  - rule: welcome_offer
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'Earn 45,000 bonus points after spending $2,000 on purchases'
+  - rule: repeat
+    url: https://www.barclaycardus.com/applycontent/TnCs.jsp?tc49156
+    quote: 'intended for applicants who are not and have not previously been Wyndham Rewards Earner® cardmembers'
+todo:
+  - "Gas and EV charging: the Reward Rules in the card's Terms and Conditions say 3 points per $1 on gas (automated fuel dispensers and service stations) and EV charging, but the card page lists 3 points only on Vacation Club, dining and grocery, and 1 point on everything else. Left at 1x until Collin decides which page to follow."
+  - 'Not modeled: 3 points per $1 at Club Wyndham, WorldMark, Margaritaville Vacation Club and Shell Vacations Club resorts outside the Trademark Collection, on their maintenance fees and on timeshare loan payments to the Wyndham and Shell developers (earnrate has no merchants for them), and timeshare down payments earning nothing.'
+  - 'The card page keeps an older offer in hidden markup (2 points on dining, grocery and gas); only the shown text is quoted.'
+  - 'Perks that are not points per dollar: automatic Wyndham Rewards Gold status, 10% fewer points for free nights, a cardmember discount on the Wyndham Rewards rate and 15% off buying points.'
+  - 'Barclays offers other Earner cards (Earner Plus, Earner Premier and Earner Business), not in earnrate yet.'

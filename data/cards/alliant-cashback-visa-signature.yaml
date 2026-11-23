@@ -1,0 +1,37 @@
+id: alliant-cashback-visa-signature
+name: Alliant Cashback Visa Signature Card
+short_name: Alliant Cashback
+issuer: alliant-credit-union
+network: visa
+currency: cash
+last_verified: 2026-11-22
+verified_by: claude
+source_urls:
+  - https://www.alliantcreditunion.org/bank/visa-signature-card
+base_rate: 1.5
+annual_fee: 0
+foreign_transaction_fee: 0
+requires_membership: alliant-credit-union # anyone may join; no yearly fee
+evidence:
+  - rule: base_rate
+    url: https://www.alliantcreditunion.org/bank/visa-signature-card
+    quote: 'Unlimited 1.5% cash back on every purchase'
+  - rule: base_rate
+    url: https://www.alliantcreditunion.org/bank/visa-signature-card
+    quote: 'No categories, no caps, no activation'
+  - rule: annual_fee
+    url: https://www.alliantcreditunion.org/bank/visa-signature-card
+    quote: 'Signature Card Annual Fee $0, No Annual Fee'
+  - rule: foreign_transaction_fee
+    url: https://www.alliantcreditunion.org/bank/visa-signature-card
+    quote: 'No foreign transaction fees'
+  - rule: foreign_transaction_fee
+    url: https://www.alliantcreditunion.org/bank/visa-signature-card
+    quote: 'Foreign Transaction Free'
+  - rule: requires_membership
+    url: https://www.alliantcreditunion.org/bank/visa-signature-card
+    quote: 'You must be an Alliant member for at least 90 days to be eligible to apply for our credit cards.'
+todo:
+  - 'Alliant ended the 2.5% tier for members with an Alliant checking account; every purchase now earns 1.5%. No welcome offer is shown.'
+  - 'The Cashback Visa Signature Card Program Terms & Conditions, card agreement and disclosure are PDFs, not sources; the card page says some purchase categories earn no cash back, but names them only there.'
+  - 'Credit union membership: anyone can apply to join Alliant, but credit cards need 90 days of membership first. The membership has no yearly fee, so `annual_fee: 0`.'

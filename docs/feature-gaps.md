@@ -57,7 +57,7 @@ A choice option is a list of categories, a list of merchants, or "any online pur
 
 A purchase can say how it's paid (`card`, `apple-pay`, `google-pay` or `paypal`), and a rule can require one (`requires: { payment: apple-pay }`) or exclude some (`exclude: { payment: [paypal] }`). Apple Card and PayPal Cashback use it. What's left are exclusions the issuers word too loosely to model, or that the source check can't re-read:
 
-- `capital-one-savor`, `bank-of-america-customized-cash-rewards`, `bank-of-america-premium-rewards`, `barclays-jetblue-plus`, `discover-it-cash-back`, `discover-it-chrome`: purchases through third-party payment accounts, mobile card readers or digital wallets "may not" earn the bonus, depending on how the merchant codes them. Not a rule earnrate can apply.
+- `capital-one-savor`, `bank-of-america-customized-cash-rewards`, `bank-of-america-premium-rewards`, `barclays-jetblue-plus`, `barclays-wyndham-rewards-earner`, `discover-it-cash-back`, `discover-it-chrome`: purchases through third-party payment accounts, mobile card readers or digital wallets "may not" earn the bonus, depending on how the merchant codes them. Not a rule earnrate can apply.
 - `amex-hilton-honors-surpass`: online retail at 4x excludes purchases "through a third-party payment account". PayPal is the usual one, but Amex doesn't name it.
 - `td-bank-nordstrom-credit-card`, `td-bank-nordstrom-visa`: through PayPal or another third-party processor, Nordstrom purchases earn only the member's 1 point, and the Rack discount excludes Apple Pay and PayPal. Nordstrom's pages block the source check, and on the Visa an excluded Nordstrom purchase would fall back to the card's 1x base rate, which the terms don't say it earns.
 - `venmo-credit-card`: 3% when the card is the linked payment method in Venmo (Venmo checkout, a business profile or a goods-and-services payment). Venmo isn't one of the payment methods a purchase can name, so it's modeled at each purchase's category rate.
@@ -99,6 +99,7 @@ A welcome offer has one spend threshold and one bonus.
 - `navy-federal-cash-rewards`, `navy-federal-cash-rewards-plus`, `navy-federal-more-rewards-amex`: Navy Federal membership (the armed forces, veterans, DoD civilians and their families).
 - `verizon-visa-card`: a Verizon wireless or Fios account.
 - `capital-one-rei-co-op-mastercard`: an REI Co-op membership, whose price isn't on file.
+- `alliant-cashback-visa-signature`: Alliant Credit Union membership (anyone may apply to join), held 90 days before applying.
 
 ### One application, two cards
 
@@ -110,6 +111,13 @@ A `cardmember_year` milestone runs from the account anniversary date. Citi count
 
 - `citi-aadvantage-business`: $30,000 for the Companion Certificate.
 - `citi-aadvantage-platinum-select`: $20,000 for the $125 Flight Discount.
+- `barclays-wyndham-rewards-earner`: $15,000 for the 7,500-point anniversary bonus, counted through the billing cycle after the anniversary month.
+
+### Terms that depend on when the account opened
+
+A card has one foreign transaction fee for every cardholder.
+
+- `robinhood-gold-card`: no fee on accounts opened before July 1, 2026, 3% on accounts opened since. Modeled at 3%.
 
 ### Perks that offset the annual fee
 

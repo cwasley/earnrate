@@ -1,0 +1,77 @@
+id: pnc-cash-rewards-visa
+name: PNC Cash Rewards Visa Credit Card
+short_name: PNC Cash Rewards
+issuer: pnc
+network: visa
+currency: cash
+last_verified: 2026-11-22
+verified_by: claude
+source_urls:
+  - https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+base_rate: 1
+annual_fee: 0
+foreign_transaction_fee: null
+welcome_offer:
+  dollars: 250
+  spend: 1000
+  months: 3
+  repeat: { after_months: 24, from: bonus }
+  note: Within the first 3 months after account opening. One new account opening bonus per customer per product in any 24 months.
+caps:
+  - id: bonus-combined
+    amount: 8000
+    period: cardmember_year
+    then_rate: 1
+rules:
+  - id: gas
+    match: { categories: [gas] }
+    exclude: { categories: [gas.superstore, gas.grocery_store] }
+    rate: 4
+    cap: bonus-combined
+    note: Merchants coded as gas stations, in the store or at the pump. Fuel at superstores, supermarkets, warehouse clubs and truck stops earns 1%. Shares an $8,000 cap a year (from the account's anniversary) with dining and grocery stores.
+  - id: dining
+    match: { categories: [dining] }
+    rate: 3
+    cap: bonus-combined
+    note: Full-service restaurants, cafes, cafeterias and fast food, by merchant category code. Shares the $8,000 yearly cap with gas and grocery stores.
+  - id: grocery
+    match: { categories: [grocery.supermarket] }
+    exclude: { categories: [superstore, warehouse_club] }
+    rate: 2
+    cap: bonus-combined
+    note: Merchants coded as grocery stores. Groceries at superstores, drugstores, warehouse clubs and convenience stores earn 1%. Shares the $8,000 yearly cap with gas and dining.
+evidence:
+  - rule: base_rate
+    url: https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+    quote: '1% cash back on all other purchases'
+  - rule: gas
+    url: https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+    quote: '4% cash back on gas station purchases'
+  - rule: gas
+    url: https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+    quote: 'on grocery store purchases for the first $8,000 in combined purchases'
+  - rule: dining
+    url: https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+    quote: '3% cash back on dining purchases at restaurants'
+  - rule: grocery
+    url: https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+    quote: '2% cash back on grocery store purchases'
+  - rule: annual_fee
+    url: https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+    quote: '$0 Annual Fee'
+  - rule: welcome_offer
+    url: https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+    quote: 'Earn a $250 Bonus with PNC Cash Rewards'
+  - rule: welcome_offer
+    url: https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+    quote: 'during the first 3 months following account opening'
+  - rule: welcome_offer
+    url: https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+    quote: 'Just make $1,000 or more in purchases'
+  - rule: repeat
+    url: https://www.pnc.com/en/personal-banking/banking/credit-cards/pnc-cash-rewards-visa-credit-card.html
+    quote: 'Only one new account opening bonus per customer per product within a 24-month period.'
+todo:
+  - "pnc.com refuses the source check's headless browser (HTTP/2 protocol error), so the weekly check lists this page as unreachable. Every quote was confirmed in a desktop browser on 2026-11-22 (visible text, offer quotes included); re-read it there when it changes."
+  - 'Foreign transaction fee: no HTML page states it. The rates and fees PDF (pnc.com/content/dam/pnc-com/pdf/personal/CreditCards/cash-rewards-rates.pdf, read 2026-11-22) says "3% of each foreign transaction amount in U.S. dollars".'
+  - "The rewards terms are a PDF (cash-rewards-terms-conditions.pdf, same folder), read 2026-11-22: the $8,000 cap runs over a Program Year from the anniversary of the account's enrollment, the category definitions and exclusions in the rule notes come from it, and gambling purchases earn nothing."

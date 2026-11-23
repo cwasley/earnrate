@@ -209,7 +209,7 @@ test("a members-only card's rates share one line on the cheat sheet", async () =
   const costco = sheet.membersOnly.filter((l) => l.includes('Costco Anywhere'))
   expect(costco).toHaveLength(1)
   expect(costco[0]).toMatch(
-    /Costco Anywhere Visa Card by Citi, 4% for gas and 3% for travel\./,
+    /Costco Anywhere Visa Card by Citi, 3% for travel\./,
   )
 })
 

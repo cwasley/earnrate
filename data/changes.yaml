@@ -3,6 +3,28 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.22.1'
+  date: 2026-11-22
+  changes:
+    - cause: addition
+      cards:
+        [
+          alliant-cashback-visa-signature,
+          barclays-wyndham-rewards-earner,
+          pnc-cash-rewards-visa,
+          robinhood-gold-card,
+        ]
+      summary: Four cards, each from the issuer's own pages. pnc.com refuses the source check, so PNC's quotes were confirmed in a browser.
+    - cause: addition
+      issuers: [alliant-credit-union, coastal-community-bank, pnc]
+      summary: New issuers.
+    - cause: addition
+      memberships: [alliant-credit-union, robinhood-gold]
+      summary: Alliant Credit Union membership, and Robinhood Gold's annual plan, which the Robinhood Gold Card needs.
+    - cause: addition
+      currencies: [robinhood-points, wyndham-rewards]
+      summary: Robinhood Gold Card points and Wyndham Rewards points.
+
 - version: '2026.11.22'
   date: 2026-11-22
   changes:
