@@ -17,6 +17,7 @@ const FOOTER_GROUPS: [string, [string, string][]][] = [
       ['/best/', 'Best card for every store'],
       ['/cards/', 'All cards'],
       ['/compare/', 'Card comparisons'],
+      ['/welcome-offers', 'Best welcome offers'],
       ['/quarterly/', "This quarter's 5% categories"],
       ['/year-end/', 'Credits that end Dec 31'],
       ['/statement', 'Check a statement'],

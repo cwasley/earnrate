@@ -179,6 +179,10 @@ export function historyOf(wallet: Wallet | null): Wallet | null {
 export const OFFERS_MAY_DIFFER =
   'Yours may differ: issuers test and target offers, so use the one shown to you when you apply.'
 
+// The one line about paying a big bill by card that no issuer's terms give.
+export const CARD_SURCHARGE_NOTE =
+  "Some vendors add a surcharge for paying by card, or don't take every card, so ask before you pay: a 3% surcharge can cancel much of a bonus."
+
 export const offerCheckedOn = (
   card: Pick<Card, 'last_verified' | 'offer_checked'>,
 ): string =>

@@ -46,6 +46,7 @@ export function bonusRulesPage(
       <p>${esc(bonusRulesLead(offered, stated, once))}</p>
       <p>${esc(BONUS_RULES_UNPUBLISHED)}</p>
       <p><a href="/#wallet&amp;had">${esc(BONUS_RULES_HAD.link)}</a>${esc(BONUS_RULES_HAD.rest)}</p>
+      <p>The offers themselves, ranked by what each is worth: <a href="/welcome-offers">best welcome offers</a>.</p>
       ${filterBox('Find a card or bank', 'Sapphire, Amex Platinum, Southwest…')}
       <p id="no-match" hidden>No cards match.</p>
       <div data-filtered>${groups

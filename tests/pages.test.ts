@@ -76,6 +76,10 @@ import { ROOT } from './helpers.ts'
 import { PAGES_CSS_LINK } from '../scripts/pages/site.ts'
 import { FILTER_SCRIPT, filterScript } from '../scripts/pages/filter.ts'
 import { landingPage } from '../site/vite.config.ts'
+import { siteFooter } from '../scripts/pages/site.ts'
+import { eventPath, LIFE_EVENTS } from '../scripts/pages/life-events.ts'
+import { PICKER_SCRIPT } from '../scripts/pages/welcome-offers.ts'
+import { CARD_SURCHARGE_NOTE } from '../src/engine/offers.ts'
 
 const catalog = await loadCatalog()
 const today = localToday()
@@ -302,6 +306,43 @@ describe('the built static pages', () => {
     const card = readFileSync(path.join(out, 'cards', 'amex-gold.html'), 'utf8')
     expect(card).toContain('<a href="/rate">Rate my wallet</a>')
     for (const t of TABS) expect(card).toContain(`href="${t.href}"`)
+  })
+
+  test('the welcome-offer hub and each life-event page are built, indexed and linked: the hub from the footer, card pages and bonus rules, each event from the hub', () => {
+    const sitemap = readFileSync(path.join(out, 'sitemap.xml'), 'utf8')
+    const hub = readFileSync(path.join(out, 'welcome-offers.html'), 'utf8')
+    const events = LIFE_EVENTS.map((e) => ({
+      path: eventPath(e),
+      html: readFileSync(
+        path.join(out, `${eventPath(e).slice(1)}.html`),
+        'utf8',
+      ),
+    }))
+    for (const page of [{ path: '/welcome-offers', html: hub }, ...events]) {
+      expect(page.html, page.path).not.toContain('noindex')
+      expect(sitemap, page.path).toContain(
+        `<loc>https://earnrate.dev${page.path}</loc>`,
+      )
+      expect(page.html.split(PICKER_SCRIPT).length - 1, page.path).toBe(1)
+      expect(page.html, page.path).toMatch(
+        /<section class="picker" data-picker hidden>/,
+      )
+      expect(page.html, page.path).toContain('BreadcrumbList')
+    }
+    for (const e of events) expect(hub, e.path).toContain(`href="${e.path}"`)
+    expect(hub).toContain('"@type":"ItemList"')
+    expect(hub).toContain('<h1>Best credit card welcome offers</h1>')
+    expect(
+      events.find((e) => e.path === '/welcome-offers/wedding')?.html,
+    ).toContain('<h1>Best credit cards for wedding expenses</h1>')
+    const bonus = readFileSync(path.join(out, 'bonus-rules.html'), 'utf8')
+    expect(bonus).toContain('href="/welcome-offers"')
+    const gold = readFileSync(path.join(out, 'cards', 'amex-gold.html'), 'utf8')
+    expect(gold).toContain('href="/welcome-offers"')
+    expect(siteFooter()).toContain('href="/welcome-offers"')
+    // The one sentence on these pages not from card data, said once each.
+    for (const e of events)
+      expect(e.html.split(esc(CARD_SURCHARGE_NOTE)).length - 1, e.path).toBe(1)
   })
 
   test('the store, card and bonus-rule lists share one search box and script, hidden until the script runs', () => {

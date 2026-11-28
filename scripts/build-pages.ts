@@ -103,6 +103,13 @@ import {
 import { changeDates, entryDates, latest } from './lastmod.ts'
 import { pageContext, type GeneratedPage } from './pages/context.ts'
 import { bonusRulesPage } from './pages/bonus-rules.ts'
+import {
+  HUB_PATH as WELCOME_OFFERS,
+  offerCardIds,
+  welcomeOffersHub,
+} from './pages/welcome-offers.ts'
+import { eventPath, LIFE_EVENTS, lifeEventPage } from './pages/life-events.ts'
+import { rankedOffers } from '../src/engine/welcome-offers.ts'
 import { categoryPageFor, categoryPages } from './pages/categories.ts'
 import {
   cardNames,
@@ -1267,7 +1274,7 @@ function offerText(card: Card): string {
   const tip = notifyTip(
     "Safari's Notify Me (in the page menu) can tell you when this offer changes.",
   )
-  const again = `<p><b>Can you get it again?</b> ${esc(repeatRuleText(catalog, card))} <a href="/bonus-rules">Every card's rule</a></p>${o.repeat ? finePrint([evidenceFor(card, 'repeat')], "The issuer's words") : ''}`
+  const again = `<p><b>Can you get it again?</b> ${esc(repeatRuleText(catalog, card))} <a href="/bonus-rules">Every card's rule</a></p>${o.repeat ? finePrint([evidenceFor(card, 'repeat')], "The issuer's words") : ''}<p><a href="${WELCOME_OFFERS}">Every card's welcome offer, ranked</a></p>`
   // The history's caveat says what OFFERS_MAY_DIFFER does, and more.
   const differ = history === '' ? esc(OFFERS_MAY_DIFFER) : ''
   return o.note
@@ -2669,7 +2676,49 @@ await writeFile(
   }),
 )
 
+// The welcome-offer pages follow the card files whose offers or rankings
+// they show, and the store, category, currency, issuer and membership
+// entries those name.
+const offers = rankedOffers(catalog, today)
+const offersDate = (cardIds: string[], ids: string[]) =>
+  latest([
+    ...cardIds.map((id) => changedOn(`data/cards/${id}.yaml`)),
+    ...[
+      ...ids,
+      ...cardIds.flatMap((id) => {
+        const card = cards.get(id)
+        return card
+          ? [
+              card.currency,
+              card.issuer,
+              ...(card.requires_membership ? [card.requires_membership] : []),
+            ]
+          : []
+      }),
+    ].map(entryDate),
+  ])
+const indexedCategory = (id: string) => {
+  const slug = categorySlug(id)
+  return slug !== null && categoryIndex.get(slug) === true
+    ? `/best/${slug}`
+    : null
+}
 const generated: GeneratedPage[] = [
+  welcomeOffersHub(
+    ctx,
+    offers,
+    [...LIFE_EVENTS.map((e) => ({ path: eventPath(e), name: e.name }))],
+    offersDate(offerCardIds(offers), []),
+  ),
+  ...LIFE_EVENTS.map((e) =>
+    lifeEventPage(
+      ctx,
+      e,
+      offers,
+      { category: indexedCategory, store: bestHref },
+      offersDate,
+    ),
+  ),
   ...quarterlyPages(
     ctx,
     { category: categoryHref, merchant: bestHref },

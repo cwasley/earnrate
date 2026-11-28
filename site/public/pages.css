@@ -1459,3 +1459,29 @@ header {
 .app-nav a:hover {
   color: var(--accent);
 }
+
+/* The welcome-offer pages' picker: taps for an amount and months, then the
+   offers that spending unlocks, one line each. */
+.picker .pick-label {
+  margin: 12px 0 4px;
+  font-weight: 600;
+}
+.picker .seg {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+}
+ol.cards.picks > li {
+  grid-template-columns: 1fr;
+}
+details.more-offers > ol.cards {
+  margin-top: 10px;
+}
+.picker button.button {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+ol.cards > li[hidden] {
+  display: none;
+}
