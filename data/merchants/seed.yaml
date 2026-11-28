@@ -757,6 +757,7 @@
     aliases: [greyhound lines],
     domains: [greyhound.com],
     category: transit,
+    likely_mcc: 4131,
   }
 - {
     id: mta,
@@ -838,11 +839,13 @@
   name: Megabus
   domains: [megabus.com]
   category: transit
+  likely_mcc: 4131
 - id: flixbus
   name: FlixBus
   aliases: [flix bus]
   domains: [flixbus.com]
   category: transit
+  likely_mcc: 4131
 - id: curb
   name: Curb
   aliases: [curb taxi]
@@ -2983,11 +2986,14 @@
   name: KOA
   aliases: [kampgrounds of america]
   domains: [koa.com]
-  category: travel
+  category: travel.campgrounds
 - id: hipcamp
   name: Hipcamp
   domains: [hipcamp.com]
-  category: travel
+  category: travel.campgrounds
+  ambiguity:
+    may_code_as: [travel]
+    note: A booking site for campsites on private land, so its charges may code as a travel booking rather than a campground.
 - id: evolve-vacation-rental
   name: Evolve Vacation Rental
   aliases: [evolve vacation rentals]

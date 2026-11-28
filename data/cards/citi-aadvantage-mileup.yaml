@@ -26,7 +26,7 @@ rules:
     rate: 2
     note: Items billed by American Airlines as the merchant of record. Car rentals booked on aadvantagecars.com and hotels booked on aadvantagehotels.com don't count.
   - id: grocery-stores
-    match: { categories: [grocery, convenience_store] }
+    match: { categories: [grocery, convenience_store, bakery] }
     exclude: { categories: [superstore, warehouse_club] }
     rate: 2
     note: Supermarkets, meat and dairy stores, convenience stores, markets, specialty food vendors, bakeries and grocery delivery services. Not superstores, warehouse clubs, candy stores, cafes, bars or fast food.

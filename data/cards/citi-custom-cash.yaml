@@ -32,7 +32,7 @@ choices:
     options:
       restaurants: [dining]
       gas-stations: [gas]
-      grocery-stores: [grocery.supermarket, convenience_store]
+      grocery-stores: [grocery.supermarket, convenience_store, bakery]
       select-travel: [travel.flights, travel.hotels, travel.cruise]
       select-transit: [transit, travel.car_rental, ev_charging]
       select-streaming:
@@ -143,6 +143,9 @@ evidence:
   - rule: top-category
     url: https://www.thankyou.com/ccterms
     quote: 'Excludes purchases at general merchandise/discount superstores; wholesale/warehouse clubs'
+  - rule: top-category
+    url: https://www.thankyou.com/ccterms
+    quote: 'Includes purchases at supermarkets, meat/seafood stores, dairy stores, bakeries'
   - rule: top-category
     url: https://www.thankyou.com/ccterms
     quote: 'if the charge is bundled with another product, membership, or service'

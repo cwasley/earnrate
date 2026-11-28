@@ -3,6 +3,188 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.28.2'
+  date: 2026-11-28
+  changes:
+    - cause: addition
+      card: bank-of-america-customized-cash-rewards
+      field: rules.two-percent
+      summary: Bakeries earn the 2% at grocery stores, as Bank of America's terms list them.
+    - cause: quote
+      card: bank-of-america-customized-cash-rewards
+      field: evidence
+      summary: The travel pick's campgrounds are quoted from the category choices page.
+    - cause: wording
+      card: bank-of-america-customized-cash-rewards
+      field: choices.three-percent.notes
+      was:
+        gas-ev-charging: Gas excludes EV charging billed by parking lots.
+        travel: Travel includes parking, transit, rideshare and tolls.
+        online-shopping: Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded.
+      now:
+        gas-ev-charging: Gas excludes EV charging billed by parking lots.
+        travel: Travel includes parking, transit, rideshare, tolls and campgrounds.
+        online-shopping: Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded.
+      summary: The travel pick's note names campgrounds.
+    - cause: correction
+      categories: [caterers]
+      summary: "Caterers (MCC 5811) are a category of their own, outside restaurants, since issuers split on them. The Verizon Visa's 4% and the Nordstrom Visa's 2% on caterers, and the Venmo card's 3%, never applied before: no category carried the code."
+    - cause: correction
+      categories: [dining.bars]
+      summary: "Bars and nightclubs (MCC 5813) are a kind of restaurant, so every dining rate still pays them unless its terms leave them out. The Amex Gold's, the three Delta SkyMiles cards' and the three Hilton Honors cards' exclusion of bars from their restaurant rates now applies; it never did."
+    - cause: correction
+      categories: [travel.campgrounds]
+      summary: 'Campgrounds and RV parks (MCC 7033) are a kind of travel. Campgrounds counted as travel agencies before, so Citi Strata Premier paid them 3x as one.'
+    - cause: correction
+      categories: [insurance]
+      summary: "Insurance (MCC 6300) is a category, so Bank of America Customized Cash Rewards' online shopping and U.S. Bank Smartly's Earning Bonus can leave it out, as their terms do."
+    - cause: correction
+      categories: [toy_store]
+      summary: "Toy and hobby stores (MCC 5945) are a category, so the Venmo card's 3% on them applies; it never did."
+    - cause: correction
+      categories: [bakery]
+      summary: "Bakeries (MCC 5462) are a category of their own, outside restaurants and grocery, since issuers split on them. The Nordstrom Visa's 2% on bakeries never applied before."
+    - cause: correction
+      categories: [liquor_store]
+      summary: "Liquor stores (MCC 5921) are a category, so the Nordstrom Visa's 2% on them applies; it never did."
+    - cause: correction
+      merchants: [koa, hipcamp]
+      field: category
+      was: travel
+      now: travel.campgrounds
+      summary: "KOA and Hipcamp count as campgrounds, not travel agencies, so the Costco Anywhere Visa cards' 3% on travel, which leaves campgrounds out, no longer pays them."
+    - cause: addition
+      merchants: [hipcamp]
+      field: ambiguity
+      summary: Hipcamp's charges may code as a travel booking rather than a campground.
+    - cause: correction
+      merchants: [greyhound, megabus, flixbus]
+      field: likely_mcc
+      was: null
+      now: 4131
+      summary: "Intercity buses code as bus lines (MCC 4131), which Wells Fargo Autograph's 3x on transit leaves out, so they earn 1x there."
+    - cause: correction
+      merchants: [total-wine, specs]
+      field: category
+      was: other
+      now: liquor_store
+      summary: "Total Wine and Spec's count as liquor stores, so the Nordstrom Visa pays its 2% on grocery there."
+    - cause: correction
+      merchants: [total-wine, specs]
+      field: likely_mcc
+      was: null
+      now: 5921
+      summary: They code as liquor stores (MCC 5921).
+    - cause: wording
+      merchants: [total-wine, specs]
+      field: note
+      summary: "The notes say each codes as a liquor store, not a supermarket, in place of saying issuers leave liquor stores out of grocery bonuses, which the Nordstrom Visa doesn't."
+    - cause: correction
+      merchants: [lego-store, build-a-bear]
+      field: category
+      was: other
+      now: toy_store
+      summary: 'The LEGO Store and Build-A-Bear count as toy stores in store, so the Venmo card pays 3% there. Their websites still count as online retail.'
+    - cause: wording
+      merchants: [lego-store, build-a-bear]
+      field: note
+      summary: The notes no longer say toy stores have no bonus category.
+    - cause: addition
+      cards:
+        [
+          bank-of-america-atmos-rewards-summit,
+          bank-of-america-atmos-rewards-business,
+        ]
+      field: rules.dining.match
+      was: { categories: [dining] }
+      now: { categories: [dining, caterers] }
+      summary: Caterers earn the dining rate, as Bank of America's terms say.
+    - cause: addition
+      cards:
+        [
+          bank-of-america-atmos-rewards-summit,
+          bank-of-america-atmos-rewards-business,
+        ]
+      field: rules.dining-with-boa-account.match
+      was: { categories: [dining] }
+      now: { categories: [dining, caterers] }
+      summary: Caterers earn the dining rate with the Bank of America account bonus too.
+    - cause: addition
+      card: discover-it-cash-back
+      field: rules.q4-2026-restaurants.match
+      was: { categories: [dining] }
+      now: { categories: [dining, caterers] }
+      summary: Caterers earn the October to December 2026 5% on restaurants, as Discover's calendar says.
+    - cause: addition
+      card: wells-fargo-autograph-journey
+      field: rules.restaurants.match
+      was: { categories: [dining] }
+      now: { categories: [dining, caterers] }
+      summary: Caterers earn 3x as restaurants, as the card page says.
+    - cause: addition
+      card: wells-fargo-autograph
+      field: rules.dining.match
+      was: { categories: [dining] }
+      now: { categories: [dining, caterers] }
+      summary: Caterers earn 3x as dining, as the card's terms say.
+    - cause: quote
+      card: wells-fargo-autograph
+      field: evidence
+      summary: "Dining's caterers are quoted from the card's terms, whose list of food and drink places starts with them."
+    - cause: addition
+      cards: [citi-costco-anywhere-visa, citi-costco-anywhere-visa-business]
+      field: rules.eligible-travel.exclude
+      was: null
+      now: { categories: [travel.campgrounds] }
+      summary: Campgrounds earn 1%, not 3% on travel, as the card pages say.
+    - cause: addition
+      card: bank-of-america-customized-cash-rewards
+      field: choices.three-percent.options.online-shopping
+      summary: Insurance paid online doesn't count as online shopping, as Bank of America's terms say.
+    - cause: addition
+      card: usbank-smartly
+      field: rules.everything-smartly-25.exclude
+      was: null
+      now: { categories: [insurance] }
+      summary: Insurance earns the 2% base rate and doesn't count toward the $10,000, as the card page says.
+    - cause: addition
+      card: usbank-smartly
+      field: rules.everything-smartly-50.exclude
+      was: null
+      now: { categories: [insurance] }
+      summary: Insurance earns the 2% base rate and doesn't count toward the $10,000, as the card page says.
+    - cause: addition
+      card: usbank-smartly
+      field: rules.everything-smartly-100.exclude
+      was: null
+      now: { categories: [insurance] }
+      summary: Insurance earns the 2% base rate and doesn't count toward the $10,000, as the card page says.
+    - cause: addition
+      card: capital-one-savor
+      field: rules.dining.match
+      was: { categories: [dining] }
+      now: { categories: [dining, bakery] }
+      summary: Bakeries earn 3% as dining, as the card page says.
+    - cause: addition
+      card: citi-aadvantage-mileup
+      field: rules.grocery-stores.match
+      was: { categories: [grocery, convenience_store] }
+      now: { categories: [grocery, convenience_store, bakery] }
+      summary: Bakeries earn 2x as grocery stores, as the card page says.
+    - cause: addition
+      card: citi-custom-cash
+      field: choices.top-category.options.grocery-stores
+      summary: Bakeries count toward grocery stores, as the card's ThankYou terms say.
+    - cause: quote
+      card: citi-custom-cash
+      field: evidence
+      summary: "Grocery stores' bakeries are quoted from the ThankYou terms."
+    - cause: wording
+      cards:
+        [bank-of-america-customized-cash-rewards, bilt-obsidian, usbank-smartly]
+      field: todo
+      summary: "The notes no longer say earnrate has no insurance category; Bilt Obsidian's says bakeries wait for a Bilt page the source check can read."
+
 - version: '2026.11.28.1'
   date: 2026-11-28
   changes:

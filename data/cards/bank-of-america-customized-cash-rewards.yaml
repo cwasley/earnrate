@@ -38,24 +38,24 @@ choices:
     options:
       gas-ev-charging: [gas, ev_charging]
       # Bank of America also excludes doctors and hospitals, government
-      # services and taxes, insurance, schools and other non-retail services,
-      # which have no earnrate category.
+      # services and taxes, schools and other non-retail services, which have
+      # no earnrate category.
       online-shopping:
-        { channel: online, exclude: [utilities, shipping, fitness] }
+        { channel: online, exclude: [utilities, shipping, fitness, insurance] }
       dining: [dining]
       travel: [travel, transit]
       drug-stores: [drugstore]
       home-improvement-furnishings: [home_improvement, furniture]
     notes:
       gas-ev-charging: Gas excludes EV charging billed by parking lots.
-      travel: Travel includes parking, transit, rideshare and tolls.
+      travel: Travel includes parking, transit, rideshare, tolls and campgrounds.
       online-shopping: Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded.
 rules:
   - id: three-percent
     match: { choice: three-percent }
     rate: 3
     cap: three-and-two-percent-combined
-    note: Gas and EV charging, online shopping, dining, travel, drug stores, or home improvement and furnishings, whichever you picked. Gas excludes EV charging billed by parking lots. Travel includes parking, transit, rideshare and tolls. Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded. The first $2,500 a calendar quarter across the 3% and 2% categories, then 1%.
+    note: Gas and EV charging, online shopping, dining, travel, drug stores, or home improvement and furnishings, whichever you picked. Gas excludes EV charging billed by parking lots. Travel includes parking, transit, rideshare, tolls and campgrounds. Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded. The first $2,500 a calendar quarter across the 3% and 2% categories, then 1%.
     # 7-Eleven (gas to Bank of America) and Wayfair (home furnishings) are left
     # out: earnrate codes them as a convenience store and online retail, so
     # they'd pass the data check only through online shopping, the wrong pick.
@@ -99,7 +99,7 @@ rules:
           home-depot,
         ]
   - id: two-percent
-    match: { categories: [grocery.supermarket, warehouse_club] }
+    match: { categories: [grocery.supermarket, warehouse_club, bakery] }
     rate: 2
     cap: three-and-two-percent-combined
     note: Grocery stores, supermarkets, wholesale clubs, and meat and seafood, candy, dairy and bakery stores. Superstores and smaller stores that also sell groceries, like drug stores, are excluded. Shares the $2,500 quarterly cap with the 3% category.
@@ -112,7 +112,7 @@ rules:
     requires: { membership: bofa-rewards-member }
     note: 3% plus the 10% BofA Rewards Member bonus.
   - id: two-percent-bofa-rewards-member
-    match: { categories: [grocery.supermarket, warehouse_club] }
+    match: { categories: [grocery.supermarket, warehouse_club, bakery] }
     rate: 2.2
     cap: three-and-two-percent-combined
     requires: { membership: bofa-rewards-member }
@@ -129,7 +129,7 @@ rules:
     requires: { membership: bofa-rewards-preferred-plus }
     note: 3% plus the 25% BofA Rewards Preferred Plus bonus.
   - id: two-percent-bofa-rewards-preferred-plus
-    match: { categories: [grocery.supermarket, warehouse_club] }
+    match: { categories: [grocery.supermarket, warehouse_club, bakery] }
     rate: 2.5
     cap: three-and-two-percent-combined
     requires: { membership: bofa-rewards-preferred-plus }
@@ -146,7 +146,7 @@ rules:
     requires: { membership: bofa-rewards-preferred-honors }
     note: 3% plus the 50% BofA Rewards Preferred Honors bonus.
   - id: two-percent-bofa-rewards-preferred-honors
-    match: { categories: [grocery.supermarket, warehouse_club] }
+    match: { categories: [grocery.supermarket, warehouse_club, bakery] }
     rate: 3
     cap: three-and-two-percent-combined
     requires: { membership: bofa-rewards-preferred-honors }
@@ -163,7 +163,7 @@ rules:
     requires: { membership: bofa-rewards-premier }
     note: 3% plus the 75% BofA Rewards Premier bonus.
   - id: two-percent-bofa-rewards-premier
-    match: { categories: [grocery.supermarket, warehouse_club] }
+    match: { categories: [grocery.supermarket, warehouse_club, bakery] }
     rate: 3.5
     cap: three-and-two-percent-combined
     requires: { membership: bofa-rewards-premier }
@@ -251,6 +251,12 @@ evidence:
   - rule: two-percent
     url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
     quote: 'Excluded from this Bonus Category are superstores and smaller stores (like drug stores)'
+  - rule: two-percent
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079537&productoffercode=8H&locale=en_US
+    quote: 'meat and seafood stores, candy, nut or confection stores, dairy stores, and bakeries'
+  - rule: three-percent
+    url: https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/cash-back-category-choices/
+    quote: 'such as airfare to hotels to tourist attractions, campgrounds and boat rentals'
   - rule: three-percent-bofa-rewards-member
     url: https://www.bankofamerica.com/bofa-rewards/increasing-bofa-rewards-with-credit-cards/
     quote: 'a $100 purchase that earns 3% ($3.00) will actually earn $3.30'
@@ -323,4 +329,4 @@ evidence:
 todo:
   - Bank of America's first-year 3% counts Net Purchases that "post to your account within 365 days of the account open date". earnrate goes by the purchase date and counts the opening day as day 1, so a purchase on the last day or two may be ranked at 3% when it would still earn 6%, or at 6% when it posts too late.
   - 'The BofA Rewards rules use proposed membership ids: bofa-rewards-member, bofa-rewards-preferred-plus, bofa-rewards-preferred-honors and bofa-rewards-premier. Cardholders who joined Preferred Rewards before May 26, 2026 may have an "extended card benefit" that Bank of America doesn''t define.'
-  - "Online shopping counts any online purchase earnrate can't place in an excluded category, including unknown merchants. Bank of America also excludes doctors, government, insurance, schools and other non-retail services, which earnrate can't tell apart."
+  - "Online shopping counts any online purchase earnrate can't place in an excluded category, including unknown merchants. Bank of America also excludes doctors, government, schools and other non-retail services, which earnrate can't tell apart."

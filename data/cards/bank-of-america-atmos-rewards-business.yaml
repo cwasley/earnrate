@@ -27,7 +27,7 @@ rules:
     rate: 3
     note: Tickets, inflight and lounge purchases, cargo and vacation packages billed by Alaska or Hawaiian and booked directly with them, not through a travel agency or online merchant. Flights booked through Atmos for Business earn 10 points per $1 instead. Card points only; points and status from flying aren't card earnings.
   - id: dining
-    match: { categories: [dining] }
+    match: { categories: [dining, caterers] }
     rate: 2
     note: Restaurants, fast food, caterers, and bars or taverns, by merchant category code.
   - id: alaska-and-hawaiian-with-boa-account
@@ -36,7 +36,7 @@ rules:
     requires: { membership: bank-of-america-small-business-account }
     note: 3x plus the 10% rewards bonus when the company has an eligible Bank of America small business account.
   - id: dining-with-boa-account
-    match: { categories: [dining] }
+    match: { categories: [dining, caterers] }
     rate: 2.2
     requires: { membership: bank-of-america-small-business-account }
     note: 2x plus the 10% rewards bonus when the company has an eligible Bank of America small business account.

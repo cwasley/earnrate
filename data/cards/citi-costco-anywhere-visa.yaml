@@ -41,6 +41,7 @@ rules:
     note: Includes cafes, bars, lounges and fast food. Bakeries and restaurants or cafes inside department stores, grocery stores or warehouse clubs earn 1%.
   - id: eligible-travel
     match: { categories: [travel] }
+    exclude: { categories: [travel.campgrounds] }
     rate: 3
     note: Airfare, hotels, car rentals, travel agencies and cruise lines. Timeshares, campgrounds, bed & breakfasts, and train and commuter travel earn 1%; a bed & breakfast that codes as a hotel would still match here.
   - id: costco-travel

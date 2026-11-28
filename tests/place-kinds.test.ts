@@ -12,6 +12,7 @@ describe('kinds of place for an unknown store', () => {
       'Restaurant',
       'Fast food',
       'Coffee shop',
+      'Bar',
       'Gas station',
       'Drugstore',
     ])

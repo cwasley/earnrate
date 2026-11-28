@@ -3657,3 +3657,123 @@ describe('#41 online stores', () => {
     },
   )
 })
+
+describe('#42 merchant types with a code of their own', () => {
+  const wallet = (cards: object[], memberships: string[] = []) =>
+    withProfile(WalletSchema.parse({ cards, memberships }), 'flat')
+
+  goldenTest(
+    '#42a KOA on the Costco Anywhere Visa earns 1%: Citi leaves campgrounds out of travel',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([
+          { id: 'citi-costco-anywhere-visa' },
+          { id: 'citi-strata-premier' },
+        ]),
+        purchase('KOA', { amount: 120, channel: 'in_store' }),
+      )
+      expect(rec.merchant.category).toBe('travel.campgrounds')
+      const costco = entry(rec, 'citi-costco-anywhere-visa')
+      expect(costco.matchedRule).toBeNull()
+      expect(costco.effectiveReturnPct).toBeCloseTo(1)
+      expect(entry(rec, 'citi-strata-premier').matchedRule).not.toBe(
+        'travel-agencies',
+      )
+    },
+  )
+
+  goldenTest(
+    '#42b Greyhound on Wells Fargo Autograph earns 1x: intercity buses are out of its transit',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: 'wells-fargo-autograph' }]),
+        purchase('Greyhound', { amount: 60, channel: 'online' }),
+      )
+      const autograph = entry(rec, 'wells-fargo-autograph')
+      expect(autograph.matchedRule).toBeNull()
+      expect(autograph.rate).toBe(1)
+    },
+  )
+
+  goldenTest('#42c a caterer on the Verizon Visa earns 4%', () => {
+    const rec = recommend(
+      catalog,
+      wallet([{ id: 'verizon-visa-card' }], ['verizon-account']),
+      purchase('caterer', { amount: 900 }),
+      resolvePlace(catalog, 'caterer', null),
+    )
+    expect(rec.merchant.category).toBe('caterers')
+    const verizon = entry(rec, 'verizon-visa-card')
+    expect(verizon.matchedRule).toBe('caterers')
+    expect(verizon.effectiveReturnPct).toBeCloseTo(4)
+  })
+
+  goldenTest(
+    '#42d a bar on the Amex Gold earns 1x; a card whose dining counts bars earns its dining rate',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: 'amex-gold' }, { id: 'chase-sapphire-preferred' }]),
+        purchase('bar', { amount: 40, channel: 'in_store' }),
+        resolvePlace(catalog, 'bar', 'in_store'),
+      )
+      expect(rec.merchant.category).toBe('dining.bars')
+      const gold = entry(rec, 'amex-gold')
+      expect(gold.matchedRule).toBeNull()
+      expect(gold.rate).toBe(1)
+      expect(entry(rec, 'chase-sapphire-preferred').rate).toBe(3)
+    },
+  )
+
+  goldenTest(
+    "#42e an insurance premium paid online doesn't earn Customized Cash's 3% on online shopping",
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([
+          {
+            id: 'bank-of-america-customized-cash-rewards',
+            chosen: {
+              period: '2026',
+              picks: { 'three-percent': ['online-shopping'] },
+            },
+          },
+        ]),
+        purchase('insurance', { amount: 600, channel: 'online' }),
+        resolvePlace(catalog, 'insurance', 'online'),
+      )
+      expect(rec.merchant.category).toBe('insurance')
+      const ccr = entry(rec, 'bank-of-america-customized-cash-rewards')
+      expect(ccr.matchedRule).toBeNull()
+      expect(ccr.effectiveReturnPct).toBeCloseTo(1)
+    },
+  )
+
+  goldenTest('#42f a toy store on the Venmo card earns 3%', () => {
+    const rec = recommend(
+      catalog,
+      wallet([{ id: 'venmo-credit-card' }]),
+      purchase('LEGO Store', { amount: 80, channel: 'in_store' }),
+    )
+    expect(rec.merchant.category).toBe('toy_store')
+    const venmo = entry(rec, 'venmo-credit-card')
+    expect(venmo.matchedRule).toBe('entertainment-other')
+    expect(venmo.effectiveReturnPct).toBeCloseTo(3)
+  })
+
+  goldenTest(
+    '#42g Total Wine on the Nordstrom Visa earns 2x: Nordstrom counts liquor stores as grocery',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: 'td-bank-nordstrom-visa' }]),
+        purchase('Total Wine', { amount: 70, channel: 'in_store' }),
+      )
+      const nordstrom = entry(rec, 'td-bank-nordstrom-visa')
+      expect(nordstrom.matchedRule).toBe('specialty-food')
+      expect(nordstrom.rate).toBe(2)
+    },
+  )
+})

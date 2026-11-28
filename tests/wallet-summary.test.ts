@@ -99,7 +99,7 @@ test('a BofA Rewards tier shows only its own rates', () => {
   const [ccr] = walletSummary(catalog, wallet, '2026-11-01').cards
   expect(ccr?.rates).toEqual([
     '3.75% cash back on the category you pick (first $2,500 a quarter, combined)',
-    '2.5% cash back at supermarkets and warehouse clubs (first $2,500 a quarter, combined)',
+    '2.5% cash back at supermarkets, warehouse clubs and bakeries (first $2,500 a quarter, combined)',
     '1.25% cash back on everything else',
   ])
 })
@@ -177,7 +177,7 @@ test('rates a membership unlocks are named, with only the top tier of a group', 
   const ccr = rates('bank-of-america-customized-cash-rewards')
   expect(ccr.filter((r) => r.includes(' with BofA'))).toEqual([
     '5.25% cash back on the category you pick with BofA Rewards Premier (first $2,500 a quarter, combined)',
-    '3.5% cash back at supermarkets and warehouse clubs with BofA Rewards Premier (first $2,500 a quarter, combined)',
+    '3.5% cash back at supermarkets, warehouse clubs and bakeries with BofA Rewards Premier (first $2,500 a quarter, combined)',
     '1.75% cash back on everything else with BofA Rewards Premier',
   ])
 })

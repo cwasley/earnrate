@@ -58,7 +58,7 @@ rules:
   # Rotating 5% categories. Activation is per quarter and isn't retroactive:
   # only purchases from the day you activate earn 5%.
   - id: q4-2026-restaurants
-    match: { categories: [dining] }
+    match: { categories: [dining, caterers] }
     rate: 5
     geography: us_only
     cap: five-percent-quarterly

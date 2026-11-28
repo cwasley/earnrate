@@ -166,7 +166,7 @@ describe('life events', () => {
       }
   })
 
-  test('the wedding page ranks rings, dress, caterer and venue as everything else, and the honeymoon as travel', () => {
+  test('the wedding page ranks rings and venue as everything else, the dress as clothing, the caterer as caterers, and the honeymoon as travel', () => {
     const wedding = LIFE_EVENTS.find((e) => e.slug === 'wedding')
     if (!wedding) throw new Error('no wedding')
     const category = (label: string) =>
@@ -175,8 +175,10 @@ describe('life events', () => {
         wedding.lines.find((l) => l.label === label) ?? { label },
       ).category
     expect(category('Engagement and wedding rings')).toBe('other')
+    expect(category('Wedding dress')).toBe('clothing')
     expect(category('Tux or suit')).toBe('clothing')
-    expect(category('Caterer')).toBe('other')
+    expect(category('Caterer')).toBe('caterers')
+    expect(category('Venue')).toBe('other')
     expect(category('Honeymoon flights')).toBe('travel.flights')
     expect(category('Honeymoon hotels')).toBe('travel.hotels')
   })

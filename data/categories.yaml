@@ -26,6 +26,16 @@
     [fast food restaurants, coffee shop, coffee shops, coffee, cafe, cafes]
   places: [Coffee shop]
   mccs: [5814]
+- id: dining.bars
+  name: Bars and nightclubs
+  aliases: [bar, pub, tavern, nightclub, cocktail lounge]
+  mccs: [5813]
+# Not under dining: some issuers count caterers as restaurants and others
+# leave them out, and most dining terms don't say.
+- id: caterers
+  name: Caterers
+  aliases: [caterer, catering]
+  mccs: [5811]
 
 - id: grocery
   name: Grocery stores
@@ -56,6 +66,24 @@
   name: Convenience stores
   aliases: [convenience store, corner store, bodega]
   mccs: [5499]
+# Bakeries and liquor stores aren't under dining or grocery: issuers
+# split on both.
+- id: bakery
+  name: Bakeries
+  aliases: [bakery, bake shop, pastry shop]
+  mccs: [5462]
+- id: liquor_store
+  name: Liquor stores
+  aliases:
+    [
+      liquor store,
+      wine store,
+      wine shop,
+      beer store,
+      package store,
+      wine and spirits,
+    ]
+  mccs: [5921]
 
 - id: gas
   name: Gas stations
@@ -107,6 +135,10 @@
   preposition: on
   aliases: [cruise]
   mccs: [4411]
+- id: travel.campgrounds
+  name: Campgrounds and RV parks
+  aliases: [campground, camping, campsite, rv park, trailer park]
+  mccs: [7033]
 
 - id: streaming
   preposition: on
@@ -142,6 +174,24 @@
   unranked: true
   cards: [bilt-blue, bilt-obsidian, bilt-palladium]
 
+- id: insurance
+  preposition: on
+  name: Insurance
+  aliases:
+    [
+      insurance,
+      insurance premium,
+      insurance premiums,
+      insurer,
+      auto insurance,
+      car insurance,
+      home insurance,
+      homeowners insurance,
+      renters insurance,
+      life insurance,
+    ]
+  mccs: [6300]
+
 - id: drugstore
   name: Drugstores and pharmacies
   aliases: [drugstores, pharmacy, pharmacies]
@@ -174,6 +224,10 @@
 - id: sporting_goods
   name: Sporting goods stores
   mccs: [5941]
+- id: toy_store
+  name: Toy and hobby stores
+  aliases: [toy store, toys, hobby shop, hobby store]
+  mccs: [5945]
 - id: home_improvement
   name: Home improvement
   preposition: on

@@ -29,7 +29,7 @@ rules:
     rate: 4
     note: Merchants coded as airlines and air carriers.
   - id: restaurants
-    match: { categories: [dining] }
+    match: { categories: [dining, caterers] }
     rate: 3
     note: Restaurants, bars, fast food and caterers.
   - id: other-travel

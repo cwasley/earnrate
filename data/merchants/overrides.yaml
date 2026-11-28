@@ -500,19 +500,22 @@
     may_code_as: [drugstore]
     note: Usually rung up as H-E-B. A pharmacy counter with its own merchant code may post as a drugstore.
 # Liquor stores: Amex's supermarket category leaves out "liquor stores", and
-# Chase's online grocery leaves them out by name.
+# Chase's online grocery leaves them out by name. The Nordstrom Visa counts
+# them as grocery.
 - id: total-wine
   name: Total Wine & More
   aliases: [total wine, total wine and more]
   domains: [totalwine.com]
-  category: other
-  note: Codes as a liquor store, which issuers leave out of grocery bonuses.
+  category: liquor_store
+  likely_mcc: 5921
+  note: Codes as a liquor store, not a supermarket.
 - id: specs
   name: "Spec's Wine, Spirits & Finer Foods"
   aliases: [specs, specs liquor, specs wine spirits]
   domains: [specsonline.com]
-  category: other
-  note: Codes as a liquor store, which issuers leave out of grocery bonuses.
+  category: liquor_store
+  likely_mcc: 5921
+  note: Codes as a liquor store, not a supermarket.
 
 # Gas stations with convenience stores. Chase's gas category covers gas "paid
 # for either at the pump or inside the station", and U.S. Bank lists several of
@@ -1349,18 +1352,18 @@
   name: Build-A-Bear Workshop
   aliases: [build a bear, build a bear workshop]
   domains: [buildabear.com]
-  category: other
+  category: toy_store
   online:
     category: online_retail
-  note: 'A toy store, with no bonus category in store. Its website counts as online retail.'
+  note: 'A toy store. Its website counts as online retail.'
 - id: lego-store
   name: LEGO Store
   aliases: [lego, the lego store]
   domains: [lego.com]
-  category: other
+  category: toy_store
   online:
     category: online_retail
-  note: 'A toy store, with no bonus category in store. Its website counts as online retail.'
+  note: 'A toy store. Its website counts as online retail.'
 - id: sally-beauty
   name: Sally Beauty
   aliases: [sally beauty supply]

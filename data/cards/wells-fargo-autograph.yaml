@@ -21,7 +21,7 @@ welcome_offer:
   note: The page calls it a $200 cash redemption value. You may not be eligible for bonus offers if you have this card or opened one within the last 48 months, even if it's closed.
 rules:
   - id: dining
-    match: { categories: [dining] }
+    match: { categories: [dining, caterers] }
     exclude: { merchants: [doordash, uber-eats] }
     rate: 3
     note: Restaurants, bars (drinking places), fast food and caterers, by Visa merchant code. Wells Fargo says bakeries, food at grocery stores and third-party delivery services may not earn 3X.
@@ -59,6 +59,9 @@ evidence:
   - rule: dining
     url: https://creditcards.wellsfargo.com/autograph-visa-credit-card/
     quote: 'Dining: eating places and restaurants, drinking places, fast food restaurants'
+  - rule: dining
+    url: https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
+    quote: 'Caterers Drinking places Eating places and restaurants Fast food restaurants'
   - rule: dining
     url: https://www.wellsfargo.com/credit-cards/autograph-visa/terms/
     quote: 'Grocery stores and other miscellaneous places that serve food or operate restaurants on site Third-party delivery services'

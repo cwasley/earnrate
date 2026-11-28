@@ -23,7 +23,7 @@ rules:
     rate: 3
     note: Card points only; points and status from flying aren't card earnings.
   - id: dining
-    match: { categories: [dining] }
+    match: { categories: [dining, caterers] }
     rate: 3
   - id: foreign-purchases
     match: { any: true }
@@ -36,7 +36,7 @@ rules:
     requires: { membership: bank-of-america-account }
     note: 3x plus the 10% rewards bonus for holding an eligible Bank of America account.
   - id: dining-with-boa-account
-    match: { categories: [dining] }
+    match: { categories: [dining, caterers] }
     rate: 3.3
     requires: { membership: bank-of-america-account }
     note: 3x plus the 10% rewards bonus for holding an eligible Bank of America account.

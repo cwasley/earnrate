@@ -63,7 +63,7 @@ todo:
   - Point Accelerator (spend $200 Bilt Cash for +1X on the next $5,000, up to five times a year) isn't modeled.
   - Bilt Neighborhood Dining restaurants add a per-restaurant bonus (up to 6X total). It varies by restaurant, so it isn't modeled.
   - Walgreens in-store (+1X, and +2X on Walgreens-brand items until December 11, 2026, per the Bilt Rewards Points Earning Terms PDF at bilt.com/terms/earn), Metropolis parking, fitness classes and Bilt Home Delivery add Bilt bonuses not stated on an HTML page; not modeled.
-  - The Bilt Card Offer Terms PDF counts bakeries (MCC 5462) in the 3X dining pick, but a choice option can only list categories and earnrate's dining category doesn't include bakeries, so bakery purchases get 1X here.
+  - The Bilt Card Offer Terms PDF counts bakeries (MCC 5462) in the 3X dining pick, but no page the source check can read says so, so bakeries aren't in the dining option and bakery purchases get 1X here. Once a readable Bilt page states it, add `bakery` to the option.
   - 'Welcome offer not modeled: the page offers $200 in Bilt Cash upon approval with no spend required. Bilt Cash is a second currency (not BILT points or cash), and this file already skips it on purpose.'
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."
 # Merchant statement credits, on top of what the purchase earns.

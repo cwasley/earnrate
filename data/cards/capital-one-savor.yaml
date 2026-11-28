@@ -52,7 +52,7 @@ rules:
     named:
       not_earning: [walmart, target]
   - id: dining
-    match: { categories: [dining] }
+    match: { categories: [dining, bakery] }
     rate: 3
     note: Restaurants, cafes, bars, lounges, fast-food chains and bakeries. Restaurants inside hotels or grocery stores, and some food trucks, may not code as dining.
   - id: entertainment
