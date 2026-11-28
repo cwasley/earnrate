@@ -2,6 +2,10 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.28.4
+
+No rates changed. Taxes (`government.taxes`) get a note that leads their answers, as rent and mortgage do: paying taxes by card goes through a payment processor that charges a fee, which can outweigh what a card earns.
+
 ## 2026.11.28.3
 
 Fifteen more categories, for merchant types whose own code some issuers pay or leave out. Before, they counted as everything else, so the rules below never applied to them. New categories default to the base rate; each card that pays or excludes one does so from a quote.

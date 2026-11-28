@@ -239,6 +239,7 @@
   name: Taxes
   aliases: [tax, taxes, tax payment, tax payments, income tax, property tax]
   mccs: [9311]
+  note: "The IRS and most tax offices take cards only through payment processors that charge a fee on each payment, which can outweigh what a card earns. Check the fee first; it can still make sense when it gets you to a welcome offer's minimum spend."
 - id: medical
   preposition: on
   name: Doctors and hospitals

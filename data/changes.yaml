@@ -3,6 +3,16 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.28.4'
+  date: 2026-11-28
+  changes:
+    - cause: wording
+      categories: [government.taxes]
+      field: note
+      was: null
+      now: "The IRS and most tax offices take cards only through payment processors that charge a fee on each payment, which can outweigh what a card earns. Check the fee first; it can still make sense when it gets you to a welcome offer's minimum spend."
+      summary: Taxes paid by card go through a processor that charges a fee, said before any ranking.
+
 - version: '2026.11.28.3'
   date: 2026-11-28
   changes:

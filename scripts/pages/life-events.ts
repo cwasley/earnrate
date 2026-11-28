@@ -28,6 +28,7 @@ import {
   midSentence,
   num,
   pct,
+  shortDate,
 } from '../../src/engine/text.ts'
 import { FROM_OPENING, openFirst } from '../../src/engine/welcome-offers.ts'
 import { findMerchant, merchantFamily } from '../../src/merchants/resolve.ts'
@@ -337,7 +338,8 @@ function bestText(ctx: PageContext, entries: ExploreEntry[]): string {
     (e) => Math.abs(e.effectiveReturnPct - top.effectiveReturnPct) < EPSILON,
   )
   const name = `<strong>${esc(ctx.shortName(top.cardId))}</strong>`
-  const rate = pct(top.effectiveReturnPct)
+  const ends = rateEnds(ctx, top)
+  const rate = `${pct(top.effectiveReturnPct)}${ends === null ? '' : ` through ${ends}`}`
   return tied.length === 1
     ? `the ${name} earns ${rate}`
     : tied.length === 2
@@ -402,7 +404,11 @@ function rankRows(ctx: PageContext, entries: ExploreEntry[]): string {
     .map((e, i) => {
       const card = ctx.cards.get(e.cardId)
       const rule = card?.rules.find((r) => r.id === e.matchedRule)
-      const lines = ctx.requirementLines(e.cardId, e.requirements)
+      const lines = ctx.requirementLines(
+        e.cardId,
+        e.requirements,
+        rateEnds(ctx, e),
+      )
       const fine = [
         rule?.note ? `<p>${esc(rule.note)}</p>` : '',
         e.evidence
@@ -412,6 +418,15 @@ function rankRows(ctx: PageContext, entries: ExploreEntry[]): string {
       return `<li><span class="rank">${String(i + 1)}</span>${ctx.art(e.cardId)}<div><span class="row-head"><a class="row-link" href="/cards/${esc(e.cardId)}">${esc(ctx.shortName(e.cardId))}</a> <span class="rate">${esc(pct(e.effectiveReturnPct))}</span></span><span class="muted row-note">${esc(ctx.issuerName(e.issuer))} · ${esc(ctx.feeLabel(e.cardId))}</span>${lines.length > 0 ? `<ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}${finePrint(fine)}</div></li>`
     })
     .join('')}</ol>`
+}
+
+// The day a time-limited rate (a rotating quarter, a promo) ends, so a page
+// people plan months ahead with never presents it as lasting.
+function rateEnds(ctx: PageContext, e: ExploreEntry): string | null {
+  const end = ctx.cards
+    .get(e.cardId)
+    ?.rules.find((r) => r.id === e.matchedRule)?.valid_to
+  return end === undefined ? null : shortDate(end)
 }
 
 // Card travel sites (Chase Travel, Hotel through Amex Travel) where a
@@ -497,10 +512,11 @@ function codingTable(
       const href = links.category(r.category)
       const codes =
         href === null ? esc(name) : `<a href="${href}">${esc(name)}</a>`
+      const ends = top === undefined ? null : rateEnds(ctx, top)
       const best =
         top === undefined
           ? '—'
-          : `<a href="/cards/${esc(top.cardId)}">${esc(ctx.shortName(top.cardId))}</a> <span class="muted">${esc(pct(top.effectiveReturnPct))}</span>`
+          : `<a href="/cards/${esc(top.cardId)}">${esc(ctx.shortName(top.cardId))}</a> <span class="muted">${esc(pct(top.effectiveReturnPct))}${ends === null ? '' : ` through ${esc(ends)}`}</span>`
       return `<tr><th scope="row">${esc(r.line.label)}</th><td>${codes}</td><td>${best}</td></tr>`
     })
     .join('')
@@ -513,9 +529,12 @@ function codingTable(
         ? esc(x.name)
         : `<a href="${href}">${esc(x.name)}</a>`
     })
-    const notes = [m[0]?.note, m[0]?.ambiguity?.note].filter(
-      (n) => n !== undefined,
-    )
+    // A store's note describes that one store; under a list of several it
+    // reads as if it were about all of them.
+    const notes =
+      m.length === 1
+        ? [m[0]?.note, m[0]?.ambiguity?.note].filter((n) => n !== undefined)
+        : []
     return [
       `${esc(r.line.label)}: ${inOrder(names)} usually ${m.length === 1 ? 'counts' : 'count'} ${esc(categoryAs(ctx.catalog, r.category))}.${notes.map((n) => ` ${esc(n)}`).join('')}`,
     ]
