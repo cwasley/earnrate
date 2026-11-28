@@ -45,7 +45,7 @@ rules:
   - id: dining
     match: { categories: [dining] }
     rate: 3
-    note: Includes takeout and eligible delivery services.
+    note: "Includes takeout and eligible delivery services. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: drugstores
     match: { categories: [drugstore] }
     rate: 3
@@ -76,7 +76,7 @@ rules:
     valid_from: 2026-10-01
     valid_to: 2026-12-31
     activate_by: 2026-12-14
-    note: The 4% quarterly bonus stacks on the everyday 3% dining rate for 7% total, on the first $1,500 of combined bonus-category spend; then dining is back to 3%.
+    note: "The 4% quarterly bonus stacks on the everyday 3% dining rate for 7% total, on the first $1,500 of combined bonus-category spend; then dining is back to 3%. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: q4-2026-american-red-cross
     match: { merchants: [american-red-cross] }
     rate: 5
@@ -211,5 +211,11 @@ evidence:
   - rule: foreign_transaction_fee
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65280.html
     quote: 'Foreign Transactions None Penalty Fees'
+  - rule: dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'
+  - rule: q4-2026-dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'
 todo:
   - 'Q2 2027 (Apr-Jun) shows "Coming Soon"; add it after Chase posts it (activation opens March 15, 2027).'

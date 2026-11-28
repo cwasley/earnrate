@@ -36,7 +36,7 @@ rules:
   - id: dining
     match: { categories: [dining] }
     rate: 3
-    note: Worldwide. Includes takeout and eligible delivery services.
+    note: "Worldwide. Includes takeout and eligible delivery services. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: lyft
     match: { merchants: [lyft] }
     rate: 5
@@ -202,6 +202,9 @@ evidence:
   - rule: exclusive-tables
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve
     quote: 'A statement credit will be automatically applied to your account for dining purchases at select restaurants'
+  - rule: dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'
 todo:
   - "peloton: the $5,000 limit runs across the whole offer (4/1/2025 to 12/31/2027), which no cap period can express, and the $150 minimum per purchase isn't modeled."
   - "Chase's terms say purchases the $300 travel credit covers earn no points, but earnrate counts the card's rate on the whole purchase with the credit on top (an engine gap). For its other credits the terms don't say, and they're modeled the same way."

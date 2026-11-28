@@ -59,6 +59,7 @@ rules:
     match: { categories: [dining] }
     rate: 2
     cap: two-percent-combined
+    note: "Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: lyft
     match: { merchants: [lyft] }
     rate: 5
@@ -124,4 +125,7 @@ evidence:
     quote: 'Foreign Transactions 3% of the amount of each transaction in U.S. dollars'
   - rule: instacart
     url: https://creditcards.chase.com/business-credit-cards/ink/cash
-    quote: 'Instacart+ members get a $20 Instacart credit each month automatically loaded into their Instacart Business Account'
+    quote: 'get a $20 Instacart credit each month automatically loaded into their'
+  - rule: restaurants
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'

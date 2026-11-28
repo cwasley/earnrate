@@ -32,7 +32,7 @@ rules:
   - id: dining-grocery-gas
     match: { categories: [dining, grocery.supermarket, gas] }
     rate: 5
-    note: Dining includes takeout and eligible delivery services. Chase's grocery stores exclude warehouse clubs, discount stores, drugstores and gas at grocery-store stations; delivery services count only if they code as a grocery store.
+    note: "Dining includes takeout and eligible delivery services. Chase's grocery stores exclude warehouse clubs, discount stores, drugstores and gas at grocery-store stations; delivery services count only if they code as a grocery store. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: flights-direct-and-car-rental
     match: { categories: [travel.flights, travel.car_rental] }
     rate: 5
@@ -150,6 +150,9 @@ evidence:
   - rule: anniversary-night
     url: https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier
     quote: 'Anniversary Free Night must be redeemed, and stay must be completed, within 12 months from date of issue.'
+  - rule: dining-grocery-gas
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'
 todo:
   - The $100 airline statement credit (after $250 on flights bought directly each calendar year, through 12/31/27) isn't modeled.
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

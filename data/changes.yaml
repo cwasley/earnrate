@@ -3,6 +3,40 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.28.1'
+  date: 2026-11-28
+  changes:
+    - cause: wording
+      cards:
+        [
+          chase-aeroplan,
+          chase-freedom-flex,
+          chase-freedom-unlimited,
+          chase-ihg-one-rewards,
+          chase-ihg-one-rewards-business,
+          chase-ihg-one-rewards-premier,
+          chase-ihg-one-rewards-premier-select,
+          chase-ink-business-cash,
+          chase-marriott-bonvoy-boundless,
+          chase-prime-visa,
+          chase-sapphire-preferred,
+          chase-sapphire-reserve,
+          chase-united-business,
+          chase-united-club,
+          chase-united-explorer,
+          chase-united-quest,
+        ]
+      field: rules
+      summary: "The dining rules say bakeries, caterers, meal kit delivery and gift card merchants don't count as dining, quoted from Chase's rewards category FAQ."
+    - cause: quote
+      card: chase-freedom-unlimited
+      field: source_urls
+      summary: "Chase's rewards category FAQ, which the card's terms point to, is a source."
+    - cause: quote
+      cards: [chase-ihg-one-rewards-business, chase-ink-business-cash]
+      field: evidence
+      summary: The Expensify and Instacart credit quotes follow Chase's new wording on the card pages.
+
 - version: '2026.11.28'
   date: 2026-11-28
   changes:

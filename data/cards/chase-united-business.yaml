@@ -32,7 +32,7 @@ rules:
   - id: dining
     match: { categories: [dining] }
     rate: 2
-    note: Includes eligible delivery services.
+    note: "Includes eligible delivery services. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: office-supply
     match: { categories: [office_supply] }
     rate: 2
@@ -167,3 +167,6 @@ evidence:
   - rule: farelock
     url: https://creditcards.chase.com/business-credit-cards/united/united-business-card
     quote: 'Annual means the year beginning with your account open date'
+  - rule: dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'

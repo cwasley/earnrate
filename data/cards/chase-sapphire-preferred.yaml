@@ -28,7 +28,7 @@ rules:
   - id: dining
     match: { categories: [dining] }
     rate: 3
-    note: Includes takeout and eligible delivery services.
+    note: "Includes takeout and eligible delivery services. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: gas-and-ev-charging
     match: { categories: [gas, ev_charging] }
     rate: 3
@@ -171,6 +171,9 @@ evidence:
   - rule: chase-travel-hotels
     url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred
     quote: 'Earn up to $100 in statement credits each account anniversary year for hotel stays purchased through Chase Travel'
+  - rule: dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'
 todo:
   - "peloton: the $5,000 limit runs across the whole offer (4/1/2025 to 12/31/2027), which no cap period can express, and the $150 minimum per purchase isn't modeled."
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

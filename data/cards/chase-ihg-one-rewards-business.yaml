@@ -28,7 +28,7 @@ rules:
   - id: dining-gas-advertising
     match: { categories: [dining, gas, online_advertising] }
     rate: 5
-    note: Dining includes takeout and eligible delivery services. Advertising must be bought directly from a social media site or search engine, not through an ad agency.
+    note: "Dining includes takeout and eligible delivery services. Advertising must be bought directly from a social media site or search engine, not through an ad agency. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: flights-direct-and-car-rental
     match: { categories: [travel.flights, travel.car_rental] }
     rate: 5
@@ -164,13 +164,16 @@ evidence:
     quote: 'up to a maximum accumulation of $100 in a calendar year'
   - rule: expensify
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
-    quote: 'Up to $100 in statement credits for Expensify purchases each calendar year.'
+    quote: 'Enjoy up to $100 in statement credits towards Expensify purchases each calendar year.'
   - rule: anniversary-night
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
     quote: 'with a point redemption value of 50,000 points or less'
   - rule: anniversary-night
     url: https://creditcards.chase.com/business-credit-cards/IHG/business
     quote: 'Anniversary Free Night will be available for redemption on your account anniversary date each year.'
+  - rule: dining-gas-advertising
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'
 todo:
   - The $100 airline statement credit (after $250 on flights bought directly each calendar year) isn't modeled.
   - "The issuer's terms don't say whether purchases a credit pays for earn rewards. Its credits are modeled as earning the card's rate on the whole purchase, with the credit on top."

@@ -2,6 +2,12 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.28.1
+
+No rates changed. Chase's [rewards category FAQ](https://www.chase.com/personal/credit-cards/rewards-category-faq), which every Chase card's terms point to ("For important information about Chase rewards categories, see chase.com/RewardsCategoryFAQs"), says "Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category" for dining. Only the Southwest cards said so; the dining rules of the other 16 Chase cards with a dining rate now do too, quoted from the FAQ: Aeroplan, Freedom Flex, Freedom Unlimited (which now lists the FAQ among its sources), the four IHG One Rewards cards, Ink Business Cash, Marriott Bonvoy Boundless, Prime Visa, Sapphire Preferred, Sapphire Reserve and the four United cards.
+
+Two quotes moved with Chase's wording: IHG One Rewards Business's Expensify credit is quoted from its offer details, and Ink Business Cash's Instacart credit avoids the page's new "lnstacart" spelling.
+
 ## 2026.11.28
 
 No rates changed. Quotes moved after the weekly source check:

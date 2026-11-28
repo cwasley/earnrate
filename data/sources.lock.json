@@ -924,7 +924,7 @@
       ]
     },
     "https://creditcards.chase.com/cash-back-credit-cards/freedom/flex": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "8d5b43ecfae20c4f",
         "c4aa062a6cebb860",
@@ -934,14 +934,14 @@
       ]
     },
     "https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-to-combine-chase-credit-card-points-in-household": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "143c532e0f7f1e5a",
         "4d1bf77c451033bf"
       ]
     },
     "https://www.chase.com/personal/credit-cards/freedom/flex-learnmore": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "171083c20b5bc170",
         "2c28b6aed108a5f2",
@@ -955,7 +955,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65280.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "33839a64c41979a9",
         "38f76b2bdb0cb431",
@@ -985,7 +985,7 @@
       ]
     },
     "https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "9768a41fb6c19bf8",
         "bea12cf09f1d17f7",
@@ -994,7 +994,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61498.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "33839a64c41979a9",
         "38f76b2bdb0cb431",
@@ -1007,18 +1007,19 @@
       ]
     },
     "https://creditcards.chase.com/business-credit-cards/IHG/business": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "12bcf148c4a01c6e",
         "59c29fd1dce3a50a",
         "84cdd69d82f821c7",
         "a84a7edc4f0e4060",
         "abac929775c267af",
+        "f47bd5c2d556b8d7",
         "f81d8f58196adb33"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65355.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "1661d1dd310f3cb0",
         "29f2aac9a943305c",
@@ -1029,7 +1030,7 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "0b0cee3df4a6021f",
         "84cdd69d82f821c7",
@@ -1040,7 +1041,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65336.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1050,7 +1051,7 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "0b0cee3df4a6021f",
         "5d0f74e3424560cc",
@@ -1061,7 +1062,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65294.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1071,11 +1072,10 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/ihg-rewards-club/one-rewards": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "06ad7fcb06f7294d",
         "0b0cee3df4a6021f",
-        "31ed9091bc25b31c",
         "688e7d2d1a9370d8",
         "99f426c28bdea280",
         "a7e9b1401312bc81",
@@ -1083,7 +1083,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65295.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1093,7 +1093,7 @@
       ]
     },
     "https://creditcards.chase.com/business-credit-cards/ink/cash": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "207a5e59bf1f68c0",
         "4b2522f997a15f72",
@@ -1103,7 +1103,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC63827.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "29f2aac9a943305c",
         "444f2a7b16b80787",
@@ -1180,7 +1180,7 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless": {
-      "checked": "2026-11-08",
+      "checked": "2026-11-28",
       "lines": [
         "6f5356f6ac907a07",
         "8fc14494f360b598",
@@ -1191,7 +1191,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65195.html": {
-      "checked": "2026-11-08",
+      "checked": "2026-11-28",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1201,19 +1201,18 @@
       ]
     },
     "https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-28",
       "lines": [
         "06736d38fa3a3b7c",
-        "2a7a3b33d170db19",
         "75469942f282db3c",
         "7c4233ceff38818d",
-        "90a7d73a45f5052c",
+        "935463eb28014cc1",
         "b83fa97f03187c3a",
-        "ee68919dd5f3829d"
+        "df7fb129575b8813"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC59329.html": {
-      "checked": "2026-11-13",
+      "checked": "2026-11-28",
       "lines": [
         "1661d1dd310f3cb0",
         "30cc337750a1be66",
@@ -1223,13 +1222,13 @@
       ]
     },
     "https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "f3bb77a579cdd25f"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65222.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "0ab32a7b5346dc8f",
         "1661d1dd310f3cb0",
@@ -1239,14 +1238,14 @@
       ]
     },
     "https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "2b2df50c7248b432",
         "faddb298329961b5"
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC64842.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "1661d1dd310f3cb0",
         "444f2a7b16b80787",
@@ -1358,7 +1357,7 @@
       ]
     },
     "https://creditcards.chase.com/business-credit-cards/united/united-business-card": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "00f9a2e44e685e2b",
         "6fdd517d9cbc7765",
@@ -1369,7 +1368,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65426.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "07e263573004b121",
         "1661d1dd310f3cb0",
@@ -1400,7 +1399,7 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/united/united-club": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "12d6d7c814ea379b",
         "25232bf961299699",
@@ -1411,7 +1410,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC62957.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "07e263573004b121",
         "1661d1dd310f3cb0",
@@ -1465,7 +1464,7 @@
       ]
     },
     "https://creditcards.chase.com/travel-credit-cards/united/united-quest": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "25232bf961299699",
         "49780cb62c016d92",
@@ -1476,7 +1475,7 @@
       ]
     },
     "https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC65756.html": {
-      "checked": "2026-11-17",
+      "checked": "2026-11-28",
       "lines": [
         "07e263573004b121",
         "1661d1dd310f3cb0",

@@ -23,7 +23,7 @@ rules:
     match: { categories: [dining, grocery.supermarket, gas] }
     rate: 3
     cap: { amount: 6000, period: calendar_year, then_rate: 2 }
-    note: On the first $6,000 of combined purchases a year. Chase's year runs from account opening (then each later year) through the December statement date, close to a calendar year. Dining includes takeout and eligible delivery services. Chase's grocery stores exclude warehouse clubs, discount stores, drugstores and gas at grocery-store stations; delivery services count only if they code as a grocery store.
+    note: "On the first $6,000 of combined purchases a year. Chase's year runs from account opening (then each later year) through the December statement date, close to a calendar year. Dining includes takeout and eligible delivery services. Chase's grocery stores exclude warehouse clubs, discount stores, drugstores and gas at grocery-store stations; delivery services count only if they code as a grocery store. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
 milestones:
   - id: spend-35k
     spend: 35000
@@ -85,6 +85,9 @@ evidence:
   - rule: anniversary-night
     url: https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless
     quote: 'at a property with a redemption level up to 35,000 points'
+  - rule: dining-grocery-gas
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'
 todo:
   - 'The welcome offer isn''t recorded: on Nov 8, 2026 Chase showed 200,000 bonus points after $3,000 in purchases in the first 3 months, labeled "This week only" with no end date (it had been 3 Free Night Awards, each up to 50,000 points). Record it once an offer runs without a one-week label. Chase: "This credit card is not available to you if (1) you currently have any of the following cards or (2) you received a new cardmember bonus for any of the following cards within the last 24 months" (Marriott Bonvoy Premier, Rewards Premier, Boundless, Rewards Premier Plus, Bold); the bonus also isn''t available to holders of the Marriott Bonvoy American Express Card in the last 30 days, or anyone approved for Brilliant or Bevy in the last 90 days or paid their bonus in the last 24 months.'
   - 1 Elite Night Credit for every $5,000 in purchases, with no limit, isn't modeled (milestones are once a period).

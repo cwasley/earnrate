@@ -39,7 +39,7 @@ rules:
   - id: dining
     match: { categories: [dining] }
     rate: 2
-    note: Includes takeout and eligible delivery services.
+    note: "Includes takeout and eligible delivery services. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: streaming
     match:
       {
@@ -196,3 +196,6 @@ evidence:
     url: https://creditcards.chase.com/travel-credit-cards/united/united-quest
     quote: 'Receive up to $150 back in statement credits each anniversary year on hotel accommodations'
     in_popup: true
+  - rule: dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'

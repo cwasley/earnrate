@@ -50,12 +50,12 @@ rules:
     match: { categories: [dining] }
     rate: 3
     valid_to: 2026-12-31
-    note: 3X applies to purchases that post by December 31, 2026. Includes takeout and eligible delivery services.
+    note: "3X applies to purchases that post by December 31, 2026. Includes takeout and eligible delivery services. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: dining
     match: { categories: [dining] }
     rate: 2
     valid_from: 2027-01-01
-    note: Includes takeout and eligible delivery services.
+    note: "Includes takeout and eligible delivery services. Bakeries, caterers, meal kit delivery and gift card merchants don't count as dining."
   - id: gas
     match: { categories: [gas] }
     rate: 2
@@ -166,3 +166,9 @@ evidence:
   - rule: air-canada-credit
     url: https://creditcards.chase.com/travel-credit-cards/aircanada/aeroplan
     quote: 'for qualifying Air Canada purchases made using your Chase Air Canada Aeroplan credit card'
+  - rule: dining-2026
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'
+  - rule: dining
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Bakeries, caterers, meal kit delivery services, and gift card merchants are not included in the category.'
