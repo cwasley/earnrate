@@ -65,12 +65,10 @@ A purchase can say how it's paid (`card`, `apple-pay`, `google-pay` or `paypal`)
 
 Merchant types some cards name that have no earnrate category, so they fall to `other`.
 
-- `bank-of-america-customized-cash-rewards`: Online Shopping excludes doctors and hospitals, government services and taxes, and schools.
-- `capital-one-savor`: amusement parks, tourist attractions, aquariums, zoos, record stores, pool halls and bowling alleys earn 3% as entertainment; golf courses and collegiate sporting events are excluded.
-- `amex-business-gold`, `amex-business-platinum`: software and cloud system providers count with electronics stores.
-- `citi-strata`: the Self-Select Category's Cosmetic Stores/Barber Shops/Hair Salons and Pet Supply Stores options.
-- `bank-of-america-premium-rewards`: travel includes tourist attractions, galleries, amusement parks, aquariums and zoos.
-- `usbank-smartly`: education, gift cards, tax, business-to-business merchants and third-party bill payment earn 2% at every Smartly tier and don't count toward the $10,000.
+- `bank-of-america-customized-cash-rewards`: Online Shopping's excluded non-retail services are a list of examples; services it doesn't name, and charities, have no rule of their own.
+- `capital-one-savor`, `discover-it-cash-back`: aquariums, zoos, record stores, pool halls and bowling alleys earn the entertainment rate; collegiate sporting events are excluded.
+- `bank-of-america-premium-rewards`: travel includes art galleries, aquariums and zoos.
+- `usbank-smartly`: gift cards, business-to-business merchants and third-party bill payment earn 2% at every Smartly tier and don't count toward the $10,000.
 - `venmo-credit-card`: cable, satellite and pay TV earn 3% as entertainment, but earnrate's `tv_internet` also covers internet service, which earns 1%.
 
 ### Housing payments and second currencies

@@ -28,21 +28,21 @@ rules:
   # Smartly Checking and Safe Debit, with a Bank Smartly Savings account.
   - id: everything-smartly-25
     match: { any: true }
-    exclude: { categories: [insurance] }
+    exclude: { categories: [insurance, education, government.taxes] }
     rate: 2.5
     cap: smartly-earning-bonus
     requires: { membership: usbank-smartly-25 }
     note: 2% plus the 25% Smartly Earning Bonus (a qualifying balance from $10,000 per the card page, $5,000 per the program rules, to $49,999.99), on the first $10,000 of eligible net purchases each billing cycle. Education, gift cards, insurance, tax, business-to-business merchants and third-party bill payment earn 2% and don't count toward the $10,000.
   - id: everything-smartly-50
     match: { any: true }
-    exclude: { categories: [insurance] }
+    exclude: { categories: [insurance, education, government.taxes] }
     rate: 3
     cap: smartly-earning-bonus
     requires: { membership: usbank-smartly-50 }
     note: 2% plus the 50% Smartly Earning Bonus (qualifying balance $50,000 to $99,999.99), on the first $10,000 of eligible net purchases each billing cycle. Education, gift cards, insurance, tax, business-to-business merchants and third-party bill payment earn 2% and don't count toward the $10,000.
   - id: everything-smartly-100
     match: { any: true }
-    exclude: { categories: [insurance] }
+    exclude: { categories: [insurance, education, government.taxes] }
     rate: 4
     cap: smartly-earning-bonus
     requires: { membership: usbank-smartly-100 }
@@ -104,7 +104,7 @@ evidence:
     quote: 'Foreign Transaction 3% of each foreign transaction'
 todo:
   - 'The card page puts the 2.5% tier at a qualifying balance of $10,000 to $49,999; the program rules page says "Between $5,000 - $49,999.99". The tier memberships (usbank-smartly-25, -50, -100) are named by rate, so a wallet picks its tier either way; which threshold applies is unconfirmed.'
-  - "Bonus exclusions other than insurance aren't modeled: education, gift cards, tax, business-to-business merchants and third-party bill payment earn 2% at every tier and don't use the $10,000, but earnrate has no categories for them, so the tier rules apply to them."
+  - "Bonus exclusions other than insurance, education and tax aren't modeled: gift cards, business-to-business merchants and third-party bill payment earn 2% at every tier and don't use the $10,000, but earnrate has no categories for them, so the tier rules apply to them."
   - 'Points are worth full value only as a deposit to a U.S. Bank checking, savings or money market account. The card page also lists statement credits at that value; the program rules say statement credits may be at a reduced rate, without saying what. Modeled as cash at 1¢.'
   - 'Whether the Smartly Earning Bonus also applies to Travel Center hotels and car rentals (which would make them 6.5% to 8%) is unstated: the 4 extra points are "in addition to your base earn". Modeled at 6% for every tier.'
   - 'The tier can change within a billing cycle as the 30-day average balance moves; earnrate takes the tier the wallet says.'

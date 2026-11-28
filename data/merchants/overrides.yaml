@@ -836,65 +836,56 @@
   name: ParkMobile
   aliases: [park mobile]
   domains: [parkmobile.io]
-  category: transit
-  likely_mcc: 7523
+  category: transit.parking
   note: Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't.
 - id: spothero
   name: SpotHero
   aliases: [spot hero]
   domains: [spothero.com]
-  category: transit
-  likely_mcc: 7523
+  category: transit.parking
   note: Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't.
 - id: paybyphone
   name: PayByPhone
   aliases: [pay by phone]
   domains: [paybyphone.com]
-  category: transit
-  likely_mcc: 7523
+  category: transit.parking
   note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
 - id: parkwhiz
   name: ParkWhiz
   aliases: [park whiz]
   domains: [parkwhiz.com]
-  category: transit
-  likely_mcc: 7523
+  category: transit.parking
   note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
 - id: laz-parking
   name: LAZ Parking
   aliases: [laz]
   domains: [lazparking.com]
-  category: transit
-  likely_mcc: 7523
+  category: transit.parking
   note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
 # Toll transponder accounts. Chase's transit category names "toll bridges
 # and highways".
 - id: e-zpass
   name: E-ZPass
   aliases: [ezpass, e z pass]
-  category: transit
-  likely_mcc: 4784
+  category: transit.tolls
   note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
 - id: sunpass
   name: SunPass
   aliases: [sun pass]
   domains: [sunpass.com]
-  category: transit
-  likely_mcc: 4784
+  category: transit.tolls
   note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
 - id: fastrak
   name: FasTrak
   aliases: [fas trak, bay area fastrak]
   domains: [bayareafastrak.org]
-  category: transit
-  likely_mcc: 4784
+  category: transit.tolls
   note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
 - id: txtag
   name: TxTag
   aliases: [tx tag]
   domains: [txtag.org]
-  category: transit
-  likely_mcc: 4784
+  category: transit.tolls
   note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
 
 # Booking.com charges prepaid stays itself, but "pay at the property" stays are
@@ -940,8 +931,7 @@
     may_code_as: [tv_internet]
     note: AT&T bills wireless and home internet separately. A wireless bill is cell phone service; an AT&T Internet or Fiber bill is TV and internet service.
 
-# Specialty stores with no bonus category in store. Amex counts their websites
-# as U.S. online retail ("U.S. merchants selling physical goods, paid on their
+# Specialty stores. Amex counts their websites as U.S. online retail ("U.S. merchants selling physical goods, paid on their
 # website or app").
 - id: chewy
   name: Chewy
@@ -961,33 +951,33 @@
 - id: petco
   name: Petco
   domains: [petco.com]
-  category: other
+  category: pet_store
   online:
     category: online_retail
-  note: A pet store, with no bonus category in store. Its website counts as online retail.
+  note: A pet store. Its website counts as online retail.
 - id: petsmart
   name: PetSmart
   aliases: [pet smart]
   domains: [petsmart.com]
-  category: other
+  category: pet_store
   online:
     category: online_retail
-  note: A pet store, with no bonus category in store. Its website counts as online retail.
+  note: A pet store. Its website counts as online retail.
 - id: ulta-beauty
   name: Ulta Beauty
   aliases: [ulta]
   domains: [ulta.com]
-  category: other
+  category: cosmetics
   online:
     category: online_retail
-  note: A cosmetics store, with no bonus category in store. Its website counts as online retail.
+  note: A cosmetics store. Its website counts as online retail.
 - id: sephora
   name: Sephora
   domains: [sephora.com]
-  category: other
+  category: cosmetics
   online:
     category: online_retail
-  note: A cosmetics store, with no bonus category in store. Its website counts as online retail.
+  note: A cosmetics store. Its website counts as online retail.
 - id: michaels
   name: Michaels
   domains: [michaels.com]
@@ -1091,10 +1081,10 @@
 - id: pet-supplies-plus
   name: Pet Supplies Plus
   domains: [petsuppliesplus.com]
-  category: other
+  category: pet_store
   online:
     category: online_retail
-  note: A pet store, with no bonus category in store. Its website counts as online retail.
+  note: A pet store. Its website counts as online retail.
 
 # Listed here, not in seed.yaml, so "Amazon Music" and "Amazon Prime Video"
 # don't match Amazon itself.
@@ -1255,29 +1245,25 @@
   name: The Parking Spot
   aliases: [parking spot]
   domains: [theparkingspot.com]
-  category: transit
-  likely_mcc: 7523
+  category: transit.parking
   note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
 - id: park-n-fly
   name: "Park 'N Fly"
   aliases: [park n fly, parknfly]
   domains: [pnf.com]
-  category: transit
-  likely_mcc: 7523
+  category: transit.parking
   note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
 - id: fast-park-and-relax
   name: FastPark & Relax
   aliases: [fastpark, fast park, fast park and relax]
   domains: [thefastpark.com]
-  category: transit
-  likely_mcc: 7523
+  category: transit.parking
   note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
 - id: sp-plus
   name: SP+ Parking
   aliases: [sp plus, sp+]
   domains: [spplus.com]
-  category: transit
-  likely_mcc: 7523
+  category: transit.parking
   note: "Parking codes as MCC 7523. Amex and Chase count parking as transit; U.S. Bank's ground transportation doesn't."
 
 # Tolls
@@ -1285,42 +1271,36 @@
   name: I-PASS
   aliases: [ipass, illinois tollway]
   domains: [getipass.com]
-  category: transit
-  likely_mcc: 4784
+  category: transit.tolls
   note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
 - id: peach-pass
   name: Peach Pass
   domains: [peachpass.com]
-  category: transit
-  likely_mcc: 4784
+  category: transit.tolls
   note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
 - id: nc-quick-pass
   name: NC Quick Pass
   aliases: [quick pass]
   domains: [ncquickpass.com]
-  category: transit
-  likely_mcc: 4784
+  category: transit.tolls
   note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
 - id: ez-tag
   name: EZ TAG
   aliases: [eztag, hctra]
   domains: [hctra.org]
-  category: transit
-  likely_mcc: 4784
+  category: transit.tolls
   note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
 - id: tolltag
   name: TollTag
   aliases: [ntta, ntta tolltag]
   domains: [ntta.org]
-  category: transit
-  likely_mcc: 4784
+  category: transit.tolls
   note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
 - id: e-pass
   name: E-PASS
   aliases: [epass, central florida expressway]
   domains: [cfxway.com]
-  category: transit
-  likely_mcc: 4784
+  category: transit.tolls
   note: "Tolls code as MCC 4784. Amex and Chase count tolls as transit; U.S. Bank's ground transportation leaves out toll stations."
 
 # Specialty stores
@@ -1376,10 +1356,10 @@
   name: Bluemercury
   aliases: [blue mercury]
   domains: [bluemercury.com]
-  category: other
+  category: cosmetics
   online:
     category: online_retail
-  note: 'A cosmetics store, with no bonus category in store. Its website counts as online retail.'
+  note: A cosmetics store. Its website counts as online retail.
 - id: kay-jewelers
   name: Kay Jewelers
   aliases: [kay jewelers store]

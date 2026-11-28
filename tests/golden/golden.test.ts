@@ -3777,3 +3777,257 @@ describe('#42 merchant types with a code of their own', () => {
     },
   )
 })
+
+describe('#43 more merchant types with a code of their own', () => {
+  const wallet = (cards: object[], memberships: string[] = []) =>
+    withProfile(WalletSchema.parse({ cards, memberships }), 'flat')
+  const place = (text: string, channel: 'online' | 'in_store' | null) =>
+    resolvePlace(catalog, text, channel)
+  const cashPlus = {
+    id: 'usbank-cash-plus',
+    chosen: {
+      period: '2026-Q4',
+      picks: {
+        'five-percent': ['ground-transportation', 'fast-food'],
+        'two-percent': ['restaurants'],
+      },
+    },
+  }
+
+  goldenTest(
+    '#43a an amusement park on the Venmo card earns 3%, and on Capital One Savor',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: 'venmo-credit-card' }, { id: 'capital-one-savor' }]),
+        purchase('amusement park', { amount: 200, channel: 'in_store' }),
+        place('amusement park', 'in_store'),
+      )
+      expect(rec.merchant.category).toBe('entertainment.amusement_parks')
+      expect(entry(rec, 'venmo-credit-card').effectiveReturnPct).toBeCloseTo(3)
+      expect(entry(rec, 'capital-one-savor').effectiveReturnPct).toBeCloseTo(3)
+    },
+  )
+
+  goldenTest(
+    "#43b a tourist attraction earns 1x on Citi Strata's live entertainment pick, which leaves attractions out",
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([
+          {
+            id: 'citi-strata',
+            chosen: {
+              period: '2026',
+              picks: { 'self-select': ['live-entertainment'] },
+            },
+          },
+          { id: 'capital-one-savor' },
+        ]),
+        purchase('tourist attraction', { amount: 60, channel: 'in_store' }),
+        place('tourist attraction', 'in_store'),
+      )
+      expect(rec.merchant.category).toBe('entertainment.attractions')
+      const strata = entry(rec, 'citi-strata')
+      expect(strata.matchedRule).toBeNull()
+      expect(strata.rate).toBe(1)
+      expect(entry(rec, 'capital-one-savor').effectiveReturnPct).toBeCloseTo(3)
+    },
+  )
+
+  goldenTest(
+    '#43c software on the Amex Business Gold earns 4x when electronics, software and cloud is a top category',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([
+          {
+            id: 'amex-business-gold',
+            chosen: {
+              period: '2026-10',
+              picks: {
+                'top-two': ['us-electronics-software-cloud', 'us-restaurants'],
+              },
+            },
+          },
+          { id: 'amex-business-platinum' },
+        ]),
+        purchase('software', { amount: 300, channel: 'online' }),
+        place('software', 'online'),
+      )
+      expect(rec.merchant.category).toBe('software')
+      const gold = entry(rec, 'amex-business-gold')
+      expect(gold.matchedRule).toBe('top-two-us')
+      expect(gold.rate).toBe(4)
+      const platinum = entry(rec, 'amex-business-platinum')
+      expect(platinum.matchedRule).toBe('us-electronics-software-cloud')
+      expect(platinum.rate).toBe(2)
+    },
+  )
+
+  goldenTest(
+    "#43d parking earns 1% on U.S. Bank Cash+'s ground transportation pick, and 1x on Atmos Ascent",
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([
+          cashPlus,
+          { id: 'bank-of-america-atmos-rewards-ascent' },
+          { id: 'chase-sapphire-preferred' },
+        ]),
+        purchase('parking', { amount: 25 }),
+        place('parking', null),
+      )
+      expect(rec.merchant.category).toBe('transit.parking')
+      const plus = entry(rec, 'usbank-cash-plus')
+      expect(plus.matchedRule).toBeNull()
+      expect(plus.effectiveReturnPct).toBeCloseTo(1)
+      const ascent = entry(rec, 'bank-of-america-atmos-rewards-ascent')
+      expect(ascent.matchedRule).toBeNull()
+      expect(ascent.rate).toBe(1)
+      expect(entry(rec, 'chase-sapphire-preferred').rate).toBe(2)
+    },
+  )
+
+  goldenTest(
+    "#43e tolls earn 1% on Cash+'s ground transportation pick, and 2x on Atmos Ascent's local transit",
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([cashPlus, { id: 'bank-of-america-atmos-rewards-ascent' }]),
+        purchase('tolls', { amount: 40 }),
+        place('tolls', null),
+      )
+      expect(rec.merchant.category).toBe('transit.tolls')
+      const plus = entry(rec, 'usbank-cash-plus')
+      expect(plus.matchedRule).toBeNull()
+      expect(plus.effectiveReturnPct).toBeCloseTo(1)
+      const ascent = entry(rec, 'bank-of-america-atmos-rewards-ascent')
+      expect(ascent.matchedRule).toBe('gas-ev-cable-streaming-transit')
+      expect(ascent.rate).toBe(2)
+    },
+  )
+
+  goldenTest(
+    "#43f taxes paid online don't earn Customized Cash's 3% on online shopping",
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([
+          {
+            id: 'bank-of-america-customized-cash-rewards',
+            chosen: {
+              period: '2026',
+              picks: { 'three-percent': ['online-shopping'] },
+            },
+          },
+        ]),
+        purchase('taxes', { amount: 2000, channel: 'online' }),
+        place('taxes', 'online'),
+      )
+      expect(rec.merchant.category).toBe('government.taxes')
+      const ccr = entry(rec, 'bank-of-america-customized-cash-rewards')
+      expect(ccr.matchedRule).toBeNull()
+      expect(ccr.effectiveReturnPct).toBeCloseTo(1)
+    },
+  )
+
+  goldenTest(
+    "#43g taxes and tuition earn U.S. Bank Smartly's 2% base, not its Earning Bonus; other government fees earn the bonus",
+    () => {
+      const smartly = (text: string) =>
+        entry(
+          recommend(
+            catalog,
+            wallet([{ id: 'usbank-smartly' }], ['usbank-smartly-50']),
+            purchase(text, { amount: 500 }),
+            place(text, null),
+          ),
+          'usbank-smartly',
+        )
+      expect(smartly('taxes').matchedRule).toBeNull()
+      expect(smartly('taxes').effectiveReturnPct).toBeCloseTo(2)
+      expect(smartly('tuition').matchedRule).toBeNull()
+      expect(smartly('tuition').effectiveReturnPct).toBeCloseTo(2)
+      expect(smartly('government services').matchedRule).toBe(
+        'everything-smartly-50',
+      )
+    },
+  )
+
+  goldenTest(
+    '#43h Home Chef earns 3x on Sapphire Preferred as online grocery, and 1x on the Amex Gold, whose supermarkets leave meal kits out',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: 'chase-sapphire-preferred' }, { id: 'amex-gold' }]),
+        purchase('Home Chef', { amount: 90 }),
+      )
+      expect(rec.merchant.category).toBe('meal_kit')
+      const csp = entry(rec, 'chase-sapphire-preferred')
+      expect(csp.matchedRule).toBe('online-grocery')
+      expect(csp.rate).toBe(3)
+      const gold = entry(rec, 'amex-gold')
+      expect(gold.matchedRule).toBeNull()
+      expect(gold.rate).toBe(1)
+    },
+  )
+
+  goldenTest(
+    '#43i golf on the Venmo card earns 3%; Capital One Savor leaves golf courses out of entertainment',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: 'venmo-credit-card' }, { id: 'capital-one-savor' }]),
+        purchase('golf course', { amount: 80, channel: 'in_store' }),
+        place('golf course', 'in_store'),
+      )
+      expect(rec.merchant.category).toBe('golf')
+      const venmo = entry(rec, 'venmo-credit-card')
+      expect(venmo.matchedRule).toBe('entertainment-other')
+      expect(venmo.effectiveReturnPct).toBeCloseTo(3)
+      expect(entry(rec, 'capital-one-savor').matchedRule).toBeNull()
+    },
+  )
+
+  goldenTest(
+    "#43j a pet store earns 3x on Citi Strata's pet supply pick, and a salon or cosmetics store on its cosmetics, barbers and salons pick",
+    () => {
+      const strata = (pick: string, text: string) =>
+        entry(
+          recommend(
+            catalog,
+            wallet([
+              {
+                id: 'citi-strata',
+                chosen: { period: '2026', picks: { 'self-select': [pick] } },
+              },
+            ]),
+            purchase(text, { amount: 70, channel: 'in_store' }),
+            place(text, 'in_store'),
+          ),
+          'citi-strata',
+        )
+      expect(strata('pet-supply-stores', 'Petco').rate).toBe(3)
+      expect(strata('cosmetics-barbers-salons', 'hair salon').rate).toBe(3)
+      expect(strata('cosmetics-barbers-salons', 'Sephora').rate).toBe(3)
+      expect(strata('select-streaming', 'Petco').rate).toBe(1)
+    },
+  )
+
+  goldenTest(
+    '#43k a toy store paid online earns 3% on the Amex Blue Cash Everyday as U.S. online retail',
+    () => {
+      const rec = recommend(
+        catalog,
+        wallet([{ id: 'amex-blue-cash-everyday' }]),
+        purchase('toy store', { amount: 50, channel: 'online' }),
+        place('toy store', 'online'),
+      )
+      expect(rec.merchant.category).toBe('toy_store')
+      const bce = entry(rec, 'amex-blue-cash-everyday')
+      expect(bce.matchedRule).toBe('us-online-retail')
+      expect(bce.effectiveReturnPct).toBeCloseTo(3)
+    },
+  )
+})

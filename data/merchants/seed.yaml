@@ -3426,7 +3426,7 @@
   name: Home Chef
   aliases: [homechef]
   domains: [homechef.com]
-  category: other
+  category: meal_kit
 - id: wonder
   name: Wonder
   aliases: [wonder restaurant, wonder food hall]

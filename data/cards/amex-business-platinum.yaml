@@ -46,7 +46,7 @@ rules:
     cap: key-business-categories
     note: U.S. construction material and hardware suppliers. The first $2 million a calendar year across the 2X categories, then 1X.
   - id: us-electronics-software-cloud
-    match: { categories: [electronics] }
+    match: { categories: [electronics, software] }
     rate: 2
     geography: us_only
     cap: key-business-categories
@@ -240,6 +240,6 @@ evidence:
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/business/prospect/business-platinum-charge-card/64281-9-0#offer-terms
     quote: 'Effective January 1, 2027, Fine Hotels + Resorts® bookings will require a minimum two-night stay'
 todo:
-  - "Software and cloud system providers count toward the electronics category, but earnrate has no software or cloud category, so only electronics stores are modeled. Construction material and hardware suppliers are modeled as earnrate's home improvement category."
+  - "Construction material and hardware suppliers are modeled as earnrate's home improvement category."
   - 'From February 17, 2027, U.S. shipping providers count only when bought directly from UPS, FedEx, USPS, Auctane, DHL, Worldwide Express and Old Dominion Freight Line. Not modeled yet.'
   - 'Amex''s rewards terms count eligible purchases as "purchases for goods and services minus returns and other credits" and don''t say whether that takes out benefit statement credits. Its credits are modeled as earning the card''s rate on the whole purchase, with the credit on top.'

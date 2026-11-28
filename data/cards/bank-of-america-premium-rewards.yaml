@@ -24,13 +24,33 @@ welcome_offer:
   note: Online offer; the window is 90 days from account opening (about 3 months). The offer may not be available elsewhere after leaving the page. The card may not be available to anyone who has or had it in the past 24 months.
 rules:
   - id: travel-dining
-    match: { categories: [travel, transit, dining] }
+    match:
+      {
+        categories:
+          [
+            travel,
+            transit,
+            dining,
+            entertainment.amusement_parks,
+            entertainment.attractions,
+          ],
+      }
     rate: 2
     note: Restaurants (fast food included) and bars; airlines, hotels and motels, timeshares, campgrounds, car and RV rentals, cruises, travel agencies and tour operators, trains, buses, taxis, limousines, ferries, parking, and tolls. Not in-flight or duty-free airport purchases, or purchases through third-party payment accounts, mobile card readers or unsupported digital wallets.
   # BofA Rewards members earn a tier bonus on all points: 10% for Member,
   # 25% Preferred Plus, 50% Preferred Honors, 75% Premier.
   - id: travel-dining-bofa-rewards-member
-    match: { categories: [travel, transit, dining] }
+    match:
+      {
+        categories:
+          [
+            travel,
+            transit,
+            dining,
+            entertainment.amusement_parks,
+            entertainment.attractions,
+          ],
+      }
     rate: 2.2
     requires: { membership: bofa-rewards-member }
     note: 2x plus the 10% BofA Rewards Member bonus.
@@ -40,7 +60,17 @@ rules:
     requires: { membership: bofa-rewards-member }
     note: 1.5x plus the 10% BofA Rewards Member bonus.
   - id: travel-dining-bofa-rewards-preferred-plus
-    match: { categories: [travel, transit, dining] }
+    match:
+      {
+        categories:
+          [
+            travel,
+            transit,
+            dining,
+            entertainment.amusement_parks,
+            entertainment.attractions,
+          ],
+      }
     rate: 2.5
     requires: { membership: bofa-rewards-preferred-plus }
     note: 2x plus the 25% BofA Rewards Preferred Plus bonus.
@@ -50,7 +80,17 @@ rules:
     requires: { membership: bofa-rewards-preferred-plus }
     note: 1.5x plus the 25% BofA Rewards Preferred Plus bonus.
   - id: travel-dining-bofa-rewards-preferred-honors
-    match: { categories: [travel, transit, dining] }
+    match:
+      {
+        categories:
+          [
+            travel,
+            transit,
+            dining,
+            entertainment.amusement_parks,
+            entertainment.attractions,
+          ],
+      }
     rate: 3
     requires: { membership: bofa-rewards-preferred-honors }
     note: 2x plus the 50% BofA Rewards Preferred Honors bonus.
@@ -60,7 +100,17 @@ rules:
     requires: { membership: bofa-rewards-preferred-honors }
     note: 1.5x plus the 50% BofA Rewards Preferred Honors bonus.
   - id: travel-dining-bofa-rewards-premier
-    match: { categories: [travel, transit, dining] }
+    match:
+      {
+        categories:
+          [
+            travel,
+            transit,
+            dining,
+            entertainment.amusement_parks,
+            entertainment.attractions,
+          ],
+      }
     rate: 3.5
     requires: { membership: bofa-rewards-premier }
     note: 2x plus the 75% BofA Rewards Premier bonus.
@@ -73,6 +123,9 @@ rules:
 # Entry statement credits.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
+  - rule: travel-dining
+    url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
+    quote: 'tourist attractions and exhibits like art galleries, amusement parks, carnivals, circuses, aquariums, zoos'
   - rule: base_rate
     url: https://www.bankofamerica.com/credit-cards/terms-and-conditions/?campaignid=4079485&productoffercode=UN&locale=en_US
     quote: 'Earn 1.5 base points for every $1 of Net Purchases (non-Travel and Dining)'
@@ -135,4 +188,3 @@ evidence:
     quote: 'Foreign Transaction None'
 todo:
   - 'The BofA Rewards rules use proposed membership ids: bofa-rewards-member, bofa-rewards-preferred-plus, bofa-rewards-preferred-honors and bofa-rewards-premier. Cardholders who joined Preferred Rewards before May 26, 2026 may have an "extended card benefit" that Bank of America doesn''t define.'
-  - 'Travel also covers tourist attractions and exhibits (art galleries, amusement parks, carnivals, circuses, aquariums, zoos), which have no earnrate category, so they earn 1.5x here.'

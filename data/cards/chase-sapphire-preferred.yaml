@@ -74,7 +74,7 @@ rules:
     rate: 3
     note: Only the "top streaming services" Chase lists at chase.com/RewardsCategoryFAQs. Peacock and Showtime are on the list too.
   - id: online-grocery
-    match: { categories: [grocery.online] }
+    match: { categories: [grocery.online, meal_kit] }
     exclude: { categories: [warehouse_club], merchants: [walmart, target] }
     rate: 3
     note: Online pickup and delivery orders from grocery stores, specialty food stores and grocery delivery services, including meal kits. Not Target, Walmart, wholesale clubs, liquor stores, supermarket pharmacies, memberships or gift cards.
@@ -123,6 +123,9 @@ evidence:
   - rule: online-grocery
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: "wholesale clubs such as Costco and BJ's, liquor stores and merchants that specialize in only a few grocery items"
+  - rule: online-grocery
+    url: https://www.chase.com/personal/credit-cards/rewards-category-faq
+    quote: 'Meal kit delivery services are included.'
   - rule: online-grocery.not_earning
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
     quote: 'Online grocery (excluding Target®, Walmart® and wholesale clubs)'

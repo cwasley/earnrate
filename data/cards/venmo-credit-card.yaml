@@ -30,6 +30,9 @@ rules:
         categories:
           [entertainment, movie_theaters, streaming, fitness, sporting_goods],
       }
+    # Paid by entertainment-other, by their codes on Venmo's list.
+    exclude:
+      { categories: [entertainment.amusement_parks, entertainment.attractions] }
     rate: 3
     note: Movie theaters, concert and theatrical promoters, pro sports, streaming and other subscription TV, radio or streaming, sporting goods stores, and membership sports and recreation clubs (gyms, golf, tennis, swimming).
     named:

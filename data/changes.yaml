@@ -3,6 +3,283 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.28.3'
+  date: 2026-11-28
+  changes:
+    - cause: addition
+      card: bank-of-america-premium-rewards
+      field: rules.travel-dining
+      summary: Tourist attractions and amusement parks earn the 2x on travel, as Bank of America's terms list them.
+    - cause: correction
+      categories: [entertainment.amusement_parks, entertainment.attractions]
+      summary: "Amusement parks (MCC 7996) and tourist attractions (MCC 7991) are kinds of live entertainment. The Venmo card's 3% on them never applied before, and Capital One Savor and Discover it Cash Back, whose entertainment rates name them, paid 1%."
+    - cause: correction
+      categories: [software]
+      summary: "Software and cloud services are a category, outside electronics stores, so the Amex Business Gold's and Business Platinum's rates on software and cloud system providers apply; they never did."
+    - cause: correction
+      categories: [transit.parking, transit.tolls]
+      summary: 'Parking (MCC 7523) and tolls (MCC 4784) are kinds of transit, so a plain "parking" or "tolls" search finds them, and the cards whose transit rates leave them out, U.S. Bank Cash+ and Atmos Rewards Ascent, answer those searches correctly.'
+    - cause: addition
+      categories: [pet_store, cosmetics, salons]
+      summary: "Pet stores (MCC 5995), cosmetics stores (MCC 5977) and hair salons and barbers (MCC 7230) are categories, so Citi Strata's Self-Select Category can be one of them."
+    - cause: correction
+      categories:
+        [education, government, government.taxes, medical, membership_orgs]
+      summary: "Schools, government services, taxes, doctors and hospitals, and membership organizations and charities are categories, so Bank of America Customized Cash Rewards' online shopping and U.S. Bank Smartly's Earning Bonus can leave them out, as their terms do."
+    - cause: correction
+      categories: [meal_kit]
+      summary: "Meal kits are a category, bought online and outside online grocery, so Chase Sapphire Preferred's 3x on online grocery, which includes them, applies."
+    - cause: correction
+      categories: [golf]
+      summary: "Golf courses (MCC 7992) are a category outside live entertainment, so the Venmo card's 3% on them applies; it never did."
+    - cause: correction
+      merchants:
+        [
+          parkmobile,
+          spothero,
+          paybyphone,
+          parkwhiz,
+          laz-parking,
+          the-parking-spot,
+          park-n-fly,
+          fast-park-and-relax,
+          sp-plus,
+        ]
+      field: category
+      was: transit
+      now: transit.parking
+      summary: The parking merchants count as parking. Their answers don't change.
+    - cause: correction
+      merchants:
+        [
+          e-zpass,
+          sunpass,
+          fastrak,
+          txtag,
+          i-pass,
+          peach-pass,
+          nc-quick-pass,
+          ez-tag,
+          tolltag,
+          e-pass,
+        ]
+      field: category
+      was: transit
+      now: transit.tolls
+      summary: The toll merchants count as tolls. Their answers don't change.
+    - cause: wording
+      merchants:
+        [
+          parkmobile,
+          spothero,
+          paybyphone,
+          parkwhiz,
+          laz-parking,
+          the-parking-spot,
+          park-n-fly,
+          fast-park-and-relax,
+          sp-plus,
+          e-zpass,
+          sunpass,
+          fastrak,
+          txtag,
+          i-pass,
+          peach-pass,
+          nc-quick-pass,
+          ez-tag,
+          tolltag,
+          e-pass,
+        ]
+      field: likely_mcc
+      now: null
+      summary: Their merchant code now comes from the parking or tolls category, so it isn't repeated on each merchant.
+    - cause: correction
+      merchants: [petco, petsmart, pet-supplies-plus]
+      field: category
+      was: other
+      now: pet_store
+      summary: 'Petco, PetSmart and Pet Supplies Plus count as pet stores in store. Their websites still count as online retail.'
+    - cause: correction
+      merchants: [ulta-beauty, sephora, bluemercury]
+      field: category
+      was: other
+      now: cosmetics
+      summary: 'Ulta Beauty, Sephora and Bluemercury count as cosmetics stores in store. Their websites still count as online retail.'
+    - cause: wording
+      merchants:
+        [petco, petsmart, pet-supplies-plus, ulta-beauty, sephora, bluemercury]
+      field: note
+      summary: The notes no longer say pet and cosmetics stores have no bonus category.
+    - cause: correction
+      merchants: [home-chef]
+      field: category
+      was: other
+      now: meal_kit
+      summary: 'Home Chef counts as a meal kit, so Chase Sapphire Preferred pays 3x on it as online grocery.'
+    - cause: quote
+      card: capital-one-savor
+      field: evidence
+      summary: Entertainment's amusement parks and tourist attractions are quoted from the card page and the rewards FAQ.
+    - cause: wording
+      card: capital-one-savor
+      field: todo
+      summary: The note on entertainment no longer lists amusement parks, tourist attractions or golf courses as having no category.
+    - cause: quote
+      card: discover-it-cash-back
+      field: evidence
+      summary: "October to December's entertainment quotes amusement parks and tourist attractions from the Cashback Calendar."
+    - cause: wording
+      card: discover-it-cash-back
+      field: todo
+      summary: The note on entertainment no longer lists amusement parks, tourist attractions or golf courses as having no category.
+    - cause: addition
+      card: venmo-credit-card
+      field: rules.entertainment.exclude
+      was: null
+      now:
+        {
+          categories:
+            [entertainment.amusement_parks, entertainment.attractions],
+        }
+      summary: "Amusement parks and tourist attractions earn their 3% from the rule for the codes on Venmo's list, whose note names them, rather than from the movie and concert rule."
+    - cause: addition
+      card: citi-strata
+      field: choices.self-select.options.cosmetics-barbers-salons
+      summary: The Self-Select Category can be Cosmetic Stores/Barber Shops/Hair Salons, as Citi's terms say.
+    - cause: addition
+      card: citi-strata
+      field: choices.self-select.options.pet-supply-stores
+      summary: The Self-Select Category can be Pet Supply Stores, as Citi's terms say.
+    - cause: correction
+      card: citi-strata
+      field: rules.self-select.exclude
+      was: null
+      now: { categories: [entertainment.attractions] }
+      summary: "Tourist attractions don't count as live entertainment, as Citi's terms say."
+    - cause: wording
+      card: citi-strata
+      field: rules.self-select.note
+      summary: The note names tourist attractions among live entertainment's exclusions and says what the cosmetics, salons and pet supply options cover.
+    - cause: quote
+      card: citi-strata
+      field: evidence
+      summary: The cosmetics, barbers and salons and pet supply options, and live entertainment's exclusion of tourist attractions, are quoted from the terms.
+    - cause: wording
+      card: citi-strata
+      field: todo
+      summary: "The note saying the cosmetics and pet supply options aren't offered is gone."
+    - cause: correction
+      card: citi-custom-cash
+      field: rules.top-category.exclude
+      was: { categories: [dining, gas.superstore] }
+      now: { categories: [dining, gas.superstore, entertainment.attractions] }
+      summary: "Tourist attractions don't count as live entertainment, as the card's ThankYou terms say."
+    - cause: quote
+      card: citi-custom-cash
+      field: evidence
+      summary: "Live entertainment's amusement parks, and its exclusion of tourist attractions, are quoted from the ThankYou terms."
+    - cause: addition
+      card: bank-of-america-customized-cash-rewards
+      field: choices.three-percent.options.travel
+      summary: 'Tourist attractions count toward the travel pick, as the category choices page says.'
+    - cause: addition
+      card: bank-of-america-customized-cash-rewards
+      field: choices.three-percent.options.online-shopping
+      summary: "Doctors and hospitals, government services and taxes, membership organizations and schools paid online don't count as online shopping, as Bank of America's terms say."
+    - cause: wording
+      card: bank-of-america-customized-cash-rewards
+      field: choices.three-percent.notes
+      was:
+        gas-ev-charging: Gas excludes EV charging billed by parking lots.
+        travel: Travel includes parking, transit, rideshare, tolls and campgrounds.
+        online-shopping: Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded.
+      now:
+        gas-ev-charging: Gas excludes EV charging billed by parking lots.
+        travel: Travel includes parking, transit, rideshare, tolls, campgrounds and tourist attractions.
+        online-shopping: Online shopping is any purchase paid on a website or app, as reported by the merchant; ordered online but paid in store, in-store mobile wallet and phone or mail orders don't count, and doctors, government, insurance, membership organizations, schools, some utilities and other non-retail services are excluded.
+      summary: The travel pick's note names tourist attractions.
+    - cause: wording
+      card: bank-of-america-customized-cash-rewards
+      field: todo
+      summary: "The note says Bank of America's excluded services are examples only."
+    - cause: correction
+      card: usbank-smartly
+      field: rules.everything-smartly-25.exclude
+      was: { categories: [insurance] }
+      now: { categories: [insurance, education, government.taxes] }
+      summary: Education and tax earn the 2% base rate and don't count toward the $10,000, as the card page says.
+    - cause: correction
+      card: usbank-smartly
+      field: rules.everything-smartly-50.exclude
+      was: { categories: [insurance] }
+      now: { categories: [insurance, education, government.taxes] }
+      summary: Education and tax earn the 2% base rate and don't count toward the $10,000, as the card page says.
+    - cause: correction
+      card: usbank-smartly
+      field: rules.everything-smartly-100.exclude
+      was: { categories: [insurance] }
+      now: { categories: [insurance, education, government.taxes] }
+      summary: Education and tax earn the 2% base rate and don't count toward the $10,000, as the card page says.
+    - cause: wording
+      card: usbank-smartly
+      field: todo
+      summary: 'The note no longer says education and tax have no category.'
+    - cause: addition
+      card: amex-business-gold
+      field: choices.top-two.options.us-electronics-software-cloud
+      summary: Software and cloud system providers count toward the electronics category, as the terms say.
+    - cause: addition
+      card: amex-business-gold
+      field: rules.top-two-us.match
+      was:
+        {
+          choice: top-two,
+          categories: [online_advertising, electronics, dining, gas, phone],
+        }
+      now:
+        {
+          choice: top-two,
+          categories:
+            [online_advertising, electronics, software, dining, gas, phone],
+        }
+      summary: Software and cloud system providers earn 4X in a top-two category, as the terms say.
+    - cause: wording
+      card: amex-business-gold
+      field: todo
+      summary: "The note saying software and cloud providers aren't modeled is gone."
+    - cause: addition
+      card: amex-business-platinum
+      field: rules.us-electronics-software-cloud.match
+      was: { categories: [electronics] }
+      now: { categories: [electronics, software] }
+      summary: Software and cloud system providers earn 2X, as the terms say.
+    - cause: wording
+      card: amex-business-platinum
+      field: todo
+      summary: "The note no longer says software and cloud providers aren't modeled."
+    - cause: addition
+      cards: [amex-blue-cash-everyday, amex-hilton-honors-surpass]
+      field: rules.us-online-retail.match
+      summary: Toy, pet and cosmetics stores paid online count as U.S. online retail, since they sell physical goods.
+    - cause: quote
+      cards: [amex-blue-cash-everyday, amex-hilton-honors-surpass]
+      field: evidence
+      summary: "Online retail's pet and toy stores are quoted from Amex's online retail page."
+    - cause: addition
+      card: chase-sapphire-preferred
+      field: rules.online-grocery.match
+      was: { categories: [grocery.online] }
+      now: { categories: [grocery.online, meal_kit] }
+      summary: Meal kit delivery earns 3x as online grocery, as Chase's rewards category FAQ says.
+    - cause: quote
+      card: chase-sapphire-preferred
+      field: evidence
+      summary: "Online grocery's meal kits are quoted from Chase's rewards category FAQ."
+    - cause: wording
+      cards: [usbank-altitude-connect, bank-of-america-premium-rewards]
+      field: todo
+      summary: "Altitude Connect's notes say U.S. Bank's travel list doesn't name campgrounds; Premium Rewards' say tourist attractions and amusement parks wait for a quote from Bank of America's terms."
+
 - version: '2026.11.28.2'
   date: 2026-11-28
   changes:

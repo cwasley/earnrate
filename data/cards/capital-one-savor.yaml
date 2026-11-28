@@ -66,7 +66,7 @@ rules:
 todo:
   - Online grocery and delivery (grocery.online, e.g. Instacart) isn't addressed on the card page or in the rewards FAQ. Only grocery.supermarket is modeled.
   - Which streaming services are eligible isn't listed on the card page or in the rewards FAQ, only some exclusions.
-  - Amusement parks, tourist attractions, aquariums, zoos, record stores, pool halls and bowling alleys earn 3% as entertainment but have no earnrate category. Golf courses and collegiate sporting events are excluded but can't be told apart from the entertainment category.
+  - Aquariums, zoos, record stores, pool halls and bowling alleys earn 3% as entertainment but have no earnrate category. Collegiate sporting events are excluded but can't be told apart from the entertainment category.
   - Capital One says purchases through third-party payment accounts, mobile card readers or digital wallets may not get the bonus rate. Not modeled.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
@@ -97,6 +97,12 @@ evidence:
   - rule: entertainment
     url: https://www.capitalone.com/credit-cards/savor/
     quote: 'Ticket purchases made at movie theaters, sports promoters'
+  - rule: entertainment
+    url: https://www.capitalone.com/credit-cards/savor/
+    quote: 'theatrical promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls'
+  - rule: entertainment
+    url: https://disclosures.capitalone.com/disclosure.42167.en-US.html
+    quote: 'tourist attraction, amusement park, aquarium, zoo, dance hall, billiard and pool establishment'
   - rule: entertainment
     url: https://disclosures.capitalone.com/disclosure.42167.en-US.html
     quote: 'golf courses, country clubs (including membership fees), collegiate sporting events categorized as “universities”'

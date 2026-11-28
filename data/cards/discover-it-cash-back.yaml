@@ -99,7 +99,7 @@ todo:
   - Discover's 5% activation isn't retroactive (5% applies "from 10/1/26 (or the date on which you activate 5%, whichever is later)"), and you can activate until the quarter's last day. The schema's activate_by can't say that purchases before activation earn 1%; it's set to the quarter's last day and the rule notes say so.
   - The card page's and application terms' Cashback Match terms say "through your first 365 days"; the Cashback Bonus page says "your first 12 consecutive billing periods or 365 days, whichever is longer". Modeled as 365 days, the shorter. Cash back is matched only when processed within the period, so a purchase in its last days may post too late; earnrate goes by the purchase date.
   - Discover says 5% purchases "must be made with merchants in the U.S." The application terms put that sentence in the general earning paragraph, so it may also apply to the 1% base and Capital One Travel; only the rotating rules are marked us_only.
-  - Amusement parks, tourist attractions, aquariums, zoos, record stores, video rental, pool halls and bowling alleys earn 5% as Q4 2026 entertainment but have no earnrate category. Golf courses, country clubs and collegiate sporting events are excluded but can't be told apart from the entertainment category.
+  - Aquariums, zoos, record stores, video rental, pool halls and bowling alleys earn 5% as Q4 2026 entertainment but have no earnrate category. Collegiate sporting events are excluded but can't be told apart from the entertainment category.
   - Third-party payment accounts and digital wallet transactions may not earn 5% if they don't carry a qualifying MCC. Not modeled.
 # Issuer text backing each rule; `yarn check-sources` checks it weekly.
 evidence:
@@ -145,6 +145,9 @@ evidence:
   - rule: q4-2026-entertainment
     url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
     quote: 'Entertainment purchases include ticket purchases at movie theaters, sports promoters (professional and semi-professional live events)'
+  - rule: q4-2026-entertainment
+    url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
+    quote: 'concert promoters, amusement parks, tourist attractions, aquariums, zoos, dance halls, record stores'
   - rule: q4-2026-entertainment
     url: https://www.discover.com/credit-cards/cash-back/cashback-calendar.html
     quote: 'Tickets for or fees at golf courses, country clubs, some collegiate sporting events, charitable events'

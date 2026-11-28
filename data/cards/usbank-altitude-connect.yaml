@@ -162,4 +162,5 @@ evidence:
     quote: 'Foreign Transaction None'
 todo:
   - 'Stitcher is a qualifying streaming service that earnrate has no merchant for yet.'
+  - "U.S. Bank's travel category gives examples only (airlines, hotels, car rentals, taxicabs, limousines, passenger trains and cruise lines). earnrate's travel also covers campgrounds, which U.S. Bank doesn't name, so they earn 4X here."
   - "Passenger trains are modeled only for Amtrak, since earnrate's transit category also covers buses, tolls and parking, which U.S. Bank doesn't list as travel."

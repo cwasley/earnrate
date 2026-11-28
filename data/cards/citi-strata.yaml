@@ -56,6 +56,8 @@ choices:
           ]
       fitness-clubs: [fitness]
       live-entertainment: [entertainment]
+      cosmetics-barbers-salons: [cosmetics, salons]
+      pet-supply-stores: [pet_store]
 rules:
   - id: citi-travel-hotels-cars-attractions
     match:
@@ -82,8 +84,9 @@ rules:
     note: Gas stations and EV charging, plus car rentals, ferries, commuter and passenger railways, subways, taxis and car services, tolls, parking, bus lines and RV rentals. Gas at warehouse clubs, superstores, discount, department and convenience stores doesn't count; neither do bike or scooter rentals.
   - id: self-select
     match: { choice: self-select }
+    exclude: { categories: [entertainment.attractions] }
     rate: 3
-    note: The Self-Select Category you chose (Select Streaming Services until you change it). Streaming bundled with another product, or billed through another platform, doesn't count. Live entertainment is tickets for concerts, live sports, theater and amusement parks, not movie theaters, museums or golf.
+    note: The Self-Select Category you chose (Select Streaming Services until you change it). Streaming bundled with another product, or billed through another platform, doesn't count. Live entertainment is tickets for concerts, live sports, theater and amusement parks, not movie theaters, tourist attractions, museums or golf. Cosmetics count only at stores that code as cosmetics stores, not department stores, drugstores or supermarkets, and salons inside spas or hotels may not count. Pet supplies count at pet supply stores, not drugstores, supermarkets, superstores or warehouse clubs, and vets don't count.
   - id: restaurants
     match: { categories: [dining] }
     exclude: { merchants: [dodger-stadium, bellagio] }
@@ -139,6 +142,30 @@ evidence:
   - rule: self-select
     url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
     quote: 'athletic, sports and recreation facilities requiring membership such as health, tennis, and swimming clubs'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'bowling alleys, movie theaters, tourist attractions, museums, and art galleries'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Live Entertainment, Cosmetic Stores/Barber Shops/Hair Salons, or Pet Supply Stores'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Cosmetic stores include retailers that sell every day and theatrical cosmetics.'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'cosmetic purchases made in businesses such as department stores, drug stores, and supermarkets'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Barber Shops and Hair Salons include merchants that provide personal hair care services'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'barber shops and hair salons located in other businesses such as spas or hotels'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'Retailers that sell pet food and pet supplies.'
+  - rule: self-select
+    url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
+    quote: 'pet supply purchases made at drug stores, markets, wholesale clubs, discount superstores, and supermarkets'
   - rule: restaurants
     url: https://www.citi.com/credit-cards/citi-strata-credit-card
     quote: '2 points per dollar spent at Restaurants'
@@ -164,5 +191,4 @@ evidence:
     url: https://online.citi.com/US/nga/cards/displayterms?app=UNSOL&HKOP=694a2bccaa4fab7c7710d9d9f1f36fbac5552a971559393761b722e87102c50f
     quote: 'Foreign Purchase Transaction 3% of each purchase transaction in U.S. dollars.'
 todo:
-  - "The Self-Select Category can also be Cosmetic Stores/Barber Shops/Hair Salons or Pet Supply Stores, which have no earnrate category, so those two options aren't offered."
   - "The terms link carries a session-like token (HKOP); if Citi rotates it, take the new one from the card page's Important Pricing & Information link."

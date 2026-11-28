@@ -57,6 +57,9 @@ rules:
           clothing,
           electronics,
           sporting_goods,
+          toy_store,
+          pet_store,
+          cosmetics,
           home_improvement,
           furniture,
         ]
@@ -118,6 +121,12 @@ evidence:
   - rule: us-online-retail
     url: https://www.americanexpress.com/en-us/credit-cards/apply/terms/personal/blue-cash-everyday-credit-card/25330-10-0
     quote: 'from a U.S. retail merchant that sells physical goods or merchandise directly to consumers'
+  - rule: us-online-retail
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'Pet stores (e.g., Chewy.com)'
+  - rule: us-online-retail
+    url: https://www.americanexpress.com/us/content/rewards-info/retail.html
+    quote: 'Personal and household care Toy & Hobby stores'
   - rule: us-online-retail
     url: https://www.americanexpress.com/us/content/rewards-info/retail.html
     quote: 'Major retailers (e.g., Amazon.com, Walmart.com)'

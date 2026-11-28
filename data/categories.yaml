@@ -66,6 +66,14 @@
   name: Convenience stores
   aliases: [convenience store, corner store, bodega]
   mccs: [5499]
+# Not under grocery.online: supermarket and grocery rates mostly leave meal
+# kits out. No issuer text gives their code.
+- id: meal_kit
+  preposition: on
+  name: Meal kits
+  channel: online
+  aliases:
+    [meal kit, meal kits, meal kit delivery, meal kit subscription, meal box]
 # Bakeries and liquor stores aren't under dining or grocery: issuers
 # split on both.
 - id: bakery
@@ -111,6 +119,17 @@
   preposition: on
   aliases: [rideshare, taxi, taxis]
   mccs: [4121]
+- id: transit.parking
+  name: Parking
+  preposition: on
+  aliases:
+    [parking, parking garage, parking garages, parking lot, parking meter]
+  mccs: [7523]
+- id: transit.tolls
+  name: Tolls
+  preposition: on
+  aliases: [toll, tolls, toll road, toll roads, toll bridge, toll transponder]
+  mccs: [4784]
 
 - id: travel
   preposition: on
@@ -191,6 +210,67 @@
       life insurance,
     ]
   mccs: [6300]
+# Codes below are inferred: no issuer text in the data gives them. Some
+# rates leave these out by name.
+- id: education
+  preposition: on
+  name: Schools and tuition
+  aliases:
+    [
+      education,
+      school,
+      schools,
+      tuition,
+      school tuition,
+      college tuition,
+      university,
+      college,
+    ]
+  mccs: [8211, 8220, 8244, 8249, 8299]
+- id: government
+  preposition: on
+  name: Government services
+  aliases: [government, government services, government fees, dmv, court fees]
+  mccs: [9399, 9222, 9211]
+# Under government: U.S. Bank Smartly leaves out tax but not other
+# government services.
+- id: government.taxes
+  preposition: on
+  name: Taxes
+  aliases: [tax, taxes, tax payment, tax payments, income tax, property tax]
+  mccs: [9311]
+- id: medical
+  preposition: on
+  name: Doctors and hospitals
+  aliases:
+    [
+      medical,
+      medical bills,
+      doctor,
+      doctors,
+      dentist,
+      dentists,
+      hospital,
+      hospitals,
+      urgent care,
+    ]
+  mccs: [8011, 8021, 8062, 8099]
+- id: membership_orgs
+  preposition: on
+  name: Membership organizations and charities
+  aliases:
+    [
+      membership organization,
+      membership organizations,
+      association dues,
+      union dues,
+      charity,
+      charities,
+      donation,
+      donations,
+      charitable donation,
+    ]
+  mccs: [8699, 8641, 8398]
 
 - id: drugstore
   name: Drugstores and pharmacies
@@ -205,10 +285,38 @@
   name: Live entertainment and events
   aliases: [concerts, concert tickets, events, tickets]
   mccs: [7922, 7941]
+- id: entertainment.amusement_parks
+  name: Amusement parks
+  aliases:
+    [
+      amusement park,
+      amusement parks,
+      theme park,
+      theme parks,
+      water park,
+      circus,
+    ]
+  mccs: [7996]
+- id: entertainment.attractions
+  name: Tourist attractions
+  aliases: [tourist attraction, tourist attractions, attraction, attractions]
+  mccs: [7991]
 - id: fitness
   name: Gyms and fitness
   aliases: [gym, gyms, fitness]
   mccs: [7997]
+# Not under entertainment: Capital One and Discover leave golf courses out
+# of it.
+- id: golf
+  name: Golf courses
+  aliases: [golf, golf course, golf courses, green fees, driving range]
+  mccs: [7992]
+# Code inferred.
+- id: salons
+  name: Hair salons and barbers
+  aliases:
+    [hair salon, hair salons, salon, barber, barber shop, barbershop, haircut]
+  mccs: [7230]
 
 - id: department_store
   name: Department stores
@@ -221,6 +329,21 @@
 - id: electronics
   name: Electronics stores
   mccs: [5732]
+# Not under electronics: rates on electronics stores, or on physical goods
+# bought online, don't pay software. Codes inferred.
+- id: software
+  preposition: on
+  name: Software and cloud services
+  aliases:
+    [
+      software,
+      software subscription,
+      cloud services,
+      cloud storage,
+      cloud computing,
+      saas,
+    ]
+  mccs: [5734, 7372, 4816]
 - id: sporting_goods
   name: Sporting goods stores
   mccs: [5941]
@@ -228,6 +351,15 @@
   name: Toy and hobby stores
   aliases: [toy store, toys, hobby shop, hobby store]
   mccs: [5945]
+# Codes inferred.
+- id: pet_store
+  name: Pet stores
+  aliases: [pet store, pet stores, pet supplies, pet supply store, pet shop]
+  mccs: [5995]
+- id: cosmetics
+  name: Cosmetics stores
+  aliases: [cosmetics, cosmetics store, beauty store, makeup, makeup store]
+  mccs: [5977]
 - id: home_improvement
   name: Home improvement
   preposition: on
