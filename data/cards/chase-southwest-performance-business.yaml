@@ -60,22 +60,22 @@ evidence:
     url: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
     quote: 'Earn 80,000 points after you spend $5,000 on purchases in the first 3 months from account opening'
   - rule: base_rate
-    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    url: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
     quote: 'You’ll earn 1 point for each $1 spent on all other purchases'
   - rule: southwest
-    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    url: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
     quote: 'You’ll earn 4 points for each $1 spent on purchases made directly with Southwest Airlines'
   - rule: southwest
-    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    url: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
     quote: 'Other Southwest Airlines related purchases, such as Southwest Cruises, Southwest Charters, and Southwest Cargo® are excluded.'
   - rule: gas
-    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    url: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
     quote: 'gas stations; dining at restaurants; hotel accommodations when purchased directly with the hotel'
   - rule: dining
-    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    url: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
     quote: 'gas stations; dining at restaurants; hotel accommodations when purchased directly with the hotel'
   - rule: hotels-direct
-    url: https://creditcards.chase.com/southwest/performance-business-credit-card
+    url: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
     quote: 'gas stations; dining at restaurants; hotel accommodations when purchased directly with the hotel'
   - rule: hotels-direct
     url: https://www.chase.com/personal/credit-cards/rewards-category-faq
@@ -105,8 +105,8 @@ evidence:
     url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61809.html
     quote: 'may not be eligible for a second Chase credit card in the same Rewards Program'
   - rule: foreign_transaction_fee
-    url: https://creditcards.chase.com/southwest/performance-business-credit-card
-    quote: 'No Foreign Transaction Fees: See Cardmember Agreement for details'
+    url: https://sites.chase.com/services/creatives/pricingandterms.html/content/dam/pricingandterms/LGC61809.html
+    quote: 'Foreign Transactions None'
   - rule: anniversary-points
     url: https://creditcards.chase.com/business-credit-cards/southwest/performance-business
     quote: 'Receive 9,000 bonus points each year after your Cardmember anniversary.'

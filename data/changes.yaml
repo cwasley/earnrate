@@ -3,6 +3,23 @@
 # changed a term after earnrate had recorded the old value correctly; see
 # src/schema/changes.ts for the fields.
 
+- version: '2026.11.28'
+  date: 2026-11-28
+  changes:
+    - cause: quote
+      cards:
+        [chase-southwest-performance-business, chase-southwest-premier-business]
+      field: evidence
+      summary: Earning, exclusion and foreign-fee quotes move from the cardmember pages, which no longer list them, to the offer details and pricing terms.
+    - cause: quote
+      card: chase-united-explorer
+      field: evidence
+      summary: The $100 TravelBank cash quote comes from the card page's terms in place of a popup that doesn't show on every load.
+    - cause: quote
+      card: capital-one-spark-cash-plus
+      field: evidence
+      summary: The $150 fee refund is quoted from the card page's footnote, which both versions of the page Capital One serves show.
+
 - version: '2026.11.22.4'
   date: 2026-11-22
   changes:

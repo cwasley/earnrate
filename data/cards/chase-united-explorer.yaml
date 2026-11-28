@@ -118,8 +118,7 @@ evidence:
     quote: 'Foreign Transactions None Penalty Fees'
   - rule: spend-10k
     url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
-    quote: 'Earn $100 in United® TravelBank cash after you spend $10,000 on purchases each calendar year'
-    in_popup: true
+    quote: 'Earn $100 in TravelBank cash after spending $10,000 with your UnitedSM Explorer Card within a calendar year'
   - rule: spend-20k
     url: https://creditcards.chase.com/travel-credit-cards/united/united-explorer
     quote: 'Earn a 10,000-mile award flight discount after spending $20,000 each calendar year'

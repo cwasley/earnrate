@@ -2,6 +2,16 @@
 
 Every change to card rules, merchants, categories or currencies under `data/`. Bump `data/VERSION` (`YYYY.MM.DD`, plus `.N` for a second release on the same day) and add a section here in the same commit, with the same release's entries in `data/changes.yaml` (the structured record, each change tagged by cause). Each row cites the issuer page the new value came from.
 
+## 2026.11.28
+
+No rates changed. Quotes moved after the weekly source check:
+
+- `chase-southwest-performance-business` and `chase-southwest-premier-business`: Chase's cardmember pages for these cards no longer list the earning terms, so the earning and exclusion quotes now come from each card's [Performance](https://creditcards.chase.com/business-credit-cards/southwest/performance-business) or [Premier](https://creditcards.chase.com/business-credit-cards/southwest/premier-business) offer details, and the no-foreign-fee quote from its pricing and terms table.
+- `chase-united-explorer`: the $100 TravelBank cash after $10,000 a calendar year is quoted from the card page's terms, since the popup that said it doesn't show on every load.
+- `capital-one-spark-cash-plus`: the $150 annual fee refund after $150,000 a year is quoted from the card page's footnote. Capital One serves two versions of the page, and only one has the old line; that version also leaves out the no-foreign-fee line, which the other still has, so the weekly check may flag that quote now and then.
+
+The pages the check couldn't read (Bank of America, Fidelity, PayPal and Synchrony, PenFed, PNC, Sam's Club, Target's program rules, Venmo) were re-read in a browser on 2026-11-28, and the three Amex pages from this machine; every quote on them still matches.
+
 ## 2026.11.22.4
 
 Bank of America changed the **Atmos Rewards Visa Signature Business Card** (`bank-of-america-atmos-rewards-business`), seen on its [card page](https://business.bankofamerica.com/en/credit-cards/atmos-rewards) and new [terms](https://www.bankofamerica.com/smallbusiness/credit-cards/terms-and-conditions/?campaignid=4082063&productoffercode=K8&locale=en_US) on 2026-11-22:
